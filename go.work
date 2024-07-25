@@ -1,3 +1,6 @@
 go 1.22.5
 
-use ./cloud/workery-backend
+use (
+	./cloud/workery-backend
+	./cloud/workery-cli
+)
