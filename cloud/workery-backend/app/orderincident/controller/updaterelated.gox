@@ -1,0 +1,252 @@
+package controller
+
+import (
+	"log/slog"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+
+	a_s "github.com/over55/monorepo/cloud/workery-backend/app/associate/datastore"
+	c_s "github.com/over55/monorepo/cloud/workery-backend/app/customer/datastore"
+	o_s "github.com/over55/monorepo/cloud/workery-backend/app/order/datastore"
+	t_s "github.com/over55/monorepo/cloud/workery-backend/app/orderincident/datastore"
+	orderincident_s "github.com/over55/monorepo/cloud/workery-backend/app/orderincident/datastore"
+)
+
+func (impl *OrderIncidentControllerImpl) updateRelatedCustomers(sessCtx mongo.SessionContext, orderincident *t_s.OrderIncident) error {
+	cf := &c_s.CustomerPaginationListFilter{
+		Cursor:    "",
+		PageSize:  1_000_000,
+		SortField: "",
+		SortOrder: c_s.OrderAscending,
+		InOrderIncidentIDs:  []primitive.ObjectID{orderincident.ID},
+	}
+	list, err := impl.CustomerStorer.ListByFilter(sessCtx, cf)
+	if err != nil {
+		impl.Logger.Error("customer list by orderincidents error",
+			slog.Any("error", err))
+		return err
+	}
+
+	// Iterate over all the associates which contain our orderincident.
+	for _, cust := range list.Results {
+		// Iterate over all the orderincidents that are attached to this associate
+		// and match it with our orderincident and update.
+		for _, t := range cust.OrderIncidents {
+			if t.ID == orderincident.ID {
+				t.Title = orderincident.Title
+				t.Description = orderincident.Description
+				t.Status = orderincident.Status
+				if err := impl.CustomerStorer.UpdateByID(sessCtx, cust); err != nil {
+					impl.Logger.Error("customer update error",
+						slog.Any("error", err))
+					return err
+				}
+				impl.Logger.Debug("updated related customer for orderincident",
+					slog.String("orderincident_id", orderincident.ID.Hex()),
+					slog.String("customer_id", cust.ID.Hex()))
+
+				if err := impl.updateRelatedTaskItemCustomers(sessCtx, orderincident, cust); err != nil {
+					impl.Logger.Error("customer update error",
+						slog.Any("error", err))
+					return err
+				}
+
+				impl.Logger.Debug("updated related customer for orderincident inside task items",
+					slog.String("orderincident_id", orderincident.ID.Hex()),
+					slog.String("customer_id", cust.ID.Hex()))
+			}
+		}
+	}
+	return nil
+}
+
+func (impl *OrderIncidentControllerImpl) updateRelatedTaskItemCustomers(sessCtx mongo.SessionContext, orderincident *orderincident_s.OrderIncident, a *c_s.Customer) error {
+	tires, err := impl.TaskItemStorer.ListByCustomerID(sessCtx, a.ID)
+	if err != nil {
+		impl.Logger.Error("task item list by customer error",
+			slog.Any("error", err))
+		return err
+	}
+
+	// Iterate over all the task items which contain our orderincident.
+	for _, ti := range tires.Results {
+		// Iterate over all the task items that are attached to this order
+		// and match it with our orderincident and update.
+		for _, at := range ti.CustomerOrderIncidents {
+			if at.ID == orderincident.ID {
+				at.Title = orderincident.Title
+				at.Description = orderincident.Description
+				at.Status = orderincident.Status
+				if err := impl.TaskItemStorer.UpdateByID(sessCtx, ti); err != nil {
+					impl.Logger.Error("task item update error",
+						slog.Any("error", err))
+					return err
+				}
+				impl.Logger.Debug("updated related task item for customer orderincident",
+					slog.String("orderincident_id", orderincident.ID.Hex()),
+					slog.Any("task_item_id", ti.ID))
+			}
+		}
+	}
+	return nil
+}
+
+func (impl *OrderIncidentControllerImpl) updateRelatedAssociates(sessCtx mongo.SessionContext, orderincident *t_s.OrderIncident) error {
+	af := &a_s.AssociatePaginationListFilter{
+		Cursor:    "",
+		PageSize:  1_000_000,
+		SortField: "",
+		SortOrder: c_s.OrderAscending,
+		InOrderIncidentIDs:  []primitive.ObjectID{orderincident.ID},
+	}
+	list, err := impl.AssociateStorer.ListByFilter(sessCtx, af)
+	if err != nil {
+		impl.Logger.Error("associate list by orderincidents error",
+			slog.Any("error", err))
+		return err
+	}
+
+	// Iterate over all the associates which contain our orderincident.
+	for _, asso := range list.Results {
+		// Iterate over all the orderincidents that are attached to this associate
+		// and match it with our orderincident and update.
+		for _, t := range asso.OrderIncidents {
+			if t.ID == orderincident.ID {
+				t.Title = orderincident.Title
+				t.Description = orderincident.Description
+				t.Status = orderincident.Status
+				if err := impl.AssociateStorer.UpdateByID(sessCtx, asso); err != nil {
+					impl.Logger.Error("associate update error",
+						slog.Any("error", err))
+					return err
+				}
+				impl.Logger.Debug("updated related associate for orderincident",
+					slog.String("orderincident_id", orderincident.ID.Hex()),
+					slog.String("associatee_id", asso.ID.Hex()))
+
+				if err := impl.updateRelatedTaskItemAssociates(sessCtx, orderincident, asso); err != nil {
+					impl.Logger.Error("associate update error",
+						slog.Any("error", err))
+					return err
+				}
+
+				impl.Logger.Debug("updated related associate for orderincident inside task items",
+					slog.String("orderincident_id", orderincident.ID.Hex()),
+					slog.String("associate_id", asso.ID.Hex()))
+			}
+		}
+	}
+	return nil
+}
+
+func (impl *OrderIncidentControllerImpl) updateRelatedTaskItemAssociates(sessCtx mongo.SessionContext, orderincident *orderincident_s.OrderIncident, a *a_s.Associate) error {
+	tires, err := impl.TaskItemStorer.ListByAssociateID(sessCtx, a.ID)
+	if err != nil {
+		impl.Logger.Error("task item list by associates error",
+			slog.Any("error", err))
+		return err
+	}
+
+	// Iterate over all the task items which contain our orderincident.
+	for _, ti := range tires.Results {
+		// Iterate over all the task items that are attached to this order
+		// and match it with our orderincident and update.
+		for _, at := range ti.AssociateOrderIncidents {
+			if at.ID == orderincident.ID {
+				at.Title = orderincident.Title
+				at.Description = orderincident.Description
+				at.Status = orderincident.Status
+				if err := impl.TaskItemStorer.UpdateByID(sessCtx, ti); err != nil {
+					impl.Logger.Error("task item update error",
+						slog.Any("error", err))
+					return err
+				}
+				impl.Logger.Debug("updated related task item for associate orderincident",
+					slog.String("orderincident_id", orderincident.ID.Hex()),
+					slog.Any("task_item_id", ti.ID))
+			}
+		}
+	}
+	return nil
+}
+
+func (impl *OrderIncidentControllerImpl) updateRelatedOrders(sessCtx mongo.SessionContext, orderincident *t_s.OrderIncident) error {
+	of := &o_s.OrderPaginationListFilter{
+		Cursor:    "",
+		PageSize:  1_000_000,
+		SortField: "",
+		SortOrder: c_s.OrderAscending,
+		InOrderIncidentIDs:  []primitive.ObjectID{orderincident.ID},
+	}
+	list, err := impl.OrderStorer.ListByFilter(sessCtx, of)
+	if err != nil {
+		impl.Logger.Error("order list by orderincidents error",
+			slog.Any("error", err))
+		return err
+	}
+
+	// Iterate over all the orders which contain our orderincident.
+	for _, order := range list.Results {
+		// Iterate over all the orderincidents that are attached to this order
+		// and match it with our orderincident and update.
+		for _, t := range order.OrderIncidents {
+			if t.ID == orderincident.ID {
+				t.Title = orderincident.Title
+				t.Description = orderincident.Description
+				t.Status = orderincident.Status
+				if err := impl.OrderStorer.UpdateByID(sessCtx, order); err != nil {
+					impl.Logger.Error("order update error",
+						slog.Any("error", err))
+					return err
+				}
+				impl.Logger.Debug("updated related order for orderincident",
+					slog.String("orderincident_id", orderincident.ID.Hex()),
+					slog.String("ordere_id", order.ID.Hex()))
+
+				if err := impl.updateRelatedTaskItemOrders(sessCtx, orderincident, order); err != nil {
+					impl.Logger.Error("order update error",
+						slog.Any("error", err))
+					return err
+				}
+
+				impl.Logger.Debug("updated related order for orderincident inside task items",
+					slog.String("orderincident_id", orderincident.ID.Hex()),
+					slog.String("order_id", order.ID.Hex()))
+			}
+		}
+	}
+	return nil
+}
+
+func (impl *OrderIncidentControllerImpl) updateRelatedTaskItemOrders(sessCtx mongo.SessionContext, orderincident *orderincident_s.OrderIncident, o *o_s.Order) error {
+	tires, err := impl.TaskItemStorer.ListByOrderWJID(sessCtx, o.WJID)
+	if err != nil {
+		impl.Logger.Error("task item list by order error",
+			slog.Any("error", err))
+		return err
+	}
+
+	// Iterate over all the task items which contain our orderincident.
+	for _, ti := range tires.Results {
+		// Iterate over all the task items that are attached to this order
+		// and match it with our orderincident and update.
+		for _, ot := range ti.OrderOrderIncidents {
+			if ot.ID == orderincident.ID {
+				ot.Title = orderincident.Title
+				ot.Description = orderincident.Description
+				ot.Status = orderincident.Status
+				if err := impl.TaskItemStorer.UpdateByID(sessCtx, ti); err != nil {
+					impl.Logger.Error("task item update error",
+						slog.Any("error", err))
+					return err
+				}
+				impl.Logger.Debug("updated related task item for order orderincident",
+					slog.String("orderincident_id", orderincident.ID.Hex()),
+					slog.Any("task_item_id", ti.ID))
+			}
+		}
+	}
+
+	return nil
+}

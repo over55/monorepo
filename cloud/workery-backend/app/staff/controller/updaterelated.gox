@@ -1,0 +1,496 @@
+package controller
+
+import (
+	"log/slog"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+
+	"github.com/bartmika/arraydiff"
+	a_c "github.com/over55/monorepo/cloud/workery-backend/app/staff/datastore"
+	a_s "github.com/over55/monorepo/cloud/workery-backend/app/staff/datastore"
+	o_s "github.com/over55/monorepo/cloud/workery-backend/app/order/datastore"
+	ti_s "github.com/over55/monorepo/cloud/workery-backend/app/taskitem/datastore"
+	"github.com/over55/monorepo/cloud/workery-backend/utils/httperror"
+)
+
+// UpdateRelatedBySkillSets function will take the inputted `skill sets` with the staff.
+func (impl *StaffControllerImpl) UpdateRelatedBySkillSets(sessCtx mongo.SessionContext, a *a_c.Staff, modifiedSSIDs []primitive.ObjectID) error {
+	oldSSIDs := []primitive.ObjectID{}
+	for _, skillSet := range a.SkillSets {
+		oldSSIDs = append(oldSSIDs, skillSet.ID)
+	}
+
+	// See what are the differences between the two arrays of type `uint64` data-types.
+	addIDs, keepIDs, removedIDs := arraydiff.ObjectIDs(oldSSIDs, modifiedSSIDs)
+
+	// For debugging purposes only.
+	impl.Logger.Debug("skill sets changes",
+		slog.Any("added", addIDs),
+		slog.Any("keep", keepIDs),
+		slog.Any("removed", removedIDs))
+
+	////
+	//// Add new skill sets.
+	////
+
+	for _, addID := range addIDs {
+		// For debugging purposes only.
+		impl.Logger.Debug("adding skill set to staff",
+			slog.Any("SkillSetID", addID))
+
+		// Step 1: Lookup the skill set.
+		ss, err := impl.SkillSetStorer.GetByID(sessCtx, addID)
+		if err != nil {
+			impl.Logger.Error("database get by id error", slog.Any("error", err))
+			return err
+		}
+		if ss == nil {
+			return httperror.NewForForbiddenWithSingleField("message", "skill set does not exist")
+		}
+
+		// Step 2: Create the staff skill set.
+		ass := &a_c.StaffSkillSet{
+			ID:          ss.ID,
+			Category:    ss.Category,
+			SubCategory: ss.SubCategory,
+			Description: ss.Description,
+			Status:      ss.Status,
+		}
+		a.SkillSets = append(a.SkillSets, ass)
+
+		// For debugging purposes only.
+		impl.Logger.Debug("added skill set for staff",
+			slog.Any("SkillSetID", addID))
+	}
+
+	////
+	//// Remove skill sets.
+	////
+
+	// Create a map to quickly check if an ID should be deleted
+	idMap := make(map[primitive.ObjectID]bool)
+	for _, id := range removedIDs {
+		idMap[id] = true
+	}
+
+	// Create a new slice without the items to be deleted
+	var newSkillSets []*a_c.StaffSkillSet
+	for _, ss := range a.SkillSets {
+		if !idMap[ss.ID] {
+			newSkillSets = append(newSkillSets, ss)
+		}
+	}
+	a.SkillSets = newSkillSets
+
+	////
+	//// Update in the database.
+	////
+
+	if err := impl.StaffStorer.UpdateByID(sessCtx, a); err != nil {
+		impl.Logger.Error("database update error", slog.Any("error", err))
+		return err
+	}
+
+	impl.Logger.Debug("updated skill set for staff",
+		slog.Any("Skill Sets", a.SkillSets)) // For debugging purposes only.
+
+	return nil
+}
+
+// UpdateRelatedByInsuranceRequirements function will take the inputted `insurance requirements` with the staff.
+func (impl *StaffControllerImpl) UpdateRelatedByInsuranceRequirements(sessCtx mongo.SessionContext, a *a_c.Staff, modifiedIRIDs []primitive.ObjectID) error {
+	oldIRIDs := []primitive.ObjectID{}
+	for _, skillSet := range a.InsuranceRequirements {
+		oldIRIDs = append(oldIRIDs, skillSet.ID)
+	}
+
+	// See what are the differences between the two arrays of type `uint64` data-types.
+	addIDs, keepIDs, removedIDs := arraydiff.ObjectIDs(oldIRIDs, modifiedIRIDs)
+
+	// For debugging purposes only.
+	impl.Logger.Debug("insurance requirement changes",
+		slog.Any("added", addIDs),
+		slog.Any("keep", keepIDs),
+		slog.Any("removed", removedIDs))
+
+	////
+	//// Add new skill sets.
+	////
+
+	for _, addID := range addIDs {
+		// For debugging purposes only.
+		impl.Logger.Debug("adding insurance requirement to staff",
+			slog.Any("InsuranceRequirementID", addID))
+
+		// Step 1: Lookup the skill set.
+		ir, err := impl.InsuranceRequirementStorer.GetByID(sessCtx, addID)
+		if err != nil {
+			impl.Logger.Error("database get by id error", slog.Any("error", err))
+			return err
+		}
+		if ir == nil {
+			return httperror.NewForForbiddenWithSingleField("message", "insurance requirement does not exist")
+		}
+
+		// Step 2: Create the staff skill set.
+		air := &a_c.StaffInsuranceRequirement{
+			ID:          ir.ID,
+			Name:        ir.Name,
+			Description: ir.Description,
+			Status:      ir.Status,
+		}
+		a.InsuranceRequirements = append(a.InsuranceRequirements, air)
+
+		// For debugging purposes only.
+		impl.Logger.Debug("added insurance requirement for staff",
+			slog.Any("InsuranceRequirementID", addID))
+	}
+
+	////
+	//// Remove skill sets.
+	////
+
+	// Create a map to quickly check if an ID should be deleted
+	idMap := make(map[primitive.ObjectID]bool)
+	for _, id := range removedIDs {
+		idMap[id] = true
+	}
+
+	// Create a new slice without the items to be deleted
+	var newInsuranceRequirements []*a_c.StaffInsuranceRequirement
+	for _, ir := range a.InsuranceRequirements {
+		if !idMap[ir.ID] {
+			newInsuranceRequirements = append(newInsuranceRequirements, ir)
+		}
+	}
+	a.InsuranceRequirements = newInsuranceRequirements
+
+	////
+	//// Update in the database.
+	////
+
+	if err := impl.StaffStorer.UpdateByID(sessCtx, a); err != nil {
+		impl.Logger.Error("database update error", slog.Any("error", err))
+		return err
+	}
+
+	impl.Logger.Debug("updated insurance requiremens for staff",
+		slog.Any("insurance requirements", a.InsuranceRequirements)) // For debugging purposes only.
+
+	return nil
+}
+
+// UpdateRelatedByVehicleTypes function will take the inputted `vehicle types` with the staff.
+func (impl *StaffControllerImpl) UpdateRelatedByVehicleTypes(sessCtx mongo.SessionContext, a *a_c.Staff, modifiedVTIDs []primitive.ObjectID) error {
+	oldVTIDs := []primitive.ObjectID{}
+	for _, skillSet := range a.VehicleTypes {
+		oldVTIDs = append(oldVTIDs, skillSet.ID)
+	}
+
+	// See what are the differences between the two arrays of type `uint64` data-types.
+	addIDs, keepIDs, removedIDs := arraydiff.ObjectIDs(oldVTIDs, modifiedVTIDs)
+
+	// For debugging purposes only.
+	impl.Logger.Debug("vehicle types changes",
+		slog.Any("added", addIDs),
+		slog.Any("keep", keepIDs),
+		slog.Any("removed", removedIDs))
+
+	////
+	//// Add new skill sets.
+	////
+
+	for _, addID := range addIDs {
+		// For debugging purposes only.
+		impl.Logger.Debug("adding vehicle type to staff",
+			slog.Any("VehicleTypeID", addID))
+
+		// Step 1: Lookup the skill set.
+		ss, err := impl.VehicleTypeStorer.GetByID(sessCtx, addID)
+		if err != nil {
+			impl.Logger.Error("database get by id error", slog.Any("error", err))
+			return err
+		}
+		if ss == nil {
+			return httperror.NewForForbiddenWithSingleField("message", "vehicle type does not exist")
+		}
+
+		// Step 2: Create the staff skill set.
+		ass := &a_c.StaffVehicleType{
+			ID:          ss.ID,
+			Name:        ss.Name,
+			Description: ss.Description,
+			Status:      ss.Status,
+		}
+		a.VehicleTypes = append(a.VehicleTypes, ass)
+
+		// For debugging purposes only.
+		impl.Logger.Debug("added vehicle type for staff",
+			slog.Any("VehicleTypeID", addID))
+	}
+
+	////
+	//// Remove skill sets.
+	////
+
+	// Create a map to quickly check if an ID should be deleted
+	idMap := make(map[primitive.ObjectID]bool)
+	for _, id := range removedIDs {
+		idMap[id] = true
+	}
+
+	// Create a new slice without the items to be deleted
+	var newVehicleTypes []*a_c.StaffVehicleType
+	for _, ss := range a.VehicleTypes {
+		if !idMap[ss.ID] {
+			newVehicleTypes = append(newVehicleTypes, ss)
+		}
+	}
+	a.VehicleTypes = newVehicleTypes
+
+	////
+	//// Update in the database.
+	////
+
+	if err := impl.StaffStorer.UpdateByID(sessCtx, a); err != nil {
+		impl.Logger.Error("database update error", slog.Any("error", err))
+		return err
+	}
+
+	impl.Logger.Debug("updated vehicle types for staff",
+		slog.Any("Vehicle Types", a.VehicleTypes)) // For debugging purposes only.
+
+	return nil
+}
+
+// UpdateRelatedByTags function will take the inputted `tags` with the staff.
+func (impl *StaffControllerImpl) UpdateRelatedByTags(sessCtx mongo.SessionContext, a *a_c.Staff, modifiedTIDs []primitive.ObjectID) error {
+	oldTIDs := []primitive.ObjectID{}
+	for _, skillSet := range a.Tags {
+		oldTIDs = append(oldTIDs, skillSet.ID)
+	}
+
+	// See what are the differences between the two arrays of type `uint64` data-types.
+	addIDs, keepIDs, removedIDs := arraydiff.ObjectIDs(oldTIDs, modifiedTIDs)
+
+	// For debugging purposes only.
+	impl.Logger.Debug("tags changes",
+		slog.Any("added", addIDs),
+		slog.Any("keep", keepIDs),
+		slog.Any("removed", removedIDs))
+
+	////
+	//// Add new tags.
+	////
+
+	for _, addID := range addIDs {
+		// For debugging purposes only.
+		impl.Logger.Debug("adding tag to staff",
+			slog.Any("TagID", addID))
+
+		// Step 1: Lookup the tag.
+		ss, err := impl.TagStorer.GetByID(sessCtx, addID)
+		if err != nil {
+			impl.Logger.Error("database get by id error", slog.Any("error", err))
+			return err
+		}
+		if ss == nil {
+			return httperror.NewForForbiddenWithSingleField("message", "tag does not exist")
+		}
+
+		// Step 2: Create the staff tag.
+		ass := &a_c.StaffTag{
+			ID:          ss.ID,
+			Text:        ss.Text,
+			Description: ss.Description,
+			Status:      ss.Status,
+		}
+		a.Tags = append(a.Tags, ass)
+
+		// For debugging purposes only.
+		impl.Logger.Debug("added tag for staff",
+			slog.Any("TagID", addID))
+	}
+
+	////
+	//// Remove tags.
+	////
+
+	// Create a map to quickly check if an ID should be deleted
+	idMap := make(map[primitive.ObjectID]bool)
+	for _, id := range removedIDs {
+		idMap[id] = true
+	}
+
+	// Create a new slice without the items to be deleted
+	var newTags []*a_c.StaffTag
+	for _, ss := range a.Tags {
+		if !idMap[ss.ID] {
+			newTags = append(newTags, ss)
+		}
+	}
+	a.Tags = newTags
+
+	////
+	//// Update in the database.
+	////
+
+	if err := impl.StaffStorer.UpdateByID(sessCtx, a); err != nil {
+		impl.Logger.Error("database update error", slog.Any("error", err))
+		return err
+	}
+
+	impl.Logger.Debug("updated tag for staff",
+		slog.Any("Tags", a.Tags)) // For debugging purposes only.
+
+	return nil
+}
+
+// UpdateRelatedByOrders function will take the inputted `order` with the staff.
+func (impl *StaffControllerImpl) UpdateRelatedByOrders(sessCtx mongo.SessionContext, staff *a_s.Staff) error {
+	res, err := impl.OrderStorer.ListByStaffID(sessCtx, staff.ID)
+	if err != nil {
+		impl.Logger.Error("database list by staff id error",
+			slog.Any("staff_id", staff.ID),
+			slog.Any("error", err))
+		return err
+	}
+	for _, o := range res.Results {
+		o.StaffFirstName = staff.FirstName
+		o.StaffLastName = staff.LastName
+		o.StaffName = staff.Name
+		o.StaffLexicalName = staff.LexicalName
+		o.StaffGender = staff.Gender
+		o.StaffGenderOther = staff.GenderOther
+		o.StaffBirthdate = staff.BirthDate
+		o.StaffEmail = staff.Email
+		o.StaffPhone = staff.Phone
+		o.StaffPhoneType = staff.PhoneType
+		o.StaffPhoneExtension = staff.PhoneExtension
+		o.StaffOtherPhone = staff.OtherPhone
+		o.StaffOtherPhoneExtension = staff.OtherPhoneExtension
+		o.StaffOtherPhoneType = staff.OtherPhoneType
+		o.StaffFullAddressWithoutPostalCode = staff.FullAddressWithoutPostalCode
+		o.StaffFullAddressURL = staff.FullAddressURL
+		o.StaffTags = make([]*o_s.OrderTag, 0)
+		for _, tag := range staff.Tags {
+			o.StaffTags = append(o.StaffTags, &o_s.OrderTag{
+				ID:          tag.ID,
+				Text:        tag.Text,
+				Description: tag.Description,
+			})
+		}
+		o.StaffSkillSets = make([]*o_s.OrderSkillSet, 0)
+		for _, ss := range staff.SkillSets {
+			o.StaffSkillSets = append(o.StaffSkillSets, &o_s.OrderSkillSet{
+				ID:          ss.ID,
+				Category:    ss.Category,
+				SubCategory: ss.SubCategory,
+				Description: ss.Description,
+				Status:      ss.Status,
+			})
+		}
+		o.StaffInsuranceRequirements = make([]*o_s.OrderInsuranceRequirement, 0)
+		for _, t := range staff.InsuranceRequirements {
+			o.StaffInsuranceRequirements = append(o.StaffInsuranceRequirements, &o_s.OrderInsuranceRequirement{
+				ID:          t.ID,
+				Name:        t.Name,
+				Description: t.Description,
+				Status:      t.Status,
+			})
+		}
+		o.StaffVehicleTypes = make([]*o_s.OrderVehicleType, 0)
+		for _, vt := range staff.VehicleTypes {
+			o.StaffVehicleTypes = append(o.StaffVehicleTypes, &o_s.OrderVehicleType{
+				ID:          vt.ID,
+				Name:        vt.Name,
+				Description: vt.Description,
+				Status:      vt.Status,
+			})
+		}
+		o.StaffTaxID = staff.TaxID
+
+		if err := impl.OrderStorer.UpdateByID(sessCtx, o); err != nil {
+			impl.Logger.Error("database update error",
+				slog.Any("staff_id", staff.ID),
+				slog.Any("error", err))
+			return err
+		}
+	}
+	return nil
+}
+
+// UpdateRelatedByTaskItems function will take the inputted `order` with the staff.
+func (impl *StaffControllerImpl) UpdateRelatedByTaskItems(sessCtx mongo.SessionContext, staff *a_s.Staff) error {
+	res, err := impl.TaskItemStorer.ListByStaffID(sessCtx, staff.ID)
+	if err != nil {
+		impl.Logger.Error("database list by staff id error",
+			slog.Any("staff_id", staff.ID),
+			slog.Any("error", err))
+		return err
+	}
+	for _, ti := range res.Results {
+		ti.StaffFirstName = staff.FirstName
+		ti.StaffLastName = staff.LastName
+		ti.StaffName = staff.Name
+		ti.StaffLexicalName = staff.LexicalName
+		ti.StaffGender = staff.Gender
+		ti.StaffGenderOther = staff.GenderOther
+		ti.StaffBirthdate = staff.BirthDate
+		ti.StaffEmail = staff.Email
+		ti.StaffPhone = staff.Phone
+		ti.StaffPhoneType = staff.PhoneType
+		ti.StaffPhoneExtension = staff.PhoneExtension
+		ti.StaffOtherPhone = staff.OtherPhone
+		ti.StaffOtherPhoneExtension = staff.OtherPhoneExtension
+		ti.StaffOtherPhoneType = staff.OtherPhoneType
+		ti.StaffFullAddressWithoutPostalCode = staff.FullAddressWithoutPostalCode
+		ti.StaffFullAddressURL = staff.FullAddressURL
+		ti.StaffTags = make([]*ti_s.TaskItemTag, 0)
+		for _, tag := range staff.Tags {
+			ti.StaffTags = append(ti.StaffTags, &ti_s.TaskItemTag{
+				ID:          tag.ID,
+				Text:        tag.Text,
+				Description: tag.Description,
+			})
+		}
+		ti.StaffSkillSets = make([]*ti_s.TaskItemSkillSet, 0)
+		for _, ss := range staff.SkillSets {
+			ti.StaffSkillSets = append(ti.StaffSkillSets, &ti_s.TaskItemSkillSet{
+				ID:          ss.ID,
+				Category:    ss.Category,
+				SubCategory: ss.SubCategory,
+				Description: ss.Description,
+				Status:      ss.Status,
+			})
+		}
+		ti.StaffInsuranceRequirements = make([]*ti_s.TaskItemInsuranceRequirement, 0)
+		for _, t := range staff.InsuranceRequirements {
+			ti.StaffInsuranceRequirements = append(ti.StaffInsuranceRequirements, &ti_s.TaskItemInsuranceRequirement{
+				ID:          t.ID,
+				Name:        t.Name,
+				Description: t.Description,
+				Status:      t.Status,
+			})
+		}
+		ti.StaffVehicleTypes = make([]*ti_s.TaskItemVehicleType, 0)
+		for _, vt := range staff.VehicleTypes {
+			ti.StaffVehicleTypes = append(ti.StaffVehicleTypes, &ti_s.TaskItemVehicleType{
+				ID:          vt.ID,
+				Name:        vt.Name,
+				Description: vt.Description,
+				Status:      vt.Status,
+			})
+		}
+		ti.StaffTaxID = staff.TaxID
+
+		if err := impl.TaskItemStorer.UpdateByID(sessCtx, ti); err != nil {
+			impl.Logger.Error("database update error",
+				slog.Any("staff_id", staff.ID),
+				slog.Any("error", err))
+			return err
+		}
+	}
+	return nil
+}

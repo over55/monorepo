@@ -1,0 +1,94 @@
+version: "3"
+
+tasks:
+  startnode:
+    desc: Start the backend in developer mode with single-node mongodb
+    cmds:
+      - docker-compose -p workery_backend -f dev.single-node.docker-compose.yml up
+
+  start:
+    desc: Start the backend in developer mode with a mongodb cluster
+    cmds:
+      - docker-compose -p workery_backend -f dev.cluster.docker-compose.yml up
+
+  end:
+    desc: Stop the backend in developer mode
+    cmds:
+      - docker-compose -p workery_backend -f dev.docker-compose.yml down
+
+  console:
+    desc: Open console in (developer mode) running backend
+    cmds:
+      - docker exec -it workery_backend bash
+
+  wire:
+    desc: Generate new compile-time dependency injection file, called `wire_gen.go`, which is needed by our app
+    cmds:
+      - go run github.com/google/wire/cmd/wire
+
+  clean:
+    cmds:
+      - go clean -cache
+      - go clean -modcache
+
+  # Note: Only executed by devops team.
+  dockerlogin:
+    desc: Command will log in your developer's machine with the private docker registry.
+    cmds:
+      - docker login registry.digitalocean.com
+
+  # Note: Only executed by devops team.
+  dockerlogout:
+    desc: Command will log out of the private docker registry. (Important step if you are using other private docker registries)
+    cmds:
+      - docker logout registry.digitalocean.com
+
+  # Note: Only executed by devops team.
+  dockerdeploy:
+    desc: Command will build the production container of this project and deploy to the private docker registry
+    cmds:
+      - docker build -f Dockerfile --rm -t registry.digitalocean.com/over55/workery-backend:prod --platform linux/amd64 .
+      - docker tag registry.digitalocean.com/over55/workery-backend:prod registry.digitalocean.com/over55/workery-backend:prod
+      - docker push registry.digitalocean.com/over55/workery-backend:prod
+
+  vendor:
+    desc: Save all the libraries into our code repository
+    cmds:
+      - go mod download
+      - go mod vendor
+
+  genkey:
+    desc: Generate a unique key.
+    cmds:
+      - openssl rand -hex 64.
+
+  upgradelib:
+    desc: Update all the golang libraries (https://stackoverflow.com/a/67202539)
+    cmds:
+      - go get -u ./...
+
+  fmt:
+    desc: Format the source code to be more inlined with Go standard style (https://pkg.go.dev/cmd/gofmt)
+    cmds:
+      - gofmt -s -w .
+
+  lint:
+    cmds:
+      - golangci-lint run --verbose
+
+  test:
+    cmds:
+      - go test ./...
+
+  # The following task will perform a vulnerability scan on our golang project and display any issues found.
+  scan:
+    cmds:
+      - govulncheck ./...
+      - trivy filesystem .
+      - trivy image over55/workery-backend:prod
+      - trivy repo https://github.com/over55/monorepo/cloud/workery-backend.git
+
+  gitundo:
+    desc: How can I undo the last commit? Undoing the last commit by running this task.
+    cmds:
+      - git reset --soft HEAD~1

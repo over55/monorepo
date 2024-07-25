@@ -1,0 +1,18 @@
+# humanstxt.org/
+# The humans responsible & technology colophon
+
+# TEAM
+
+  Bartlomiej Mika -- Technical Lead -- https://mikasoftware.com
+
+# THANKS
+
+  Rodolfo Martinez
+
+# TECHNOLOGY COLOPHON
+
+  CSS3, HTML5, JavaScript
+  Bulma.css -- https://bulma.io
+  Golang -- https://go.dev
+  MongoDB -- https://www.mongodb.com
+  DigitalOcean -- https://www.digitalocean.com
