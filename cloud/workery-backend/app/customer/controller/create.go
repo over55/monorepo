@@ -579,7 +579,7 @@ func (impl *CustomerControllerImpl) createUserFromCreateCustomerRequest(sessCtx 
 		PasswordHash:            "DO BELOW...",
 		Role:                    u_s.UserRoleCustomer,
 		ReferenceID:             customerID,
-		WasEmailVerified:        true,
+		WasEmailVerified:        true, // Assume true b/c this record created by staff.
 		EmailVerificationCode:   "",
 		EmailVerificationExpiry: time.Now(),
 		Phone:                   req.Phone,

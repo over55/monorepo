@@ -6,13 +6,14 @@ import (
 	"strings"
 	"time"
 
+	"github.com/bartmika/arraydiff"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
-	"github.com/bartmika/arraydiff"
 	c_s "github.com/over55/monorepo/cloud/workery-backend/app/customer/datastore"
 	o_s "github.com/over55/monorepo/cloud/workery-backend/app/order/datastore"
 	ti_s "github.com/over55/monorepo/cloud/workery-backend/app/taskitem/datastore"
+	u_s "github.com/over55/monorepo/cloud/workery-backend/app/user/datastore"
 	"github.com/over55/monorepo/cloud/workery-backend/utils/httperror"
 )
 
@@ -24,13 +25,83 @@ func (impl *CustomerControllerImpl) UpdateRelatedByUser(sessCtx mongo.SessionCon
 
 	u, err := impl.UserStorer.GetByID(sessCtx, cust.UserID)
 	if err != nil {
-		impl.Logger.Error("get user by email error", slog.Any("error", err))
+		impl.Logger.Error("get user by email error",
+			slog.String("customer_id", cust.ID.Hex()),
+			slog.Any("error", err))
 		return err
 	}
 
-	// If user account does not exist then skip it.
-	if u == nil {
-		return nil
+	// If user account does not exist then create it now.
+	if u == nil && cust.Email != "" {
+		u = &u_s.User{
+			ID:                      primitive.NewObjectID(),
+			TenantID:                cust.TenantID,
+			FirstName:               cust.FirstName,
+			LastName:                cust.LastName,
+			Name:                    fmt.Sprintf("%s %s", cust.FirstName, cust.LastName),
+			LexicalName:             fmt.Sprintf("%s, %s", cust.LastName, cust.FirstName),
+			OrganizationName:        cust.OrganizationName,
+			OrganizationType:        cust.OrganizationType,
+			Email:                   cust.Email,
+			PasswordHashAlgorithm:   "DO BELOW...",
+			PasswordHash:            "DO BELOW...",
+			Role:                    u_s.UserRoleCustomer,
+			ReferenceID:             cust.ID,
+			WasEmailVerified:        true, // Assume true b/c inputted by staff.
+			EmailVerificationCode:   "",
+			EmailVerificationExpiry: time.Now(),
+			Phone:                   cust.Phone,
+			Country:                 cust.Country,
+			Region:                  cust.Region,
+			City:                    cust.City,
+			AgreeTOS:                true,
+			AgreePromotionsEmail:    true,
+			CreatedAt:               time.Now(),
+			CreatedByUserID:         cust.CreatedByUserID,
+			CreatedByUserName:       cust.CreatedByUserName,
+			CreatedFromIPAddress:    cust.CreatedFromIPAddress,
+			ModifiedAt:              time.Now(),
+			ModifiedByUserID:        cust.ModifiedByUserID,
+			ModifiedByUserName:      cust.ModifiedByUserName,
+			ModifiedFromIPAddress:   cust.CreatedFromIPAddress,
+			Status:                  u_s.UserStatusActive,
+			Comments:                make([]*u_s.UserComment, 0),
+			Salt:                    "",
+			JoinedTime:              cust.CreatedAt,
+			PrAccessCode:            "",
+			PrExpiryTime:            time.Now(),
+			PublicID:                0, // Do not worry about setting this as this value is set inside `app/user/datastore/create.go` file.
+			Timezone:                "American/Toronto",
+			OTPEnabled:              impl.Config.AppServer.Enable2FAOnRegistration,
+			OTPVerified:             false,
+			OTPValidated:            false,
+			OTPSecret:               "",
+			OTPAuthURL:              "",
+		}
+
+		temporaryPassword := primitive.NewObjectID().Hex()
+
+		// Hash our password with the temporary password and attach to account.
+		temporaryPasswordHash, err := impl.Password.GenerateHashFromPassword(temporaryPassword)
+		if err != nil {
+			impl.Logger.Error("hashing error",
+				slog.String("customer_id", cust.ID.Hex()),
+				slog.Any("error", err))
+			return err
+		}
+		u.PasswordHash = temporaryPasswordHash
+		u.PasswordHashAlgorithm = impl.Password.AlgorithmName()
+
+		if err := impl.UserStorer.Create(sessCtx, u); err != nil {
+			impl.Logger.Error("database update error",
+				slog.String("customer_id", cust.ID.Hex()),
+				slog.Any("error", err))
+			return err
+		}
+
+		impl.Logger.Debug("created user for customer",
+			slog.String("user_id", u.ID.Hex()),
+			slog.String("customer_id", cust.ID.Hex())) // For debugging purposes only.
 	}
 
 	// u.Type = cust.Type
@@ -56,6 +127,23 @@ func (impl *CustomerControllerImpl) UpdateRelatedByUser(sessCtx mongo.SessionCon
 	u.ModifiedByUserID = cust.ModifiedByUserID
 	u.ModifiedByUserName = cust.ModifiedByUserName
 	u.ModifiedFromIPAddress = cust.ModifiedFromIPAddress
+	u.Role = u_s.UserRoleCustomer
+
+	// If staff inputted email then auto-assume the email was already verified.
+	if u.Email != "" {
+		u.WasEmailVerified = true
+	}
+
+	if err := impl.UserStorer.UpdateByID(sessCtx, u); err != nil {
+		impl.Logger.Error("database update error",
+			slog.String("customer_id", cust.ID.Hex()),
+			slog.Any("error", err))
+		return err
+	}
+
+	impl.Logger.Debug("updated user for customer",
+		slog.String("user_id", u.ID.Hex()),
+		slog.String("customer_id", cust.ID.Hex())) // For debugging purposes only.
 
 	return nil
 }
@@ -83,12 +171,15 @@ func (impl *CustomerControllerImpl) UpdateRelatedByTags(sessCtx mongo.SessionCon
 	for _, addID := range addIDs {
 		// For debugging purposes only.
 		impl.Logger.Debug("adding tag to customer",
+			slog.String("customer_id", cust.ID.Hex()),
 			slog.Any("TagID", addID))
 
 		// Step 1: Lookup the tag.
 		ss, err := impl.TagStorer.GetByID(sessCtx, addID)
 		if err != nil {
-			impl.Logger.Error("database get by id error", slog.Any("error", err))
+			impl.Logger.Error("database get by id error",
+				slog.String("customer_id", cust.ID.Hex()),
+				slog.Any("error", err))
 			return err
 		}
 		if ss == nil {
@@ -106,6 +197,7 @@ func (impl *CustomerControllerImpl) UpdateRelatedByTags(sessCtx mongo.SessionCon
 
 		// For debugging purposes only.
 		impl.Logger.Debug("added tag for customer",
+			slog.String("customer_id", cust.ID.Hex()),
 			slog.Any("TagID", addID))
 	}
 
@@ -133,11 +225,14 @@ func (impl *CustomerControllerImpl) UpdateRelatedByTags(sessCtx mongo.SessionCon
 	////
 
 	if err := impl.CustomerStorer.UpdateByID(sessCtx, cust); err != nil {
-		impl.Logger.Error("database update error", slog.Any("error", err))
+		impl.Logger.Error("database update error",
+			slog.String("customer_id", cust.ID.Hex()),
+			slog.Any("error", err))
 		return err
 	}
 
 	impl.Logger.Debug("updated tag for customer",
+		slog.String("customer_id", cust.ID.Hex()),
 		slog.Any("Tags", cust.Tags)) // For debugging purposes only.
 
 	return nil
