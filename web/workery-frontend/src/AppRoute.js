@@ -109,6 +109,11 @@ import AssociateClientDetailOrderList from "./Components/Associate/Client/Detail
 // Customer Dashboard
 import CustomerDashboard from "./Components/Customer/Dashboard/View";
 
+// Customer Order
+import CustomerOrderDetailFull from "./Components/Customer/Order/Detail/Full";
+import CustomerOrderDetailLite from "./Components/Customer/Order/Detail/Lite";
+import CustomerOrderList from "./Components/Customer/Order/List/View";
+
 // Job Seeker Dashboard
 import JobSeekerDashboard from "./Components/JobSeeker/Dashboard/View";
 
@@ -334,6 +339,21 @@ function AppRoute() {
                     element={<CustomerDashboard />}
                   />
                   <Route exact path="/c/help" element={<DashboardHelp />} />
+                  <Route
+                    exact
+                    path="/c/orders"
+                    element={<CustomerOrderList />}
+                  />
+                  <Route
+                    exact
+                    path="/c/order/:oid/full"
+                    element={<CustomerOrderDetailFull />}
+                  />
+                  <Route
+                    exact
+                    path="/c/order/:oid"
+                    element={<CustomerOrderDetailLite />}
+                  />
 
                   {/*
                       #########

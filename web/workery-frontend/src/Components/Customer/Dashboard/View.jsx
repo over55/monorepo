@@ -112,7 +112,7 @@ function CustomerDashboard() {
                     </div>
                     <footer className="card-footer">
                       <Link
-                        to={`/501`}
+                        to={`/c/orders`}
                         className="card-footer-item button is-primary is-large"
                       >
                         View&nbsp;

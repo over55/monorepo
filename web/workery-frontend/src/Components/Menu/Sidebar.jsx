@@ -411,7 +411,7 @@ export default (props) => {
               <li>
                 <Link
                   onClick={onLinkClickCloseHamburgerMenuIfMobile}
-                  to="/501"
+                  to="/c/orders"
                   className={`has-text-grey-light ${location.pathname.includes("order") && "is-active"}`}
                 >
                   <FontAwesomeIcon className="fas" icon={faWrench} />
