@@ -202,7 +202,7 @@ function CustomerOrderList() {
         s +
         ", t=" +
         t,
-        ", associate_id=" +
+        ", customer_id=" +
         aid
     ); // For debugging purposes only.
 
@@ -234,7 +234,7 @@ function CustomerOrderList() {
       params.set("type", t);
     }
     if (aid !== undefined && aid !== null && aid !== "") {
-      params.set("associate_id", aid);
+      params.set("customer_id", aid);
     }
 
     getOrderListAPI(

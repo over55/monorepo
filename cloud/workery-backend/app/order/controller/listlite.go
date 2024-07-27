@@ -34,6 +34,11 @@ func (c *OrderControllerImpl) LiteListAndCountByFilter(ctx context.Context, f *o
 		f.AssociateID = associateID
 		c.Logger.Debug("applying filter based on associate role",
 			slog.Any("associate_id", associateID))
+	case user_s.UserRoleCustomer:
+		customerID, _ := ctx.Value(constants.SessionUserReferenceID).(primitive.ObjectID)
+		f.CustomerID = customerID
+		c.Logger.Debug("applying filter based on associate role",
+			slog.Any("customer_id", customerID))
 	default:
 		c.Logger.Warn("user does not permission error", slog.Any("role", userRoleID))
 		return nil, httperror.NewForForbiddenWithSingleField("forbidden", "you do not have the correct role")

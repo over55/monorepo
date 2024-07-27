@@ -67,6 +67,12 @@ func (impl *AssociateControllerImpl) UpdateRelatedByUser(sessCtx mongo.SessionCo
 	u.ModifiedByUserID = a.ModifiedByUserID
 	u.ModifiedByUserName = a.ModifiedByUserName
 	u.ModifiedFromIPAddress = a.ModifiedFromIPAddress
+	u.ReferenceID = a.ID
+
+	// If staff inputted email then auto-assume the email was already verified.
+	if u.Email != "" {
+		u.WasEmailVerified = true
+	}
 
 	if err := impl.UserStorer.UpdateByID(sessCtx, u); err != nil {
 		impl.Logger.Error("database update error", slog.Any("error", err))

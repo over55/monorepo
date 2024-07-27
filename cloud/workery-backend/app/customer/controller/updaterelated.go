@@ -102,6 +102,19 @@ func (impl *CustomerControllerImpl) UpdateRelatedByUser(sessCtx mongo.SessionCon
 		impl.Logger.Debug("created user for customer",
 			slog.String("user_id", u.ID.Hex()),
 			slog.String("customer_id", cust.ID.Hex())) // For debugging purposes only.
+
+		cust.UserID = u.ID
+		if err := impl.CustomerStorer.UpdateByID(sessCtx, cust); err != nil {
+			impl.Logger.Error("database update error",
+				slog.String("customer_id", cust.ID.Hex()),
+				slog.Any("error", err))
+			return err
+		}
+
+		impl.Logger.Debug("updated customer with newely created user",
+			slog.String("user_id", u.ID.Hex()),
+			slog.String("user_reference_id", u.ReferenceID.Hex()),
+			slog.String("customer_id", cust.ID.Hex())) // For debugging purposes only.
 	}
 
 	// u.Type = cust.Type
@@ -128,6 +141,7 @@ func (impl *CustomerControllerImpl) UpdateRelatedByUser(sessCtx mongo.SessionCon
 	u.ModifiedByUserName = cust.ModifiedByUserName
 	u.ModifiedFromIPAddress = cust.ModifiedFromIPAddress
 	u.Role = u_s.UserRoleCustomer
+	u.ReferenceID = cust.ID
 
 	// If staff inputted email then auto-assume the email was already verified.
 	if u.Email != "" {
@@ -143,6 +157,7 @@ func (impl *CustomerControllerImpl) UpdateRelatedByUser(sessCtx mongo.SessionCon
 
 	impl.Logger.Debug("updated user for customer",
 		slog.String("user_id", u.ID.Hex()),
+		slog.String("user_reference_id", u.ReferenceID.Hex()),
 		slog.String("customer_id", cust.ID.Hex())) // For debugging purposes only.
 
 	return nil
