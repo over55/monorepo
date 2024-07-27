@@ -63,15 +63,6 @@ function CustomerOrderListGrid(props) {
                   {/* BODY */}
                   <div className="card-content">
                     <div className="content">
-                      <strong>Client:</strong>
-                      <br />
-                      <URLTextFormatter
-                        urlKey={datum.customerName}
-                        urlValue={`/c/client/${datum.customerId}`}
-                        type={`external`}
-                      />
-                      <br />
-                      <br />
                       <strong>Assigned:</strong>
                       <br />
                       <DateTextFormatter value={datum.assignmentDate} />
