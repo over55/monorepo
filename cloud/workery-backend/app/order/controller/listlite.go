@@ -23,7 +23,7 @@ func (c *OrderControllerImpl) LiteListAndCountByFilter(ctx context.Context, f *o
 
 	// Handle permissions based on roles.
 	// (1) O55 staff gets full access
-	// (2) Associates are only allowed to view the customers that the
+	// (2) Associates are only allowed to view the orders that the
 	//     associate has done business with.
 	// (3) Deny all other user role types.
 	switch userRoleID {
@@ -37,7 +37,7 @@ func (c *OrderControllerImpl) LiteListAndCountByFilter(ctx context.Context, f *o
 	case user_s.UserRoleCustomer:
 		customerID, _ := ctx.Value(constants.SessionUserReferenceID).(primitive.ObjectID)
 		f.CustomerID = customerID
-		c.Logger.Debug("applying filter based on associate role",
+		c.Logger.Debug("applying filter based on customer role",
 			slog.Any("customer_id", customerID))
 	default:
 		c.Logger.Warn("user does not permission error", slog.Any("role", userRoleID))

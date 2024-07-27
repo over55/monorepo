@@ -34,7 +34,7 @@ func (impl *OrderControllerImpl) GetByID(ctx context.Context, id primitive.Objec
 
 	// Handle permissions based on roles.
 	// (1) O55 staff gets full access
-	// (2) Associates are only allowed to view the customers that the
+	// (2) Associates are only allowed to view the orders that the
 	//     associate has done business with.
 	// (3) Deny all other user role types.
 	switch userRoleID {
@@ -46,11 +46,19 @@ func (impl *OrderControllerImpl) GetByID(ctx context.Context, id primitive.Objec
 	case user_s.UserRoleAssociate:
 		associateID, _ := ctx.Value(constants.SessionUserReferenceID).(primitive.ObjectID)
 		if m.AssociateID != associateID {
-			impl.Logger.Warn("user does not permission to view customer detail error")
-			return nil, httperror.NewForForbiddenWithSingleField("forbidden", "you do not have permission to view this customer")
+			impl.Logger.Warn("user does not permission to view order detail error")
+			return nil, httperror.NewForForbiddenWithSingleField("forbidden", "you do not have permission to view this order")
 		}
 		impl.Logger.Debug("applying filter based on associate role",
 			slog.Any("associate_id", associateID))
+	case user_s.UserRoleCustomer:
+		customerID, _ := ctx.Value(constants.SessionUserReferenceID).(primitive.ObjectID)
+		if m.CustomerID != customerID {
+			impl.Logger.Warn("user does not permission to view order detail error")
+			return nil, httperror.NewForForbiddenWithSingleField("forbidden", "you do not have permission to view this order")
+		}
+		impl.Logger.Debug("applying filter based on customer role",
+			slog.Any("customer_id", customerID))
 	default:
 		impl.Logger.Warn("user does not permission error", slog.Any("role", userRoleID))
 		return nil, httperror.NewForForbiddenWithSingleField("forbidden", "you do not have the correct role")
@@ -89,7 +97,7 @@ func (impl *OrderControllerImpl) GetByWJID(ctx context.Context, wjid uint64) (*o
 
 	// Handle permissions based on roles.
 	// (1) O55 staff gets full access
-	// (2) Associates are only allowed to view the customers that the
+	// (2) Associates are only allowed to view the orders that the
 	//     associate has done business with.
 	// (3) Deny all other user role types.
 	switch userRoleID {
@@ -101,11 +109,19 @@ func (impl *OrderControllerImpl) GetByWJID(ctx context.Context, wjid uint64) (*o
 	case user_s.UserRoleAssociate:
 		associateID, _ := ctx.Value(constants.SessionUserReferenceID).(primitive.ObjectID)
 		if m.AssociateID != associateID {
-			impl.Logger.Warn("user does not permission to view customer detail error")
-			return nil, httperror.NewForForbiddenWithSingleField("forbidden", "you do not have permission to view this customer")
+			impl.Logger.Warn("user does not permission to view order detail error")
+			return nil, httperror.NewForForbiddenWithSingleField("forbidden", "you do not have permission to view this order")
 		}
 		impl.Logger.Debug("applying filter based on associate role",
 			slog.Any("associate_id", associateID))
+	case user_s.UserRoleCustomer:
+		customerID, _ := ctx.Value(constants.SessionUserReferenceID).(primitive.ObjectID)
+		if m.CustomerID != customerID {
+			impl.Logger.Warn("user does not permission to view order detail error")
+			return nil, httperror.NewForForbiddenWithSingleField("forbidden", "you do not have permission to view this order")
+		}
+		impl.Logger.Debug("applying filter based on customer role",
+			slog.Any("customer_id", customerID))
 	default:
 		impl.Logger.Warn("user does not permission error", slog.Any("role", userRoleID))
 		return nil, httperror.NewForForbiddenWithSingleField("forbidden", "you do not have the correct role")
