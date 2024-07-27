@@ -114,6 +114,18 @@ import CustomerOrderDetailFull from "./Components/Customer/Order/Detail/Full";
 import CustomerOrderDetailLite from "./Components/Customer/Order/Detail/Lite";
 import CustomerOrderList from "./Components/Customer/Order/List/View";
 
+// Customer Financial
+// import CustomerFinancialMoreCloneOperation from "./Components/Customer/Financial/Detail/More/Clone/Clone";
+// import CustomerFinancialMore from "./Components/Customer/Financial/Detail/More/More";
+import CustomerFinancialGenerateInvoiceStep4 from "./Components/Customer/Financial/Detail/Invoice/Generate/Step4";
+import CustomerFinancialGenerateInvoiceStep3 from "./Components/Customer/Financial/Detail/Invoice/Generate/Step3";
+import CustomerFinancialGenerateInvoiceStep2 from "./Components/Customer/Financial/Detail/Invoice/Generate/Step2";
+import CustomerFinancialGenerateInvoiceStep1 from "./Components/Customer/Financial/Detail/Invoice/Generate/Step1";
+// import CustomerFinancialUpdate from "./Components/Customer/Financial/Update/View";
+import CustomerFinancialInvoiceDetail from "./Components/Customer/Financial/Detail/Invoice/Detail";
+import CustomerFinancialDetailFull from "./Components/Customer/Financial/Detail/Full";
+import CustomerFinancialList from "./Components/Customer/Financial/List/List";
+
 // Job Seeker Dashboard
 import JobSeekerDashboard from "./Components/JobSeeker/Dashboard/View";
 
@@ -353,6 +365,41 @@ function AppRoute() {
                     exact
                     path="/c/order/:oid"
                     element={<CustomerOrderDetailLite />}
+                  />
+                  <Route
+                    exact
+                    path="/c/financials"
+                    element={<CustomerFinancialList />}
+                  />
+                  <Route
+                    exact
+                    path="/c/financial/:oid"
+                    element={<CustomerFinancialDetailFull />}
+                  />
+                  <Route
+                    exact
+                    path="/c/financial/:oid/invoice"
+                    element={<CustomerFinancialInvoiceDetail />}
+                  />
+                  <Route
+                    exact
+                    path="/c/financial/:oid/invoice/generate/step-4"
+                    element={<CustomerFinancialGenerateInvoiceStep4 />}
+                  />
+                  <Route
+                    exact
+                    path="/c/financial/:oid/invoice/generate/step-3"
+                    element={<CustomerFinancialGenerateInvoiceStep3 />}
+                  />
+                  <Route
+                    exact
+                    path="/c/financial/:oid/invoice/generate/step-2"
+                    element={<CustomerFinancialGenerateInvoiceStep2 />}
+                  />
+                  <Route
+                    exact
+                    path="/c/financial/:oid/invoice/generate/step-1"
+                    element={<CustomerFinancialGenerateInvoiceStep1 />}
                   />
 
                   {/*
