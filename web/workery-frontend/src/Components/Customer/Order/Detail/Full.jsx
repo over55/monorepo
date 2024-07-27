@@ -235,62 +235,7 @@ function CustomerOrderDetailFull() {
                   </p>
                 </div>
                 <div className="column is-three-quarters has-text-right">
-                  {/*
-                {order && order.associatePublicId !== 0 &&
-                    <>
-                        <Link
-                          to={`/c/order/${oid}/more/unassign`}
-                          className="button is-dark is-fullwidth-mobile"
-                          disabled={order.status === 2}
-                        >
-                          <FontAwesomeIcon className="fas" icon={faUserSlash} />
-                          &nbsp;Unassign
-                        </Link>
-                        &nbsp;
-                    </>
-                }
-                <Link
-                  to={`/c/order/${oid}/more/close`}
-                  className="button is-danger is-fullwidth-mobile"
-                  disabled={order.status === 2}
-                >
-                  <FontAwesomeIcon className="fas" icon={faTimes} />
-                  &nbsp;Close
-                </Link>
-                &nbsp;
-                  <Link
-                    to={`/c/order/${oid}/edit`}
-                    className="button is-warning is-fullwidth-mobile"
-                    type="button"
-                    disabled={order.status === 2}
-                  >
-                    <FontAwesomeIcon className="mdi" icon={faPencil} />
-                    &nbsp;Edit
-                  </Link>
-                  {(order.latestPendingTaskId && order.latestPendingTaskId !== "000000000000000000000000") && <>
-                      &nbsp;
-                      <Link
-                        to={TaskItemUpdateURLPathFormatter(
-                          order.latestPendingTaskId,
-                          order.latestPendingTaskType,
-                        )}
-                        className="button  is-primary is-fullwidth-mobile"
-                        disabled={order.status === 2}
-                      >
-                       Go to Task&nbsp;<FontAwesomeIcon className="fas" icon={faChevronRight} />
-                      </Link>
-                  </>}
-                  {((order.status === ORDER_STATUS_COMPLETED_BUT_UNPAID || order.status === ORDER_STATUS_COMPLETED_AND_PAID) && (currentUser.role === STAFF_TYPE_MANAGEMENT || currentUser.role === STAFF_TYPE_EXECUTIVE) ) && <>
-                      &nbsp;
-                      <Link
-                        to={`/c/financial/${oid}`}
-                        className="button is-link is-fullwidth-mobile"
-                        disabled={order.status === 2}
-                      >
-                        Go to Financials&nbsp;<FontAwesomeIcon className="fas" icon={faChevronRight} />
-                      </Link>
-                  </>}
-                  */}
+                    {/* You can add buttons here ... */}
                 </div>
               </div>
             )}
@@ -365,55 +310,6 @@ function CustomerOrderDetailFull() {
                             Job #
                           </th>
                           <td>{order.wjid}</td>
-                        </tr>
-                        <tr>
-                          <th
-                            className="has-background-light"
-                            style={{ width: "30%" }}
-                          >
-                            Client
-                          </th>
-                          <td>
-                            <URLTextFormatter
-                              urlKey={order.customerName}
-                              urlValue={`/c/client/${order.customerId}`}
-                              type={`external`}
-                            />
-                          </td>
-                        </tr>
-                        <tr>
-                          <th
-                            className="has-background-light"
-                            style={{ width: "30%" }}
-                          >
-                            Client Phone Number (
-                            {CLIENT_PHONE_TYPE_OF_MAP[order.customerPhoneType]}
-                            ):
-                          </th>
-                          <td>
-                            <PhoneTextFormatter value={order.customerPhone} />
-                            {order.customerPhoneType ===
-                              CLIENT_PHONE_TYPE_WORK && (
-                              <>&nbsp;{order.customerPhoneExtension}</>
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th
-                            className="has-background-light"
-                            style={{ width: "30%" }}
-                          >
-                            Client Address
-                          </th>
-                          <td>
-                            <URLTextFormatter
-                              urlKey={
-                                order.customerFullAddressWithoutPostalCode
-                              }
-                              urlValue={order.customerFullAddressUrl}
-                              type={`external`}
-                            />
-                          </td>
                         </tr>
                         <tr>
                           <th
@@ -591,6 +487,7 @@ function CustomerOrderDetailFull() {
                             <TagsTextFormatter tags={order.tags} />
                           </td>
                         </tr>
+                        {/*
                         <tr>
                           <th
                             className="has-background-light"
@@ -617,6 +514,7 @@ function CustomerOrderDetailFull() {
                             <td>-</td>
                           )}
                         </tr>
+                        */}
                       </tbody>
                     </table>
 
@@ -681,100 +579,6 @@ function CustomerOrderDetailFull() {
                                         </tbody>
                                     </table>
                                     */}
-
-                    <table className="is-fullwidth table">
-                      <thead>
-                        <tr className="has-background-black">
-                          <th className="has-text-white" colSpan="2">
-                            System
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <th
-                            className="has-background-light"
-                            style={{ width: "30%" }}
-                          >
-                            Created at:
-                          </th>
-                          <td>
-                            <DateTimeTextFormatter value={order.createdAt} />
-                          </td>
-                        </tr>
-                        <tr>
-                          <th
-                            className="has-background-light"
-                            style={{ width: "30%" }}
-                          >
-                            Created by:
-                          </th>
-                          <td>
-                            <URLTextFormatter
-                              urlKey={order.createdByUserName}
-                              urlValue={`/c/client/${order.createdByUserId}`}
-                              type={`external`}
-                            />
-                          </td>
-                        </tr>
-                        <tr>
-                          <th
-                            className="has-background-light"
-                            style={{ width: "30%" }}
-                          >
-                            Created from:
-                          </th>
-                          <td>
-                            <URLTextFormatter
-                              urlKey={order.createdFromIpAddress}
-                              urlValue={`https://whatismyipaddress.com/ip/${order.createdFromIpAddress}`}
-                              type={`external`}
-                            />
-                          </td>
-                        </tr>
-                        <tr>
-                          <th
-                            className="has-background-light"
-                            style={{ width: "30%" }}
-                          >
-                            Modified at:
-                          </th>
-                          <td>
-                            <DateTimeTextFormatter value={order.modifiedAt} />
-                          </td>
-                        </tr>
-                        <tr>
-                          <th
-                            className="has-background-light"
-                            style={{ width: "30%" }}
-                          >
-                            Modified by:
-                          </th>
-                          <td>
-                            <URLTextFormatter
-                              urlKey={order.modifiedByUserName}
-                              urlValue={`/c/client/${order.modifiedByUserId}`}
-                              type={`external`}
-                            />
-                          </td>
-                        </tr>
-                        <tr>
-                          <th
-                            className="has-background-light"
-                            style={{ width: "30%" }}
-                          >
-                            Modified from:
-                          </th>
-                          <td>
-                            <URLTextFormatter
-                              urlKey={order.modifiedFromIpAddress}
-                              urlValue={`https://whatismyipaddress.com/ip/${order.modifiedFromIpAddress}`}
-                              type={`external`}
-                            />
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
 
                     <div className="columns pt-5">
                       <div className="column is-one-quarter">

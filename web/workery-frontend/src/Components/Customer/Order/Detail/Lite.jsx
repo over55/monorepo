@@ -233,62 +233,7 @@ function CustomerOrderDetailLite() {
                   </p>
                 </div>
                 <div className="column is-three-quarters has-text-right">
-                  {/*
-                {order && order.associatePublicId !== 0 &&
-                    <>
-                        <Link
-                          to={`/c/order/${oid}/more/unassign`}
-                          className="button is-dark is-fullwidth-mobile"
-                          disabled={order.status === 2}
-                        >
-                          <FontAwesomeIcon className="fas" icon={faUserSlash} />
-                          &nbsp;Unassign
-                        </Link>
-                        &nbsp;
-                    </>
-                }
-                  <Link
-                    to={`/c/order/${oid}/more/close`}
-                    className="button is-danger is-fullwidth-mobile"
-                    disabled={order.status === 2}
-                  >
-                    <FontAwesomeIcon className="fas" icon={faTimes} />
-                    &nbsp;Close
-                  </Link>
-                  &nbsp;
-                  <Link
-                    to={`/c/order/${oid}/edit`}
-                    className="button is-warning is-fullwidth-mobile"
-                    type="button"
-                    disabled={order.status === 2}
-                  >
-                    <FontAwesomeIcon className="mdi" icon={faPencil} />
-                    &nbsp;Edit
-                  </Link>
-                  {(order.latestPendingTaskId && order.latestPendingTaskId !== "000000000000000000000000") && <>
-                      &nbsp;
-                      <Link
-                        to={TaskItemUpdateURLPathFormatter(
-                          order.latestPendingTaskId,
-                          order.latestPendingTaskType,
-                        )}
-                        className="button  is-primary is-fullwidth-mobile"
-                        disabled={order.status === 2}
-                      >
-                       Go to Task&nbsp;<FontAwesomeIcon className="fas" icon={faChevronRight} />
-                      </Link>
-                  </>}
-                  {((order.status === ORDER_STATUS_COMPLETED_BUT_UNPAID || order.status === ORDER_STATUS_COMPLETED_AND_PAID) && (currentUser.role === STAFF_TYPE_MANAGEMENT || currentUser.role === STAFF_TYPE_EXECUTIVE) ) && <>
-                      &nbsp;
-                      <Link
-                        to={`/c/financial/${oid}`}
-                        className="button is-link is-fullwidth-mobile"
-                        disabled={order.status === 2}
-                      >
-                        Go to Financials&nbsp;<FontAwesomeIcon className="fas" icon={faChevronRight} />
-                      </Link>
-                  </>}
-                  */}
+                    {/* You can add buttons here ... */}
                 </div>
               </div>
             )}
@@ -356,59 +301,20 @@ function CustomerOrderDetailLite() {
                       </thead>
                       <tbody>
                         <tr>
-                          <th
-                            className="has-background-light"
-                            style={{ width: "30%" }}
-                          >
-                            Client:
-                          </th>
-                          <td>
-                            <URLTextFormatter
-                              urlKey={order.customerName}
-                              urlValue={`/c/client/${order.customerId}`}
-                              type={`external`}
-                            />
-                          </td>
-                        </tr>
-                        <tr>
-                          <th
-                            className="has-background-light"
-                            style={{ width: "30%" }}
-                          >
-                            Client Phone Number (
-                            {CLIENT_PHONE_TYPE_OF_MAP[order.customerPhoneType]}
-                            ):
-                          </th>
-                          <td>
-                            <PhoneTextFormatter value={order.customerPhone} />
-                            {order.customerPhoneType ===
-                              CLIENT_PHONE_TYPE_WORK && (
-                              <>&nbsp;{order.customerPhoneExtension}</>
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th
-                            className="has-background-light"
-                            style={{ width: "30%" }}
-                          >
-                            Client Address
-                          </th>
-                          <td>
-                            <URLTextFormatter
-                              urlKey={
-                                order.customerFullAddressWithoutPostalCode
-                              }
-                              urlValue={order.customerFullAddressUrl}
-                              type={`external`}
-                            />
-                          </td>
+                            <th
+                                className="has-background-light"
+                                style={{ width: "30%" }}
+                            >
+                                Job #
+                                </th>
+                            <td>{order.wjid}</td>
                         </tr>
                         {order.associateId !== undefined &&
                           order.associateId !== null &&
                           order.associateId !== "" &&
                           order.associateId !== "000000000000000000000000" && (
                             <>
+
                               <tr>
                                 <th
                                   className="has-background-light"
@@ -504,6 +410,7 @@ function CustomerOrderDetailLite() {
                             <TagsTextFormatter tags={order.tags} />
                           </td>
                         </tr>
+                        {/*
                         <tr>
                           <th
                             className="has-background-light"
@@ -534,6 +441,7 @@ function CustomerOrderDetailLite() {
                             <td>-</td>
                           )}
                         </tr>
+                        */}
                       </tbody>
                     </table>
 
