@@ -39,21 +39,6 @@ function CustomerOrderListDesktop(props) {
               <th></th>
               <th>Job</th>
               <th>
-                Client
-                {sortByValue === "customer_lexical_name,ASC" && (
-                  <>
-                    &nbsp;
-                    <FontAwesomeIcon className="fas" icon={faCaretUp} />
-                  </>
-                )}
-                {sortByValue === "customer_lexical_name,DESC" && (
-                  <>
-                    &nbsp;
-                    <FontAwesomeIcon className="fas" icon={faCaretDown} />
-                  </>
-                )}
-              </th>
-              <th>
                 Assigned
                 {sortByValue === "assignment_date,ASC" && (
                   <>
@@ -107,13 +92,6 @@ function CustomerOrderListDesktop(props) {
                       <OrderTypeOfIconFormatter type={datum.type} />
                     </td>
                     <td data-label="Job #">{datum.wjid}</td>
-                    <td data-label="Client">
-                      <URLTextFormatter
-                        urlKey={datum.customerName}
-                        urlValue={`/c/client/${datum.customerId}`}
-                        type={`external`}
-                      />
-                    </td>
                     <td data-label="Assigned">
                       <DateTextFormatter value={datum.assignmentDate} />
                     </td>

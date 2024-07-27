@@ -59,14 +59,6 @@ function CustomerOrderListMobile(props) {
               <strong>Job #:</strong>&nbsp;{datum.wjid}
               <br />
               <br />
-              <strong>Client:</strong>&nbsp;
-              <URLTextFormatter
-                urlKey={datum.customerName}
-                urlValue={`/c/client/${datum.customerId}`}
-                type={`external`}
-              />
-              <br />
-              <br />
               <strong>Assigned:</strong>&nbsp;
               <DateTextFormatter value={datum.assignmentDate} />
               <br />
