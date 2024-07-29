@@ -445,7 +445,7 @@ export default (props) => {
               <li>
                 <Link
                   onClick={onLinkClickCloseHamburgerMenuIfMobile}
-                  to="/501"
+                  to="/account"
                   className={`has-text-grey-light ${location.pathname.includes("account") && "is-active"}`}
                 >
                   <FontAwesomeIcon className="fas" icon={faUser} />
@@ -556,7 +556,7 @@ export default (props) => {
               <li>
                 <Link
                   onClick={onLinkClickCloseHamburgerMenuIfMobile}
-                  to="/501"
+                  to="/account"
                   className={`has-text-grey-light ${location.pathname.includes("account") && "is-active"}`}
                 >
                   <FontAwesomeIcon className="fas" icon={faUser} />
@@ -676,7 +676,7 @@ export default (props) => {
             <li>
               <Link
                 onClick={onLinkClickCloseHamburgerMenuIfMobile}
-                to="/501"
+                to="/account"
                 className={`has-text-grey-light ${location.pathname.includes("account") && "is-active"}`}
               >
                 <FontAwesomeIcon className="fas" icon={faUser} />
