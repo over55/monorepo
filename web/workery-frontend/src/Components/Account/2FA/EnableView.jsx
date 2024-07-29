@@ -69,6 +69,7 @@ import {
   MANAGEMENT_ROLE_ID,
   FRONTLINE_ROLE_ID,
   ASSOCIATE_ROLE_ID,
+  ASSOCIATE_JOB_SEEKER_ROLE_ID,
   CUSTOMER_ROLE_ID,
 } from "../../../Constants/App";
 import {
@@ -242,7 +243,13 @@ function AccountEnableTwoFactorAuthentication() {
         dashboardLink = "/admin/dashboard";
         break;
       case CUSTOMER_ROLE_ID:
-        dashboardLink = "/dashboard";
+        dashboardLink = "/c/dashboard";
+        break;
+      case ASSOCIATE_ROLE_ID:
+        dashboardLink = "/a/dashboard";
+        break;
+      case ASSOCIATE_JOB_SEEKER_ROLE_ID:
+        dashboardLink = "/js/dashboard";
         break;
       default:
         dashboardLink = "/501"; // Default or error handling

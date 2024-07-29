@@ -332,7 +332,7 @@ function AssociateUpdate({
           >
             <ul>
               <li className="">
-                <Link to={`/admin/dashboard`} aria-current="page">
+                <Link to={`/a/dashboard`} aria-current="page">
                   <FontAwesomeIcon className="fas" icon={faGauge} />
                   &nbsp;Dashboard
                 </Link>
