@@ -24,11 +24,12 @@ import PageLoadingContent from "../../Reusable/PageLoadingContent";
 import { topAlertMessageState, topAlertStatusState } from "../../../AppState";
 import { currentUserState } from "../../../AppState";
 import {
-  EXECUTIVE_ROLE_ID,
-  MANAGEMENT_ROLE_ID,
-  FRONTLINE_ROLE_ID,
-  ASSOCIATE_ROLE_ID,
-  CUSTOMER_ROLE_ID,
+    EXECUTIVE_ROLE_ID,
+    MANAGEMENT_ROLE_ID,
+    FRONTLINE_ROLE_ID,
+    ASSOCIATE_ROLE_ID,
+    CUSTOMER_ROLE_ID,
+    ASSOCIATE_JOB_SEEKER_ROLE_ID
 } from "../../../Constants/App";
 
 function AccountMoreLaunchpad() {
@@ -64,8 +65,14 @@ function AccountMoreLaunchpad() {
       case FRONTLINE_ROLE_ID:
         dashboardLink = "/admin/dashboard";
         break;
+      case ASSOCIATE_ROLE_ID:
+        dashboardLink = "/a/dashboard";
+        break;
+      case ASSOCIATE_JOB_SEEKER_ROLE_ID:
+        dashboardLink = "/js/dashboard";
+        break;
       case CUSTOMER_ROLE_ID:
-        dashboardLink = "/dashboard";
+        dashboardLink = "/c/dashboard";
         break;
       default:
         dashboardLink = "/501"; // Default or error handling
@@ -301,8 +308,8 @@ function AccountMoreLaunchpad() {
                     <div className="columns pt-5">
                       <div className="column is-half">
                         <Link
-                          className="button is-fullwidth-mobile"
-                          to={`/admin/clients`}
+                          className="button is-medium is-fullwidth-mobile"
+                          to={generateBreadcrumbItemLink(currentUser)}
                         >
                           <FontAwesomeIcon className="fas" icon={faArrowLeft} />
                           &nbsp;Back to Clients
