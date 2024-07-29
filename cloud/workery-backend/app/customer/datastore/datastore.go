@@ -99,10 +99,12 @@ type Customer struct {
 	ContactType                          string             `bson:"contact_type" json:"contact_type"`
 	OrganizationName                     string             `bson:"organization_name" json:"organization_name"`
 	OrganizationType                     int8               `bson:"organization_type" json:"organization_type"`
+	LimitSpecial                         string             `bson:"limit_special" json:"limit_special"`
 	PreferredLanguage                    string             `bson:"preferred_language" json:"preferred_language"`
 	PublicID                             uint64             `bson:"public_id" json:"public_id,omitempty"`
 	Comments                             []*CustomerComment `bson:"comments" json:"comments"`
 	Tags                                 []*CustomerTag     `bson:"tags" json:"tags"`
+	IdentifyAs                           []int8             `bson:"identify_as" json:"identify_as,omitempty"`
 
 	// OTPEnabled controls whether we force 2FA or not during login for this customer.
 	OTPEnabled bool `bson:"otp_enabled" json:"otp_enabled"`
@@ -176,6 +178,7 @@ type CustomerStorer interface {
 	GetByEmail(ctx context.Context, email string) (*Customer, error)
 	GetByVerificationCode(ctx context.Context, verificationCode string) (*Customer, error)
 	GetLatestByTenantID(ctx context.Context, tenantID primitive.ObjectID) (*Customer, error)
+	GetByUserID(ctx context.Context, userID primitive.ObjectID) (*Customer, error)
 	CheckIfExistsByEmail(ctx context.Context, email string) (bool, error)
 	UpdateByID(ctx context.Context, m *Customer) error
 	UpsertByID(ctx context.Context, user *Customer) error

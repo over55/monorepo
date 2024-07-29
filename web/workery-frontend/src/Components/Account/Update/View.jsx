@@ -82,6 +82,7 @@ import {
 import AccountExecutiveStaffUpdate from "./ExecutiveStaffView";
 import AccountManagementOrFrontlineStaffUpdate from "./ManagementOrFrontlineStaffView";
 import AssociateUpdate from "./AssociateView";
+import CustomerUpdate from "./CustomerView";
 
 function AccountUpdate() {
   ////
@@ -185,6 +186,14 @@ function AccountUpdate() {
       case ASSOCIATE_ROLE_ID:
         return (
           <AssociateUpdate
+            currentUser={currentUser}
+            setCurrentUser={setCurrentUser}
+          />
+        );
+        break;
+      case CUSTOMER_ROLE_ID:
+        return (
+          <CustomerUpdate
             currentUser={currentUser}
             setCurrentUser={setCurrentUser}
           />
