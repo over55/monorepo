@@ -76,10 +76,12 @@ import {
   MANAGEMENT_ROLE_ID,
   FRONTLINE_ROLE_ID,
   ASSOCIATE_ROLE_ID,
-  CUSTOMER_ROLE_ID,
+  ASSOCIATE_JOB_SEEKER_ROLE_ID,
+  CUSTOMER_ROLE_ID
 } from "../../../Constants/App";
 import AccountExecutiveStaffUpdate from "./ExecutiveStaffView";
 import AccountManagementOrFrontlineStaffUpdate from "./ManagementOrFrontlineStaffView";
+import AssociateUpdate from "./AssociateView";
 
 function AccountUpdate() {
   ////
@@ -180,7 +182,14 @@ function AccountUpdate() {
           />
         );
         break;
-
+      case ASSOCIATE_ROLE_ID:
+        return (
+          <AssociateUpdate
+            currentUser={currentUser}
+            setCurrentUser={setCurrentUser}
+          />
+        );
+        break;
       default:
         return (
           <>
