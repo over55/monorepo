@@ -51,6 +51,7 @@ import {
   FRONTLINE_ROLE_ID,
   ASSOCIATE_ROLE_ID,
   CUSTOMER_ROLE_ID,
+  ASSOCIATE_JOB_SEEKER_ROLE_ID
 } from "../../../Constants/App";
 import {
   CLIENT_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS,
@@ -60,6 +61,7 @@ import {
 } from "../../../Constants/FieldOptions";
 import AccountExecutiveStaffDetail from "./ExecutiveStaff";
 import AccountManagementOrFrontlineStaffDetail from "./ManagementOrFrontlineStaff";
+import AccountAssociateDetail from "./Associate";
 
 function AccountDetail() {
   ////
@@ -131,8 +133,14 @@ function AccountDetail() {
       case FRONTLINE_ROLE_ID:
         dashboardLink = "/admin/dashboard";
         break;
+      case ASSOCIATE_ROLE_ID:
+        dashboardLink = "/a/dashboard";
+        break;
+      case ASSOCIATE_JOB_SEEKER_ROLE_ID:
+        dashboardLink = "/js/dashboard";
+        break;
       case CUSTOMER_ROLE_ID:
-        dashboardLink = "/dashboard";
+        dashboardLink = "/c/dashboard";
         break;
       default:
         dashboardLink = "/501"; // Default or error handling
@@ -319,6 +327,12 @@ function AccountDetail() {
                           return (
                             <AccountManagementOrFrontlineStaffDetail
                               currentUser={currentUser}
+                            />
+                          );
+                        case ASSOCIATE_ROLE_ID:
+                          return (
+                            <AccountAssociateDetail
+                                currentUser={currentUser}
                             />
                           );
                         default:
