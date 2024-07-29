@@ -51,7 +51,6 @@ import {
 } from "../../../../AppState";
 import { COMMERCIAL_CUSTOMER_TYPE_OF_ID } from "../../../../Constants/App";
 import {
-  addCustomerState,
   ADD_CUSTOMER_STATE_DEFAULT,
 } from "../../../../AppState";
 import {
@@ -332,22 +331,22 @@ function AssociateFinancialDetailFull() {
                             {order.completionDate ? <DateTextFormatter value={order.completionDate} /> : <>-</>}
                           </td>
                         </tr>
-                        {order.customerId !== undefined &&
-                          order.customerId !== null &&
-                          order.customerId !== "" &&
-                          order.customerId !== "000000000000000000000000" && (
+                        {order.associateId !== undefined &&
+                          order.associateId !== null &&
+                          order.associateId !== "" &&
+                          order.associateId !== "000000000000000000000000" && (
                             <>
                               <tr>
                                 <th
                                   className="has-background-light"
                                   style={{ width: "30%" }}
                                 >
-                                  Customer
+                                  Associate
                                 </th>
                                 <td>
                                   <URLTextFormatter
-                                    urlKey={order.customerName}
-                                    urlValue={`/c/client/${order.customerId}`}
+                                    urlKey={order.associateName}
+                                    urlValue={`/c/associate/${order.associateId}`}
                                     type={`external`}
                                   />
                                 </td>

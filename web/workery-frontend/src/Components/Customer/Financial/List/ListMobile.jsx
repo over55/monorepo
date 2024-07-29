@@ -59,18 +59,10 @@ function CustomerFinancialListMobile(props) {
               <strong>Job #:</strong>&nbsp;{datum.wjid}
               <br />
               <br />
-              <strong>Client:</strong>&nbsp;
+              <strong>Associate:</strong>&nbsp;
               <URLTextFormatter
-                urlKey={datum.customerName}
-                urlValue={`/c/client/${datum.customerId}`}
-                type={`external`}
-              />
-              <br />
-              <br />
-              <strong>Customer:</strong>&nbsp;
-              <URLTextFormatter
-                urlKey={datum.customerName}
-                urlValue={`/c/customer/${datum.customerId}`}
+                urlKey={datum.associateName}
+                urlValue={`/c/associate/${datum.associateId}`}
                 type={`external`}
               />
               <br />

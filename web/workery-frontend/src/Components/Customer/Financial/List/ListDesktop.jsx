@@ -58,14 +58,14 @@ function CustomerFinancialListDesktop(props) {
               <th></th>
               <th>Job #</th>
               <th>
-                Client
-                {sortByValue === "customer_lexical_name,ASC" && (
+                Associate
+                {sortByValue === "associate_lexical_name,ASC" && (
                   <>
                     &nbsp;
                     <FontAwesomeIcon className="fas" icon={faCaretUp} />
                   </>
                 )}
-                {sortByValue === "customer_lexical_name,DESC" && (
+                {sortByValue === "associate_lexical_name,DESC" && (
                   <>
                     &nbsp;
                     <FontAwesomeIcon className="fas" icon={faCaretDown} />
@@ -119,10 +119,10 @@ function CustomerFinancialListDesktop(props) {
                       <OrderTypeOfIconFormatter type={datum.type} />
                     </td>
                     <td data-label="Job #">{datum.wjid}</td>
-                    <td data-label="Client">
+                    <td data-label="Associate">
                       <URLTextFormatter
-                        urlKey={datum.customerName}
-                        urlValue={`/c/client/${datum.customerId}`}
+                        urlKey={datum.associateName}
+                        urlValue={`/c/associate/${datum.associateId}`}
                         type={`external`}
                       />
                     </td>

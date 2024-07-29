@@ -418,6 +418,16 @@ export default (props) => {
                   &nbsp;My Service Requests
                 </Link>
               </li>
+              <li>
+                <Link
+                  onClick={onLinkClickCloseHamburgerMenuIfMobile}
+                  to="/c/financials"
+                  className={`has-text-grey-light ${location.pathname.includes("financial") && "is-active"}`}
+                >
+                  <FontAwesomeIcon className="fas" icon={faCreditCard} />
+                  &nbsp;My Financials
+                </Link>
+              </li>
             </ul>
 
             <p className="menu-label has-text-grey-light">Account</p>

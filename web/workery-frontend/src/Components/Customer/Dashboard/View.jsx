@@ -81,7 +81,7 @@ function CustomerDashboard() {
             <div className="container">
               <div className="columns is-multiline is-mobile">
                 {/* My Work Orders */}
-                <div className="column is-6">
+                <div className="column is-4">
                   <div className="card">
                     <div className="card-image has-background-info">
                       <div
@@ -126,8 +126,54 @@ function CustomerDashboard() {
                 </div>
                 {/* end My Work Orders */}
 
+                {/* My Financials */}
+                <div className="column is-4">
+                  <div className="card">
+                    <div className="card-image has-background-info">
+                      <div
+                        className="has-text-centered"
+                        style={{ padding: "30px" }}
+                      >
+                        <FontAwesomeIcon
+                          className="fas"
+                          icon={faCreditCard}
+                          style={{ color: "white", fontSize: "9rem" }}
+                        />
+                      </div>
+                    </div>
+                    <div className="card-content">
+                      <div className="media">
+                        <div className="media-content">
+                          <p className="title is-4">
+                            {/*<FontAwesomeIcon className="fas" icon={faSquarePhone} />&nbsp;*/}
+                            My Financials
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="content">
+                        Click here to view existing requests or create new ones.
+                        <br />
+                      </div>
+                    </div>
+                    <footer className="card-footer">
+                      <Link
+                        to={`/c/financials`}
+                        className="card-footer-item button is-primary is-large"
+                      >
+                        View&nbsp;
+                        <FontAwesomeIcon
+                          className="fas"
+                          icon={faArrowCircleRight}
+                        />
+                      </Link>
+                    </footer>
+                  </div>
+                </div>
+                {/* end My Financials */}
+
                 {/* Help */}
-                <div className="column is-6">
+                <div className="column is-4">
                   <div className="card">
                     <div className="card-image has-background-info">
                       <div
