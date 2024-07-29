@@ -12,6 +12,8 @@ import (
 
 	"github.com/over55/monorepo/cloud/workery-backend/adapter/cache/mongodbcache"
 	"github.com/over55/monorepo/cloud/workery-backend/adapter/templatedemailer"
+	a_s "github.com/over55/monorepo/cloud/workery-backend/app/associate/datastore"
+	c_s "github.com/over55/monorepo/cloud/workery-backend/app/customer/datastore"
 	gateway_s "github.com/over55/monorepo/cloud/workery-backend/app/gateway/datastore"
 	howhear_s "github.com/over55/monorepo/cloud/workery-backend/app/howhear/datastore"
 	s_s "github.com/over55/monorepo/cloud/workery-backend/app/staff/datastore"
@@ -58,6 +60,8 @@ type GatewayControllerImpl struct {
 	TaskQueue        stepper.Stepper
 	TemplatedEmailer templatedemailer.TemplatedEmailer
 	UserStorer       user_s.UserStorer
+	AssociateStorer  a_s.AssociateStorer
+	CustomerStorer   c_s.CustomerStorer
 	StaffStorer      s_s.StaffStorer
 	TenantStorer     tenant_s.TenantStorer
 	HowHearStorer    howhear_s.HowHearAboutUsItemStorer
@@ -75,6 +79,8 @@ func NewController(
 	te templatedemailer.TemplatedEmailer,
 	client *mongo.Client,
 	usr_storer user_s.UserStorer,
+	a_storer a_s.AssociateStorer,
+	c_storer c_s.CustomerStorer,
 	s_storer s_s.StaffStorer,
 	org_storer tenant_s.TenantStorer,
 	howhear_s howhear_s.HowHearAboutUsItemStorer,
@@ -92,6 +98,8 @@ func NewController(
 		TaskQueue:        tq,
 		TemplatedEmailer: te,
 		UserStorer:       usr_storer,
+		AssociateStorer:  a_storer,
+		CustomerStorer:   c_storer,
 		StaffStorer:      s_storer,
 		TenantStorer:     org_storer,
 		HowHearStorer:    howhear_s,

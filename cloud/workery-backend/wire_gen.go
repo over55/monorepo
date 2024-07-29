@@ -16,7 +16,7 @@ import (
 	datastore15 "github.com/over55/monorepo/cloud/workery-backend/app/activitysheet/datastore"
 	httptransport16 "github.com/over55/monorepo/cloud/workery-backend/app/activitysheet/httptransport"
 	controller9 "github.com/over55/monorepo/cloud/workery-backend/app/associate/controller"
-	datastore7 "github.com/over55/monorepo/cloud/workery-backend/app/associate/datastore"
+	datastore2 "github.com/over55/monorepo/cloud/workery-backend/app/associate/datastore"
 	httptransport9 "github.com/over55/monorepo/cloud/workery-backend/app/associate/httptransport"
 	controller20 "github.com/over55/monorepo/cloud/workery-backend/app/associateawaylog/controller"
 	datastore17 "github.com/over55/monorepo/cloud/workery-backend/app/associateawaylog/datastore"
@@ -31,14 +31,14 @@ import (
 	datastore14 "github.com/over55/monorepo/cloud/workery-backend/app/comment/datastore"
 	httptransport10 "github.com/over55/monorepo/cloud/workery-backend/app/comment/httptransport"
 	controller13 "github.com/over55/monorepo/cloud/workery-backend/app/customer/controller"
-	datastore6 "github.com/over55/monorepo/cloud/workery-backend/app/customer/datastore"
+	datastore3 "github.com/over55/monorepo/cloud/workery-backend/app/customer/datastore"
 	httptransport13 "github.com/over55/monorepo/cloud/workery-backend/app/customer/httptransport"
 	controller18 "github.com/over55/monorepo/cloud/workery-backend/app/dashboard/controller"
 	httptransport18 "github.com/over55/monorepo/cloud/workery-backend/app/dashboard/httptransport"
 	"github.com/over55/monorepo/cloud/workery-backend/app/gateway/controller"
 	"github.com/over55/monorepo/cloud/workery-backend/app/gateway/httptransport"
 	controller7 "github.com/over55/monorepo/cloud/workery-backend/app/howhear/controller"
-	datastore4 "github.com/over55/monorepo/cloud/workery-backend/app/howhear/datastore"
+	datastore6 "github.com/over55/monorepo/cloud/workery-backend/app/howhear/datastore"
 	httptransport7 "github.com/over55/monorepo/cloud/workery-backend/app/howhear/httptransport"
 	controller6 "github.com/over55/monorepo/cloud/workery-backend/app/insurancerequirement/controller"
 	datastore12 "github.com/over55/monorepo/cloud/workery-backend/app/insurancerequirement/datastore"
@@ -58,16 +58,16 @@ import (
 	datastore10 "github.com/over55/monorepo/cloud/workery-backend/app/skillset/datastore"
 	httptransport4 "github.com/over55/monorepo/cloud/workery-backend/app/skillset/httptransport"
 	controller11 "github.com/over55/monorepo/cloud/workery-backend/app/staff/controller"
-	datastore2 "github.com/over55/monorepo/cloud/workery-backend/app/staff/datastore"
+	datastore4 "github.com/over55/monorepo/cloud/workery-backend/app/staff/datastore"
 	httptransport11 "github.com/over55/monorepo/cloud/workery-backend/app/staff/httptransport"
 	controller3 "github.com/over55/monorepo/cloud/workery-backend/app/tag/controller"
-	datastore5 "github.com/over55/monorepo/cloud/workery-backend/app/tag/datastore"
+	datastore7 "github.com/over55/monorepo/cloud/workery-backend/app/tag/datastore"
 	httptransport3 "github.com/over55/monorepo/cloud/workery-backend/app/tag/httptransport"
 	controller17 "github.com/over55/monorepo/cloud/workery-backend/app/taskitem/controller"
 	datastore9 "github.com/over55/monorepo/cloud/workery-backend/app/taskitem/datastore"
 	httptransport17 "github.com/over55/monorepo/cloud/workery-backend/app/taskitem/httptransport"
 	controller12 "github.com/over55/monorepo/cloud/workery-backend/app/tenant/controller"
-	datastore3 "github.com/over55/monorepo/cloud/workery-backend/app/tenant/datastore"
+	datastore5 "github.com/over55/monorepo/cloud/workery-backend/app/tenant/datastore"
 	httptransport12 "github.com/over55/monorepo/cloud/workery-backend/app/tenant/httptransport"
 	controller2 "github.com/over55/monorepo/cloud/workery-backend/app/user/controller"
 	"github.com/over55/monorepo/cloud/workery-backend/app/user/datastore"
@@ -111,18 +111,18 @@ func InitializeEvent() Application {
 	emailer := mailgun.NewEmailer(conf, slogLogger, provider)
 	templatedEmailer := templatedemailer.NewTemplatedEmailer(conf, slogLogger, provider, emailer)
 	userStorer := datastore.NewDatastore(conf, slogLogger, client)
-	staffStorer := datastore2.NewDatastore(conf, slogLogger, client)
-	tenantStorer := datastore3.NewDatastore(conf, slogLogger, client)
-	howHearAboutUsItemStorer := datastore4.NewDatastore(conf, slogLogger, client)
-	gatewayController := controller.NewController(conf, slogLogger, provider, jwtProvider, passwordProvider, kmutexProvider, cacher, stepper, templatedEmailer, client, userStorer, staffStorer, tenantStorer, howHearAboutUsItemStorer)
+	associateStorer := datastore2.NewDatastore(conf, slogLogger, client)
+	customerStorer := datastore3.NewDatastore(conf, slogLogger, client)
+	staffStorer := datastore4.NewDatastore(conf, slogLogger, client)
+	tenantStorer := datastore5.NewDatastore(conf, slogLogger, client)
+	howHearAboutUsItemStorer := datastore6.NewDatastore(conf, slogLogger, client)
+	gatewayController := controller.NewController(conf, slogLogger, provider, jwtProvider, passwordProvider, kmutexProvider, cacher, stepper, templatedEmailer, client, userStorer, associateStorer, customerStorer, staffStorer, tenantStorer, howHearAboutUsItemStorer)
 	middlewareMiddleware := middleware.NewMiddleware(conf, slogLogger, provider, timeProvider, jwtProvider, gatewayController)
 	handler := httptransport.NewHandler(slogLogger, gatewayController)
 	userController := controller2.NewController(conf, slogLogger, provider, passwordProvider, kmutexProvider, client, tenantStorer, userStorer, templatedEmailer)
 	httptransportHandler := httptransport2.NewHandler(slogLogger, userController)
 	s3Storager := s3.NewStorage(conf, slogLogger, provider)
-	tagStorer := datastore5.NewDatastore(conf, slogLogger, client)
-	customerStorer := datastore6.NewDatastore(conf, slogLogger, client)
-	associateStorer := datastore7.NewDatastore(conf, slogLogger, client)
+	tagStorer := datastore7.NewDatastore(conf, slogLogger, client)
 	orderStorer := datastore8.NewDatastore(conf, slogLogger, client)
 	taskItemStorer := datastore9.NewDatastore(conf, slogLogger, client)
 	tagController := controller3.NewController(conf, slogLogger, provider, s3Storager, passwordProvider, kmutexProvider, client, templatedEmailer, userStorer, tagStorer, customerStorer, associateStorer, orderStorer, taskItemStorer)

@@ -280,6 +280,182 @@ func (impl *GatewayControllerImpl) Profile(ctx context.Context) (*ProfileRespons
 		res.EmergencyContactTelephone = staff.EmergencyContactTelephone
 		res.EmergencyContactAlternativeTelephone = staff.EmergencyContactAlternativeTelephone
 		break
+	case user_s.UserRoleAssociate, user_s.UserRoleAssociateJobSeeker:
+		impl.Logger.Debug("fetching associate record")
+		asso, err := impl.AssociateStorer.GetByID(ctx, u.ReferenceID)
+		if err != nil {
+			impl.Logger.Error("failed getting associate record", slog.Any("err", err))
+			return nil, err
+		}
+		if asso == nil {
+			impl.Logger.Error("associate does not exist error",
+				slog.Any("user_role", u.Role),
+				slog.String("user_id", u.ID.Hex()),
+				slog.Any("reference_id", u.ReferenceID))
+			return nil, httperror.NewForBadRequestWithSingleField("associate_id", "does not exist")
+		}
+		res.PersonalEmail = asso.PersonalEmail
+		res.IsOkToEmail = asso.IsOkToEmail
+		res.PhoneType = asso.PhoneType
+		res.PhoneExtension = asso.PhoneExtension
+		res.IsOkToText = asso.IsOkToText
+		res.FaxNumber = asso.FaxNumber
+		res.OtherPhone = asso.OtherPhone
+		res.OtherPhoneExtension = asso.OtherPhoneExtension
+		res.OtherPhoneType = asso.OtherPhoneType
+		res.PostalCode = asso.PostalCode
+		res.AddressLine1 = asso.AddressLine1
+		res.AddressLine2 = asso.AddressLine2
+		res.PostOfficeBoxNumber = asso.PostOfficeBoxNumber
+		res.FullAddressWithoutPostalCode = asso.FullAddressWithoutPostalCode
+		res.FullAddressWithPostalCode = asso.FullAddressWithPostalCode
+		res.FullAddressURL = asso.FullAddressURL
+		res.HasShippingAddress = asso.HasShippingAddress
+		res.ShippingName = asso.ShippingName
+		res.ShippingPhone = asso.ShippingPhone
+		res.ShippingCountry = asso.ShippingCountry
+		res.ShippingRegion = asso.ShippingRegion
+		res.ShippingCity = asso.ShippingCity
+		res.ShippingPostalCode = asso.ShippingPostalCode
+		res.ShippingAddressLine1 = asso.ShippingAddressLine1
+		res.ShippingAddressLine2 = asso.ShippingAddressLine2
+		res.ShippingPostOfficeBoxNumber = asso.ShippingPostOfficeBoxNumber
+		res.ShippingFullAddressWithoutPostalCode = asso.ShippingFullAddressWithoutPostalCode
+		res.ShippingFullAddressWithPostalCode = asso.ShippingFullAddressWithPostalCode
+		res.ShippingFullAddressURL = asso.ShippingFullAddressURL
+		res.HowDidYouHearAboutUsID = asso.HowDidYouHearAboutUsID
+		res.HowDidYouHearAboutUsText = asso.HowDidYouHearAboutUsText
+		res.IsHowDidYouHearAboutUsOther = asso.IsHowDidYouHearAboutUsOther
+		res.HowDidYouHearAboutUsOther = asso.HowDidYouHearAboutUsOther
+		res.Type = asso.Type
+		res.IsBusiness = asso.IsBusiness
+		res.IsSenior = asso.IsSenior
+		res.IsSupport = asso.IsSupport
+		res.JobInfoRead = asso.JobInfoRead
+		res.DeactivationReason = asso.DeactivationReason
+		res.DeactivationReasonOther = asso.DeactivationReasonOther
+		res.Description = asso.Description
+		res.AvatarObjectExpiry = asso.AvatarObjectExpiry
+		res.AvatarObjectURL = asso.AvatarObjectURL
+		res.AvatarObjectKey = asso.AvatarObjectKey
+		res.AvatarFileType = asso.AvatarFileType
+		res.AvatarFileName = asso.AvatarFileName
+		res.BirthDate = asso.BirthDate
+		res.JoinDate = asso.JoinDate
+		res.Nationality = asso.PersonalEmail
+		res.Gender = asso.Gender
+		res.GenderOther = asso.GenderOther
+		res.TaxID = asso.TaxID
+		res.Elevation = asso.Elevation
+		res.Latitude = asso.Latitude
+		res.Longitude = asso.Longitude
+		res.AreaServed = asso.AreaServed
+		res.PreferredLanguage = asso.PreferredLanguage
+		res.ContactType = asso.ContactType
+		res.HourlySalaryDesired = asso.HourlySalaryDesired
+		res.LimitSpecial = asso.LimitSpecial
+		res.DuesDate = asso.DuesDate
+		res.CommercialInsuranceExpiryDate = asso.CommercialInsuranceExpiryDate
+		res.AutoInsuranceExpiryDate = asso.AutoInsuranceExpiryDate
+		res.WsibNumber = asso.WsibNumber
+		res.WsibInsuranceDate = asso.WsibInsuranceDate
+		res.PoliceCheck = asso.PoliceCheck
+		res.DriversLicenseClass = asso.DriversLicenseClass
+		res.Score = asso.Score
+		res.BalanceOwingAmount = asso.BalanceOwingAmount
+		res.EmergencyContactName = asso.EmergencyContactName
+		res.EmergencyContactRelationship = asso.EmergencyContactRelationship
+		res.EmergencyContactTelephone = asso.EmergencyContactTelephone
+		res.EmergencyContactAlternativeTelephone = asso.EmergencyContactAlternativeTelephone
+		break
+	case user_s.UserRoleCustomer:
+		impl.Logger.Debug("fetching customer record")
+		cust, err := impl.CustomerStorer.GetByID(ctx, u.ReferenceID)
+		if err != nil {
+			impl.Logger.Error("failed getting customer record", slog.Any("err", err))
+			return nil, err
+		}
+		if cust == nil {
+			impl.Logger.Error("customer does not exist error",
+				slog.Any("user_role", u.Role),
+				slog.String("user_id", u.ID.Hex()),
+				slog.Any("reference_id", u.ReferenceID))
+			return nil, httperror.NewForBadRequestWithSingleField("customer_id", "does not exist")
+		}
+		// res.PersonalEmail = cust.PersonalEmail
+		res.IsOkToEmail = cust.IsOkToEmail
+		res.PhoneType = cust.PhoneType
+		res.PhoneExtension = cust.PhoneExtension
+		res.IsOkToText = cust.IsOkToText
+		res.FaxNumber = cust.FaxNumber
+		res.OtherPhone = cust.OtherPhone
+		res.OtherPhoneExtension = cust.OtherPhoneExtension
+		res.OtherPhoneType = cust.OtherPhoneType
+		res.PostalCode = cust.PostalCode
+		res.AddressLine1 = cust.AddressLine1
+		res.AddressLine2 = cust.AddressLine2
+		res.PostOfficeBoxNumber = cust.PostOfficeBoxNumber
+		res.FullAddressWithoutPostalCode = cust.FullAddressWithoutPostalCode
+		res.FullAddressWithPostalCode = cust.FullAddressWithPostalCode
+		res.FullAddressURL = cust.FullAddressURL
+		res.HasShippingAddress = cust.HasShippingAddress
+		res.ShippingName = cust.ShippingName
+		res.ShippingPhone = cust.ShippingPhone
+		res.ShippingCountry = cust.ShippingCountry
+		res.ShippingRegion = cust.ShippingRegion
+		res.ShippingCity = cust.ShippingCity
+		res.ShippingPostalCode = cust.ShippingPostalCode
+		res.ShippingAddressLine1 = cust.ShippingAddressLine1
+		res.ShippingAddressLine2 = cust.ShippingAddressLine2
+		res.ShippingPostOfficeBoxNumber = cust.ShippingPostOfficeBoxNumber
+		res.ShippingFullAddressWithoutPostalCode = cust.ShippingFullAddressWithoutPostalCode
+		res.ShippingFullAddressWithPostalCode = cust.ShippingFullAddressWithPostalCode
+		res.ShippingFullAddressURL = cust.ShippingFullAddressURL
+		res.HowDidYouHearAboutUsID = cust.HowDidYouHearAboutUsID
+		res.HowDidYouHearAboutUsText = cust.HowDidYouHearAboutUsText
+		res.IsHowDidYouHearAboutUsOther = cust.IsHowDidYouHearAboutUsOther
+		res.HowDidYouHearAboutUsOther = cust.HowDidYouHearAboutUsOther
+		res.Type = cust.Type
+		res.IsBusiness = cust.IsBusiness
+		res.IsSenior = cust.IsSenior
+		res.IsSupport = cust.IsSupport
+		res.JobInfoRead = cust.JobInfoRead
+		res.DeactivationReason = cust.DeactivationReason
+		res.DeactivationReasonOther = cust.DeactivationReasonOther
+		res.Description = cust.Description
+		res.AvatarObjectExpiry = cust.AvatarObjectExpiry
+		res.AvatarObjectURL = cust.AvatarObjectURL
+		res.AvatarObjectKey = cust.AvatarObjectKey
+		res.AvatarFileType = cust.AvatarFileType
+		res.AvatarFileName = cust.AvatarFileName
+		res.BirthDate = cust.BirthDate
+		res.JoinDate = cust.JoinDate
+		// res.Nationality = cust.PersonalEmail
+		res.Gender = cust.Gender
+		res.GenderOther = cust.GenderOther
+		// res.TaxID = cust.TaxID
+		res.Elevation = cust.Elevation
+		res.Latitude = cust.Latitude
+		res.Longitude = cust.Longitude
+		res.AreaServed = cust.AreaServed
+		res.PreferredLanguage = cust.PreferredLanguage
+		res.ContactType = cust.ContactType
+		// res.HourlySalaryDesired = cust.HourlySalaryDesired
+		// res.LimitSpecial = cust.LimitSpecial
+		// res.DuesDate = cust.DuesDate
+		// res.CommercialInsuranceExpiryDate = cust.CommercialInsuranceExpiryDate
+		// res.AutoInsuranceExpiryDate = cust.AutoInsuranceExpiryDate
+		// res.WsibNumber = cust.WsibNumber
+		// res.WsibInsuranceDate = cust.WsibInsuranceDate
+		// res.PoliceCheck = cust.PoliceCheck
+		// res.DriversLicenseClass = cust.DriversLicenseClass
+		// res.Score = cust.Score
+		// res.BalanceOwingAmount = cust.BalanceOwingAmount
+		// res.EmergencyContactName = cust.EmergencyContactName
+		// res.EmergencyContactRelationship = cust.EmergencyContactRelationship
+		// res.EmergencyContactTelephone = cust.EmergencyContactTelephone
+		// res.EmergencyContactAlternativeTelephone = cust.EmergencyContactAlternativeTelephone
+		break
 	default:
 		err := fmt.Errorf("not implemented for user role: %v", u.Role)
 		return nil, err
