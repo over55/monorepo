@@ -428,6 +428,15 @@ function AdminFinancialDetailFull() {
                           </th>
                           <td>${order.invoiceTaxAmount}{order.invoiceIsCustomTaxAmount && <>&nbsp;(<FontAwesomeIcon className="fas" icon={faCircleInfo} />&nbsp;Note: Custom value was set)</>}</td>
                         </tr>
+                        {order.associateTaxId && <tr>
+                          <th
+                            className="has-background-light"
+                            style={{ width: "30%" }}
+                          >
+                            Invoice HST #
+                          </th>
+                          <td>{order.associateTaxId}</td>
+                        </tr>}
                         <tr>
                           <th
                             className="has-background-light"
