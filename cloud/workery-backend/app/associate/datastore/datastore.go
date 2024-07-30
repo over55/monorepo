@@ -246,6 +246,10 @@ type AssociateListFilter struct {
 	OrganizationName string
 	IsJobSeeker      int8
 	HasTaxID         int8
+
+	// IDs filter is used if you know the `ID` values of all the
+	// customers you want to retrieve.
+	IDs []primitive.ObjectID
 }
 
 type AssociateListResult struct {

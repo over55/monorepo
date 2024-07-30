@@ -126,6 +126,12 @@ import CustomerFinancialInvoiceDetail from "./Components/Customer/Financial/Deta
 import CustomerFinancialDetailFull from "./Components/Customer/Financial/Detail/Full";
 import CustomerFinancialList from "./Components/Customer/Financial/List/List";
 
+// Customer Associates
+import ClientAssociateList from "./Components/Customer/Associate/List/View";
+import ClientAssociateDetailLite from "./Components/Customer/Associate/Detail/LiteView";
+import ClientAssociateDetailFull from "./Components/Customer/Associate/Detail/FullView";
+import ClientAssociateDetailOrderList from "./Components/Customer/Associate/Detail/Order/ListView";
+
 // Job Seeker Dashboard
 import JobSeekerDashboard from "./Components/JobSeeker/Dashboard/View";
 
@@ -400,6 +406,26 @@ function AppRoute() {
                     exact
                     path="/c/financial/:oid/invoice/generate/step-1"
                     element={<CustomerFinancialGenerateInvoiceStep1 />}
+                  />
+                  <Route
+                    exact
+                    path="/c/associates"
+                    element={<ClientAssociateList />}
+                  />
+                  <Route
+                    exact
+                    path="/c/associates/:cid"
+                    element={<ClientAssociateDetailLite />}
+                  />
+                  <Route
+                    exact
+                    path="/c/associates/:cid/detail"
+                    element={<ClientAssociateDetailFull />}
+                  />
+                  <Route
+                    exact
+                    path="/c/associates/:cid/orders"
+                    element={<ClientAssociateDetailOrderList />}
                   />
 
                   {/*

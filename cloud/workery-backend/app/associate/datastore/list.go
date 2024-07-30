@@ -81,6 +81,9 @@ func (impl AssociateStorerImpl) ListByFilter(ctx context.Context, f *AssociatePa
 	if f.HasTaxID != 0 {
 		filter["tax_id"] = bson.M{"$ne": ""}
 	}
+	if len(f.IDs) > 0 {
+		filter["_id"] = bson.M{"$in": f.IDs}
+	}
 
 	// Create a slice to store conditions
 	var conditions []bson.M

@@ -11,7 +11,8 @@ import {
   faCreditCard,
   faBullhorn,
   faArrowCircleRight,
-  faQuestionCircle
+  faQuestionCircle,
+  faHardHat
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 
@@ -81,7 +82,7 @@ function CustomerDashboard() {
             <div className="container">
               <div className="columns is-multiline is-mobile">
                 {/* My Work Orders */}
-                <div className="column is-4">
+                <div className="column is-6-tablet is-3-fullhd">
                   <div className="card">
                     <div className="card-image has-background-info">
                       <div
@@ -127,7 +128,7 @@ function CustomerDashboard() {
                 {/* end My Work Orders */}
 
                 {/* My Financials */}
-                <div className="column is-4">
+                <div className="column is-6-tablet is-3-fullhd">
                   <div className="card">
                     <div className="card-image has-background-info">
                       <div
@@ -172,8 +173,54 @@ function CustomerDashboard() {
                 </div>
                 {/* end My Financials */}
 
+                {/* My Associates */}
+                <div className="column is-6-tablet is-3-fullhd">
+                  <div className="card">
+                    <div className="card-image has-background-info">
+                      <div
+                        className="has-text-centered"
+                        style={{ padding: "60px" }}
+                      >
+                        <FontAwesomeIcon
+                          className="fas"
+                          icon={faHardHat}
+                          style={{ color: "white", fontSize: "6rem" }}
+                        />
+                      </div>
+                    </div>
+                    <div className="card-content">
+                      <div className="media">
+                        <div className="media-content">
+                          <p className="title is-4">
+                            {/*<FontAwesomeIcon className="fas" icon={faHardHat} />&nbsp;*/}
+                            My Associates
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="content">
+                        View all my past and present associates.
+                        <br />
+                      </div>
+                    </div>
+                    <footer className="card-footer">
+                      <Link
+                        to={`/c/associates`}
+                        className="card-footer-item button is-primary is-large"
+                      >
+                        View&nbsp;
+                        <FontAwesomeIcon
+                          className="fas"
+                          icon={faArrowCircleRight}
+                        />
+                      </Link>
+                    </footer>
+                  </div>
+                </div>
+                {/* end My Associates */}
+
                 {/* Help */}
-                <div className="column is-4">
+                <div className="column is-6-tablet is-3-fullhd">
                   <div className="card">
                     <div className="card-image has-background-info">
                       <div

@@ -84,6 +84,9 @@ func (impl AssociateStorerImpl) ListAsSelectOptionByFilter(ctx context.Context, 
 	if f.OrganizationName != "" {
 		query["organization_name"] = bson.M{"$regex": primitive.Regex{Pattern: f.OrganizationName, Options: "i"}}
 	}
+	if len(f.IDs) > 0 {
+		query["_id"] = bson.M{"$in": f.IDs}
+	}
 
 	// Full-text search
 	if f.SearchText != "" {

@@ -118,6 +118,9 @@ func (impl AssociateStorerImpl) LiteListByFilter(ctx context.Context, f *Associa
 	if f.HasTaxID != 0 {
 		filter["tax_id"] = bson.M{"$ne": ""}
 	}
+	if len(f.IDs) > 0 {
+		filter["_id"] = bson.M{"$in": f.IDs}
+	}
 
 	// Create a slice to store conditions
 	var conditions []bson.M

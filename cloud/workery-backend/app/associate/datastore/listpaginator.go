@@ -87,6 +87,10 @@ type AssociatePaginationListFilter struct {
 	// AllVehicleTypeIDs filter is used if you want to find all tag ids for
 	// the associate.
 	AllVehicleTypeIDs []primitive.ObjectID
+
+	// IDs filter is used if you know the `ID` values of all the
+	// customers you want to retrieve.
+	IDs []primitive.ObjectID
 }
 
 // AssociatePaginationLiteListResult represents the paginated list results for
