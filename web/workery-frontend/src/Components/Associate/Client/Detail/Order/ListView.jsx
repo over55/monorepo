@@ -365,10 +365,7 @@ function AssociateClientDetailOrderList() {
                     <div className="tabs is-medium is-size-7-mobile">
                       <ul>
                         <li>
-                          <Link to={`/a/client/${cid}`}>Summary</Link>
-                        </li>
-                        <li>
-                          <Link to={`/a/client/${cid}/detail`}>Detail</Link>
+                          <Link to={`/a/client/${cid}`}>Detail</Link>
                         </li>
                         <li className="is-active">
                           <Link>

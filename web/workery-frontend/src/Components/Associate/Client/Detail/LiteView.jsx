@@ -211,7 +211,7 @@ function AssociateClientDetailLite() {
                 <div className="column">
                   <p className="title is-one-quarter is-4">
                     <FontAwesomeIcon className="fas" icon={faTable} />
-                    &nbsp;Summary
+                    &nbsp;Detail
                   </p>
                 </div>
                 <div className="column is-three-quarters has-text-right">
@@ -260,12 +260,7 @@ function AssociateClientDetailLite() {
                       <ul>
                         <li className="is-active">
                           <Link>
-                            <strong>Summary</strong>
-                          </Link>
-                        </li>
-                        <li>
-                          <Link to={`/a/client/${client.id}/detail`}>
-                            Detail
+                            <strong>Detail</strong>
                           </Link>
                         </li>
                         <li>

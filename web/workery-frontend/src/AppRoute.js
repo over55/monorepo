@@ -103,7 +103,6 @@ import AssociateFinancialList from "./Components/Associate/Financial/List/List";
 // Associate Customers
 import AssociateClientList from "./Components/Associate/Client/List/View";
 import AssociateClientDetailLite from "./Components/Associate/Client/Detail/LiteView";
-import AssociateClientDetailFull from "./Components/Associate/Client/Detail/FullView";
 import AssociateClientDetailOrderList from "./Components/Associate/Client/Detail/Order/ListView";
 
 // Customer Dashboard
@@ -491,11 +490,6 @@ function AppRoute() {
                     exact
                     path="/a/client/:cid"
                     element={<AssociateClientDetailLite />}
-                  />
-                  <Route
-                    exact
-                    path="/a/client/:cid/detail"
-                    element={<AssociateClientDetailFull />}
                   />
                   <Route
                     exact
