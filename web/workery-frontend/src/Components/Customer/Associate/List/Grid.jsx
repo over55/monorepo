@@ -43,7 +43,7 @@ import {
 /*
 Display for both tablet and mobile.
 */
-function ClientAssociateListGrid(props) {
+function AssociateAssociateListGrid(props) {
   const {
     listData,
     setPageSize,
@@ -67,7 +67,7 @@ function ClientAssociateListGrid(props) {
                       {/* HEADER */}
                       <header className="card-header">
                         <p className="is-size-5 card-header-title">
-                        <Link to={`/a/client/${datum.id}`}>
+                        <Link to={`/c/associate/${datum.id}`}>
                           {datum.type ===
                             COMMERCIAL_CUSTOMER_TYPE_OF_ID && (
                             <strong>
@@ -138,7 +138,7 @@ function ClientAssociateListGrid(props) {
                       {/* BOTTOM */}
                       <footer className="card-footer">
                       <Link
-                        to={`/a/client/${datum.id}`}
+                        to={`/c/associate/${datum.id}`}
                         className="card-footer-item"
                       >
                         Select&nbsp;
@@ -211,4 +211,4 @@ function ClientAssociateListGrid(props) {
   );
 }
 
-export default ClientAssociateListGrid;
+export default AssociateAssociateListGrid;

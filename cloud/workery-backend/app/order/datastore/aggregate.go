@@ -39,3 +39,34 @@ func (impl OrderStorerImpl) GetAllByCustomerIDsByAssociateID(ctx context.Context
 
 	return customerIDs, nil
 }
+
+func (impl OrderStorerImpl) GetAllByAssociateIDsByCustomerID(ctx context.Context, customerID primitive.ObjectID) ([]primitive.ObjectID, error) {
+	filter := bson.M{"customer_id": customerID}
+	projection := bson.M{"associate_id": 1, "_id": 0} // Include only associate_id, exclude _id
+
+	cursor, err := impl.Collection.Find(context.TODO(), filter, options.Find().SetProjection(projection))
+	if err != nil {
+		impl.Logger.Error("database find error", slog.Any("error", err))
+		return nil, err
+	}
+	defer cursor.Close(context.TODO())
+
+	var associateIDs []primitive.ObjectID
+	for cursor.Next(context.TODO()) {
+		var result struct {
+			AssociateID primitive.ObjectID `bson:"associate_id"`
+		}
+		if err := cursor.Decode(&result); err != nil {
+			impl.Logger.Error("decode error", slog.Any("error", err))
+			return nil, err
+		}
+		associateIDs = append(associateIDs, result.AssociateID)
+	}
+
+	if err := cursor.Err(); err != nil {
+		impl.Logger.Error("database cursor error", slog.Any("error", err))
+		return nil, err
+	}
+
+	return associateIDs, nil
+}

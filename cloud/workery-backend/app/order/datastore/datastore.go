@@ -386,6 +386,7 @@ type OrderStorer interface {
 	PermanentlyDeleteAllByAssociateID(ctx context.Context, associateID primitive.ObjectID) error
 	CheckIfAnyExistsByCustomerID(ctx context.Context, customerID primitive.ObjectID) (bool, error)
 	GetAllByCustomerIDsByAssociateID(ctx context.Context, associateID primitive.ObjectID) ([]primitive.ObjectID, error)
+	GetAllByAssociateIDsByCustomerID(ctx context.Context, customerID primitive.ObjectID) ([]primitive.ObjectID, error)
 }
 
 type OrderStorerImpl struct {

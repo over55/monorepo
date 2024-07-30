@@ -27,7 +27,7 @@ import {
 import { useRecoilState } from "recoil";
 import { useParams } from "react-router-dom";
 
-import { getClientDetailAPI } from "../../../../API/Client";
+import { getAssociateDetailAPI } from "../../../../API/Associate";
 import FormErrorBox from "../../../Reusable/FormErrorBox";
 import SelectTextFormatter from "../../../Reusable/EveryPage/SelectTextFormatter";
 import CheckboxTextFormatter from "../../../Reusable/EveryPage/CheckboxTextFormatter";
@@ -60,7 +60,7 @@ import {
   GENDER_OPTIONS_WITH_EMPTY_OPTION,
 } from "../../../../Constants/FieldOptions";
 
-function ClientAssociateDetailFull() {
+function AssociateAssociateDetailFull() {
   ////
   //// URL Parameters.
   ////
@@ -83,7 +83,7 @@ function ClientAssociateDetailFull() {
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
   const [forceURL, setForceURL] = useState("");
-  const [client, setClient] = useState({});
+  const [associate, setAssociate] = useState({});
   const [tabIndex, setTabIndex] = useState(1);
 
   ////
@@ -98,7 +98,7 @@ function ClientAssociateDetailFull() {
 
   function onSuccess(response) {
     console.log("onSuccess: Starting...");
-    setClient(response);
+    setAssociate(response);
   }
 
   function onError(apiErr) {
@@ -132,7 +132,7 @@ function ClientAssociateDetailFull() {
       window.scrollTo(0, 0); // Start the page at the top of the page.
 
       setFetching(true);
-      getClientDetailAPI(cid, onSuccess, onError, onDone, onUnauthorized);
+      getAssociateDetailAPI(cid, onSuccess, onError, onDone, onUnauthorized);
     }
 
     return () => {
@@ -159,15 +159,15 @@ function ClientAssociateDetailFull() {
           >
             <ul>
               <li className="">
-                <Link to="/a/dashboard" aria-current="page">
+                <Link to="/c/dashboard" aria-current="page">
                   <FontAwesomeIcon className="fas" icon={faGauge} />
                   &nbsp;Dashboard
                 </Link>
               </li>
               <li className="">
-                <Link to="/a/clients" aria-current="page">
+                <Link to="/c/associates" aria-current="page">
                   <FontAwesomeIcon className="fas" icon={faUserCircle} />
-                  &nbsp;Clients
+                  &nbsp;Associates
                 </Link>
               </li>
               <li className="is-active">
@@ -186,23 +186,23 @@ function ClientAssociateDetailFull() {
           >
             <ul>
               <li className="">
-                <Link to="/a/clients" aria-current="page">
+                <Link to="/c/associates" aria-current="page">
                   <FontAwesomeIcon className="fas" icon={faArrowLeft} />
-                  &nbsp;Back to Clients
+                  &nbsp;Back to Associates
                 </Link>
               </li>
             </ul>
           </nav>
 
           {/* Page banner */}
-          {client && client.status === 2 && (
+          {associate && associate.status === 2 && (
             <AlertBanner message="Archived" status="info" />
           )}
 
           {/* Page Title */}
           <h1 className="title is-2">
             <FontAwesomeIcon className="fas" icon={faUserCircle} />
-            &nbsp;Client
+            &nbsp;Associate
           </h1>
           <h4 className="subtitle is-4">
             <FontAwesomeIcon className="fas" icon={faCircleInfo} />
@@ -213,7 +213,7 @@ function ClientAssociateDetailFull() {
           {/* Page */}
           <nav className="box">
             {/* Title + Options */}
-            {client && (
+            {associate && (
               <div className="columns">
                 <div className="column">
                   <p className="title is-one-quarter is-4">
@@ -224,16 +224,16 @@ function ClientAssociateDetailFull() {
                 <div className="column is-three-quarters has-text-right">
                   {/*
                   <Link
-                    to={`/a/client/${cid}/edit`}
+                    to={`/c/associate/${cid}/edit`}
                     className="button is-warning is-fullwidth-mobile"
                     type="button"
-                    disabled={client.status === 2}
+                    disabled={associate.status === 2}
                   >
                     <FontAwesomeIcon className="mdi" icon={faPencil} />
                     &nbsp;Edit
                   </Link>&nbsp;
                   <Link
-                    to={`/a/orders/add/step-2-from-launchpad?id=${client && cid}&fn=${client && client.firstName}&ln=${client && client.lastName}`}
+                    to={`/c/orders/add/step-2-from-launchpad?id=${associate && cid}&fn=${associate && associate.firstName}&ln=${associate && associate.lastName}`}
                     className="button is-success is-fullwidth-mobile"
                     type="button"
                     target="_blank"
@@ -259,13 +259,13 @@ function ClientAssociateDetailFull() {
               <>
                 <FormErrorBox errors={errors} />
 
-                {client && (
+                {associate && (
                   <div className="container">
                     {/* Tab Navigation */}
                     <div className="tabs is-medium is-size-7-mobile">
                       <ul>
                         <li>
-                          <Link to={`/a/client/${client.id}`}>Summary</Link>
+                          <Link to={`/c/associate/${associate.id}`}>Summary</Link>
                         </li>
                         <li className="is-active">
                           <Link>
@@ -273,23 +273,23 @@ function ClientAssociateDetailFull() {
                           </Link>
                         </li>
                         <li>
-                          <Link to={`/a/client/${client.id}/orders`}>
+                          <Link to={`/c/associate/${associate.id}/orders`}>
                             Orders
                           </Link>
                         </li>
                         {/*
                         <li>
-                          <Link to={`/a/client/${client.id}/comments`}>
+                          <Link to={`/c/associate/${associate.id}/comments`}>
                             Comments
                           </Link>
                         </li>
                         <li>
-                          <Link to={`/a/client/${client.id}/attachments`}>
+                          <Link to={`/c/associate/${associate.id}/attachments`}>
                             Attachments
                           </Link>
                         </li>
                         <li>
-                          <Link to={`/a/client/${client.id}/more`}>
+                          <Link to={`/c/associate/${associate.id}/more`}>
                             More&nbsp;&nbsp;
                             <FontAwesomeIcon
                               className="mdi"
@@ -324,7 +324,7 @@ function ClientAssociateDetailFull() {
                           </th>
                           <td>
                             <SelectTextFormatter
-                              selectedValue={client.type}
+                              selectedValue={associate.type}
                               options={ASSOCIATE_TYPE_OF_FILTER_OPTIONS}
                             />
                           </td>
@@ -336,7 +336,7 @@ function ClientAssociateDetailFull() {
                           >
                             First Name:
                           </th>
-                          <td>{client.firstName}</td>
+                          <td>{associate.firstName}</td>
                         </tr>
                         <tr>
                           <th
@@ -345,7 +345,7 @@ function ClientAssociateDetailFull() {
                           >
                             Last Name:
                           </th>
-                          <td>{client.lastName}</td>
+                          <td>{associate.lastName}</td>
                         </tr>
                         <tr>
                           <th
@@ -355,8 +355,8 @@ function ClientAssociateDetailFull() {
                             Date of Birth:
                           </th>
                           <td>
-                            {client.birthDate ? (
-                              <DateTextFormatter value={client.birthDate} />
+                            {associate.birthDate ? (
+                              <DateTextFormatter value={associate.birthDate} />
                             ) : (
                               <>-</>
                             )}
@@ -370,14 +370,14 @@ function ClientAssociateDetailFull() {
                             Gender:
                           </th>
                           <td>
-                            {client.gender ? (
+                            {associate.gender ? (
                               <>
                                 <SelectTextFormatter
-                                  selectedValue={client.gender}
+                                  selectedValue={associate.gender}
                                   options={GENDER_OPTIONS_WITH_EMPTY_OPTION}
                                 />
-                                {client.gender === 1 && (
-                                  <>&nbsp;-&nbsp;{client.genderOther}</>
+                                {associate.gender === 1 && (
+                                  <>&nbsp;-&nbsp;{associate.genderOther}</>
                                 )}
                               </>
                             ) : (
@@ -393,7 +393,7 @@ function ClientAssociateDetailFull() {
                             Description:
                           </th>
                           <td>
-                            {client.description ? client.description : <>-</>}
+                            {associate.description ? associate.description : <>-</>}
                           </td>
                         </tr>
                         <tr>
@@ -404,8 +404,8 @@ function ClientAssociateDetailFull() {
                             Tags:
                           </th>
                           <td>
-                            {client.tags && client.tags.length > 0 ? (
-                              <TagsTextFormatter tags={client.tags} />
+                            {associate.tags && associate.tags.length > 0 ? (
+                              <TagsTextFormatter tags={associate.tags} />
                             ) : (
                               <>-</>
                             )}
@@ -419,7 +419,7 @@ function ClientAssociateDetailFull() {
                                         Company Information Table
                                         ##########################
                                     */}
-                    {client.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID && (
+                    {associate.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID && (
                       <table className="is-fullwidth table">
                         <thead>
                           <tr className="has-background-black">
@@ -436,7 +436,7 @@ function ClientAssociateDetailFull() {
                             >
                               Company Name:
                             </th>
-                            <td>{client.organizationName}</td>
+                            <td>{associate.organizationName}</td>
                           </tr>
                           <tr>
                             <th
@@ -447,7 +447,7 @@ function ClientAssociateDetailFull() {
                             </th>
                             <td>
                               <SelectTextFormatter
-                                selectedValue={client.organizationType}
+                                selectedValue={associate.organizationType}
                                 options={ASSOCIATE_ORGANIZATION_TYPE_OPTIONS}
                               />
                             </td>
@@ -478,8 +478,8 @@ function ClientAssociateDetailFull() {
                             Email:
                           </th>
                           <td>
-                            {client.email ? (
-                              <EmailTextFormatter value={client.email} />
+                            {associate.email ? (
+                              <EmailTextFormatter value={associate.email} />
                             ) : (
                               <>-</>
                             )}
@@ -494,7 +494,7 @@ function ClientAssociateDetailFull() {
                           </th>
                           <td>
                             <CheckboxTextFormatter
-                              checked={client.isOkToEmail}
+                              checked={associate.isOkToEmail}
                             />
                           </td>
                         </tr>
@@ -506,12 +506,12 @@ function ClientAssociateDetailFull() {
                             Phone:
                           </th>
                           <td>
-                            {client.phone ? (
+                            {associate.phone ? (
                               <>
-                                <PhoneTextFormatter value={client.phone} />
-                                {client.phoneType ===
+                                <PhoneTextFormatter value={associate.phone} />
+                                {associate.phoneType ===
                                   ASSOCIATE_PHONE_TYPE_WORK && (
-                                  <>&nbsp;{client.phoneExtension}</>
+                                  <>&nbsp;{associate.phoneExtension}</>
                                 )}
                               </>
                             ) : (
@@ -528,14 +528,14 @@ function ClientAssociateDetailFull() {
                           </th>
                           <td>
                             <SelectTextFormatter
-                              selectedValue={client.phoneType}
+                              selectedValue={associate.phoneType}
                               options={
                                 ASSOCIATE_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS
                               }
                             />
                           </td>
                         </tr>
-                        {client.otherPhone && (
+                        {associate.otherPhone && (
                           <>
                             <tr>
                               <th
@@ -545,14 +545,14 @@ function ClientAssociateDetailFull() {
                                 Other Phone (Optional):
                               </th>
                               <td>
-                                {client.otherPhone ? (
+                                {associate.otherPhone ? (
                                   <>
                                     <PhoneTextFormatter
-                                      value={client.otherPhone}
+                                      value={associate.otherPhone}
                                     />
-                                    {client.otherPhoneType ===
+                                    {associate.otherPhoneType ===
                                       ASSOCIATE_PHONE_TYPE_WORK && (
-                                      <>&nbsp;{client.otherPhoneExtension}</>
+                                      <>&nbsp;{associate.otherPhoneExtension}</>
                                     )}
                                   </>
                                 ) : (
@@ -569,7 +569,7 @@ function ClientAssociateDetailFull() {
                               </th>
                               <td>
                                 <SelectTextFormatter
-                                  selectedValue={client.otherPhoneType}
+                                  selectedValue={associate.otherPhoneType}
                                   options={
                                     ASSOCIATE_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS
                                   }
@@ -587,7 +587,7 @@ function ClientAssociateDetailFull() {
                           </th>
                           <td>
                             <CheckboxTextFormatter
-                              checked={client.isOkToText}
+                              checked={associate.isOkToText}
                             />
                           </td>
                         </tr>
@@ -617,8 +617,8 @@ function ClientAssociateDetailFull() {
                           </th>
                           <td>
                             <URLTextFormatter
-                              urlKey={client.fullAddressWithPostalCode}
-                              urlValue={client.fullAddressUrl}
+                              urlKey={associate.fullAddressWithPostalCode}
+                              urlValue={associate.fullAddressUrl}
                               type={`external`}
                             />
                           </td>
@@ -648,9 +648,9 @@ function ClientAssociateDetailFull() {
                             How did they discover us?:
                           </th>
                           <td>
-                            {client.isHowDidYouHearAboutUsOther
-                              ? client.howDidYouHearAboutUsOther
-                              : client.howDidYouHearAboutUsText}
+                            {associate.isHowDidYouHearAboutUsOther
+                              ? associate.howDidYouHearAboutUsOther
+                              : associate.howDidYouHearAboutUsText}
                           </td>
                         </tr>
                         <tr>
@@ -661,7 +661,7 @@ function ClientAssociateDetailFull() {
                             Join date:
                           </th>
                           <td>
-                            <DateTimeTextFormatter value={client.joinDate} />
+                            <DateTimeTextFormatter value={associate.joinDate} />
                           </td>
                         </tr>
                         <tr>
@@ -673,7 +673,7 @@ function ClientAssociateDetailFull() {
                           </th>
                           <td>
                             <RadioTextFormatter
-                              value={client.preferredLanguage}
+                              value={associate.preferredLanguage}
                               opt1Value={`English`}
                               opt1Label="English"
                               opt2Value={`French`}
@@ -687,13 +687,13 @@ function ClientAssociateDetailFull() {
                     {/*
 
                                         <DataDisplayRowHowHearAboutUsItem
-                                            howDidYouHearAboutUsID={client.howDidYouHearAboutUsID}
+                                            howDidYouHearAboutUsID={associate.howDidYouHearAboutUsID}
                                         />
 
-                                        {client.howDidYouHearAboutUsOther !== undefined && client.howDidYouHearAboutUsOther !== null && client.howDidYouHearAboutUsOther !== null &&
+                                        {associate.howDidYouHearAboutUsOther !== undefined && associate.howDidYouHearAboutUsOther !== null && associate.howDidYouHearAboutUsOther !== null &&
                                             <DataDisplayRowText
                                                 label="How did you hear about us? (Other)"
-                                                value={client.howDidYouHearAboutUsOther}
+                                                value={associate.howDidYouHearAboutUsOther}
                                             />
                                         }
                                     */}
@@ -719,7 +719,7 @@ function ClientAssociateDetailFull() {
                           >
                             ID:
                           </th>
-                          <td>{client.publicId}</td>
+                          <td>{associate.publicId}</td>
                         </tr>
                         <tr>
                           <th
@@ -729,7 +729,7 @@ function ClientAssociateDetailFull() {
                             Created at:
                           </th>
                           <td>
-                            <DateTimeTextFormatter value={client.createdAt} />
+                            <DateTimeTextFormatter value={associate.createdAt} />
                           </td>
                         </tr>
                         <tr>
@@ -739,7 +739,7 @@ function ClientAssociateDetailFull() {
                           >
                             Created by:
                           </th>
-                          <td>{client.createdByUserName}</td>
+                          <td>{associate.createdByUserName}</td>
                         </tr>
                         <tr>
                           <th
@@ -748,7 +748,7 @@ function ClientAssociateDetailFull() {
                           >
                             Created from:
                           </th>
-                          <td>{client.createdFromIpAddress}</td>
+                          <td>{associate.createdFromIpAddress}</td>
                         </tr>
                         <tr>
                           <th
@@ -758,7 +758,7 @@ function ClientAssociateDetailFull() {
                             Modified at:
                           </th>
                           <td>
-                            <DateTimeTextFormatter value={client.modifiedAt} />
+                            <DateTimeTextFormatter value={associate.modifiedAt} />
                           </td>
                         </tr>
                         <tr>
@@ -768,7 +768,7 @@ function ClientAssociateDetailFull() {
                           >
                             Modified by:
                           </th>
-                          <td>{client.modifiedByUserName}</td>
+                          <td>{associate.modifiedByUserName}</td>
                         </tr>
                         <tr>
                           <th
@@ -777,7 +777,7 @@ function ClientAssociateDetailFull() {
                           >
                             Modified from:
                           </th>
-                          <td>{client.modifiedFromIpAddress}</td>
+                          <td>{associate.modifiedFromIpAddress}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -785,25 +785,25 @@ function ClientAssociateDetailFull() {
                       <div className="column is-half">
                         <Link
                           className="button is-one-quarter is-fullwidth-mobile"
-                          to={`/a/clients`}
+                          to={`/c/associates`}
                         >
                           <FontAwesomeIcon className="fas" icon={faArrowLeft} />
-                          &nbsp;Back to Clients
+                          &nbsp;Back to Associates
                         </Link>
                       </div>
                       <div className="column is-three-quarters has-text-right">
                         {/*
                         <Link
-                          to={`/a/client/${cid}/edit`}
+                          to={`/c/associate/${cid}/edit`}
                           className="button is-warning is-fullwidth-mobile"
-                          disabled={client.status === 2}
+                          disabled={associate.status === 2}
                         >
                           <FontAwesomeIcon className="fas" icon={faPencil} />
                           &nbsp;Edit
                         </Link>
                         &nbsp;
                         <Link
-                          to={`/a/orders/add/step-2-from-launchpad?id=${client && cid}&fn=${client && client.firstName}&ln=${client && client.lastName}`}
+                          to={`/c/orders/add/step-2-from-launchpad?id=${associate && cid}&fn=${associate && associate.firstName}&ln=${associate && associate.lastName}`}
                           className="button is-success is-fullwidth-mobile"
                           type="button"
                           target="_blank"
@@ -830,4 +830,4 @@ function ClientAssociateDetailFull() {
   );
 }
 
-export default ClientAssociateDetailFull;
+export default AssociateAssociateDetailFull;

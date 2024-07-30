@@ -38,7 +38,7 @@ import DateTextFormatter from "../../../../Reusable/EveryPage/DateTextFormatter"
 /*
 Display for both tablet and mobile.
 */
-function ClientAssociateOrderListMobile(props) {
+function AssociateAssociateOrderListMobile(props) {
   const {
     listData,
     setPageSize,
@@ -46,7 +46,7 @@ function ClientAssociateOrderListMobile(props) {
     previousCursors,
     onPreviousClicked,
     onNextClicked,
-    onSelectClientForDeletion,
+    onSelectAssociateForDeletion,
   } = props;
   // console.log("listData:", listData);
   return (
@@ -64,7 +64,7 @@ function ClientAssociateOrderListMobile(props) {
               <br />
               <strong>Job #:</strong>&nbsp;
               <Link
-                to={`/a/order/${datum.wjid}`}
+                to={`/c/order/${datum.wjid}`}
                 className="is-small"
                 target="_blank"
                 rel="noreferrer"
@@ -83,7 +83,7 @@ function ClientAssociateOrderListMobile(props) {
               datum.associateId !== "" &&
               datum.associateId !== "000000000000000000000000" ? (
                 <Link
-                  to={`/a/associate/${datum.associateId}`}
+                  to={`/c/associate/${datum.associateId}`}
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -121,7 +121,7 @@ function ClientAssociateOrderListMobile(props) {
               {/*
               <strong>Invoice (PDF):</strong>&nbsp;
               <Link
-                to={`/a/financial/${datum.wjid}`}
+                to={`/c/financial/${datum.wjid}`}
                 target="_blank"
                 rel="noreferrer"
               >
@@ -133,7 +133,7 @@ function ClientAssociateOrderListMobile(props) {
               <br />
               <strong>Financial:</strong>&nbsp;
               <Link
-                to={`/a/financial/${datum.wjid}`}
+                to={`/c/financial/${datum.wjid}`}
                 target="_blank"
                 rel="noreferrer"
               >
@@ -143,7 +143,7 @@ function ClientAssociateOrderListMobile(props) {
               <br />
               <br />
               <Link
-                to={`/a/order/${datum.wjid}`}
+                to={`/c/order/${datum.wjid}`}
                 className="button is-primary is-fullwidth-mobile"
                 type="button"
               >
@@ -194,4 +194,4 @@ function ClientAssociateOrderListMobile(props) {
   );
 }
 
-export default ClientAssociateOrderListMobile;
+export default AssociateAssociateOrderListMobile;

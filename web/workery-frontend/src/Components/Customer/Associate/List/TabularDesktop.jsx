@@ -34,7 +34,7 @@ import {
   USER_ROLES,
 } from "../../../../Constants/FieldOptions";
 
-function ClientAssociateListDesktop(props) {
+function AssociateAssociateListDesktop(props) {
   const {
     listData,
     setPageSize,
@@ -101,7 +101,7 @@ function ClientAssociateListDesktop(props) {
                     <td className="is-actions-cell">
                       <div className="buttons is-right">
                         <Link
-                          to={`/a/client/${datum.id}`}
+                          to={`/c/associate/${datum.id}`}
                           className="is-small"
                         >
                           View&nbsp;
@@ -166,4 +166,4 @@ function ClientAssociateListDesktop(props) {
   );
 }
 
-export default ClientAssociateListDesktop;
+export default AssociateAssociateListDesktop;

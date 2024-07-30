@@ -30,7 +30,7 @@ import {
 import { useRecoilState } from "recoil";
 import { useParams } from "react-router-dom";
 
-import { getClientDetailAPI } from "../../../../API/Client";
+import { getAssociateDetailAPI } from "../../../../API/Associate";
 import FormErrorBox from "../../../Reusable/FormErrorBox";
 import URLTextFormatter from "../../../Reusable/EveryPage/URLTextFormatter";
 import EmailTextFormatter from "../../../Reusable/EveryPage/EmailTextFormatter";
@@ -53,7 +53,7 @@ import {
   ASSOCIATE_ORGANIZATION_TYPE_OPTIONS,
 } from "../../../../Constants/FieldOptions";
 
-function ClientAssociateDetailLite() {
+function AssociateAssociateDetailLite() {
   ////
   //// URL Parameters.
   ////
@@ -76,7 +76,7 @@ function ClientAssociateDetailLite() {
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
   const [forceURL, setForceURL] = useState("");
-  const [client, setClient] = useState({});
+  const [associate, setAssociate] = useState({});
   const [tabIndex, setTabIndex] = useState(1);
 
   ////
@@ -91,7 +91,7 @@ function ClientAssociateDetailLite() {
 
   function onSuccess(response) {
     console.log("onSuccess: Starting...");
-    setClient(response);
+    setAssociate(response);
   }
 
   function onError(apiErr) {
@@ -125,7 +125,7 @@ function ClientAssociateDetailLite() {
       window.scrollTo(0, 0); // Start the page at the top of the page.
 
       setFetching(true);
-      getClientDetailAPI(cid, onSuccess, onError, onDone, onUnauthorized);
+      getAssociateDetailAPI(cid, onSuccess, onError, onDone, onUnauthorized);
     }
 
     return () => {
@@ -152,15 +152,15 @@ function ClientAssociateDetailLite() {
           >
             <ul>
               <li className="">
-                <Link to="/a/dashboard" aria-current="page">
+                <Link to="/c/dashboard" aria-current="page">
                   <FontAwesomeIcon className="fas" icon={faGauge} />
                   &nbsp;Dashboard
                 </Link>
               </li>
               <li className="">
-                <Link to="/a/clients" aria-current="page">
+                <Link to="/c/associates" aria-current="page">
                   <FontAwesomeIcon className="fas" icon={faUserCircle} />
-                  &nbsp;Clients
+                  &nbsp;Associates
                 </Link>
               </li>
               <li className="is-active">
@@ -179,23 +179,23 @@ function ClientAssociateDetailLite() {
           >
             <ul>
               <li className="">
-                <Link to="/a/clients" aria-current="page">
+                <Link to="/c/associates" aria-current="page">
                   <FontAwesomeIcon className="fas" icon={faArrowLeft} />
-                  &nbsp;Back to Clients
+                  &nbsp;Back to Associates
                 </Link>
               </li>
             </ul>
           </nav>
 
           {/* Page banner */}
-          {client && client.status === 2 && (
+          {associate && associate.status === 2 && (
             <AlertBanner message="Archived" status="info" />
           )}
 
           {/* Page Title */}
           <h1 className="title is-2">
             <FontAwesomeIcon className="fas" icon={faUserCircle} />
-            &nbsp;Client
+            &nbsp;Associate
           </h1>
           <h4 className="subtitle is-4">
             <FontAwesomeIcon className="fas" icon={faCircleInfo} />
@@ -206,7 +206,7 @@ function ClientAssociateDetailLite() {
           {/* Page */}
           <nav className="box">
             {/* Title + Options */}
-            {client && (
+            {associate && (
               <div className="columns">
                 <div className="column">
                   <p className="title is-one-quarter is-4">
@@ -217,17 +217,17 @@ function ClientAssociateDetailLite() {
                 <div className="column is-three-quarters has-text-right">
                   {/*
                   <Link
-                    to={`/a/client/${cid}/edit`}
+                    to={`/c/associate/${cid}/edit`}
                     className="button is-warning is-fullwidth-mobile"
                     type="button"
-                    disabled={client.status === 2}
+                    disabled={associate.status === 2}
                   >
                     <FontAwesomeIcon className="mdi" icon={faPencil} />
                     &nbsp;Edit
                   </Link>
                   &nbsp;
                   <Link
-                    to={`/a/orders/add/step-2-from-launchpad?id=${client && cid}&fn=${client && client.firstName}&ln=${client && client.lastName}`}
+                    to={`/c/orders/add/step-2-from-launchpad?id=${associate && cid}&fn=${associate && associate.firstName}&ln=${associate && associate.lastName}`}
                     className="button is-success is-fullwidth-mobile"
                     type="button"
                     target="_blank"
@@ -253,7 +253,7 @@ function ClientAssociateDetailLite() {
               <>
                 <FormErrorBox errors={errors} />
 
-                {client && (
+                {associate && (
                   <div className="container">
                     {/* Tab Navigation */}
                     <div className="tabs is-medium is-size-7-mobile">
@@ -264,28 +264,28 @@ function ClientAssociateDetailLite() {
                           </Link>
                         </li>
                         <li>
-                          <Link to={`/a/client/${client.id}/detail`}>
+                          <Link to={`/c/associate/${associate.id}/detail`}>
                             Detail
                           </Link>
                         </li>
                         <li>
-                          <Link to={`/a/client/${client.id}/orders`}>
+                          <Link to={`/c/associate/${associate.id}/orders`}>
                             Orders
                           </Link>
                         </li>
                         {/*
                         <li>
-                          <Link to={`/a/client/${client.id}/comments`}>
+                          <Link to={`/c/associate/${associate.id}/comments`}>
                             Comments
                           </Link>
                         </li>
                         <li>
-                          <Link to={`/a/client/${client.id}/attachments`}>
+                          <Link to={`/c/associate/${associate.id}/attachments`}>
                             Attachments
                           </Link>
                         </li>
                         <li>
-                          <Link to={`/a/client/${client.id}/more`}>
+                          <Link to={`/c/associate/${associate.id}/more`}>
                             More&nbsp;&nbsp;
                             <FontAwesomeIcon
                               className="mdi"
@@ -308,17 +308,17 @@ function ClientAssociateDetailLite() {
                                                 </div>
                                                  */}
                           <div className="media-content">
-                            {client.type === 3 && (
+                            {associate.type === 3 && (
                               <p className="title is-2 is-size-3-mobile">
                                 <FontAwesomeIcon
                                   className="mdi"
                                   icon={faBuilding}
                                 />
-                                &nbsp;{client.organizationName}
+                                &nbsp;{associate.organizationName}
                               </p>
                             )}
                             <p className="title is-3 is-size-4-mobile">
-                              {client.type === 2 && (
+                              {associate.type === 2 && (
                                 <>
                                   <FontAwesomeIcon
                                     className="mdi"
@@ -327,12 +327,12 @@ function ClientAssociateDetailLite() {
                                   &nbsp;
                                 </>
                               )}
-                              {client.name}
+                              {associate.name}
                             </p>
                             <p className="subtitle is-5 is-size-6-mobile">
                               <URLTextFormatter
-                                urlKey={client.fullAddressWithPostalCode}
-                                urlValue={client.fullAddressUrl}
+                                urlKey={associate.fullAddressWithPostalCode}
+                                urlValue={associate.fullAddressUrl}
                                 type={`external`}
                               />
                             </p>
@@ -346,8 +346,8 @@ function ClientAssociateDetailLite() {
                               icon={faEnvelope}
                             />
                             &nbsp;
-                            {client.email ? (
-                              <EmailTextFormatter value={client.email} />
+                            {associate.email ? (
+                              <EmailTextFormatter value={associate.email} />
                             ) : (
                               <>-</>
                             )}
@@ -358,8 +358,8 @@ function ClientAssociateDetailLite() {
                               icon={faSquarePhone}
                             />
                             &nbsp;
-                            {client.phone ? (
-                              <PhoneTextFormatter value={client.phone} />
+                            {associate.phone ? (
+                              <PhoneTextFormatter value={associate.phone} />
                             ) : (
                               <>-</>
                             )}
@@ -367,8 +367,8 @@ function ClientAssociateDetailLite() {
                           <p>
                             <FontAwesomeIcon className="fas" icon={faTags} />
                             &nbsp;Tag(s):&nbsp;
-                            {client.tags && client.tags.length > 0 ? (
-                              <TagsTextFormatter tags={client.tags} />
+                            {associate.tags && associate.tags.length > 0 ? (
+                              <TagsTextFormatter tags={associate.tags} />
                             ) : (
                               <>-</>
                             )}
@@ -383,51 +383,51 @@ function ClientAssociateDetailLite() {
                     </div>
 
                     {/*
-                                    {client.avatarObjectUrl && <>
+                                    {associate.avatarObjectUrl && <>
                                         <DataDisplayRowImage
                                             label="Profile Photo"
-                                            objectURL={client.avatarObjectUrl}
+                                            objectURL={associate.avatarObjectUrl}
                                             maxWidth={"640px"}
                                         />
                                     </>}
 
                                     <DataDisplayRowSelect
                                         label="Type"
-                                        selectedValue={client.type}
+                                        selectedValue={associate.type}
                                         options={ASSOCIATE_TYPE_OF_FILTER_OPTIONS}
                                     />
 
-                                    {client.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID && <>
+                                    {associate.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID && <>
                                         <DataDisplayRowText
                                             label="Organization Name"
-                                            value={client.organizationName}
+                                            value={associate.organizationName}
                                         />
                                         <DataDisplayRowSelect
                                             label="Organization Type"
-                                            selectedValue={client.organizationType}
+                                            selectedValue={associate.organizationType}
                                             options={ASSOCIATE_ORGANIZATION_TYPE_OPTIONS}
                                         />
                                     </>}
 
                                     <DataDisplayRowText
                                         label="First Name"
-                                        value={client.firstName}
+                                        value={associate.firstName}
                                     />
 
                                     <DataDisplayRowText
                                         label="Last Name"
-                                        value={client.lastName}
+                                        value={associate.lastName}
                                     />
 
                                     <DataDisplayRowText
                                         label="Email"
-                                        value={client.email}
+                                        value={associate.email}
                                         type="email"
                                     />
 
                                     <DataDisplayRowText
                                         label="Phone"
-                                        value={client.phone}
+                                        value={associate.phone}
                                         type="phone"
                                     />
 */}
@@ -436,24 +436,24 @@ function ClientAssociateDetailLite() {
                       <div className="column is-one-quarter">
                         <Link
                           className="button is-fullwidth-mobile"
-                          to={`/a/clients`}
+                          to={`/c/associates`}
                         >
                           <FontAwesomeIcon className="fas" icon={faArrowLeft} />
-                          &nbsp;Back to Clients
+                          &nbsp;Back to Associates
                         </Link>
                       </div>
                       <div className="column is-three-quarters has-text-right">
                         {/*
                         <Link
-                          to={`/a/client/${cid}/edit`}
+                          to={`/c/associate/${cid}/edit`}
                           className="button is-warning is-fullwidth-mobile"
-                          disabled={client.status === 2}
+                          disabled={associate.status === 2}
                         >
                           <FontAwesomeIcon className="fas" icon={faPencil} />
                           &nbsp;Edit
                         </Link>&nbsp;
                         <Link
-                          to={`/a/orders/add/step-2-from-launchpad?id=${client && cid}&fn=${client && client.firstName}&ln=${client && client.lastName}`}
+                          to={`/c/orders/add/step-2-from-launchpad?id=${associate && cid}&fn=${associate && associate.firstName}&ln=${associate && associate.lastName}`}
                           className="button is-success is-fullwidth-mobile"
                           type="button"
                           target="_blank"
@@ -480,4 +480,4 @@ function ClientAssociateDetailLite() {
   );
 }
 
-export default ClientAssociateDetailLite;
+export default AssociateAssociateDetailLite;

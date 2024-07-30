@@ -16,6 +16,7 @@ import (
 func (c *AssociateControllerImpl) LiteListAndCountByFilter(ctx context.Context, f *a_c.AssociatePaginationListFilter) (*a_c.AssociatePaginationLiteListAndCountResult, error) {
 	// // Extract from our session the following data.
 	tenantID := ctx.Value(constants.SessionUserTenantID).(primitive.ObjectID)
+	userID := ctx.Value(constants.SessionUserID).(primitive.ObjectID)
 	userRoleID, _ := ctx.Value(constants.SessionUserRole).(int8)
 
 	// Handle permissions based on roles.
@@ -28,19 +29,32 @@ func (c *AssociateControllerImpl) LiteListAndCountByFilter(ctx context.Context, 
 		break
 	case user_s.UserRoleCustomer:
 		customerID, _ := ctx.Value(constants.SessionUserReferenceID).(primitive.ObjectID)
-		ids, err := c.OrderStorer.GetAllByCustomerIDsByAssociateID(ctx, customerID)
+		ids, err := c.OrderStorer.GetAllByAssociateIDsByCustomerID(ctx, customerID)
 
 		c.Logger.Debug("applying filter based on customer",
 			slog.Any("customer_id", customerID),
-			slog.Any("associate_ids", ids))
+			slog.Any("associate_ids", ids),
+			slog.Any("user_id", userID))
 		if err != nil {
 			c.Logger.Error("database get all assocaites ids by customer id error", slog.Any("error", err))
 			return nil, err
 		}
+
+		// CASE 1 of 2: No associates.
+		if len(ids) == 0 {
+			c.Logger.Debug("no associates found for customer user",
+				slog.Any("customer_id", customerID),
+				slog.Any("user_id", userID))
+			return &a_c.AssociatePaginationLiteListAndCountResult{}, nil
+		}
+
+		// CASE 2 of 2: Has associates.
 		f.IDs = ids
 		break
 	default:
-		c.Logger.Warn("user does not permission error", slog.Any("role", userRoleID))
+		c.Logger.Warn("user does not permission error",
+			slog.Any("user_id", userID),
+			slog.Any("role", userRoleID))
 		return nil, httperror.NewForForbiddenWithSingleField("forbidden", fmt.Sprintf("you do not have the correct role: %v", userRoleID))
 	}
 
@@ -66,7 +80,10 @@ func (c *AssociateControllerImpl) LiteListAndCountByFilter(ctx context.Context, 
 
 	m, err := c.AssociateStorer.LiteListAndCountByFilter(ctx, f)
 	if err != nil {
-		c.Logger.Error("database list by filter error", slog.Any("error", err))
+		c.Logger.Error("database list by filter error",
+			slog.Any("user_id", userID),
+			slog.Any("role", userRoleID),
+			slog.Any("error", err))
 		return nil, err
 	}
 	return m, err

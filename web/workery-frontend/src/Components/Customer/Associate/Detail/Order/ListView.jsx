@@ -30,7 +30,7 @@ import {
 import { useRecoilState } from "recoil";
 import { useParams } from "react-router-dom";
 
-import { getClientDetailAPI } from "../../../../../API/Client";
+import { getAssociateDetailAPI } from "../../../../../API/Associate";
 import { getOrderListAPI } from "../../../../../API/Order";
 import FormErrorBox from "../../../../Reusable/FormErrorBox";
 import DataDisplayRowText from "../../../../Reusable/DataDisplayRowText";
@@ -51,10 +51,10 @@ import {
   ASSOCIATE_TYPE_OF_FILTER_OPTIONS,
   ASSOCIATE_ORGANIZATION_TYPE_OPTIONS,
 } from "../../../../../Constants/FieldOptions";
-import ClientAssociateOrderListDesktop from "./ListDesktop";
-import ClientAssociateOrderListMobile from "./ListMobile";
+import AssociateAssociateOrderListDesktop from "./ListDesktop";
+import AssociateAssociateOrderListMobile from "./ListMobile";
 
-function ClientAssociateDetailOrderList() {
+function AssociateAssociateDetailOrderList() {
   ////
   //// URL Parameters.
   ////
@@ -77,7 +77,7 @@ function ClientAssociateDetailOrderList() {
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
   const [forceURL, setForceURL] = useState("");
-  const [client, setClient] = useState({});
+  const [associate, setAssociate] = useState({});
   const [tabIndex, setTabIndex] = useState(1);
   const [orderList, setOrderList] = useState([]);
 
@@ -157,16 +157,16 @@ function ClientAssociateDetailOrderList() {
   //// API.
   ////
 
-  // --- Client Detail --- //
+  // --- Associate Detail --- //
 
-  function onClientSuccess(response) {
-    console.log("onClientSuccess: Starting...");
-    console.log("onClientSuccess: response:", response);
-    setClient(response);
+  function onAssociateSuccess(response) {
+    console.log("onAssociateSuccess: Starting...");
+    console.log("onAssociateSuccess: response:", response);
+    setAssociate(response);
   }
 
-  function onClientError(apiErr) {
-    console.log("onClientError: Starting...");
+  function onAssociateError(apiErr) {
+    console.log("onAssociateError: Starting...");
     setErrors(apiErr);
 
     // The following code will cause the screen to scroll to the top of
@@ -176,8 +176,8 @@ function ClientAssociateDetailOrderList() {
     scroll.scrollToTop();
   }
 
-  function onClientDone() {
-    console.log("onClientDone: Starting...");
+  function onAssociateDone() {
+    console.log("onAssociateDone: Starting...");
     setFetching(false);
   }
 
@@ -225,11 +225,11 @@ function ClientAssociateDetailOrderList() {
       window.scrollTo(0, 0); // Start the page at the top of the page.
 
       setFetching(true);
-      getClientDetailAPI(
+      getAssociateDetailAPI(
         cid,
-        onClientSuccess,
-        onClientError,
-        onClientDone,
+        onAssociateSuccess,
+        onAssociateError,
+        onAssociateDone,
         onUnauthorized,
       );
 
@@ -268,15 +268,15 @@ function ClientAssociateDetailOrderList() {
           >
             <ul>
               <li className="">
-                <Link to="/a/dashboard" aria-current="page">
+                <Link to="/c/dashboard" aria-current="page">
                   <FontAwesomeIcon className="fas" icon={faGauge} />
                   &nbsp;Dashboard
                 </Link>
               </li>
               <li className="">
-                <Link to="/a/clients" aria-current="page">
+                <Link to="/c/associates" aria-current="page">
                   <FontAwesomeIcon className="fas" icon={faUserCircle} />
-                  &nbsp;Clients
+                  &nbsp;Associates
                 </Link>
               </li>
               <li className="is-active">
@@ -295,23 +295,23 @@ function ClientAssociateDetailOrderList() {
           >
             <ul>
               <li className="">
-                <Link to="/a/clients" aria-current="page">
+                <Link to="/c/associates" aria-current="page">
                   <FontAwesomeIcon className="fas" icon={faArrowLeft} />
-                  &nbsp;Back to Clients
+                  &nbsp;Back to Associates
                 </Link>
               </li>
             </ul>
           </nav>
 
           {/* Page banner */}
-          {client && client.status === 2 && (
+          {associate && associate.status === 2 && (
             <AlertBanner message="Archived" status="info" />
           )}
 
           {/* Page Title */}
           <h1 className="title is-2">
             <FontAwesomeIcon className="fas" icon={faUserCircle} />
-            &nbsp;Client
+            &nbsp;Associate
           </h1>
           <h4 className="subtitle is-4">
             <FontAwesomeIcon className="fas" icon={faCircleInfo} />
@@ -322,7 +322,7 @@ function ClientAssociateDetailOrderList() {
           {/* Page */}
           <nav className="box">
             {/* Title + Options */}
-            {client && (
+            {associate && (
               <div className="columns">
                 <div className="column">
                   <p className="title is-4">
@@ -333,7 +333,7 @@ function ClientAssociateDetailOrderList() {
                 <div className="column has-text-right">
                   {/*
                   <Link
-                    to={`/a/orders/add/step-2-from-launchpad?id=${client && cid}&fn=${client && client.firstName}&ln=${client && client.lastName}`}
+                    to={`/c/orders/add/step-2-from-launchpad?id=${associate && cid}&fn=${associate && associate.firstName}&ln=${associate && associate.lastName}`}
                     className="button is-success is-fullwidth-mobile"
                     type="button"
                     target="_blank"
@@ -359,16 +359,16 @@ function ClientAssociateDetailOrderList() {
               <>
                 <FormErrorBox errors={errors} />
 
-                {client && (
+                {associate && (
                   <div className="container">
                     {/* Tab Navigation */}
                     <div className="tabs is-medium is-size-7-mobile">
                       <ul>
                         <li>
-                          <Link to={`/a/client/${cid}`}>Summary</Link>
+                          <Link to={`/c/associate/${cid}`}>Summary</Link>
                         </li>
                         <li>
-                          <Link to={`/a/client/${cid}/detail`}>Detail</Link>
+                          <Link to={`/c/associate/${cid}/detail`}>Detail</Link>
                         </li>
                         <li className="is-active">
                           <Link>
@@ -377,17 +377,17 @@ function ClientAssociateDetailOrderList() {
                         </li>
                         {/*
                         <li>
-                          <Link to={`/a/client/${cid}/comments`}>
+                          <Link to={`/c/associate/${cid}/comments`}>
                             Comments
                           </Link>
                         </li>
                         <li>
-                          <Link to={`/a/client/${cid}/attachments`}>
+                          <Link to={`/c/associate/${cid}/attachments`}>
                             Attachments
                           </Link>
                         </li>
                         <li>
-                          <Link to={`/a/client/${cid}/more`}>
+                          <Link to={`/c/associate/${cid}/more`}>
                             More&nbsp;&nbsp;
                             <FontAwesomeIcon
                               className="mdi"
@@ -410,7 +410,7 @@ function ClientAssociateDetailOrderList() {
                             ##################################################################
                         */}
                         <div className="is-hidden-touch">
-                          <ClientAssociateOrderListDesktop
+                          <AssociateAssociateOrderListDesktop
                             listData={orderList}
                             setPageSize={setPageSize}
                             pageSize={pageSize}
@@ -427,7 +427,7 @@ function ClientAssociateDetailOrderList() {
                             ###########################################################################
                         */}
                         <div className="is-fullwidth is-hidden-desktop">
-                          <ClientAssociateOrderListMobile
+                          <AssociateAssociateOrderListMobile
                             listData={orderList}
                             setPageSize={setPageSize}
                             pageSize={pageSize}
@@ -448,7 +448,7 @@ function ClientAssociateDetailOrderList() {
                             No orders.{" "}
                             <b>
                               <Link
-                                to={`/a/orders/add/step-2-from-launchpad?id=${client && cid}&fn=${client && client.firstName}&ln=${client && client.lastName}`}
+                                to={`/c/orders/add/step-2-from-launchpad?id=${associate && cid}&fn=${associate && associate.firstName}&ln=${associate && associate.lastName}`}
                                 target="_blank"
                                 rel="noreferrer"
                               >
@@ -469,17 +469,17 @@ function ClientAssociateDetailOrderList() {
                       <div className="column is-half">
                         <Link
                           className="button is-fullwidth-mobile"
-                          to={`/a/clients`}
+                          to={`/c/associates`}
                         >
                           <FontAwesomeIcon className="fas" icon={faArrowLeft} />
-                          &nbsp;Back to Clients
+                          &nbsp;Back to Associates
                         </Link>
                       </div>
                       <div className="column is-half has-text-right">
                         {/*
                         <Link
                           className="button is-success is-fullwidth-mobile"
-                          to={`/a/orders/add/step-2-from-launchpad?id=${client && cid}&fn=${client && client.firstName}&ln=${client && client.lastName}`}
+                          to={`/c/orders/add/step-2-from-launchpad?id=${associate && cid}&fn=${associate && associate.firstName}&ln=${associate && associate.lastName}`}
                           target="_blank"
                           rel="noreferrer"
                         >
@@ -504,4 +504,4 @@ function ClientAssociateDetailOrderList() {
   );
 }
 
-export default ClientAssociateDetailOrderList;
+export default AssociateAssociateDetailOrderList;

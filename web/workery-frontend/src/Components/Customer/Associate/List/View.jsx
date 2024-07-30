@@ -25,7 +25,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 
-import { getClientListAPI } from "../../../../API/Client";
+import { getAssociateListAPI } from "../../../../API/Associate";
 import {
   topAlertMessageState,
   topAlertStatusState,
@@ -33,8 +33,8 @@ import {
   associateFilterStatusState,
   associateFilterTypeState,
   associateFilterSortState,
-  clientListViewTypeState,
-  clientListSeeAllFiltersState,
+  associateListViewTypeState,
+  associateListSeeAllFiltersState,
 } from "../../../../AppState";
 import FormErrorBox from "../../../Reusable/FormErrorBox";
 import PageLoadingContent from "../../../Reusable/PageLoadingContent";
@@ -57,11 +57,11 @@ import {
   LIST_VIEW_TYPE_TABULAR,
   LIST_VIEW_TYPE_GRID,
 } from "../../../../Constants/App";
-import ClientAssociateListDesktop from "./TabularDesktop";
-import ClientAssociateListMobile from "./TabularMobile";
-import ClientAssociateListGrid from "./Grid";
+import AssociateAssociateListDesktop from "./TabularDesktop";
+import AssociateAssociateListMobile from "./TabularMobile";
+import AssociateAssociateListGrid from "./Grid";
 
-function ClientAssociateList() {
+function AssociateAssociateList() {
   ////
   //// Global state.
   ////
@@ -75,10 +75,10 @@ function ClientAssociateList() {
   const [type, setType] = useRecoilState(associateFilterTypeState); // Filtering
   const [sortByValue, setSortByValue] = useRecoilState(associateFilterSortState); // Sorting
   const [listViewType, setListViewType] = useRecoilState(
-    clientListViewTypeState,
+    associateListViewTypeState,
   );
   const [hasClickedSeeAllFilters, setHasClickedSeeAllFilters] = useRecoilState(
-    clientListSeeAllFiltersState,
+    associateListSeeAllFiltersState,
   );
 
   ////
@@ -89,7 +89,7 @@ function ClientAssociateList() {
   const [errors, setErrors] = useState({});
   const [forceURL, setForceURL] = useState("");
   const [listData, setListData] = useState("");
-  const [selectedClientForDeletion, setSelectedClientForDeletion] =
+  const [selectedAssociateForDeletion, setSelectedAssociateForDeletion] =
     useState("");
   const [isFetching, setFetching] = useState(false);
   const [pageSize, setPageSize] = useState(50); // Pagination
@@ -103,8 +103,8 @@ function ClientAssociateList() {
 
   // --- List --- //
 
-  function onClientListSuccess(response) {
-    console.log("onClientListSuccess: Starting...");
+  function onAssociateListSuccess(response) {
+    console.log("onAssociateListSuccess: Starting...");
     if (response.results !== null) {
       setListData(response);
       if (response.hasNextPage) {
@@ -113,8 +113,8 @@ function ClientAssociateList() {
     }
   }
 
-  function onClientListError(apiErr) {
-    console.log("onClientListError: Starting...");
+  function onAssociateListError(apiErr) {
+    console.log("onAssociateListError: Starting...");
     setErrors(apiErr);
 
     // The following code will cause the screen to scroll to the top of
@@ -124,19 +124,19 @@ function ClientAssociateList() {
     scroll.scrollToTop();
   }
 
-  function onClientListDone() {
-    console.log("onClientListDone: Starting...");
+  function onAssociateListDone() {
+    console.log("onAssociateListDone: Starting...");
     setFetching(false);
   }
 
   // --- Delete --- //
 
-  function onClientDeleteSuccess(response) {
-    console.log("onClientDeleteSuccess: Starting..."); // For debugging purposes only.
+  function onAssociateDeleteSuccess(response) {
+    console.log("onAssociateDeleteSuccess: Starting..."); // For debugging purposes only.
 
     // Update notification.
     setTopAlertStatus("success");
-    setTopAlertMessage("Client deleted");
+    setTopAlertMessage("Associate deleted");
     setTimeout(() => {
       console.log(
         "onDeleteConfirmButtonClick: topAlertMessage, topAlertStatus:",
@@ -150,8 +150,8 @@ function ClientAssociateList() {
     fetchList(currentCursor, pageSize, "", sortByValue, status, type);
   }
 
-  function onClientDeleteError(apiErr) {
-    console.log("onClientDeleteError: Starting..."); // For debugging purposes only.
+  function onAssociateDeleteError(apiErr) {
+    console.log("onAssociateDeleteError: Starting..."); // For debugging purposes only.
     setErrors(apiErr);
 
     // Update notification.
@@ -159,7 +159,7 @@ function ClientAssociateList() {
     setTopAlertMessage("Failed deleting");
     setTimeout(() => {
       console.log(
-        "onClientDeleteError: topAlertMessage, topAlertStatus:",
+        "onAssociateDeleteError: topAlertMessage, topAlertStatus:",
         topAlertMessage,
         topAlertStatus,
       );
@@ -173,8 +173,8 @@ function ClientAssociateList() {
     scroll.scrollToTop();
   }
 
-  function onClientDeleteDone() {
-    console.log("onClientDeleteDone: Starting...");
+  function onAssociateDeleteDone() {
+    console.log("onAssociateDeleteDone: Starting...");
     setFetching(false);
   }
 
@@ -228,11 +228,11 @@ function ClientAssociateList() {
       params.set("type", t);
     }
 
-    getClientListAPI(
+    getAssociateListAPI(
       params,
-      onClientListSuccess,
-      onClientListError,
-      onClientListDone,
+      onAssociateListSuccess,
+      onAssociateListError,
+      onAssociateListDone,
       onUnauthorized,
     );
   };
@@ -292,7 +292,7 @@ function ClientAssociateList() {
           >
             <ul className="">
               <li className="">
-                <Link to="/a/dashboard" aria-current="page">
+                <Link to="/c/dashboard" aria-current="page">
                   <FontAwesomeIcon className="fas" icon={faGauge} />
                   &nbsp;Dashboard
                 </Link>
@@ -300,7 +300,7 @@ function ClientAssociateList() {
               <li className="is-active">
                 <Link aria-current="page">
                   <FontAwesomeIcon className="fas" icon={faUserCircle} />
-                  &nbsp;Clients
+                  &nbsp;Associates
                 </Link>
               </li>
             </ul>
@@ -313,7 +313,7 @@ function ClientAssociateList() {
           >
             <ul>
               <li className="">
-                <Link to="/a/dashboard" aria-current="page">
+                <Link to="/c/dashboard" aria-current="page">
                   <FontAwesomeIcon className="fas" icon={faArrowLeft} />
                   &nbsp;Back to Dashboard
                 </Link>
@@ -324,7 +324,7 @@ function ClientAssociateList() {
           {/* Page Title */}
           <h1 className="title is-2">
             <FontAwesomeIcon className="fas" icon={faUserCircle} />
-            &nbsp;Clients
+            &nbsp;Associates
           </h1>
           <hr />
 
@@ -350,12 +350,12 @@ function ClientAssociateList() {
                   <tr>
                     <td>
                       <FontAwesomeIcon className="fas" icon={faPlus} />
-                      &nbsp;Add Client
+                      &nbsp;Add Associate
                     </td>
                     <td>
                       <div className="buttons is-right">
                         <Link
-                          to={`/a/clients/add/step-1-search`}
+                          to={`/c/associates/add/step-1-search`}
                           className="is-small"
                         >
                           View&nbsp;
@@ -367,15 +367,15 @@ function ClientAssociateList() {
                       </div>
                     </td>
                   </tr>
-                  {/* End Clients */}
+                  {/* End Associates */}
                   <tr>
                     <td>
                       <FontAwesomeIcon className="fas" icon={faSearch} />
-                      &nbsp;Search Clients
+                      &nbsp;Search Associates
                     </td>
                     <td>
                       <div className="buttons is-right">
-                        <Link to={`/a/clients/search`} className="is-small">
+                        <Link to={`/c/associates/search`} className="is-small">
                           View&nbsp;
                           <FontAwesomeIcon
                             className="mdi"
@@ -499,7 +499,7 @@ function ClientAssociateList() {
                       <FormSelectField
                         label="Type"
                         name="type"
-                        placeholder="Pick client type"
+                        placeholder="Pick associate type"
                         selectedValue={type}
                         helpText=""
                         onChange={(e) => setType(parseInt(e.target.value))}
@@ -530,7 +530,7 @@ function ClientAssociateList() {
                               EVERYTHING INSIDE HERE WILL ONLY GRID VIEW FOR MOBILE/DESKTOP
                               ##################################################################
                           */}
-                        <ClientAssociateListGrid
+                        <AssociateAssociateListGrid
                           listData={listData}
                           setPageSize={setPageSize}
                           pageSize={pageSize}
@@ -551,7 +551,7 @@ function ClientAssociateList() {
                             ##################################################################
                         */}
                         <div className="is-hidden-touch">
-                          <ClientAssociateListDesktop
+                          <AssociateAssociateListDesktop
                             listData={listData}
                             setPageSize={setPageSize}
                             pageSize={pageSize}
@@ -568,7 +568,7 @@ function ClientAssociateList() {
                           ###########################################################################
                         */}
                         <div className="is-fullwidth is-hidden-desktop">
-                          <ClientAssociateListMobile
+                          <AssociateAssociateListMobile
                             listData={listData}
                             setPageSize={setPageSize}
                             pageSize={pageSize}
@@ -585,12 +585,12 @@ function ClientAssociateList() {
                     <div className="hero-body">
                       <p className="title">
                         <FontAwesomeIcon className="fas" icon={faTable} />
-                        &nbsp;No Clients
+                        &nbsp;No Associates
                       </p>
                       <p className="subtitle">
-                        No clients.{" "}
+                        No associates.{" "}
                         <b>
-                          <Link to="/a/clients/add/step-1">
+                          <Link to="/c/associates/add/step-1">
                             Click here&nbsp;
                             <FontAwesomeIcon
                               className="mdi"
@@ -598,7 +598,7 @@ function ClientAssociateList() {
                             />
                           </Link>
                         </b>{" "}
-                        to get started creating your first client.
+                        to get started creating your first associate.
                       </p>
                     </div>
                   </section>
@@ -609,7 +609,7 @@ function ClientAssociateList() {
               <div className="column is-half">
                 <Link
                   className="button is-fullwidth-mobile"
-                  to={`/a/dashboard`}
+                  to={`/c/dashboard`}
                 >
                   <FontAwesomeIcon className="fas" icon={faArrowLeft} />
                   &nbsp;Back to Dashboard
@@ -624,4 +624,4 @@ function ClientAssociateList() {
   );
 }
 
-export default ClientAssociateList;
+export default AssociateAssociateList;

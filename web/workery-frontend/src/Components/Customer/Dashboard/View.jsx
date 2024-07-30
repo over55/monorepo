@@ -71,7 +71,7 @@ function CustomerDashboard() {
           <nav class="breadcrumb" aria-label="breadcrumbs">
             <ul>
               <li class="is-active">
-                <Link to="/a/dashboard" aria-current="page">
+                <Link to="/c/dashboard" aria-current="page">
                   <FontAwesomeIcon className="fas" icon={faGauge} />
                   &nbsp;Dashboard
                 </Link>

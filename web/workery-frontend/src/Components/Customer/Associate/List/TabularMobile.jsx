@@ -32,7 +32,7 @@ import { PAGE_SIZE_OPTIONS } from "../../../../Constants/FieldOptions";
 /*
 Display for both tablet and mobile.
 */
-function ClientAssociateListMobile(props) {
+function AssociateAssociateListMobile(props) {
   const {
     listData,
     setPageSize,
@@ -72,7 +72,7 @@ function ClientAssociateListMobile(props) {
               <br />
               <br />
               <Link
-                to={`/a/client/${datum.id}`}
+                to={`/c/associate/${datum.id}`}
                 className="button is-primary is-fullwidth-mobile"
                 type="button"
               >
@@ -139,4 +139,4 @@ function ClientAssociateListMobile(props) {
   );
 }
 
-export default ClientAssociateListMobile;
+export default AssociateAssociateListMobile;

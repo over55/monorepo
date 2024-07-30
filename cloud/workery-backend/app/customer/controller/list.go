@@ -36,7 +36,17 @@ func (c *CustomerControllerImpl) LiteListAndCountByFilter(ctx context.Context, f
 			c.Logger.Error("database get all customer ids by associate ids error", slog.Any("error", err))
 			return nil, err
 		}
+
+		// CASE 1 of 2: No customers.
+		if len(ids) == 0 {
+			c.Logger.Debug("no customers found for associate user",
+				slog.Any("associate_id", associateID))
+			return &c_s.CustomerPaginationLiteListAndCountResult{}, nil
+		}
+
+		// CASE 2 of 2: Has customers.
 		f.IDs = ids
+		break
 	default:
 		c.Logger.Warn("user does not permission error", slog.Any("role", userRoleID))
 		return nil, httperror.NewForForbiddenWithSingleField("forbidden", "you do not have the correct role")

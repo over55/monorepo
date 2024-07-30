@@ -39,7 +39,7 @@ import CustomerTypeOfIconFormatter from "../../../../Reusable/SpecificPage/Custo
 import CustomerOrderStatusFormatter from "../../../../Reusable/SpecificPage/Customer/OrderStatusFormatter";
 import DateTextFormatter from "../../../../Reusable/EveryPage/DateTextFormatter";
 
-function ClientAssociateOrderListDesktop(props) {
+function AssociateAssociateOrderListDesktop(props) {
   const {
     listData,
     setPageSize,
@@ -47,7 +47,7 @@ function ClientAssociateOrderListDesktop(props) {
     previousCursors,
     onPreviousClicked,
     onNextClicked,
-    onSelectClientForDeletion,
+    onSelectAssociateForDeletion,
     sortByValue,
   } = props;
   return (
@@ -84,7 +84,7 @@ function ClientAssociateOrderListDesktop(props) {
                     </td>
                     <td data-label="Job #">
                     <Link
-                      to={`/a/order/${datum.wjid}`}
+                      to={`/c/order/${datum.wjid}`}
                       className="is-small"
                       target="_blank"
                       rel="noreferrer"
@@ -102,7 +102,7 @@ function ClientAssociateOrderListDesktop(props) {
                       datum.associateId !== "" &&
                       datum.associateId !== "000000000000000000000000" ? (
                         <Link
-                          to={`/a/associate/${datum.associateId}`}
+                          to={`/c/associate/${datum.associateId}`}
                           target="_blank"
                           rel="noreferrer"
                         >
@@ -138,7 +138,7 @@ function ClientAssociateOrderListDesktop(props) {
                     {/*
                     <td data-label="Invoice (PDF)">
                       <Link
-                        to={`/a/financial/${datum.wjid}`}
+                        to={`/c/financial/${datum.wjid}`}
                         target="_blank"
                         rel="noreferrer"
                       >
@@ -153,7 +153,7 @@ function ClientAssociateOrderListDesktop(props) {
                     <td data-label="Financial">
                       <div className="buttons">
                       <Link
-                        to={`/a/financial/${datum.wjid}`}
+                        to={`/c/financial/${datum.wjid}`}
                         target="_blank"
                         rel="noreferrer"
                       >
@@ -173,7 +173,7 @@ function ClientAssociateOrderListDesktop(props) {
                     <td className="is-actions-cell">
                       <div className="buttons">
                         <Link
-                          to={`/a/order/${datum.wjid}`}
+                          to={`/c/order/${datum.wjid}`}
                           className="is-small"
                           target="_blank"
                           rel="noreferrer"
@@ -233,4 +233,4 @@ function ClientAssociateOrderListDesktop(props) {
   );
 }
 
-export default ClientAssociateOrderListDesktop;
+export default AssociateAssociateOrderListDesktop;
