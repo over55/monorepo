@@ -62,7 +62,9 @@ import {
 import AccountExecutiveStaffDetail from "./ExecutiveStaff";
 import AccountManagementOrFrontlineStaffDetail from "./ManagementOrFrontlineStaff";
 import AccountAssociateDetail from "./Associate";
+import AccountAssociateJobSeekerDetail from "./AssociateJobSeeker";
 import AccountCustomerDetail from "./Customer";
+
 
 function AccountDetail() {
   ////
@@ -333,6 +335,12 @@ function AccountDetail() {
                         case ASSOCIATE_ROLE_ID:
                           return (
                             <AccountAssociateDetail
+                                currentUser={currentUser}
+                            />
+                          );
+                        case ASSOCIATE_JOB_SEEKER_ROLE_ID:
+                          return (
+                            <AccountAssociateJobSeekerDetail
                                 currentUser={currentUser}
                             />
                           );
