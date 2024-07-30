@@ -82,7 +82,9 @@ import {
 import AccountExecutiveStaffUpdate from "./ExecutiveStaffView";
 import AccountManagementOrFrontlineStaffUpdate from "./ManagementOrFrontlineStaffView";
 import AssociateUpdate from "./AssociateView";
+import AssociateJobSeekerUpdate from "./AssociateJobSeeker";
 import CustomerUpdate from "./CustomerView";
+
 
 function AccountUpdate() {
   ////
@@ -191,6 +193,15 @@ function AccountUpdate() {
           />
         );
         break;
+      case ASSOCIATE_JOB_SEEKER_ROLE_ID:
+        return (
+          <AssociateJobSeekerUpdate
+            currentUser={currentUser}
+            setCurrentUser={setCurrentUser}
+          />
+        );
+        break;
+
       case CUSTOMER_ROLE_ID:
         return (
           <CustomerUpdate
