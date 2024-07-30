@@ -365,10 +365,7 @@ function AssociateAssociateDetailOrderList() {
                     <div className="tabs is-medium is-size-7-mobile">
                       <ul>
                         <li>
-                          <Link to={`/c/associate/${cid}`}>Summary</Link>
-                        </li>
-                        <li>
-                          <Link to={`/c/associate/${cid}/detail`}>Detail</Link>
+                          <Link to={`/c/associate/${cid}`}>Detail</Link>
                         </li>
                         <li className="is-active">
                           <Link>
