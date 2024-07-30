@@ -77,24 +77,6 @@ function AssociateAssociateOrderListMobile(props) {
               </Link>
               <br />
               <br />
-              <strong>Associate:</strong>&nbsp;
-              {datum.associateId !== undefined &&
-              datum.associateId !== null &&
-              datum.associateId !== "" &&
-              datum.associateId !== "000000000000000000000000" ? (
-                <Link
-                  to={`/c/associate/${datum.associateId}`}
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  {datum.associateName}&nbsp;
-                  <FontAwesomeIcon className="mdi" icon={faExternalLinkAlt} />
-                </Link>
-              ) : (
-                <>-</>
-              )}
-              <br />
-              <br />
               <strong>Assigned:</strong>&nbsp;
               {datum.associateId !== undefined &&
               datum.associateId !== null &&
@@ -128,9 +110,9 @@ function AssociateAssociateOrderListMobile(props) {
                 View&nbsp;
                 <FontAwesomeIcon className="mdi" icon={faExternalLinkAlt} />
               </Link>
+              <br />
+              <br />
               */}
-              <br />
-              <br />
               <strong>Financial:</strong>&nbsp;
               <Link
                 to={`/c/financial/${datum.wjid}`}

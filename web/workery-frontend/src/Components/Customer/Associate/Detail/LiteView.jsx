@@ -14,7 +14,6 @@ import {
   faPlus,
   faArrowLeft,
   faCheckCircle,
-  faUserCircle,
   faGauge,
   faPencil,
   faUsers,
@@ -26,6 +25,7 @@ import {
   faBuilding,
   faEllipsis,
   faArrowUpRightFromSquare,
+  faHardHat
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 import { useParams } from "react-router-dom";
@@ -159,7 +159,7 @@ function AssociateAssociateDetailLite() {
               </li>
               <li className="">
                 <Link to="/c/associates" aria-current="page">
-                  <FontAwesomeIcon className="fas" icon={faUserCircle} />
+                  <FontAwesomeIcon className="fas" icon={faHardHat} />
                   &nbsp;Associates
                 </Link>
               </li>
@@ -194,7 +194,7 @@ function AssociateAssociateDetailLite() {
 
           {/* Page Title */}
           <h1 className="title is-2">
-            <FontAwesomeIcon className="fas" icon={faUserCircle} />
+            <FontAwesomeIcon className="fas" icon={faHardHat} />
             &nbsp;Associate
           </h1>
           <h4 className="subtitle is-4">

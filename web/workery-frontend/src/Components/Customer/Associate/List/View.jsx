@@ -6,7 +6,7 @@ import {
   faChevronRight,
   faFilterCircleXmark,
   faArrowLeft,
-  faUserCircle,
+  faHardHat,
   faTachometer,
   faCircleInfo,
   faPencil,
@@ -299,7 +299,7 @@ function AssociateAssociateList() {
               </li>
               <li className="is-active">
                 <Link aria-current="page">
-                  <FontAwesomeIcon className="fas" icon={faUserCircle} />
+                  <FontAwesomeIcon className="fas" icon={faHardHat} />
                   &nbsp;Associates
                 </Link>
               </li>
@@ -323,7 +323,7 @@ function AssociateAssociateList() {
 
           {/* Page Title */}
           <h1 className="title is-2">
-            <FontAwesomeIcon className="fas" icon={faUserCircle} />
+            <FontAwesomeIcon className="fas" icon={faHardHat} />
             &nbsp;Associates
           </h1>
           <hr />

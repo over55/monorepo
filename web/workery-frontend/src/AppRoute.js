@@ -414,17 +414,17 @@ function AppRoute() {
                   />
                   <Route
                     exact
-                    path="/c/associates/:cid"
+                    path="/c/associate/:cid"
                     element={<ClientAssociateDetailLite />}
                   />
                   <Route
                     exact
-                    path="/c/associates/:cid/detail"
+                    path="/c/associate/:cid/detail"
                     element={<ClientAssociateDetailFull />}
                   />
                   <Route
                     exact
-                    path="/c/associates/:cid/orders"
+                    path="/c/associate/:cid/orders"
                     element={<ClientAssociateDetailOrderList />}
                   />
 

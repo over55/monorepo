@@ -15,7 +15,7 @@ import {
   faPlus,
   faArrowLeft,
   faCheckCircle,
-  faUserCircle,
+  faHardHat,
   faGauge,
   faPencil,
   faUsers,
@@ -275,7 +275,7 @@ function AssociateAssociateDetailOrderList() {
               </li>
               <li className="">
                 <Link to="/c/associates" aria-current="page">
-                  <FontAwesomeIcon className="fas" icon={faUserCircle} />
+                  <FontAwesomeIcon className="fas" icon={faHardHat} />
                   &nbsp;Associates
                 </Link>
               </li>
@@ -310,7 +310,7 @@ function AssociateAssociateDetailOrderList() {
 
           {/* Page Title */}
           <h1 className="title is-2">
-            <FontAwesomeIcon className="fas" icon={faUserCircle} />
+            <FontAwesomeIcon className="fas" icon={faHardHat} />
             &nbsp;Associate
           </h1>
           <h4 className="subtitle is-4">

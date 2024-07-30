@@ -59,7 +59,6 @@ function AssociateAssociateOrderListDesktop(props) {
               <th></th>
               <th>Type</th>
               <th>Job #</th>
-              <th>Associate</th>
               <th>
                 Assigned&nbsp;
                 <FontAwesomeIcon className="fas" icon={faCaretDown} />
@@ -95,26 +94,6 @@ function AssociateAssociateOrderListDesktop(props) {
                         icon={faExternalLinkAlt}
                       />
                     </Link>
-                    </td>
-                    <td data-label="Associate">
-                      {datum.associateId !== undefined &&
-                      datum.associateId !== null &&
-                      datum.associateId !== "" &&
-                      datum.associateId !== "000000000000000000000000" ? (
-                        <Link
-                          to={`/c/associate/${datum.associateId}`}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          {datum.associateName}&nbsp;
-                          <FontAwesomeIcon
-                            className="mdi"
-                            icon={faExternalLinkAlt}
-                          />
-                        </Link>
-                      ) : (
-                        <>-</>
-                      )}
                     </td>
                     <td data-label="Assigned">
                       {datum.associateId !== undefined &&
