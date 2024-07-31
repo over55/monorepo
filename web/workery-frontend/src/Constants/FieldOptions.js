@@ -130,10 +130,10 @@ export const USER_ROLES = [];
 //----------------------------------------------------------------------------//
 
 export const CLIENT_SORT_OPTIONS = [
-  // { value: "join_date,ASC", label: "Join Date 2000 -> 2023" },  // Deprecated
-  // { value: "join_date,DESC", label: "Join Date 2023 -> 2000" }, // Deprecated
-  { value: "lexical_name,ASC", label: "Last Name A -> Z" },
-  { value: "lexical_name,DESC", label: "Last Name Z -> A" },
+  // { value: "join_date,ASC", label: "Join Date ▲" },  // Deprecated
+  // { value: "join_date,DESC", label: "Join Date ▼" }, // Deprecated
+  { value: "lexical_name,ASC", label: "Last Name ▲" },
+  { value: "lexical_name,DESC", label: "Last Name ▼" },
 ];
 
 export const CLIENT_STATUS_FILTER_OPTIONS = [
@@ -199,10 +199,10 @@ export const ATTACHMENT_STATES = {
 //----------------------------------------------------------------------------//
 
 export const ASSOCIATE_SORT_OPTIONS = [
-  // { value: "join_date,ASC", label: "Join Date 2000 -> 2023" },  // Deprecated
-  // { value: "join_date,DESC", label: "Join Date 2023 -> 2000" }, // Deprecated
-  { value: "lexical_name,ASC", label: "Last Name A -> Z" },
-  { value: "lexical_name,DESC", label: "Last Name Z -> A" },
+  // { value: "join_date,ASC", label: "Join Date ▲" },  // Deprecated
+  // { value: "join_date,DESC", label: "Join Date ▼" }, // Deprecated
+  { value: "lexical_name,ASC", label: "Last Name ▲" },  // Note: Alterantive: ↑
+  { value: "lexical_name,DESC", label: "Last Name ▼" }, // Note: Alterantive: ↓
 ];
 
 export const ASSOCIATE_STATUS_FILTER_OPTIONS = [
@@ -366,16 +366,16 @@ export const ASSOCIATE_AWAY_LOG_REASON_OPTIONS_WITH_EMPTY_OPTIONS = [
 //----------------------------------------------------------------------------//
 
 export const ORDER_SORT_OPTIONS = [
-  { value: "assignment_date,ASC", label: "Assignment Date 2000 -> 2023" },
-  { value: "assignment_date,DESC", label: "Assignment Date 2023 -> 2000" },
-  { value: "associate_lexical_name,ASC", label: "Associate A -> Z" },
-  { value: "associate_lexical_name,DESC", label: "Associate Z -> A" },
-  // { value: "start_date,ASC", label: "Start Date 2000 -> 2023" },  // Deprecated
-  // { value: "start_date,DESC", label: "Start Date 2023 -> 2000" }, // Deprecated
-  { value: "created_at,ASC", label: "Creation Date 2000 -> 2023" },
-  { value: "created_at,DESC", label: "Creation Date 2023 -> 2000" },
-  { value: "customer_lexical_name,ASC", label: "Client A -> Z" },
-  { value: "customer_lexical_name,DESC", label: "Client Z -> A" },
+  { value: "assignment_date,ASC", label: "Assignment Date ▲" },
+  { value: "assignment_date,DESC", label: "Assignment Date ▼" },
+  { value: "associate_lexical_name,ASC", label: "Associate ▲" },
+  { value: "associate_lexical_name,DESC", label: "Associate ▼" },
+  // { value: "start_date,ASC", label: "Start Date ▲" },  // Deprecated
+  // { value: "start_date,DESC", label: "Start Date ▼" }, // Deprecated
+  { value: "created_at,ASC", label: "Creation Date ▲" },
+  { value: "created_at,DESC", label: "Creation Date ▼" },
+  { value: "customer_lexical_name,ASC", label: "Client ▲" },
+  { value: "customer_lexical_name,DESC", label: "Client ▼" },
 ];
 
 export const ORDER_STATUS_FILTER_OPTIONS = [
@@ -468,10 +468,10 @@ export const TASK_ITEM_CLOSE_REASON_MAP = {
 };
 
 export const TASK_ITEM_SORT_OPTIONS = [
-  { value: "due_date,ASC", label: "Due Date 2000 -> 2023" },
-  { value: "due_date,DESC", label: "Due Date 2023 -> 2000" },
-  { value: "created_at,ASC", label: "Creation Date 2000 -> 2023" },
-  { value: "created_at,DESC", label: "Creation Date 2023 -> 2000" },
+  { value: "due_date,ASC", label: "Due Date ▲" },
+  { value: "due_date,DESC", label: "Due Date ▼" },
+  { value: "created_at,ASC", label: "Creation Date ▲" },
+  { value: "created_at,DESC", label: "Creation Date ▼" },
 ];
 
 export const TASK_ITEM_TYPE_FILTER_OPTIONS = [
@@ -687,10 +687,10 @@ export const IDENTIFY_AS_OPTIONS = [
 //----------------------------------------------------------------------------//
 
 export const BULLETIN_SORT_OPTIONS = [
-  { value: "text,ASC", label: "Text A -> Z" },
-  { value: "text,DESC", label: "Text Z -> A" },
-  { value: "created_at,ASC", label: "Created At 2000 -> 2024" },
-  { value: "created_at,DESC", label: "Created At 2024 -> 2000" },
+  { value: "text,ASC", label: "Text ▲" },
+  { value: "text,DESC", label: "Text ▼" },
+  { value: "created_at,ASC", label: "Created At ▲" },
+  { value: "created_at,DESC", label: "Created At ▼" },
 ];
 
 export const BULLETIN_STATUS_FILTER_OPTIONS = [
@@ -703,12 +703,12 @@ export const BULLETIN_STATUS_FILTER_OPTIONS = [
 //----------------------------------------------------------------------------//
 
 export const SKILL_SET_SORT_OPTIONS = [
-  { value: "category,ASC", label: "Category A -> Z" },
-  { value: "category,DESC", label: "Category Z -> A" },
-  { value: "sub_category,ASC", label: "Sub-Category A -> Z" },
-  { value: "sub_category,DESC", label: "Sub-Category Z -> A" },
-  { value: "created_at,ASC", label: "Created At 2000 -> 2024" },
-  { value: "created_at,DESC", label: "Created At 2024 -> 2000" },
+  { value: "category,ASC", label: "Category ▲" },
+  { value: "category,DESC", label: "Category ▼" },
+  { value: "sub_category,ASC", label: "Sub-Category ▲" },
+  { value: "sub_category,DESC", label: "Sub-Category ▼" },
+  { value: "created_at,ASC", label: "Created At ▲" },
+  { value: "created_at,DESC", label: "Created At ▼" },
 ];
 
 export const SKILL_SET_STATUS_FILTER_OPTIONS = [
@@ -721,10 +721,10 @@ export const SKILL_SET_STATUS_FILTER_OPTIONS = [
 //----------------------------------------------------------------------------//
 
 export const ASSOCIATE_AWAY_LOG_SORT_OPTIONS = [
-  // { value: "text,ASC", label: 'Text A -> Z' },
-  // { value: "text,DESC", label: 'Text Z -> A' },
-  { value: "created_at,ASC", label: "Created At 2000 -> 2024" },
-  { value: "created_at,DESC", label: "Created At 2024 -> 2000" },
+  // { value: "text,ASC", label: 'Text ▲' },
+  // { value: "text,DESC", label: 'Text ▼' },
+  { value: "created_at,ASC", label: "Created At ▲" },
+  { value: "created_at,DESC", label: "Created At ▼" },
 ];
 
 export const ASSOCIATE_AWAY_LOG_STATUS_FILTER_OPTIONS = [
@@ -737,10 +737,10 @@ export const ASSOCIATE_AWAY_LOG_STATUS_FILTER_OPTIONS = [
 //----------------------------------------------------------------------------//
 
 export const INSURANCE_REQUIREMENT_SORT_OPTIONS = [
-  // { value: "text,ASC", label: 'Text A -> Z' },
-  // { value: "text,DESC", label: 'Text Z -> A' },
-  { value: "created_at,ASC", label: "Created At 2000 -> 2024" },
-  { value: "created_at,DESC", label: "Created At 2024 -> 2000" },
+  // { value: "text,ASC", label: 'Text ▲' },
+  // { value: "text,DESC", label: 'Text ▼' },
+  { value: "created_at,ASC", label: "Created At ▲" },
+  { value: "created_at,DESC", label: "Created At ▼" },
 ];
 
 export const INSURANCE_REQUIREMENT_STATUS_FILTER_OPTIONS = [
@@ -753,10 +753,10 @@ export const INSURANCE_REQUIREMENT_STATUS_FILTER_OPTIONS = [
 //----------------------------------------------------------------------------//
 
 export const INACTIVE_CLIENT_SORT_OPTIONS = [
-  { value: "lexical_name,ASC", label: "Last Name A -> Z" },
-  { value: "lexical_name,DESC", label: "Last Name Z -> A" },
-  { value: "join_date,ASC", label: "Join Date 2000 -> 2024" },
-  { value: "join_date,DESC", label: "Join Date 2024 -> 2000" },
+  { value: "lexical_name,ASC", label: "Last Name ▲" },
+  { value: "lexical_name,DESC", label: "Last Name ▼" },
+  { value: "join_date,ASC", label: "Join Date ▲" },
+  { value: "join_date,DESC", label: "Join Date ▼" },
 ];
 
 export const INACTIVE_CLIENT_STATUS_FILTER_OPTIONS = [
@@ -802,10 +802,10 @@ export const INACTIVE_CLIENT_DEACTIVATION_REASON_OPTIONS_WITH_EMPTY_OPTION = [
 //----------------------------------------------------------------------------//
 
 export const HOW_HEAR_ABOUT_US_ITEM_SORT_OPTIONS = [
-  { value: "text,ASC", label: "Text A -> Z" },
-  { value: "text,DESC", label: "Text Z -> A" },
-  { value: "sort_number,ASC", label: "Sort # 1 -> 9" },
-  { value: "sort_number,DESC", label: "Sort # 9 -> 1" },
+  { value: "text,ASC", label: "Text ▲" },
+  { value: "text,DESC", label: "Text ▼" },
+  { value: "sort_number,ASC", label: "Sort # ▲" },
+  { value: "sort_number,DESC", label: "Sort # ▼" },
 ];
 
 export const HOW_HEAR_ABOUT_US_ITEM_STATUS_FILTER_OPTIONS = [
@@ -818,10 +818,10 @@ export const HOW_HEAR_ABOUT_US_ITEM_STATUS_FILTER_OPTIONS = [
 //----------------------------------------------------------------------------//
 
 export const STAFF_SORT_OPTIONS = [
-  // { value: "join_date,ASC", label: "Join Date 2000 -> 2023" },  // Deprecated
-  // { value: "join_date,DESC", label: "Join Date 2023 -> 2000" }, // Deprecated
-  { value: "lexical_name,ASC", label: "Last Name A -> Z" },
-  { value: "lexical_name,DESC", label: "Last Name Z -> A" },
+  // { value: "join_date,ASC", label: "Join Date ▲" },  // Deprecated
+  // { value: "join_date,DESC", label: "Join Date ▼" }, // Deprecated
+  { value: "lexical_name,ASC", label: "Last Name ▲" },
+  { value: "lexical_name,DESC", label: "Last Name ▼" },
 ];
 
 export const STAFF_STATUS_FILTER_OPTIONS = [
@@ -872,8 +872,8 @@ export const STAFF_ORGANIZATION_TYPE_OPTIONS_WITH_EMPTY_OPTIONS = [
 //----------------------------------------------------------------------------//
 
 export const COMMENT_SORT_OPTIONS = [
-  { value: "created_at,ASC", label: "Creation Date 2000 -> 2023" },
-  { value: "created_at,DESC", label: "Creation Date 2023 -> 2000" },
+  { value: "created_at,ASC", label: "Creation Date ▲" },
+  { value: "created_at,DESC", label: "Creation Date ▼" },
 ];
 
 export const COMMENT_STATUS_FILTER_OPTIONS = [
@@ -920,8 +920,8 @@ export const ORDER_INCIDENT_CLOSING_REASON_OPTIONS_WITH_EMPTY_OPTIONS = [
 ];
 
 export const ORDER_INCIDENT_SORT_OPTIONS = [
-  // { value: "join_date,ASC", label: "Join Date 2000 -> 2023" },  // Deprecated
-  // { value: "join_date,DESC", label: "Join Date 2023 -> 2000" }, // Deprecated
-  { value: "created_at,ASC", label: "Created At 2000 -> 2024" },
-  { value: "created_at,DESC", label: "Created At 2024 -> 2000" },
+  // { value: "join_date,ASC", label: "Join Date ▲" },  // Deprecated
+  // { value: "join_date,DESC", label: "Join Date ▼" }, // Deprecated
+  { value: "created_at,ASC", label: "Created At ▲" },
+  { value: "created_at,DESC", label: "Created At ▼" },
 ];
