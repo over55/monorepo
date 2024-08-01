@@ -122,29 +122,41 @@ func importByFiles(ctx context.Context, elementFilePath string, structFilePath s
 		for _, s := range ss {
 			// sLevel := s[0]
 			// sHierarchicalStructure := s[1]
-			sCode := s[2]
+			sCodeStr := s[2]
 			sClassTitle := s[3]
-			// sClassDefinition := s[4]
+			sClassDefinition := s[4]
 
-			if broadCategory == sCode {
-				noc.BroadCategoryCodeStr = sCode
+			sCodeInt, _ := strconv.ParseUint(sCodeStr, 10, 32)
+
+			if broadCategory == sCodeStr {
+				noc.BroadCategoryCode = uint(sCodeInt)
+				noc.BroadCategoryCodeStr = sCodeStr
 				noc.BroadCategoryTitle = sClassTitle
+				noc.BroadCategoryDescription = sClassDefinition
 			}
-			if majorGroup == sCode {
-				noc.MajorGroupCodeStr = sCode
+			if majorGroup == sCodeStr {
+				noc.MajorGroupCode = uint(sCodeInt)
+				noc.MajorGroupCodeStr = sCodeStr
 				noc.MajorGroupTitle = sClassTitle
+				noc.MajorGroupDescription = sClassDefinition
 			}
-			if subMajorGroup == sCode {
-				noc.SubMinorGroupCodeStr = sCode
+			if subMajorGroup == sCodeStr {
+				noc.SubMinorGroupCode = uint(sCodeInt)
+				noc.SubMinorGroupCodeStr = sCodeStr
 				noc.SubMinorGroupTitle = sClassTitle
+				noc.SubMinorGroupDescription = sClassDefinition
 			}
-			if minorGroup == sCode {
-				noc.MinorGroupCodeStr = sCode
+			if minorGroup == sCodeStr {
+				noc.MinorGroupCode = uint(sCodeInt)
+				noc.MinorGroupCodeStr = sCodeStr
 				noc.MinorGroupTitle = sClassTitle
+				noc.MinorGroupDescription = sClassDefinition
 			}
-			if unitGroup == sCode {
-				noc.UnitGroupCodeStr = sCode
+			if unitGroup == sCodeStr {
+				noc.UnitGroupCode = uint(sCodeInt)
+				noc.UnitGroupCodeStr = sCodeStr
 				noc.UnitGroupTitle = sClassTitle
+				noc.UnitGroupDescription = sClassDefinition
 			}
 		}
 
