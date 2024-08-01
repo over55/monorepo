@@ -2,11 +2,12 @@ package noc
 
 import (
 	"context"
-	"encoding/csv"
 	"fmt"
 	"os"
 	"strconv"
-	"strings"
+
+	"github.com/over55/monorepo/cloud/statcan/pkg/csvreader"
+	"github.com/over55/monorepo/cloud/statcan/pkg/padzero"
 )
 
 type NOCVersion int
@@ -46,58 +47,13 @@ func (imp *nocImporter) ImportByVersion(ctx context.Context, version NOCVersion)
 	}
 }
 
-func readCsvFile(filePath string) ([][]string, error) {
-	// Open the CSV file
-	f, err := os.Open(filePath)
-	if err != nil {
-		return nil, fmt.Errorf("Unable to read input file %v: %v", filePath, err)
-	}
-	defer f.Close()
-
-	// Create a new CSV reader
-	csvReader := csv.NewReader(f)
-
-	// Skip the first line
-	csvReader.Read() // Note: Hide error returns here.
-
-	// Read the remaining records
-	records, err := csvReader.ReadAll()
-	if err != nil {
-		return nil, fmt.Errorf("Unable to parse file as CSV for %v: %v", filePath, err)
-	}
-
-	return records, nil
-}
-
-// padZeroes function appends zero strings as prefix based on a string size of 5. So for example:
-//
-// 0 => 00000
-// 23 => 00023
-// 120 => 00120
-// 10000 => 10000
-func padZeroes(s string, size int) string {
-	// Calculate how many zeroes to add
-	prefixLength := size - len(s)
-
-	// If the length of the string is already equal or greater than the target size, return the string
-	if prefixLength <= 0 {
-		return s
-	}
-
-	// Generate the zeroes prefix
-	prefix := strings.Repeat("0", prefixLength)
-
-	// Return the string with the zeroes prefix
-	return prefix + s
-}
-
 func importByFiles(ctx context.Context, elementFilePath string, structFilePath string) ([]*NationalOccupationalClassification, error) {
 	nocs := make([]*NationalOccupationalClassification, 0)
-	ee, readCsvFileErr := readCsvFile(elementFilePath)
+	ee, readCsvFileErr := csvreader.ReadCsvFile(elementFilePath)
 	if readCsvFileErr != nil {
 		return nil, readCsvFileErr
 	}
-	ss, readCsvFileErr := readCsvFile(structFilePath)
+	ss, readCsvFileErr := csvreader.ReadCsvFile(structFilePath)
 	if readCsvFileErr != nil {
 		return nil, readCsvFileErr
 	}
@@ -110,7 +66,7 @@ func importByFiles(ctx context.Context, elementFilePath string, structFilePath s
 			Version:            "NOC 2021 V1.0",
 			Level:              uint8(level),
 			Code:               uint(code),
-			CodeStr:            padZeroes(e[1], 5),
+			CodeStr:            padzero.PadZeroes(e[1], 5),
 			ElementType:        e[3],
 			ElementDescription: e[4],
 		}

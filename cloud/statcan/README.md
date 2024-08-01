@@ -1,13 +1,6 @@
-![alt tag](https://github.com/over55/workery-django/blob/master/workery/static/img/compressed-logo.png)
-
 # Statistics Canada Utility Module
 
-The purpose of this module is to provide access to a few datapoints provided by [Statistics Canada](www.statcan.gc.ca) for any Golang application; more specifically, the features are as follows:
-
-* Golang struct of "National Occupational Classification (NOC)"
-* Golang struct of "North American Industry Classification System (NAICS)"
-* Import NOC from CSV
-* Import NAICS from CSV
+The purpose of this module is to provide access to a few datapoints provided by [Statistics Canada](www.statcan.gc.ca) for any Golang application.
 
 ## Installation
 
@@ -34,6 +27,33 @@ When you are done, your folder should look like this:
 ├── noc_2021_version_1.0_-_classification_structure.csv
 └── noc_2021_version_1.0_-_elements.csv
 ```
+
+## Usage
+
+```go
+package main
+
+import (
+	"context"
+	"fmt"
+	"os"
+	"strconv" //TODO: Fix
+
+	"github.com/over55/monorepo/cloud/statcan/pkg/noc"
+	"github.com/over55/monorepo/cloud/statcan/pkg/naics"
+)
+
+//TODO - Finish
+```
+
+## Features
+The features are as follows:
+
+* Golang struct of "National Occupational Classification (NOC)"
+* Golang struct of "North American Industry Classification System (NAICS)"
+* Import (English) NOC from CSV
+* Import (English) NAICS from CSV
+* 100% unit test code coverage
 
 ## Contributing
 
