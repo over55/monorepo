@@ -1,4 +1,4 @@
-package pkg
+package noc
 
 type CanadianNationalOccupationalClassification struct {
 	LanguageCode         string `bson:"language_code" json:"language_code"` // Please use `ISO 639-1` (https://en.wikipedia.org/wiki/ISO_639-1).

@@ -1,4 +1,4 @@
-package pkg
+package noc
 
 import (
 	"context"
@@ -11,25 +11,25 @@ import (
 // TestNewNOCImporterAtDataDir tests the NewNOCImporterAtDataDir function
 func TestNewNOCImporterAtDataDir(t *testing.T) {
 	t.Run("DataDirectoryIsCorrect", func(t *testing.T) {
-		imp, err := NewNOCImporterAtDataDir("../data")
+		imp, err := NewNOCImporterAtDataDir("../../data")
 		if err != nil {
-			t.Errorf("NewNOCImporterAtDataDir(../data) got error %v", err)
+			t.Errorf("NewNOCImporterAtDataDir(../../data) got error %v", err)
 		}
 		if imp == nil {
-			t.Errorf("NewNOCImporterAtDataDir(../data) = %d; do not want nil", imp)
+			t.Errorf("NewNOCImporterAtDataDir(../../data) = %d; do not want nil", imp)
 		}
 	})
 	t.Run("DataDirectoryIsIncorrect", func(t *testing.T) {
 		_, err := NewNOCImporterAtDataDir("./data")
 		if err == nil {
-			t.Errorf("NewNOCImporterAtDataDir(../data) got error %v when there should be non", err)
+			t.Errorf("NewNOCImporterAtDataDir(../../data) got error %v when there should be non", err)
 		}
 	})
 }
 
 func TestImportByVersion(t *testing.T) {
 	ctx := context.Background()
-	imp, _ := NewNOCImporterAtDataDir("../data")
+	imp, _ := NewNOCImporterAtDataDir("../../data")
 
 	t.Run("Pick Incorrect Version", func(t *testing.T) {
 		_, err := imp.ImportByVersion(ctx, 123)
@@ -209,14 +209,14 @@ func TestImportByFiles(t *testing.T) {
 		}
 	})
 	t.Run("one file exists while other file is missing", func(t *testing.T) {
-		_, err := importByFiles(ctx, "../data/noc_2021_version_1.0_-_elements.csv", "../data/xxx.csv")
+		_, err := importByFiles(ctx, "../../data/noc_2021_version_1.0_-_elements.csv", "../../data/xxx.csv")
 		if err == nil {
 			t.Errorf("ImportByVersion(ctx, VersionNOC2021V1Dot0) did not get error")
 		}
 	})
 	t.Run("both file exists and verify output", func(t *testing.T) {
 		// STEP 1: Lookup correct files.
-		nocs, err := importByFiles(ctx, "../data/noc_2021_version_1.0_-_elements.csv", "../data/noc_2021_version_1.0_-_classification_structure.csv")
+		nocs, err := importByFiles(ctx, "../../data/noc_2021_version_1.0_-_elements.csv", "../../data/noc_2021_version_1.0_-_classification_structure.csv")
 		if err != nil {
 			t.Errorf("ImportByVersion(ctx, VersionNOC2021V1Dot0) got error %v", err)
 		}
