@@ -6,10 +6,10 @@ import (
 	"log"
 	"log/slog"
 
+	"github.com/over55/monorepo/cloud/statcan"
 	"github.com/spf13/cobra"
 	"go.mongodb.org/mongo-driver/mongo"
 
-	importer "github.com/over55/monorepo/cloud/statcan/pkg/noc"
 	"github.com/over55/monorepo/cloud/workery-cli/adapter/storage/mongodb"
 	tenant_ds "github.com/over55/monorepo/cloud/workery-cli/app/tenant/datastore"
 	"github.com/over55/monorepo/cloud/workery-cli/config"
@@ -55,7 +55,7 @@ func RunImportNOC(
 	transactionFunc := func(sessCtx mongo.SessionContext) (interface{}, error) {
 		log.Println("starting up importer...")
 
-		imp, err := importer.NewNOCImporterAtDataDir("./data")
+		imp, err := statcan.NewNOCImporterAtDataDir("./data")
 		if err != nil {
 			log.Fatalf("got error starting importer: %v", err)
 		}

@@ -10,6 +10,7 @@ require (
 	github.com/aws/smithy-go v1.20.3
 	github.com/bartmika/timekit v0.0.0-20240130035202-cad2325dfd57
 	github.com/lib/pq v1.10.9
+	github.com/over55/monorepo/cloud/statcan v0.0.0-00010101000000-000000000000
 	github.com/spf13/cobra v1.8.1
 	go.mongodb.org/mongo-driver v1.16.0
 	golang.org/x/crypto v0.25.0
@@ -45,3 +46,5 @@ require (
 	golang.org/x/sys v0.22.0 // indirect
 	golang.org/x/text v0.16.0 // indirect
 )
+
+replace github.com/over55/monorepo/cloud/statcan => ../statcan

@@ -1,4 +1,4 @@
-package noc
+package statcan
 
 import (
 	"context"
@@ -6,8 +6,8 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/over55/monorepo/cloud/statcan/pkg/csvreader"
-	"github.com/over55/monorepo/cloud/statcan/pkg/padzero"
+	"github.com/over55/monorepo/cloud/statcan/csvreader"
+	"github.com/over55/monorepo/cloud/statcan/padzero"
 )
 
 type NOCVersion int
@@ -41,13 +41,13 @@ func NewNOCImporterAtDataDir(dirPath string) (NOCImporter, error) {
 func (imp *nocImporter) ImportByVersion(ctx context.Context, version NOCVersion) ([]*NationalOccupationalClassification, error) {
 	switch version {
 	case VersionNOC2021V1Dot0:
-		return importByFiles(ctx, imp.dirPath+"/"+"noc_2021_version_1.0_-_elements.csv", imp.dirPath+"/"+"noc_2021_version_1.0_-_classification_structure.csv")
+		return importNOCByFiles(ctx, imp.dirPath+"/"+"noc_2021_version_1.0_-_elements.csv", imp.dirPath+"/"+"noc_2021_version_1.0_-_classification_structure.csv")
 	default:
 		return nil, fmt.Errorf("unsupported version: %v", version)
 	}
 }
 
-func importByFiles(ctx context.Context, elementFilePath string, structFilePath string) ([]*NationalOccupationalClassification, error) {
+func importNOCByFiles(ctx context.Context, elementFilePath string, structFilePath string) ([]*NationalOccupationalClassification, error) {
 	nocs := make([]*NationalOccupationalClassification, 0)
 	ee, readCsvFileErr := csvreader.ReadCsvFile(elementFilePath)
 	if readCsvFileErr != nil {

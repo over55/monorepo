@@ -1,4 +1,4 @@
-package naics
+package statcan
 
 import (
 	"context"
@@ -6,8 +6,8 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/over55/monorepo/cloud/statcan/pkg/csvreader"
-	"github.com/over55/monorepo/cloud/statcan/pkg/padzero"
+	"github.com/over55/monorepo/cloud/statcan/csvreader"
+	"github.com/over55/monorepo/cloud/statcan/padzero"
 )
 
 type NAICSVersion int
@@ -41,13 +41,13 @@ func NewNAICSImporterAtDataDir(dirPath string) (NAICSImporter, error) {
 func (imp *naicsImporter) ImportByVersion(ctx context.Context, version NAICSVersion) ([]*NorthAmericanIndustryClassificationSystem, error) {
 	switch version {
 	case VersionNAICSCanada2021V1Dot0:
-		return importByFiles(ctx, imp.dirPath+"/"+"naics-scian-2022-element-v1-eng.csv", imp.dirPath+"/"+"naics-scian-2022-structure-v1-eng.csv")
+		return importNAICSByFiles(ctx, imp.dirPath+"/"+"naics-scian-2022-element-v1-eng.csv", imp.dirPath+"/"+"naics-scian-2022-structure-v1-eng.csv")
 	default:
 		return nil, fmt.Errorf("unsupported version: %v", version)
 	}
 }
 
-func importByFiles(ctx context.Context, elementFilePath string, structFilePath string) ([]*NorthAmericanIndustryClassificationSystem, error) {
+func importNAICSByFiles(ctx context.Context, elementFilePath string, structFilePath string) ([]*NorthAmericanIndustryClassificationSystem, error) {
 	naicss := make([]*NorthAmericanIndustryClassificationSystem, 0)
 	ee, readCsvFileErr := csvreader.ReadCsvFile(elementFilePath)
 	if readCsvFileErr != nil {
@@ -106,36 +106,24 @@ func importByFiles(ctx context.Context, elementFilePath string, structFilePath s
 				naics.SectorCodeStr = sCodeStr
 				naics.SectorTitle = sClassTitle
 				naics.SectorDescription = sClassDefinition
-				if sSuperscript != "" {
-					naics.Superscript = sSuperscript
-				}
 			}
 			if subsector == sCodeStr {
 				naics.SubsectorCode = uint(sCodeInt)
 				naics.SubsectorCodeStr = sCodeStr
 				naics.SubsectorTitle = sClassTitle
 				naics.SubsectorDescription = sClassDefinition
-				if sSuperscript != "" {
-					naics.Superscript = sSuperscript
-				}
 			}
 			if industryGroup == sCodeStr {
 				naics.IndustryGroupCode = uint(sCodeInt)
 				naics.IndustryGroupCodeStr = sCodeStr
 				naics.IndustryGroupTitle = sClassTitle
 				naics.IndustryGroupDescription = sClassDefinition
-				if sSuperscript != "" {
-					naics.Superscript = sSuperscript
-				}
 			}
 			if industry == sCodeStr {
 				naics.IndustryCode = uint(sCodeInt)
 				naics.IndustryCodeStr = sCodeStr
 				naics.IndustryTitle = sClassTitle
 				naics.IndustryDescription = sClassDefinition
-				if sSuperscript != "" {
-					naics.Superscript = sSuperscript
-				}
 			}
 			if canadianIndustry == sCodeStr {
 				naics.CanadianIndustryCode = uint(sCodeInt)
