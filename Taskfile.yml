@@ -20,3 +20,9 @@ tasks:
     desc: Load up the go workspace for the `workery-cli` module.
     cmds:
       - go work use ./cloud/workery-cli
+
+  usestatcan:
+    desc: Load up the go workspace for the `statcan` module.
+    cmds:
+      - go work use ./cloud/statcan
+      statcan

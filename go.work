@@ -1,6 +1,7 @@
 go 1.22.5
 
 use (
+	./cloud/statcan
 	./cloud/workery-backend
 	./cloud/workery-cli
 )
