@@ -16,7 +16,7 @@ const (
 )
 
 type NOCImporter interface {
-	ImportByVersion(ctx context.Context, version NOCVersion) ([]*CanadianNationalOccupationalClassification, error)
+	ImportByVersion(ctx context.Context, version NOCVersion) ([]*NationalOccupationalClassification, error)
 }
 
 type nocImporter struct {
@@ -37,7 +37,7 @@ func NewNOCImporterAtDataDir(dirPath string) (NOCImporter, error) {
 	}, nil
 }
 
-func (imp *nocImporter) ImportByVersion(ctx context.Context, version NOCVersion) ([]*CanadianNationalOccupationalClassification, error) {
+func (imp *nocImporter) ImportByVersion(ctx context.Context, version NOCVersion) ([]*NationalOccupationalClassification, error) {
 	switch version {
 	case VersionNOC2021V1Dot0:
 		return importByFiles(ctx, imp.dirPath+"/"+"noc_2021_version_1.0_-_elements.csv", imp.dirPath+"/"+"noc_2021_version_1.0_-_classification_structure.csv")
@@ -91,8 +91,8 @@ func padZeroes(s string, size int) string {
 	return prefix + s
 }
 
-func importByFiles(ctx context.Context, elementFilePath string, structFilePath string) ([]*CanadianNationalOccupationalClassification, error) {
-	nocs := make([]*CanadianNationalOccupationalClassification, 0)
+func importByFiles(ctx context.Context, elementFilePath string, structFilePath string) ([]*NationalOccupationalClassification, error) {
+	nocs := make([]*NationalOccupationalClassification, 0)
 	ee, readCsvFileErr := readCsvFile(elementFilePath)
 	if readCsvFileErr != nil {
 		return nil, readCsvFileErr
@@ -105,12 +105,14 @@ func importByFiles(ctx context.Context, elementFilePath string, structFilePath s
 	for _, e := range ee {
 		level, _ := strconv.ParseUint(e[0], 10, 8)
 		code, _ := strconv.ParseUint(e[1], 10, 32)
-		noc := &CanadianNationalOccupationalClassification{
-			LanguageCode: "en",
-			Version:      "NOC 2021 V1.0",
-			Level:        uint8(level),
-			Code:         uint(code),
-			CodeStr:      padZeroes(e[1], 5),
+		noc := &NationalOccupationalClassification{
+			LanguageCode:       "en",
+			Version:            "NOC 2021 V1.0",
+			Level:              uint8(level),
+			Code:               uint(code),
+			CodeStr:            padZeroes(e[1], 5),
+			ElementType:        e[3],
+			ElementDescription: e[4],
 		}
 
 		broadCategory := noc.CodeStr[0:1]

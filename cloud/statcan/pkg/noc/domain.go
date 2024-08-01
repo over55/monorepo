@@ -1,6 +1,6 @@
 package noc
 
-type CanadianNationalOccupationalClassification struct {
+type NationalOccupationalClassification struct {
 	LanguageCode             string `bson:"language_code" json:"language_code"` // Please use `ISO 639-1` (https://en.wikipedia.org/wiki/ISO_639-1).
 	Version                  string `bson:"version" json:"version"`             // Ex: "NOC 2021 V1.0"
 	Level                    uint8  `bson:"level" json:"level"`                 // Ex: 1
@@ -26,4 +26,6 @@ type CanadianNationalOccupationalClassification struct {
 	UnitGroupCodeStr         string `bson:"unit_group_code_str" json:"unit_group_code_str"`
 	UnitGroupTitle           string `bson:"unit_group_title" json:"unit_group_title"`
 	UnitGroupDescription     string `bson:"unit_group_description" json:"unit_group_description"`
+	ElementType              string `bson:"element_type" json:"element_type"`
+	ElementDescription       string `bson:"element_description" json:"element_description"`
 }
