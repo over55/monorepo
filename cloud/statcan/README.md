@@ -39,8 +39,7 @@ import (
 	"os"
 	"strconv" //TODO: Fix
 
-	"github.com/over55/monorepo/cloud/statcan/pkg/noc"
-	"github.com/over55/monorepo/cloud/statcan/pkg/naics"
+	"github.com/over55/monorepo/cloud/statcan"
 )
 
 //TODO - Finish
