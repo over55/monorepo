@@ -22,7 +22,7 @@ func init() {
 
 var importNOCCmd = &cobra.Command{
 	Use:   "import_noc",
-	Short: "Execute importNOC",
+	Short: "Execute importing of NOC into workery",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.New()
@@ -52,39 +52,39 @@ func RunImportNOC(
 	}
 	defer session.EndSession(context.Background())
 
-	// Define a transaction function with a series of operations
-	transactionFunc := func(sessCtx mongo.SessionContext) (interface{}, error) {
-		log.Println("starting up importer...")
-		defer log.Println("closing importer")
+	log.Println("starting up importer...")
+	defer log.Println("closing importer")
 
-		imp, err := statcan.NewNOCImporterAtDataDir("./data")
-		if err != nil {
-			log.Fatalf("got error starting importer: %v", err)
-		}
-		if imp == nil {
-			log.Fatal("no importer detected")
-		}
+	imp, err := statcan.NewNOCImporterAtDataDir("./data")
+	if err != nil {
+		log.Fatalf("got error starting importer: %v", err)
+	}
+	if imp == nil {
+		log.Fatal("no importer detected")
+	}
 
-		nocs, err := imp.ImportByVersion(sessCtx, statcan.VersionNOC2021V1Dot0)
-		if err != nil {
-			log.Fatalf("failed importing by version with error: %v", err)
-		}
-		if nocs == nil {
-			log.Fatal("no nocs detected")
-		}
+	nocs, err := imp.ImportByVersion(context.Background(), statcan.VersionNOC2021V1Dot0)
+	if err != nil {
+		log.Fatalf("failed importing by version with error: %v", err)
+	}
+	if nocs == nil {
+		log.Fatal("no nocs detected")
+	}
 
-		for _, noc := range nocs {
+	for _, noc := range nocs {
+		// Define a transaction function with a series of operations
+		transactionFunc := func(sessCtx mongo.SessionContext) (interface{}, error) {
 			if err := runImportNOC(sessCtx, tenantStorer, tenant, nocStorer, noc); err != nil {
 				loggerp.Error("failed importing noc", slog.Any("error", err))
 				return nil, err
 			}
+			return nil, nil
 		}
-		return nil, nil
-	}
 
-	// Start a transaction
-	if _, err := session.WithTransaction(context.Background(), transactionFunc); err != nil {
-		log.Fatal(err)
+		// Start a transaction
+		if _, err := session.WithTransaction(context.Background(), transactionFunc); err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 
@@ -100,10 +100,23 @@ func runImportNOC(
 		return err
 	}
 	if n == nil {
+		latest, err := nocStorer.GetLatestByTenantID(sessCtx, tenant.ID)
+		if err != nil {
+			return err
+		}
+
+		var publicID uint64
+		if latest == nil {
+			publicID = 1
+		} else {
+			publicID = latest.PublicID + 1
+		}
+
 		n = &noc_ds.NationalOccupationalClassification{
 			ID:                       primitive.NewObjectID(),
 			TenantID:                 tenant.ID,
 			Status:                   noc_ds.StatusActive,
+			PublicID:                 publicID,
 			LanguageCode:             noc.LanguageCode,
 			Version:                  noc.Version,
 			Level:                    noc.Level,

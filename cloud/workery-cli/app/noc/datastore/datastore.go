@@ -101,15 +101,18 @@ type NationalOccupationalClassificationStorerImpl struct {
 
 func NewDatastore(appCfg *c.Conf, loggerp *slog.Logger, client *mongo.Client) NationalOccupationalClassificationStorer {
 	// ctx := context.Background()
-	uc := client.Database(appCfg.DB.Name).Collection("national_occupational_classifications")
+	uc := client.Database(appCfg.DB.Name).Collection("nocs")
 
 	_, err := uc.Indexes().CreateMany(context.TODO(), []mongo.IndexModel{
 		{Keys: bson.D{{Key: "tenant_id", Value: 1}}},
 		{Keys: bson.D{{Key: "public_id", Value: -1}}},
 		{Keys: bson.D{{Key: "status", Value: 1}}},
 		{Keys: bson.D{
-			{"name", "text"},
-			{"description", "text"},
+			{"broad_category_title", "text"},
+			{"major_group_title", "text"},
+			{"sub_minor_group_title", "text"},
+			{"minor_group_title", "text"},
+			{"unit_group_title", "text"},
 		}},
 	})
 	if err != nil {

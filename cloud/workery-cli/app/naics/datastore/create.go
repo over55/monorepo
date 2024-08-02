@@ -8,7 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func (impl NationalOccupationalClassificationStorerImpl) Create(ctx context.Context, u *NationalOccupationalClassification) error {
+func (impl NorthAmericanIndustryClassificationSystemStorerImpl) Create(ctx context.Context, u *NorthAmericanIndustryClassificationSystem) error {
 	// DEVELOPER NOTES:
 	// According to mongodb documentaiton:
 	//     Non-existent Databases and Collections
@@ -39,22 +39,22 @@ func (impl NationalOccupationalClassificationStorerImpl) Create(ctx context.Cont
 	return nil
 }
 
-func (impl NationalOccupationalClassificationStorerImpl) generatePublicID(ctx context.Context, tenantID primitive.ObjectID) (uint64, error) {
+func (impl NorthAmericanIndustryClassificationSystemStorerImpl) generatePublicID(ctx context.Context, tenantID primitive.ObjectID) (uint64, error) {
 	var publicID uint64
 	latest, err := impl.GetLatestByTenantID(ctx, tenantID)
 	if err != nil {
-		impl.Logger.Error("database get latest noc by tenant id error",
+		impl.Logger.Error("database get latest naics by tenant id error",
 			slog.Any("error", err),
 			slog.Any("tenant_id", tenantID))
 		return 0, err
 	}
 	if latest == nil {
-		impl.Logger.Debug("first noc creation detected, setting publicID to value of 1",
+		impl.Logger.Debug("first naics creation detected, setting publicID to value of 1",
 			slog.Any("tenant_id", tenantID))
 		publicID = 1
 	} else {
 		publicID = latest.PublicID + 1
-		impl.Logger.Debug("system generated new noc publicID",
+		impl.Logger.Debug("system generated new naics publicID",
 			slog.Int("tenant_id", int(publicID)))
 	}
 	return publicID, nil
