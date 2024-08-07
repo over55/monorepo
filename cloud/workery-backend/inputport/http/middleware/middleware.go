@@ -402,21 +402,45 @@ func (mid *middleware) PostJWTProcessorMiddleware(fn http.HandlerFunc) http.Hand
 	}
 }
 
-func (mid *middleware) IPAddressMiddleware(fn http.HandlerFunc) http.HandlerFunc {
+func (mid *middleware) IPAddressMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		// Extract the IPAddress. Code taken from: https://stackoverflow.com/a/55738279
-		IPAddress := r.Header.Get("X-Real-Ip")
-		if IPAddress == "" {
-			IPAddress = r.Header.Get("X-Forwarded-For")
-		}
-		if IPAddress == "" {
-			IPAddress = r.RemoteAddr
+		var clientIP string
+		var proxies string
+
+		// Check the X-Forwarded-For header
+		xfwdFor := r.Header.Get("X-Forwarded-For")
+		if xfwdFor != "" {
+			// Log all the proxies
+			proxies = xfwdFor
+			// Extract the client IP from the list of proxies
+			ips := strings.Split(xfwdFor, ",")
+			clientIP = strings.TrimSpace(ips[0])
 		}
 
-		// Save our IP address to the context.
-		ctx := r.Context()
-		ctx = context.WithValue(ctx, constants.SessionIPAddress, IPAddress)
-		fn(w, r.WithContext(ctx)) // Flow to the next middleware.
+		// Fallback to X-Real-Ip if X-Forwarded-For is not set
+		if clientIP == "" {
+			clientIP = r.Header.Get("X-Real-Ip")
+		}
+
+		// Finally, fallback to r.RemoteAddr
+		if clientIP == "" {
+			clientIP = r.RemoteAddr
+			// r.RemoteAddr contains both the IP and the port, so we should extract only the IP
+			clientIP, _, _ = net.SplitHostPort(clientIP)
+		}
+
+		// Log the extracted client IP and any proxies
+		if proxies != "" {
+			mid.Logger.Warn("request received using proxies",
+				"ip_address", clientIP,
+				"proxies", proxies,
+			)
+		}
+
+		// Save the client IP to the context
+		ctx := context.WithValue(r.Context(), constants.SessionIPAddress, clientIP)
+		ctx = context.WithValue(r.Context(), constants.SessionProxies, proxies)
+		next(w, r.WithContext(ctx))
 	}
 }
 
@@ -472,9 +496,11 @@ func (mid *middleware) ProtectedURLsMiddleware(fn http.HandlerFunc) http.Handler
 				fn(w, r.WithContext(ctx)) // Flow to the next middleware.
 			} else {
 				ipAddress, _ := ctx.Value(constants.SessionIPAddress).(string)
+				proxies, _ := ctx.Value(constants.SessionProxies).(string)
 				mid.Logger.Warn("unauthorized api call",
 					slog.Any("url", r.URL.Path),
 					slog.String("ip_address", ipAddress),
+					slog.String("proxies", proxies),
 					slog.Any("middleware", "ProtectedURLsMiddleware"))
 				http.Error(w, "attempting to access a protected endpoint", http.StatusUnauthorized)
 				return
