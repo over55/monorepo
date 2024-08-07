@@ -431,9 +431,10 @@ func (mid *middleware) IPAddressMiddleware(next http.HandlerFunc) http.HandlerFu
 
 		// Log the extracted client IP and any proxies
 		if proxies != "" {
-			mid.Logger.Warn("request received using proxies",
-				"ip_address", clientIP,
-				"proxies", proxies,
+			mid.Logger.Debug("request received using proxies",
+				slog.String("url", r.URL.Path),
+				slog.String("ip_address", clientIP),
+				slog.String("proxies", proxies),
 			)
 		}
 
