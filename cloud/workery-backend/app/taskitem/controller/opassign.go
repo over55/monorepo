@@ -373,8 +373,7 @@ func (impl *TaskItemControllerImpl) AssignAssociateOperation(ctx context.Context
 				slog.Any("new_task_item_id", newTask.ID),
 				slog.Any("order_id", ti.OrderID),
 				slog.Any("order_wjid", ti.OrderWJID),
-				slog.Any("associate_id", req.AssociateID),
-				slog.Any("error", err))
+				slog.Any("associate_id", req.AssociateID))
 
 			////
 			//// Update existing order.
