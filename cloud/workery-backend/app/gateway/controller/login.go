@@ -9,10 +9,13 @@ import (
 
 	gateway_s "github.com/over55/monorepo/cloud/workery-backend/app/gateway/datastore"
 	u_s "github.com/over55/monorepo/cloud/workery-backend/app/user/datastore"
+	"github.com/over55/monorepo/cloud/workery-backend/config/constants"
 	"github.com/over55/monorepo/cloud/workery-backend/utils/httperror"
 )
 
 func (impl *GatewayControllerImpl) Login(ctx context.Context, email, password string) (*gateway_s.LoginResponseIDO, error) {
+	ipAddress, _ := ctx.Value(constants.SessionIPAddress).(string)
+
 	// Defensive Code: For security purposes we need to perform some sanitization on the inputs.
 	email = strings.ToLower(email)
 	email = strings.ReplaceAll(email, " ", "")
@@ -25,24 +28,31 @@ func (impl *GatewayControllerImpl) Login(ctx context.Context, email, password st
 	// Lookup the user in our database, else return a `400 Bad Request` error.
 	u, err := impl.UserStorer.GetByEmail(ctx, email)
 	if err != nil {
-		impl.Logger.Error("database error", slog.Any("err", err))
+		impl.Logger.Error("database error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("err", err))
 		return nil, err
 	}
 	if u == nil {
-		impl.Logger.Warn("user does not exist validation error", slog.String("email", email))
+		impl.Logger.Warn("user does not exist validation error",
+			slog.String("ip_address", ipAddress),
+			slog.String("email", email))
 		return nil, httperror.NewForBadRequestWithSingleField("email", "does not exist")
 	}
 
 	// Verify the inputted password and hashed password match.
 	passwordMatch, _ := impl.Password.ComparePasswordAndHash(password, u.PasswordHash)
 	if passwordMatch == false {
-		impl.Logger.Warn("password check validation error")
+		impl.Logger.Warn("password check validation error",
+			slog.String("ip_address", ipAddress))
 		return nil, httperror.NewForBadRequestWithSingleField("password", "password do not match with record")
 	}
 
 	// Enforce the verification code of the email.
 	if u.WasEmailVerified == false {
-		impl.Logger.Warn("email verification validation error", slog.Any("u", u))
+		impl.Logger.Warn("email verification validation error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("u", u))
 		return nil, httperror.NewForBadRequestWithSingleField("email", "was not verified")
 	}
 
@@ -53,7 +63,9 @@ func (impl *GatewayControllerImpl) Login(ctx context.Context, email, password st
 		u.OTPValidated = false
 		u.ModifiedAt = time.Now()
 		if err := impl.UserStorer.UpdateByID(ctx, u); err != nil {
-			impl.Logger.Error("failed updating user during login", slog.Any("err", err))
+			impl.Logger.Error("failed updating user during login",
+				slog.String("ip_address", ipAddress),
+				slog.Any("err", err))
 			return nil, err
 		}
 	}
@@ -62,9 +74,13 @@ func (impl *GatewayControllerImpl) Login(ctx context.Context, email, password st
 }
 
 func (impl *GatewayControllerImpl) loginWithUser(ctx context.Context, u *u_s.User) (*gateway_s.LoginResponseIDO, error) {
+	ipAddress, _ := ctx.Value(constants.SessionIPAddress).(string)
+
 	uBin, err := json.Marshal(u)
 	if err != nil {
-		impl.Logger.Error("marshalling error", slog.Any("err", err))
+		impl.Logger.Error("marshalling error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("err", err))
 		return nil, err
 	}
 
@@ -77,14 +93,18 @@ func (impl *GatewayControllerImpl) loginWithUser(ctx context.Context, u *u_s.Use
 
 	err = impl.Cache.SetWithExpiry(ctx, sessionUUID, uBin, rtExpiry)
 	if err != nil {
-		impl.Logger.Error("cache set with expiry error", slog.Any("err", err))
+		impl.Logger.Error("cache set with expiry error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("err", err))
 		return nil, err
 	}
 
 	// Generate our JWT token.
 	accessToken, accessTokenExpiry, refreshToken, refreshTokenExpiry, err := impl.JWT.GenerateJWTTokenPair(sessionUUID, atExpiry, rtExpiry)
 	if err != nil {
-		impl.Logger.Error("jwt generate pairs error", slog.Any("err", err))
+		impl.Logger.Error("jwt generate pairs error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("err", err))
 		return nil, err
 	}
 

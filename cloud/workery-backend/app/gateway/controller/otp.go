@@ -29,6 +29,7 @@ func (impl *GatewayControllerImpl) GenerateOTP(ctx context.Context) (*OTPGenerat
 	// Extract from our session the following data.
 	userID, _ := ctx.Value(constants.SessionUserID).(primitive.ObjectID)
 	sessionID, _ := ctx.Value(constants.SessionID).(string)
+	ipAddress, _ := ctx.Value(constants.SessionIPAddress).(string)
 
 	////
 	//// Start the transaction.
@@ -37,6 +38,7 @@ func (impl *GatewayControllerImpl) GenerateOTP(ctx context.Context) (*OTPGenerat
 	session, err := impl.DbClient.StartSession()
 	if err != nil {
 		impl.Logger.Error("start session error",
+			slog.String("ip_address", ipAddress),
 			slog.Any("error", err))
 		return nil, err
 	}
@@ -48,11 +50,14 @@ func (impl *GatewayControllerImpl) GenerateOTP(ctx context.Context) (*OTPGenerat
 		// Lookup the user in our database, else return a `400 Bad Request` error.
 		u, err := impl.UserStorer.GetByID(sessCtx, userID)
 		if err != nil {
-			impl.Logger.Error("failed getting session user", slog.Any("err", err))
+			impl.Logger.Error("failed getting session user",
+				slog.String("ip_address", ipAddress),
+				slog.Any("err", err))
 			return nil, err
 		}
 		if u == nil {
-			impl.Logger.Warn("user does not exist validation error")
+			impl.Logger.Warn("user does not exist validation error",
+				slog.String("ip_address", ipAddress))
 			return nil, httperror.NewForBadRequestWithSingleField("id", "does not exist")
 		}
 
@@ -68,7 +73,9 @@ func (impl *GatewayControllerImpl) GenerateOTP(ctx context.Context) (*OTPGenerat
 				SecretSize:  15,
 			})
 			if err != nil {
-				impl.Logger.Error("failed generating otp", slog.Any("err", err))
+				impl.Logger.Error("failed generating otp",
+					slog.String("ip_address", ipAddress),
+					slog.Any("err", err))
 				return nil, err
 			}
 
@@ -88,20 +95,26 @@ func (impl *GatewayControllerImpl) GenerateOTP(ctx context.Context) (*OTPGenerat
 			u.ModifiedAt = time.Now()
 
 			if err := impl.UserStorer.UpdateByID(sessCtx, u); err != nil {
-				impl.Logger.Error("failed updating session user with opt secret", slog.Any("err", err))
+				impl.Logger.Error("failed updating session user with opt secret",
+					slog.String("ip_address", ipAddress),
+					slog.Any("err", err))
 				return nil, err
 			}
 
 			// STEP 3: Update the authenticated user session.
 			uBin, err := json.Marshal(u)
 			if err != nil {
-				impl.Logger.Error("marshalling error", slog.Any("err", err))
+				impl.Logger.Error("marshalling error",
+					slog.String("ip_address", ipAddress),
+					slog.Any("err", err))
 				return nil, err
 			}
 			atExpiry := 14 * 24 * time.Hour
 			err = impl.Cache.SetWithExpiry(sessCtx, sessionID, uBin, atExpiry)
 			if err != nil {
-				impl.Logger.Error("cache set with expiry error", slog.Any("err", err))
+				impl.Logger.Error("cache set with expiry error",
+					slog.String("ip_address", ipAddress),
+					slog.Any("err", err))
 				return nil, err
 			}
 
@@ -110,12 +123,18 @@ func (impl *GatewayControllerImpl) GenerateOTP(ctx context.Context) (*OTPGenerat
 			res.Base32 = key.Secret()
 			res.OTPAuthURL = key.URL()
 
-			impl.Logger.Debug("successfully generated opt secret and auth url", slog.Any("base_32", res.Base32), slog.Any("opt_auth_url", res.OTPAuthURL))
+			impl.Logger.Debug("successfully generated opt secret and auth url",
+				slog.String("ip_address", ipAddress),
+				slog.Any("base_32", res.Base32),
+				slog.Any("opt_auth_url", res.OTPAuthURL))
 		} else {
 			// Reuse the existing opt secret and auth url.
 			res.Base32 = u.OTPSecret
 			res.OTPAuthURL = u.OTPAuthURL
-			impl.Logger.Warn("reusing previously generated opt secret and auth url", slog.Any("base_32", res.Base32), slog.Any("opt_auth_url", res.OTPAuthURL))
+			impl.Logger.Warn("reusing previously generated opt secret and auth url",
+				slog.String("ip_address", ipAddress),
+				slog.Any("base_32", res.Base32),
+				slog.Any("opt_auth_url", res.OTPAuthURL))
 		}
 
 		return res, nil
@@ -125,6 +144,7 @@ func (impl *GatewayControllerImpl) GenerateOTP(ctx context.Context) (*OTPGenerat
 	result, err := session.WithTransaction(ctx, transactionFunc)
 	if err != nil {
 		impl.Logger.Error("session failed error",
+			slog.String("ip_address", ipAddress),
 			slog.Any("error", err))
 		return nil, err
 	}
@@ -133,9 +153,12 @@ func (impl *GatewayControllerImpl) GenerateOTP(ctx context.Context) (*OTPGenerat
 }
 
 func (impl *GatewayControllerImpl) GenerateOTPAndQRCodePNGImage(ctx context.Context) ([]byte, error) {
+	ipAddress, _ := ctx.Value(constants.SessionIPAddress).(string)
+
 	otpResponse, err := impl.GenerateOTP(ctx)
 	if err != nil {
 		impl.Logger.Error("failed generating otp",
+			slog.String("ip_address", ipAddress),
 			slog.Any("error", err))
 		return nil, err
 	}
@@ -145,11 +168,14 @@ func (impl *GatewayControllerImpl) GenerateOTPAndQRCodePNGImage(ctx context.Cont
 	var png []byte
 	png, err = qrcode.Encode(otpResponse.OTPAuthURL, qrcode.Medium, 256)
 	if err != nil {
-		impl.Logger.Error("encode error", slog.Any("error", err))
+		impl.Logger.Error("encode error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("error", err))
 		return nil, err
 	}
 
 	impl.Logger.Debug("qr code ready",
+		slog.String("ip_address", ipAddress),
 		slog.Any("payload", otpResponse.OTPAuthURL))
 
 	return png, err
@@ -316,6 +342,7 @@ func (impl *GatewayControllerImpl) ValidateOTP(ctx context.Context, req *Validat
 	// Extract from our session the following data.
 	userID, _ := ctx.Value(constants.SessionUserID).(primitive.ObjectID)
 	sessionID, _ := ctx.Value(constants.SessionID).(string)
+	ipAddress, _ := ctx.Value(constants.SessionIPAddress).(string)
 
 	////
 	//// Start the transaction.
@@ -324,6 +351,7 @@ func (impl *GatewayControllerImpl) ValidateOTP(ctx context.Context, req *Validat
 	session, err := impl.DbClient.StartSession()
 	if err != nil {
 		impl.Logger.Error("start session error",
+			slog.String("ip_address", ipAddress),
 			slog.Any("error", err))
 		return nil, err
 	}
@@ -335,15 +363,19 @@ func (impl *GatewayControllerImpl) ValidateOTP(ctx context.Context, req *Validat
 		// Lookup the user in our database, else return a `400 Bad Request` error.
 		u, err := impl.UserStorer.GetByID(sessCtx, userID)
 		if err != nil {
-			impl.Logger.Error("failed getting session user", slog.Any("err", err))
+			impl.Logger.Error("failed getting session user",
+				slog.String("ip_address", ipAddress),
+				slog.Any("err", err))
 			return nil, err
 		}
 		if u == nil {
-			impl.Logger.Warn("user does not exist validation error")
+			impl.Logger.Warn("user does not exist validation error",
+				slog.String("ip_address", ipAddress))
 			return nil, httperror.NewForBadRequestWithSingleField("id", "does not exist")
 		}
 		if u.OTPSecret == "" {
-			impl.Logger.Warn("user did not run generate otp")
+			impl.Logger.Warn("user did not run generate otp",
+				slog.String("ip_address", ipAddress))
 			return nil, httperror.NewForBadRequestWithSingleField("message", "you did not setup two-factor authentication")
 		}
 
@@ -358,6 +390,7 @@ func (impl *GatewayControllerImpl) ValidateOTP(ctx context.Context, req *Validat
 			//
 
 			impl.Logger.Warn("totp verification failed or expired",
+				slog.String("ip_address", ipAddress),
 				slog.String("token", req.Token),
 				slog.String("otp_secret", u.OTPSecret))
 			return nil, httperror.NewForBadRequestWithSingleField("token", "expired or invalid")
@@ -374,7 +407,9 @@ func (impl *GatewayControllerImpl) ValidateOTP(ctx context.Context, req *Validat
 		// Keep track of when user's account changes.
 		u.ModifiedAt = time.Now()
 		if err := impl.UserStorer.UpdateByID(sessCtx, u); err != nil {
-			impl.Logger.Error("failed updating user", slog.Any("err", err))
+			impl.Logger.Error("failed updating user",
+				slog.String("ip_address", ipAddress),
+				slog.Any("err", err))
 			return nil, err
 		}
 
@@ -384,13 +419,17 @@ func (impl *GatewayControllerImpl) ValidateOTP(ctx context.Context, req *Validat
 
 		uBin, err := json.Marshal(u)
 		if err != nil {
-			impl.Logger.Error("marshalling error", slog.Any("err", err))
+			impl.Logger.Error("marshalling error",
+				slog.String("ip_address", ipAddress),
+				slog.Any("err", err))
 			return nil, err
 		}
 		atExpiry := 14 * 24 * time.Hour
 		err = impl.Cache.SetWithExpiry(sessCtx, sessionID, uBin, atExpiry)
 		if err != nil {
-			impl.Logger.Error("cache set with expiry error", slog.Any("err", err))
+			impl.Logger.Error("cache set with expiry error",
+				slog.String("ip_address", ipAddress),
+				slog.Any("err", err))
 			return nil, err
 		}
 
@@ -401,6 +440,7 @@ func (impl *GatewayControllerImpl) ValidateOTP(ctx context.Context, req *Validat
 	u, err := session.WithTransaction(ctx, transactionFunc)
 	if err != nil {
 		impl.Logger.Error("session failed error",
+			slog.String("ip_address", ipAddress),
 			slog.Any("error", err))
 		return nil, err
 	}
@@ -417,6 +457,7 @@ func (impl *GatewayControllerImpl) DisableOTP(ctx context.Context) (*u_d.User, e
 	// Extract from our session the following data.
 	userID, _ := ctx.Value(constants.SessionUserID).(primitive.ObjectID)
 	sessionID, _ := ctx.Value(constants.SessionID).(string)
+	ipAddress, _ := ctx.Value(constants.SessionIPAddress).(string)
 
 	////
 	//// Start the transaction.
@@ -425,6 +466,7 @@ func (impl *GatewayControllerImpl) DisableOTP(ctx context.Context) (*u_d.User, e
 	session, err := impl.DbClient.StartSession()
 	if err != nil {
 		impl.Logger.Error("start session error",
+			slog.String("ip_address", ipAddress),
 			slog.Any("error", err))
 		return nil, err
 	}
@@ -436,11 +478,14 @@ func (impl *GatewayControllerImpl) DisableOTP(ctx context.Context) (*u_d.User, e
 		// Lookup the user in our database, else return a `400 Bad Request` error.
 		u, err := impl.UserStorer.GetByID(sessCtx, userID)
 		if err != nil {
-			impl.Logger.Error("failed getting session user", slog.Any("err", err))
+			impl.Logger.Error("failed getting session user",
+				slog.String("ip_address", ipAddress),
+				slog.Any("err", err))
 			return nil, err
 		}
 		if u == nil {
-			impl.Logger.Warn("user does not exist validation error")
+			impl.Logger.Warn("user does not exist validation error",
+				slog.String("ip_address", ipAddress))
 			return nil, httperror.NewForBadRequestWithSingleField("id", "does not exist")
 		}
 
@@ -455,7 +500,9 @@ func (impl *GatewayControllerImpl) DisableOTP(ctx context.Context) (*u_d.User, e
 		u.OTPAuthURL = ""
 		u.ModifiedAt = time.Now()
 		if err := impl.UserStorer.UpdateByID(sessCtx, u); err != nil {
-			impl.Logger.Error("failed updating user", slog.Any("err", err))
+			impl.Logger.Error("failed updating user",
+				slog.String("ip_address", ipAddress),
+				slog.Any("err", err))
 			return nil, err
 		}
 
@@ -465,13 +512,17 @@ func (impl *GatewayControllerImpl) DisableOTP(ctx context.Context) (*u_d.User, e
 
 		uBin, err := json.Marshal(u)
 		if err != nil {
-			impl.Logger.Error("marshalling error", slog.Any("err", err))
+			impl.Logger.Error("marshalling error",
+				slog.String("ip_address", ipAddress),
+				slog.Any("err", err))
 			return nil, err
 		}
 		atExpiry := 14 * 24 * time.Hour
 		err = impl.Cache.SetWithExpiry(sessCtx, sessionID, uBin, atExpiry)
 		if err != nil {
-			impl.Logger.Error("cache set with expiry error", slog.Any("err", err))
+			impl.Logger.Error("cache set with expiry error",
+				slog.String("ip_address", ipAddress),
+				slog.Any("err", err))
 			return nil, err
 		}
 
@@ -482,6 +533,7 @@ func (impl *GatewayControllerImpl) DisableOTP(ctx context.Context) (*u_d.User, e
 	res, err := session.WithTransaction(ctx, transactionFunc)
 	if err != nil {
 		impl.Logger.Error("session failed error",
+			slog.String("ip_address", ipAddress),
 			slog.Any("error", err))
 		return nil, err
 	}
@@ -497,10 +549,12 @@ type RecoveryRequestIDO struct {
 func (impl *GatewayControllerImpl) RecoveryOTP(ctx context.Context, req *RecoveryRequestIDO) (*gateway_s.LoginResponseIDO, error) {
 	// Extract from our session the following data.
 	userID, _ := ctx.Value(constants.SessionUserID).(primitive.ObjectID)
+	ipAddress, _ := ctx.Value(constants.SessionIPAddress).(string)
 
 	// Validate the inputted totp code.
 	if req.BackupCode == "" {
 		impl.Logger.Warn("user did not include backup code",
+			slog.String("ip_address", ipAddress),
 			slog.String("user_id", userID.Hex()))
 		return nil, httperror.NewForBadRequestWithSingleField("backup_code", "missing value")
 	}
@@ -512,6 +566,7 @@ func (impl *GatewayControllerImpl) RecoveryOTP(ctx context.Context, req *Recover
 	session, err := impl.DbClient.StartSession()
 	if err != nil {
 		impl.Logger.Error("start session error",
+			slog.String("ip_address", ipAddress),
 			slog.Any("error", err))
 		return nil, err
 	}
@@ -524,17 +579,20 @@ func (impl *GatewayControllerImpl) RecoveryOTP(ctx context.Context, req *Recover
 		u, err := impl.UserStorer.GetByID(sessCtx, userID)
 		if err != nil {
 			impl.Logger.Error("failed getting session user",
+				slog.String("ip_address", ipAddress),
 				slog.String("user_id", userID.Hex()),
 				slog.Any("err", err))
 			return nil, err
 		}
 		if u == nil {
 			impl.Logger.Warn("user does not exist validation error",
+				slog.String("ip_address", ipAddress),
 				slog.String("user_id", userID.Hex()))
 			return nil, httperror.NewForBadRequestWithSingleField("id", "does not exist")
 		}
 		if u.OTPBackupCodeHash == "" || u.OTPBackupCodeHashAlgorithm == "" {
 			impl.Logger.Error("user did not run generate backup code",
+				slog.String("ip_address", ipAddress),
 				slog.String("user_id", userID.Hex()),
 				slog.String("user_email", u.Email),
 				slog.String("hash", u.OTPBackupCodeHash),
@@ -550,6 +608,7 @@ func (impl *GatewayControllerImpl) RecoveryOTP(ctx context.Context, req *Recover
 		// Make sure we are using the correct hashing algorithm.
 		if impl.Password.AlgorithmName() != u.OTPBackupCodeHashAlgorithm {
 			impl.Logger.Warn("backup code encoded in different hashing algorithm",
+				slog.String("ip_address", ipAddress),
 				slog.String("given_algorithm", u.OTPBackupCodeHashAlgorithm),
 				slog.String("system_algorithm", impl.Password.AlgorithmName()),
 				slog.String("user_email", u.Email),
@@ -562,6 +621,7 @@ func (impl *GatewayControllerImpl) RecoveryOTP(ctx context.Context, req *Recover
 		otpBackupCodedMatch, _ := impl.Password.ComparePasswordAndHash(req.BackupCode, u.OTPBackupCodeHash)
 		if otpBackupCodedMatch == false {
 			impl.Logger.Warn("backup code check validation error",
+				slog.String("ip_address", ipAddress),
 				slog.String("user_id", userID.Hex()),
 				slog.String("user_email", u.Email),
 			)
@@ -581,12 +641,14 @@ func (impl *GatewayControllerImpl) RecoveryOTP(ctx context.Context, req *Recover
 		u.ModifiedAt = time.Now()
 		if err := impl.UserStorer.UpdateByID(sessCtx, u); err != nil {
 			impl.Logger.Error("failed updating user",
+				slog.String("ip_address", ipAddress),
 				slog.String("user_id", userID.Hex()),
 				slog.Any("err", err))
 			return nil, err
 		}
 
 		impl.Logger.Debug("successfully reset 2fa via backup code recovery",
+			slog.String("ip_address", ipAddress),
 			slog.String("user_id", userID.Hex()))
 
 		return u, nil
@@ -596,6 +658,7 @@ func (impl *GatewayControllerImpl) RecoveryOTP(ctx context.Context, req *Recover
 	u, err := session.WithTransaction(ctx, transactionFunc)
 	if err != nil {
 		impl.Logger.Error("session failed error",
+			slog.String("ip_address", ipAddress),
 			slog.String("user_id", userID.Hex()),
 			slog.Any("error", err))
 		return nil, err

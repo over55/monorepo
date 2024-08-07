@@ -42,38 +42,49 @@ func ValidateProfileChangePassworRequest(dirtyData *ProfileChangePasswordRequest
 func (impl *GatewayControllerImpl) ProfileChangePassword(ctx context.Context, req *ProfileChangePasswordRequestIDO) error {
 	// Extract from our session the following data.
 	userID := ctx.Value(constants.SessionUserID).(primitive.ObjectID)
+	ipAddress, _ := ctx.Value(constants.SessionIPAddress).(string)
 
 	// Lookup the user in our database, else return a `400 Bad Request` error.
 	u, err := impl.UserStorer.GetByID(ctx, userID)
 	if err != nil {
-		impl.Logger.Error("database error", slog.Any("err", err))
+		impl.Logger.Error("database error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("err", err))
 		return err
 	}
 	if u == nil {
-		impl.Logger.Error("user does not exist validation error")
+		impl.Logger.Error("user does not exist validation error",
+			slog.String("ip_address", ipAddress))
 		return httperror.NewForBadRequestWithSingleField("id", "does not exist")
 	}
 
 	if err := ValidateProfileChangePassworRequest(req); err != nil {
-		impl.Logger.Warn("user validation failed", slog.Any("err", err))
+		impl.Logger.Warn("user validation failed",
+			slog.String("ip_address", ipAddress),
+			slog.Any("err", err))
 		return err
 	}
 
 	// Verify the inputted password and hashed password match.
 	if passwordMatch, _ := impl.Password.ComparePasswordAndHash(req.OldPassword, u.PasswordHash); passwordMatch == false {
-		impl.Logger.Warn("password check validation error")
+		impl.Logger.Warn("password check validation error",
+			slog.String("ip_address", ipAddress))
 		return httperror.NewForBadRequestWithSingleField("old_password", "old password do not match with record of existing password")
 	}
 
 	passwordHash, err := impl.Password.GenerateHashFromPassword(req.Password)
 	if err != nil {
-		impl.Logger.Error("hashing error", slog.Any("error", err))
+		impl.Logger.Error("hashing error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("error", err))
 		return err
 	}
 	u.PasswordHash = passwordHash
 	u.PasswordHashAlgorithm = impl.Password.AlgorithmName()
 	if err := impl.UserStorer.UpdateByID(ctx, u); err != nil {
-		impl.Logger.Error("user update by id error", slog.Any("error", err))
+		impl.Logger.Error("user update by id error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("error", err))
 		return err
 	}
 	return nil

@@ -48,6 +48,8 @@ func validatePasswordResetRequest(dirtyData *PasswordResetRequestIDO) error {
 }
 
 func (impl *GatewayControllerImpl) PasswordReset(ctx context.Context, req *PasswordResetRequestIDO) error {
+	ipAddress, _ := ctx.Value(constants.SessionIPAddress).(string)
+
 	// Perform our validation and return validation error on any issues detected.
 	if err := validatePasswordResetRequest(req); err != nil {
 		return err
@@ -56,11 +58,14 @@ func (impl *GatewayControllerImpl) PasswordReset(ctx context.Context, req *Passw
 	// Lookup the user in our database, else return a `400 Bad Request` error.
 	u, err := impl.UserStorer.GetByVerificationCode(ctx, req.VerificationCode)
 	if err != nil {
-		impl.Logger.Error("database error", slog.Any("err", err))
+		impl.Logger.Error("database error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("err", err))
 		return err
 	}
 	if u == nil {
-		impl.Logger.Warn("user does not exist validation error")
+		impl.Logger.Warn("user does not exist validation error",
+			slog.String("ip_address", ipAddress))
 		return httperror.NewForBadRequestWithSingleField("code", "does not exist")
 	}
 
@@ -68,7 +73,9 @@ func (impl *GatewayControllerImpl) PasswordReset(ctx context.Context, req *Passw
 
 	passwordHash, err := impl.Password.GenerateHashFromPassword(req.Password)
 	if err != nil {
-		impl.Logger.Error("hashing error", slog.Any("error", err))
+		impl.Logger.Error("hashing error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("error", err))
 		return err
 	}
 
@@ -79,9 +86,16 @@ func (impl *GatewayControllerImpl) PasswordReset(ctx context.Context, req *Passw
 	u.ModifiedAt = time.Now()
 
 	if err := impl.UserStorer.UpdateByID(ctx, u); err != nil {
-		impl.Logger.Error("update error", slog.Any("err", err))
+		impl.Logger.Error("update error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("err", err))
 		return err
 	}
+
+	impl.Logger.Error("reset password for my account",
+		slog.String("ip_address", ipAddress),
+		slog.String("user_id", u.ID.Hex()),
+		slog.String("user_email", u.Email))
 
 	return nil
 }
@@ -123,17 +137,22 @@ func (impl *GatewayControllerImpl) validateChangePasswordRequest(u *u_ds.User, d
 
 // ChangePassword function will change the password of the current user in the session.
 func (impl *GatewayControllerImpl) ChangePassword(ctx context.Context, req *ChangePasswordRequestIDO) error {
+	ipAddress, _ := ctx.Value(constants.SessionIPAddress).(string)
+
 	// Extract from our session the following data.
 	userID := ctx.Value(constants.SessionUserID).(primitive.ObjectID)
 
 	// Lookup the user in our database, else return a `400 Bad Request` error.
 	u, err := impl.UserStorer.GetByID(ctx, userID)
 	if err != nil {
-		impl.Logger.Error("database error", slog.Any("err", err))
+		impl.Logger.Error("database error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("err", err))
 		return err
 	}
 	if u == nil {
-		impl.Logger.Warn("user does not exist validation error")
+		impl.Logger.Warn("user does not exist validation error",
+			slog.String("ip_address", ipAddress))
 		return httperror.NewForBadRequestWithSingleField("id", "does not exist")
 	}
 
@@ -144,7 +163,9 @@ func (impl *GatewayControllerImpl) ChangePassword(ctx context.Context, req *Chan
 
 	passwordHash, err := impl.Password.GenerateHashFromPassword(req.NewPassword)
 	if err != nil {
-		impl.Logger.Error("hashing error", slog.Any("error", err))
+		impl.Logger.Error("hashing error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("error", err))
 		return err
 	}
 
@@ -155,11 +176,14 @@ func (impl *GatewayControllerImpl) ChangePassword(ctx context.Context, req *Chan
 	u.ModifiedAt = time.Now()
 
 	if err := impl.UserStorer.UpdateByID(ctx, u); err != nil {
-		impl.Logger.Error("update error", slog.Any("err", err))
+		impl.Logger.Error("update error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("err", err))
 		return err
 	}
 
 	impl.Logger.Error("changed password for my account",
+		slog.String("ip_address", ipAddress),
 		slog.String("user_id", u.ID.Hex()),
 		slog.String("user_email", u.Email))
 

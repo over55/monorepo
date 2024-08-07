@@ -59,15 +59,19 @@ func (impl *GatewayControllerImpl) Dashboard(ctx context.Context) (*DashboardRes
 	// Extract from our session the following data.
 	tenantID, _ := ctx.Value(constants.SessionUserTenantID).(primitive.ObjectID)
 	userID, _ := ctx.Value(constants.SessionUserID).(primitive.ObjectID)
+	ipAddress, _ := ctx.Value(constants.SessionIPAddress).(string)
 
 	// Lookup the user in our database, else return a `400 Bad Request` error.
 	u, err := impl.UserStorer.GetByID(ctx, userID)
 	if err != nil {
-		impl.Logger.Error("database error", slog.Any("err", err))
+		impl.Logger.Error("database error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("err", err))
 		return nil, err
 	}
 	if u == nil {
-		impl.Logger.Warn("user does not exist validation error")
+		impl.Logger.Warn("user does not exist validation error",
+			slog.String("ip_address", ipAddress))
 		return nil, httperror.NewForBadRequestWithSingleField("id", "does not exist")
 	}
 
@@ -77,22 +81,30 @@ func (impl *GatewayControllerImpl) Dashboard(ctx context.Context) (*DashboardRes
 
 	clientsCount, err := impl.getActiveClientsCount(ctx, tenantID)
 	if err != nil {
-		impl.Logger.Error("database error", slog.Any("err", err))
+		impl.Logger.Error("database error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("err", err))
 		return nil, err
 	}
 	associatesCount, err := impl.getActiveAssociatesCount(ctx, tenantID)
 	if err != nil {
-		impl.Logger.Error("database error", slog.Any("err", err))
+		impl.Logger.Error("database error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("err", err))
 		return nil, err
 	}
 	jobsCount, err := impl.getActiveJobsCount(ctx, tenantID)
 	if err != nil {
-		impl.Logger.Error("database error", slog.Any("err", err))
+		impl.Logger.Error("database error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("err", err))
 		return nil, err
 	}
 	tasksCount, err := impl.getActiveTasksCount(ctx, tenantID)
 	if err != nil {
-		impl.Logger.Error("database error", slog.Any("err", err))
+		impl.Logger.Error("database error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("err", err))
 		return nil, err
 	}
 

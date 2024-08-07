@@ -544,6 +544,8 @@ func ValidateAssociateJobSeekerProfileUpdateRequest(dirtyData *ProfileUpdateRequ
 }
 
 func (impl *GatewayControllerImpl) ProfileUpdate(ctx context.Context, req *ProfileUpdateRequestIDO) error {
+	ipAddress, _ := ctx.Value(constants.SessionIPAddress).(string)
+
 	////
 	//// Start the transaction.
 	////
@@ -551,6 +553,7 @@ func (impl *GatewayControllerImpl) ProfileUpdate(ctx context.Context, req *Profi
 	session, err := impl.DbClient.StartSession()
 	if err != nil {
 		impl.Logger.Error("start session error",
+			slog.String("ip_address", ipAddress),
 			slog.Any("error", err))
 		return err
 	}
@@ -569,11 +572,14 @@ func (impl *GatewayControllerImpl) ProfileUpdate(ctx context.Context, req *Profi
 		// Lookup the user in our database, else return a `400 Bad Request` error.
 		ou, err := impl.UserStorer.GetByID(sessCtx, userID)
 		if err != nil {
-			impl.Logger.Error("database error", slog.Any("err", err))
+			impl.Logger.Error("database error",
+				slog.String("ip_address", ipAddress),
+				slog.Any("err", err))
 			return nil, err
 		}
 		if ou == nil {
-			impl.Logger.Error("user does not exist validation error")
+			impl.Logger.Error("user does not exist validation error",
+				slog.String("ip_address", ipAddress))
 			return nil, httperror.NewForBadRequestWithSingleField("id", "does not exist")
 		}
 
@@ -607,7 +613,8 @@ func (impl *GatewayControllerImpl) ProfileUpdate(ctx context.Context, req *Profi
 			}
 			break
 		default:
-			impl.Logger.Error("unsupported profile role")
+			impl.Logger.Error("unsupported profile role",
+				slog.String("ip_address", ipAddress))
 			return nil, httperror.NewForBadRequestWithSingleField("message", "currently do not support your profile role")
 		}
 
@@ -617,6 +624,7 @@ func (impl *GatewayControllerImpl) ProfileUpdate(ctx context.Context, req *Profi
 	// Start a transaction
 	if _, err := session.WithTransaction(ctx, transactionFunc); err != nil {
 		impl.Logger.Error("session failed error",
+			slog.String("ip_address", ipAddress),
 			slog.Any("error", err))
 		return err
 	}
@@ -625,6 +633,8 @@ func (impl *GatewayControllerImpl) ProfileUpdate(ctx context.Context, req *Profi
 }
 
 func (impl *GatewayControllerImpl) ProfileUpdateExecutiveStaff(sessCtx mongo.SessionContext, req *ProfileUpdateRequestIDO, ou *u_d.User) error {
+	ipAddress, _ := sessCtx.Value(constants.SessionIPAddress).(string)
+
 	impl.Logger.Debug("validating executive staff user profile")
 	if err := ValidateExecutiveStaffProfileUpdateRequest(req); err != nil {
 		return err
@@ -641,7 +651,9 @@ func (impl *GatewayControllerImpl) ProfileUpdateExecutiveStaff(sessCtx mongo.Ses
 	ou.AgreePromotionsEmail = req.AgreePromotionsEmail
 
 	if err := impl.UserStorer.UpdateByID(sessCtx, ou); err != nil {
-		impl.Logger.Error("user update by id error", slog.Any("error", err))
+		impl.Logger.Error("user update by id error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("error", err))
 		return err
 	}
 	impl.Logger.Debug("updated executive staff user profile")
@@ -671,18 +683,23 @@ func (impl *GatewayControllerImpl) ProfileUpdateStaff(sessCtx mongo.SessionConte
 	ou.City = req.City
 	ou.AgreePromotionsEmail = req.AgreePromotionsEmail
 	if err := impl.UserStorer.UpdateByID(sessCtx, ou); err != nil {
-		impl.Logger.Error("user update by id error", slog.Any("error", err))
+		impl.Logger.Error("user update by id error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("error", err))
 		return err
 	}
 
 	// STEP 3:
 	staff, err := impl.StaffStorer.GetByUserID(sessCtx, ou.ID)
 	if err != nil {
-		impl.Logger.Error("database error", slog.Any("err", err))
+		impl.Logger.Error("database error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("err", err))
 		return err
 	}
 	if staff == nil {
-		impl.Logger.Error("staff does not exist validation error")
+		impl.Logger.Error("staff does not exist validation error",
+			slog.String("ip_address", ipAddress))
 		return httperror.NewForBadRequestWithSingleField("user_id", "staff does not exist")
 	}
 
@@ -735,11 +752,15 @@ func (impl *GatewayControllerImpl) ProfileUpdateStaff(sessCtx mongo.SessionConte
 
 	hh, err := impl.HowHearStorer.GetByID(sessCtx, req.HowDidYouHearAboutUsID)
 	if err != nil {
-		impl.Logger.Error("fetching how hear error", slog.Any("error", err))
+		impl.Logger.Error("fetching how hear error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("error", err))
 		return err
 	}
 	if hh == nil {
-		impl.Logger.Error("how hear does not exist error", slog.Any("tagID", req.HowDidYouHearAboutUsID))
+		impl.Logger.Error("how hear does not exist error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("tagID", req.HowDidYouHearAboutUsID))
 		return httperror.NewForBadRequestWithSingleField("tags", req.HowDidYouHearAboutUsID.Hex()+" how hear does not exist")
 	}
 	staff.HowDidYouHearAboutUsID = hh.ID
@@ -782,7 +803,9 @@ func (impl *GatewayControllerImpl) ProfileUpdateStaff(sessCtx mongo.SessionConte
 	//
 
 	if err := impl.StaffStorer.UpdateByID(sessCtx, staff); err != nil {
-		impl.Logger.Error("database update error", slog.Any("error", err))
+		impl.Logger.Error("database update error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("error", err))
 		return err
 	}
 
@@ -814,18 +837,23 @@ func (impl *GatewayControllerImpl) ProfileUpdateAssociate(sessCtx mongo.SessionC
 	ou.City = req.City
 	ou.AgreePromotionsEmail = req.AgreePromotionsEmail
 	if err := impl.UserStorer.UpdateByID(sessCtx, ou); err != nil {
-		impl.Logger.Error("user update by id error", slog.Any("error", err))
+		impl.Logger.Error("user update by id error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("error", err))
 		return err
 	}
 
 	// STEP 3:
 	asso, err := impl.AssociateStorer.GetByUserID(sessCtx, ou.ID)
 	if err != nil {
-		impl.Logger.Error("database error", slog.Any("err", err))
+		impl.Logger.Error("database error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("err", err))
 		return err
 	}
 	if asso == nil {
-		impl.Logger.Error("asso does not exist validation error")
+		impl.Logger.Error("asso does not exist validation error",
+			slog.String("ip_address", ipAddress))
 		return httperror.NewForBadRequestWithSingleField("user_id", "asso does not exist")
 	}
 
@@ -878,11 +906,15 @@ func (impl *GatewayControllerImpl) ProfileUpdateAssociate(sessCtx mongo.SessionC
 
 	hh, err := impl.HowHearStorer.GetByID(sessCtx, req.HowDidYouHearAboutUsID)
 	if err != nil {
-		impl.Logger.Error("fetching how hear error", slog.Any("error", err))
+		impl.Logger.Error("fetching how hear error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("error", err))
 		return err
 	}
 	if hh == nil {
-		impl.Logger.Error("how hear does not exist error", slog.Any("tagID", req.HowDidYouHearAboutUsID))
+		impl.Logger.Error("how hear does not exist error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("tagID", req.HowDidYouHearAboutUsID))
 		return httperror.NewForBadRequestWithSingleField("tags", req.HowDidYouHearAboutUsID.Hex()+" how hear does not exist")
 	}
 	asso.HowDidYouHearAboutUsID = hh.ID
@@ -925,7 +957,9 @@ func (impl *GatewayControllerImpl) ProfileUpdateAssociate(sessCtx mongo.SessionC
 	//
 
 	if err := impl.AssociateStorer.UpdateByID(sessCtx, asso); err != nil {
-		impl.Logger.Error("database update error", slog.Any("error", err))
+		impl.Logger.Error("database update error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("error", err))
 		return err
 	}
 
@@ -957,18 +991,23 @@ func (impl *GatewayControllerImpl) ProfileUpdateCustomer(sessCtx mongo.SessionCo
 	ou.City = req.City
 	ou.AgreePromotionsEmail = req.AgreePromotionsEmail
 	if err := impl.UserStorer.UpdateByID(sessCtx, ou); err != nil {
-		impl.Logger.Error("user update by id error", slog.Any("error", err))
+		impl.Logger.Error("user update by id error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("error", err))
 		return err
 	}
 
 	// STEP 3:
 	asso, err := impl.CustomerStorer.GetByUserID(sessCtx, ou.ID)
 	if err != nil {
-		impl.Logger.Error("database error", slog.Any("err", err))
+		impl.Logger.Error("database error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("err", err))
 		return err
 	}
 	if asso == nil {
-		impl.Logger.Error("asso does not exist validation error")
+		impl.Logger.Error("asso does not exist validation error",
+			slog.String("ip_address", ipAddress))
 		return httperror.NewForBadRequestWithSingleField("user_id", "asso does not exist")
 	}
 
@@ -1015,11 +1054,15 @@ func (impl *GatewayControllerImpl) ProfileUpdateCustomer(sessCtx mongo.SessionCo
 
 	hh, err := impl.HowHearStorer.GetByID(sessCtx, req.HowDidYouHearAboutUsID)
 	if err != nil {
-		impl.Logger.Error("fetching how hear error", slog.Any("error", err))
+		impl.Logger.Error("fetching how hear error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("error", err))
 		return err
 	}
 	if hh == nil {
-		impl.Logger.Error("how hear does not exist error", slog.Any("tagID", req.HowDidYouHearAboutUsID))
+		impl.Logger.Error("how hear does not exist error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("tagID", req.HowDidYouHearAboutUsID))
 		return httperror.NewForBadRequestWithSingleField("tags", req.HowDidYouHearAboutUsID.Hex()+" how hear does not exist")
 	}
 	asso.HowDidYouHearAboutUsID = hh.ID
@@ -1062,7 +1105,9 @@ func (impl *GatewayControllerImpl) ProfileUpdateCustomer(sessCtx mongo.SessionCo
 	//
 
 	if err := impl.CustomerStorer.UpdateByID(sessCtx, asso); err != nil {
-		impl.Logger.Error("database update error", slog.Any("error", err))
+		impl.Logger.Error("database update error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("error", err))
 		return err
 	}
 
@@ -1094,18 +1139,23 @@ func (impl *GatewayControllerImpl) ProfileUpdateAssociateJobSeeker(sessCtx mongo
 	ou.City = req.City
 	ou.AgreePromotionsEmail = req.AgreePromotionsEmail
 	if err := impl.UserStorer.UpdateByID(sessCtx, ou); err != nil {
-		impl.Logger.Error("user update by id error", slog.Any("error", err))
+		impl.Logger.Error("user update by id error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("error", err))
 		return err
 	}
 
 	// STEP 3:
 	asso, err := impl.AssociateStorer.GetByUserID(sessCtx, ou.ID)
 	if err != nil {
-		impl.Logger.Error("database error", slog.Any("err", err))
+		impl.Logger.Error("database error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("err", err))
 		return err
 	}
 	if asso == nil {
-		impl.Logger.Error("asso does not exist validation error")
+		impl.Logger.Error("asso does not exist validation error",
+			slog.String("ip_address", ipAddress))
 		return httperror.NewForBadRequestWithSingleField("user_id", "asso does not exist")
 	}
 
@@ -1158,11 +1208,15 @@ func (impl *GatewayControllerImpl) ProfileUpdateAssociateJobSeeker(sessCtx mongo
 
 	hh, err := impl.HowHearStorer.GetByID(sessCtx, req.HowDidYouHearAboutUsID)
 	if err != nil {
-		impl.Logger.Error("fetching how hear error", slog.Any("error", err))
+		impl.Logger.Error("fetching how hear error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("error", err))
 		return err
 	}
 	if hh == nil {
-		impl.Logger.Error("how hear does not exist error", slog.Any("tagID", req.HowDidYouHearAboutUsID))
+		impl.Logger.Error("how hear does not exist error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("tagID", req.HowDidYouHearAboutUsID))
 		return httperror.NewForBadRequestWithSingleField("tags", req.HowDidYouHearAboutUsID.Hex()+" how hear does not exist")
 	}
 	asso.HowDidYouHearAboutUsID = hh.ID
@@ -1205,7 +1259,9 @@ func (impl *GatewayControllerImpl) ProfileUpdateAssociateJobSeeker(sessCtx mongo
 	//
 
 	if err := impl.AssociateStorer.UpdateByID(sessCtx, asso); err != nil {
-		impl.Logger.Error("database update error", slog.Any("error", err))
+		impl.Logger.Error("database update error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("error", err))
 		return err
 	}
 

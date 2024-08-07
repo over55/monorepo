@@ -134,6 +134,7 @@ type ProfileResponse struct {
 func (impl *GatewayControllerImpl) Profile(ctx context.Context) (*ProfileResponse, error) {
 	// Extract from our session the following data.
 	userID := ctx.Value(constants.SessionUserID).(primitive.ObjectID)
+	ipAddress, _ := ctx.Value(constants.SessionIPAddress).(string)
 
 	// DEVELOPERS NOTE:
 	// We are going to take the app user account and the reference record (
@@ -142,11 +143,14 @@ func (impl *GatewayControllerImpl) Profile(ctx context.Context) (*ProfileRespons
 	// Lookup the user in our database, else return a `400 Bad Request` error.
 	u, err := impl.UserStorer.GetByID(ctx, userID)
 	if err != nil {
-		impl.Logger.Error("database error", slog.Any("err", err))
+		impl.Logger.Error("database error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("err", err))
 		return nil, err
 	}
 	if u == nil {
-		impl.Logger.Error("user does not exist validation error")
+		impl.Logger.Error("user does not exist validation error",
+			slog.String("ip_address", ipAddress))
 		return nil, httperror.NewForBadRequestWithSingleField("id", "does not exist")
 	}
 
@@ -201,6 +205,7 @@ func (impl *GatewayControllerImpl) Profile(ctx context.Context) (*ProfileRespons
 		}
 		if staff == nil {
 			impl.Logger.Error("staff does not exist error",
+				slog.String("ip_address", ipAddress),
 				slog.Any("user_role", u.Role),
 				slog.String("user_id", u.ID.Hex()),
 				slog.Any("reference_id", u.ReferenceID))
@@ -284,11 +289,14 @@ func (impl *GatewayControllerImpl) Profile(ctx context.Context) (*ProfileRespons
 		impl.Logger.Debug("fetching associate record")
 		asso, err := impl.AssociateStorer.GetByID(ctx, u.ReferenceID)
 		if err != nil {
-			impl.Logger.Error("failed getting associate record", slog.Any("err", err))
+			impl.Logger.Error("failed getting associate record",
+				slog.String("ip_address", ipAddress),
+				slog.Any("err", err))
 			return nil, err
 		}
 		if asso == nil {
 			impl.Logger.Error("associate does not exist error",
+				slog.String("ip_address", ipAddress),
 				slog.Any("user_role", u.Role),
 				slog.String("user_id", u.ID.Hex()),
 				slog.Any("reference_id", u.ReferenceID))
@@ -372,11 +380,14 @@ func (impl *GatewayControllerImpl) Profile(ctx context.Context) (*ProfileRespons
 		impl.Logger.Debug("fetching customer record")
 		cust, err := impl.CustomerStorer.GetByID(ctx, u.ReferenceID)
 		if err != nil {
-			impl.Logger.Error("failed getting customer record", slog.Any("err", err))
+			impl.Logger.Error("failed getting customer record",
+				slog.String("ip_address", ipAddress),
+				slog.Any("err", err))
 			return nil, err
 		}
 		if cust == nil {
 			impl.Logger.Error("customer does not exist error",
+				slog.String("ip_address", ipAddress),
 				slog.Any("user_role", u.Role),
 				slog.String("user_id", u.ID.Hex()),
 				slog.Any("reference_id", u.ReferenceID))

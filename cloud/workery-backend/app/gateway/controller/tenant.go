@@ -27,9 +27,12 @@ func (impl *GatewayControllerImpl) ExecutiveVisitsTenant(ctx context.Context, re
 	userRole := ctx.Value(constants.SessionUserRole).(int8)
 	userID, _ := ctx.Value(constants.SessionUserID).(primitive.ObjectID)
 	tenantID, _ := ctx.Value(constants.SessionUserTenantID).(primitive.ObjectID)
+	ipAddress, _ := ctx.Value(constants.SessionIPAddress).(string)
 
 	if userRole != user_s.UserRoleExecutive {
-		impl.Logger.Error("not executive error", slog.Int("role", int(userRole)))
+		impl.Logger.Error("not executive error",
+			slog.Int("role", int(userRole)),
+			slog.String("ip_address", ipAddress))
 		return errors.New("user is not executive")
 	}
 
@@ -44,14 +47,18 @@ func (impl *GatewayControllerImpl) ExecutiveVisitsTenant(ctx context.Context, re
 
 	oldUserBin, err := impl.Cache.Get(ctx, sessionID)
 	if err != nil {
-		impl.Logger.Error("in-memory set error", slog.Any("err", err))
+		impl.Logger.Error("in-memory set error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("err", err))
 		return err
 	}
 
 	var u *user_s.User
 	err = json.Unmarshal(oldUserBin, &u)
 	if err != nil {
-		impl.Logger.Error("unmarshal error", slog.Any("err", err))
+		impl.Logger.Error("unmarshal error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("err", err))
 		return err
 	}
 
@@ -67,13 +74,17 @@ func (impl *GatewayControllerImpl) ExecutiveVisitsTenant(ctx context.Context, re
 
 	newUserBin, err := json.Marshal(u)
 	if err != nil {
-		impl.Logger.Error("marshalling error", slog.Any("err", err))
+		impl.Logger.Error("marshalling error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("err", err))
 		return err
 	}
 
 	// Save the session.
 	if err := impl.Cache.SetWithExpiry(ctx, sessionID, newUserBin, expiry); err != nil {
-		impl.Logger.Error("cache set with expiry error", slog.Any("err", err))
+		impl.Logger.Error("cache set with expiry error",
+			slog.String("ip_address", ipAddress),
+			slog.Any("err", err))
 		return err
 	}
 
