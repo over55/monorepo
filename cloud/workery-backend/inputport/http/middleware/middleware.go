@@ -80,7 +80,7 @@ func (mid *middleware) RateLimitMiddleware(fn http.HandlerFunc) http.HandlerFunc
 
 		host, _, err := net.SplitHostPort(r.RemoteAddr)
 		if err != nil {
-			mid.Logger.Error("invalid RemoteAddr", slog.Any("err", err))
+			mid.Logger.Error("invalid RemoteAddr", slog.Any("err", err), slog.Any("middleware", "RateLimitMiddleware"))
 			http.Error(w, fmt.Sprintf("invalid RemoteAddr: %s", err), http.StatusInternalServerError)
 			return
 		}
@@ -92,7 +92,7 @@ func (mid *middleware) RateLimitMiddleware(fn http.HandlerFunc) http.HandlerFunc
 
 		lm, ok := lif.(ratelimit.Limiter)
 		if !ok {
-			mid.Logger.Error("internal middleware error: typecast failed")
+			mid.Logger.Error("internal middleware error: typecast failed", slog.Any("middleware", "RateLimitMiddleware"))
 			http.Error(w, "internal middleware error: typecast failed", http.StatusInternalServerError)
 			return
 		}
@@ -205,7 +205,7 @@ func (mid *middleware) JWTProcessorMiddleware(fn http.HandlerFunc) http.HandlerF
 			// Special thanks to "poise" via https://stackoverflow.com/a/44700761
 			splitToken := strings.Split(reqToken, "JWT ")
 			if len(splitToken) < 2 {
-				mid.Logger.Warn("not properly formatted authorization header")
+				mid.Logger.Warn("not properly formatted authorization header", slog.Any("middleware", "JWTProcessorMiddleware"))
 				http.Error(w, "not properly formatted authorization header", http.StatusBadRequest)
 				return
 			}
@@ -250,12 +250,13 @@ func (mid *middleware) JWTProcessorMiddleware(fn http.HandlerFunc) http.HandlerF
 			// this middleware.
 			if len(urlSplit) >= 3 {
 				if skipPath[urlSplit[2]] {
-					mid.Logger.Warn("Skipping expired or error token")
+					mid.Logger.Warn("Skipping expired or error token", slog.Any("middleware", "JWTProcessorMiddleware"))
 				} else {
 					// For debugging purposes only.
 					// log.Println("JWTProcessorMiddleware | ProcessJWT | err", err, "for reqToken:", reqToken)
 					// log.Println("JWTProcessorMiddleware | ProcessJWT | urlSplit:", urlSplit)
 					// log.Println("JWTProcessorMiddleware | ProcessJWT | urlSplit[2]:", urlSplit[2])
+					mid.Logger.Warn("unauthorized api call", slog.Any("url", urlSplit), slog.Any("middleware", "JWTProcessorMiddleware"))
 					http.Error(w, err.Error(), http.StatusUnauthorized)
 					return
 				}
@@ -288,7 +289,7 @@ func (mid *middleware) PostJWTProcessorMiddleware(fn http.HandlerFunc) http.Hand
 			// Lookup our user profile in the session or return 500 error.
 			user, err := mid.GatewayController.GetUserBySessionID(ctx, sessionID) //TODO: IMPLEMENT.
 			if err != nil {
-				mid.Logger.Warn("GetUserBySessionID error", slog.Any("err", err))
+				mid.Logger.Warn("GetUserBySessionID error", slog.Any("err", err), slog.Any("middleware", "PostJWTProcessorMiddleware"))
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
@@ -296,7 +297,7 @@ func (mid *middleware) PostJWTProcessorMiddleware(fn http.HandlerFunc) http.Hand
 			// If no user was found then that means our session expired and the
 			// user needs to login or use the refresh token.
 			if user == nil {
-				mid.Logger.Warn("Session expired - please log in again")
+				mid.Logger.Warn("Session expired - please log in again", slog.Any("middleware", "PostJWTProcessorMiddleware"))
 				http.Error(w, "attempting to access a protected endpoint", http.StatusUnauthorized)
 				return
 			}
@@ -331,6 +332,7 @@ func (mid *middleware) PostJWTProcessorMiddleware(fn http.HandlerFunc) http.Hand
 					// For debuggin purposes only.
 					mid.Logger.Warn("session requires 2fa validation after login",
 						slog.Any("url_split", urlSplit),
+						slog.Any("middleware", "PostJWTProcessorMiddleware"),
 					)
 
 					// Halt proceeding further.
@@ -437,7 +439,7 @@ func (mid *middleware) ProtectedURLsMiddleware(fn http.HandlerFunc) http.Handler
 			if ok && isAuthorized {
 				fn(w, r.WithContext(ctx)) // Flow to the next middleware.
 			} else {
-				mid.Logger.Warn("attempting to access a protected endpoint")
+				mid.Logger.Warn("unauthorized api call", slog.Any("url", urlSplit), slog.Any("middleware", "ProtectedURLsMiddleware"))
 				http.Error(w, "attempting to access a protected endpoint", http.StatusUnauthorized)
 				return
 			}
