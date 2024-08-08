@@ -57,6 +57,7 @@ function AdminOrderSearch() {
   const [forceURL, setForceURL] = useState("");
   const [actualSearchText, setActualSearchText] = useState("");
   const [accountType, setAccountType] = useState(0);
+  const [filterByOrder, setFilterByOrder] = useState(false);
   const [filterByCustomer, setFilterByCustomer] = useState(false);
   const [filterByAssociate, setFilterByAssociate] = useState(false);
   const [customerOrganizationName, setCustomerOrganizationName] = useState("");
@@ -71,6 +72,7 @@ function AdminOrderSearch() {
   const [associateFirstName, setAssociateFirstName] = useState("");
   const [associateLastName, setAssociateLastName] = useState("");
   const [showCancelWarning, setShowCancelWarning] = useState(false);
+  const [orderWjid, setOrderWjid] = useState("");
   const [isAdvancedFiltering, setIsAdvancedFiltering] = useState(false);
   const [country] = useState(addOrder.country);
 
@@ -91,7 +93,8 @@ function AdminOrderSearch() {
       associateFirstName === "" &&
       associateLastName === "" &&
       associateEmail === "" &&
-      associatePhone === ""
+      associatePhone === "" &&
+      orderWjid === ""
     ) {
       setErrors({
         message: "please enter a value",
@@ -124,7 +127,9 @@ function AdminOrderSearch() {
       "&ap=" +
       encodeURIComponent(associatePhone) +
       "&aon=" +
-      associateOrganizationName;
+      associateOrganizationName +
+      "&owjid=" +
+      orderWjid;
     setForceURL(aURL);
   };
 
@@ -277,6 +282,17 @@ function AdminOrderSearch() {
                           maxWidth="180px"
                         />
 
+                        <FormCheckboxField
+                          label="Filter By Order"
+                          name="filterByOrder"
+                          checked={filterByOrder}
+                          errorText={errors && errors.filterByOrder}
+                          onChange={(e, x) =>
+                            setFilterByOrder(!filterByOrder)
+                          }
+                          maxWidth="180px"
+                        />
+
                         {filterByCustomer === true && (
                           <>
                             <p className="title is-5">
@@ -410,7 +426,7 @@ function AdminOrderSearch() {
                               }
                               isRequired={true}
                               maxWidth="380px"
-                            />                            
+                            />
 
                             <FormPhoneField
                               label="Phone"
@@ -438,6 +454,31 @@ function AdminOrderSearch() {
                               helpText=""
                               onChange={(e) =>
                                 setAssociateOrganizationName(e.target.value)
+                              }
+                              isRequired={true}
+                              maxWidth="380px"
+                            />
+                          </>
+                        )}
+
+                        {filterByOrder === true && (
+                          <>
+                            <p className="title is-5">
+                              <FontAwesomeIcon
+                                className="fas"
+                                icon={faWrench}
+                              />
+                              &nbsp;<u>Order</u>
+                            </p>
+                            <FormInputField
+                              label="Job #"
+                              name="orderWjid"
+                              placeholder="Text input"
+                              value={orderWjid}
+                              errorText={errors && errors.orderWjid}
+                              helpText=""
+                              onChange={(e) =>
+                                setOrderWjid(e.target.value)
                               }
                               isRequired={true}
                               maxWidth="380px"

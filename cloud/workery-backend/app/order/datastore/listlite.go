@@ -2,6 +2,7 @@ package datastore
 
 import (
 	"context"
+	"strconv"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -115,6 +116,12 @@ func (impl OrderStorerImpl) LiteListByFilter(ctx context.Context, f *OrderPagina
 	}
 	if len(f.Statuses) > 0 {
 		filter["status"] = bson.M{"$in": f.Statuses}
+	}
+	if f.OrderWJID != "" {
+		wjidInt, err := strconv.ParseUint(f.OrderWJID, 10, 64)
+		if err == nil {
+			filter["wjid"] = bson.M{"$eq": wjidInt}
+		}
 	}
 
 	// Create a slice to store conditions

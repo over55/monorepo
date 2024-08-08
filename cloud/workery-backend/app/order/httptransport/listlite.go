@@ -132,6 +132,10 @@ func (h *Handler) LiteList(w http.ResponseWriter, r *http.Request) {
 		}
 		f.AssociateID = associateID
 	}
+	orderWJID := query.Get("order_wjid")
+	if orderWJID != "" {
+		f.OrderWJID = orderWJID
+	}
 
 	tenantID := query.Get("tenant_id")
 	if tenantID != "" {

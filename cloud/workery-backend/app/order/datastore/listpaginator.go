@@ -45,6 +45,7 @@ type OrderPaginationListFilter struct {
 	AssociateLastName         string
 	AssociateEmail            string
 	AssociatePhone            string
+	OrderWJID                 string
 
 	// InSkillSetIDs filter is used if you want to find one or more skill set
 	// ids inside the associate.

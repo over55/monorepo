@@ -63,6 +63,7 @@ function AdminOrderSearchResult() {
   const associateEmail = searchParams.get("ae");
   const associatePhone = searchParams.get("ap");
   const actualSearchText = searchParams.get("q");
+  const orderWjid = searchParams.get("owjid");
 
   ////
   //// Global state.
@@ -158,6 +159,7 @@ function AdminOrderSearchResult() {
       associateLastName,
       associateEmail,
       associatePhone,
+      orderWjid
     );
   }
 
@@ -222,6 +224,7 @@ function AdminOrderSearchResult() {
     aln,
     ae,
     ap,
+    owjid
   ) => {
     setFetching(true);
     setErrors({});
@@ -286,6 +289,9 @@ function AdminOrderSearchResult() {
     }
     if (ap !== undefined && ap !== null && ap !== "") {
       params.set("associate_phone", ap);
+    }
+    if (owjid !== undefined && owjid !== null && owjid !== "") {
+      params.set("order_wjid", owjid);
     }
 
     getOrderListAPI(
@@ -359,6 +365,7 @@ function AdminOrderSearchResult() {
         associateLastName,
         associateEmail,
         associatePhone,
+        orderWjid
       );
 
       // If you loaded the page for the very first time.
@@ -390,6 +397,7 @@ function AdminOrderSearchResult() {
     associateLastName,
     associateEmail,
     associatePhone,
+    orderWjid,
   ]);
 
   ////
@@ -585,10 +593,10 @@ function AdminOrderSearchResult() {
                 (users.results.length > 0 || previousCursors.length > 0) ? (
                   <div className="container">
                     {/*
-                                            ##################################################################
-                                            EVERYTHING INSIDE HERE WILL ONLY BE DISPLAYED ON A DESKTOP SCREEN.
-                                            ##################################################################
-                                        */}
+                        ##################################################################
+                        EVERYTHING INSIDE HERE WILL ONLY BE DISPLAYED ON A DESKTOP SCREEN.
+                        ##################################################################
+                    */}
                     <div className="is-hidden-touch">
                       <AdminOrderSearchResultDesktop
                         listData={users}
@@ -602,10 +610,10 @@ function AdminOrderSearchResult() {
                     </div>
 
                     {/*
-                                            ###########################################################################
-                                            EVERYTHING INSIDE HERE WILL ONLY BE DISPLAYED ON A TABLET OR MOBILE SCREEN.
-                                            ###########################################################################
-                                        */}
+                        ###########################################################################
+                        EVERYTHING INSIDE HERE WILL ONLY BE DISPLAYED ON A TABLET OR MOBILE SCREEN.
+                        ###########################################################################
+                    */}
                     <div className="is-fullwidth is-hidden-desktop">
                       <AdminOrderSearchResultMobile
                         listData={users}
