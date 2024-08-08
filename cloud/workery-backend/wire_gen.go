@@ -79,6 +79,7 @@ import (
 	"github.com/over55/monorepo/cloud/workery-backend/inputport/http"
 	"github.com/over55/monorepo/cloud/workery-backend/inputport/http/middleware"
 	taskqueue2 "github.com/over55/monorepo/cloud/workery-backend/inputport/taskqueue"
+	"github.com/over55/monorepo/cloud/workery-backend/provider/blacklist"
 	"github.com/over55/monorepo/cloud/workery-backend/provider/jobseekerid"
 	"github.com/over55/monorepo/cloud/workery-backend/provider/jwt"
 	"github.com/over55/monorepo/cloud/workery-backend/provider/kmutex"
@@ -103,6 +104,7 @@ func InitializeEvent() Application {
 	provider := uuid.NewProvider()
 	timeProvider := time.NewProvider()
 	jwtProvider := jwt.NewProvider(conf)
+	blacklistProvider := blacklist.NewProvider()
 	passwordProvider := password.NewProvider()
 	kmutexProvider := kmutex.NewProvider()
 	client := mongodb.NewProvider(conf, slogLogger)
@@ -117,7 +119,7 @@ func InitializeEvent() Application {
 	tenantStorer := datastore5.NewDatastore(conf, slogLogger, client)
 	howHearAboutUsItemStorer := datastore6.NewDatastore(conf, slogLogger, client)
 	gatewayController := controller.NewController(conf, slogLogger, provider, jwtProvider, passwordProvider, kmutexProvider, cacher, stepper, templatedEmailer, client, userStorer, associateStorer, customerStorer, staffStorer, tenantStorer, howHearAboutUsItemStorer)
-	middlewareMiddleware := middleware.NewMiddleware(conf, slogLogger, provider, timeProvider, jwtProvider, gatewayController)
+	middlewareMiddleware := middleware.NewMiddleware(conf, slogLogger, provider, timeProvider, jwtProvider, blacklistProvider, gatewayController)
 	handler := httptransport.NewHandler(slogLogger, gatewayController)
 	userController := controller2.NewController(conf, slogLogger, provider, passwordProvider, kmutexProvider, client, tenantStorer, userStorer, templatedEmailer)
 	httptransportHandler := httptransport2.NewHandler(slogLogger, userController)

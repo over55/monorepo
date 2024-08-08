@@ -87,6 +87,7 @@ import (
 	"github.com/over55/monorepo/cloud/workery-backend/provider/taskqueue"
 	"github.com/over55/monorepo/cloud/workery-backend/provider/time"
 	"github.com/over55/monorepo/cloud/workery-backend/provider/uuid"
+	"github.com/over55/monorepo/cloud/workery-backend/provider/blacklist"
 )
 
 func InitializeEvent() Application {
@@ -106,6 +107,7 @@ func InitializeEvent() Application {
 		kmutex.NewProvider,
 		mongodb.NewProvider,
 		taskqueue.NewProvider,
+		blacklist.NewProvider,
 		mongodbcache.NewCache,
 		s3_storage.NewStorage,
 		pdfbuilder.NewAssociateInvoiceBuilder,

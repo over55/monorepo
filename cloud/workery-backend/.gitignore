@@ -200,6 +200,10 @@ private.txt
 private.md
 todo.txt
 
+# Blacklist - Don't share items we banned from the server.
+static/blacklist/ips.txt
+static/blacklist/urls.txt
+
 # Executable
 bin/
 workery-backend
