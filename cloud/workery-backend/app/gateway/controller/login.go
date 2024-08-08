@@ -75,6 +75,7 @@ func (impl *GatewayControllerImpl) Login(ctx context.Context, email, password st
 
 func (impl *GatewayControllerImpl) loginWithUser(ctx context.Context, u *u_s.User) (*gateway_s.LoginResponseIDO, error) {
 	ipAddress, _ := ctx.Value(constants.SessionIPAddress).(string)
+	proxies, _ := ctx.Value(constants.SessionProxies).(string)
 
 	uBin, err := json.Marshal(u)
 	if err != nil {
@@ -121,6 +122,12 @@ func (impl *GatewayControllerImpl) loginWithUser(ctx context.Context, u *u_s.Use
 	u.OTPAuthURL = ""
 	u.OTPBackupCodeHash = ""
 	u.OTPBackupCodeHashAlgorithm = ""
+
+    // For debugging purposes only.
+	impl.Logger.Debug("logged in successfully",
+		slog.String("ip_address", ipAddress),
+		slog.String("proxies", proxies),
+		slog.Any("session_id", sessionUUID))
 
 	// Return our auth keys.
 	return &gateway_s.LoginResponseIDO{

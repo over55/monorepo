@@ -192,6 +192,7 @@ func (mid *middleware) JWTProcessorMiddleware(fn http.HandlerFunc) http.HandlerF
 
 		// Let's get the IP address of the client to utalize for our log.
 		ipAddress, _ := ctx.Value(constants.SessionIPAddress).(string)
+		proxies, _ := ctx.Value(constants.SessionProxies).(string)
 
 		skipAuthorization, ok := ctx.Value(constants.SessionSkipAuthorization).(bool)
 		if ok && skipAuthorization {
@@ -217,6 +218,7 @@ func (mid *middleware) JWTProcessorMiddleware(fn http.HandlerFunc) http.HandlerF
 				mid.Logger.Warn("not properly formatted authorization header",
 					slog.Any("url", r.URL.Path),
 					slog.String("ip_address", ipAddress),
+					slog.String("proxies", proxies),
 					slog.Any("middleware", "JWTProcessorMiddleware"))
 				http.Error(w, "not properly formatted authorization header", http.StatusBadRequest)
 				return
@@ -265,6 +267,7 @@ func (mid *middleware) JWTProcessorMiddleware(fn http.HandlerFunc) http.HandlerF
 					mid.Logger.Warn("Skipping expired or error token",
 						slog.Any("url", r.URL.Path),
 						slog.Any("middleware", "JWTProcessorMiddleware"),
+						slog.String("proxies", proxies),
 						slog.String("ip_address", ipAddress))
 				} else {
 					// For debugging purposes only.
@@ -274,6 +277,7 @@ func (mid *middleware) JWTProcessorMiddleware(fn http.HandlerFunc) http.HandlerF
 					mid.Logger.Warn("unauthorized api call",
 						slog.Any("url", r.URL.Path),
 						slog.String("ip_address", ipAddress),
+						slog.String("proxies", proxies),
 						slog.Any("middleware", "JWTProcessorMiddleware"))
 					http.Error(w, err.Error(), http.StatusUnauthorized)
 					return
@@ -294,6 +298,7 @@ func (mid *middleware) PostJWTProcessorMiddleware(fn http.HandlerFunc) http.Hand
 
 		// Let's get the IP address of the client to utalize for our log.
 		ipAddress, _ := ctx.Value(constants.SessionIPAddress).(string)
+		proxies, _ := ctx.Value(constants.SessionProxies).(string)
 
 		// Skip this middleware if user is on a whitelisted URL path.
 		skipAuthorization, ok := ctx.Value(constants.SessionSkipAuthorization).(bool)
@@ -315,6 +320,7 @@ func (mid *middleware) PostJWTProcessorMiddleware(fn http.HandlerFunc) http.Hand
 					slog.Any("url", r.URL.Path),
 					slog.Any("err", err),
 					slog.String("ip_address", ipAddress),
+					slog.String("proxies", proxies),
 					slog.Any("middleware", "PostJWTProcessorMiddleware"))
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -326,6 +332,7 @@ func (mid *middleware) PostJWTProcessorMiddleware(fn http.HandlerFunc) http.Hand
 				mid.Logger.Warn("Session expired - please log in again",
 					slog.Any("url", r.URL.Path),
 					slog.Any("middleware", "PostJWTProcessorMiddleware"),
+					slog.String("proxies", proxies),
 					slog.String("ip_address", ipAddress))
 				http.Error(w, "attempting to access a protected endpoint", http.StatusUnauthorized)
 				return
@@ -356,12 +363,14 @@ func (mid *middleware) PostJWTProcessorMiddleware(fn http.HandlerFunc) http.Hand
 					// the following log for debugging purposes only.
 					mid.Logger.Debug("skipping session requires 2fa validation after login",
 						slog.String("ip_address", ipAddress),
+						slog.String("proxies", proxies),
 						slog.Any("url", r.URL.Path),
 					)
 				} else {
 					// For debuggin purposes only.
 					mid.Logger.Warn("session requires 2fa validation after login",
 						slog.String("ip_address", ipAddress),
+						slog.String("proxies", proxies),
 						slog.Any("url", r.URL.Path),
 						slog.Any("middleware", "PostJWTProcessorMiddleware"),
 					)
@@ -429,14 +438,14 @@ func (mid *middleware) IPAddressMiddleware(next http.HandlerFunc) http.HandlerFu
 			clientIP, _, _ = net.SplitHostPort(clientIP)
 		}
 
-		// Log the extracted client IP and any proxies
-		if proxies != "" {
-			mid.Logger.Debug("request received using proxies",
-				slog.String("url", r.URL.Path),
-				slog.String("ip_address", clientIP),
-				slog.String("proxies", proxies),
-			)
-		}
+		// // Log the extracted client IP and any proxies
+		// if proxies != "" {
+		// 	mid.Logger.Debug("request received using proxies",
+		// 		slog.String("url", r.URL.Path),
+		// 		slog.String("ip_address", clientIP),
+		// 		slog.String("proxies", proxies),
+		// 	)
+		// }
 
 		// Save the client IP to the context
 		ctx := context.WithValue(r.Context(), constants.SessionIPAddress, clientIP)
