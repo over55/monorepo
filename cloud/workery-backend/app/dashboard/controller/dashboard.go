@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"time"
 	"log/slog"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -175,17 +176,26 @@ func (impl *DashboardControllerImpl) Dashboard(ctx context.Context) (*DashboardR
 	// Extract from our session the following data.
 	tenantID, _ := ctx.Value(constants.SessionUserTenantID).(primitive.ObjectID)
 	userID, _ := ctx.Value(constants.SessionUserID).(primitive.ObjectID)
+	ipAddress, _ := ctx.Value(constants.SessionIPAddress).(string)
+	proxies, _ := ctx.Value(constants.SessionProxies).(string)
 
 	// Lookup the user in our database, else return a `400 Bad Request` error.
 	u, err := impl.UserStorer.GetByID(ctx, userID)
 	if err != nil {
-		impl.Logger.Error("database error", slog.Any("err", err))
+		impl.Logger.Error("database error",
+			slog.String("ip_address", ipAddress),
+			slog.String("proxies", proxies),
+			slog.Any("err", err))
 		return nil, err
 	}
 	if u == nil {
 		impl.Logger.Warn("user does not exist validation error")
 		return nil, httperror.NewForBadRequestWithSingleField("id", "does not exist")
 	}
+
+	// Get the current time of the request which will be used to calculate the
+	// time difference spent executing each of the following goroutines.
+	startTime := time.Now()
 
 	////
 	//// Get counts.
@@ -194,8 +204,19 @@ func (impl *DashboardControllerImpl) Dashboard(ctx context.Context) (*DashboardR
 	ccCh := make(chan int64)
 	go func(tid primitive.ObjectID) {
 		clientsCount, err := impl.getActiveClientsCount(ctx, tid)
+
+		// For debugging purposes only.
+		impl.Logger.Debug("goroutine done",
+			slog.String("func", "getActiveClientsCount"),
+			slog.String("ip_address", ipAddress),
+			slog.String("proxies", proxies),
+			slog.Any("execution_time_in_ms", time.Since(startTime).Milliseconds()))
+
 		if err != nil {
-			impl.Logger.Error("database error", slog.Any("err", err))
+			impl.Logger.Error("database error",
+				slog.String("ip_address", ipAddress),
+				slog.String("proxies", proxies),
+				slog.Any("err", err))
 			ccCh <- 0
 		} else {
 			ccCh <- clientsCount
@@ -205,8 +226,19 @@ func (impl *DashboardControllerImpl) Dashboard(ctx context.Context) (*DashboardR
 	jcCh := make(chan int64)
 	go func(tid primitive.ObjectID) {
 		jobsCount, err := impl.getActiveJobsCount(ctx, tid)
+
+		// For debugging purposes only.
+		impl.Logger.Debug("goroutine done",
+			slog.String("func", "getActiveJobsCount"),
+			slog.String("ip_address", ipAddress),
+			slog.String("proxies", proxies),
+			slog.Any("execution_time_in_ms", time.Since(startTime).Milliseconds()))
+
 		if err != nil {
-			impl.Logger.Error("database error", slog.Any("err", err))
+			impl.Logger.Error("database error",
+				slog.String("ip_address", ipAddress),
+				slog.String("proxies", proxies),
+				slog.Any("err", err))
 			jcCh <- 0
 		} else {
 			jcCh <- jobsCount
@@ -216,8 +248,19 @@ func (impl *DashboardControllerImpl) Dashboard(ctx context.Context) (*DashboardR
 	mcCh := make(chan int64)
 	go func(tid primitive.ObjectID) {
 		associatesCount, err := impl.getActiveAssociatesCount(ctx, tenantID)
+
+		// For debugging purposes only.
+		impl.Logger.Debug("goroutine done",
+			slog.String("func", "getActiveAssociatesCount"),
+			slog.String("ip_address", ipAddress),
+			slog.String("proxies", proxies),
+			slog.Any("execution_time_in_ms", time.Since(startTime).Milliseconds()))
+
 		if err != nil {
-			impl.Logger.Error("database error", slog.Any("err", err))
+			impl.Logger.Error("database error",
+				slog.String("ip_address", ipAddress),
+				slog.String("proxies", proxies),
+				slog.Any("err", err))
 			mcCh <- 0
 		} else {
 			mcCh <- associatesCount
@@ -227,8 +270,19 @@ func (impl *DashboardControllerImpl) Dashboard(ctx context.Context) (*DashboardR
 	tcCh := make(chan int64)
 	go func(tid primitive.ObjectID) {
 		tasksCount, err := impl.getActiveTasksCount(ctx, tid)
+
+		// For debugging purposes only.
+		impl.Logger.Debug("goroutine done",
+			slog.String("func", "getActiveTasksCount"),
+			slog.String("ip_address", ipAddress),
+			slog.String("proxies", proxies),
+			slog.Any("execution_time_in_ms", time.Since(startTime).Milliseconds()))
+
 		if err != nil {
-			impl.Logger.Error("database error", slog.Any("err", err))
+			impl.Logger.Error("database error",
+				slog.String("ip_address", ipAddress),
+				slog.String("proxies", proxies),
+				slog.Any("err", err))
 			tcCh <- 0
 		} else {
 			tcCh <- tasksCount
@@ -242,8 +296,19 @@ func (impl *DashboardControllerImpl) Dashboard(ctx context.Context) (*DashboardR
 	bbiCh := make(chan []*b_s.Bulletin)
 	go func(tid primitive.ObjectID) {
 		arr, err := impl.getBulletins(ctx, tenantID)
+
+		// For debugging purposes only.
+		impl.Logger.Debug("goroutine done",
+			slog.String("func", "getBulletins"),
+			slog.String("ip_address", ipAddress),
+			slog.String("proxies", proxies),
+			slog.Any("execution_time_in_ms", time.Since(startTime).Milliseconds()))
+
 		if err != nil {
-			impl.Logger.Error("database error", slog.Any("err", err))
+			impl.Logger.Error("database error",
+				slog.String("ip_address", ipAddress),
+				slog.String("proxies", proxies),
+				slog.Any("err", err))
 			bbiCh <- []*b_s.Bulletin{}
 		} else {
 			bbiCh <- arr[:]
@@ -257,8 +322,19 @@ func (impl *DashboardControllerImpl) Dashboard(ctx context.Context) (*DashboardR
 	lmbuCh := make(chan []*o_s.OrderLite)
 	go func(tid primitive.ObjectID) {
 		arr, err := impl.getUserJobHistory(ctx, tenantID, userID)
+
+		// For debugging purposes only.
+		impl.Logger.Debug("goroutine done",
+			slog.String("func", "getUserJobHistory"),
+			slog.String("ip_address", ipAddress),
+			slog.String("proxies", proxies),
+			slog.Any("execution_time_in_ms", time.Since(startTime).Milliseconds()))
+
 		if err != nil {
-			impl.Logger.Error("database error", slog.Any("err", err))
+			impl.Logger.Error("database error",
+				slog.String("ip_address", ipAddress),
+				slog.String("proxies", proxies),
+				slog.Any("err", err))
 			lmbuCh <- []*o_s.OrderLite{}
 		} else {
 			lmbuCh <- arr[:]
@@ -272,8 +348,19 @@ func (impl *DashboardControllerImpl) Dashboard(ctx context.Context) (*DashboardR
 	alCh := make(chan []*away_s.AssociateAwayLog)
 	go func(tid primitive.ObjectID) {
 		arr, err := impl.getAwayLogs(ctx, tenantID)
+
+		// For debugging purposes only.
+		impl.Logger.Debug("goroutine done",
+			slog.String("func", "getAwayLogs"),
+			slog.String("ip_address", ipAddress),
+			slog.String("proxies", proxies),
+			slog.Any("execution_time_in_ms", time.Since(startTime).Milliseconds()))
+
 		if err != nil {
-			impl.Logger.Error("database error", slog.Any("err", err))
+			impl.Logger.Error("database error",
+				slog.String("ip_address", ipAddress),
+				slog.String("proxies", proxies),
+				slog.Any("err", err))
 			alCh <- []*away_s.AssociateAwayLog{}
 		} else {
 			alCh <- arr[:]
@@ -287,8 +374,19 @@ func (impl *DashboardControllerImpl) Dashboard(ctx context.Context) (*DashboardR
 	lmbtCh := make(chan []*o_s.OrderLite)
 	go func(tid primitive.ObjectID) {
 		arr, err := impl.getTeamJobHistory(ctx, tenantID)
+
+		// For debugging purposes only.
+		impl.Logger.Debug("goroutine done",
+			slog.String("func", "getTeamJobHistory"),
+			slog.String("ip_address", ipAddress),
+			slog.String("proxies", proxies),
+			slog.Any("execution_time_in_ms", time.Since(startTime).Milliseconds()))
+
 		if err != nil {
-			impl.Logger.Error("database error", slog.Any("err", err))
+			impl.Logger.Error("database error",
+				slog.String("ip_address", ipAddress),
+				slog.String("proxies", proxies),
+				slog.Any("err", err))
 			lmbtCh <- []*o_s.OrderLite{}
 		} else {
 			lmbtCh <- arr[:]
@@ -302,8 +400,19 @@ func (impl *DashboardControllerImpl) Dashboard(ctx context.Context) (*DashboardR
 	ocCh := make(chan []*com_s.Comment)
 	go func(tid primitive.ObjectID) {
 		arr, err := impl.getOrderComments(ctx, tenantID)
+
+		// For debugging purposes only.
+		impl.Logger.Debug("goroutine done",
+			slog.String("func", "getOrderComments"),
+			slog.String("ip_address", ipAddress),
+			slog.String("proxies", proxies),
+			slog.Any("execution_time_in_ms", time.Since(startTime).Milliseconds()))
+
 		if err != nil {
-			impl.Logger.Error("database error", slog.Any("err", err))
+			impl.Logger.Error("database error",
+				slog.String("ip_address", ipAddress),
+				slog.String("proxies", proxies),
+				slog.Any("err", err))
 			ocCh <- []*com_s.Comment{}
 		} else {
 			ocCh <- arr[:]
