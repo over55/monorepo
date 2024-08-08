@@ -19,16 +19,17 @@ func (c *UserControllerImpl) ListByFilter(ctx context.Context, f *user_s.UserLis
 		return nil, httperror.NewForForbiddenWithSingleField("message", "you do not have permission")
 	}
 
-	c.Logger.Debug("listing using filter options:",
-		slog.Any("TenantID", f.TenantID),
-		slog.Any("Cursor", f.Cursor),
-		slog.Int64("PageSize", f.PageSize),
-		slog.String("SortField", f.SortField),
-		slog.Int("SortOrder", int(f.SortOrder)),
-		slog.Any("Status", f.Status),
-		slog.String("SearchText", f.SearchText),
-		slog.Time("CreatedAtGTE", f.CreatedAtGTE),
-		slog.Bool("ExcludeArchived", f.ExcludeArchived))
+	// For debugging purposes only.
+	// c.Logger.Debug("listing using filter options:",
+	// 	slog.Any("TenantID", f.TenantID),
+	// 	slog.Any("Cursor", f.Cursor),
+	// 	slog.Int64("PageSize", f.PageSize),
+	// 	slog.String("SortField", f.SortField),
+	// 	slog.Int("SortOrder", int(f.SortOrder)),
+	// 	slog.Any("Status", f.Status),
+	// 	slog.String("SearchText", f.SearchText),
+	// 	slog.Time("CreatedAtGTE", f.CreatedAtGTE),
+	// 	slog.Bool("ExcludeArchived", f.ExcludeArchived))
 
 	// Filtering the database.
 	m, err := c.UserStorer.ListByFilter(ctx, f)
@@ -48,9 +49,10 @@ func (c *UserControllerImpl) ListAsSelectOptionByFilter(ctx context.Context, f *
 		return nil, httperror.NewForForbiddenWithSingleField("message", "you do not have permission")
 	}
 
-	c.Logger.Debug("listing using filter options:",
-		slog.Any("TenantID", f.TenantID),
-		slog.Any("Role", f.Role))
+	// For debugging purposes only.
+	// c.Logger.Debug("listing using filter options:",
+	// 	slog.Any("TenantID", f.TenantID),
+	// 	slog.Any("Role", f.Role))
 
 	// Filtering the database.
 	m, err := c.UserStorer.ListAsSelectOptionByFilter(ctx, f)

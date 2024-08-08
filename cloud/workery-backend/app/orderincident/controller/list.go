@@ -19,23 +19,24 @@ func (c *OrderIncidentControllerImpl) ListAndCountByFilter(ctx context.Context, 
 	// Apply filtering based on ownership and role.
 	f.TenantID = tenantID // Manditory
 
-	c.Logger.Debug("listing using filter options:",
-		slog.Any("Cursor", f.Cursor),
-		slog.Int64("PageSize", f.PageSize),
-		slog.String("SortField", f.SortField),
-		slog.Uint64("OrderWJID", f.OrderWJID),
-		// slog.Int("SortOrder", int(f.SortOrder)),
-		// slog.Any("TenantID", f.TenantID),
-		// slog.Any("Type", f.Type),
-		// slog.Any("Status", f.Status),
-		// slog.Bool("ExcludeArchived", f.ExcludeArchived),
-		// slog.String("SearchTitle", f.SearchTitle),
-		// slog.Any("FirstName", f.FirstName),
-		// slog.Any("LastName", f.LastName),
-		// slog.Any("Email", f.Email),
-		// slog.Any("Phone", f.Phone),
-		// slog.Time("CreatedAtGTE", f.CreatedAtGTE)
-	)
+	// For debugging purposes only.
+	// c.Logger.Debug("listing using filter options:",
+	// 	slog.Any("Cursor", f.Cursor),
+	// 	slog.Int64("PageSize", f.PageSize),
+	// 	slog.String("SortField", f.SortField),
+	// 	slog.Uint64("OrderWJID", f.OrderWJID),
+	// 	// slog.Int("SortOrder", int(f.SortOrder)),
+	// 	// slog.Any("TenantID", f.TenantID),
+	// 	// slog.Any("Type", f.Type),
+	// 	// slog.Any("Status", f.Status),
+	// 	// slog.Bool("ExcludeArchived", f.ExcludeArchived),
+	// 	// slog.String("SearchTitle", f.SearchTitle),
+	// 	// slog.Any("FirstName", f.FirstName),
+	// 	// slog.Any("LastName", f.LastName),
+	// 	// slog.Any("Email", f.Email),
+	// 	// slog.Any("Phone", f.Phone),
+	// 	// slog.Time("CreatedAtGTE", f.CreatedAtGTE)
+	// )
 
 	m, err := c.OrderIncidentStorer.ListAndCountByFilter(ctx, f)
 	if err != nil {
@@ -75,13 +76,14 @@ func (c *OrderIncidentControllerImpl) ListAsSelectOptionByFilter(ctx context.Con
 	// Apply filtering based on ownership and role.
 	f.TenantID = tenantID // Manditory
 
-	c.Logger.Debug("listing using filter options:",
-		slog.Any("Cursor", f.Cursor),
-		slog.Int64("PageSize", f.PageSize),
-		slog.String("SortField", f.SortField),
-		slog.Int("SortOrder", int(f.SortOrder)),
-		slog.Any("TenantID", f.TenantID),
-	)
+	// For debugging purposes only.
+	// c.Logger.Debug("listing using filter options:",
+	// 	slog.Any("Cursor", f.Cursor),
+	// 	slog.Int64("PageSize", f.PageSize),
+	// 	slog.String("SortField", f.SortField),
+	// 	slog.Int("SortOrder", int(f.SortOrder)),
+	// 	slog.Any("TenantID", f.TenantID),
+	// )
 
 	// Filtering the database.
 	m, err := c.OrderIncidentStorer.ListAsSelectOptionByFilter(ctx, f)

@@ -18,13 +18,14 @@ func (c *InsuranceRequirementControllerImpl) ListAsSelectOptionByFilter(ctx cont
 	// Apply filtering based on ownership and role.
 	f.TenantID = tenantID // Manditory
 
-	c.Logger.Debug("listing using filter options:",
-		slog.Any("Cursor", f.Cursor),
-		slog.Int64("PageSize", f.PageSize),
-		slog.String("SortField", f.SortField),
-		slog.Int("SortOrder", int(f.SortOrder)),
-		slog.Any("TenantID", f.TenantID),
-	)
+	// // For debugging purposes only.
+	// 	c.Logger.Debug("listing using filter options:",
+	// 		slog.Any("Cursor", f.Cursor),
+	// 		slog.Int64("PageSize", f.PageSize),
+	// 		slog.String("SortField", f.SortField),
+	// 		slog.Int("SortOrder", int(f.SortOrder)),
+	// 		slog.Any("TenantID", f.TenantID),
+	// 	)
 
 	// Filtering the database.
 	m, err := c.InsuranceRequirementStorer.ListAsSelectOptionByFilter(ctx, f)

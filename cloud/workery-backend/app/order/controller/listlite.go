@@ -44,21 +44,22 @@ func (c *OrderControllerImpl) LiteListAndCountByFilter(ctx context.Context, f *o
 		return nil, httperror.NewForForbiddenWithSingleField("forbidden", "you do not have the correct role")
 	}
 
-	c.Logger.Debug("listing using filter options:",
-		slog.Any("Cursor", f.Cursor),
-		slog.Int64("PageSize", f.PageSize),
-		slog.String("SortField", f.SortField),
-		slog.Int("SortOrder", int(f.SortOrder)),
-		// slog.Any("TenantID", f.TenantID),
-		// // slog.Any("Type", f.Type),
-		// slog.Any("Status", f.Status),
-		slog.String("SearchText", f.SearchText),
-		slog.Any("CustomerFirstName", f.CustomerFirstName),
-		slog.Any("CustomerLastName", f.CustomerLastName),
-		slog.Any("CustomerEmail", f.CustomerEmail),
-		slog.Any("CustomerPhone", f.CustomerPhone),
-		// slog.Time("CreatedAtGTE", f.CreatedAtGTE)
-	)
+	// For debugging purposes only.
+	// c.Logger.Debug("listing using filter options:",
+	// 	slog.Any("Cursor", f.Cursor),
+	// 	slog.Int64("PageSize", f.PageSize),
+	// 	slog.String("SortField", f.SortField),
+	// 	slog.Int("SortOrder", int(f.SortOrder)),
+	// 	// slog.Any("TenantID", f.TenantID),
+	// 	// // slog.Any("Type", f.Type),
+	// 	// slog.Any("Status", f.Status),
+	// 	slog.String("SearchText", f.SearchText),
+	// 	slog.Any("CustomerFirstName", f.CustomerFirstName),
+	// 	slog.Any("CustomerLastName", f.CustomerLastName),
+	// 	slog.Any("CustomerEmail", f.CustomerEmail),
+	// 	slog.Any("CustomerPhone", f.CustomerPhone),
+	// 	// slog.Time("CreatedAtGTE", f.CreatedAtGTE)
+	// )
 
 	m, err := c.OrderStorer.LiteListAndCountByFilter(ctx, f)
 	if err != nil {

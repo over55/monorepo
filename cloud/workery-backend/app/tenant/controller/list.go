@@ -29,6 +29,7 @@ func (c *TenantControllerImpl) ListByFilter(ctx context.Context, f *domain.Tenan
 		return nil, httperror.NewForForbiddenWithSingleField("message", "you role does not grant you access to this")
 	}
 
+	// For debugging purposes only.
 	// c.Logger.Debug("fetching Tenants now...", slog.Any("userID", userID))
 	// c.Logger.Debug("listing using filter options:",
 	// 	slog.Any("TenantID", f.TenantID),

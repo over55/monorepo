@@ -18,6 +18,7 @@ func (c *AssociateControllerImpl) ListAsSelectOptionByFilter(ctx context.Context
 	// Apply filtering based on ownership and role.
 	f.TenantID = tenantID // Manditory
 
+	// For debugging purposes only.
 	// c.Logger.Debug("listing using filter options:",
 	// 	slog.Any("Cursor", f.Cursor),
 	// 	slog.Int64("PageSize", f.PageSize),

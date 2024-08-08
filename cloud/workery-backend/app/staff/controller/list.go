@@ -17,20 +17,21 @@ func (c *StaffControllerImpl) LiteListAndCountByFilter(ctx context.Context, f *a
 	// Apply filtering based on ownership and role.
 	f.TenantID = tenantID // Manditory
 
-	c.Logger.Debug("listing using filter options:",
-		slog.Any("Cursor", f.Cursor),
-		slog.Int64("PageSize", f.PageSize),
-		slog.String("SortField", f.SortField),
-		slog.Int("SortOrder", int(f.SortOrder)),
-		slog.Any("TenantID", f.TenantID),
-		// slog.Any("Type", f.Type),
-		// slog.Any("Status", f.Status),
-		slog.String("SearchText", f.SearchText),
-		slog.Any("FirstName", f.FirstName),
-		slog.Any("LastName", f.LastName),
-		slog.Any("Email", f.Email),
-		slog.Any("Phone", f.Phone),
-		slog.Time("CreatedAtGTE", f.CreatedAtGTE))
+	// For debugging purposes only.
+	// c.Logger.Debug("listing using filter options:",
+	// 	slog.Any("Cursor", f.Cursor),
+	// 	slog.Int64("PageSize", f.PageSize),
+	// 	slog.String("SortField", f.SortField),
+	// 	slog.Int("SortOrder", int(f.SortOrder)),
+	// 	slog.Any("TenantID", f.TenantID),
+	// 	// slog.Any("Type", f.Type),
+	// 	// slog.Any("Status", f.Status),
+	// 	slog.String("SearchText", f.SearchText),
+	// 	slog.Any("FirstName", f.FirstName),
+	// 	slog.Any("LastName", f.LastName),
+	// 	slog.Any("Email", f.Email),
+	// 	slog.Any("Phone", f.Phone),
+	// 	slog.Time("CreatedAtGTE", f.CreatedAtGTE))
 
 	m, err := c.StaffStorer.LiteListAndCountByFilter(ctx, f)
 	if err != nil {

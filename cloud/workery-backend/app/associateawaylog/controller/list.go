@@ -19,22 +19,23 @@ func (c *AssociateAwayLogControllerImpl) ListAndCountByFilter(ctx context.Contex
 	// Apply filtering based on ownership and role.
 	f.TenantID = tenantID // Manditory
 
-	c.Logger.Debug("listing using filter options:",
-		slog.Any("Cursor", f.Cursor),
-		slog.Int64("PageSize", f.PageSize),
-		slog.String("SortField", f.SortField),
-		// slog.Int("SortOrder", int(f.SortOrder)),
-		// slog.Any("TenantID", f.TenantID),
-		// slog.Any("Type", f.Type),
-		// slog.Any("Status", f.Status),
-		// slog.Bool("ExcludeArchived", f.ExcludeArchived),
-		// slog.String("SearchText", f.SearchText),
-		// slog.Any("FirstName", f.FirstName),
-		// slog.Any("LastName", f.LastName),
-		// slog.Any("Email", f.Email),
-		// slog.Any("Phone", f.Phone),
-		// slog.Time("CreatedAtGTE", f.CreatedAtGTE)
-	)
+	// For debugging purposes only.
+	// c.Logger.Debug("listing using filter options:",
+	// 	slog.Any("Cursor", f.Cursor),
+	// 	slog.Int64("PageSize", f.PageSize),
+	// 	slog.String("SortField", f.SortField),
+	// 	// slog.Int("SortOrder", int(f.SortOrder)),
+	// 	// slog.Any("TenantID", f.TenantID),
+	// 	// slog.Any("Type", f.Type),
+	// 	// slog.Any("Status", f.Status),
+	// 	// slog.Bool("ExcludeArchived", f.ExcludeArchived),
+	// 	// slog.String("SearchText", f.SearchText),
+	// 	// slog.Any("FirstName", f.FirstName),
+	// 	// slog.Any("LastName", f.LastName),
+	// 	// slog.Any("Email", f.Email),
+	// 	// slog.Any("Phone", f.Phone),
+	// 	// slog.Time("CreatedAtGTE", f.CreatedAtGTE)
+	// )
 
 	m, err := c.AssociateAwayLogStorer.ListAndCountByFilter(ctx, f)
 	if err != nil {
@@ -74,13 +75,13 @@ func (c *AssociateAwayLogControllerImpl) ListAsSelectOptionByFilter(ctx context.
 	// Apply filtering based on ownership and role.
 	f.TenantID = tenantID // Manditory
 
-	c.Logger.Debug("listing using filter options:",
-		slog.Any("Cursor", f.Cursor),
-		slog.Int64("PageSize", f.PageSize),
-		slog.String("SortField", f.SortField),
-		slog.Int("SortOrder", int(f.SortOrder)),
-		slog.Any("TenantID", f.TenantID),
-	)
+	// c.Logger.Debug("listing using filter options:",
+	// 	slog.Any("Cursor", f.Cursor),
+	// 	slog.Int64("PageSize", f.PageSize),
+	// 	slog.String("SortField", f.SortField),
+	// 	slog.Int("SortOrder", int(f.SortOrder)),
+	// 	slog.Any("TenantID", f.TenantID),
+	// )
 
 	// Filtering the database.
 	m, err := c.AssociateAwayLogStorer.ListAsSelectOptionByFilter(ctx, f)

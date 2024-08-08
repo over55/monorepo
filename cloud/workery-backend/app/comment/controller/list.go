@@ -18,13 +18,13 @@ func (c *CommentControllerImpl) ListByFilter(ctx context.Context, f *com_s.Comme
 	// Apply filtering based on ownership and role.
 	f.TenantID = tenantID // Manditory
 
-	c.Logger.Debug("listing using filter options:",
-		slog.Any("Cursor", f.Cursor),
-		slog.Int64("PageSize", f.PageSize),
-		slog.String("SortField", f.SortField),
-		slog.Int("SortOrder", int(f.SortOrder)),
-		slog.Any("TenantID", f.TenantID),
-	)
+	// c.Logger.Debug("listing using filter options:",
+	// 	slog.Any("Cursor", f.Cursor),
+	// 	slog.Int64("PageSize", f.PageSize),
+	// 	slog.String("SortField", f.SortField),
+	// 	slog.Int("SortOrder", int(f.SortOrder)),
+	// 	slog.Any("TenantID", f.TenantID),
+	// )
 
 	m, err := c.CommentStorer.ListByFilter(ctx, f)
 	if err != nil {

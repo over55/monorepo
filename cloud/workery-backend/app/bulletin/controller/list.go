@@ -18,14 +18,15 @@ func (c *BulletinControllerImpl) ListAndCountByFilter(ctx context.Context, f *bu
 	// Apply filtering based on ownership and role.
 	f.TenantID = tenantID // Manditory
 
-	c.Logger.Debug("listing using filter options:",
-		slog.Any("Cursor", f.Cursor),
-		slog.Int64("PageSize", f.PageSize),
-		slog.String("SortField", f.SortField),
-		slog.Int("SortOrder", int(f.SortOrder)),
-		slog.Any("TenantID", f.TenantID),
-		slog.Any("Status", f.Status),
-		slog.String("SearchText", f.SearchText))
+	// For debugging purposes only.
+	// c.Logger.Debug("listing using filter options:",
+	// 	slog.Any("Cursor", f.Cursor),
+	// 	slog.Int64("PageSize", f.PageSize),
+	// 	slog.String("SortField", f.SortField),
+	// 	slog.Int("SortOrder", int(f.SortOrder)),
+	// 	slog.Any("TenantID", f.TenantID),
+	// 	slog.Any("Status", f.Status),
+	// 	slog.String("SearchText", f.SearchText))
 
 	res, err := c.BulletinStorer.ListAndCountByFilter(ctx, f)
 	if err != nil {

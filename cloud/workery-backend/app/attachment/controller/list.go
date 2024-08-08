@@ -16,7 +16,7 @@ import (
 func (c *AttachmentControllerImpl) ListByFilter(ctx context.Context, f *domain.AttachmentListFilter) (*domain.AttachmentListResult, error) {
 	// Extract from our session the following data.
 	orgID := ctx.Value(constants.SessionUserTenantID).(primitive.ObjectID)
-	userID := ctx.Value(constants.SessionUserID).(primitive.ObjectID)
+	// userID := ctx.Value(constants.SessionUserID).(primitive.ObjectID)
 	userRole := ctx.Value(constants.SessionUserRole).(int8)
 
 	// Apply protection based on ownership and role.
@@ -24,14 +24,14 @@ func (c *AttachmentControllerImpl) ListByFilter(ctx context.Context, f *domain.A
 		f.TenantID = orgID // Force tenant tenancy restrictions.
 	}
 
-	c.Logger.Debug("fetching attachments now...", slog.Any("userID", userID))
+	// c.Logger.Debug("fetching attachments now...", slog.Any("userID", userID))
 
 	aa, err := c.AttachmentStorer.ListByFilter(ctx, f)
 	if err != nil {
 		c.Logger.Error("database list by filter error", slog.Any("error", err))
 		return nil, err
 	}
-	c.Logger.Debug("fetched attachments", slog.Any("aa", aa))
+	// c.Logger.Debug("fetched attachments", slog.Any("aa", aa))
 
 	for _, a := range aa.Results {
 		// Generate the URL.
@@ -58,13 +58,13 @@ func (c *AttachmentControllerImpl) ListAsSelectOptionByFilter(ctx context.Contex
 		return nil, httperror.NewForForbiddenWithSingleField("message", "you role does not grant you access to this")
 	}
 
-	c.Logger.Debug("fetching attachments now...", slog.Any("userID", userID))
+	// c.Logger.Debug("fetching attachments now...", slog.Any("userID", userID))
 
 	m, err := c.AttachmentStorer.ListAsSelectOptionByFilter(ctx, f)
 	if err != nil {
 		c.Logger.Error("database list by filter error", slog.Any("error", err))
 		return nil, err
 	}
-	c.Logger.Debug("fetched attachments", slog.Any("m", m))
+	// c.Logger.Debug("fetched attachments", slog.Any("m", m))
 	return m, err
 }
