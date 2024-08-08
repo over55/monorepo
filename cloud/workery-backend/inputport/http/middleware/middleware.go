@@ -435,10 +435,13 @@ func (mid *middleware) IPAddressMiddleware(next http.HandlerFunc) http.HandlerFu
 		if clientIP == "" {
 			clientIP = r.RemoteAddr
 			// r.RemoteAddr contains both the IP and the port, so we should extract only the IP
-			clientIP, _, _ = net.SplitHostPort(clientIP)
+			if host, _, err := net.SplitHostPort(clientIP); err == nil {
+				clientIP = host
+			}
 		}
 
-		// // Log the extracted client IP and any proxies
+		// Log the extracted client IP and any proxies
+		// Uncomment and use your logger here.
 		// if proxies != "" {
 		// 	mid.Logger.Debug("request received using proxies",
 		// 		slog.String("url", r.URL.Path),
@@ -447,7 +450,7 @@ func (mid *middleware) IPAddressMiddleware(next http.HandlerFunc) http.HandlerFu
 		// 	)
 		// }
 
-		// Save the client IP to the context
+		// Save the client IP and proxies to the context
 		ctx := context.WithValue(r.Context(), constants.SessionIPAddress, clientIP)
 		ctx = context.WithValue(r.Context(), constants.SessionProxies, proxies)
 		next(w, r.WithContext(ctx))
