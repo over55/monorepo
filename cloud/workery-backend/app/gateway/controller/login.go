@@ -15,6 +15,7 @@ import (
 
 func (impl *GatewayControllerImpl) Login(ctx context.Context, email, password string) (*gateway_s.LoginResponseIDO, error) {
 	ipAddress, _ := ctx.Value(constants.SessionIPAddress).(string)
+	proxies, _ := ctx.Value(constants.SessionProxies).(string)
 
 	// Defensive Code: For security purposes we need to perform some sanitization on the inputs.
 	email = strings.ToLower(email)
@@ -30,13 +31,14 @@ func (impl *GatewayControllerImpl) Login(ctx context.Context, email, password st
 	if err != nil {
 		impl.Logger.Error("database error",
 			slog.String("ip_address", ipAddress),
+			slog.String("proxies", proxies),
 			slog.Any("err", err))
 		return nil, err
 	}
 	if u == nil {
 		impl.Logger.Warn("user does not exist validation error",
 			slog.String("ip_address", ipAddress),
-			slog.String("email", email))
+			slog.String("proxies", proxies))
 		return nil, httperror.NewForBadRequestWithSingleField("email", "does not exist")
 	}
 
@@ -44,6 +46,7 @@ func (impl *GatewayControllerImpl) Login(ctx context.Context, email, password st
 	passwordMatch, _ := impl.Password.ComparePasswordAndHash(password, u.PasswordHash)
 	if passwordMatch == false {
 		impl.Logger.Warn("password check validation error",
+			slog.String("proxies", proxies),
 			slog.String("ip_address", ipAddress))
 		return nil, httperror.NewForBadRequestWithSingleField("password", "password do not match with record")
 	}
@@ -52,6 +55,7 @@ func (impl *GatewayControllerImpl) Login(ctx context.Context, email, password st
 	if u.WasEmailVerified == false {
 		impl.Logger.Warn("email verification validation error",
 			slog.String("ip_address", ipAddress),
+			slog.String("proxies", proxies),
 			slog.Any("u", u))
 		return nil, httperror.NewForBadRequestWithSingleField("email", "was not verified")
 	}
@@ -65,6 +69,7 @@ func (impl *GatewayControllerImpl) Login(ctx context.Context, email, password st
 		if err := impl.UserStorer.UpdateByID(ctx, u); err != nil {
 			impl.Logger.Error("failed updating user during login",
 				slog.String("ip_address", ipAddress),
+				slog.String("proxies", proxies),
 				slog.Any("err", err))
 			return nil, err
 		}
@@ -81,6 +86,7 @@ func (impl *GatewayControllerImpl) loginWithUser(ctx context.Context, u *u_s.Use
 	if err != nil {
 		impl.Logger.Error("marshalling error",
 			slog.String("ip_address", ipAddress),
+			slog.String("proxies", proxies),
 			slog.Any("err", err))
 		return nil, err
 	}
@@ -96,6 +102,7 @@ func (impl *GatewayControllerImpl) loginWithUser(ctx context.Context, u *u_s.Use
 	if err != nil {
 		impl.Logger.Error("cache set with expiry error",
 			slog.String("ip_address", ipAddress),
+			slog.String("proxies", proxies),
 			slog.Any("err", err))
 		return nil, err
 	}
@@ -105,6 +112,7 @@ func (impl *GatewayControllerImpl) loginWithUser(ctx context.Context, u *u_s.Use
 	if err != nil {
 		impl.Logger.Error("jwt generate pairs error",
 			slog.String("ip_address", ipAddress),
+			slog.String("proxies", proxies),
 			slog.Any("err", err))
 		return nil, err
 	}
@@ -123,11 +131,10 @@ func (impl *GatewayControllerImpl) loginWithUser(ctx context.Context, u *u_s.Use
 	u.OTPBackupCodeHash = ""
 	u.OTPBackupCodeHashAlgorithm = ""
 
-    // For debugging purposes only.
+	// For debugging purposes only.
 	impl.Logger.Debug("logged in successfully",
 		slog.String("ip_address", ipAddress),
-		slog.String("proxies", proxies),
-		slog.Any("session_id", sessionUUID))
+		slog.String("proxies", proxies))
 
 	// Return our auth keys.
 	return &gateway_s.LoginResponseIDO{

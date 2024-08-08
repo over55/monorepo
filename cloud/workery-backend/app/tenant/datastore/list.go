@@ -117,7 +117,6 @@ func (impl TenantStorerImpl) ListAsSelectOptionByFilter(ctx context.Context, f *
 	if f.UserID != primitive.NilObjectID {
 		query["user_id"] = f.UserID
 	}
-	log.Println(f)
 
 	if startAfter != "" {
 		// Find the document with the given startAfter ID

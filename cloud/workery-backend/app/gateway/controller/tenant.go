@@ -25,21 +25,27 @@ func (impl *GatewayControllerImpl) ExecutiveVisitsTenant(ctx context.Context, re
 
 	sessionID := ctx.Value(constants.SessionID).(string)
 	userRole := ctx.Value(constants.SessionUserRole).(int8)
-	userID, _ := ctx.Value(constants.SessionUserID).(primitive.ObjectID)
+	// userID, _ := ctx.Value(constants.SessionUserID).(primitive.ObjectID)
 	tenantID, _ := ctx.Value(constants.SessionUserTenantID).(primitive.ObjectID)
 	ipAddress, _ := ctx.Value(constants.SessionIPAddress).(string)
+	proxies, _ := ctx.Value(constants.SessionProxies).(string)
 
 	if userRole != user_s.UserRoleExecutive {
 		impl.Logger.Error("not executive error",
 			slog.Int("role", int(userRole)),
-			slog.String("ip_address", ipAddress))
+			slog.String("ip_address", ipAddress),
+			slog.String("proxies", proxies))
 		return errors.New("user is not executive")
 	}
 
+	// We want to display this information in the console log to keep track of
+	// administration accessing various tenants for auditing reasons in the
+	// future.
 	impl.Logger.Debug("executive visits tenant",
 		slog.Any("current_tenant_id", tenantID),
 		slog.Any("visiting_tenant_id", req.TenantID),
-		slog.Any("user_id", userID))
+		slog.String("ip_address", ipAddress),
+		slog.String("proxies", proxies))
 
 	////
 	//// Lookup in our in-memory the user record for the `sessionID` or error.
@@ -49,6 +55,7 @@ func (impl *GatewayControllerImpl) ExecutiveVisitsTenant(ctx context.Context, re
 	if err != nil {
 		impl.Logger.Error("in-memory set error",
 			slog.String("ip_address", ipAddress),
+			slog.String("proxies", proxies),
 			slog.Any("err", err))
 		return err
 	}
@@ -58,6 +65,7 @@ func (impl *GatewayControllerImpl) ExecutiveVisitsTenant(ctx context.Context, re
 	if err != nil {
 		impl.Logger.Error("unmarshal error",
 			slog.String("ip_address", ipAddress),
+			slog.String("proxies", proxies),
 			slog.Any("err", err))
 		return err
 	}
@@ -76,6 +84,7 @@ func (impl *GatewayControllerImpl) ExecutiveVisitsTenant(ctx context.Context, re
 	if err != nil {
 		impl.Logger.Error("marshalling error",
 			slog.String("ip_address", ipAddress),
+			slog.String("proxies", proxies),
 			slog.Any("err", err))
 		return err
 	}
@@ -84,6 +93,7 @@ func (impl *GatewayControllerImpl) ExecutiveVisitsTenant(ctx context.Context, re
 	if err := impl.Cache.SetWithExpiry(ctx, sessionID, newUserBin, expiry); err != nil {
 		impl.Logger.Error("cache set with expiry error",
 			slog.String("ip_address", ipAddress),
+			slog.String("proxies", proxies),
 			slog.Any("err", err))
 		return err
 	}

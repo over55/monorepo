@@ -26,8 +26,7 @@ func (impl *GatewayControllerImpl) ForgotPassword(ctx context.Context, email str
 	}
 	if u == nil {
 		impl.Logger.Warn("user does not exist validation error",
-			slog.String("ip_address", ipAddress),
-			slog.String("email", email))
+			slog.String("ip_address", ipAddress))
 		return httperror.NewForBadRequestWithSingleField("email", "does not exist")
 	}
 

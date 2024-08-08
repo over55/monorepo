@@ -25,8 +25,7 @@ func (impl *GatewayControllerImpl) Logout(ctx context.Context) error {
 	// For debugging purposes only.
 	impl.Logger.Debug("logged out successfully",
 		slog.String("ip_address", ipAddress),
-		slog.String("proxies", proxies),
-		slog.Any("session_id", sessionID))
+		slog.String("proxies", proxies))
 
 	return nil
 }
