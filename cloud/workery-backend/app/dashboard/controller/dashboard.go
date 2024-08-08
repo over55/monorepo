@@ -2,10 +2,10 @@ package controller
 
 import (
 	"context"
-	"time"
 	"log/slog"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"golang.org/x/sync/errgroup"
 
 	a_s "github.com/over55/monorepo/cloud/workery-backend/app/associate/datastore"
 	away_s "github.com/over55/monorepo/cloud/workery-backend/app/associateawaylog/datastore"
@@ -193,252 +193,127 @@ func (impl *DashboardControllerImpl) Dashboard(ctx context.Context) (*DashboardR
 		return nil, httperror.NewForBadRequestWithSingleField("id", "does not exist")
 	}
 
-	// Get the current time of the request which will be used to calculate the
-	// time difference spent executing each of the following goroutines.
-	startTime := time.Now()
+	// Initialize errgroup
+	var g errgroup.Group
+
+	var clientsCount, jobsCount, associatesCount, tasksCount int64
+	var bulletins []*b_s.Bulletin
+	var userJobHistory, teamJobHistory []*o_s.OrderLite
+	var associateAwayLogs []*away_s.AssociateAwayLog
+	var pastFewDayComments []*com_s.Comment
 
 	////
-	//// Get counts.
+	//// Get counts concurrently.
 	////
-
-	ccCh := make(chan int64)
-	go func(tid primitive.ObjectID) {
-		clientsCount, err := impl.getActiveClientsCount(ctx, tid)
-
-		// For debugging purposes only.
-		impl.Logger.Debug("goroutine done",
-			slog.String("func", "getActiveClientsCount"),
-			slog.String("ip_address", ipAddress),
-			slog.String("proxies", proxies),
-			slog.Any("execution_time_in_ms", time.Since(startTime).Milliseconds()))
-
+	g.Go(func() error {
+		count, err := impl.getActiveClientsCount(ctx, tenantID)
 		if err != nil {
-			impl.Logger.Error("database error",
-				slog.String("ip_address", ipAddress),
-				slog.String("proxies", proxies),
-				slog.Any("err", err))
-			ccCh <- 0
-		} else {
-			ccCh <- clientsCount
+			return err
 		}
-	}(tenantID)
-
-	jcCh := make(chan int64)
-	go func(tid primitive.ObjectID) {
-		jobsCount, err := impl.getActiveJobsCount(ctx, tid)
-
-		// For debugging purposes only.
-		impl.Logger.Debug("goroutine done",
-			slog.String("func", "getActiveJobsCount"),
-			slog.String("ip_address", ipAddress),
-			slog.String("proxies", proxies),
-			slog.Any("execution_time_in_ms", time.Since(startTime).Milliseconds()))
-
+		clientsCount = count
+		return nil
+	})
+	g.Go(func() error {
+		count, err := impl.getActiveJobsCount(ctx, tenantID)
 		if err != nil {
-			impl.Logger.Error("database error",
-				slog.String("ip_address", ipAddress),
-				slog.String("proxies", proxies),
-				slog.Any("err", err))
-			jcCh <- 0
-		} else {
-			jcCh <- jobsCount
+			return err
 		}
-	}(tenantID)
-
-	mcCh := make(chan int64)
-	go func(tid primitive.ObjectID) {
-		associatesCount, err := impl.getActiveAssociatesCount(ctx, tenantID)
-
-		// For debugging purposes only.
-		impl.Logger.Debug("goroutine done",
-			slog.String("func", "getActiveAssociatesCount"),
-			slog.String("ip_address", ipAddress),
-			slog.String("proxies", proxies),
-			slog.Any("execution_time_in_ms", time.Since(startTime).Milliseconds()))
-
+		jobsCount = count
+		return nil
+	})
+	g.Go(func() error {
+		count, err := impl.getActiveAssociatesCount(ctx, tenantID)
 		if err != nil {
-			impl.Logger.Error("database error",
-				slog.String("ip_address", ipAddress),
-				slog.String("proxies", proxies),
-				slog.Any("err", err))
-			mcCh <- 0
-		} else {
-			mcCh <- associatesCount
+			return err
 		}
-	}(tenantID)
-
-	tcCh := make(chan int64)
-	go func(tid primitive.ObjectID) {
-		tasksCount, err := impl.getActiveTasksCount(ctx, tid)
-
-		// For debugging purposes only.
-		impl.Logger.Debug("goroutine done",
-			slog.String("func", "getActiveTasksCount"),
-			slog.String("ip_address", ipAddress),
-			slog.String("proxies", proxies),
-			slog.Any("execution_time_in_ms", time.Since(startTime).Milliseconds()))
-
+		associatesCount = count
+		return nil
+	})
+	g.Go(func() error {
+		count, err := impl.getActiveTasksCount(ctx, tenantID)
 		if err != nil {
-			impl.Logger.Error("database error",
-				slog.String("ip_address", ipAddress),
-				slog.String("proxies", proxies),
-				slog.Any("err", err))
-			tcCh <- 0
-		} else {
-			tcCh <- tasksCount
+			return err
 		}
-	}(tenantID)
+		tasksCount = count
+		return nil
+	})
 
 	////
-	//// Get bulletins.
+	//// Get bulletins concurrently.
 	////
-
-	bbiCh := make(chan []*b_s.Bulletin)
-	go func(tid primitive.ObjectID) {
-		arr, err := impl.getBulletins(ctx, tenantID)
-
-		// For debugging purposes only.
-		impl.Logger.Debug("goroutine done",
-			slog.String("func", "getBulletins"),
-			slog.String("ip_address", ipAddress),
-			slog.String("proxies", proxies),
-			slog.Any("execution_time_in_ms", time.Since(startTime).Milliseconds()))
-
+	g.Go(func() error {
+		bbs, err := impl.getBulletins(ctx, tenantID)
 		if err != nil {
-			impl.Logger.Error("database error",
-				slog.String("ip_address", ipAddress),
-				slog.String("proxies", proxies),
-				slog.Any("err", err))
-			bbiCh <- []*b_s.Bulletin{}
-		} else {
-			bbiCh <- arr[:]
+			return err
 		}
-	}(tenantID)
+		bulletins = bbs
+		return nil
+	})
 
 	////
-	//// Job History ("last_modified_jobs_by_user".)
+	//// Get user job history concurrently.
 	////
-
-	lmbuCh := make(chan []*o_s.OrderLite)
-	go func(tid primitive.ObjectID) {
-		arr, err := impl.getUserJobHistory(ctx, tenantID, userID)
-
-		// For debugging purposes only.
-		impl.Logger.Debug("goroutine done",
-			slog.String("func", "getUserJobHistory"),
-			slog.String("ip_address", ipAddress),
-			slog.String("proxies", proxies),
-			slog.Any("execution_time_in_ms", time.Since(startTime).Milliseconds()))
-
+	g.Go(func() error {
+		history, err := impl.getUserJobHistory(ctx, tenantID, userID)
 		if err != nil {
-			impl.Logger.Error("database error",
-				slog.String("ip_address", ipAddress),
-				slog.String("proxies", proxies),
-				slog.Any("err", err))
-			lmbuCh <- []*o_s.OrderLite{}
-		} else {
-			lmbuCh <- arr[:]
+			return err
 		}
-	}(tenantID)
+		userJobHistory = history
+		return nil
+	})
 
 	////
-	//// Get away logs.
+	//// Get associate away logs concurrently.
 	////
-
-	alCh := make(chan []*away_s.AssociateAwayLog)
-	go func(tid primitive.ObjectID) {
-		arr, err := impl.getAwayLogs(ctx, tenantID)
-
-		// For debugging purposes only.
-		impl.Logger.Debug("goroutine done",
-			slog.String("func", "getAwayLogs"),
-			slog.String("ip_address", ipAddress),
-			slog.String("proxies", proxies),
-			slog.Any("execution_time_in_ms", time.Since(startTime).Milliseconds()))
-
+	g.Go(func() error {
+		logs, err := impl.getAwayLogs(ctx, tenantID)
 		if err != nil {
-			impl.Logger.Error("database error",
-				slog.String("ip_address", ipAddress),
-				slog.String("proxies", proxies),
-				slog.Any("err", err))
-			alCh <- []*away_s.AssociateAwayLog{}
-		} else {
-			alCh <- arr[:]
+			return err
 		}
-	}(tenantID)
+		associateAwayLogs = logs
+		return nil
+	})
 
 	////
-	//// Get team job history
+	//// Get team job history concurrently.
 	////
-
-	lmbtCh := make(chan []*o_s.OrderLite)
-	go func(tid primitive.ObjectID) {
-		arr, err := impl.getTeamJobHistory(ctx, tenantID)
-
-		// For debugging purposes only.
-		impl.Logger.Debug("goroutine done",
-			slog.String("func", "getTeamJobHistory"),
-			slog.String("ip_address", ipAddress),
-			slog.String("proxies", proxies),
-			slog.Any("execution_time_in_ms", time.Since(startTime).Milliseconds()))
-
+	g.Go(func() error {
+		history, err := impl.getTeamJobHistory(ctx, tenantID)
 		if err != nil {
-			impl.Logger.Error("database error",
-				slog.String("ip_address", ipAddress),
-				slog.String("proxies", proxies),
-				slog.Any("err", err))
-			lmbtCh <- []*o_s.OrderLite{}
-		} else {
-			lmbtCh <- arr[:]
+			return err
 		}
-	}(tenantID)
+		teamJobHistory = history
+		return nil
+	})
 
 	////
-	//// Get comments
+	//// Get past few days' comments concurrently.
 	////
-
-	ocCh := make(chan []*com_s.Comment)
-	go func(tid primitive.ObjectID) {
-		arr, err := impl.getOrderComments(ctx, tenantID)
-
-		// For debugging purposes only.
-		impl.Logger.Debug("goroutine done",
-			slog.String("func", "getOrderComments"),
-			slog.String("ip_address", ipAddress),
-			slog.String("proxies", proxies),
-			slog.Any("execution_time_in_ms", time.Since(startTime).Milliseconds()))
-
+	g.Go(func() error {
+		comments, err := impl.getOrderComments(ctx, tenantID)
 		if err != nil {
-			impl.Logger.Error("database error",
-				slog.String("ip_address", ipAddress),
-				slog.String("proxies", proxies),
-				slog.Any("err", err))
-			ocCh <- []*com_s.Comment{}
-		} else {
-			ocCh <- arr[:]
+			return err
 		}
-	}(tenantID)
+		pastFewDayComments = comments
+		return nil
+	})
 
-	////
-	//// Wait until all goroutines are finished executing.
-	////
-
-	cc, jc, mc, tc, bbi, al, lmbu, lmbt, oc := <-ccCh, <-jcCh, <-mcCh, <-tcCh, <-bbiCh, <-alCh, <-lmbuCh, <-lmbtCh, <-ocCh
-
-	////
-	//// Return the response.
-	////
-
-	res := &DashboardResponseIDO{
-		ClientsCount:       cc,
-		AssociatesCount:    mc,
-		JobsCount:          jc,
-		TasksCount:         tc,
-		Bulletins:          bbi,
-		UserJobHistory:     lmbu,
-		AssociateAwayLogs:  al,
-		TeamJobHistory:     lmbt,
-		PastFewDayComments: oc,
+	// Wait for all goroutines to finish
+	if err := g.Wait(); err != nil {
+		impl.Logger.Error("error in concurrent execution", slog.Any("error", err))
+		return nil, err
 	}
-	return res, nil
+
+	// Return the response
+	return &DashboardResponseIDO{
+		ClientsCount:       clientsCount,
+		AssociatesCount:    associatesCount,
+		JobsCount:          jobsCount,
+		TasksCount:         tasksCount,
+		Bulletins:          bulletins,
+		UserJobHistory:     userJobHistory,
+		AssociateAwayLogs:  associateAwayLogs,
+		TeamJobHistory:     teamJobHistory,
+		PastFewDayComments: pastFewDayComments,
+	}, nil
 }
