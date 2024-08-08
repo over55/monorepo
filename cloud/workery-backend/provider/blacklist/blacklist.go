@@ -48,7 +48,6 @@ func NewProvider() Provider {
 	ips, err := readBlacklistFileContent(bannedIPAddressesFilePath)
 	if err == nil { // Aka: if the file exists...
 		for _, ip := range ips {
-			fmt.Println("Blacklisted IP", ip)
 			bannedIPAddresses[ip] = true
 		}
 	}
@@ -58,7 +57,6 @@ func NewProvider() Provider {
 	urls, err := readBlacklistFileContent(bannedURLsFilePath)
 	if err == nil { // Aka: if the file exists...
 		for _, url := range urls {
-			fmt.Println("URL", url)
 			bannedURLs[url] = true
 		}
 	}
