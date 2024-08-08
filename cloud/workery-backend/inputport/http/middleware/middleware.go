@@ -452,7 +452,7 @@ func (mid *middleware) IPAddressMiddleware(next http.HandlerFunc) http.HandlerFu
 
 		// Save the client IP and proxies to the context
 		ctx := context.WithValue(r.Context(), constants.SessionIPAddress, clientIP)
-		ctx = context.WithValue(r.Context(), constants.SessionProxies, proxies)
+		ctx = context.WithValue(ctx, constants.SessionProxies, proxies)
 		next(w, r.WithContext(ctx))
 	}
 }
