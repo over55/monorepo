@@ -21,6 +21,11 @@ tasks:
     cmds:
       - go work use ./cloud/workery-cli
 
+  usebanned:
+    desc: Load up the go workspace for the `bannedlist-cli` module.
+    cmds:
+      - go work use ./cloud/bannedlist-cli
+
   usestatcan:
     desc: Load up the go workspace for the `statcan` module.
     cmds:
