@@ -333,6 +333,26 @@ export const WORKERY_REPORT_API_ENDPOINT =
 export const WORKERY_COMMENT_LIST_API_URL =
   HTTP_API_SERVER + "/api/v1/comments";
 
+/**
+ * National Occupational Classification
+ */
+export const WORKERY_NATIONAL_OCCUPATIONAL_CLASSIFICATIONS_API_ENDPOINT =
+  HTTP_API_SERVER + "/api/v1/national-occupational-classifications";
+export const WORKERY_NATIONAL_OCCUPATIONAL_CLASSIFICATION_API_ENDPOINT =
+  HTTP_API_SERVER + "/api/v1/national-occupational-classification/{id}";
+export const WORKERY_NATIONAL_OCCUPATIONAL_CLASSIFICATION_SELECT_OPTIONS_API_ENDPOINT =
+  HTTP_API_SERVER + "/api/v1/national-occupational-classifications/select-options";
+
+/**
+ * North America Industry Classification System
+ */
+export const WORKERY_NORTH_AMERICA_INDUSTRY_CLASSIFICATION_SYSTEMS_API_ENDPOINT =
+  HTTP_API_SERVER + "/api/v1/north-america-industry-classification-systems";
+export const WORKERY_NORTH_AMERICA_INDUSTRY_CLASSIFICATION_SYSTEM_API_ENDPOINT =
+  HTTP_API_SERVER + "/api/v1/north-america-industry-classification-system/{id}";
+export const WORKERY_NORTH_AMERICA_INDUSTRY_CLASSIFICATION_SYSTEM_SELECT_OPTIONS_API_ENDPOINT =
+  HTTP_API_SERVER + "/api/v1/north-america-industry-classification-systems/select-options";
+
 //
 // Continue below ...
 //

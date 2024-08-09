@@ -134,6 +134,10 @@ import ClientAssociateDetailOrderList from "./Components/Customer/Associate/Deta
 import JobSeekerDashboard from "./Components/JobSeeker/Dashboard/View";
 
 // Admin Dashboard, Help
+import AdminSettingNAICSSearchResult from "./Components/Admin/Setting/NAICS/Result";
+import AdminSettingNAICSSearch from "./Components/Admin/Setting/NAICS/Search";
+import AdminSettingNOCSearchResult from "./Components/Admin/Setting/NOC/Result";
+import AdminSettingNOCSearch from "./Components/Admin/Setting/NOC/Search";
 import AdminSettingHowHearAboutUsItemList from "./Components/Admin/Setting/HowHearAboutUsItem/List";
 import AdminSettingVehicleTypeList from "./Components/Admin/Setting/VehicleType/List";
 import AdminSettingInactiveClientList from "./Components/Admin/Setting/InactiveClient/List";
@@ -1361,6 +1365,26 @@ function AppRoute() {
                     exact
                     path="/admin/financials"
                     element={<AdminFinancialList />}
+                  />
+                  <Route
+                    exact
+                    path="/admin/settings/naics/search-result"
+                    element={<AdminSettingNAICSSearchResult />}
+                  />
+                  <Route
+                    exact
+                    path="/admin/settings/naics/search"
+                    element={<AdminSettingNAICSSearch />}
+                  />
+                  <Route
+                    exact
+                    path="/admin/settings/noc/search-result"
+                    element={<AdminSettingNOCSearchResult />}
+                  />
+                  <Route
+                    exact
+                    path="/admin/settings/noc/search"
+                    element={<AdminSettingNOCSearch />}
                   />
                   <Route
                     exact

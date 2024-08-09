@@ -606,6 +606,94 @@ function AdminSettingLaunchpad() {
                   </footer>
                 </div>
               </div>
+
+              {/* National Occupational Classification */}
+              <div className="column is-one-third">
+                <div className="card">
+                  <div className="card-image has-background-info">
+                    <div
+                      className="has-text-centered"
+                      style={{ padding: "60px" }}
+                    >
+                      <FontAwesomeIcon
+                        className="fas"
+                        icon={faUniversity}
+                        style={{ color: "white", fontSize: "9rem" }}
+                      />
+                    </div>
+                  </div>
+                  <div className="card-content">
+                    <div className="media">
+                      <div className="media-content">
+                        <p className="title is-4">
+                          {/*<FontAwesomeIcon className="fas" icon={faSquarePhone} />&nbsp;*/}
+                          National Occupational Classification
+                        </p>
+                      </div>
+                    </div>
+                    <div className="content">
+                      Search NOC's in the system.
+                      <br />
+                    </div>
+                  </div>
+                  <footer className="card-footer">
+                    <Link
+                      to={`/admin/settings/noc/search`}
+                      className="card-footer-item button is-primary is-large"
+                    >
+                      View&nbsp;
+                      <FontAwesomeIcon
+                        className="fas"
+                        icon={faArrowCircleRight}
+                      />
+                    </Link>
+                  </footer>
+                </div>
+              </div>
+
+              {/* North America Industry ClassificationSystem */}
+              <div className="column is-one-third">
+                <div className="card">
+                  <div className="card-image has-background-info">
+                    <div
+                      className="has-text-centered"
+                      style={{ padding: "60px" }}
+                    >
+                      <FontAwesomeIcon
+                        className="fas"
+                        icon={faUniversity}
+                        style={{ color: "white", fontSize: "9rem" }}
+                      />
+                    </div>
+                  </div>
+                  <div className="card-content">
+                    <div className="media">
+                      <div className="media-content">
+                        <p className="title is-4">
+                          {/*<FontAwesomeIcon className="fas" icon={faSquarePhone} />&nbsp;*/}
+                          North America Industry Classification System
+                        </p>
+                      </div>
+                    </div>
+                    <div className="content">
+                      Search NAICS's in the system.
+                      <br />
+                    </div>
+                  </div>
+                  <footer className="card-footer">
+                    <Link
+                      to={`/admin/settings/naics/search`}
+                      className="card-footer-item button is-primary is-large"
+                    >
+                      View&nbsp;
+                      <FontAwesomeIcon
+                        className="fas"
+                        icon={faArrowCircleRight}
+                      />
+                    </Link>
+                  </footer>
+                </div>
+              </div>
             </div>
           </div>
         </section>
