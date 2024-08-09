@@ -369,6 +369,7 @@ type OrderStorer interface {
 	ListByCustomerID(ctx context.Context, customerID primitive.ObjectID) (*OrderPaginationListResult, error)
 	ListByAssociateID(ctx context.Context, associateID primitive.ObjectID) (*OrderPaginationListResult, error)
 	ListByServiceFeeID(ctx context.Context, serviceFeeID primitive.ObjectID) (*OrderPaginationListResult, error)
+	ListAll(ctx context.Context) (*OrderPaginationListResult, error)
 	// ListAsSelectOptionByFilter(ctx context.Context, f *OrderListFilter) ([]*OrderAsSelectOption, error)
 	// DeleteByID(ctx context.Context, id primitive.ObjectID) error
 	CountByFilter(ctx context.Context, f *OrderListFilter) (int64, error)

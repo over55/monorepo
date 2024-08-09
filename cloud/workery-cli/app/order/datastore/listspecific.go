@@ -50,3 +50,13 @@ func (impl OrderStorerImpl) ListByServiceFeeID(ctx context.Context, serviceFeeID
 	}
 	return res, nil
 }
+
+func (impl OrderStorerImpl) ListAll(ctx context.Context) (*OrderPaginationListResult, error) {
+	f := &OrderPaginationListFilter{
+		Cursor:    "",
+		PageSize:  1_000_000_000, // Max
+		SortField: "",
+		SortOrder: 0,
+	}
+	return impl.ListByFilter(ctx, f)
+}

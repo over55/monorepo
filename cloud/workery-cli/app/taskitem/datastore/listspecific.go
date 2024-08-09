@@ -65,3 +65,13 @@ func (impl TaskItemStorerImpl) ListByOrderWJID(ctx context.Context, orderWJID ui
 	}
 	return res, nil
 }
+
+func (impl TaskItemStorerImpl) ListAll(ctx context.Context) (*TaskItemPaginationListResult, error) {
+	f := &TaskItemPaginationListFilter{
+		Cursor:    "",
+		PageSize:  1_000_000_000, // Max
+		SortField: "",
+		SortOrder: 0,
+	}
+	return impl.ListByFilter(ctx, f)
+}

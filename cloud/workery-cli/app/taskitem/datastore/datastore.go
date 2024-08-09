@@ -193,6 +193,7 @@ type TaskItemStorer interface {
 	ListByAssociateID(ctx context.Context, associateID primitive.ObjectID) (*TaskItemPaginationListResult, error)
 	ListByOrderID(ctx context.Context, orderID primitive.ObjectID) (*TaskItemPaginationListResult, error)
 	ListByOrderWJID(ctx context.Context, orderWJID uint64) (*TaskItemPaginationListResult, error)
+	ListAll(ctx context.Context) (*TaskItemPaginationListResult, error)
 	DeleteByID(ctx context.Context, id primitive.ObjectID) error
 	PermanentlyDeleteAllByCustomerID(ctx context.Context, customerID primitive.ObjectID) error
 	PermanentlyDeleteAllByAssociateID(ctx context.Context, associateID primitive.ObjectID) error
