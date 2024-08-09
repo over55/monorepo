@@ -202,38 +202,51 @@ func NewDatastore(appCfg *c.Conf, loggerp *slog.Logger, client *mongo.Client) Cu
 	// ctx := context.Background()
 	uc := client.Database(appCfg.DB.Name).Collection("customers")
 
-	// // For debugging purposes only.
-	// if _, err := uc.Indexes().DropAll(context.TODO()); err != nil {
-	// 	loggerp.Error("failed deleting all indexes",
-	// 		slog.Any("err", err))
-	//
-	// 	// It is important that we crash the app on startup to meet the
-	// 	// requirements of `google/wire` framework.
-	// 	log.Fatal(err)
-	// }
+	// For debugging purposes only.
+	if _, err := uc.Indexes().DropAll(context.TODO()); err != nil {
+		loggerp.Error("failed deleting all indexes",
+			slog.Any("err", err))
+
+		// It is important that we crash the app on startup to meet the
+		// requirements of `google/wire` framework.
+		log.Fatal(err)
+	}
 
 	_, err := uc.Indexes().CreateMany(context.TODO(), []mongo.IndexModel{
+		// 1. Composite Indexes for Filtering
 		{Keys: bson.D{{Key: "tenant_id", Value: 1}}},
 		{Keys: bson.D{{Key: "public_id", Value: -1}}},
 		{Keys: bson.D{{Key: "email", Value: 1}}},
 		{Keys: bson.D{{Key: "name", Value: 1}}},
-		{Keys: bson.D{{Key: "lexical_name", Value: 1}}},
-		{Keys: bson.D{{Key: "last_name", Value: 1}}},
-		{Keys: bson.D{{Key: "join_date", Value: 1}}},
 		{Keys: bson.D{{Key: "status", Value: 1}}},
 		{Keys: bson.D{{Key: "type", Value: 1}}},
+
+		// 2. Indexes for Sorting
+		{Keys: bson.D{{Key: "lexical_name", Value: 1}}},
+		{Keys: bson.D{{Key: "last_name", Value: 1}}},
+		{Keys: bson.D{{Key: "join_date", Value: -1}}},
+		{Keys: bson.D{{Key: "modified_by_user_id", Value: -1}}},
+		{Keys: bson.D{{Key: "created_at", Value: -1}}},
+		{Keys: bson.D{{Key: "modified_at", Value: -1}}},
+
+		// 3. Composite Indexes for Filtering with Multiple Fields and Sorting
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "last_name", Value: 1}}},
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "lexical_name", Value: 1}}},
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "join_date", Value: -1}}},
+
+		// 4. Compound Text Index for Text Search
 		{Keys: bson.D{
-			{"public_id", "text"},
-			{"name", "text"},
-			{"lexical_name", "text"},
-			{"email", "text"},
-			{"phone", "text"},
-			{"country", "text"},
-			{"region", "text"},
-			{"city", "text"},
-			{"postal_code", "text"},
-			{"address_line1", "text"},
-			{"description", "text"},
+			{Key: "public_id", Value: "text"},
+			{Key: "name", Value: "text"},
+			{Key: "lexical_name", Value: "text"},
+			{Key: "email", Value: "text"},
+			{Key: "phone", Value: "text"},
+			{Key: "country", Value: "text"},
+			{Key: "region", Value: "text"},
+			{Key: "city", Value: "text"},
+			{Key: "postal_code", Value: "text"},
+			{Key: "address_line1", Value: "text"},
+			{Key: "description", Value: "text"},
 		}},
 	})
 	if err != nil {
