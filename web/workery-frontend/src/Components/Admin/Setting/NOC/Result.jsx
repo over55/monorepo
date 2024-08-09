@@ -5,7 +5,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faFilterCircleXmark,
   faArrowLeft,
-  faWrench,
   faTachometer,
   faCircleInfo,
   faPencil,
@@ -18,10 +17,12 @@ import {
   faRefresh,
   faFilter,
   faSearch,
+  faCogs,
+  faUniversity
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 
-import { getOrderListAPI, deleteOrderAPI } from "../../../../API/Order";
+import { getNationalOccupationalClassificationListAPI } from "../../../../API/NOC";
 import {
   topAlertMessageState,
   topAlertStatusState,
@@ -38,11 +39,11 @@ import FormDateField from "../../../Reusable/FormDateField";
 import {
   USER_ROLES,
   PAGE_SIZE_OPTIONS,
-  ORDER_SORT_OPTIONS,
+  NOC_SORT_OPTIONS,
   ORDER_STATUS_FILTER_OPTIONS,
   ORDER_TYPE_FILTER_OPTIONS,
 } from "../../../../Constants/FieldOptions";
-import { DEFAULT_ORDER_LIST_SORT_BY_VALUE } from "../../../../Constants/App";
+import { DEFAULT_NOC_LIST_SORT_BY_VALUE } from "../../../../Constants/App";
 import AdminSettingNOCSearchResultDesktop from "./ResultDesktop";
 import AdminSettingNOCSearchResultMobile from "./ResultMobile";
 
@@ -53,27 +54,15 @@ function AdminSettingNOCSearchResult() {
   ////
 
   const [searchParams] = useSearchParams(); // Special thanks via https://stackoverflow.com/a/65451140
-  const customerOrganizationName = searchParams.get("con");
-  const customerFirstName = searchParams.get("cfn");
-  const customerLastName = searchParams.get("cln");
-  const customerEmail = searchParams.get("ce");
-  const customerPhone = searchParams.get("cp");
-  const associateOrganizationName = searchParams.get("aon");
-  const associateFirstName = searchParams.get("afn");
-  const associateLastName = searchParams.get("aln");
-  const associateEmail = searchParams.get("ae");
-  const associatePhone = searchParams.get("ap");
   const actualSearchText = searchParams.get("q");
-  const orderWjid = searchParams.get("owjid");
+  const unitGroupTitle = searchParams.get("ugt");
 
   ////
   //// Global state.
   ////
 
-  const [topAlertMessage, setTopAlertMessage] =
-    useRecoilState(topAlertMessageState);
-  const [topAlertStatus, setTopAlertStatus] =
-    useRecoilState(topAlertStatusState);
+  const [topAlertMessage, setTopAlertMessage] = useRecoilState(topAlertMessageState);
+  const [topAlertStatus, setTopAlertStatus] = useRecoilState(topAlertStatusState);
   const [currentUser] = useRecoilState(currentUserState);
   const [status, setStatus] = useRecoilState(orderFilterStatusState); // Filtering
   const [type, setType] = useRecoilState(orderFilterTypeState); // Filtering
@@ -86,8 +75,7 @@ function AdminSettingNOCSearchResult() {
   const [onPageLoaded, setOnPageLoaded] = useState(false);
   const [forceURL, setForceURL] = useState("");
   const [errors, setErrors] = useState({});
-  const [users, setOrders] = useState("");
-  const [selectedOrderForDeletion, setSelectedOrderForDeletion] = useState("");
+  const [users, setNOCs] = useState("");
   const [isFetching, setFetching] = useState(false);
   const [pageSize, setPageSize] = useState(50); // Pagination
   const [previousCursors, setPreviousCursors] = useState([]); // Pagination
@@ -100,18 +88,18 @@ function AdminSettingNOCSearchResult() {
   //// API.
   ////
 
-  function onOrderListSuccess(response) {
-    console.log("onOrderListSuccess: Starting...");
+  function onNOCListSuccess(response) {
+    console.log("onNOCListSuccess: Starting...");
     if (response.results !== null) {
-      setOrders(response);
+      setNOCs(response);
       if (response.hasNextPage) {
         setNextCursor(response.nextCursor); // For pagination purposes.
       }
     }
   }
 
-  function onOrderListError(apiErr) {
-    console.log("onOrderListError: Starting...");
+  function onNOCListError(apiErr) {
+    console.log("onNOCListError: Starting...");
     setErrors(apiErr);
 
     // The following code will cause the screen to scroll to the top of
@@ -121,17 +109,17 @@ function AdminSettingNOCSearchResult() {
     scroll.scrollToTop();
   }
 
-  function onOrderListDone() {
-    console.log("onOrderListDone: Starting...");
+  function onNOCListDone() {
+    console.log("onNOCListDone: Starting...");
     setFetching(false);
   }
 
-  function onOrderDeleteSuccess(response) {
-    console.log("onOrderDeleteSuccess: Starting..."); // For debugging purposes only.
+  function onNOCDeleteSuccess(response) {
+    console.log("onNOCDeleteSuccess: Starting..."); // For debugging purposes only.
 
     // Update notification.
     setTopAlertStatus("success");
-    setTopAlertMessage("Order deleted");
+    setTopAlertMessage("NOC deleted");
     setTimeout(() => {
       console.log(
         "onDeleteConfirmButtonClick: topAlertMessage, topAlertStatus:",
@@ -149,23 +137,12 @@ function AdminSettingNOCSearchResult() {
       sortByValue,
       status,
       type,
-      createdAtGTE,
-      customerOrganizationName,
-      customerFirstName,
-      customerLastName,
-      customerEmail,
-      customerPhone,
-      associateOrganizationName,
-      associateFirstName,
-      associateLastName,
-      associateEmail,
-      associatePhone,
-      orderWjid
+      unitGroupTitle
     );
   }
 
-  function onOrderDeleteError(apiErr) {
-    console.log("onOrderDeleteError: Starting..."); // For debugging purposes only.
+  function onNOCDeleteError(apiErr) {
+    console.log("onNOCDeleteError: Starting..."); // For debugging purposes only.
     setErrors(apiErr);
 
     // Update notification.
@@ -173,7 +150,7 @@ function AdminSettingNOCSearchResult() {
     setTopAlertMessage("Failed deleting");
     setTimeout(() => {
       console.log(
-        "onOrderDeleteError: topAlertMessage, topAlertStatus:",
+        "onNOCDeleteError: topAlertMessage, topAlertStatus:",
         topAlertMessage,
         topAlertStatus,
       );
@@ -187,8 +164,8 @@ function AdminSettingNOCSearchResult() {
     scroll.scrollToTop();
   }
 
-  function onOrderDeleteDone() {
-    console.log("onOrderDeleteDone: Starting...");
+  function onNOCDeleteDone() {
+    console.log("onNOCDeleteDone: Starting...");
     setFetching(false);
   }
 
@@ -204,7 +181,7 @@ function AdminSettingNOCSearchResult() {
   const onClearFilterClick = (e) => {
     setType(0);
     setStatus(0);
-    setSortByValue(DEFAULT_ORDER_LIST_SORT_BY_VALUE);
+    setSortByValue(DEFAULT_NOC_LIST_SORT_BY_VALUE);
   };
 
   const fetchList = (
@@ -214,18 +191,7 @@ function AdminSettingNOCSearchResult() {
     so,
     s,
     t,
-    j,
-    con,
-    cfn,
-    cln,
-    ce,
-    cp,
-    aon,
-    afn,
-    aln,
-    ae,
-    ap,
-    owjid
+    ugt
   ) => {
     setFetching(true);
     setErrors({});
@@ -257,49 +223,15 @@ function AdminSettingNOCSearchResult() {
     if (t !== undefined && t !== null && t !== "") {
       params.set("type", t);
     }
-    if (j !== undefined && j !== null && j !== "") {
-      const jStr = j.getTime();
-      params.set("created_at_gte", jStr);
-    }
-    if (con !== undefined && con !== null && con !== "") {
-      params.set("customer_organization_name", con);
-    }
-    if (cfn !== undefined && cfn !== null && cfn !== "") {
-      params.set("customer_first_name", cfn);
-    }
-    if (cln !== undefined && cln !== null && cln !== "") {
-      params.set("customer_last_name", cln);
-    }
-    if (ce !== undefined && ce !== null && ce !== "") {
-      params.set("customer_email", ce);
-    }
-    if (cp !== undefined && cp !== null && cp !== "") {
-      params.set("customer_phone", cp);
-    }
-    if (aon !== undefined && aon !== null && aon !== "") {
-      params.set("associate_organization_name", aon);
-    }
-    if (afn !== undefined && afn !== null && afn !== "") {
-      params.set("associate_first_name", afn);
-    }
-    if (aln !== undefined && aln !== null && aln !== "") {
-      params.set("associate_last_name", aln);
-    }
-    if (ae !== undefined && ae !== null && ae !== "") {
-      params.set("associate_email", ae);
-    }
-    if (ap !== undefined && ap !== null && ap !== "") {
-      params.set("associate_phone", ap);
-    }
-    if (owjid !== undefined && owjid !== null && owjid !== "") {
-      params.set("order_wjid", owjid);
+    if (ugt !== undefined && ugt !== null && ugt !== "") {
+      params.set("ugt", ugt);
     }
 
-    getOrderListAPI(
+    getNationalOccupationalClassificationListAPI(
       params,
-      onOrderListSuccess,
-      onOrderListError,
-      onOrderListDone,
+      onNOCListSuccess,
+      onNOCListError,
+      onNOCListDone,
     );
   };
 
@@ -317,29 +249,6 @@ function AdminSettingNOCSearchResult() {
     setCurrentCursor(previousCursor);
   };
 
-  const onSelectOrderForDeletion = (e, user) => {
-    console.log("onSelectOrderForDeletion", user);
-    setSelectedOrderForDeletion(user);
-  };
-
-  const onDeselectOrderForDeletion = (e) => {
-    console.log("onDeselectOrderForDeletion");
-    setSelectedOrderForDeletion("");
-  };
-
-  const onDeleteConfirmButtonClick = (e) => {
-    console.log("onDeleteConfirmButtonClick"); // For debugging purposes only.
-
-    deleteOrderAPI(
-      selectedOrderForDeletion.id,
-      onOrderDeleteSuccess,
-      onOrderDeleteError,
-      onOrderDeleteDone,
-      onUnauthorized,
-    );
-    setSelectedOrderForDeletion("");
-  };
-
   ////
   //// Misc.
   ////
@@ -355,18 +264,7 @@ function AdminSettingNOCSearchResult() {
         sortByValue,
         status,
         type,
-        createdAtGTE,
-        customerOrganizationName,
-        customerFirstName,
-        customerLastName,
-        customerEmail,
-        customerPhone,
-        associateOrganizationName,
-        associateFirstName,
-        associateLastName,
-        associateEmail,
-        associatePhone,
-        orderWjid
+        unitGroupTitle
       );
 
       // If you loaded the page for the very first time.
@@ -387,18 +285,7 @@ function AdminSettingNOCSearchResult() {
     sortByValue,
     status,
     type,
-    createdAtGTE,
-    customerOrganizationName,
-    customerFirstName,
-    customerLastName,
-    customerEmail,
-    customerPhone,
-    associateOrganizationName,
-    associateFirstName,
-    associateLastName,
-    associateEmail,
-    associatePhone,
-    orderWjid,
+    unitGroupTitle
   ]);
 
   ////
@@ -426,13 +313,19 @@ function AdminSettingNOCSearchResult() {
                 </Link>
               </li>
               <li className="">
-                <Link to="/admin/orders" aria-current="page">
-                  <FontAwesomeIcon className="fas" icon={faWrench} />
-                  &nbsp;Orders
+                <Link to="/admin/settings" aria-current="page">
+                  <FontAwesomeIcon className="fas" icon={faCogs} />
+                  &nbsp;Settings
                 </Link>
               </li>
               <li className="">
-                <Link to="/admin/orders/search" aria-current="page">
+                <Link to="/admin/settings/noc/search" aria-current="page">
+                  <FontAwesomeIcon className="fas" icon={faUniversity} />
+                  &nbsp;National Occupational Classification
+                </Link>
+              </li>
+              <li className="">
+                <Link to="/admin/settings/noc/search" aria-current="page">
                   <FontAwesomeIcon className="fas" icon={faSearch} />
                   &nbsp;Search
                 </Link>
@@ -454,7 +347,7 @@ function AdminSettingNOCSearchResult() {
             <ul>
               <li className="">
                 <li className="">
-                  <Link to="/admin/orders/search" aria-current="page">
+                  <Link to="/admin/settings/noc/search" aria-current="page">
                     <FontAwesomeIcon className="fas" icon={faArrowLeft} />
                     &nbsp;Back to Search
                   </Link>
@@ -465,8 +358,8 @@ function AdminSettingNOCSearchResult() {
 
           {/* Page Title */}
           <h1 className="title is-2">
-            <FontAwesomeIcon className="fas" icon={faWrench} />
-            &nbsp;Orders
+            <FontAwesomeIcon className="fas" icon={faUniversity} />
+            &nbsp;National Occupational Classification
           </h1>
           <h4 className="subtitle is-4">
             <FontAwesomeIcon className="fas" icon={faSearch} />
@@ -475,8 +368,9 @@ function AdminSettingNOCSearchResult() {
           <hr />
 
           {/* Page Modal(s) */}
+          {/*
           <div
-            className={`modal ${selectedOrderForDeletion ? "is-active" : ""}`}
+            className={`modal ${selectedNOCForDeletion ? "is-active" : ""}`}
           >
             <div className="modal-background"></div>
             <div className="modal-card">
@@ -485,7 +379,7 @@ function AdminSettingNOCSearchResult() {
                 <button
                   className="delete"
                   aria-label="close"
-                  onClick={onDeselectOrderForDeletion}
+                  onClick={onDeselectNOCForDeletion}
                 ></button>
               </header>
               <section className="modal-card-body">
@@ -501,12 +395,13 @@ function AdminSettingNOCSearchResult() {
                 >
                   Confirm
                 </button>
-                <button className="button" onClick={onDeselectOrderForDeletion}>
+                <button className="button" onClick={onDeselectNOCForDeletion}>
                   Cancel
                 </button>
               </footer>
             </div>
           </div>
+          */}
 
           {/* Page Table */}
           <nav className="box" style={{ borderRadius: "20px" }}>
@@ -576,7 +471,7 @@ function AdminSettingNOCSearchResult() {
                     selectedValue={sortByValue}
                     helpText=""
                     onChange={(e) => setSortByValue(e.target.value)}
-                    options={ORDER_SORT_OPTIONS}
+                    options={NOC_SORT_OPTIONS}
                     isRequired={true}
                   />
                 </div>
@@ -606,7 +501,6 @@ function AdminSettingNOCSearchResult() {
                         previousCursors={previousCursors}
                         onPreviousClicked={onPreviousClicked}
                         onNextClicked={onNextClicked}
-                        onSelectOrderForDeletion={onSelectOrderForDeletion}
                       />
                     </div>
 
@@ -623,7 +517,6 @@ function AdminSettingNOCSearchResult() {
                         previousCursors={previousCursors}
                         onPreviousClicked={onPreviousClicked}
                         onNextClicked={onNextClicked}
-                        onSelectOrderForDeletion={onSelectOrderForDeletion}
                       />
                     </div>
                   </div>
@@ -632,20 +525,10 @@ function AdminSettingNOCSearchResult() {
                     <div className="hero-body">
                       <p className="title">
                         <FontAwesomeIcon className="fas" icon={faTable} />
-                        &nbsp;No Orders
+                        &nbsp;No NOCs.
                       </p>
                       <p className="subtitle">
-                        No orders.{" "}
-                        <b>
-                          <Link to="/admin/orders/add/step-1-search">
-                            Click here&nbsp;
-                            <FontAwesomeIcon
-                              className="mdi"
-                              icon={faArrowRight}
-                            />
-                          </Link>
-                        </b>{" "}
-                        to get started creating your first order.
+                        No NOCs have been returned.{" "}
                       </p>
                     </div>
                   </section>

@@ -287,3 +287,8 @@ export const DEFAULT_COMMENT_LIST_SORT_BY_VALUE = "created_at,DESC";
 //----------------------------------------------------------------------------//
 export const LIST_VIEW_TYPE_TABULAR = 1;
 export const LIST_VIEW_TYPE_GRID = 2;
+
+//----------------------------------------------------------------------------//
+//                                  NOC                                       //
+//----------------------------------------------------------------------------//
+export const DEFAULT_NOC_LIST_SORT_BY_VALUE = "code,ASC";

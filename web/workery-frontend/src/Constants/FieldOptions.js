@@ -881,6 +881,17 @@ export const COMMENT_STATUS_FILTER_OPTIONS = [
   { value: 2, label: "Archived" },
 ];
 
+//----------------------------------------------------------------------------//
+//                                  NOC                                       //
+//----------------------------------------------------------------------------//
+
+export const NOC_SORT_OPTIONS = [
+  { value: "code,ASC", label: "Code ▲" },
+  { value: "code,DESC", label: "Code ▼" },
+  { value: "unit_group_title,ASC", label: "Unit Group Title ▲" },
+  { value: "unit_group_title,DESC", label: "Unit Group Title ▼" },
+];
+
 
 //----------------------------------------------------------------------------//
 //                                Unspecified                                 //

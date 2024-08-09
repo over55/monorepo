@@ -13,7 +13,7 @@ import {
   faPlus,
   faTimesCircle,
   faCheckCircle,
-  faWrench,
+  faUniversity,
   faGauge,
   faPencil,
   faUsers,
@@ -23,6 +23,7 @@ import {
   faChartPie,
   faBuilding,
   faClose,
+  faCogs
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 
@@ -57,25 +58,12 @@ function AdminSettingNOCSearch() {
   const [isFetching, setFetching] = useState(false);
   const [forceURL, setForceURL] = useState("");
   const [actualSearchText, setActualSearchText] = useState("");
-  const [accountType, setAccountType] = useState(0);
   const [filterByOrder, setFilterByOrder] = useState(false);
   const [filterByCustomer, setFilterByCustomer] = useState(false);
   const [filterByAssociate, setFilterByAssociate] = useState(false);
-  const [customerOrganizationName, setCustomerOrganizationName] = useState("");
-  const [customerEmail, setCustomerEmail] = useState("");
-  const [customerPhone, setCustomerPhone] = useState("");
-  const [customerFirstName, setCustomerFirstName] = useState("");
-  const [customerLastName, setCustomerLastName] = useState("");
-  const [associateOrganizationName, setAssociateOrganizationName] =
-    useState("");
-  const [associateEmail, setAssociateEmail] = useState("");
-  const [associatePhone, setAssociatePhone] = useState("");
-  const [associateFirstName, setAssociateFirstName] = useState("");
-  const [associateLastName, setAssociateLastName] = useState("");
   const [showCancelWarning, setShowCancelWarning] = useState(false);
-  const [orderWjid, setOrderWjid] = useState("");
   const [isAdvancedFiltering, setIsAdvancedFiltering] = useState(false);
-  const [country] = useState(addOrder.country);
+  const [unitGroupTitle, setUnitGroupTitle] = useState("");
 
   ////
   //// Event handling.
@@ -84,18 +72,8 @@ function AdminSettingNOCSearch() {
   const onSubmitClick = (e) => {
     console.log("onSubmitClick: Beginning...");
     if (
-      customerOrganizationName === "" &&
-      customerFirstName === "" &&
-      customerLastName === "" &&
-      customerEmail === "" &&
-      customerPhone === "" &&
       actualSearchText === "" &&
-      associateOrganizationName === "" &&
-      associateFirstName === "" &&
-      associateLastName === "" &&
-      associateEmail === "" &&
-      associatePhone === "" &&
-      orderWjid === ""
+      unitGroupTitle === ""
     ) {
       setErrors({
         message: "please enter a value",
@@ -108,29 +86,10 @@ function AdminSettingNOCSearch() {
       return;
     }
     let aURL = "/admin/settings/noc/search-result?cfn=" +
-      customerFirstName +
-      "&cln=" +
-      customerLastName +
-      "&ce=" +
-      customerEmail +
-      "&cp=" +
-      encodeURIComponent(customerPhone) +
-      "&con=" +
-      customerOrganizationName +
-      "&q=" +
+      "?q=" +
       actualSearchText +
-      "&afn=" +
-      associateFirstName +
-      "&aln=" +
-      associateLastName +
-      "&ae=" +
-      associateEmail +
-      "&ap=" +
-      encodeURIComponent(associatePhone) +
-      "&aon=" +
-      associateOrganizationName +
-      "&owjid=" +
-      orderWjid;
+      "&ugt=" +
+      unitGroupTitle;
     setForceURL(aURL);
   };
 
@@ -182,9 +141,15 @@ function AdminSettingNOCSearch() {
                 </Link>
               </li>
               <li className="">
-                <Link to="/admin/orders" aria-current="page">
-                  <FontAwesomeIcon className="fas" icon={faWrench} />
-                  &nbsp;Orders
+                <Link to="/admin/settings" aria-current="page">
+                  <FontAwesomeIcon className="fas" icon={faCogs} />
+                  &nbsp;Settings
+                </Link>
+              </li>
+              <li className="is-active">
+                <Link aria-current="page">
+                  <FontAwesomeIcon className="fas" icon={faUniversity} />
+                  &nbsp;National Occupational Classification
                 </Link>
               </li>
               <li className="is-active">
@@ -203,9 +168,9 @@ function AdminSettingNOCSearch() {
           >
             <ul>
               <li className="">
-                <Link to="/admin/orders" aria-current="page">
+                <Link to="/admin/settings" aria-current="page">
                   <FontAwesomeIcon className="fas" icon={faArrowLeft} />
-                  &nbsp;Back to Orders
+                  &nbsp;Back to Settings
                 </Link>
               </li>
             </ul>
@@ -213,8 +178,8 @@ function AdminSettingNOCSearch() {
 
           {/* Page Title */}
           <h1 className="title is-2">
-            <FontAwesomeIcon className="fas" icon={faWrench} />
-            &nbsp;Orders
+            <FontAwesomeIcon className="fas" icon={faUniversity} />
+            &nbsp;National Occupational Classification
           </h1>
           <h4 className="subtitle is-4">
             <FontAwesomeIcon className="fas" icon={faSearch} />
@@ -226,7 +191,7 @@ function AdminSettingNOCSearch() {
           <nav className="box">
             <p className="title is-4">
               <FontAwesomeIcon className="fas" icon={faSearch} />
-              &nbsp;Search for existing order:
+              &nbsp;Search for existing NOC's:
             </p>
 
             <p className="has-text-grey pb-4">
@@ -261,231 +226,18 @@ function AdminSettingNOCSearch() {
                           &nbsp;Advanced Search
                         </p>
 
-                        <FormCheckboxField
-                          label="Filter By Customer"
-                          name="filterByCustomer"
-                          checked={filterByCustomer}
-                          errorText={errors && errors.filterByCustomer}
-                          onChange={(e, x) =>
-                            setFilterByCustomer(!filterByCustomer)
-                          }
-                          maxWidth="180px"
+                        <FormInputField
+                          label={<u>Unit Group Title</u>}
+                          name="unitGroupTitle"
+                          placeholder="Search all unit group title"
+                          value={unitGroupTitle}
+                          errorText={errors && errors.unitGroupTitle}
+                          helpText=""
+                          onChange={(e) => setUnitGroupTitle(e.target.value)}
+                          isRequired={true}
+                          maxWidth="380px"
                         />
 
-                        <FormCheckboxField
-                          label="Filter By Associate"
-                          name="filterByAssociate"
-                          checked={filterByAssociate}
-                          errorText={errors && errors.filterByAssociate}
-                          onChange={(e, x) =>
-                            setFilterByAssociate(!filterByAssociate)
-                          }
-                          maxWidth="180px"
-                        />
-
-                        <FormCheckboxField
-                          label="Filter By Order"
-                          name="filterByOrder"
-                          checked={filterByOrder}
-                          errorText={errors && errors.filterByOrder}
-                          onChange={(e, x) =>
-                            setFilterByOrder(!filterByOrder)
-                          }
-                          maxWidth="180px"
-                        />
-
-                        {filterByCustomer === true && (
-                          <>
-                            <p className="title is-5">
-                              <FontAwesomeIcon
-                                className="fas"
-                                icon={faUserCircle}
-                              />
-                              &nbsp;<u>Customer</u>
-                            </p>
-                            <FormInputField
-                              label="First Name"
-                              name="customerFirstName"
-                              placeholder="Text input"
-                              value={customerFirstName}
-                              errorText={errors && errors.customerFirstName}
-                              helpText=""
-                              onChange={(e) =>
-                                setCustomerFirstName(e.target.value)
-                              }
-                              isRequired={true}
-                              maxWidth="380px"
-                            />
-
-                            <FormInputField
-                              label="Last Name"
-                              name="customerLastName"
-                              placeholder="Text input"
-                              value={customerLastName}
-                              errorText={errors && errors.customerLastName}
-                              helpText=""
-                              onChange={(e) =>
-                                setCustomerLastName(e.target.value)
-                              }
-                              isRequired={true}
-                              maxWidth="380px"
-                            />
-
-                            <FormInputField
-                              label="Email"
-                              name="customerEmail"
-                              type="email"
-                              placeholder="Text input"
-                              value={customerEmail}
-                              errorText={errors && errors.customerEmail}
-                              helpText=""
-                              onChange={(e) => setCustomerEmail(e.target.value)}
-                              isRequired={true}
-                              maxWidth="380px"
-                            />
-
-                            <FormPhoneField
-                              label="Phone"
-                              name="customerPhone"
-                              placeholder="Text input"
-                              selectedCountry={country}
-                              selectePhoneNumber={customerPhone}
-                              errorText={errors && errors.customerPhone}
-                              helpText=""
-                              onChange={(ph) => {
-                                setCustomerPhone(ph);
-                              }}
-                              isRequired={true}
-                              maxWidth="200px"
-                            />
-
-                            <FormInputField
-                              label="Organization Name"
-                              name="customerOrganizationName"
-                              placeholder="Text input"
-                              value={customerOrganizationName}
-                              errorText={
-                                errors && errors.customerOrganizationName
-                              }
-                              helpText=""
-                              onChange={(e) =>
-                                setCustomerOrganizationName(e.target.value)
-                              }
-                              isRequired={true}
-                              maxWidth="380px"
-                            />
-                          </>
-                        )}
-
-                        {filterByAssociate === true && (
-                          <>
-                            <p className="title is-5">
-                              <FontAwesomeIcon
-                                className="fas"
-                                icon={faHardHat}
-                              />
-                              &nbsp;<u>Associate</u>
-                            </p>
-                            <FormInputField
-                              label="First Name"
-                              name="associateFirstName"
-                              placeholder="Text input"
-                              value={associateFirstName}
-                              errorText={errors && errors.associateFirstName}
-                              helpText=""
-                              onChange={(e) =>
-                                setAssociateFirstName(e.target.value)
-                              }
-                              isRequired={true}
-                              maxWidth="380px"
-                            />
-
-                            <FormInputField
-                              label="Last Name"
-                              name="associateLastName"
-                              placeholder="Text input"
-                              value={associateLastName}
-                              errorText={errors && errors.associateLastName}
-                              helpText=""
-                              onChange={(e) =>
-                                setAssociateLastName(e.target.value)
-                              }
-                              isRequired={true}
-                              maxWidth="380px"
-                            />
-
-                            <FormInputField
-                              label="Email"
-                              name="associateEmail"
-                              type="email"
-                              placeholder="Text input"
-                              value={associateEmail}
-                              errorText={errors && errors.associateEmail}
-                              helpText=""
-                              onChange={(e) =>
-                                setAssociateEmail(e.target.value)
-                              }
-                              isRequired={true}
-                              maxWidth="380px"
-                            />
-
-                            <FormPhoneField
-                              label="Phone"
-                              name="associatePhone"
-                              placeholder="Text input"
-                              selectedCountry={country}
-                              selectePhoneNumber={associatePhone}
-                              errorText={errors && errors.associatePhone}
-                              helpText=""
-                              onChange={(ph) => {
-                                setAssociatePhone(ph);
-                              }}
-                              isRequired={true}
-                              maxWidth="200px"
-                            />
-
-                            <FormInputField
-                              label="Organization Name"
-                              name="associateOrganizationName"
-                              placeholder="Text input"
-                              value={associateOrganizationName}
-                              errorText={
-                                errors && errors.associateOrganizationName
-                              }
-                              helpText=""
-                              onChange={(e) =>
-                                setAssociateOrganizationName(e.target.value)
-                              }
-                              isRequired={true}
-                              maxWidth="380px"
-                            />
-                          </>
-                        )}
-
-                        {filterByOrder === true && (
-                          <>
-                            <p className="title is-5">
-                              <FontAwesomeIcon
-                                className="fas"
-                                icon={faWrench}
-                              />
-                              &nbsp;<u>Order</u>
-                            </p>
-                            <FormInputField
-                              label="Job #"
-                              name="orderWjid"
-                              placeholder="Text input"
-                              value={orderWjid}
-                              errorText={errors && errors.orderWjid}
-                              helpText=""
-                              onChange={(e) =>
-                                setOrderWjid(e.target.value)
-                              }
-                              isRequired={true}
-                              maxWidth="380px"
-                            />
-                          </>
-                        )}
                       </div>
                     </>
                   )}
@@ -494,10 +246,10 @@ function AdminSettingNOCSearch() {
                     <div className="column is-half">
                       <Link
                         className="button is-medium is-fullwidth-mobile"
-                        to="/admin/orders"
+                        to="/admin/settings"
                       >
                         <FontAwesomeIcon className="fas" icon={faArrowLeft} />
-                        &nbsp;Back to Orders
+                        &nbsp;Back to Settings
                       </Link>
                     </div>
                     <div className="column is-half has-text-right">
