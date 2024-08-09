@@ -189,7 +189,7 @@ func (impl *OrderControllerImpl) Create(ctx context.Context, req *OrderCreateReq
 		var o *o_s.Order = &o_s.Order{}
 		o.ID = primitive.NewObjectID()
 		o.WJID = wjid
-		o.TenantIDWithWJID = fmt.Sprintf("%v_%v", tid.Hex(), o.ID)
+		o.TenantIDWithWJID = fmt.Sprintf("%v_%v", tid.Hex(), wjid)
 		o.TenantID = tid
 		o.CreatedAt = time.Now()
 		o.CreatedByUserID = userID
