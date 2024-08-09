@@ -49,12 +49,20 @@ var analyzeLogCmd = &cobra.Command{
 			// api call` or `rejected request` then we need to analyze
 			// the console line.
 			if strings.Contains(line, "unauthorized api call") || strings.Contains(line, "rejected request") {
+				var exists bool = false
 
 				// There are a few URLs we consider safe and hence will ignore.
+				// Go through all the safe urls and check if it exists in this
+				// string.
 				for _, safeURL := range constants.GetWorkeryBackendIgnoreURLS() {
-					if !strings.Contains(line, safeURL) {
-						runAnalyzeLogLine(line, &bannedIPs, &bannedURLs)
+					if strings.Contains(line, safeURL) {
+						exists = true
+						break
 					}
+				}
+
+				if !exists {
+					runAnalyzeLogLine(line, &bannedIPs, &bannedURLs)
 				}
 			}
 		}

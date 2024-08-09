@@ -18,6 +18,8 @@ import (
 	gateway_http "github.com/over55/monorepo/cloud/workery-backend/app/gateway/httptransport"
 	howhear_http "github.com/over55/monorepo/cloud/workery-backend/app/howhear/httptransport"
 	insurancerequirement_http "github.com/over55/monorepo/cloud/workery-backend/app/insurancerequirement/httptransport"
+	naics_http "github.com/over55/monorepo/cloud/workery-backend/app/naics/httptransport"
+	noc_http "github.com/over55/monorepo/cloud/workery-backend/app/noc/httptransport"
 	order_http "github.com/over55/monorepo/cloud/workery-backend/app/order/httptransport"
 	orderincident_http "github.com/over55/monorepo/cloud/workery-backend/app/orderincident/httptransport"
 	report_http "github.com/over55/monorepo/cloud/workery-backend/app/report/httptransport"
@@ -39,32 +41,34 @@ type InputPortServer interface {
 }
 
 type httpInputPort struct {
-	Config               *config.Conf
-	Logger               *slog.Logger
-	Server               *http.Server
-	Middleware           middleware.Middleware
-	Gateway              *gateway_http.Handler
-	Tag                  *tag_http.Handler
-	SkillSet             *skillset_http.Handler
-	InsuranceRequirement *insurancerequirement_http.Handler
-	VehicleType          *vehicletype_http.Handler
-	HowHear              *howhear_http.Handler
-	ServiceFee           *servicefee_http.Handler
-	User                 *user_http.Handler
-	Tenant               *tenant_http.Handler
-	Associate            *associate_http.Handler
-	Comment              *comment_http.Handler
-	Staff                *staff_http.Handler
-	Customer             *customer_http.Handler
-	Attachment           *attachment_http.Handler
-	Order                *order_http.Handler
-	ActivitySheet        *activitysheet_http.Handler
-	TaskItem             *taskitem_http.Handler
-	Dashboard            *dashboard_http.Handler
-	Bulletin             *bulletin_http.Handler
-	AssociateAwayLog     *associateawaylog_http.Handler
-	OrderIncident        *orderincident_http.Handler
-	Report               *report_http.Handler
+	Config                                    *config.Conf
+	Logger                                    *slog.Logger
+	Server                                    *http.Server
+	Middleware                                middleware.Middleware
+	Gateway                                   *gateway_http.Handler
+	Tag                                       *tag_http.Handler
+	SkillSet                                  *skillset_http.Handler
+	InsuranceRequirement                      *insurancerequirement_http.Handler
+	VehicleType                               *vehicletype_http.Handler
+	NationalOccupationalClassification        *noc_http.Handler
+	NorthAmericanIndustryClassificationSystem *naics_http.Handler
+	HowHear                                   *howhear_http.Handler
+	ServiceFee                                *servicefee_http.Handler
+	User                                      *user_http.Handler
+	Tenant                                    *tenant_http.Handler
+	Associate                                 *associate_http.Handler
+	Comment                                   *comment_http.Handler
+	Staff                                     *staff_http.Handler
+	Customer                                  *customer_http.Handler
+	Attachment                                *attachment_http.Handler
+	Order                                     *order_http.Handler
+	ActivitySheet                             *activitysheet_http.Handler
+	TaskItem                                  *taskitem_http.Handler
+	Dashboard                                 *dashboard_http.Handler
+	Bulletin                                  *bulletin_http.Handler
+	AssociateAwayLog                          *associateawaylog_http.Handler
+	OrderIncident                             *orderincident_http.Handler
+	Report                                    *report_http.Handler
 }
 
 func NewInputPort(
@@ -76,6 +80,8 @@ func NewInputPort(
 	tag *tag_http.Handler,
 	ss *skillset_http.Handler,
 	vt *vehicletype_http.Handler,
+	noc *noc_http.Handler,
+	naics *naics_http.Handler,
 	ireq *insurancerequirement_http.Handler,
 	hh *howhear_http.Handler,
 	sf *servicefee_http.Handler,
@@ -111,32 +117,34 @@ func NewInputPort(
 
 	// Create our HTTP server controller.
 	p := &httpInputPort{
-		Config:               configp,
-		Logger:               loggerp,
-		Middleware:           mid,
-		Gateway:              gh,
-		User:                 cu,
-		Tag:                  tag,
-		SkillSet:             ss,
-		InsuranceRequirement: ireq,
-		VehicleType:          vt,
-		HowHear:              hh,
-		ServiceFee:           sf,
-		Tenant:               org,
-		Customer:             cust,
-		Staff:                staf,
-		Associate:            a,
-		Attachment:           att,
-		Order:                ord,
-		ActivitySheet:        sh,
-		TaskItem:             ti,
-		Dashboard:            dash,
-		Bulletin:             bul,
-		Comment:              com,
-		AssociateAwayLog:     aal,
-		OrderIncident:        orderincident,
-		Report:               report,
-		Server:               srv,
+		Config:                             configp,
+		Logger:                             loggerp,
+		Middleware:                         mid,
+		Gateway:                            gh,
+		User:                               cu,
+		Tag:                                tag,
+		SkillSet:                           ss,
+		InsuranceRequirement:               ireq,
+		VehicleType:                        vt,
+		NationalOccupationalClassification: noc,
+		NorthAmericanIndustryClassificationSystem: naics,
+		HowHear:          hh,
+		ServiceFee:       sf,
+		Tenant:           org,
+		Customer:         cust,
+		Staff:            staf,
+		Associate:        a,
+		Attachment:       att,
+		Order:            ord,
+		ActivitySheet:    sh,
+		TaskItem:         ti,
+		Dashboard:        dash,
+		Bulletin:         bul,
+		Comment:          com,
+		AssociateAwayLog: aal,
+		OrderIncident:    orderincident,
+		Report:           report,
+		Server:           srv,
 	}
 
 	// Attach the HTTP server controller to the ServerMux.
@@ -615,6 +623,22 @@ func (port *httpInputPort) HandleRequests(w http.ResponseWriter, r *http.Request
 		port.OrderIncident.OperationCreateComment(w, r)
 	case n == 5 && p[1] == "v1" && p[2] == "order-incidents" && p[3] == "operation" && p[4] == "create-attachment" && r.Method == http.MethodPost:
 		port.OrderIncident.OperationCreateAttachment(w, r)
+
+	// --- NATIONAL OCCUPATIONAL CLASSIFICATION --- //
+	case n == 3 && p[1] == "v1" && p[2] == "national-occupational-classifications" && r.Method == http.MethodGet:
+		port.NationalOccupationalClassification.List(w, r)
+	case n == 4 && p[1] == "v1" && p[2] == "national-occupational-classification" && r.Method == http.MethodGet:
+		port.NationalOccupationalClassification.GetByID(w, r, p[3])
+	case n == 4 && p[1] == "v1" && p[2] == "national-occupational-classifications" && p[3] == "select-options" && r.Method == http.MethodGet:
+		port.NationalOccupationalClassification.ListAsSelectOptions(w, r)
+
+	// --- NORTH AMERICA INDUSTRY CLASSIFICATION SYSTEM --- //
+	case n == 3 && p[1] == "v1" && p[2] == "north-america-industry-classification-systems" && r.Method == http.MethodGet:
+		port.NorthAmericanIndustryClassificationSystem.List(w, r)
+	case n == 4 && p[1] == "v1" && p[2] == "north-america-industry-classification-system" && r.Method == http.MethodGet:
+		port.NorthAmericanIndustryClassificationSystem.GetByID(w, r, p[3])
+	case n == 4 && p[1] == "v1" && p[2] == "north-america-industry-classification-systems" && p[3] == "select-options" && r.Method == http.MethodGet:
+		port.NorthAmericanIndustryClassificationSystem.ListAsSelectOptions(w, r)
 
 	// --- CATCH ALL: D.N.E. ---
 	default:

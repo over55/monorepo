@@ -16,7 +16,7 @@ const (
 	OrderDescending = -1
 )
 
-type NorthAmericanIndustryClassificationSystemPaginationListFilter struct {
+type NationalOccupationalClassificationPaginationListFilter struct {
 	// Pagination related.
 	Cursor    string
 	PageSize  int64
@@ -29,17 +29,17 @@ type NorthAmericanIndustryClassificationSystemPaginationListFilter struct {
 	SearchText string
 }
 
-// NorthAmericanIndustryClassificationSystemPaginationListResult represents the paginated list results for
+// NationalOccupationalClassificationPaginationListResult represents the paginated list results for
 // the associate records.
-type NorthAmericanIndustryClassificationSystemPaginationListResult struct {
-	Results     []*NorthAmericanIndustryClassificationSystem `json:"results"`
-	NextCursor  string         `json:"next_cursor"`
-	HasNextPage bool           `json:"has_next_page"`
+type NationalOccupationalClassificationPaginationListResult struct {
+	Results     []*NationalOccupationalClassification `json:"results"`
+	NextCursor  string                                `json:"next_cursor"`
+	HasNextPage bool                                  `json:"has_next_page"`
 }
 
 // newPaginationFilter will create the mongodb filter to apply the cursor or
 // or ignore it depending if a cursor was specified in the filter.
-func (impl NorthAmericanIndustryClassificationSystemStorerImpl) newPaginationFilter(f *NorthAmericanIndustryClassificationSystemPaginationListFilter) (bson.M, error) {
+func (impl NationalOccupationalClassificationStorerImpl) newPaginationFilter(f *NationalOccupationalClassificationPaginationListFilter) (bson.M, error) {
 	if len(f.Cursor) > 0 {
 		// STEP 1: Decode the cursor which is encoded in a base64 format.
 		decodedCursor, err := base64.RawStdEncoding.DecodeString(f.Cursor)
@@ -49,20 +49,17 @@ func (impl NorthAmericanIndustryClassificationSystemStorerImpl) newPaginationFil
 
 		// STEP 2: Pick the specific cursor to build or else error.
 		switch f.SortField {
-		case "name":
-			// STEP 3: Build for `lexical_name` field.
+		case "unit_group_title", "code":
+			// STEP 3: Build for `unit_group_title` field.
 			return impl.newPaginationFilterBasedOnString(f, string(decodedCursor))
-		case "created_at":
-			// STEP 3: Build for `join_date` field.
-			return impl.newPaginationFilterBasedOnTimestamp(f, string(decodedCursor))
 		default:
-			return nil, fmt.Errorf("unsupported sort field for `%v`, only supported fields are `name` and `created_at`", f.SortField)
+			return nil, fmt.Errorf("unsupported sort field for `%v`, only supported fields are `unit_group_title` and `code`", f.SortField)
 		}
 	}
 	return bson.M{}, nil
 }
 
-func (impl NorthAmericanIndustryClassificationSystemStorerImpl) newPaginationFilterBasedOnString(f *NorthAmericanIndustryClassificationSystemPaginationListFilter, decodedCursor string) (bson.M, error) {
+func (impl NationalOccupationalClassificationStorerImpl) newPaginationFilterBasedOnString(f *NationalOccupationalClassificationPaginationListFilter, decodedCursor string) (bson.M, error) {
 	// Extract our cursor into two parts which we need to use.
 	arr := strings.Split(decodedCursor, "|")
 	if len(arr) < 1 {
@@ -97,7 +94,7 @@ func (impl NorthAmericanIndustryClassificationSystemStorerImpl) newPaginationFil
 	}
 }
 
-func (impl NorthAmericanIndustryClassificationSystemStorerImpl) newPaginationFilterBasedOnTimestamp(f *NorthAmericanIndustryClassificationSystemPaginationListFilter, decodedCursor string) (bson.M, error) {
+func (impl NationalOccupationalClassificationStorerImpl) newPaginationFilterBasedOnTimestamp(f *NationalOccupationalClassificationPaginationListFilter, decodedCursor string) (bson.M, error) {
 	// Extract our cursor into two parts which we need to use.
 	arr := strings.Split(decodedCursor, "|")
 	if len(arr) < 1 {
@@ -139,7 +136,7 @@ func (impl NorthAmericanIndustryClassificationSystemStorerImpl) newPaginationFil
 
 // newPaginatorOptions will generate the mongodb options which will support the
 // paginator in ordering the data to work.
-func (impl NorthAmericanIndustryClassificationSystemStorerImpl) newPaginationOptions(f *NorthAmericanIndustryClassificationSystemPaginationListFilter) (*options.FindOptions, error) {
+func (impl NationalOccupationalClassificationStorerImpl) newPaginationOptions(f *NationalOccupationalClassificationPaginationListFilter) (*options.FindOptions, error) {
 	options := options.Find().SetLimit(f.PageSize)
 
 	// DEVELOPERS NOTE:
@@ -158,8 +155,8 @@ func (impl NorthAmericanIndustryClassificationSystemStorerImpl) newPaginationOpt
 
 // newPaginatorNextCursor will return the base64 encoded next cursor which works
 // with our paginator.
-func (impl NorthAmericanIndustryClassificationSystemStorerImpl) newPaginatorNextCursor(f *NorthAmericanIndustryClassificationSystemPaginationListFilter, results []*NorthAmericanIndustryClassificationSystem) (string, error) {
-	var lastDatum *NorthAmericanIndustryClassificationSystem
+func (impl NationalOccupationalClassificationStorerImpl) newPaginatorNextCursor(f *NationalOccupationalClassificationPaginationListFilter, results []*NationalOccupationalClassification) (string, error) {
+	var lastDatum *NationalOccupationalClassification
 
 	// Remove the extra document from the current page
 	results = results[:]
@@ -171,15 +168,14 @@ func (impl NorthAmericanIndustryClassificationSystemStorerImpl) newPaginatorNext
 	var nextCursor string
 
 	switch f.SortField {
-	case "name":
-		nextCursor = fmt.Sprintf("%v|%v", lastDatum.Name, lastDatum.ID.Hex())
+	case "unit_group_title":
+		nextCursor = fmt.Sprintf("%v|%v", lastDatum.UnitGroupTitle, lastDatum.ID.Hex())
 		break
-	case "created_at":
-		timestamp := lastDatum.CreatedAt.UnixMilli()
-		nextCursor = fmt.Sprintf("%v|%v", timestamp, lastDatum.ID.Hex())
+	case "code":
+		nextCursor = fmt.Sprintf("%v|%v", lastDatum.Code, lastDatum.ID.Hex())
 		break
 	default:
-		return "", fmt.Errorf("unsupported sort field in options for `%v`, only supported fields are `name` and `created_at`", f.SortField)
+		return "", fmt.Errorf("unsupported sort field in options for `%v`, only supported fields are `unit_group_title` and `code`", f.SortField)
 	}
 
 	// Encode to base64 without the `=` symbol that would corrupt when we

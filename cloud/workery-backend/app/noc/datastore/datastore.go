@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
-	c "github.com/over55/monorepo/cloud/workery-cli/config"
+	c "github.com/over55/monorepo/cloud/workery-backend/config"
 )
 
 const (
@@ -55,29 +55,29 @@ type NationalOccupationalClassificationElement struct {
 	Description string `bson:"description" json:"description"`
 }
 
-// type NationalOccupationalClassificationListFilter struct {
-// 	// Pagination related.
-// 	Cursor    primitive.ObjectID
-// 	PageSize  int64
-// 	SortField string
-// 	SortOrder int8 // 1=ascending | -1=descending
-//
-// 	// Filter related.
-// 	TenantID   primitive.ObjectID
-// 	Status     int8
-// 	SearchText string
-// }
-//
-// type NationalOccupationalClassificationListResult struct {
-// 	Results     []*NationalOccupationalClassification `json:"results"`
-// 	NextCursor  primitive.ObjectID                    `json:"next_cursor"`
-// 	HasNextPage bool                                  `json:"has_next_page"`
-// }
-//
-// type NationalOccupationalClassificationAsSelectOption struct {
-// 	Value primitive.ObjectID `bson:"_id" json:"value"` // Extract from the database `_id` field and output through API as `value`.
-// 	Label string             `bson:"name" json:"label"`
-// }
+type NationalOccupationalClassificationListFilter struct {
+	// Pagination related.
+	Cursor    primitive.ObjectID
+	PageSize  int64
+	SortField string
+	SortOrder int8 // 1=ascending | -1=descending
+
+	// Filter related.
+	TenantID   primitive.ObjectID
+	Status     int8
+	SearchText string
+}
+
+type NationalOccupationalClassificationListResult struct {
+	Results     []*NationalOccupationalClassification `json:"results"`
+	NextCursor  primitive.ObjectID                    `json:"next_cursor"`
+	HasNextPage bool                                  `json:"has_next_page"`
+}
+
+type NationalOccupationalClassificationAsSelectOption struct {
+	Value primitive.ObjectID `bson:"_id" json:"value"` // Extract from the database `_id` field and output through API as `value`.
+	Label string             `bson:"unit_group_title" json:"label"`
+}
 
 // NationalOccupationalClassificationStorer Interface for user.
 type NationalOccupationalClassificationStorer interface {
@@ -88,9 +88,11 @@ type NationalOccupationalClassificationStorer interface {
 	GetByCode(ctx context.Context, code uint) (*NationalOccupationalClassification, error)
 	// CheckIfExistsByEmail(ctx context.Context, email string) (bool, error)
 	UpdateByID(ctx context.Context, m *NationalOccupationalClassification) error
-	// ListByFilter(ctx context.Context, f *NationalOccupationalClassificationPaginationListFilter) (*NationalOccupationalClassificationPaginationListResult, error)
-	// ListAsSelectOptionByFilter(ctx context.Context, f *NationalOccupationalClassificationPaginationListFilter) ([]*NationalOccupationalClassificationAsSelectOption, error)
+	ListByFilter(ctx context.Context, f *NationalOccupationalClassificationPaginationListFilter) (*NationalOccupationalClassificationPaginationListResult, error)
+	ListAndCountByFilter(ctx context.Context, f *NationalOccupationalClassificationPaginationListFilter) (*NationalOccupationalClassificationPaginationListAndCountResult, error)
+	ListAsSelectOptionByFilter(ctx context.Context, f *NationalOccupationalClassificationPaginationListFilter) ([]*NationalOccupationalClassificationAsSelectOption, error)
 	// DeleteByID(ctx context.Context, id primitive.ObjectID) error
+	CountByFilter(ctx context.Context, f *NationalOccupationalClassificationPaginationListFilter) (int64, error)
 }
 
 type NationalOccupationalClassificationStorerImpl struct {
@@ -102,6 +104,16 @@ type NationalOccupationalClassificationStorerImpl struct {
 func NewDatastore(appCfg *c.Conf, loggerp *slog.Logger, client *mongo.Client) NationalOccupationalClassificationStorer {
 	// ctx := context.Background()
 	uc := client.Database(appCfg.DB.Name).Collection("nocs")
+
+	// // For debugging purposes only or if you are going to recreate new indexes.
+	// if _, err := uc.Indexes().DropAll(context.TODO()); err != nil {
+	// 	loggerp.Error("failed deleting all indexes",
+	// 		slog.Any("err", err))
+	//
+	// 	// It is important that we crash the app on startup to meet the
+	// 	// requirements of `google/wire` framework.
+	// 	log.Fatal(err)
+	// }
 
 	_, err := uc.Indexes().CreateMany(context.TODO(), []mongo.IndexModel{
 		{Keys: bson.D{{Key: "tenant_id", Value: 1}}},

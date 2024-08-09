@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
-	c "github.com/over55/monorepo/cloud/workery-cli/config"
+	c "github.com/over55/monorepo/cloud/workery-backend/config"
 )
 
 const (
@@ -77,7 +77,7 @@ type NorthAmericanIndustryClassificationSystemListResult struct {
 
 type NorthAmericanIndustryClassificationSystemAsSelectOption struct {
 	Value primitive.ObjectID `bson:"_id" json:"value"` // Extract from the database `_id` field and output through API as `value`.
-	Label string             `bson:"name" json:"label"`
+	Label string             `bson:"industry_title" json:"label"`
 }
 
 // NorthAmericanIndustryClassificationSystemStorer Interface for user.
@@ -92,8 +92,9 @@ type NorthAmericanIndustryClassificationSystemStorer interface {
 	// GetLatestByTenantID(ctx context.Context, tenantID primitive.ObjectID) (*NorthAmericanIndustryClassificationSystem, error)
 	// CheckIfExistsByEmail(ctx context.Context, email string) (bool, error)
 	UpdateByID(ctx context.Context, m *NorthAmericanIndustryClassificationSystem) error
-	// ListByFilter(ctx context.Context, f *NorthAmericanIndustryClassificationSystemPaginationListFilter) (*NorthAmericanIndustryClassificationSystemPaginationListResult, error)
-	// ListAsSelectOptionByFilter(ctx context.Context, f *NorthAmericanIndustryClassificationSystemPaginationListFilter) ([]*NorthAmericanIndustryClassificationSystemAsSelectOption, error)
+	ListByFilter(ctx context.Context, f *NorthAmericanIndustryClassificationSystemPaginationListFilter) (*NorthAmericanIndustryClassificationSystemPaginationListResult, error)
+	ListAndCountByFilter(ctx context.Context, f *NorthAmericanIndustryClassificationSystemPaginationListFilter) (*NorthAmericanIndustryClassificationSystemPaginationListAndCountResult, error)
+	ListAsSelectOptionByFilter(ctx context.Context, f *NorthAmericanIndustryClassificationSystemPaginationListFilter) ([]*NorthAmericanIndustryClassificationSystemAsSelectOption, error)
 	// DeleteByID(ctx context.Context, id primitive.ObjectID) error
 }
 
@@ -106,6 +107,16 @@ type NorthAmericanIndustryClassificationSystemStorerImpl struct {
 func NewDatastore(appCfg *c.Conf, loggerp *slog.Logger, client *mongo.Client) NorthAmericanIndustryClassificationSystemStorer {
 	// ctx := context.Background()
 	uc := client.Database(appCfg.DB.Name).Collection("naics")
+
+	// // For debugging purposes only or if you are going to recreate new indexes.
+	// if _, err := uc.Indexes().DropAll(context.TODO()); err != nil {
+	// 	loggerp.Error("failed deleting all indexes",
+	// 		slog.Any("err", err))
+	//
+	// 	// It is important that we crash the app on startup to meet the
+	// 	// requirements of `google/wire` framework.
+	// 	log.Fatal(err)
+	// }
 
 	_, err := uc.Indexes().CreateMany(context.TODO(), []mongo.IndexModel{
 		{Keys: bson.D{{Key: "tenant_id", Value: 1}}},

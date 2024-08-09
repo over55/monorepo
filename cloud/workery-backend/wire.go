@@ -42,6 +42,12 @@ import (
 	insurance_c "github.com/over55/monorepo/cloud/workery-backend/app/insurancerequirement/controller"
 	insurance_s "github.com/over55/monorepo/cloud/workery-backend/app/insurancerequirement/datastore"
 	insurance_http "github.com/over55/monorepo/cloud/workery-backend/app/insurancerequirement/httptransport"
+	naics_c "github.com/over55/monorepo/cloud/workery-backend/app/naics/controller"
+	naics_s "github.com/over55/monorepo/cloud/workery-backend/app/naics/datastore"
+	naics_http "github.com/over55/monorepo/cloud/workery-backend/app/naics/httptransport"
+	noc_c "github.com/over55/monorepo/cloud/workery-backend/app/noc/controller"
+	noc_s "github.com/over55/monorepo/cloud/workery-backend/app/noc/datastore"
+	noc_http "github.com/over55/monorepo/cloud/workery-backend/app/noc/httptransport"
 	order_c "github.com/over55/monorepo/cloud/workery-backend/app/order/controller"
 	order_s "github.com/over55/monorepo/cloud/workery-backend/app/order/datastore"
 	order_http "github.com/over55/monorepo/cloud/workery-backend/app/order/httptransport"
@@ -78,6 +84,7 @@ import (
 	"github.com/over55/monorepo/cloud/workery-backend/inputport/http"
 	"github.com/over55/monorepo/cloud/workery-backend/inputport/http/middleware"
 	tq "github.com/over55/monorepo/cloud/workery-backend/inputport/taskqueue"
+	"github.com/over55/monorepo/cloud/workery-backend/provider/blacklist"
 	"github.com/over55/monorepo/cloud/workery-backend/provider/jobseekerid"
 	"github.com/over55/monorepo/cloud/workery-backend/provider/jwt"
 	"github.com/over55/monorepo/cloud/workery-backend/provider/kmutex"
@@ -87,7 +94,6 @@ import (
 	"github.com/over55/monorepo/cloud/workery-backend/provider/taskqueue"
 	"github.com/over55/monorepo/cloud/workery-backend/provider/time"
 	"github.com/over55/monorepo/cloud/workery-backend/provider/uuid"
-	"github.com/over55/monorepo/cloud/workery-backend/provider/blacklist"
 )
 
 func InitializeEvent() Application {
@@ -119,6 +125,10 @@ func InitializeEvent() Application {
 		skillset_c.NewController,
 		vehicle_s.NewDatastore,
 		vehicle_c.NewController,
+		noc_s.NewDatastore,
+		noc_c.NewController,
+		naics_s.NewDatastore,
+		naics_c.NewController,
 		insurance_s.NewDatastore,
 		insurance_c.NewController,
 		howhear_s.NewDatastore,
@@ -157,6 +167,8 @@ func InitializeEvent() Application {
 		tag_http.NewHandler,
 		skillset_http.NewHandler,
 		vehicle_http.NewHandler,
+		noc_http.NewHandler,
+		naics_http.NewHandler,
 		report_http.NewHandler,
 		insurance_http.NewHandler,
 		howhear_http.NewHandler,

@@ -4,8 +4,6 @@ import (
 	"context"
 	"time"
 
-	"log/slog"
-
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -28,8 +26,8 @@ func (impl NationalOccupationalClassificationStorerImpl) ListByFilter(ctx contex
 		filter["status"] = f.Status
 	}
 
-	impl.Logger.Debug("listing filter:",
-		slog.Any("filter", filter))
+	// impl.Logger.Debug("listing filter:",
+	// 	slog.Any("filter", filter))
 
 	// Include additional filters for our cursor-based pagination pertaining to sorting and limit.
 	options, err := impl.newPaginationOptions(f)
