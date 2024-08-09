@@ -399,60 +399,86 @@ func NewDatastore(appCfg *c.Conf, loggerp *slog.Logger, client *mongo.Client) Or
 	// ctx := context.Background()
 	uc := client.Database(appCfg.DB.Name).Collection("orders")
 
-	// // For debugging purposes only.
-	// if _, err := uc.Indexes().DropAll(context.TODO()); err != nil {
-	// 	loggerp.Error("failed deleting all indexes",
-	// 		slog.Any("err", err))
-	//
-	// 	// It is important that we crash the app on startup to meet the
-	// 	// requirements of `google/wire` framework.
-	// 	log.Fatal(err)
-	// }
+	// For debugging purposes only or if you are going to create new index(es).
+	if _, err := uc.Indexes().DropAll(context.TODO()); err != nil {
+		loggerp.Error("failed deleting all indexes",
+			slog.Any("err", err))
+
+		// It is important that we crash the app on startup to meet the
+		// requirements of `google/wire` framework.
+		log.Fatal(err)
+	}
+
+	// Note:
+	// * 1 for ascending
+	// * -1 for descending
+	// * "text" for text indexes
 
 	_, err := uc.Indexes().CreateMany(context.TODO(), []mongo.IndexModel{
+		// 1. Composite Indexes for Filtering
 		{Keys: bson.D{{Key: "tenant_id", Value: 1}}},
-		{Keys: bson.D{{Key: "wjid", Value: -1}}},
-		{Keys: bson.D{{Key: "tenant_id_with_wjid", Value: 1}}},
-		{Keys: bson.D{{Key: "customer_id", Value: 1}}},
-		{Keys: bson.D{{Key: "associate_id", Value: 1}}},
-		{Keys: bson.D{{Key: "start_date", Value: 1}}},
-		{Keys: bson.D{{Key: "completion_date", Value: 1}}},
-		{Keys: bson.D{{Key: "assignment_date", Value: -1}}},
 		{Keys: bson.D{{Key: "status", Value: 1}}},
 		{Keys: bson.D{{Key: "type", Value: 1}}},
+		{Keys: bson.D{{Key: "associate_id", Value: 1}}},
+		{Keys: bson.D{{Key: "customer_id", Value: 1}}},
+		{Keys: bson.D{{Key: "modified_by_user_id", Value: -1}}},
+
+		// Composite Indexes for Filtering with Multiple Fields
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}}},
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "associate_id", Value: 1}}},
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "customer_id", Value: 1}}},
+
+		// 2. Indexes for Sorting
 		{Keys: bson.D{{Key: "customer_lexical_name", Value: 1}}},
 		{Keys: bson.D{{Key: "associate_lexical_name", Value: 1}}},
+		{Keys: bson.D{{Key: "assignment_date", Value: -1}}},
+		{Keys: bson.D{{Key: "start_date", Value: -1}}},
+		{Keys: bson.D{{Key: "created_at", Value: -1}}},
+		{Keys: bson.D{{Key: "modified_at", Value: -1}}},
+
+		// 3. Composite Indexes for Filtering with Multiple Fields and Sorting
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "customer_lexical_name", Value: 1}}},
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "associate_lexical_name", Value: 1}}},
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "assignment_date", Value: -1}}},
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "start_date", Value: -1}}},
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "created_at", Value: -1}}},
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "modified_at", Value: -1}}},
+
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "associate_id", Value: 1}, {Key: "customer_lexical_name", Value: 1}}},
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "associate_id", Value: 1}, {Key: "associate_lexical_name", Value: 1}}},
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "associate_id", Value: 1}, {Key: "assignment_date", Value: -1}}},
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "associate_id", Value: 1}, {Key: "start_date", Value: -1}}},
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "associate_id", Value: 1}, {Key: "created_at", Value: -1}}},
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "associate_id", Value: 1}, {Key: "modified_at", Value: -1}}},
+
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "customer_id", Value: 1}, {Key: "customer_lexical_name", Value: 1}}},
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "customer_id", Value: 1}, {Key: "associate_lexical_name", Value: 1}}},
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "customer_id", Value: 1}, {Key: "assignment_date", Value: -1}}},
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "customer_id", Value: 1}, {Key: "start_date", Value: -1}}},
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "customer_id", Value: 1}, {Key: "created_at", Value: -1}}},
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "customer_id", Value: 1}, {Key: "modified_at", Value: -1}}},
+
+		// 4. Compound Text Index for Text Search
 		{Keys: bson.D{
-			{"wjid", "text"},
-			{"customer_organization_name", "text"},
-			{"customer_name", "text"},
-			{"customer_lexical_name", "text"},
-			{"customer_email", "text"},
-			{"customer_phone", "text"},
-			{"customer_other_phone", "text"},
-			{"customer_full_address_without_postal_code", "text"},
-			{"customer_tags", "text"},
-			{"associate_organization_name", "text"},
-			{"associate_name", "text"},
-			{"associate_lexical_name", "text"},
-			{"associate_email", "text"},
-			{"associate_phone", "text"},
-			{"associate_other_phone", "text"},
-			{"associate_full_address_without_postal_code", "text"},
-			{"associate_tags", "text"},
-			{"associate_skill_sets", "text"},
-			{"associate_insurance_requirements", "text"},
-			{"associate_vehicle_types", "text"},
-			{"tenant_id_with_wjid", "text"},
-			{"description", "text"},
-			{"closing_reason_other", "text"},
-			{"invoice_service_fee_name", "text"},
-			{"invoice_service_fee_description", "text"},
-			{"latest_pending_task_description", "text"},
-			{"no_survey_conducted_reason_other", "text"},
-			{"tags", "text"},
-			{"skill_sets", "text"},
-			{"comments", "text"},
+			// Frontend Search  - filter by customer
+			{Key: "customer_organization_name", Value: "text"},
+			{Key: "customer_name", Value: "text"},
+			{Key: "customer_lexical_name", Value: "text"},
+			{Key: "customer_email", Value: "text"},
+			{Key: "customer_phone", Value: "text"},
+
+			// Frontend Search  - filter by associate
+			{Key: "associate_organization_name", Value: "text"},
+			{Key: "associate_name", Value: "text"},
+			{Key: "associate_lexical_name", Value: "text"},
+			{Key: "associate_email", Value: "text"},
+			{Key: "associate_phone", Value: "text"},
+
+			// Frontend Search - filter by order
+			{Key: "tenant_id_with_wjid", Value: "text"},
+
+			// ...
+			// You can add other fields here for text search if needed
 		}},
 	})
 	if err != nil {
