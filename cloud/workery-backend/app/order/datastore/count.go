@@ -82,6 +82,15 @@ func (impl OrderStorerImpl) CountByFilter(ctx context.Context, f *OrderPaginatio
 	if len(f.Statuses) > 0 {
 		filter["status"] = bson.M{"$in": f.Statuses}
 	}
+	if f.OrderWJID != "" {
+		// NOTE: This is how you find the exact.
+		// wjidInt, err := strconv.ParseUint(f.OrderWJID, 10, 64)
+		// if err == nil {
+		// 	filter["wjid"] = bson.M{"$eq": wjidInt}
+		// }
+
+		filter["tenant_id_with_wjid"] = bson.M{"$regex": primitive.Regex{Pattern: f.OrderWJID, Options: "i"}}
+	}
 
 	// Create a slice to store conditions
 	var conditions []bson.M

@@ -70,7 +70,7 @@ func runHotfix06(
 
 	// Define a transaction function with a series of operations
 	transactionFunc := func(sessCtx mongo.SessionContext) (interface{}, error) {
-		log.Println("fetching all associates...")
+		log.Println("fetching all orders...")
 		oo, err := oStorer.ListAll(context.Background())
 		if err != nil {
 			log.Println("error:", err)
