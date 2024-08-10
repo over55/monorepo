@@ -120,27 +120,22 @@ func NewDatastore(appCfg *c.Conf, loggerp *slog.Logger, client *mongo.Client) Na
 		{Keys: bson.D{{Key: "public_id", Value: -1}}},
 		{Keys: bson.D{{Key: "status", Value: 1}}},
 		{Keys: bson.D{
-			{"broad_category_code_str", "text"},
-			{"broad_category_title", "text"},
-			{"broad_category_description", "text"},
-
-			{"major_group_code_str", "text"},
-			{"major_group_title", "text"},
-			{"major_group_description", "text"},
-
-			{"sub_minor_group_code_str", "text"},
-			{"sub_minor_group_title", "text"},
-			{"sub_minor_group_description", "text"},
-
-			{"minor_group_code_str", "text"},
-			{"minor_group_title", "text"},
-			{"minor_group_description", "text"},
-
-			{"unit_group_code_str", "text"},
-			{"unit_group_title", "text"},
-			{"unit_group_description", "text"},
-
-			{"elements", "text"},
+			{Key: "broad_category_code_str", Value: "text"},
+			{Key: "broad_category_title", Value: "text"},
+			{Key: "broad_category_description", Value: "text"},
+			{Key: "major_group_code_str", Value: "text"},
+			{Key: "major_group_title", Value: "text"},
+			{Key: "major_group_description", Value: "text"},
+			{Key: "sub_minor_group_code_str", Value: "text"},
+			{Key: "sub_minor_group_title", Value: "text"},
+			{Key: "sub_minor_group_description", Value: "text"},
+			{Key: "minor_group_code_str", Value: "text"},
+			{Key: "minor_group_title", Value: "text"},
+			{Key: "minor_group_description", Value: "text"},
+			{Key: "unit_group_code_str", Value: "text"},
+			{Key: "unit_group_title", Value: "text"},
+			{Key: "unit_group_description", Value: "text"},
+			{Key: "elements", Value: "text"},
 		}},
 	})
 	if err != nil {
