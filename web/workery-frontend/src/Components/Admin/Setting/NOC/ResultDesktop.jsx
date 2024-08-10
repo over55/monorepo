@@ -44,7 +44,8 @@ function AdminSettingNOCSearchResultDesktop(props) {
     previousCursors,
     onPreviousClicked,
     onNextClicked,
-    onSelectOrderForDeletion,
+    showDetailModalForID,
+    setShowDetailModalForID,
   } = props;
   return (
     <div className="b-table">
@@ -52,14 +53,8 @@ function AdminSettingNOCSearchResultDesktop(props) {
         <table className="is-fullwidth is-striped is-hoverable is-fullwidth table">
           <thead>
             <tr>
-              <th></th>
-              <th>Job #</th>
-              <th>Client</th>
-              <th>Associate</th>
-              <th>Assigned Date</th>
-              <th>Start Date</th>
-              <th>Status</th>
-              <th>Financials</th>
+              <th>Code</th>
+              <th>Unit Group Title</th>
               <th></th>
             </tr>
           </thead>
@@ -72,46 +67,14 @@ function AdminSettingNOCSearchResultDesktop(props) {
                     className="is-size-7-tablet"
                     key={`${datum.wjid}-desktop`}
                   >
-                    <td>
-                      <OrderTypeOfIconFormatter type={datum.type} />
-                    </td>
-                    <td data-label="Job #">{datum.wjid}</td>
-                    <td data-label="Client">
-                      <URLTextFormatter
-                        urlKey={datum.customerName}
-                        urlValue={`/admin/client/${datum.customerId}`}
-                        type={`external`}
-                      />
-                    </td>
-                    <td data-label="Associate">
-                      <URLTextFormatter
-                        urlKey={datum.associateName}
-                        urlValue={`/admin/associate/${datum.associateId}`}
-                        type={`external`}
-                      />
-                    </td>
-                    <td data-label="Assigned Date">
-                      <DateTextFormatter value={datum.assignmentDate} />
-                    </td>
-                    <td data-label="Start Date">
-                      <DateTextFormatter value={datum.startDate} />
-                    </td>
-                    <td data-label="Status">
-                      <OrderStatusFormatter value={datum.status} />
-                    </td>
-                    <td className="is-actions-cell">
-                      <div className="buttons is-right">
-                        <URLTextFormatter
-                          urlKey={`View Financials`}
-                          urlValue={`/admin/financial/${datum.wjid}`}
-                          type={`external`}
-                        />
-                      </div>
-                    </td>
+                    <td data-label="Code">{datum.code}</td>
+                    <td data-label="Unit Group Title">{datum.unitGroupTitle}</td>
                     <td className="is-actions-cell">
                       <div className="buttons is-right">
                         <Link
-                          to={`/admin/order/${datum.wjid}`}
+                          onClick={(id) => {
+                              setShowDetailModalForID(datum.id);
+                          }}
                           className="is-small"
                         >
                           View Detail&nbsp;

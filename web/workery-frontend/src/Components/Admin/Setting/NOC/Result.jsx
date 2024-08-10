@@ -46,6 +46,7 @@ import {
 import { DEFAULT_NOC_LIST_SORT_BY_VALUE } from "../../../../Constants/App";
 import AdminSettingNOCSearchResultDesktop from "./ResultDesktop";
 import AdminSettingNOCSearchResultMobile from "./ResultMobile";
+import NationalOccupationalClassificationDetailModal from "./ModalDetail";
 
 
 function AdminSettingNOCSearchResult() {
@@ -83,6 +84,7 @@ function AdminSettingNOCSearchResult() {
   const [currentCursor, setCurrentCursor] = useState(""); // Pagination
   const [showFilter, setShowFilter] = useState(false); // Filtering + Searching
   const [createdAtGTE, setCreatedAtGTE] = useState(null); // Filtering
+  const [showDetailModalForID, setShowDetailModalForID] = useState("")
 
   ////
   //// API.
@@ -111,61 +113,6 @@ function AdminSettingNOCSearchResult() {
 
   function onNOCListDone() {
     console.log("onNOCListDone: Starting...");
-    setFetching(false);
-  }
-
-  function onNOCDeleteSuccess(response) {
-    console.log("onNOCDeleteSuccess: Starting..."); // For debugging purposes only.
-
-    // Update notification.
-    setTopAlertStatus("success");
-    setTopAlertMessage("NOC deleted");
-    setTimeout(() => {
-      console.log(
-        "onDeleteConfirmButtonClick: topAlertMessage, topAlertStatus:",
-        topAlertMessage,
-        topAlertStatus,
-      );
-      setTopAlertMessage("");
-    }, 2000);
-
-    // Fetch again an updated list.
-    fetchList(
-      currentCursor,
-      pageSize,
-      actualSearchText,
-      sortByValue,
-      status,
-      type,
-      unitGroupTitle
-    );
-  }
-
-  function onNOCDeleteError(apiErr) {
-    console.log("onNOCDeleteError: Starting..."); // For debugging purposes only.
-    setErrors(apiErr);
-
-    // Update notification.
-    setTopAlertStatus("danger");
-    setTopAlertMessage("Failed deleting");
-    setTimeout(() => {
-      console.log(
-        "onNOCDeleteError: topAlertMessage, topAlertStatus:",
-        topAlertMessage,
-        topAlertStatus,
-      );
-      setTopAlertMessage("");
-    }, 2000);
-
-    // The following code will cause the screen to scroll to the top of
-    // the page. Please see ``react-scroll`` for more information:
-    // https://github.com/fisshy/react-scroll
-    var scroll = Scroll.animateScroll;
-    scroll.scrollToTop();
-  }
-
-  function onNOCDeleteDone() {
-    console.log("onNOCDeleteDone: Starting...");
     setFetching(false);
   }
 
@@ -368,40 +315,11 @@ function AdminSettingNOCSearchResult() {
           <hr />
 
           {/* Page Modal(s) */}
-          {/*
-          <div
-            className={`modal ${selectedNOCForDeletion ? "is-active" : ""}`}
-          >
-            <div className="modal-background"></div>
-            <div className="modal-card">
-              <header className="modal-card-head">
-                <p className="modal-card-title">Are you sure?</p>
-                <button
-                  className="delete"
-                  aria-label="close"
-                  onClick={onDeselectNOCForDeletion}
-                ></button>
-              </header>
-              <section className="modal-card-body">
-                You are about to <b>archive</b> this user; it will no longer
-                appear on your dashboard This action can be undone but you'll
-                need to contact the system administrator. Are you sure you would
-                like to continue?
-              </section>
-              <footer className="modal-card-foot">
-                <button
-                  className="button is-success"
-                  onClick={onDeleteConfirmButtonClick}
-                >
-                  Confirm
-                </button>
-                <button className="button" onClick={onDeselectNOCForDeletion}>
-                  Cancel
-                </button>
-              </footer>
-            </div>
-          </div>
-          */}
+          <NationalOccupationalClassificationDetailModal
+            currentUser={currentUser}
+            showDetailModalForID={showDetailModalForID}
+            setShowDetailModalForID={setShowDetailModalForID}
+          />
 
           {/* Page Table */}
           <nav className="box" style={{ borderRadius: "20px" }}>
@@ -496,6 +414,8 @@ function AdminSettingNOCSearchResult() {
                     <div className="is-hidden-touch">
                       <AdminSettingNOCSearchResultDesktop
                         listData={users}
+                        showDetailModalForID={showDetailModalForID}
+                        setShowDetailModalForID={setShowDetailModalForID}
                         setPageSize={setPageSize}
                         pageSize={pageSize}
                         previousCursors={previousCursors}
@@ -512,6 +432,8 @@ function AdminSettingNOCSearchResult() {
                     <div className="is-fullwidth is-hidden-desktop">
                       <AdminSettingNOCSearchResultMobile
                         listData={users}
+                        showDetailModalForID={showDetailModalForID}
+                        setShowDetailModalForID={setShowDetailModalForID}
                         setPageSize={setPageSize}
                         pageSize={pageSize}
                         previousCursors={previousCursors}
