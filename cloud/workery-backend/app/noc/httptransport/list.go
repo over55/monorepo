@@ -64,6 +64,11 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	unitGroupTitle := query.Get("ugt")
+	if unitGroupTitle != "" {
+		f.UnitGroupTitle = unitGroupTitle
+	}
+
 	list, err := h.Controller.ListAndCountByFilter(ctx, f)
 	if err != nil {
 		httperror.ResponseError(w, err)

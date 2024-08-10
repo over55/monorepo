@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func (impl NationalOccupationalClassificationStorerImpl) ListByFilter(ctx context.Context, f *NationalOccupationalClassificationPaginationListFilter) (*NationalOccupationalClassificationPaginationListResult, error) {
@@ -24,6 +25,10 @@ func (impl NationalOccupationalClassificationStorerImpl) ListByFilter(ctx contex
 
 	if f.Status != 0 {
 		filter["status"] = f.Status
+	}
+
+	if f.UnitGroupTitle != "" {
+		filter["unit_group_title"] = bson.M{"$regex": primitive.Regex{Pattern: f.UnitGroupTitle, Options: "i"}}
 	}
 
 	// impl.Logger.Debug("listing filter:",

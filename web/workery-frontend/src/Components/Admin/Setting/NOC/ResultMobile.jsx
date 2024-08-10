@@ -62,7 +62,8 @@ function AdminSettingNOCSearchResultMobile(props) {
               <br />
               <br />
               <Link
-                onClick={(id) => {
+                onClick={(e) => {
+                  e.preventDefault(); // Prevent the default link behavior
                   setShowDetailModalForID(datum.id);
                 }}
                 className="button is-primary is-fullwidth-mobile"

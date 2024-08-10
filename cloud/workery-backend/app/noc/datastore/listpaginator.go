@@ -24,9 +24,10 @@ type NationalOccupationalClassificationPaginationListFilter struct {
 	SortOrder int8 // 1=ascending | -1=descending
 
 	// Filter related.
-	TenantID   primitive.ObjectID
-	Status     int8
-	SearchText string
+	TenantID       primitive.ObjectID
+	Status         int8
+	SearchText     string
+	UnitGroupTitle string
 }
 
 // NationalOccupationalClassificationPaginationListResult represents the paginated list results for

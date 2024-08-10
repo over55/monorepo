@@ -357,6 +357,7 @@ function AdminSettingNOCSearchResult() {
               </div>
 
               <div className="columns">
+                {/*
                 <div className="column">
                   <FormSelectField
                     label="Status"
@@ -381,6 +382,7 @@ function AdminSettingNOCSearchResult() {
                     isRequired={true}
                   />
                 </div>
+                */}
                 <div className="column">
                   <FormSelectField
                     label="Sort by"
@@ -461,7 +463,7 @@ function AdminSettingNOCSearchResult() {
               <div className="column is-half">
                 <Link
                   className="button is-fullwidth-mobile"
-                  to={`/admin/orders/search`}
+                  to={`/admin/settings/noc/search`}
                 >
                   <FontAwesomeIcon className="fas" icon={faArrowLeft} />
                   &nbsp;Back to Search

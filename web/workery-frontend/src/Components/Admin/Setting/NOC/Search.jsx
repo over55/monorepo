@@ -85,7 +85,7 @@ function AdminSettingNOCSearch() {
       scroll.scrollToTop();
       return;
     }
-    let aURL = "/admin/settings/noc/search-result?cfn=" +
+    let aURL = "/admin/settings/noc/search-result" +
       "?q=" +
       actualSearchText +
       "&ugt=" +

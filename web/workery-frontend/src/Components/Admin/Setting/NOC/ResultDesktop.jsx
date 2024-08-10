@@ -72,8 +72,9 @@ function AdminSettingNOCSearchResultDesktop(props) {
                     <td className="is-actions-cell">
                       <div className="buttons is-right">
                         <Link
-                          onClick={(id) => {
-                              setShowDetailModalForID(datum.id);
+                          onClick={(e) => {
+                            e.preventDefault(); // Prevent the default link behavior
+                            setShowDetailModalForID(datum.id);
                           }}
                           className="is-small"
                         >

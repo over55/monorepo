@@ -105,26 +105,42 @@ func NewDatastore(appCfg *c.Conf, loggerp *slog.Logger, client *mongo.Client) Na
 	// ctx := context.Background()
 	uc := client.Database(appCfg.DB.Name).Collection("nocs")
 
-	// // For debugging purposes only or if you are going to recreate new indexes.
-	// if _, err := uc.Indexes().DropAll(context.TODO()); err != nil {
-	// 	loggerp.Error("failed deleting all indexes",
-	// 		slog.Any("err", err))
-	//
-	// 	// It is important that we crash the app on startup to meet the
-	// 	// requirements of `google/wire` framework.
-	// 	log.Fatal(err)
-	// }
+	// For debugging purposes only or if you are going to recreate new indexes.
+	if _, err := uc.Indexes().DropAll(context.TODO()); err != nil {
+		loggerp.Error("failed deleting all indexes",
+			slog.Any("err", err))
+
+		// It is important that we crash the app on startup to meet the
+		// requirements of `google/wire` framework.
+		log.Fatal(err)
+	}
 
 	_, err := uc.Indexes().CreateMany(context.TODO(), []mongo.IndexModel{
 		{Keys: bson.D{{Key: "tenant_id", Value: 1}}},
 		{Keys: bson.D{{Key: "public_id", Value: -1}}},
 		{Keys: bson.D{{Key: "status", Value: 1}}},
 		{Keys: bson.D{
+			{"broad_category_code_str", "text"},
 			{"broad_category_title", "text"},
+			{"broad_category_description", "text"},
+
+			{"major_group_code_str", "text"},
 			{"major_group_title", "text"},
+			{"major_group_description", "text"},
+
+			{"sub_minor_group_code_str", "text"},
 			{"sub_minor_group_title", "text"},
+			{"sub_minor_group_description", "text"},
+
+			{"minor_group_code_str", "text"},
 			{"minor_group_title", "text"},
+			{"minor_group_description", "text"},
+
+			{"unit_group_code_str", "text"},
 			{"unit_group_title", "text"},
+			{"unit_group_description", "text"},
+
+			{"elements", "text"},
 		}},
 	})
 	if err != nil {

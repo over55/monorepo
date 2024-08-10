@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -41,6 +42,10 @@ func (impl NationalOccupationalClassificationStorerImpl) ListAsSelectOptionByFil
 
 	if f.Status != 0 {
 		query["status"] = f.Status
+	}
+
+	if f.UnitGroupTitle != "" {
+		query["unit_group_title"] = bson.M{"$regex": primitive.Regex{Pattern: f.UnitGroupTitle, Options: "i"}}
 	}
 
 	// Full-text search
