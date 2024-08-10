@@ -55,8 +55,6 @@ func (impl NationalOccupationalClassificationStorerImpl) ListAsSelectOptionByFil
 	// Full-text search
 	if f.SearchText != "" {
 		query["$text"] = bson.M{"$search": f.SearchText}
-		options.SetProjection(bson.M{"score": bson.M{"$meta": "textScore"}})
-		options.SetSort(bson.D{{"score", bson.M{"$meta": "textScore"}}})
 	}
 
 	options.SetSort(bson.D{{f.SortField, 1}}) // Sort in ascending order based on the specified field

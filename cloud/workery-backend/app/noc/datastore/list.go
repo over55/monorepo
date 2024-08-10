@@ -47,8 +47,6 @@ func (impl NationalOccupationalClassificationStorerImpl) ListByFilter(ctx contex
 	// Include Full-text search
 	if f.SearchText != "" {
 		filter["$text"] = bson.M{"$search": f.SearchText}
-		options.SetProjection(bson.M{"score": bson.M{"$meta": "textScore"}})
-		options.SetSort(bson.D{{"score", bson.M{"$meta": "textScore"}}})
 	}
 
 	// Execute the query

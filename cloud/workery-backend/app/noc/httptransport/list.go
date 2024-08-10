@@ -42,13 +42,12 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		f.SortField = sortField
 	}
 
-	sortOrderStr := query.Get("sort_order")
-	if sortOrderStr != "" {
-		sortOrder, _ := strconv.ParseInt(sortOrderStr, 10, 64)
-		if sortOrder != 1 && sortOrder != -1 {
-			sortOrder = 1
-		}
-		f.SortOrder = int8(sortOrder)
+	sortOrder := query.Get("sort_order")
+	if sortOrder == "ASC" {
+		f.SortOrder = noc_s.OrderAscending
+	}
+	if sortOrder == "DESC" {
+		f.SortOrder = noc_s.OrderDescending
 	}
 
 	searchKeyword := query.Get("search")

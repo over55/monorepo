@@ -17,15 +17,14 @@ func (c *NationalOccupationalClassificationControllerImpl) ListAndCountByFilter(
 	// Apply filtering based on ownership and role.
 	f.TenantID = tenantID // Manditory
 
-	// For debugging purposes only.
+	// // For debugging purposes only.
 	// c.Logger.Debug("listing using filter options:",
 	// 	slog.Any("Cursor", f.Cursor),
 	// 	slog.Int64("PageSize", f.PageSize),
 	// 	slog.String("SortField", f.SortField),
-	// 	// slog.Int("SortOrder", int(f.SortOrder)),
-	// 	// slog.Any("TenantID", f.TenantID),
-	// 	// slog.Any("Type", f.Type),
-	// 	// slog.Any("Status", f.Status),
+	// 	slog.Int("SortOrder", int(f.SortOrder)),
+	// 	slog.Any("TenantID", f.TenantID),
+	// 	slog.Any("Status", f.Status),
 	// 	// slog.Bool("ExcludeArchived", f.ExcludeArchived),
 	// 	// slog.String("SearchText", f.SearchText),
 	// 	// slog.Any("FirstName", f.FirstName),
