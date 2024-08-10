@@ -27,6 +27,7 @@ type NationalOccupationalClassificationPaginationListFilter struct {
 	TenantID       primitive.ObjectID
 	Status         int8
 	SearchText     string
+	CodeStr        string
 	UnitGroupTitle string
 }
 

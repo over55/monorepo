@@ -63,6 +63,7 @@ function AdminSettingNOCSearch() {
   const [filterByAssociate, setFilterByAssociate] = useState(false);
   const [showCancelWarning, setShowCancelWarning] = useState(false);
   const [isAdvancedFiltering, setIsAdvancedFiltering] = useState(false);
+  const [code, setCode] = useState("");
   const [unitGroupTitle, setUnitGroupTitle] = useState("");
 
   ////
@@ -73,6 +74,7 @@ function AdminSettingNOCSearch() {
     console.log("onSubmitClick: Beginning...");
     if (
       actualSearchText === "" &&
+      code === "" &&
       unitGroupTitle === ""
     ) {
       setErrors({
@@ -88,6 +90,8 @@ function AdminSettingNOCSearch() {
     let aURL = "/admin/settings/noc/search-result" +
       "?q=" +
       actualSearchText +
+      "&c=" +
+      code +
       "&ugt=" +
       unitGroupTitle;
     setForceURL(aURL);
@@ -225,6 +229,17 @@ function AdminSettingNOCSearch() {
                           <FontAwesomeIcon className="fas" icon={faFilter} />
                           &nbsp;Advanced Search
                         </p>
+                        <FormInputField
+                          label={<u>Code</u>}
+                          name="code"
+                          placeholder="Search all codes"
+                          value={code}
+                          errorText={errors && errors.code}
+                          helpText=""
+                          onChange={(e) => setCode(e.target.value)}
+                          isRequired={true}
+                          maxWidth="380px"
+                        />
 
                         <FormInputField
                           label={<u>Unit Group Title</u>}

@@ -27,6 +27,10 @@ func (impl NationalOccupationalClassificationStorerImpl) ListByFilter(ctx contex
 		filter["status"] = f.Status
 	}
 
+	if f.CodeStr != "" {
+		filter["code_str"] = bson.M{"$regex": primitive.Regex{Pattern: f.CodeStr, Options: "i"}}
+	}
+
 	if f.UnitGroupTitle != "" {
 		filter["unit_group_title"] = bson.M{"$regex": primitive.Regex{Pattern: f.UnitGroupTitle, Options: "i"}}
 	}

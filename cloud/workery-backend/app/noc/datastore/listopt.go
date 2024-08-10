@@ -44,6 +44,10 @@ func (impl NationalOccupationalClassificationStorerImpl) ListAsSelectOptionByFil
 		query["status"] = f.Status
 	}
 
+	if f.CodeStr != "" {
+		query["code_str"] = bson.M{"$regex": primitive.Regex{Pattern: f.CodeStr, Options: "i"}}
+	}
+
 	if f.UnitGroupTitle != "" {
 		query["unit_group_title"] = bson.M{"$regex": primitive.Regex{Pattern: f.UnitGroupTitle, Options: "i"}}
 	}

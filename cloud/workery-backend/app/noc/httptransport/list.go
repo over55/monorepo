@@ -64,6 +64,11 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	code := query.Get("code")
+	if code != "" {
+		f.CodeStr = code
+	}
+
 	unitGroupTitle := query.Get("ugt")
 	if unitGroupTitle != "" {
 		f.UnitGroupTitle = unitGroupTitle

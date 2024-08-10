@@ -56,6 +56,7 @@ function AdminSettingNOCSearchResult() {
 
   const [searchParams] = useSearchParams(); // Special thanks via https://stackoverflow.com/a/65451140
   const actualSearchText = searchParams.get("q");
+  const code = searchParams.get("c");
   const unitGroupTitle = searchParams.get("ugt");
 
   ////
@@ -138,6 +139,7 @@ function AdminSettingNOCSearchResult() {
     so,
     s,
     t,
+    c,
     ugt
   ) => {
     setFetching(true);
@@ -169,6 +171,9 @@ function AdminSettingNOCSearchResult() {
     }
     if (t !== undefined && t !== null && t !== "") {
       params.set("type", t);
+    }
+    if (c !== undefined && c !== null && c !== "") {
+      params.set("code", c);
     }
     if (ugt !== undefined && ugt !== null && ugt !== "") {
       params.set("ugt", ugt);
@@ -211,6 +216,7 @@ function AdminSettingNOCSearchResult() {
         sortByValue,
         status,
         type,
+        code,
         unitGroupTitle
       );
 
@@ -232,6 +238,7 @@ function AdminSettingNOCSearchResult() {
     sortByValue,
     status,
     type,
+    code,
     unitGroupTitle
   ]);
 
