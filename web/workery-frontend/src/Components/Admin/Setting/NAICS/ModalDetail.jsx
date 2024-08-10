@@ -18,7 +18,7 @@ import {
   topAlertMessageState,
   topAlertStatusState,
 } from "../../../../AppState";
-import { getNationalOccupationalClassificationDetailAPI } from "../../../../API/NOC";
+import { getNorthAmericaIndustryClassificationSystemDetailAPI } from "../../../../API/NAICS";
 import DateTimeTextFormatter from "../../../Reusable/EveryPage/DateTimeTextFormatter";
 import FormErrorBox from "../../../Reusable/FormErrorBox";
 
@@ -102,13 +102,13 @@ function NationalOccupationalClassificationDetailModal({
 
   // --- Detail --- //
 
-  function onNOCDetailSuccess(response) {
-    console.log("onNOCDetailSuccess: Starting...");
+  function onNAICSDetailSuccess(response) {
+    console.log("onNAICSDetailSuccess: Starting...");
     setDatum(response);
   }
 
-  function onNOCDetailError(apiErr) {
-    console.log("onNOCDetailError: Starting...");
+  function onNAICSDetailError(apiErr) {
+    console.log("onNAICSDetailError: Starting...");
     setErrors(apiErr);
 
     // The following code will cause the screen to scroll to the top of
@@ -118,8 +118,8 @@ function NationalOccupationalClassificationDetailModal({
     scroll.scrollToTop();
   }
 
-  function onNOCDetailDone() {
-    console.log("onNOCDetailDone: Starting...");
+  function onNAICSDetailDone() {
+    console.log("onNAICSDetailDone: Starting...");
     setFetching(false);
   }
 
@@ -147,11 +147,11 @@ function NationalOccupationalClassificationDetailModal({
       ) {
         setFetching(true);
         setErrors({});
-        getNationalOccupationalClassificationDetailAPI(
+        getNorthAmericaIndustryClassificationSystemDetailAPI(
           showDetailModalForID,
-          onNOCDetailSuccess,
-          onNOCDetailError,
-          onNOCDetailDone,
+          onNAICSDetailSuccess,
+          onNAICSDetailError,
+          onNAICSDetailDone,
           onUnauthorized,
         );
       }
@@ -176,7 +176,7 @@ function NationalOccupationalClassificationDetailModal({
           <header class="modal-card-head">
             <p class="modal-card-title">
               <FontAwesomeIcon className="mdi" icon={faCircleInfo} />
-              &nbsp;National Occupational Classification Detail
+              &nbsp;North American Industry Classification System Detail
             </p>
             <button
               class="delete"
@@ -203,11 +203,12 @@ function NationalOccupationalClassificationDetailModal({
                 <FormErrorBox errors={errors} />
                 {datum !== undefined && datum !== null && datum !== "" && (
                   <>
+                    {/* ---------------------------------------------------- */}
                     <table className="is-fullwidth table">
                       <thead>
                         <tr className="has-background-black">
                           <th className="has-text-white">
-                            Unit Group
+                            Industry
                           </th>
                           <th className="has-text-white">
 
@@ -231,7 +232,7 @@ function NationalOccupationalClassificationDetailModal({
                           >
                             Title:
                           </th>
-                          <td>{datum.unitGroupTitle}</td>
+                          <td>{datum.industryTitle}</td>
                         </tr>
                         <tr>
                           <th
@@ -240,9 +241,51 @@ function NationalOccupationalClassificationDetailModal({
                           >
                             Description:
                           </th>
-                          <td>{datum.unitGroupDescription}</td>
+                          <td>{datum.industryDescription}</td>
                         </tr>
 
+                      </tbody>
+                    </table>
+                    {/* ---------------------------------------------------- */}
+                    <table className="is-fullwidth table">
+                      <thead>
+                        <tr className="has-background-black">
+                          <th className="has-text-white">
+                            (Canadian) Industry
+                          </th>
+                          <th className="has-text-white">
+
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <th
+                            className="has-background-light"
+                            style={{ width: "30%" }}
+                          >
+                            Code:
+                          </th>
+                          <td>{datum.canadianIndustryCode}</td>
+                        </tr>
+                        <tr>
+                          <th
+                            className="has-background-light"
+                            style={{ width: "30%" }}
+                          >
+                            Title:
+                          </th>
+                          <td>{datum.canadianIndustryTitle}</td>
+                        </tr>
+                        <tr>
+                          <th
+                            className="has-background-light"
+                            style={{ width: "30%" }}
+                          >
+                            Description:
+                          </th>
+                          <td>{datum.canadianIndustryDescription}</td>
+                        </tr>
                       </tbody>
                     </table>
                     {/* ---------------------------------------------------- */}
@@ -266,7 +309,7 @@ function NationalOccupationalClassificationDetailModal({
                       <thead>
                         <tr className="has-background-black">
                           <th className="has-text-white">
-                            Broad Category
+                            Sector
                           </th>
                           <th className="has-text-white">
 
@@ -281,7 +324,7 @@ function NationalOccupationalClassificationDetailModal({
                           >
                             Code:
                           </th>
-                          <td>{datum.broadCategoryCode}</td>
+                          <td>{datum.sectorCode}</td>
                         </tr>
                         <tr>
                           <th
@@ -290,7 +333,7 @@ function NationalOccupationalClassificationDetailModal({
                           >
                             Title:
                           </th>
-                          <td>{datum.broadCategoryTitle}</td>
+                          <td>{datum.sectorTitle}</td>
                         </tr>
                         <tr>
                           <th
@@ -299,7 +342,7 @@ function NationalOccupationalClassificationDetailModal({
                           >
                             Description:
                           </th>
-                          <td>{datum.broadCategoryDescription}</td>
+                          <td>{datum.sectorDescription}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -308,7 +351,7 @@ function NationalOccupationalClassificationDetailModal({
                       <thead>
                         <tr className="has-background-black">
                           <th className="has-text-white">
-                            Major Group
+                            Subsector
                           </th>
                           <th className="has-text-white">
 
@@ -323,7 +366,7 @@ function NationalOccupationalClassificationDetailModal({
                           >
                             Code:
                           </th>
-                          <td>{datum.majorGroupCode}</td>
+                          <td>{datum.subsectorCode}</td>
                         </tr>
                         <tr>
                           <th
@@ -332,7 +375,7 @@ function NationalOccupationalClassificationDetailModal({
                           >
                             Title:
                           </th>
-                          <td>{datum.majorGroupTitle}</td>
+                          <td>{datum.subsectorTitle}</td>
                         </tr>
                         <tr>
                           <th
@@ -341,7 +384,7 @@ function NationalOccupationalClassificationDetailModal({
                           >
                             Description:
                           </th>
-                          <td>{datum.majorGroupDescription}</td>
+                          <td>{datum.subsectorDescription}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -350,7 +393,7 @@ function NationalOccupationalClassificationDetailModal({
                       <thead>
                         <tr className="has-background-black">
                           <th className="has-text-white">
-                            Sub-Minor Group
+                            Industry Group
                           </th>
                           <th className="has-text-white">
 
@@ -365,7 +408,7 @@ function NationalOccupationalClassificationDetailModal({
                           >
                             Code:
                           </th>
-                          <td>{datum.subMinorGroupCode}</td>
+                          <td>{datum.industryGroupCode}</td>
                         </tr>
                         <tr>
                           <th
@@ -374,7 +417,7 @@ function NationalOccupationalClassificationDetailModal({
                           >
                             Title:
                           </th>
-                          <td>{datum.subMinorGroupTitle}</td>
+                          <td>{datum.industryGroupTitle}</td>
                         </tr>
                         <tr>
                           <th
@@ -383,49 +426,7 @@ function NationalOccupationalClassificationDetailModal({
                           >
                             Description:
                           </th>
-                          <td>{datum.subMinorGroupDescription}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                    {/* ---------------------------------------------------- */}
-                    <table className="is-fullwidth table">
-                      <thead>
-                        <tr className="has-background-black">
-                          <th className="has-text-white">
-                            Minor Group
-                          </th>
-                          <th className="has-text-white">
-
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <th
-                            className="has-background-light"
-                            style={{ width: "30%" }}
-                          >
-                            Code:
-                          </th>
-                          <td>{datum.minorGroupCode}</td>
-                        </tr>
-                        <tr>
-                          <th
-                            className="has-background-light"
-                            style={{ width: "30%" }}
-                          >
-                            Title:
-                          </th>
-                          <td>{datum.minorGroupTitle}</td>
-                        </tr>
-                        <tr>
-                          <th
-                            className="has-background-light"
-                            style={{ width: "30%" }}
-                          >
-                            Description:
-                          </th>
-                          <td>{datum.minorGroupDescription}</td>
+                          <td>{datum.industryGroupDescription}</td>
                         </tr>
                       </tbody>
                     </table>

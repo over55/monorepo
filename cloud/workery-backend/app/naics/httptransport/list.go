@@ -42,13 +42,12 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		f.SortField = sortField
 	}
 
-	sortOrderStr := query.Get("sort_order")
-	if sortOrderStr != "" {
-		sortOrder, _ := strconv.ParseInt(sortOrderStr, 10, 64)
-		if sortOrder != 1 && sortOrder != -1 {
-			sortOrder = 1
-		}
-		f.SortOrder = int8(sortOrder)
+	sortOrder := query.Get("sort_order")
+	if sortOrder == "ASC" {
+		f.SortOrder = naics_s.OrderAscending
+	}
+	if sortOrder == "DESC" {
+		f.SortOrder = naics_s.OrderDescending
 	}
 
 	searchKeyword := query.Get("search")
@@ -62,6 +61,16 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		if status > 0 {
 			f.Status = int8(status)
 		}
+	}
+
+	code := query.Get("code")
+	if code != "" {
+		f.CodeStr = code
+	}
+
+	industryTitle := query.Get("it")
+	if industryTitle != "" {
+		f.IndustryTitle = industryTitle
 	}
 
 	list, err := h.Controller.ListAndCountByFilter(ctx, f)

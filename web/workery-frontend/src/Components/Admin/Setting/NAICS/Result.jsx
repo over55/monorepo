@@ -5,7 +5,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faFilterCircleXmark,
   faArrowLeft,
-  faWrench,
   faTachometer,
   faCircleInfo,
   faPencil,
@@ -18,10 +17,12 @@ import {
   faRefresh,
   faFilter,
   faSearch,
+  faCogs,
+  faUniversity
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 
-import { getOrderListAPI, deleteOrderAPI } from "../../../../API/Order";
+import { getNorthAmericaIndustryClassificationSystemListAPI } from "../../../../API/NAICS";
 import {
   topAlertMessageState,
   topAlertStatusState,
@@ -38,13 +39,14 @@ import FormDateField from "../../../Reusable/FormDateField";
 import {
   USER_ROLES,
   PAGE_SIZE_OPTIONS,
-  ORDER_SORT_OPTIONS,
+  NAICS_SORT_OPTIONS,
   ORDER_STATUS_FILTER_OPTIONS,
   ORDER_TYPE_FILTER_OPTIONS,
 } from "../../../../Constants/FieldOptions";
-import { DEFAULT_ORDER_LIST_SORT_BY_VALUE } from "../../../../Constants/App";
+import { DEFAULT_NAICS_LIST_SORT_BY_VALUE } from "../../../../Constants/App";
 import AdminSettingNAICSSearchResultDesktop from "./ResultDesktop";
 import AdminSettingNAICSSearchResultMobile from "./ResultMobile";
+import NationalOccupationalClassificationDetailModal from "./ModalDetail";
 
 
 function AdminSettingNAICSSearchResult() {
@@ -53,27 +55,16 @@ function AdminSettingNAICSSearchResult() {
   ////
 
   const [searchParams] = useSearchParams(); // Special thanks via https://stackoverflow.com/a/65451140
-  const customerOrganizationName = searchParams.get("con");
-  const customerFirstName = searchParams.get("cfn");
-  const customerLastName = searchParams.get("cln");
-  const customerEmail = searchParams.get("ce");
-  const customerPhone = searchParams.get("cp");
-  const associateOrganizationName = searchParams.get("aon");
-  const associateFirstName = searchParams.get("afn");
-  const associateLastName = searchParams.get("aln");
-  const associateEmail = searchParams.get("ae");
-  const associatePhone = searchParams.get("ap");
   const actualSearchText = searchParams.get("q");
-  const orderWjid = searchParams.get("owjid");
+  const code = searchParams.get("c");
+  const industryTitle = searchParams.get("it");
 
   ////
   //// Global state.
   ////
 
-  const [topAlertMessage, setTopAlertMessage] =
-    useRecoilState(topAlertMessageState);
-  const [topAlertStatus, setTopAlertStatus] =
-    useRecoilState(topAlertStatusState);
+  const [topAlertMessage, setTopAlertMessage] = useRecoilState(topAlertMessageState);
+  const [topAlertStatus, setTopAlertStatus] = useRecoilState(topAlertStatusState);
   const [currentUser] = useRecoilState(currentUserState);
   const [status, setStatus] = useRecoilState(orderFilterStatusState); // Filtering
   const [type, setType] = useRecoilState(orderFilterTypeState); // Filtering
@@ -86,8 +77,7 @@ function AdminSettingNAICSSearchResult() {
   const [onPageLoaded, setOnPageLoaded] = useState(false);
   const [forceURL, setForceURL] = useState("");
   const [errors, setErrors] = useState({});
-  const [users, setOrders] = useState("");
-  const [selectedOrderForDeletion, setSelectedOrderForDeletion] = useState("");
+  const [users, setNAICSs] = useState("");
   const [isFetching, setFetching] = useState(false);
   const [pageSize, setPageSize] = useState(50); // Pagination
   const [previousCursors, setPreviousCursors] = useState([]); // Pagination
@@ -95,23 +85,24 @@ function AdminSettingNAICSSearchResult() {
   const [currentCursor, setCurrentCursor] = useState(""); // Pagination
   const [showFilter, setShowFilter] = useState(false); // Filtering + Searching
   const [createdAtGTE, setCreatedAtGTE] = useState(null); // Filtering
+  const [showDetailModalForID, setShowDetailModalForID] = useState("")
 
   ////
   //// API.
   ////
 
-  function onOrderListSuccess(response) {
-    console.log("onOrderListSuccess: Starting...");
+  function onNAICSListSuccess(response) {
+    console.log("onNAICSListSuccess: Starting...");
     if (response.results !== null) {
-      setOrders(response);
+      setNAICSs(response);
       if (response.hasNextPage) {
         setNextCursor(response.nextCursor); // For pagination purposes.
       }
     }
   }
 
-  function onOrderListError(apiErr) {
-    console.log("onOrderListError: Starting...");
+  function onNAICSListError(apiErr) {
+    console.log("onNAICSListError: Starting...");
     setErrors(apiErr);
 
     // The following code will cause the screen to scroll to the top of
@@ -121,74 +112,8 @@ function AdminSettingNAICSSearchResult() {
     scroll.scrollToTop();
   }
 
-  function onOrderListDone() {
-    console.log("onOrderListDone: Starting...");
-    setFetching(false);
-  }
-
-  function onOrderDeleteSuccess(response) {
-    console.log("onOrderDeleteSuccess: Starting..."); // For debugging purposes only.
-
-    // Update notification.
-    setTopAlertStatus("success");
-    setTopAlertMessage("Order deleted");
-    setTimeout(() => {
-      console.log(
-        "onDeleteConfirmButtonClick: topAlertMessage, topAlertStatus:",
-        topAlertMessage,
-        topAlertStatus,
-      );
-      setTopAlertMessage("");
-    }, 2000);
-
-    // Fetch again an updated list.
-    fetchList(
-      currentCursor,
-      pageSize,
-      actualSearchText,
-      sortByValue,
-      status,
-      type,
-      createdAtGTE,
-      customerOrganizationName,
-      customerFirstName,
-      customerLastName,
-      customerEmail,
-      customerPhone,
-      associateOrganizationName,
-      associateFirstName,
-      associateLastName,
-      associateEmail,
-      associatePhone,
-      orderWjid
-    );
-  }
-
-  function onOrderDeleteError(apiErr) {
-    console.log("onOrderDeleteError: Starting..."); // For debugging purposes only.
-    setErrors(apiErr);
-
-    // Update notification.
-    setTopAlertStatus("danger");
-    setTopAlertMessage("Failed deleting");
-    setTimeout(() => {
-      console.log(
-        "onOrderDeleteError: topAlertMessage, topAlertStatus:",
-        topAlertMessage,
-        topAlertStatus,
-      );
-      setTopAlertMessage("");
-    }, 2000);
-
-    // The following code will cause the screen to scroll to the top of
-    // the page. Please see ``react-scroll`` for more information:
-    // https://github.com/fisshy/react-scroll
-    var scroll = Scroll.animateScroll;
-    scroll.scrollToTop();
-  }
-
-  function onOrderDeleteDone() {
-    console.log("onOrderDeleteDone: Starting...");
+  function onNAICSListDone() {
+    console.log("onNAICSListDone: Starting...");
     setFetching(false);
   }
 
@@ -204,7 +129,7 @@ function AdminSettingNAICSSearchResult() {
   const onClearFilterClick = (e) => {
     setType(0);
     setStatus(0);
-    setSortByValue(DEFAULT_ORDER_LIST_SORT_BY_VALUE);
+    setSortByValue(DEFAULT_NAICS_LIST_SORT_BY_VALUE);
   };
 
   const fetchList = (
@@ -214,18 +139,8 @@ function AdminSettingNAICSSearchResult() {
     so,
     s,
     t,
-    j,
-    con,
-    cfn,
-    cln,
-    ce,
-    cp,
-    aon,
-    afn,
-    aln,
-    ae,
-    ap,
-    owjid
+    c,
+    it
   ) => {
     setFetching(true);
     setErrors({});
@@ -257,49 +172,18 @@ function AdminSettingNAICSSearchResult() {
     if (t !== undefined && t !== null && t !== "") {
       params.set("type", t);
     }
-    if (j !== undefined && j !== null && j !== "") {
-      const jStr = j.getTime();
-      params.set("created_at_gte", jStr);
+    if (c !== undefined && c !== null && c !== "") {
+      params.set("code", c);
     }
-    if (con !== undefined && con !== null && con !== "") {
-      params.set("customer_organization_name", con);
-    }
-    if (cfn !== undefined && cfn !== null && cfn !== "") {
-      params.set("customer_first_name", cfn);
-    }
-    if (cln !== undefined && cln !== null && cln !== "") {
-      params.set("customer_last_name", cln);
-    }
-    if (ce !== undefined && ce !== null && ce !== "") {
-      params.set("customer_email", ce);
-    }
-    if (cp !== undefined && cp !== null && cp !== "") {
-      params.set("customer_phone", cp);
-    }
-    if (aon !== undefined && aon !== null && aon !== "") {
-      params.set("associate_organization_name", aon);
-    }
-    if (afn !== undefined && afn !== null && afn !== "") {
-      params.set("associate_first_name", afn);
-    }
-    if (aln !== undefined && aln !== null && aln !== "") {
-      params.set("associate_last_name", aln);
-    }
-    if (ae !== undefined && ae !== null && ae !== "") {
-      params.set("associate_email", ae);
-    }
-    if (ap !== undefined && ap !== null && ap !== "") {
-      params.set("associate_phone", ap);
-    }
-    if (owjid !== undefined && owjid !== null && owjid !== "") {
-      params.set("order_wjid", owjid);
+    if (it !== undefined && it !== null && it !== "") {
+      params.set("it", it);
     }
 
-    getOrderListAPI(
+    getNorthAmericaIndustryClassificationSystemListAPI(
       params,
-      onOrderListSuccess,
-      onOrderListError,
-      onOrderListDone,
+      onNAICSListSuccess,
+      onNAICSListError,
+      onNAICSListDone,
     );
   };
 
@@ -317,29 +201,6 @@ function AdminSettingNAICSSearchResult() {
     setCurrentCursor(previousCursor);
   };
 
-  const onSelectOrderForDeletion = (e, user) => {
-    console.log("onSelectOrderForDeletion", user);
-    setSelectedOrderForDeletion(user);
-  };
-
-  const onDeselectOrderForDeletion = (e) => {
-    console.log("onDeselectOrderForDeletion");
-    setSelectedOrderForDeletion("");
-  };
-
-  const onDeleteConfirmButtonClick = (e) => {
-    console.log("onDeleteConfirmButtonClick"); // For debugging purposes only.
-
-    deleteOrderAPI(
-      selectedOrderForDeletion.id,
-      onOrderDeleteSuccess,
-      onOrderDeleteError,
-      onOrderDeleteDone,
-      onUnauthorized,
-    );
-    setSelectedOrderForDeletion("");
-  };
-
   ////
   //// Misc.
   ////
@@ -355,18 +216,8 @@ function AdminSettingNAICSSearchResult() {
         sortByValue,
         status,
         type,
-        createdAtGTE,
-        customerOrganizationName,
-        customerFirstName,
-        customerLastName,
-        customerEmail,
-        customerPhone,
-        associateOrganizationName,
-        associateFirstName,
-        associateLastName,
-        associateEmail,
-        associatePhone,
-        orderWjid
+        code,
+        industryTitle
       );
 
       // If you loaded the page for the very first time.
@@ -387,18 +238,8 @@ function AdminSettingNAICSSearchResult() {
     sortByValue,
     status,
     type,
-    createdAtGTE,
-    customerOrganizationName,
-    customerFirstName,
-    customerLastName,
-    customerEmail,
-    customerPhone,
-    associateOrganizationName,
-    associateFirstName,
-    associateLastName,
-    associateEmail,
-    associatePhone,
-    orderWjid,
+    code,
+    industryTitle
   ]);
 
   ////
@@ -426,13 +267,19 @@ function AdminSettingNAICSSearchResult() {
                 </Link>
               </li>
               <li className="">
-                <Link to="/admin/orders" aria-current="page">
-                  <FontAwesomeIcon className="fas" icon={faWrench} />
-                  &nbsp;Orders
+                <Link to="/admin/settings" aria-current="page">
+                  <FontAwesomeIcon className="fas" icon={faCogs} />
+                  &nbsp;Settings
                 </Link>
               </li>
               <li className="">
-                <Link to="/admin/orders/search" aria-current="page">
+                <Link to="/admin/settings/naics/search" aria-current="page">
+                  <FontAwesomeIcon className="fas" icon={faUniversity} />
+                  &nbsp;North American Industry Classification System
+                </Link>
+              </li>
+              <li className="">
+                <Link to="/admin/settings/naics/search" aria-current="page">
                   <FontAwesomeIcon className="fas" icon={faSearch} />
                   &nbsp;Search
                 </Link>
@@ -454,7 +301,7 @@ function AdminSettingNAICSSearchResult() {
             <ul>
               <li className="">
                 <li className="">
-                  <Link to="/admin/orders/search" aria-current="page">
+                  <Link to="/admin/settings/naics/search" aria-current="page">
                     <FontAwesomeIcon className="fas" icon={faArrowLeft} />
                     &nbsp;Back to Search
                   </Link>
@@ -465,8 +312,8 @@ function AdminSettingNAICSSearchResult() {
 
           {/* Page Title */}
           <h1 className="title is-2">
-            <FontAwesomeIcon className="fas" icon={faWrench} />
-            &nbsp;Orders
+            <FontAwesomeIcon className="fas" icon={faUniversity} />
+            &nbsp;North American Industry Classification System
           </h1>
           <h4 className="subtitle is-4">
             <FontAwesomeIcon className="fas" icon={faSearch} />
@@ -475,38 +322,11 @@ function AdminSettingNAICSSearchResult() {
           <hr />
 
           {/* Page Modal(s) */}
-          <div
-            className={`modal ${selectedOrderForDeletion ? "is-active" : ""}`}
-          >
-            <div className="modal-background"></div>
-            <div className="modal-card">
-              <header className="modal-card-head">
-                <p className="modal-card-title">Are you sure?</p>
-                <button
-                  className="delete"
-                  aria-label="close"
-                  onClick={onDeselectOrderForDeletion}
-                ></button>
-              </header>
-              <section className="modal-card-body">
-                You are about to <b>archive</b> this user; it will no longer
-                appear on your dashboard This action can be undone but you'll
-                need to contact the system administrator. Are you sure you would
-                like to continue?
-              </section>
-              <footer className="modal-card-foot">
-                <button
-                  className="button is-success"
-                  onClick={onDeleteConfirmButtonClick}
-                >
-                  Confirm
-                </button>
-                <button className="button" onClick={onDeselectOrderForDeletion}>
-                  Cancel
-                </button>
-              </footer>
-            </div>
-          </div>
+          <NationalOccupationalClassificationDetailModal
+            currentUser={currentUser}
+            showDetailModalForID={showDetailModalForID}
+            setShowDetailModalForID={setShowDetailModalForID}
+          />
 
           {/* Page Table */}
           <nav className="box" style={{ borderRadius: "20px" }}>
@@ -544,6 +364,7 @@ function AdminSettingNAICSSearchResult() {
               </div>
 
               <div className="columns">
+                {/*
                 <div className="column">
                   <FormSelectField
                     label="Status"
@@ -568,6 +389,7 @@ function AdminSettingNAICSSearchResult() {
                     isRequired={true}
                   />
                 </div>
+                */}
                 <div className="column">
                   <FormSelectField
                     label="Sort by"
@@ -576,7 +398,7 @@ function AdminSettingNAICSSearchResult() {
                     selectedValue={sortByValue}
                     helpText=""
                     onChange={(e) => setSortByValue(e.target.value)}
-                    options={ORDER_SORT_OPTIONS}
+                    options={NAICS_SORT_OPTIONS}
                     isRequired={true}
                   />
                 </div>
@@ -601,12 +423,13 @@ function AdminSettingNAICSSearchResult() {
                     <div className="is-hidden-touch">
                       <AdminSettingNAICSSearchResultDesktop
                         listData={users}
+                        showDetailModalForID={showDetailModalForID}
+                        setShowDetailModalForID={setShowDetailModalForID}
                         setPageSize={setPageSize}
                         pageSize={pageSize}
                         previousCursors={previousCursors}
                         onPreviousClicked={onPreviousClicked}
                         onNextClicked={onNextClicked}
-                        onSelectOrderForDeletion={onSelectOrderForDeletion}
                       />
                     </div>
 
@@ -618,12 +441,13 @@ function AdminSettingNAICSSearchResult() {
                     <div className="is-fullwidth is-hidden-desktop">
                       <AdminSettingNAICSSearchResultMobile
                         listData={users}
+                        showDetailModalForID={showDetailModalForID}
+                        setShowDetailModalForID={setShowDetailModalForID}
                         setPageSize={setPageSize}
                         pageSize={pageSize}
                         previousCursors={previousCursors}
                         onPreviousClicked={onPreviousClicked}
                         onNextClicked={onNextClicked}
-                        onSelectOrderForDeletion={onSelectOrderForDeletion}
                       />
                     </div>
                   </div>
@@ -632,20 +456,10 @@ function AdminSettingNAICSSearchResult() {
                     <div className="hero-body">
                       <p className="title">
                         <FontAwesomeIcon className="fas" icon={faTable} />
-                        &nbsp;No Orders
+                        &nbsp;No NAICSs.
                       </p>
                       <p className="subtitle">
-                        No orders.{" "}
-                        <b>
-                          <Link to="/admin/orders/add/step-1-search">
-                            Click here&nbsp;
-                            <FontAwesomeIcon
-                              className="mdi"
-                              icon={faArrowRight}
-                            />
-                          </Link>
-                        </b>{" "}
-                        to get started creating your first order.
+                        No NAICSs have been returned.{" "}
                       </p>
                     </div>
                   </section>
@@ -656,7 +470,7 @@ function AdminSettingNAICSSearchResult() {
               <div className="column is-half">
                 <Link
                   className="button is-fullwidth-mobile"
-                  to={`/admin/orders/search`}
+                  to={`/admin/settings/naics/search`}
                 >
                   <FontAwesomeIcon className="fas" icon={faArrowLeft} />
                   &nbsp;Back to Search

@@ -4,9 +4,8 @@ import (
 	"context"
 	"time"
 
-	"log/slog"
-
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func (impl NorthAmericanIndustryClassificationSystemStorerImpl) ListByFilter(ctx context.Context, f *NorthAmericanIndustryClassificationSystemPaginationListFilter) (*NorthAmericanIndustryClassificationSystemPaginationListResult, error) {
@@ -28,8 +27,16 @@ func (impl NorthAmericanIndustryClassificationSystemStorerImpl) ListByFilter(ctx
 		filter["status"] = f.Status
 	}
 
-	impl.Logger.Debug("listing filter:",
-		slog.Any("filter", filter))
+	if f.CodeStr != "" {
+		filter["code_str"] = bson.M{"$regex": primitive.Regex{Pattern: f.CodeStr, Options: "i"}}
+	}
+
+	if f.IndustryTitle != "" {
+		filter["industry_title"] = bson.M{"$regex": primitive.Regex{Pattern: f.IndustryTitle, Options: "i"}}
+	}
+
+	// impl.Logger.Debug("listing filter:",
+	// 	slog.Any("filter", filter))
 
 	// Include additional filters for our cursor-based pagination pertaining to sorting and limit.
 	options, err := impl.newPaginationOptions(f)
@@ -40,8 +47,6 @@ func (impl NorthAmericanIndustryClassificationSystemStorerImpl) ListByFilter(ctx
 	// Include Full-text search
 	if f.SearchText != "" {
 		filter["$text"] = bson.M{"$search": f.SearchText}
-		options.SetProjection(bson.M{"score": bson.M{"$meta": "textScore"}})
-		options.SetSort(bson.D{{"score", bson.M{"$meta": "textScore"}}})
 	}
 
 	// Execute the query

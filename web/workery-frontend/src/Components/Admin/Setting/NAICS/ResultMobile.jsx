@@ -44,7 +44,8 @@ function AdminSettingNAICSSearchResultMobile(props) {
     previousCursors,
     onPreviousClicked,
     onNextClicked,
-    onSelectOrderForDeletion,
+    showDetailModalForID,
+    setShowDetailModalForID,
   } = props;
   return (
     <>
@@ -54,51 +55,17 @@ function AdminSettingNAICSSearchResultMobile(props) {
           return (
             <div className="mb-5" key={`${datum.wjid}-mobile`}>
               <hr />
-              <OrderTypeOfIconFormatter type={datum.type} />
-              &nbsp;
-              <strong>Job #:</strong>&nbsp;{datum.wjid}
+              <strong>Code:</strong>&nbsp;{datum.code}
               <br />
               <br />
-              <strong>Client:</strong>&nbsp;
-              <URLTextFormatter
-                urlKey={datum.customerName}
-                urlValue={`/admin/client/${datum.customerId}`}
-                type={`external`}
-              />
-              <br />
-              <br />
-              <strong>Associate:</strong>&nbsp;
-              <URLTextFormatter
-                urlKey={datum.associateName}
-                urlValue={`/admin/associate/${datum.associateId}`}
-                type={`external`}
-              />
-              <br />
-              <br />
-              <strong>Assigned Date:</strong>&nbsp;
-              <DateTextFormatter value={datum.assignmentDate} />
-              <br />
-              <br />
-              <strong>Start Date:</strong>&nbsp;
-              <DateTextFormatter value={datum.startDate} />
-              <br />
-              <br />
-              <strong>Status:</strong>&nbsp;
-              <OrderStatusFormatter value={datum.status} />
+              <strong>Industry Title:</strong>&nbsp;{datum.industryTitle}
               <br />
               <br />
               <Link
-                to={`/admin/financial/${datum.wjid}`}
-                className="button is-primary is-fullwidth-mobile"
-                type="button"
-              >
-                View Financials&nbsp;
-                <FontAwesomeIcon className="mdi" icon={faChevronRight} />
-              </Link>
-              <br />
-              <br />
-              <Link
-                to={`/admin/order/${datum.wjid}`}
+                onClick={(e) => {
+                  e.preventDefault(); // Prevent the default link behavior
+                  setShowDetailModalForID(datum.id);
+                }}
                 className="button is-primary is-fullwidth-mobile"
                 type="button"
               >

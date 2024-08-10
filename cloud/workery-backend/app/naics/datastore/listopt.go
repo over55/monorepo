@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -43,11 +44,17 @@ func (impl NorthAmericanIndustryClassificationSystemStorerImpl) ListAsSelectOpti
 		query["status"] = f.Status
 	}
 
+	if f.CodeStr != "" {
+		query["code_str"] = bson.M{"$regex": primitive.Regex{Pattern: f.CodeStr, Options: "i"}}
+	}
+
+	if f.IndustryTitle != "" {
+		query["industry_title"] = bson.M{"$regex": primitive.Regex{Pattern: f.IndustryTitle, Options: "i"}}
+	}
+
 	// Full-text search
 	if f.SearchText != "" {
 		query["$text"] = bson.M{"$search": f.SearchText}
-		options.SetProjection(bson.M{"score": bson.M{"$meta": "textScore"}})
-		options.SetSort(bson.D{{"score", bson.M{"$meta": "textScore"}}})
 	}
 
 	options.SetSort(bson.D{{f.SortField, 1}}) // Sort in ascending order based on the specified field

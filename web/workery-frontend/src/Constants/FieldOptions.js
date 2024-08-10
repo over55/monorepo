@@ -892,6 +892,16 @@ export const NOC_SORT_OPTIONS = [
   { value: "unit_group_title,DESC", label: "Unit Group Title ▼" },
 ];
 
+//----------------------------------------------------------------------------//
+//                                NAICS                                       //
+//----------------------------------------------------------------------------//
+
+export const NAICS_SORT_OPTIONS = [
+  { value: "code,ASC", label: "Code ▲" },
+  { value: "code,DESC", label: "Code ▼" },
+  { value: "industry_title,ASC", label: "Industry Title ▲" },
+  { value: "industry_title,DESC", label: "Industry Title ▼" },
+];
 
 //----------------------------------------------------------------------------//
 //                                Unspecified                                 //

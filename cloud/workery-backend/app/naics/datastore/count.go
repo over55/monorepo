@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func (impl NorthAmericanIndustryClassificationSystemStorerImpl) CountByFilter(ctx context.Context, f *NorthAmericanIndustryClassificationSystemPaginationListFilter) (int64, error) {
@@ -22,6 +23,20 @@ func (impl NorthAmericanIndustryClassificationSystemStorerImpl) CountByFilter(ct
 	if f.Status != 0 {
 		filter["status"] = f.Status
 	}
+
+	if f.CodeStr != "" {
+		filter["code_str"] = bson.M{"$regex": primitive.Regex{Pattern: f.CodeStr, Options: "i"}}
+	}
+
+	if f.IndustryTitle != "" {
+		filter["industry_title"] = bson.M{"$regex": primitive.Regex{Pattern: f.IndustryTitle, Options: "i"}}
+	}
+
+	// Include Full-text search
+	if f.SearchText != "" {
+		filter["$text"] = bson.M{"$search": f.SearchText}
+	}
+
 	// impl.Logger.Debug("counting w/ filter:",
 	// 	slog.Any("filter", filter))
 
