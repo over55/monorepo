@@ -21,6 +21,7 @@ import {
   faRefresh,
   faCalendarCheck,
   faUsers,
+  faBan
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 
@@ -49,6 +50,13 @@ function AdminClientListMobile(props) {
           return (
             <div className="mb-5">
               <hr />
+              {datum.isBanned && (
+                  <>
+                  <strong><FontAwesomeIcon
+                    className="fas"
+                    icon={faBan}
+                  />&nbsp;Banned Client</strong><br/><br/></>
+              )}
               <strong>First Name:</strong>&nbsp;{datum.firstName}
               <br />
               <br />

@@ -3,7 +3,7 @@ import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faBuildingUser,
+  faBan,
   faImage,
   faPaperclip,
   faAddressCard,
@@ -31,7 +31,7 @@ import { useParams } from "react-router-dom";
 
 import {
   getClientDetailAPI,
-  postUpgradeClientAPI,
+  postBanClientAPI,
 } from "../../../../../../API/Client";
 import FormErrorBox from "../../../../../Reusable/FormErrorBox";
 import FormInputField from "../../../../../Reusable/FormInputField";
@@ -42,9 +42,9 @@ import {
   topAlertMessageState,
   topAlertStatusState,
 } from "../../../../../../AppState";
-import { CLIENT_ORGANIZATION_TYPE_OPTIONS_WITH_EMPTY_OPTIONS } from "../../../../../../Constants/FieldOptions";
+import { CLIENT_BANNING_REASON_OPTIONS_WITH_EMPTY_OPTIONS } from "../../../../../../Constants/FieldOptions";
 
-function AdminClientUpgradeOperation() {
+function AdminClientBanOperation() {
   ////
   //// URL Parameters.
   ////
@@ -68,8 +68,8 @@ function AdminClientUpgradeOperation() {
   const [isFetching, setFetching] = useState(false);
   const [forceURL, setForceURL] = useState("");
   const [client, setClient] = useState({});
-  const [organizationName, setOrganizationName] = useState("");
-  const [organizationType, setOrganizationType] = useState(0);
+  const [banningReasonOther, setBanningReasonOther] = useState("");
+  const [banningReason, setBanningReason] = useState(0);
 
   ////
   //// Event handling.
@@ -78,15 +78,15 @@ function AdminClientUpgradeOperation() {
   const onSubmitClick = () => {
     setErrors({});
     setFetching(true);
-    postUpgradeClientAPI(
+    postBanClientAPI(
       {
         customer_id: cid,
-        organization_name: organizationName,
-        organization_type: organizationType,
+        banning_reason_other: banningReasonOther,
+        banning_reason: banningReason,
       },
-      onUpgradeSuccess,
-      onUpgradeError,
-      onUpgradeDone,
+      onBanSuccess,
+      onBanError,
+      onBanDone,
       onUnauthorized,
     );
   };
@@ -118,13 +118,13 @@ function AdminClientUpgradeOperation() {
     setFetching(false);
   }
 
-  // --- Upgrade --- //
+  // --- Ban --- //
 
-  function onUpgradeSuccess(response) {
-    console.log("onUpgradeSuccess: Starting...");
+  function onBanSuccess(response) {
+    console.log("onBanSuccess: Starting...");
 
     // Add a temporary banner message in the app and then clear itself after 2 seconds.
-    setTopAlertMessage("Client upgraded");
+    setTopAlertMessage("Client banned");
     setTopAlertStatus("success");
     setTimeout(() => {
       console.log("onSuccess: Delayed for 2 seconds.");
@@ -139,8 +139,8 @@ function AdminClientUpgradeOperation() {
     setForceURL("/admin/client/" + cid + "/more");
   }
 
-  function onUpgradeError(apiErr) {
-    console.log("onUpgradeError: Starting...");
+  function onBanError(apiErr) {
+    console.log("onBanError: Starting...");
     setErrors(apiErr);
 
     // The following code will cause the screen to scroll to the top of
@@ -150,8 +150,8 @@ function AdminClientUpgradeOperation() {
     scroll.scrollToTop();
   }
 
-  function onUpgradeDone() {
-    console.log("onUpgradeDone: Starting...");
+  function onBanDone() {
+    console.log("onBanDone: Starting...");
     setFetching(false);
   }
 
@@ -216,8 +216,8 @@ function AdminClientUpgradeOperation() {
               </li>
               <li className="is-active">
                 <Link aria-current="page">
-                  <FontAwesomeIcon className="fas" icon={faBuildingUser} />
-                  &nbsp;Upgrade
+                  <FontAwesomeIcon className="fas" icon={faBan} />
+                  &nbsp;Ban
                 </Link>
               </li>
             </ul>
@@ -242,9 +242,6 @@ function AdminClientUpgradeOperation() {
           {client && client.status === 2 && (
             <AlertBanner message="Archived" status="info" />
           )}
-          {client && client.isBanned && (
-            <AlertBanner message="Client is Banned" status="danger" />
-          )}
 
           {/* Page Title */}
           <h1 className="title is-2">
@@ -253,7 +250,7 @@ function AdminClientUpgradeOperation() {
           </h1>
           <h4 className="subtitle is-4">
             <FontAwesomeIcon className="fas" icon={faCircleInfo} />
-            &nbsp;Detail
+            &nbsp;Detail (More)
           </h4>
           <hr />
 
@@ -264,8 +261,8 @@ function AdminClientUpgradeOperation() {
               <div className="columns">
                 <div className="column">
                   <p className="title is-4">
-                    <FontAwesomeIcon className="fas" icon={faBuildingUser} />
-                    &nbsp;Upgrade Client
+                    <FontAwesomeIcon className="fas" icon={faBan} />
+                    &nbsp;Ban Client
                   </p>
                 </div>
                 <div className="column has-text-right"></div>
@@ -292,40 +289,38 @@ function AdminClientUpgradeOperation() {
                           &nbsp;Warning
                         </p>
                         <p>
-                          You are about to <b>upgrade</b> this client from{" "}
-                          <i>Residential</i> type into <i>Business</i>. This
-                          will affect the rates, associates and terms the client
-                          will now be applied. Are you sure you want to
-                          continue?
+                          You are about to <b>ban</b> this client from our system. This means the client will still appear in search results but will have the <i>banned banner displayed</i>. Are you sure you want to continue?
                         </p>
                       </div>
                     </article>
 
-                    <FormInputField
-                      label="Organization Name"
-                      name="organizationName"
-                      placeholder="Text input"
-                      value={organizationName}
-                      errorText={errors && errors.organizationName}
-                      helpText=""
-                      onChange={(e) => setOrganizationName(e.target.value)}
-                      isRequired={true}
-                      maxWidth="380px"
-                    />
+
                     <FormSelectField
-                      label="Organization Type"
-                      name="organizationType"
+                      label="Banning Reason"
+                      name="banningReason"
                       placeholder="Pick"
-                      selectedValue={organizationType}
-                      errorText={errors && errors.organizationType}
-                      helpText=""
+                      selectedValue={banningReason}
+                      errorText={errors && errors.banningReason}
+                      helpText="Please select the reason for the banning."
                       onChange={(e) =>
-                        setOrganizationType(parseInt(e.target.value))
+                        setBanningReason(parseInt(e.target.value))
                       }
                       options={
-                        CLIENT_ORGANIZATION_TYPE_OPTIONS_WITH_EMPTY_OPTIONS
+                        CLIENT_BANNING_REASON_OPTIONS_WITH_EMPTY_OPTIONS
                       }
                     />
+
+                    {banningReason === 1 && <FormInputField
+                      label="Banning Reason (Other)"
+                      name="banningReasonOther"
+                      placeholder="Text input"
+                      value={banningReasonOther}
+                      errorText={errors && errors.banningReasonOther}
+                      helpText="Please write a short reason."
+                      onChange={(e) => setBanningReasonOther(e.target.value)}
+                      isRequired={true}
+                      maxWidth="680px"
+                    />}
 
                     {/* Bottom Navigation */}
                     <div className="columns pt-5">
@@ -348,7 +343,7 @@ function AdminClientUpgradeOperation() {
                             icon={faCheckCircle}
                             type="button"
                           />
-                          &nbsp;Confirm and Upgrade
+                          &nbsp;Confirm and Ban
                         </button>
                       </div>
                     </div>
@@ -363,4 +358,4 @@ function AdminClientUpgradeOperation() {
   );
 }
 
-export default AdminClientUpgradeOperation;
+export default AdminClientBanOperation;

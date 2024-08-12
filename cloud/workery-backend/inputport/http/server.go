@@ -269,6 +269,10 @@ func (port *httpInputPort) HandleRequests(w http.ResponseWriter, r *http.Request
 		port.Customer.OperationChangePassword(w, r)
 	case n == 5 && p[1] == "v1" && p[2] == "customers" && p[3] == "operations" && p[4] == "change-2fa" && r.Method == http.MethodPost:
 		port.Customer.OperationChangeTwoFactorAuthentication(w, r)
+	case n == 5 && p[1] == "v1" && p[2] == "customers" && p[3] == "operations" && p[4] == "ban" && r.Method == http.MethodPost:
+		port.Customer.OperationBan(w, r)
+	case n == 5 && p[1] == "v1" && p[2] == "customers" && p[3] == "operations" && p[4] == "unban" && r.Method == http.MethodPost:
+		port.Customer.OperationUnban(w, r)
 	case n == 4 && p[1] == "v1" && p[2] == "customers" && p[3] == "select-options" && r.Method == http.MethodGet:
 		port.Customer.ListAsSelectOptions(w, r)
 

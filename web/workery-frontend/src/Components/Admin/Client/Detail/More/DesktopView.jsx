@@ -31,6 +31,7 @@ import {
   faBoxOpen,
   faTrashCan,
   faHomeUser,
+  faBan
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 import { useParams } from "react-router-dom";
@@ -172,6 +173,30 @@ const AdminClientDetailMoreDesktop = ({ cid, client, currentUser }) => {
                     </>
                   )}
                 </>
+              )}
+
+              {/* ---------------------------------------------------------------------- */}
+
+              {client.isBanned ? (
+                <div className="column">
+                  <BubbleLink
+                    title={`Unban`}
+                    subtitle={`Make client visible in list and search results`}
+                    faIcon={faCheckCircle}
+                    url={`/admin/client/${cid}/unban`}
+                    bgColour={`has-background-warning`}
+                  />
+                </div>
+              ) : (
+                <div className="column">
+                  <BubbleLink
+                    title={`Ban`}
+                    subtitle={`Mark the client as banned on search results`}
+                    faIcon={faBan}
+                    url={`/admin/client/${cid}/ban`}
+                    bgColour={`has-background-warning`}
+                  />
+                </div>
               )}
 
               {/* ---------------------------------------------------------------------- */}

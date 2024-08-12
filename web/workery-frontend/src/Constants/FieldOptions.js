@@ -185,6 +185,15 @@ export const CLIENT_STATUS_OPTIONS_WITH_EMPTY_OPTIONS = [
   ...CLIENT_STATUS_OPTIONS,
 ];
 
+export const CLIENT_BANNING_REASON_OPTIONS = [
+  { value: 1, label: "Other" },
+];
+
+export const CLIENT_BANNING_REASON_OPTIONS_WITH_EMPTY_OPTIONS = [
+  { value: 0, label: "Please select" }, // EMPTY OPTION
+  ...CLIENT_BANNING_REASON_OPTIONS,
+];
+
 //----------------------------------------------------------------------------//
 //                               Attachments                                  //
 //----------------------------------------------------------------------------//

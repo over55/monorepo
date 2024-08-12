@@ -239,6 +239,9 @@ function AdminClientMoreOperation2FAToggle() {
           {Client && Client.status === 2 && (
             <AlertBanner message="Archived" status="info" />
           )}
+          {Client && Client.isBanned && (
+            <AlertBanner message="Client is Banned" status="danger" />
+          )}
 
           {/* Page Title */}
           <h1 className="title is-2">

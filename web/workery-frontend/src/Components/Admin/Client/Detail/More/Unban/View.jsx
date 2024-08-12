@@ -12,7 +12,6 @@ import {
   faTachometer,
   faPlus,
   faArrowLeft,
-  faCheckCircle,
   faUserCircle,
   faGauge,
   faPencil,
@@ -24,6 +23,7 @@ import {
   faChartPie,
   faBuilding,
   faEllipsis,
+  faCheckCircle,
   faCircleExclamation,
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
@@ -31,20 +31,17 @@ import { useParams } from "react-router-dom";
 
 import {
   getClientDetailAPI,
-  postUpgradeClientAPI,
+  postUnbanClientAPI,
 } from "../../../../../../API/Client";
 import FormErrorBox from "../../../../../Reusable/FormErrorBox";
-import FormInputField from "../../../../../Reusable/FormInputField";
-import FormSelectField from "../../../../../Reusable/FormSelectField";
-import PageLoadingContent from "../../../../../Reusable/PageLoadingContent";
 import AlertBanner from "../../../../../Reusable/EveryPage/AlertBanner";
+import PageLoadingContent from "../../../../../Reusable/PageLoadingContent";
 import {
   topAlertMessageState,
   topAlertStatusState,
 } from "../../../../../../AppState";
-import { CLIENT_ORGANIZATION_TYPE_OPTIONS_WITH_EMPTY_OPTIONS } from "../../../../../../Constants/FieldOptions";
 
-function AdminClientUpgradeOperation() {
+function AdminClientUnbanOperation() {
   ////
   //// URL Parameters.
   ////
@@ -68,8 +65,6 @@ function AdminClientUpgradeOperation() {
   const [isFetching, setFetching] = useState(false);
   const [forceURL, setForceURL] = useState("");
   const [client, setClient] = useState({});
-  const [organizationName, setOrganizationName] = useState("");
-  const [organizationType, setOrganizationType] = useState(0);
 
   ////
   //// Event handling.
@@ -78,15 +73,13 @@ function AdminClientUpgradeOperation() {
   const onSubmitClick = () => {
     setErrors({});
     setFetching(true);
-    postUpgradeClientAPI(
-      {
+    postUnbanClientAPI(
+     {
         customer_id: cid,
-        organization_name: organizationName,
-        organization_type: organizationType,
       },
-      onUpgradeSuccess,
-      onUpgradeError,
-      onUpgradeDone,
+      onUnbanSuccess,
+      onUnbanError,
+      onUnbanDone,
       onUnauthorized,
     );
   };
@@ -118,13 +111,13 @@ function AdminClientUpgradeOperation() {
     setFetching(false);
   }
 
-  // --- Upgrade --- //
+  // --- Unban --- //
 
-  function onUpgradeSuccess(response) {
-    console.log("onUpgradeSuccess: Starting...");
+  function onUnbanSuccess(response) {
+    console.log("onUnbanSuccess: Starting...");
 
     // Add a temporary banner message in the app and then clear itself after 2 seconds.
-    setTopAlertMessage("Client upgraded");
+    setTopAlertMessage("Client unban");
     setTopAlertStatus("success");
     setTimeout(() => {
       console.log("onSuccess: Delayed for 2 seconds.");
@@ -139,8 +132,8 @@ function AdminClientUpgradeOperation() {
     setForceURL("/admin/client/" + cid + "/more");
   }
 
-  function onUpgradeError(apiErr) {
-    console.log("onUpgradeError: Starting...");
+  function onUnbanError(apiErr) {
+    console.log("onUnbanError: Starting...");
     setErrors(apiErr);
 
     // The following code will cause the screen to scroll to the top of
@@ -150,8 +143,8 @@ function AdminClientUpgradeOperation() {
     scroll.scrollToTop();
   }
 
-  function onUpgradeDone() {
-    console.log("onUpgradeDone: Starting...");
+  function onUnbanDone() {
+    console.log("onUnbanDone: Starting...");
     setFetching(false);
   }
 
@@ -216,8 +209,8 @@ function AdminClientUpgradeOperation() {
               </li>
               <li className="is-active">
                 <Link aria-current="page">
-                  <FontAwesomeIcon className="fas" icon={faBuildingUser} />
-                  &nbsp;Upgrade
+                  <FontAwesomeIcon className="fas" icon={faCheckCircle} />
+                  &nbsp;Unban
                 </Link>
               </li>
             </ul>
@@ -264,8 +257,8 @@ function AdminClientUpgradeOperation() {
               <div className="columns">
                 <div className="column">
                   <p className="title is-4">
-                    <FontAwesomeIcon className="fas" icon={faBuildingUser} />
-                    &nbsp;Upgrade Client
+                    <FontAwesomeIcon className="fas" icon={faCheckCircle} />
+                    &nbsp;Unban Client
                   </p>
                 </div>
                 <div className="column has-text-right"></div>
@@ -292,40 +285,11 @@ function AdminClientUpgradeOperation() {
                           &nbsp;Warning
                         </p>
                         <p>
-                          You are about to <b>upgrade</b> this client from{" "}
-                          <i>Residential</i> type into <i>Business</i>. This
-                          will affect the rates, associates and terms the client
-                          will now be applied. Are you sure you want to
+                          You are about to <b>unban</b> this client. This will remove the <i>banner warning</i> from this client. Are you sure you want to
                           continue?
                         </p>
                       </div>
                     </article>
-
-                    <FormInputField
-                      label="Organization Name"
-                      name="organizationName"
-                      placeholder="Text input"
-                      value={organizationName}
-                      errorText={errors && errors.organizationName}
-                      helpText=""
-                      onChange={(e) => setOrganizationName(e.target.value)}
-                      isRequired={true}
-                      maxWidth="380px"
-                    />
-                    <FormSelectField
-                      label="Organization Type"
-                      name="organizationType"
-                      placeholder="Pick"
-                      selectedValue={organizationType}
-                      errorText={errors && errors.organizationType}
-                      helpText=""
-                      onChange={(e) =>
-                        setOrganizationType(parseInt(e.target.value))
-                      }
-                      options={
-                        CLIENT_ORGANIZATION_TYPE_OPTIONS_WITH_EMPTY_OPTIONS
-                      }
-                    />
 
                     {/* Bottom Navigation */}
                     <div className="columns pt-5">
@@ -348,7 +312,7 @@ function AdminClientUpgradeOperation() {
                             icon={faCheckCircle}
                             type="button"
                           />
-                          &nbsp;Confirm and Upgrade
+                          &nbsp;Confirm and Unban
                         </button>
                       </div>
                     </div>
@@ -363,4 +327,4 @@ function AdminClientUpgradeOperation() {
   );
 }
 
-export default AdminClientUpgradeOperation;
+export default AdminClientUnbanOperation;

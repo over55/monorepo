@@ -41,6 +41,7 @@ type CustomerLite struct {
 	PostalCode          string             `bson:"postal_code" json:"postal_code,omitempty"`
 	AddressLine1        string             `bson:"address_line1" json:"address_line1,omitempty"`
 	AddressLine2        string             `bson:"address_line2" json:"address_line2,omitempty"`
+	IsBanned            bool               `bson:"is_banned" json:"is_banned"`
 }
 
 func (impl CustomerStorerImpl) LiteListByFilter(ctx context.Context, f *CustomerPaginationListFilter) (*CustomerPaginationLiteListResult, error) {

@@ -39,6 +39,8 @@ type CustomerController interface {
 	Avatar(ctx context.Context, req *CustomerOperationAvatarRequest) (*c_s.Customer, error)
 	ChangePassword(ctx context.Context, req *CustomerOperationChangePasswordRequest) error
 	ChangeTwoFactorAuthentication(ctx context.Context, req *CustomerOperationChangeTwoFactorAuthenticationRequest) error
+	Ban(ctx context.Context, req *CustomerOperationBanRequest) (*c_s.Customer, error)
+	Unban(ctx context.Context, req *CustomerOperationUnbanRequest) (*c_s.Customer, error)
 }
 
 type CustomerControllerImpl struct {

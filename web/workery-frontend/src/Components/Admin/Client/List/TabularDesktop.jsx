@@ -23,6 +23,7 @@ import {
   faRefresh,
   faCalendarCheck,
   faUsers,
+  faBan
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 
@@ -81,7 +82,15 @@ function AdminClientListDesktop(props) {
                     className="is-size-7-tablet is-size-6-widescreen"
                     key={`${datum.wjid}-desktop`}
                   >
-                    <td></td>
+                    <td>
+                    {datum.isBanned && (
+                        <>
+                        <i style={{fontSize: "16px"}}><FontAwesomeIcon
+                          className="fas"
+                          icon={faBan}
+                        /></i></>
+                    )}
+                    </td>
                     <td data-label="First Name">{datum.firstName}</td>
                     <td data-label="Last Name">{datum.lastName}</td>
                     <td data-label="Phone">

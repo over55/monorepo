@@ -105,6 +105,10 @@ type Customer struct {
 	Comments                             []*CustomerComment `bson:"comments" json:"comments"`
 	Tags                                 []*CustomerTag     `bson:"tags" json:"tags"`
 	IdentifyAs                           []int8             `bson:"identify_as" json:"identify_as,omitempty"`
+	IsBanned                             bool               `bson:"is_banned" json:"is_banned"`
+	BannedAt                             time.Time          `bson:"banned_at" json:"banned_at"`
+	BanningReason                        int8               `bson:"banning_reason" json:"banning_reason"`
+	BanningReasonOther                   string             `bson:"banning_reason_other" json:"banning_reason_other"`
 
 	// OTPEnabled controls whether we force 2FA or not during login for this customer.
 	OTPEnabled bool `bson:"otp_enabled" json:"otp_enabled"`

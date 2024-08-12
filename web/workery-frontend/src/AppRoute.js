@@ -243,6 +243,8 @@ import AdminClientMoreOperation2FAToggle from "./Components/Admin/Client/Detail/
 import AdminClientAttachmentAdd from "./Components/Admin/Client/Detail/Attachment/Add";
 import AdminClientAttachmentDetail from "./Components/Admin/Client/Detail/Attachment/Detail";
 import AdminClientAttachmentUpdate from "./Components/Admin/Client/Detail/Attachment/Update";
+import AdminClientBanOperation from "./Components/Admin/Client/Detail/More/Ban/View";
+import AdminClientUnbanOperation from "./Components/Admin/Client/Detail/More/Unban/View";
 import AdminAssociateList from "./Components/Admin/Associate/List/View";
 import AdminAssociateSearchResult from "./Components/Admin/Associate/Search/Result";
 import AdminAssociateSearch from "./Components/Admin/Associate/Search/Search";
@@ -918,6 +920,16 @@ function AppRoute() {
                     exact
                     path="/admin/associates"
                     element={<AdminAssociateList />}
+                  />
+                  <Route
+                    exact
+                    path="/admin/client/:cid/unban"
+                    element={<AdminClientUnbanOperation />}
+                  />
+                  <Route
+                    exact
+                    path="/admin/client/:cid/ban"
+                    element={<AdminClientBanOperation />}
                   />
                   <Route
                     exact

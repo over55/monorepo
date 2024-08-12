@@ -92,7 +92,7 @@ function AdminClientDetailAttachmentList() {
 
     let params = new Map();
     params.set("ownership_id", cid);
-    params.set("ownership_role", ATTACHMENT_TYPE_CUSTOMER); 
+    params.set("ownership_role", ATTACHMENT_TYPE_CUSTOMER);
     params.set("page_size", limit);
     if (cur !== "") {
       params.set("cursor", cur);
@@ -339,6 +339,10 @@ function AdminClientDetailAttachmentList() {
           {/* Page banner */}
           {client && client.status === 2 && (
             <AlertBanner message="Archived" status="info" />
+          )}
+
+          {client && client.isBanned && (
+            <AlertBanner message="Client is Banned" status="danger" />
           )}
 
           {/* Page Title */}

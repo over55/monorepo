@@ -22,7 +22,8 @@ import {
   faCalendarCheck,
   faUsers,
   faBuilding,
-  faHome
+  faHome,
+  faBan
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 
@@ -88,6 +89,13 @@ function AdminClientListGrid(props) {
                               &nbsp;{datum.firstName}&nbsp;
                               {datum.lastName}
                             </strong>
+                          )}
+                          {datum.isBanned && (
+                              <><br/>
+                              <i style={{fontSize: "16px"}}>(<FontAwesomeIcon
+                                className="fas"
+                                icon={faBan}
+                              />Banned)</i></>
                           )}
                         </Link>
                         </p>

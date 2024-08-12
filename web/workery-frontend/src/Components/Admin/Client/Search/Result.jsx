@@ -22,6 +22,7 @@ import {
   faSearch,
   faClose,
   faCheckCircle,
+  faBan
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 import { DateTime } from "luxon";
@@ -567,6 +568,13 @@ function AdminClientSearchResult() {
                                             &nbsp;{datum.firstName}&nbsp;
                                             {datum.lastName}
                                           </strong>
+                                        )}
+                                        {datum.isBanned && (
+                                            <><br/>
+                                            <i style={{fontSize: "16px"}}>(<FontAwesomeIcon
+                                              className="fas"
+                                              icon={faBan}
+                                            />Banned)</i></>
                                         )}
                                       </Link>
                                     </p>

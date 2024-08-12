@@ -253,6 +253,9 @@ function AdminAssociateMoreOperationChangePassword() {
           {currentUser && currentUser.status === 2 && (
             <AlertBanner message="Archived" status="info" />
           )}
+          {currentUser && currentUser.isBanned && (
+            <AlertBanner message="Client is Banned" status="danger" />
+          )}
 
           {/* Page Title */}
           <h1 className="title is-2">

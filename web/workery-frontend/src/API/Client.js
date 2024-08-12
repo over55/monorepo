@@ -13,6 +13,8 @@ import {
   WORKERY_CLIENT_AVATAR_OPERATION_API_ENDPOINT,
   WORKERY_CLIENT_CHANGE_PASSWORD_OPERATION_API_ENDPOINT,
   WORKERY_CLIENT_CHANGE_2FA_OPERATION_API_URL,
+  WORKERY_CLIENT_BAN_OPERATION_API_ENDPOINT,
+  WORKERY_CLIENT_UNBAN_OPERATION_API_ENDPOINT
   // WORKERY_CLIENTS_SELECT_OPTIONS_API_ENDPOINT
 } from "../Constants/API";
 
@@ -474,6 +476,60 @@ export function postClientChangeTwoFactorAuthenticationAPI(
   const axios = getCustomAxios(onUnauthorizedCallback);
   axios
     .post(WORKERY_CLIENT_CHANGE_2FA_OPERATION_API_URL, data)
+    .then((successResponse) => {
+      const responseData = successResponse.data;
+
+      // Snake-case from API to camel-case for React.
+      const data = camelizeKeys(responseData);
+
+      // Return the callback data.
+      onSuccessCallback(data);
+    })
+    .catch((exception) => {
+      let errors = camelizeKeys(exception);
+      onErrorCallback(errors);
+    })
+    .then(onDoneCallback);
+}
+
+export function postBanClientAPI(
+  rawData,
+  onSuccessCallback,
+  onErrorCallback,
+  onDoneCallback,
+  onUnauthorizedCallback,
+) {
+  const axios = getCustomAxios(onUnauthorizedCallback);
+  const data = rawData;
+  axios
+    .post(WORKERY_CLIENT_BAN_OPERATION_API_ENDPOINT, data)
+    .then((successResponse) => {
+      const responseData = successResponse.data;
+
+      // Snake-case from API to camel-case for React.
+      const data = camelizeKeys(responseData);
+
+      // Return the callback data.
+      onSuccessCallback(data);
+    })
+    .catch((exception) => {
+      let errors = camelizeKeys(exception);
+      onErrorCallback(errors);
+    })
+    .then(onDoneCallback);
+}
+
+export function postUnbanClientAPI(
+  rawData,
+  onSuccessCallback,
+  onErrorCallback,
+  onDoneCallback,
+  onUnauthorizedCallback,
+) {
+  const axios = getCustomAxios(onUnauthorizedCallback);
+  const data = rawData;
+  axios
+    .post(WORKERY_CLIENT_UNBAN_OPERATION_API_ENDPOINT, data)
     .then((successResponse) => {
       const responseData = successResponse.data;
 

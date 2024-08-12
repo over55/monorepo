@@ -66,6 +66,11 @@ export const WORKERY_CLIENT_AVATAR_OPERATION_API_ENDPOINT =
   HTTP_API_SERVER + "/api/v1/customers/operation/avatar";
 export const WORKERY_CLIENT_CHANGE_2FA_OPERATION_API_URL =
   HTTP_API_SERVER + "/api/v1/customers/operations/change-2fa";
+export const WORKERY_CLIENT_BAN_OPERATION_API_ENDPOINT =
+  HTTP_API_SERVER + "/api/v1/customers/operations/ban";
+export const WORKERY_CLIENT_UNBAN_OPERATION_API_ENDPOINT =
+  HTTP_API_SERVER + "/api/v1/customers/operations/unban";
+
 /**
  * Tags
  */

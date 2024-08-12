@@ -31,6 +31,7 @@ import {
   faBoxOpen,
   faTrashCan,
   faHomeUser,
+  faBan
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 import { useParams } from "react-router-dom";
@@ -240,6 +241,47 @@ const AdminClientDetailMoreMobile = ({ cid, client, currentUser }) => {
                 )}
 
                 {/* ---------------------------------------------------------------------- */}
+
+                {client.status === 2 ? (
+                  <tr>
+                    <td>
+                      <FontAwesomeIcon className="fas" icon={faBan} />
+                      &nbsp;Unban
+                    </td>
+                    <td>
+                      <div className="buttons is-right">
+                        <Link
+                          to={`/admin/client/${cid}/unban`}
+                          className="is-small"
+                        >
+                          View&nbsp;
+                          <FontAwesomeIcon className="mdi" icon={faChevronRight} />
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  <tr>
+                    <td>
+                      <FontAwesomeIcon className="fas" icon={faArchive} />
+                      &nbsp;Ban
+                    </td>
+                    <td>
+                      <div className="buttons is-right">
+                        <Link
+                          to={`/admin/client/${cid}/ban`}
+                          className="is-small"
+                        >
+                          View&nbsp;
+                          <FontAwesomeIcon className="mdi" icon={faChevronRight} />
+                        </Link>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+
+                {/* ---------------------------------------------------------------------- */}
+
               </>
             )}
           </tbody>

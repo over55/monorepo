@@ -39,6 +39,8 @@ import {
   topAlertMessageState,
   topAlertStatusState,
 } from "../../../../../../AppState";
+import AlertBanner from "../../../../../Reusable/EveryPage/AlertBanner";
+
 
 function AdminClientArchiveOperation() {
   ////
@@ -252,6 +254,14 @@ function AdminClientArchiveOperation() {
                 </div>
                 <div className="column has-text-right"></div>
               </div>
+            )}
+
+            {/* Page banner */}
+            {client && client.status === 2 && (
+              <AlertBanner message="Archived" status="info" />
+            )}
+            {client && client.isBanned && (
+              <AlertBanner message="Client is Banned" status="danger" />
             )}
 
             {/* <p className="pb-4">Please fill out all the required fields before submitting this form.</p> */}

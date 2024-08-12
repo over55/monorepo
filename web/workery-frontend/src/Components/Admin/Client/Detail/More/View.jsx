@@ -30,7 +30,7 @@ import {
   faArchive,
   faBoxOpen,
   faTrashCan,
-  faHomeUser,
+  faHomeUser
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 import { useParams } from "react-router-dom";
@@ -202,6 +202,9 @@ function AdminClientDetailMore() {
           {/* Page banner */}
           {client && client.status === 2 && (
             <AlertBanner message="Archived" status="info" />
+          )}
+          {client && client.isBanned && (
+            <AlertBanner message="Client is Banned" status="danger" />
           )}
 
           {/* Page Title */}
