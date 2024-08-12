@@ -79,7 +79,7 @@ function AdminClientListDesktop(props) {
               listData.results.map(function (datum, i) {
                 return (
                   <tr
-                    className="is-size-7-tablet is-size-6-widescreen"
+                    className={`card ${datum.isBanned && "has-background-danger-light"} is-size-7-tablet is-size-6-widescreen`}
                     key={`${datum.wjid}-desktop`}
                   >
                     <td>

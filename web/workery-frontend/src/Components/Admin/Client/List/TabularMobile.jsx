@@ -48,7 +48,7 @@ function AdminClientListMobile(props) {
         listData.results &&
         listData.results.map(function (datum, i) {
           return (
-            <div className="mb-5">
+            <div className={`${datum.isBanned && "has-background-danger-light"} mb-5`}>
               <hr />
               {datum.isBanned && (
                   <>

@@ -541,7 +541,7 @@ function AdminClientSearchResult() {
                             return (
                               <div className="column is-4">
                                 <div
-                                  className="card has-background-info-light m-4"
+                                  className={`card ${datum.isBanned ? "has-background-danger-light": "has-background-info-light"} m-4`}
                                   key={`id_${datum.id}`}
                                 >
                                   {/* HEADER */}

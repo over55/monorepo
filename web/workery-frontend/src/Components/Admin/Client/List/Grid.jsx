@@ -62,7 +62,7 @@ function AdminClientListGrid(props) {
               <div className="column is-4 mb-5" key={`${datum.id}-grid`}>
                   {/* CARD */}
                   <div
-                    className="card has-background-info-light m-4"
+                    className={`card ${datum.isBanned ? "has-background-danger-light": "has-background-info-light"} m-4`}
                     key={`id_${datum.id}`}
                   >
                       {/* HEADER */}
