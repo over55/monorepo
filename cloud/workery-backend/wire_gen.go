@@ -169,7 +169,7 @@ func InitializeEvent() Application {
 	handler13 := httptransport14.NewHandler(slogLogger, tenantController)
 	customerController := controller15.NewController(conf, slogLogger, provider, s3Storager, passwordProvider, kmutexProvider, templatedEmailer, client, tenantStorer, commentStorer, howHearAboutUsItemStorer, tagStorer, userStorer, attachmentStorer, customerStorer, orderStorer, taskItemStorer)
 	handler14 := httptransport15.NewHandler(slogLogger, customerController)
-	attachmentController := controller16.NewController(conf, slogLogger, provider, kmutexProvider, s3Storager, emailer, client, attachmentStorer, userStorer, customerStorer, associateStorer, orderStorer, staffStorer)
+	attachmentController := controller16.NewController(conf, slogLogger, provider, kmutexProvider, s3Storager, emailer, client, attachmentStorer, commentStorer, userStorer, customerStorer, associateStorer, orderStorer, staffStorer)
 	handler15 := httptransport16.NewHandler(slogLogger, attachmentController)
 	associateInvoiceBuilder := pdfbuilder.NewAssociateInvoiceBuilder(conf, slogLogger)
 	orderController := controller17.NewController(conf, slogLogger, provider, s3Storager, passwordProvider, kmutexProvider, templatedEmailer, client, associateInvoiceBuilder, tenantStorer, commentStorer, howHearAboutUsItemStorer, skillSetStorer, tagStorer, taskItemStorer, userStorer, customerStorer, associateStorer, orderStorer, serviceFeeStorer, activitySheetStorer, attachmentStorer)

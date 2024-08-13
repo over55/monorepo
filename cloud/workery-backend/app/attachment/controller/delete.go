@@ -45,6 +45,8 @@ func (impl *AttachmentControllerImpl) DeleteByID(ctx context.Context, id primiti
 	// 	return httperror.NewForForbiddenWithSingleField("role", "root attachment cannot be deleted")
 	// }
 
+	//TODO: CREATE A COMMENT.
+
 	// Save to the database the modified attachment.
 	if err := impl.AttachmentStorer.UpdateByID(ctx, attachment); err != nil {
 		impl.Logger.Error("database update by id error", slog.Any("error", err))

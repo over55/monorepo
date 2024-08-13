@@ -332,10 +332,10 @@ function AdminAssociateDetailAttachmentList() {
                       previousCursors.length > 0) ? (
                       <div className="container">
                         {/*
-                                                ##################################################################
-                                                EVERYTHING INSIDE HERE WILL ONLY BE DISPLAYED ON A DESKTOP SCREEN.
-                                                ##################################################################
-                                            */}
+                            ##################################################################
+                            EVERYTHING INSIDE HERE WILL ONLY BE DISPLAYED ON A DESKTOP SCREEN.
+                            ##################################################################
+                        */}
                         <div className="is-hidden-touch">
                           <AdminAssociateDetailAttachmentListDesktop
                             associateID={aid}
@@ -349,10 +349,10 @@ function AdminAssociateDetailAttachmentList() {
                         </div>
 
                         {/*
-                                                ###########################################################################
-                                                EVERYTHING INSIDE HERE WILL ONLY BE DISPLAYED ON A TABLET OR MOBILE SCREEN.
-                                                ###########################################################################
-                                            */}
+                            ###########################################################################
+                            EVERYTHING INSIDE HERE WILL ONLY BE DISPLAYED ON A TABLET OR MOBILE SCREEN.
+                            ###########################################################################
+                        */}
                         <div className="is-fullwidth is-hidden-desktop">
                           <AdminAssociateDetailAttachmentListMobile
                             associateID={aid}

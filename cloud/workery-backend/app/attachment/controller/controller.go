@@ -12,6 +12,7 @@ import (
 	a_s "github.com/over55/monorepo/cloud/workery-backend/app/associate/datastore"
 	attachment_s "github.com/over55/monorepo/cloud/workery-backend/app/attachment/datastore"
 	domain "github.com/over55/monorepo/cloud/workery-backend/app/attachment/datastore"
+	com_s "github.com/over55/monorepo/cloud/workery-backend/app/comment/datastore"
 	c_s "github.com/over55/monorepo/cloud/workery-backend/app/customer/datastore"
 	o_s "github.com/over55/monorepo/cloud/workery-backend/app/order/datastore"
 	s_s "github.com/over55/monorepo/cloud/workery-backend/app/staff/datastore"
@@ -43,6 +44,7 @@ type AttachmentControllerImpl struct {
 	Emailer          mg.Emailer
 	DbClient         *mongo.Client
 	AttachmentStorer attachment_s.AttachmentStorer
+	CommentStorer    com_s.CommentStorer
 	UserStorer       user_s.UserStorer
 	CustomerStorer   c_s.CustomerStorer
 	AssociateStorer  a_s.AssociateStorer
@@ -59,6 +61,7 @@ func NewController(
 	emailer mg.Emailer,
 	client *mongo.Client,
 	org_storer attachment_s.AttachmentStorer,
+	com_storer com_s.CommentStorer,
 	usr_storer user_s.UserStorer,
 	c_storer c_s.CustomerStorer,
 	a_storer a_s.AssociateStorer,
@@ -75,6 +78,7 @@ func NewController(
 		Emailer:          emailer,
 		DbClient:         client,
 		AttachmentStorer: org_storer,
+		CommentStorer:    com_storer,
 		UserStorer:       usr_storer,
 		CustomerStorer:   c_storer,
 		AssociateStorer:  a_storer,

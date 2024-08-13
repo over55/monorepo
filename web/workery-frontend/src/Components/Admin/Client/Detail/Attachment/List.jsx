@@ -371,10 +371,7 @@ function AdminClientDetailAttachmentList() {
                 ></button>
               </header>
               <section className="modal-card-body">
-                You are about to <b>archive</b> this user; it will no longer
-                appear on your dashboard This action can be undone but you'll
-                need to contact the system administrator. Are you sure you would
-                like to continue?
+                You are about to <b>delete</b> this attachment; it will no longer appear on your dashboard and will be permently removed. This action cannot be undone. Are you sure you would like to continue?
               </section>
               <footer className="modal-card-foot">
                 <button
