@@ -72,7 +72,7 @@ func (impl *AttachmentControllerImpl) DeleteByID(ctx context.Context, id primiti
 		}
 
 		// Attach a comment.
-		commentContent := fmt.Sprintf("%s deleted the called `file` %s on `%v`.", userName, attachment.Filename, timekit.ToAmericanDateString(time.Now()))
+		commentContent := fmt.Sprintf("%s deleted the file called `%s` on `%v`.", userName, attachment.Filename, timekit.ToAmericanDateString(time.Now()))
 		if err := impl.attachCommentComment(sessCtx, attachment, commentContent); err != nil {
 			impl.Logger.Error("failed to attach comment error", slog.Any("error", err))
 			return nil, err
@@ -140,7 +140,7 @@ func (impl *AttachmentControllerImpl) PermanentlyDeleteByID(ctx context.Context,
 		}
 
 		// Attach a comment.
-		commentContent := fmt.Sprintf("%s deleted the called `file` %s on `%v`.", userName, attachment.Filename, timekit.ToAmericanDateString(time.Now()))
+		commentContent := fmt.Sprintf("%s deleted the file called `%s` on `%v`.", userName, attachment.Filename, timekit.ToAmericanDateString(time.Now()))
 		if err := impl.attachCommentComment(sessCtx, attachment, commentContent); err != nil {
 			impl.Logger.Error("failed to attach comment error", slog.Any("error", err))
 			return nil, err
@@ -215,7 +215,7 @@ func (impl *AttachmentControllerImpl) PermanentlyDeleteAllByCustomerID(ctx conte
 			}
 
 			// Attach a comment.
-			commentContent := fmt.Sprintf("%s deleted the called `file` %s on `%v`.", userName, a.Filename, timekit.ToAmericanDateString(time.Now()))
+			commentContent := fmt.Sprintf("%s deleted the file called `%s` on `%v`.", userName, a.Filename, timekit.ToAmericanDateString(time.Now()))
 			if err := impl.attachCommentComment(sessCtx, a, commentContent); err != nil {
 				impl.Logger.Error("failed to attach comment error", slog.Any("error", err))
 				return nil, err
@@ -290,7 +290,7 @@ func (impl *AttachmentControllerImpl) PermanentlyDeleteAllByAssociateID(ctx cont
 			}
 
 			// Attach a comment.
-			commentContent := fmt.Sprintf("%s deleted the called `file` %s on `%v`.", userName, a.Filename, timekit.ToAmericanDateString(time.Now()))
+			commentContent := fmt.Sprintf("%s deleted the file called `%s` on `%v`.", userName, a.Filename, timekit.ToAmericanDateString(time.Now()))
 			if err := impl.attachCommentComment(sessCtx, a, commentContent); err != nil {
 				impl.Logger.Error("failed to attach comment error", slog.Any("error", err))
 				return nil, err
