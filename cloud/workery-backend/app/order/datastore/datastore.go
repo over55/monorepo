@@ -399,15 +399,15 @@ func NewDatastore(appCfg *c.Conf, loggerp *slog.Logger, client *mongo.Client) Or
 	// ctx := context.Background()
 	uc := client.Database(appCfg.DB.Name).Collection("orders")
 
-	// // For debugging purposes only or if you are going to recreate new indexes.
-	// if _, err := uc.Indexes().DropAll(context.TODO()); err != nil {
-	// 	loggerp.Error("failed deleting all indexes",
-	// 		slog.Any("err", err))
-	//
-	// 	// It is important that we crash the app on startup to meet the
-	// 	// requirements of `google/wire` framework.
-	// 	log.Fatal(err)
-	// }
+	// For debugging purposes only or if you are going to recreate new indexes.
+	if _, err := uc.Indexes().DropAll(context.TODO()); err != nil {
+		loggerp.Error("failed deleting all indexes",
+			slog.Any("err", err))
+
+		// It is important that we crash the app on startup to meet the
+		// requirements of `google/wire` framework.
+		log.Fatal(err)
+	}
 
 	// Note:
 	// * 1 for ascending
@@ -415,59 +415,62 @@ func NewDatastore(appCfg *c.Conf, loggerp *slog.Logger, client *mongo.Client) Or
 	// * "text" for text indexes
 
 	_, err := uc.Indexes().CreateMany(context.TODO(), []mongo.IndexModel{
-		// 1. Composite Indexes for Filtering
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}}},
-		{Keys: bson.D{{Key: "status", Value: 1}}},
-		{Keys: bson.D{{Key: "type", Value: 1}}},
-		{Keys: bson.D{{Key: "associate_id", Value: 1}}},
-		{Keys: bson.D{{Key: "customer_id", Value: 1}}},
-		{Keys: bson.D{{Key: "modified_by_user_id", Value: -1}}},
-
-		// Composite Indexes for Filtering with Multiple Fields
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}}},
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "associate_id", Value: 1}}},
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "customer_id", Value: 1}}},
-
-		// 2. Indexes for Sorting
-		{Keys: bson.D{{Key: "customer_lexical_name", Value: 1}}},
-		{Keys: bson.D{{Key: "associate_lexical_name", Value: 1}}},
-		{Keys: bson.D{{Key: "assignment_date", Value: -1}}},
-		{Keys: bson.D{{Key: "start_date", Value: -1}}},
-		{Keys: bson.D{{Key: "created_at", Value: -1}}},
-		{Keys: bson.D{{Key: "modified_at", Value: -1}}},
-
-		// 3. Composite Indexes for Filtering with Multiple Fields and Sorting
-		// (These are for `order list` page in the frontend.)
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "customer_lexical_name", Value: 1}}},
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "associate_lexical_name", Value: 1}}},
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "assignment_date", Value: -1}}},
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "start_date", Value: -1}}},
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "created_at", Value: -1}}},
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "modified_at", Value: -1}}},
-
-		// (These are for filtering orders within `client details` page in the frontend.)
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "associate_id", Value: 1}, {Key: "customer_lexical_name", Value: 1}}},
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "associate_id", Value: 1}, {Key: "associate_lexical_name", Value: 1}}},
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "associate_id", Value: 1}, {Key: "assignment_date", Value: -1}}},
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "associate_id", Value: 1}, {Key: "start_date", Value: -1}}},
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "associate_id", Value: 1}, {Key: "created_at", Value: -1}}},
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "associate_id", Value: 1}, {Key: "modified_at", Value: -1}}},
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "assignment_date", Value: -1}, {Key: "customer_id", Value: 1}}},
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "start_date", Value: -1}, {Key: "customer_id", Value: 1}}},
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "created_at", Value: -1}, {Key: "customer_id", Value: 1}}},
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "modified_at", Value: -1}, {Key: "customer_id", Value: 1}}},
-
-		// (These are for filtering orders within `associate details` page in the frontend.)
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "customer_id", Value: 1}, {Key: "customer_lexical_name", Value: 1}}},
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "customer_id", Value: 1}, {Key: "associate_lexical_name", Value: 1}}},
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "customer_id", Value: 1}, {Key: "assignment_date", Value: -1}}},
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "customer_id", Value: 1}, {Key: "start_date", Value: -1}}},
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "customer_id", Value: 1}, {Key: "created_at", Value: -1}}},
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "customer_id", Value: 1}, {Key: "modified_at", Value: -1}}},
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "assignment_date", Value: -1}, {Key: "associate_id", Value: 1}}},
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "start_date", Value: -1}, {Key: "associate_id", Value: 1}}},
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "created_at", Value: -1}, {Key: "associate_id", Value: 1}}},
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "modified_at", Value: -1}, {Key: "associate_id", Value: 1}}},
+		// // 1. Composite Indexes for Filtering
+		// {Keys: bson.D{{Key: "tenant_id", Value: 1}}},
+		// {Keys: bson.D{{Key: "status", Value: 1}}},
+		// {Keys: bson.D{{Key: "type", Value: 1}}},
+		// {Keys: bson.D{{Key: "associate_id", Value: 1}}},
+		// {Keys: bson.D{{Key: "customer_id", Value: 1}}},
+		// {Keys: bson.D{{Key: "modified_by_user_id", Value: -1}}},
+		//
+		// // Composite Indexes for Filtering with Multiple Fields
+		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}}},
+		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "associate_id", Value: 1}}},
+		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "customer_id", Value: 1}}},
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "created_at", Value: -1}}}, // (Note: Used in dashboard.)
+		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "modified_by_user_id", Value: 1}}},
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "modified_by_user_id", Value: 1}, {Key: "created_at", Value: -1}}}, // (Note: Used in dashboard.)
+		//
+		// // 2. Indexes for Sorting
+		// {Keys: bson.D{{Key: "customer_lexical_name", Value: 1}}},
+		// {Keys: bson.D{{Key: "associate_lexical_name", Value: 1}}},
+		// {Keys: bson.D{{Key: "assignment_date", Value: -1}}},
+		// {Keys: bson.D{{Key: "start_date", Value: -1}}},
+		// {Keys: bson.D{{Key: "created_at", Value: -1}}},
+		// {Keys: bson.D{{Key: "modified_at", Value: -1}}},
+		//
+		// // 3. Composite Indexes for Filtering with Multiple Fields and Sorting
+		// // (These are for `order list` page in the frontend.)
+		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "customer_lexical_name", Value: 1}}},
+		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "associate_lexical_name", Value: 1}}},
+		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "assignment_date", Value: -1}}},
+		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "start_date", Value: -1}}},
+		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "created_at", Value: -1}}},
+		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "modified_at", Value: -1}}},
+		//
+		// // (These are for filtering orders within `client details` page in the frontend.)
+		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "associate_id", Value: 1}, {Key: "customer_lexical_name", Value: 1}}},
+		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "associate_id", Value: 1}, {Key: "associate_lexical_name", Value: 1}}},
+		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "associate_id", Value: 1}, {Key: "assignment_date", Value: -1}}},
+		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "associate_id", Value: 1}, {Key: "start_date", Value: -1}}},
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "associate_id", Value: 1}, {Key: "created_at", Value: -1}}}, // (Note: Associate related orders)
+		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "associate_id", Value: 1}, {Key: "modified_at", Value: -1}}},
+		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "assignment_date", Value: -1}, {Key: "customer_id", Value: 1}}},
+		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "start_date", Value: -1}, {Key: "customer_id", Value: 1}}},
+		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "created_at", Value: -1}, {Key: "customer_id", Value: 1}}},
+		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "modified_at", Value: -1}, {Key: "customer_id", Value: 1}}},
+		//
+		// // (These are for filtering orders within `associate details` page in the frontend.)
+		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "customer_id", Value: 1}, {Key: "customer_lexical_name", Value: 1}}},
+		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "customer_id", Value: 1}, {Key: "associate_lexical_name", Value: 1}}},
+		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "customer_id", Value: 1}, {Key: "assignment_date", Value: -1}}},
+		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "customer_id", Value: 1}, {Key: "start_date", Value: -1}}},
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "customer_id", Value: 1}, {Key: "created_at", Value: -1}}}, // (Note: Customer related orders)
+		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "customer_id", Value: 1}, {Key: "modified_at", Value: -1}}},
+		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "assignment_date", Value: -1}, {Key: "associate_id", Value: 1}}},
+		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "start_date", Value: -1}, {Key: "associate_id", Value: 1}}},
+		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "created_at", Value: -1}, {Key: "associate_id", Value: 1}}},
+		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}, {Key: "modified_at", Value: -1}, {Key: "associate_id", Value: 1}}},
 
 		// 4. Compound Text Index for Text Search
 		{Keys: bson.D{

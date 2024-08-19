@@ -54,7 +54,13 @@ func (impl TaskItemStorerImpl) ListByFilter(ctx context.Context, f *TaskItemPagi
 		filter["skill_sets._id"] = bson.M{"$all": f.AllSkillSetIDs}
 	}
 
+	// // For debugging purposes only.
 	// impl.Logger.Debug("listing filter:",
+	// 	slog.Any("Cursor", f.Cursor),
+	// 	slog.Int64("PageSize", f.PageSize),
+	// 	slog.String("SortField", f.SortField),
+	// 	slog.Int("SortOrder", int(f.SortOrder)),
+	// 	// slog.Any("TenantID", f.TenantID),
 	// 	slog.Any("filter", filter))
 
 	// Include additional filters for our cursor-based pagination pertaining to sorting and limit.

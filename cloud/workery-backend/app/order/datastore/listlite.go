@@ -172,8 +172,13 @@ func (impl OrderStorerImpl) LiteListByFilter(ctx context.Context, f *OrderPagina
 		filter["$and"] = conditions
 	}
 
-	// For debugging purposes only.
+	// // For debugging purposes only.
 	// impl.Logger.Debug("listing filter:",
+	// 	slog.Any("Cursor", f.Cursor),
+	// 	slog.Int64("PageSize", f.PageSize),
+	// 	slog.String("SortField", f.SortField),
+	// 	slog.Int("SortOrder", int(f.SortOrder)),
+	// 	// slog.Any("TenantID", f.TenantID),
 	// 	slog.Any("filter", filter))
 
 	// Include additional filters for our cursor-based pagination pertaining to sorting and limit.

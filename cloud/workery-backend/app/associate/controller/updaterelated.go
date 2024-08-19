@@ -93,22 +93,22 @@ func (impl *AssociateControllerImpl) UpdateRelatedBySkillSets(sessCtx mongo.Sess
 	}
 
 	// See what are the differences between the two arrays of type `uint64` data-types.
-	addIDs, keepIDs, removedIDs := arraydiff.ObjectIDs(oldSSIDs, modifiedSSIDs)
+	addIDs, _, removedIDs := arraydiff.ObjectIDs(oldSSIDs, modifiedSSIDs)
 
-	// For debugging purposes only.
-	impl.Logger.Debug("skill sets changes",
-		slog.Any("added", addIDs),
-		slog.Any("keep", keepIDs),
-		slog.Any("removed", removedIDs))
+	// // For debugging purposes only.
+	// impl.Logger.Debug("skill sets changes",
+	// 	slog.Any("added", addIDs),
+	// 	slog.Any("keep", keepIDs),
+	// 	slog.Any("removed", removedIDs))
 
 	////
 	//// Add new skill sets.
 	////
 
 	for _, addID := range addIDs {
-		// For debugging purposes only.
-		impl.Logger.Debug("adding skill set to associate",
-			slog.Any("SkillSetID", addID))
+		// // For debugging purposes only.
+		// impl.Logger.Debug("adding skill set to associate",
+		// 	slog.Any("SkillSetID", addID))
 
 		// Step 1: Lookup the skill set.
 		ss, err := impl.SkillSetStorer.GetByID(sessCtx, addID)
