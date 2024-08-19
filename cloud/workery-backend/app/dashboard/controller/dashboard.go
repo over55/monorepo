@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"log/slog"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/sync/errgroup"
@@ -32,6 +33,15 @@ type DashboardResponseIDO struct {
 }
 
 func (impl *DashboardControllerImpl) getActiveClientsCount(ctx context.Context, tenantID primitive.ObjectID) (int64, error) {
+	startTime := time.Now() // Capture the start time
+	defer func() {
+		duration := time.Since(startTime).Seconds() // Calculate the duration in seconds
+		impl.Logger.Debug("executed",
+			slog.String("func", "getActiveClientsCount"),
+			slog.Float64("duration_seconds", duration),
+		)
+	}()
+
 	f := &cust_s.CustomerPaginationListFilter{
 		TenantID: tenantID,
 		Status:   u_s.UserStatusActive,
@@ -45,6 +55,15 @@ func (impl *DashboardControllerImpl) getActiveClientsCount(ctx context.Context, 
 }
 
 func (impl *DashboardControllerImpl) getActiveAssociatesCount(ctx context.Context, tenantID primitive.ObjectID) (int64, error) {
+	startTime := time.Now() // Capture the start time
+	defer func() {
+		duration := time.Since(startTime).Seconds() // Calculate the duration in seconds
+		impl.Logger.Debug("executed",
+			slog.String("func", "getActiveAssociatesCount"),
+			slog.Float64("duration_seconds", duration),
+		)
+	}()
+
 	f := &a_s.AssociatePaginationListFilter{
 		TenantID: tenantID,
 		Status:   a_s.AssociateStatusActive,
@@ -58,6 +77,15 @@ func (impl *DashboardControllerImpl) getActiveAssociatesCount(ctx context.Contex
 }
 
 func (impl *DashboardControllerImpl) getActiveJobsCount(ctx context.Context, tenantID primitive.ObjectID) (int64, error) {
+	startTime := time.Now() // Capture the start time
+	defer func() {
+		duration := time.Since(startTime).Seconds() // Calculate the duration in seconds
+		impl.Logger.Debug("executed",
+			slog.String("func", "getActiveJobsCount"),
+			slog.Float64("duration_seconds", duration),
+		)
+	}()
+
 	f := &o_s.OrderPaginationListFilter{
 		TenantID: tenantID,
 		Statuses: []int8{
@@ -75,6 +103,15 @@ func (impl *DashboardControllerImpl) getActiveJobsCount(ctx context.Context, ten
 }
 
 func (impl *DashboardControllerImpl) getActiveTasksCount(ctx context.Context, tenantID primitive.ObjectID) (int64, error) {
+	startTime := time.Now() // Capture the start time
+	defer func() {
+		duration := time.Since(startTime).Seconds() // Calculate the duration in seconds
+		impl.Logger.Debug("executed",
+			slog.String("func", "getActiveTasksCount"),
+			slog.Float64("duration_seconds", duration),
+		)
+	}()
+
 	f := &ti_s.TaskItemPaginationListFilter{
 		TenantID: tenantID,
 		Status:   ti_s.TaskItemStatusActive,
@@ -89,6 +126,15 @@ func (impl *DashboardControllerImpl) getActiveTasksCount(ctx context.Context, te
 }
 
 func (impl *DashboardControllerImpl) getAwayLogs(ctx context.Context, tenantID primitive.ObjectID) ([]*away_s.AssociateAwayLog, error) {
+	startTime := time.Now() // Capture the start time
+	defer func() {
+		duration := time.Since(startTime).Seconds() // Calculate the duration in seconds
+		impl.Logger.Debug("executed",
+			slog.String("func", "getAwayLogs"),
+			slog.Float64("duration_seconds", duration),
+		)
+	}()
+
 	f := &away_s.AssociateAwayLogPaginationListFilter{
 		Cursor:    "",
 		PageSize:  1_000_000,
@@ -106,6 +152,15 @@ func (impl *DashboardControllerImpl) getAwayLogs(ctx context.Context, tenantID p
 }
 
 func (impl *DashboardControllerImpl) getUserJobHistory(ctx context.Context, tenantID, userID primitive.ObjectID) ([]*o_s.OrderLite, error) {
+	startTime := time.Now() // Capture the start time
+	defer func() {
+		duration := time.Since(startTime).Seconds() // Calculate the duration in seconds
+		impl.Logger.Debug("executed",
+			slog.String("func", "getUserJobHistory"),
+			slog.Float64("duration_seconds", duration),
+		)
+	}()
+
 	f := &o_s.OrderPaginationListFilter{
 		Cursor:           "",
 		PageSize:         5,
@@ -123,6 +178,15 @@ func (impl *DashboardControllerImpl) getUserJobHistory(ctx context.Context, tena
 }
 
 func (impl *DashboardControllerImpl) getTeamJobHistory(ctx context.Context, tenantID primitive.ObjectID) ([]*o_s.OrderLite, error) {
+	startTime := time.Now() // Capture the start time
+	defer func() {
+		duration := time.Since(startTime).Seconds() // Calculate the duration in seconds
+		impl.Logger.Debug("executed",
+			slog.String("func", "getTeamJobHistory"),
+			slog.Float64("duration_seconds", duration),
+		)
+	}()
+
 	f := &o_s.OrderPaginationListFilter{
 		Cursor:    "",
 		PageSize:  10,
@@ -139,6 +203,15 @@ func (impl *DashboardControllerImpl) getTeamJobHistory(ctx context.Context, tena
 }
 
 func (impl *DashboardControllerImpl) getBulletins(ctx context.Context, tenantID primitive.ObjectID) ([]*b_s.Bulletin, error) {
+	startTime := time.Now() // Capture the start time
+	defer func() {
+		duration := time.Since(startTime).Seconds() // Calculate the duration in seconds
+		impl.Logger.Debug("executed",
+			slog.String("func", "getBulletins"),
+			slog.Float64("duration_seconds", duration),
+		)
+	}()
+
 	f := &b_s.BulletinPaginationListFilter{
 		Cursor:    "",
 		PageSize:  1_000_000,
@@ -156,6 +229,15 @@ func (impl *DashboardControllerImpl) getBulletins(ctx context.Context, tenantID 
 }
 
 func (impl *DashboardControllerImpl) getOrderComments(ctx context.Context, tenantID primitive.ObjectID) ([]*com_s.Comment, error) {
+	startTime := time.Now() // Capture the start time
+	defer func() {
+		duration := time.Since(startTime).Seconds() // Calculate the duration in seconds
+		impl.Logger.Debug("executed",
+			slog.String("func", "getOrderComments"),
+			slog.Float64("duration_seconds", duration),
+		)
+	}()
+
 	f := &com_s.CommentPaginationListFilter{
 		Cursor:    "",
 		PageSize:  10,
@@ -173,6 +255,15 @@ func (impl *DashboardControllerImpl) getOrderComments(ctx context.Context, tenan
 }
 
 func (impl *DashboardControllerImpl) Dashboard(ctx context.Context) (*DashboardResponseIDO, error) {
+	startTime := time.Now() // Capture the start time
+	defer func() {
+		duration := time.Since(startTime).Seconds() // Calculate the duration in seconds
+		impl.Logger.Debug("executed",
+			slog.String("func", "Dashboard"),
+			slog.Float64("duration_seconds", duration),
+		)
+	}()
+
 	// Extract from our session the following data.
 	tenantID, _ := ctx.Value(constants.SessionUserTenantID).(primitive.ObjectID)
 	userID, _ := ctx.Value(constants.SessionUserID).(primitive.ObjectID)

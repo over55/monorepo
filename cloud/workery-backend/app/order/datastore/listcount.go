@@ -9,18 +9,18 @@ import (
 // the Order lite records (meaning limited).
 type OrderPaginationLiteListAndCountResult struct {
 	Results     []*OrderLite `json:"results"`
-	NextCursor  string          `json:"next_cursor"`
-	HasNextPage bool            `json:"has_next_page"`
-	Count       int64           `json:"count"`
+	NextCursor  string       `json:"next_cursor"`
+	HasNextPage bool         `json:"has_next_page"`
+	Count       int64        `json:"count"`
 }
 
 // OrderPaginationListResult represents the paginated list results for
 // the Order records (meaning limited).
 type OrderPaginationListAndCountResult struct {
 	Results     []*Order `json:"results"`
-	NextCursor  string      `json:"next_cursor"`
-	HasNextPage bool        `json:"has_next_page"`
-	Count       int64       `json:"count"`
+	NextCursor  string   `json:"next_cursor"`
+	HasNextPage bool     `json:"has_next_page"`
+	Count       int64    `json:"count"`
 }
 
 func (c *OrderStorerImpl) LiteListAndCountByFilter(ctx context.Context, f *OrderPaginationListFilter) (*OrderPaginationLiteListAndCountResult, error) {
