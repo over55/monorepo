@@ -10,7 +10,7 @@ import (
 )
 
 func (impl VehicleTypeStorerImpl) ListAsSelectOptionByFilter(ctx context.Context, f *VehicleTypePaginationListFilter) ([]*VehicleTypeAsSelectOption, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
 	defer cancel()
 
 	// Get a reference to the collection

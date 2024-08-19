@@ -11,7 +11,7 @@ import (
 )
 
 func (impl UserStorerImpl) ListByFilter(ctx context.Context, f *UserListFilter) (*UserListResult, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
 	defer cancel()
 
 	// Create the filter based on the cursor
@@ -108,7 +108,7 @@ func (impl UserStorerImpl) ListByFilter(ctx context.Context, f *UserListFilter) 
 }
 
 func (impl UserStorerImpl) ListAsSelectOptionByFilter(ctx context.Context, f *UserListFilter) ([]*UserAsSelectOption, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
 	defer cancel()
 
 	// Get a reference to the collection

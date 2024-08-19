@@ -10,7 +10,7 @@ import (
 )
 
 func (impl TaskItemStorerImpl) ListAsSelectOptionByFilter(ctx context.Context, f *TaskItemListFilter) ([]*TaskItemAsSelectOption, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
 	defer cancel()
 
 	// Get a reference to the collection

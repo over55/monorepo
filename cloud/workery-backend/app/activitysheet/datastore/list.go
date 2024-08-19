@@ -10,7 +10,7 @@ import (
 )
 
 func (impl ActivitySheetStorerImpl) ListByFilter(ctx context.Context, f *ActivitySheetPaginationListFilter) (*ActivitySheetPaginationListResult, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
 	defer cancel()
 
 	filter, err := impl.newPaginationFilter(f)
@@ -97,7 +97,7 @@ func (impl ActivitySheetStorerImpl) ListByFilter(ctx context.Context, f *Activit
 }
 
 func (impl ActivitySheetStorerImpl) ListAsSelectOptionByFilter(ctx context.Context, f *ActivitySheetPaginationListFilter) ([]*ActivitySheetAsSelectOption, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
 	defer cancel()
 
 	// Get a reference to the collection

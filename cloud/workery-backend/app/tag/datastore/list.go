@@ -11,7 +11,7 @@ import (
 )
 
 func (impl TagStorerImpl) ListByFilter(ctx context.Context, f *TagPaginationListFilter) (*TagPaginationListResult, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
 	defer cancel()
 
 	// Create the paginated filter based on the cursor
@@ -90,7 +90,7 @@ func (impl TagStorerImpl) ListByFilter(ctx context.Context, f *TagPaginationList
 }
 
 func (impl TagStorerImpl) ListAsSelectOptionByFilter(ctx context.Context, f *TagListFilter) ([]*TagAsSelectOption, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
 	defer cancel()
 
 	// Get a reference to the collection

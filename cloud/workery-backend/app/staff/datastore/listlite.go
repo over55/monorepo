@@ -44,7 +44,7 @@ type StaffLite struct {
 }
 
 func (impl StaffStorerImpl) LiteListByFilter(ctx context.Context, f *StaffPaginationListFilter) (*StaffPaginationLiteListResult, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
 	defer cancel()
 
 	filter, err := impl.newPaginationFilter(f)

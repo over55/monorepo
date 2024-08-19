@@ -9,7 +9,7 @@ import (
 )
 
 func (impl TagStorerImpl) CountByFilter(ctx context.Context, f *TagPaginationListFilter) (int64, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
 	defer cancel()
 
 	// Create the filter based on the cursor

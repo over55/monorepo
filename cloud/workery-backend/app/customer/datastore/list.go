@@ -9,7 +9,7 @@ import (
 )
 
 func (impl CustomerStorerImpl) ListByFilter(ctx context.Context, f *CustomerPaginationListFilter) (*CustomerPaginationListResult, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
 	defer cancel()
 
 	filter, err := impl.newPaginationFilter(f)

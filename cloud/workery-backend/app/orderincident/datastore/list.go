@@ -11,7 +11,7 @@ import (
 )
 
 func (impl OrderIncidentStorerImpl) ListByFilter(ctx context.Context, f *OrderIncidentPaginationListFilter) (*OrderIncidentPaginationListResult, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
 	defer cancel()
 
 	// Create the paginated filter based on the cursor
@@ -97,7 +97,7 @@ func (impl OrderIncidentStorerImpl) ListByFilter(ctx context.Context, f *OrderIn
 }
 
 func (impl OrderIncidentStorerImpl) ListAsSelectOptionByFilter(ctx context.Context, f *OrderIncidentListFilter) ([]*OrderIncidentAsSelectOption, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
 	defer cancel()
 
 	// Get a reference to the collection

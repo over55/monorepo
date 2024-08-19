@@ -11,7 +11,7 @@ import (
 )
 
 func (impl TenantStorerImpl) ListByFilter(ctx context.Context, f *TenantListFilter) (*TenantListResult, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
 	defer cancel()
 
 	// Create the filter based on the cursor
@@ -93,7 +93,7 @@ func (impl TenantStorerImpl) ListByFilter(ctx context.Context, f *TenantListFilt
 }
 
 func (impl TenantStorerImpl) ListAsSelectOptionByFilter(ctx context.Context, f *TenantListFilter) ([]*TenantAsSelectOption, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
 	defer cancel()
 
 	// Get a reference to the collection

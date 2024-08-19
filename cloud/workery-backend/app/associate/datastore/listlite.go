@@ -46,7 +46,7 @@ type AssociateLite struct {
 }
 
 func (impl AssociateStorerImpl) LiteListByFilter(ctx context.Context, f *AssociatePaginationListFilter) (*AssociatePaginationLiteListResult, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
 	defer cancel()
 
 	filter, err := impl.newPaginationFilter(f)

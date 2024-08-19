@@ -9,7 +9,7 @@ import (
 )
 
 func (impl OrderStorerImpl) CountByFilter(ctx context.Context, f *OrderPaginationListFilter) (int64, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
 	defer cancel()
 
 	// Create the filter based on the cursor
@@ -151,7 +151,7 @@ func (impl OrderStorerImpl) CountByFilter(ctx context.Context, f *OrderPaginatio
 }
 
 func (impl OrderStorerImpl) CountByAssociateID(ctx context.Context, tenantID primitive.ObjectID) (int64, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
 	defer cancel()
 
 	// Create the filter based on the cursor
@@ -175,7 +175,7 @@ func (impl OrderStorerImpl) CountByAssociateID(ctx context.Context, tenantID pri
 }
 
 func (impl OrderStorerImpl) CountByTenantID(ctx context.Context, tenantID primitive.ObjectID) (int64, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
 	defer cancel()
 
 	// Create the filter based on the cursor

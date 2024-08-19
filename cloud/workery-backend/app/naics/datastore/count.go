@@ -9,7 +9,7 @@ import (
 )
 
 func (impl NorthAmericanIndustryClassificationSystemStorerImpl) CountByFilter(ctx context.Context, f *NorthAmericanIndustryClassificationSystemPaginationListFilter) (int64, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
 	defer cancel()
 
 	// Create the filter based on the cursor

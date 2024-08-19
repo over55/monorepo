@@ -16,7 +16,7 @@ const (
 )
 
 func (impl AttachmentStorerImpl) ListByFilter(ctx context.Context, f *AttachmentListFilter) (*AttachmentListResult, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
 	defer cancel()
 
 	// Create the filter based on the cursor
@@ -113,7 +113,7 @@ func (impl AttachmentStorerImpl) ListByFilter(ctx context.Context, f *Attachment
 }
 
 func (impl AttachmentStorerImpl) ListAsSelectOptionByFilter(ctx context.Context, f *AttachmentListFilter) ([]*AttachmentAsSelectOption, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
 	defer cancel()
 
 	// Get a reference to the collection

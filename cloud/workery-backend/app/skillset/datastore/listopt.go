@@ -10,7 +10,7 @@ import (
 )
 
 func (impl SkillSetStorerImpl) ListAsSelectOptionByFilter(ctx context.Context, f *SkillSetListFilter) ([]*SkillSetAsSelectOption, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
 	defer cancel()
 
 	// Get a reference to the collection

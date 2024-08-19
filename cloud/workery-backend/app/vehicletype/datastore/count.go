@@ -8,7 +8,7 @@ import (
 )
 
 func (impl VehicleTypeStorerImpl) CountByFilter(ctx context.Context, f *VehicleTypePaginationListFilter) (int64, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
 	defer cancel()
 
 	// Create the filter based on the cursor

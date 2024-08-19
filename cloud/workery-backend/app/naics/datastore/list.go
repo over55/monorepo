@@ -9,7 +9,7 @@ import (
 )
 
 func (impl NorthAmericanIndustryClassificationSystemStorerImpl) ListByFilter(ctx context.Context, f *NorthAmericanIndustryClassificationSystemPaginationListFilter) (*NorthAmericanIndustryClassificationSystemPaginationListResult, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 12*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
 	defer cancel()
 
 	// Create the paginated filter based on the cursor
