@@ -33,23 +33,31 @@ tasks:
 
   # Note: Only executed by devops team.
   dockerlogin:
-    desc: Command will log in your developer's machine with the private docker registry.
+    desc: (DevOps only) Command will log in your developer's machine with the private docker registry.
     cmds:
       - docker login registry.digitalocean.com
 
   # Note: Only executed by devops team.
   dockerlogout:
-    desc: Command will log out of the private docker registry. (Important step if you are using other private docker registries)
+    desc: (DevOps only) Command will log out of the private docker registry. (Important step if you are using other private docker registries)
     cmds:
       - docker logout registry.digitalocean.com
 
   # Note: Only executed by devops team.
-  dockerdeploy:
-    desc: Command will build the production container of this project and deploy to the private docker registry
+  dockerdeployprod:
+    desc: (DevOps only) Command will build the production container of this project and deploy to the private docker registry
     cmds:
       - docker build -f Dockerfile --rm -t registry.digitalocean.com/over55/workery-backend:prod --platform linux/amd64 .
       - docker tag registry.digitalocean.com/over55/workery-backend:prod registry.digitalocean.com/over55/workery-backend:prod
       - docker push registry.digitalocean.com/over55/workery-backend:prod
+
+  # Note: Only executed by devops team.
+  dockerdeployqa:
+    desc: (DevOps only) Command will build the quality assurance container of this project and deploy to the private docker registry
+    cmds:
+      - docker build -f Dockerfile --rm -t registry.digitalocean.com/over55/workery-backend:qa --platform linux/amd64 .
+      - docker tag registry.digitalocean.com/over55/workery-backend:qa registry.digitalocean.com/over55/workery-backend:qa
+      - docker push registry.digitalocean.com/over55/workery-backend:qa
 
   vendor:
     desc: Save all the libraries into our code repository
@@ -66,6 +74,11 @@ tasks:
     desc: Update all the golang libraries (https://stackoverflow.com/a/67202539)
     cmds:
       - go get -u ./...
+
+  undelast:
+    desc: Undue last commit which was not pushed. Special thanks to https://www.nobledesktop.com/learn/git/undo-changes.
+    cmds:
+      - git reset --soft HEAD~
 
   fmt:
     desc: Format the source code to be more inlined with Go standard style (https://pkg.go.dev/cmd/gofmt)

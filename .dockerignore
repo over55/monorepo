@@ -11,6 +11,7 @@ private.txt
 docker-compose.yml
 .env
 .env.production
+.env.qa
 
 # Project artificats we don't want include.
 private.md

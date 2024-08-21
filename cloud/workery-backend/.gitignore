@@ -209,3 +209,4 @@ bin/
 workery-backend
 private_readme.md
 .env.production
+.env.qa
