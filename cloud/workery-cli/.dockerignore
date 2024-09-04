@@ -10,7 +10,6 @@ dev.docker-compose.yml
 dev.Dockerfile
 
 # Private project related files.
-todo.txt
 data/workery_db.backup
 data/workery_v2_db.backup
 data
@@ -20,9 +19,14 @@ data/*
 **/data
 **/data/*
 workery_v2_db.backup
-private_docker.md
-private.dev.md
-private.md
-private.prod.md
 private.txt
+private.md
+todo.txt
+private_docker.md
+private.db.md
+private.dev.md
+private.prod.md
+private_prod.md
 private_readme.md
+private_readme_qa.md
+attachments.csv
