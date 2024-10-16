@@ -317,7 +317,7 @@ function AdminJobHistoryLaunchapd() {
           {/* Page Title */}
           <h1 className="title is-2">
             <FontAwesomeIcon className="fas" icon={faProjectDiagram} />
-            &nbsp;Job History
+            &nbsp;Job History (Launchpad)
           </h1>
           <hr />
 

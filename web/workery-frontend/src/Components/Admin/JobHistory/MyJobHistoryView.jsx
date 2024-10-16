@@ -294,7 +294,7 @@ function AdminMyJobHistoryListView() {
               <li className="">
                 <Link to="/admin/job-history" aria-current="page">
                   <FontAwesomeIcon className="fas" icon={faProjectDiagram} />
-                  &nbsp;Job History
+                  &nbsp;Job History (Launchpad)
                 </Link>
               </li>
               <li className="is-active">
@@ -346,115 +346,16 @@ function AdminMyJobHistoryListView() {
               <FormErrorBox errors={errors} />
               <div className="container">
                 <div className="columns">
-                  {/* Residential */}
-                  <div className="column">
-                    <div className="card">
-                      <div className="card-image has-background-info">
-                        <div
-                          className="has-text-centered"
-                          style={{ padding: "60px" }}
-                        >
-                          <FontAwesomeIcon
-                            className="fas"
-                            icon={faHome}
-                            style={{ color: "white", fontSize: "9rem" }}
-                          />
-                        </div>
-                      </div>
-                      <div className="card-content">
-                        <div className="media">
-                          <div className="media-content">
-                            <p className="title is-4">
-                              <FontAwesomeIcon
-                                className="fas"
-                                icon={faHomeUser}
-                              />
-                              &nbsp;Residential User
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="content">
-                          Add a Residential Associate.
-                          <br />
-                        </div>
-                      </div>
-                      <footer className="card-footer">
-                        <button
-                          onClick={(e, s) =>
-                            setForceURL("/admin/job-history/team-history")
-                          }
-                          className="card-footer-item button is-primary is-large"
-                        >
-                          Pick&nbsp;
-                          <FontAwesomeIcon
-                            className="fas"
-                            icon={faArrowCircleRight}
-                          />
-                        </button>
-                      </footer>
-                    </div>
-                  </div>
-
-                  {/* Business */}
-                  <div className="column">
-                    <div className="card">
-                      <div className="card-image has-background-info">
-                        <div
-                          className="has-text-centered"
-                          style={{ padding: "60px" }}
-                        >
-                          <FontAwesomeIcon
-                            className="fas"
-                            icon={faBuilding}
-                            style={{ color: "white", fontSize: "9rem" }}
-                          />
-                        </div>
-                      </div>
-                      <div className="card-content">
-                        <div className="media">
-                          <div className="media-content">
-                            <p className="title is-4">
-                              <FontAwesomeIcon
-                                className="fas"
-                                icon={faBuildingUser}
-                              />
-                              &nbsp;Business User
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="content">
-                          Add a Commercial Associate.
-                          <br />
-                        </div>
-                      </div>
-                      <footer className="card-footer">
-                        <a
-                          onClick={(e, s) =>
-                            setForceURL("/admin/job-history/my-history")
-                          }
-                          className="card-footer-item button is-primary is-large"
-                        >
-                          Pick&nbsp;
-                          <FontAwesomeIcon
-                            className="fas"
-                            icon={faArrowCircleRight}
-                          />
-                        </a>
-                      </footer>
-                    </div>
-                  </div>
                 </div>
 
                 <div className="columns pt-5">
                   <div className="column is-half">
                     <button
                       className="button is-medium is-fullwidth-mobile"
-                      onClick={(e) => setForceURL("/admin/dashboard") }
+                      onClick={(e) => setForceURL("/admin/job-history") }
                     >
                       <FontAwesomeIcon className="fas" icon={faArrowLeft} />
-                      &nbsp;Back to Dashboard
+                      &nbsp;Back to Job History (Launchpad)
                     </button>
                   </div>
                   <div className="column is-half has-text-right"></div>
