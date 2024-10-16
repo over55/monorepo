@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"log/slog"
 	"mime/multipart"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -34,6 +36,9 @@ type S3Storager interface {
 	DownloadToLocalfile(ctx context.Context, objectKey string, filePath string) (string, error)
 	ListAllObjects(ctx context.Context) (*s3.ListObjectsOutput, error)
 	FindMatchingObjectKey(s3Objects *s3.ListObjectsOutput, partialKey string) string
+	DownloadAllFiles(ctx context.Context, localDir string) error
+	DownloadFilesIfNotExist(ctx context.Context, localDir string) error
+	ListAllObjectKeys(ctx context.Context) ([]string, error)
 }
 
 type s3Storager struct {
@@ -330,4 +335,158 @@ func (s *s3Storager) FindMatchingObjectKey(s3Objects *s3.ListObjectsOutput, part
 		}
 	}
 	return ""
+}
+
+// DownloadAllFiles downloads all files from the S3 bucket and saves them locally, preserving folder structure
+func (s *s3Storager) DownloadAllFiles(ctx context.Context, localDir string) error {
+	var continuationToken *string
+
+	for {
+		// List all objects in the S3 bucket
+		output, err := s.S3Client.ListObjectsV2(ctx, &s3.ListObjectsV2Input{
+			Bucket:            aws.String(s.BucketName),
+			ContinuationToken: continuationToken,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to list objects in bucket: %v", err)
+		}
+
+		for _, object := range output.Contents {
+			// Create local directories if necessary
+			localPath := filepath.Join(localDir, *object.Key)
+			if err := os.MkdirAll(filepath.Dir(localPath), os.ModePerm); err != nil {
+				return fmt.Errorf("failed to create local directories: %v", err)
+			}
+
+			// Download the object
+			if err := s.downloadFile(ctx, *object.Key, localPath); err != nil {
+				fmt.Printf("Error downloading file %s: %v\n", *object.Key, err)
+			} else {
+				fmt.Printf("Successfully downloaded %s to %s\n", *object.Key, localPath)
+			}
+		}
+
+		// Check if there are more files to list
+		if output.IsTruncated != nil && *output.IsTruncated {
+			continuationToken = output.NextContinuationToken
+		} else {
+			break
+		}
+	}
+
+	return nil
+}
+
+// DownloadFilesIfNotExist downloads files from the S3 bucket only if they don't exist locally
+func (s *s3Storager) DownloadFilesIfNotExist(ctx context.Context, localDir string) error {
+	var continuationToken *string
+
+	for {
+		// List all objects in the S3 bucket
+		output, err := s.S3Client.ListObjectsV2(ctx, &s3.ListObjectsV2Input{
+			Bucket:            aws.String(s.BucketName),
+			ContinuationToken: continuationToken,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to list objects in bucket: %v", err)
+		}
+
+		for _, object := range output.Contents {
+			// Trim whitespace from the object key
+			key := strings.TrimSpace(*object.Key)
+
+			// Log the key for debugging
+			fmt.Printf("Attempting to download object with key: '%s'\n", key)
+
+			// Create local path for the file
+			localPath := filepath.Join(localDir, key)
+
+			// Check if the file already exists locally
+			if _, err := os.Stat(localPath); err == nil {
+				// File exists, no need to download
+				fmt.Printf("File already exists locally: %s\n", localPath)
+				continue
+			} else if !os.IsNotExist(err) {
+				// An unexpected error occurred while checking for the file
+				return fmt.Errorf("failed to check if file exists: %v", err)
+			}
+
+			// If file doesn't exist locally, create necessary directories and download
+			if err := os.MkdirAll(filepath.Dir(localPath), os.ModePerm); err != nil {
+				return fmt.Errorf("failed to create local directories: %v", err)
+			}
+
+			if err := s.downloadFile(ctx, key, localPath); err != nil {
+				fmt.Printf("Error downloading file %s: %v\n", key, err)
+			} else {
+				fmt.Printf("Successfully downloaded %s to %s\n", key, localPath)
+			}
+		}
+
+		// Check if there are more files to list
+		if output.IsTruncated != nil && *output.IsTruncated {
+			continuationToken = output.NextContinuationToken
+		} else {
+			break
+		}
+	}
+
+	return nil
+}
+
+// downloadFile downloads a single file from S3 and saves it locally
+func (s *s3Storager) downloadFile(ctx context.Context, objectKey, localPath string) error {
+	// Get the object from S3
+	resp, err := s.S3Client.GetObject(ctx, &s3.GetObjectInput{
+		Bucket: aws.String(s.BucketName),
+		Key:    aws.String(objectKey), // Pass the object key directly without encoding
+	})
+	if err != nil {
+		return fmt.Errorf("failed to get object %s: %v", objectKey, err)
+	}
+	defer resp.Body.Close()
+
+	// Create local file
+	file, err := os.Create(localPath)
+	if err != nil {
+		return fmt.Errorf("failed to create local file %s: %v", localPath, err)
+	}
+	defer file.Close()
+
+	// Copy object content to the local file
+	if _, err := io.Copy(file, resp.Body); err != nil {
+		return fmt.Errorf("failed to write to local file %s: %v", localPath, err)
+	}
+
+	return nil
+}
+
+func (s *s3Storager) ListAllObjectKeys(ctx context.Context) ([]string, error) {
+	var continuationToken *string
+	var allObjectKeys []string
+
+	for {
+		// List all objects in the S3 bucket
+		output, err := s.S3Client.ListObjectsV2(ctx, &s3.ListObjectsV2Input{
+			Bucket:            aws.String(s.BucketName),
+			ContinuationToken: continuationToken,
+		})
+		if err != nil {
+			return nil, fmt.Errorf("failed to list objects in bucket: %v", err)
+		}
+
+		// Iterate over the Contents of the output
+		for _, object := range output.Contents {
+			allObjectKeys = append(allObjectKeys, *object.Key)
+		}
+
+		// Check if there are more files to list
+		if output.IsTruncated != nil && *output.IsTruncated {
+			continuationToken = output.NextContinuationToken
+		} else {
+			break
+		}
+	}
+
+	return allObjectKeys, nil
 }
