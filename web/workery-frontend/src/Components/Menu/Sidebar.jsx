@@ -25,7 +25,8 @@ import {
   faFire,
   faBriefcase,
   faSearch,
-  faStar
+  faStar,
+  faMessage
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 
@@ -268,6 +269,16 @@ export default (props) => {
                 >
                   <FontAwesomeIcon className="fas" icon={faFire} />
                   &nbsp;Incidents
+                </Link>
+              </li>
+              <li>
+                <Link
+                  onClick={onLinkClickCloseHamburgerMenuIfMobile}
+                  to="/admin/all-comments"
+                  className={`has-text-grey-light ${location.pathname.includes("all-comments") && !location.pathname.includes("order") && "is-active"}`}
+                >
+                  <FontAwesomeIcon className="fas" icon={faMessage} />
+                  &nbsp;Comments
                 </Link>
               </li>
               <li>

@@ -327,6 +327,9 @@ import AdminReport20 from "./Components/Admin/Report/20To29/20/View";
 import AdminReport21 from "./Components/Admin/Report/20To29/21/View";
 import AdminReport22 from "./Components/Admin/Report/20To29/22/View";
 
+// Comments
+import AdminCommentList from "./Components/Admin/Comment/List/View";
+
 function AppRoute() {
   return (
     <div class="is-widescreen is-size-5-widescreen is-size-6-tablet is-size-7-mobile">
@@ -1087,6 +1090,13 @@ function AppRoute() {
                     path="/admin/order/:oid/more/incidents"
                     element={<AdminOrderMoreIncidentList />}
                   />
+
+                  <Route
+                    exact
+                    path="/admin/all-comments"
+                    element={<AdminCommentList />}
+                  />
+
                   <Route
                     exact
                     path="/admin/order/:oid/more/transfer/step-5"
