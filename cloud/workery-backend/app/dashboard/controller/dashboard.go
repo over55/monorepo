@@ -21,15 +21,15 @@ import (
 )
 
 type DashboardResponseIDO struct {
-	ClientsCount       int64                      `json:"clients_count"`
-	AssociatesCount    int64                      `json:"associates_count"`
-	JobsCount          int64                      `json:"jobs_count"`
-	TasksCount         int64                      `json:"tasks_count"`
-	Bulletins          []*b_s.Bulletin            `json:"bulletins"`
-	AssociateAwayLogs  []*away_s.AssociateAwayLog `json:"associate_away_logs"`
-	UserJobHistory     []*o_s.OrderLite           `json:"user_job_history"`
-	TeamJobHistory     []*o_s.OrderLite           `json:"team_job_history"`
-	PastFewDayComments []*com_s.Comment           `json:"past_few_day_comments"`
+	ClientsCount      int64                      `json:"clients_count"`
+	AssociatesCount   int64                      `json:"associates_count"`
+	JobsCount         int64                      `json:"jobs_count"`
+	TasksCount        int64                      `json:"tasks_count"`
+	Bulletins         []*b_s.Bulletin            `json:"bulletins"`
+	AssociateAwayLogs []*away_s.AssociateAwayLog `json:"associate_away_logs"`
+	// UserJobHistory     []*o_s.OrderLite           `json:"user_job_history"` // DEPRECATED
+	// TeamJobHistory     []*o_s.OrderLite           `json:"team_job_history"`  // DEPRECATED
+	// PastFewDayComments []*com_s.Comment           `json:"past_few_day_comments"`  // DEPRECATED
 }
 
 func (impl *DashboardControllerImpl) getActiveClientsCount(ctx context.Context, tenantID primitive.ObjectID) (int64, error) {
@@ -289,9 +289,9 @@ func (impl *DashboardControllerImpl) Dashboard(ctx context.Context) (*DashboardR
 
 	var clientsCount, jobsCount, associatesCount, tasksCount int64
 	var bulletins []*b_s.Bulletin
-	var userJobHistory, teamJobHistory []*o_s.OrderLite
+	// var userJobHistory, teamJobHistory []*o_s.OrderLite
 	var associateAwayLogs []*away_s.AssociateAwayLog
-	var pastFewDayComments []*com_s.Comment
+	// var pastFewDayComments []*com_s.Comment
 
 	////
 	//// Get counts concurrently.
@@ -341,17 +341,17 @@ func (impl *DashboardControllerImpl) Dashboard(ctx context.Context) (*DashboardR
 		return nil
 	})
 
-	////
-	//// Get user job history concurrently.
-	////
-	g.Go(func() error {
-		history, err := impl.getUserJobHistory(ctx, tenantID, userID)
-		if err != nil {
-			return err
-		}
-		userJobHistory = history
-		return nil
-	})
+	// ////
+	// //// Get user job history concurrently.  // DEPRECATED
+	// ////
+	// g.Go(func() error {
+	// 	history, err := impl.getUserJobHistory(ctx, tenantID, userID)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	userJobHistory = history
+	// 	return nil
+	// })
 
 	////
 	//// Get associate away logs concurrently.
@@ -365,29 +365,29 @@ func (impl *DashboardControllerImpl) Dashboard(ctx context.Context) (*DashboardR
 		return nil
 	})
 
-	////
-	//// Get team job history concurrently.
-	////
-	g.Go(func() error {
-		history, err := impl.getTeamJobHistory(ctx, tenantID)
-		if err != nil {
-			return err
-		}
-		teamJobHistory = history
-		return nil
-	})
-
-	////
-	//// Get past few days' comments concurrently.
-	////
-	g.Go(func() error {
-		comments, err := impl.getOrderComments(ctx, tenantID)
-		if err != nil {
-			return err
-		}
-		pastFewDayComments = comments
-		return nil
-	})
+	// ////
+	// //// Get team job history concurrently.  // DEPRECATED
+	// ////
+	// g.Go(func() error {
+	// 	history, err := impl.getTeamJobHistory(ctx, tenantID)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	teamJobHistory = history
+	// 	return nil
+	// })
+	//
+	// ////
+	// //// Get past few days' comments concurrently.  // DEPRECATED
+	// ////
+	// g.Go(func() error {
+	// 	comments, err := impl.getOrderComments(ctx, tenantID)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	pastFewDayComments = comments
+	// 	return nil
+	// })
 
 	// Wait for all goroutines to finish
 	if err := g.Wait(); err != nil {
@@ -397,14 +397,14 @@ func (impl *DashboardControllerImpl) Dashboard(ctx context.Context) (*DashboardR
 
 	// Return the response
 	return &DashboardResponseIDO{
-		ClientsCount:       clientsCount,
-		AssociatesCount:    associatesCount,
-		JobsCount:          jobsCount,
-		TasksCount:         tasksCount,
-		Bulletins:          bulletins,
-		UserJobHistory:     userJobHistory,
-		AssociateAwayLogs:  associateAwayLogs,
-		TeamJobHistory:     teamJobHistory,
-		PastFewDayComments: pastFewDayComments,
+		ClientsCount:    clientsCount,
+		AssociatesCount: associatesCount,
+		JobsCount:       jobsCount,
+		TasksCount:      tasksCount,
+		Bulletins:       bulletins,
+		// UserJobHistory:     userJobHistory,  // DEPRECATED
+		AssociateAwayLogs: associateAwayLogs,
+		// TeamJobHistory:     teamJobHistory,  // DEPRECATED
+		// PastFewDayComments: pastFewDayComments,  // DEPRECATED
 	}, nil
 }

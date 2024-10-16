@@ -437,7 +437,8 @@ function AdminDashboard() {
                   </button>
                 </div>
 
-                {/* User invoiceDateFormattedtory */}
+                {/* JOB HISTORY (DEPRECATED) */}
+                {/*
                 <div className="mb-6 p-5" style={{ borderRadius: "15px" }}>
                   <h1 className="title is-1 is-size-3-mobile">
                     <FontAwesomeIcon className="fas" icon={faWrench} />
@@ -494,8 +495,9 @@ function AdminDashboard() {
                     </tbody>
                   </table>
                 </div>
+                */}
 
-                {/* Associate Away logs */}
+                {/* Associate Away logs (DEPRECATED) */}
                 <div
                   className="has-background-light mb-6 p-5"
                   style={{ borderRadius: "15px" }}
@@ -602,7 +604,8 @@ function AdminDashboard() {
                   </button>
                 </div>
 
-                {/* Team Job History */}
+                {/* Team Job History (DEPRECATED) */}
+                {/*
                 <div className="mb-6 p-5" style={{ borderRadius: "15px" }}>
                   <h1 className="title is-1 is-size-3-mobile">
                     <FontAwesomeIcon className="fas" icon={faUsers} />
@@ -659,8 +662,10 @@ function AdminDashboard() {
                     </tbody>
                   </table>
                 </div>
+                */}
 
-                {/* Comments */}
+                {/* Comments (DEPRECATED) */}
+                {/*
                 <div className="mb-6 p-5" style={{ borderRadius: "15px" }}>
                   <h1 className="title is-1 is-size-3-mobile">
                     <FontAwesomeIcon className="fas" icon={faMessage} />
@@ -713,6 +718,8 @@ function AdminDashboard() {
                     <FontAwesomeIcon className="mdi" icon={faChevronRight} />
                   </Link>
                 </div>
+                */}
+
               </nav>
 
               <div className="has-text-right">
