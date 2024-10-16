@@ -122,16 +122,23 @@ function AdminCommentListDesktop(props) {
                           </Link>
                         )}
                         {datum.belongsTo == 2 && (
-                          <Link
-                            to={`/admin/associate/${datum.associateId}/comments`}
-                            className="is-small"
-                          >
-                            View&nbsp;
-                            <FontAwesomeIcon
-                              className="mdi"
-                              icon={faChevronRight}
-                            />
-                          </Link>
+                          <>
+                          {datum.associateId == "000000000000000000000000" ? <>
+                               {/* Nothing. */}
+                           </> : <>
+                               <Link
+                                 to={`/admin/associate/${datum.associateId}/comments`}
+                                 className="is-small"
+                               >
+                                 View&nbsp;
+                                 <FontAwesomeIcon
+                                   className="mdi"
+                                   icon={faChevronRight}
+                                 />
+                               </Link>
+                           </>}
+
+                          </>
                         )}
                         {datum.belongsTo == 3 && (
                           <Link

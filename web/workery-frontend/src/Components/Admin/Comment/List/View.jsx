@@ -406,10 +406,10 @@ function AdminCommentList() {
                 (users.results.length > 0 || previousCursors.length > 0) ? (
                   <div className="container">
                     {/*
-                                            ##################################################################
-                                            EVERYTHING INSIDE HERE WILL ONLY BE DISPLAYED ON A DESKTOP SCREEN.
-                                            ##################################################################
-                                        */}
+                        ##################################################################
+                        EVERYTHING INSIDE HERE WILL ONLY BE DISPLAYED ON A DESKTOP SCREEN.
+                        ##################################################################
+                    */}
                     <div className="is-hidden-touch">
                       <AdminCommentListDesktop
                         listData={users}
@@ -424,10 +424,10 @@ function AdminCommentList() {
                     </div>
 
                     {/*
-                                            ###########################################################################
-                                            EVERYTHING INSIDE HERE WILL ONLY BE DISPLAYED ON A TABLET OR MOBILE SCREEN.
-                                            ###########################################################################
-                                        */}
+                        ###########################################################################
+                        EVERYTHING INSIDE HERE WILL ONLY BE DISPLAYED ON A TABLET OR MOBILE SCREEN.
+                        ###########################################################################
+                    */}
                     <div className="is-fullwidth is-hidden-desktop">
                       <AdminCommentListMobile
                         listData={users}

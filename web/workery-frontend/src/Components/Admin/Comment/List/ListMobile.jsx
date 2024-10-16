@@ -80,6 +80,42 @@ function AdminCommentListMobile(props) {
               <strong>Created At:</strong>&nbsp;{datum.createdAt}
               <br />
               <br />
+              {datum.belongsTo == 1 && (
+                <>
+                {datum.customerId == "000000000000000000000000" ? <>
+                     {/* Nothing. */}
+                 </> : <>
+                     <Link
+                       to={`/admin/client/${datum.customerId}/comments`}
+                       className="button is-primary is-fullwidth-mobile"
+                     >
+                       View&nbsp;
+                       <FontAwesomeIcon
+                         className="mdi"
+                         icon={faChevronRight}
+                       />
+                     </Link>
+                 </>}
+                </>
+              )}
+              {datum.belongsTo == 2 && (
+                <>
+                {datum.associateId == "000000000000000000000000" ? <>
+                     {/* Nothing. */}
+                 </> : <>
+                     <Link
+                       to={`/admin/associate/${datum.associateId}/comments`}
+                       className="button is-primary is-fullwidth-mobile"
+                     >
+                       View&nbsp;
+                       <FontAwesomeIcon
+                         className="mdi"
+                         icon={faChevronRight}
+                       />
+                     </Link>
+                 </>}
+                </>
+              )}
               {datum.belongsTo == 3 && (
                 <Link
                   to={`/admin/comment/${datum.orderWjid}/comments`}
