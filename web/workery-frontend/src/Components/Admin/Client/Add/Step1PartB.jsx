@@ -683,7 +683,7 @@ function AdminClientAddStep1PartB() {
                         <p className="subtitle">
                           No clients found.{" "}
                           <b>
-                            <Link to="/admin/clients/add/step-1">
+                            <Link to="/admin/clients/add/step-1-search">
                               Click here&nbsp;
                               <FontAwesomeIcon
                                 className="mdi"

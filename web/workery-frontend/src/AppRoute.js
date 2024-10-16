@@ -329,6 +329,11 @@ import AdminReport22 from "./Components/Admin/Report/20To29/22/View";
 // Comments
 import AdminCommentList from "./Components/Admin/Comment/List/View";
 
+// Job History
+import AdminJobHistoryLaunchapd from "./Components/Admin/JobHistory/LaunchpadView";
+import AdminMyJobHistoryListView from "./Components/Admin/JobHistory/MyJobHistoryView";
+import TeamJobHistoryView from "./Components/Admin/JobHistory/TeamJobHistoryView";
+
 function AppRoute() {
   return (
     <div class="is-widescreen is-size-5-widescreen is-size-6-tablet is-size-7-mobile">
@@ -1089,6 +1094,23 @@ function AppRoute() {
                     path="/admin/order/:oid/more/incidents"
                     element={<AdminOrderMoreIncidentList />}
                   />
+
+                  <Route
+                    exact
+                    path="/admin/job-history"
+                    element={<AdminJobHistoryLaunchapd />}
+                  />
+                  <Route
+                    exact
+                    path="/admin/job-history/my-job-history"
+                    element={<AdminMyJobHistoryListView />}
+                  />
+                  <Route
+                    exact
+                    path="/admin/job-history/team-job-history"
+                    element={<TeamJobHistoryView />}
+                  />
+
 
                   <Route
                     exact

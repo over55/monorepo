@@ -497,7 +497,7 @@ function AdminDashboard() {
                 </div>
                 */}
 
-                {/* Associate Away logs (DEPRECATED) */}
+                {/* Associate Away logs */}
                 <div
                   className="has-background-light mb-6 p-5"
                   style={{ borderRadius: "15px" }}
