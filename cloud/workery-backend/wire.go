@@ -42,6 +42,8 @@ import (
 	insurance_c "github.com/over55/monorepo/cloud/workery-backend/app/insurancerequirement/controller"
 	insurance_s "github.com/over55/monorepo/cloud/workery-backend/app/insurancerequirement/datastore"
 	insurance_http "github.com/over55/monorepo/cloud/workery-backend/app/insurancerequirement/httptransport"
+	jobhistory_c "github.com/over55/monorepo/cloud/workery-backend/app/jobhistory/controller"
+	jobhistory_http "github.com/over55/monorepo/cloud/workery-backend/app/jobhistory/httptransport"
 	naics_c "github.com/over55/monorepo/cloud/workery-backend/app/naics/controller"
 	naics_s "github.com/over55/monorepo/cloud/workery-backend/app/naics/datastore"
 	naics_http "github.com/over55/monorepo/cloud/workery-backend/app/naics/httptransport"
@@ -162,6 +164,7 @@ func InitializeEvent() Application {
 		orderincident_d.NewDatastore,
 		orderincident_c.NewController,
 		report_c.NewController,
+		jobhistory_c.NewController,
 		gateway_http.NewHandler,
 		user_http.NewHandler,
 		tag_http.NewHandler,
@@ -170,6 +173,7 @@ func InitializeEvent() Application {
 		noc_http.NewHandler,
 		naics_http.NewHandler,
 		report_http.NewHandler,
+		jobhistory_http.NewHandler,
 		insurance_http.NewHandler,
 		howhear_http.NewHandler,
 		servicefee_http.NewHandler,

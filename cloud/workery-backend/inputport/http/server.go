@@ -18,6 +18,7 @@ import (
 	gateway_http "github.com/over55/monorepo/cloud/workery-backend/app/gateway/httptransport"
 	howhear_http "github.com/over55/monorepo/cloud/workery-backend/app/howhear/httptransport"
 	insurancerequirement_http "github.com/over55/monorepo/cloud/workery-backend/app/insurancerequirement/httptransport"
+	jobhistory_http "github.com/over55/monorepo/cloud/workery-backend/app/jobhistory/httptransport"
 	naics_http "github.com/over55/monorepo/cloud/workery-backend/app/naics/httptransport"
 	noc_http "github.com/over55/monorepo/cloud/workery-backend/app/noc/httptransport"
 	order_http "github.com/over55/monorepo/cloud/workery-backend/app/order/httptransport"
@@ -69,6 +70,7 @@ type httpInputPort struct {
 	AssociateAwayLog                          *associateawaylog_http.Handler
 	OrderIncident                             *orderincident_http.Handler
 	Report                                    *report_http.Handler
+	JobHistory                                *jobhistory_http.Handler
 }
 
 func NewInputPort(
@@ -99,6 +101,7 @@ func NewInputPort(
 	aal *associateawaylog_http.Handler,
 	orderincident *orderincident_http.Handler,
 	report *report_http.Handler,
+	jobhistory *jobhistory_http.Handler,
 ) InputPortServer {
 	// Initialize the ServeMux.
 	mux := http.NewServeMux()
@@ -144,6 +147,7 @@ func NewInputPort(
 		AssociateAwayLog: aal,
 		OrderIncident:    orderincident,
 		Report:           report,
+		JobHistory:       jobhistory,
 		Server:           srv,
 	}
 
@@ -643,6 +647,10 @@ func (port *httpInputPort) HandleRequests(w http.ResponseWriter, r *http.Request
 		port.NorthAmericanIndustryClassificationSystem.GetByID(w, r, p[3])
 	case n == 4 && p[1] == "v1" && p[2] == "north-america-industry-classification-systems" && p[3] == "select-options" && r.Method == http.MethodGet:
 		port.NorthAmericanIndustryClassificationSystem.ListAsSelectOptions(w, r)
+
+	// --- JOB HISTORY --- //
+	case n == 3 && p[1] == "v1" && p[2] == "job-history" && r.Method == http.MethodGet:
+		port.JobHistory.JobHistory(w, r)
 
 	// --- CATCH ALL: D.N.E. ---
 	default:

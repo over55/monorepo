@@ -43,6 +43,8 @@ import (
 	controller8 "github.com/over55/monorepo/cloud/workery-backend/app/insurancerequirement/controller"
 	datastore14 "github.com/over55/monorepo/cloud/workery-backend/app/insurancerequirement/datastore"
 	httptransport8 "github.com/over55/monorepo/cloud/workery-backend/app/insurancerequirement/httptransport"
+	controller25 "github.com/over55/monorepo/cloud/workery-backend/app/jobhistory/controller"
+	httptransport25 "github.com/over55/monorepo/cloud/workery-backend/app/jobhistory/httptransport"
 	controller7 "github.com/over55/monorepo/cloud/workery-backend/app/naics/controller"
 	datastore13 "github.com/over55/monorepo/cloud/workery-backend/app/naics/datastore"
 	httptransport7 "github.com/over55/monorepo/cloud/workery-backend/app/naics/httptransport"
@@ -191,7 +193,9 @@ func InitializeEvent() Application {
 	handler22 := httptransport23.NewHandler(slogLogger, orderIncidentController)
 	reportController := controller24.NewController(conf, slogLogger, provider, s3Storager, passwordProvider, kmutexProvider, templatedEmailer, client, associateInvoiceBuilder, commentStorer, howHearAboutUsItemStorer, skillSetStorer, tagStorer, taskItemStorer, userStorer, customerStorer, associateStorer, orderStorer, serviceFeeStorer, activitySheetStorer, attachmentStorer, staffStorer)
 	handler23 := httptransport24.NewHandler(slogLogger, reportController)
-	inputPortServer := http.NewInputPort(conf, slogLogger, middlewareMiddleware, handler, httptransportHandler, handler2, handler3, handler4, handler5, handler6, handler7, handler8, handler9, handler10, handler11, handler12, handler13, handler14, handler15, handler16, handler17, handler18, handler19, handler20, handler21, handler22, handler23)
+	jobHistoryController := controller25.NewController(conf, slogLogger, provider, jwtProvider, passwordProvider, cacher, templatedEmailer, userStorer, tenantStorer, customerStorer, associateStorer, associateAwayLogStorer, orderStorer, taskItemStorer, bulletinStorer, commentStorer)
+	handler24 := httptransport25.NewHandler(slogLogger, jobHistoryController)
+	inputPortServer := http.NewInputPort(conf, slogLogger, middlewareMiddleware, handler, httptransportHandler, handler2, handler3, handler4, handler5, handler6, handler7, handler8, handler9, handler10, handler11, handler12, handler13, handler14, handler15, handler16, handler17, handler18, handler19, handler20, handler21, handler22, handler23, handler24)
 	taskqueueInputPortServer := taskqueue2.NewInputPort(conf, slogLogger, stepper)
 	application := NewApplication(slogLogger, inputPortServer, taskqueueInputPortServer)
 	return application

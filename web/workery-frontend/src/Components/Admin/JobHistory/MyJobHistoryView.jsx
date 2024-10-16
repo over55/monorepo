@@ -24,11 +24,15 @@ import {
   faArrowCircleRight,
   faBuilding,
   faBuildingUser,
-  faTimesCircle
+  faTimesCircle,
+  faWrench,
+  faChevronRight
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 
-import { getCommentListAPI } from "../../../API/Comment";
+import DateTextFormatter from "../../Reusable/EveryPage/DateTextFormatter";
+import DateTimeTextFormatter from "../../Reusable/EveryPage/DateTimeTextFormatter";
+import { getJobHistoryListAPI } from "../../../API/JobHistory";
 import {
   topAlertMessageState,
   topAlertStatusState,
@@ -212,7 +216,7 @@ function AdminMyJobHistoryListView() {
       params.set("type", t);
     }
 
-    getCommentListAPI(
+    getJobHistoryListAPI(
       params,
       onCommentListSuccess,
       onCommentListError,
@@ -275,6 +279,8 @@ function AdminMyJobHistoryListView() {
     return <Navigate to={forceURL} />;
   }
 
+  const results = [];
+
   return (
     <>
       <div className="container">
@@ -334,13 +340,60 @@ function AdminMyJobHistoryListView() {
           {/* Page */}
           <nav className="box">
             <p className="title is-4">
-              <FontAwesomeIcon className="fas" icon={faUserGear} />
-              &nbsp;Select Associate Type:
+              <FontAwesomeIcon className="fas" icon={faTable} />
+              &nbsp;List
             </p>
 
-            <p className="has-text-grey pb-4">
-              Please select the type of associate this is.
-            </p>
+            <h5 className="title is-6 has-text-grey">
+              Maximum of 5 orders are listed here:
+            </h5>
+            <table className="is-fullwidth is-striped table">
+              <thead>
+                <tr>
+                  <th>Job #</th>
+                  <th>Client Name</th>
+                  <th>Associate Name</th>
+                  <th>Created</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {results.userJobHistory &&
+                  results.userJobHistory.map(function (datum, i) {
+                    return (
+                      <tr>
+                        <td>
+                          <Link
+                            to={`/admin/order/${datum.wjid}`}
+                            className=""
+                          >
+                            {datum.wjid}
+                          </Link>
+                        </td>
+                        <td>{datum.customerName}</td>
+                        <td>{datum.associateName}</td>
+                        <td>
+                          <DateTimeTextFormatter
+                            value={datum.modifiedAt}
+                          />
+                        </td>
+                        <td>
+                          <Link
+                            to={`/admin/order/${datum.wjid}`}
+                            className=""
+                          >
+                            View&nbsp;
+                            <FontAwesomeIcon
+                              className="mdi"
+                              icon={faChevronRight}
+                            />
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
 
             <>
               <FormErrorBox errors={errors} />

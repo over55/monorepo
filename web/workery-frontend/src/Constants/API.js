@@ -556,3 +556,10 @@ export const WORKERY_STAFF_FILE_ARCHIVE_API_URL =
   HTTP_API_SERVER + "/api/v1/staff-file/XXX/";
 export const WORKERY_TAG_ITEM_SEARCH_LIST_API_URL =
   HTTP_API_SERVER + "/api/v1/v1/search";
+
+/**
+ * Job History
+ */
+
+export const WORKERY_JOB_HISTORY_LIST_API_URL =
+  HTTP_API_SERVER + "/api/v1/job-history";
