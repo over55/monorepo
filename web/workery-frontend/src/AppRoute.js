@@ -149,7 +149,6 @@ import AdminSettingSkillSetList from "./Components/Admin/Setting/SkillSet/List";
 import AdminSettingBulletinList from "./Components/Admin/Setting/Bulletin/List";
 import AdminSettingLaunchpad from "./Components/Admin/Setting/Launchpad";
 import AdminDashboard from "./Components/Admin/Dashboard/View";
-import AdminDashboardCommentList from "./Components/Admin/Dashboard/Comments/List";
 import AdminFinancialMoreCloneOperation from "./Components/Admin/Financial/Detail/More/Clone/Clone";
 import AdminFinancialMore from "./Components/Admin/Financial/Detail/More/More";
 import AdminFinancialGenerateInvoiceStep4 from "./Components/Admin/Financial/Detail/Invoice/Generate/Step4";
@@ -1463,11 +1462,6 @@ function AppRoute() {
                     exact
                     path="/admin/dashboard"
                     element={<AdminDashboard />}
-                  />
-                  <Route
-                    exact
-                    path="/admin/dashboard/comments"
-                    element={<AdminDashboardCommentList />}
                   />
                   <Route
                     exact
