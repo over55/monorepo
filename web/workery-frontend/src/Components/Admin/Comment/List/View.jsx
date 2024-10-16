@@ -171,7 +171,7 @@ function AdminCommentList() {
   const onClearFilterClick = (e) => {
     setType(0);
     setStatus(1);
-    setSortByValue(DEFAULT_CLIENT_LIST_SORT_BY_VALUE);
+    setSortByValue("created_at,DESC");
   };
 
   const fetchList = (cur, limit, keywords, so, s, t) => {
