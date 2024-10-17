@@ -321,75 +321,79 @@ function AdminMyJobHistoryListView() {
             <h5 className="title is-6 has-text-grey">
               Maximum of 5 orders are listed here:
             </h5>
-            <table className="is-fullwidth is-striped table">
-              <thead>
-                <tr>
-                  <th>Job #</th>
-                  <th>Client Name</th>
-                  <th>Associate Name</th>
-                  <th>Created</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.userJobHistory &&
-                  users.userJobHistory.map(function (datum, i) {
-                    return (
-                      <tr>
-                        <td>
-                          <Link
-                            to={`/admin/order/${datum.wjid}`}
-                            className=""
-                          >
-                            {datum.wjid}
-                          </Link>
-                        </td>
-                        <td>{datum.customerName}</td>
-                        <td>{datum.associateName}</td>
-                        <td>
-                          <DateTimeTextFormatter
-                            value={datum.modifiedAt}
-                          />
-                        </td>
-                        <td>
-                          <Link
-                            to={`/admin/order/${datum.wjid}`}
-                            className=""
-                          >
-                            View&nbsp;
-                            <FontAwesomeIcon
-                              className="mdi"
-                              icon={faChevronRight}
+          {isFetching ? (
+            <PageLoadingContent displayMessage={"Loading..."} />
+          ) : (
+              <table className="is-fullwidth is-striped table">
+                <thead>
+                  <tr>
+                    <th>Job #</th>
+                    <th>Client Name</th>
+                    <th>Associate Name</th>
+                    <th>Created</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.userJobHistory &&
+                    users.userJobHistory.map(function (datum, i) {
+                      return (
+                        <tr>
+                          <td>
+                            <Link
+                              to={`/admin/order/${datum.wjid}`}
+                              className=""
+                            >
+                              {datum.wjid}
+                            </Link>
+                          </td>
+                          <td>{datum.customerName}</td>
+                          <td>{datum.associateName}</td>
+                          <td>
+                            <DateTimeTextFormatter
+                              value={datum.modifiedAt}
                             />
-                          </Link>
-                        </td>
-                      </tr>
-                    );
-                  })}
-              </tbody>
-            </table>
+                          </td>
+                          <td>
+                            <Link
+                              to={`/admin/order/${datum.wjid}`}
+                              className=""
+                            >
+                              View&nbsp;
+                              <FontAwesomeIcon
+                                className="mdi"
+                                icon={faChevronRight}
+                              />
+                            </Link>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
+          )}
 
-            <>
-              <FormErrorBox errors={errors} />
-              <div className="container">
-                <div className="columns">
-                </div>
-
-                <div className="columns pt-5">
-                  <div className="column is-half">
-                    <button
-                      className="button is-medium is-fullwidth-mobile"
-                      onClick={(e) => setForceURL("/admin/job-history") }
-                    >
-                      <FontAwesomeIcon className="fas" icon={faArrowLeft} />
-                      &nbsp;Back to Job History (Launchpad)
-                    </button>
-                  </div>
-                  <div className="column is-half has-text-right"></div>
-                </div>
+            <FormErrorBox errors={errors} />
+            <div className="container">
+              <div className="columns">
               </div>
-            </>
+
+              <div className="columns pt-5">
+                <div className="column is-half">
+                  <button
+                    className="button is-medium is-fullwidth-mobile"
+                    onClick={(e) => setForceURL("/admin/job-history") }
+                  >
+                    <FontAwesomeIcon className="fas" icon={faArrowLeft} />
+                    &nbsp;Back to Job History (Launchpad)
+                  </button>
+                </div>
+                <div className="column is-half has-text-right"></div>
+              </div>
+            </div>
+
           </nav>
+
         </section>
       </div>
     </>

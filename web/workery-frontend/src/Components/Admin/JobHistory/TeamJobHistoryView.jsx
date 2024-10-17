@@ -321,56 +321,61 @@ function AdminTeamJobHistoryListView() {
             <h5 className="title is-6 has-text-grey">
               Maximum of 5 orders are listed here:
             </h5>
-            <table className="is-fullwidth is-striped table">
-              <thead>
-                <tr>
-                  <th>Job #</th>
-                  <th>Client Name</th>
-                  <th>Associate Name</th>
-                  <th>Created</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.teamJobHistory &&
-                  users.teamJobHistory.map(function (datum, i) {
-                    return (
-                      <tr>
-                        <td>
-                          <Link
-                            to={`/admin/order/${datum.wjid}`}
-                            className=""
-                          >
-                            {datum.wjid}
-                          </Link>
-                        </td>
-                        <td>{datum.customerName}</td>
-                        <td>{datum.associateName}</td>
-                        <td>
-                          <DateTimeTextFormatter
-                            value={datum.modifiedAt}
-                          />
-                        </td>
-                        <td>
-                          <Link
-                            to={`/admin/order/${datum.wjid}`}
-                            className=""
-                          >
-                            View&nbsp;
-                            <FontAwesomeIcon
-                              className="mdi"
-                              icon={faChevronRight}
-                            />
-                          </Link>
-                        </td>
-                      </tr>
-                    );
-                  })}
-              </tbody>
-            </table>
 
             <>
               <FormErrorBox errors={errors} />
+              {isFetching ? (
+                <PageLoadingContent displayMessage={"Loading..."} />
+              ) : (
+                  <table className="is-fullwidth is-striped table">
+                    <thead>
+                      <tr>
+                        <th>Job #</th>
+                        <th>Client Name</th>
+                        <th>Associate Name</th>
+                        <th>Created</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {users.teamJobHistory &&
+                        users.teamJobHistory.map(function (datum, i) {
+                          return (
+                            <tr>
+                              <td>
+                                <Link
+                                  to={`/admin/order/${datum.wjid}`}
+                                  className=""
+                                >
+                                  {datum.wjid}
+                                </Link>
+                              </td>
+                              <td>{datum.customerName}</td>
+                              <td>{datum.associateName}</td>
+                              <td>
+                                <DateTimeTextFormatter
+                                  value={datum.modifiedAt}
+                                />
+                              </td>
+                              <td>
+                                <Link
+                                  to={`/admin/order/${datum.wjid}`}
+                                  className=""
+                                >
+                                  View&nbsp;
+                                  <FontAwesomeIcon
+                                    className="mdi"
+                                    icon={faChevronRight}
+                                  />
+                                </Link>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+              )}
+
               <div className="container">
                 <div className="columns">
                 </div>
