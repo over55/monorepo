@@ -24,11 +24,16 @@ import {
   faArrowCircleRight,
   faBuilding,
   faBuildingUser,
-  faTimesCircle
+  faTimesCircle,
+  faWrench,
+  faChevronRight,
+  faUserFriends
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 
-import { getCommentListAPI } from "../../../API/Comment";
+import DateTextFormatter from "../../Reusable/EveryPage/DateTextFormatter";
+import DateTimeTextFormatter from "../../Reusable/EveryPage/DateTimeTextFormatter";
+import { getJobHistoryListAPI } from "../../../API/JobHistory";
 import {
   topAlertMessageState,
   topAlertStatusState,
@@ -58,7 +63,7 @@ import {
 } from "../../../Constants/App";
 
 
-function AdminMyJobHistoryListView() {
+function AdminTeamJobHistoryListView() {
   ////
   //// Global state.
   ////
@@ -185,34 +190,9 @@ function AdminMyJobHistoryListView() {
     setErrors({});
 
     let params = new Map();
-    params.set("page_size", limit); // Pagination
-    params.set("sort_field", "lexical_name"); // Sorting
+    params.set("filter_by", "team_job_history");
 
-    if (cur !== "") {
-      // Pagination
-      params.set("cursor", cur);
-    }
-
-    // DEVELOPERS NOTE: Our `sortByValue` is string with the sort field
-    // and sort order combined with a comma seperation. Therefore we
-    // need to split as follows.
-    const sortArray = so.split(",");
-    params.set("sort_field", sortArray[0]);
-    params.set("sort_order", sortArray[1]);
-
-    // Filtering
-    if (keywords !== undefined && keywords !== null && keywords !== "") {
-      // Searhcing
-      params.set("search", keywords);
-    }
-    if (s !== undefined && s !== null && s !== "") {
-      params.set("status", s);
-    }
-    if (t !== undefined && t !== null && t !== "") {
-      params.set("type", t);
-    }
-
-    getCommentListAPI(
+    getJobHistoryListAPI(
       params,
       onCommentListSuccess,
       onCommentListError,
@@ -299,7 +279,7 @@ function AdminMyJobHistoryListView() {
               </li>
               <li className="is-active">
                 <Link aria-current="page">
-                  <FontAwesomeIcon className="fas" icon={faProjectDiagram} />
+                  <FontAwesomeIcon className="fas" icon={faUserFriends} />
                   &nbsp;Team Job History
                 </Link>
               </li>
@@ -313,9 +293,9 @@ function AdminMyJobHistoryListView() {
           >
             <ul>
               <li className="">
-                <Link to="/admin/job-history" aria-current="page">
+                <Link to="/admin/dashboard" aria-current="page">
                   <FontAwesomeIcon className="fas" icon={faArrowLeft} />
-                  &nbsp;Back to Job History (Launchpad)
+                  &nbsp;Back to Dashboard
                 </Link>
               </li>
             </ul>
@@ -323,7 +303,7 @@ function AdminMyJobHistoryListView() {
 
           {/* Page Title */}
           <h1 className="title is-2">
-            <FontAwesomeIcon className="fas" icon={faProjectDiagram} />
+            <FontAwesomeIcon className="fas" icon={faUserFriends} />
             &nbsp;Team Job History
           </h1>
           <hr />
@@ -334,20 +314,65 @@ function AdminMyJobHistoryListView() {
           {/* Page */}
           <nav className="box">
             <p className="title is-4">
-              <FontAwesomeIcon className="fas" icon={faUserGear} />
-              &nbsp;Select Associate Type:
+              <FontAwesomeIcon className="fas" icon={faTable} />
+              &nbsp;List
             </p>
 
-            <p className="has-text-grey pb-4">
-              Please select the type of associate this is.
-            </p>
+            <h5 className="title is-6 has-text-grey">
+              Maximum of 5 orders are listed here:
+            </h5>
+            <table className="is-fullwidth is-striped table">
+              <thead>
+                <tr>
+                  <th>Job #</th>
+                  <th>Client Name</th>
+                  <th>Associate Name</th>
+                  <th>Created</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.teamJobHistory &&
+                  users.teamJobHistory.map(function (datum, i) {
+                    return (
+                      <tr>
+                        <td>
+                          <Link
+                            to={`/admin/order/${datum.wjid}`}
+                            className=""
+                          >
+                            {datum.wjid}
+                          </Link>
+                        </td>
+                        <td>{datum.customerName}</td>
+                        <td>{datum.associateName}</td>
+                        <td>
+                          <DateTimeTextFormatter
+                            value={datum.modifiedAt}
+                          />
+                        </td>
+                        <td>
+                          <Link
+                            to={`/admin/order/${datum.wjid}`}
+                            className=""
+                          >
+                            View&nbsp;
+                            <FontAwesomeIcon
+                              className="mdi"
+                              icon={faChevronRight}
+                            />
+                          </Link>
+                        </td>
+                      </tr>
+                    );
+                  })}
+              </tbody>
+            </table>
 
             <>
               <FormErrorBox errors={errors} />
               <div className="container">
                 <div className="columns">
-                 
-
                 </div>
 
                 <div className="columns pt-5">
@@ -371,4 +396,4 @@ function AdminMyJobHistoryListView() {
   );
 }
 
-export default AdminMyJobHistoryListView;
+export default AdminTeamJobHistoryListView;
