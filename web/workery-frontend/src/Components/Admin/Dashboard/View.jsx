@@ -20,6 +20,8 @@ import {
   faArrowRight,
   faUsers,
   faBarcode,
+  faUserFriends,
+  faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 
@@ -437,66 +439,6 @@ function AdminDashboard() {
                   </button>
                 </div>
 
-                {/* JOB HISTORY (DEPRECATED) */}
-                {/*
-                <div className="mb-6 p-5" style={{ borderRadius: "15px" }}>
-                  <h1 className="title is-1 is-size-3-mobile">
-                    <FontAwesomeIcon className="fas" icon={faWrench} />
-                    &nbsp;Job History
-                  </h1>
-                  <h5 className="title is-6 has-text-grey">
-                    Maximum of 5 orders are listed here:
-                  </h5>
-                  <table className="is-fullwidth is-striped table">
-                    <thead>
-                      <tr>
-                        <th>Job #</th>
-                        <th>Client Name</th>
-                        <th>Associate Name</th>
-                        <th>Created</th>
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {dashboard.userJobHistory &&
-                        dashboard.userJobHistory.map(function (datum, i) {
-                          return (
-                            <tr>
-                              <td>
-                                <Link
-                                  to={`/admin/order/${datum.wjid}`}
-                                  className=""
-                                >
-                                  {datum.wjid}
-                                </Link>
-                              </td>
-                              <td>{datum.customerName}</td>
-                              <td>{datum.associateName}</td>
-                              <td>
-                                <DateTimeTextFormatter
-                                  value={datum.modifiedAt}
-                                />
-                              </td>
-                              <td>
-                                <Link
-                                  to={`/admin/order/${datum.wjid}`}
-                                  className=""
-                                >
-                                  View&nbsp;
-                                  <FontAwesomeIcon
-                                    className="mdi"
-                                    icon={faChevronRight}
-                                  />
-                                </Link>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                    </tbody>
-                  </table>
-                </div>
-                */}
-
                 {/* Associate Away logs */}
                 <div
                   className="has-background-light mb-6 p-5"
@@ -604,121 +546,47 @@ function AdminDashboard() {
                   </button>
                 </div>
 
-                {/* Team Job History (DEPRECATED) */}
-                {/*
-                <div className="mb-6 p-5" style={{ borderRadius: "15px" }}>
-                  <h1 className="title is-1 is-size-3-mobile">
-                    <FontAwesomeIcon className="fas" icon={faUsers} />
-                    &nbsp;Team Job History
-                  </h1>
-                  <h5 className="title is-6 has-text-grey">
-                    Maximum of 10 orders are listed here:
-                  </h5>
-                  <table className="is-fullwidth is-striped table">
-                    <thead>
-                      <tr>
-                        <th>Job #</th>
-                        <th>Client Name</th>
-                        <th>Associate Name</th>
-                        <th>Created</th>
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {dashboard.teamJobHistory &&
-                        dashboard.teamJobHistory.map(function (datum, i) {
-                          return (
-                            <tr>
-                              <td>
-                                <Link
-                                  to={`/admin/order/${datum.wjid}`}
-                                  className=""
-                                >
-                                  {datum.wjid}
-                                </Link>
-                              </td>
-                              <td>{datum.customerName}</td>
-                              <td>{datum.associateName}</td>
-                              <td>
-                                <DateTimeTextFormatter
-                                  value={datum.modifiedAt}
-                                />
-                              </td>
-                              <td>
-                                <Link
-                                  to={`/admin/order/${datum.wjid}`}
-                                  className=""
-                                >
-                                  View&nbsp;
-                                  <FontAwesomeIcon
-                                    className="mdi"
-                                    icon={faChevronRight}
-                                  />
-                                </Link>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                    </tbody>
-                  </table>
-                </div>
-                */}
+                {/* User History */}
+                <section class="hero has-background-link-light mb-6 p-5" style={{ borderRadius: "15px" }}>
+                  <div class="hero-body">
+                    <p class="title">
+                    <h1 className="title is-1 is-size-3-mobile">
+                      <FontAwesomeIcon className="fas" icon={faUser} />
+                      &nbsp;My Job History
+                    </h1>
+                    </p>
+                    <p class="subtitle">To view your history for work orders then please <Link to={`/admin/job-history/my-job-history`} className="is-small">
+                      click here&nbsp;<FontAwesomeIcon className="mdi" icon={faArrowRight} /></Link> to get started.</p>
+                  </div>
+                </section>
 
-                {/* Comments (DEPRECATED) */}
-                {/*
-                <div className="mb-6 p-5" style={{ borderRadius: "15px" }}>
-                  <h1 className="title is-1 is-size-3-mobile">
-                    <FontAwesomeIcon className="fas" icon={faMessage} />
-                    &nbsp;Comments
-                  </h1>
-                  <h5 className="title is-6 has-text-grey">
-                    Maximum of 10 comments are listed here:
-                  </h5>
-                  <table className="is-fullwidth table">
-                    <thead>
-                      <tr>
-                        <th>Order #</th>
-                        <th>Comment</th>
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {dashboard.pastFewDayComments &&
-                        dashboard.pastFewDayComments.map(function (datum, i) {
-                          return (
-                            <tr>
-                              <td>
-                                <Link
-                                  to={`/admin/order/${datum.orderWjid}`}
-                                  className=""
-                                >
-                                  {datum.orderWjid}
-                                </Link>
-                              </td>
-                              <td>{datum.content}</td>
-                              <td>
-                                <Link
-                                  to={`/admin/order/${datum.orderWjid}/comments`}
-                                  className=""
-                                >
-                                  View&nbsp;
-                                  <FontAwesomeIcon
-                                    className="mdi"
-                                    icon={faChevronRight}
-                                  />
-                                </Link>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                    </tbody>
-                  </table>
-                  <Link to={`/admin/dashboard/comments`} className="">
-                    See more comments&nbsp;
-                    <FontAwesomeIcon className="mdi" icon={faChevronRight} />
-                  </Link>
-                </div>
-                */}
+                {/* Team History */}
+                <section class="hero has-background-info-light mb-6 p-5" style={{ borderRadius: "15px" }}>
+                  <div class="hero-body">
+                    <p class="title">
+                    <h1 className="title is-1 is-size-3-mobile">
+                      <FontAwesomeIcon className="fas" icon={faUserFriends} />
+                      &nbsp;Team Job History
+                    </h1>
+                    </p>
+                    <p class="subtitle">To view the team's history for work orders then please <Link to={`/admin/job-history/team-job-history`} className="is-small">
+                      click here&nbsp;<FontAwesomeIcon className="mdi" icon={faArrowRight} /></Link> to get started.</p>
+                  </div>
+                </section>
+
+                {/* Comments */}
+                <section class="hero has-background-primary-light p-5" style={{ borderRadius: "15px" }}>
+                  <div class="hero-body">
+                    <p class="title">
+                    <h1 className="title is-1 is-size-3-mobile">
+                      <FontAwesomeIcon className="fas" icon={faMessage} />
+                      &nbsp;Comments
+                    </h1>
+                    </p>
+                    <p class="subtitle">To view the most recent comments in the entire system sorted by latest to oldest then please <Link to={`/admin/all-comments`} className="is-small">
+                      click here&nbsp;<FontAwesomeIcon className="mdi" icon={faArrowRight} /></Link> to get started.</p>
+                  </div>
+                </section>
 
               </nav>
 
