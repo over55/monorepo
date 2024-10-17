@@ -427,7 +427,7 @@ func NewDatastore(appCfg *c.Conf, loggerp *slog.Logger, client *mongo.Client) Or
 		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}, {Key: "type", Value: 1}}},
 		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "associate_id", Value: 1}}},
 		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "customer_id", Value: 1}}},
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: -1}}},                             // (Note: Used in dashboard.)
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "status", Value: 1}}},                              // (Note: Used in dashboard.)
 		{Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "created_at", Value: -1}}},                         // (Note: Used in dashboard.)
 		{Keys: bson.D{{Key: "_id", Value: 1}, {Key: "tenant_id", Value: 1}, {Key: "created_at", Value: -1}}}, // (Note: Used in dashboard.)
 		// {Keys: bson.D{{Key: "tenant_id", Value: 1}, {Key: "modified_by_user_id", Value: 1}}},
