@@ -399,15 +399,15 @@ func NewDatastore(appCfg *c.Conf, loggerp *slog.Logger, client *mongo.Client) Or
 	// ctx := context.Background()
 	uc := client.Database(appCfg.DB.Name).Collection("orders")
 
-	// // For debugging purposes only or if you are going to recreate new indexes.
-	// if _, err := uc.Indexes().DropAll(context.TODO()); err != nil {
-	// 	loggerp.Error("failed deleting all indexes",
-	// 		slog.Any("err", err))
-	//
-	// 	// It is important that we crash the app on startup to meet the
-	// 	// requirements of `google/wire` framework.
-	// 	log.Fatal(err)
-	// }
+	// For debugging purposes only or if you are going to recreate new indexes.
+	if _, err := uc.Indexes().DropAll(context.TODO()); err != nil {
+		loggerp.Error("failed deleting all indexes",
+			slog.Any("err", err))
+
+		// It is important that we crash the app on startup to meet the
+		// requirements of `google/wire` framework.
+		log.Fatal(err)
+	}
 
 	// Note:
 	// * 1 for ascending
@@ -416,7 +416,7 @@ func NewDatastore(appCfg *c.Conf, loggerp *slog.Logger, client *mongo.Client) Or
 
 	_, err := uc.Indexes().CreateMany(context.TODO(), []mongo.IndexModel{
 		// // 1. Composite Indexes for Filtering
-		// {Keys: bson.D{{Key: "tenant_id", Value: 1}}},
+		{Keys: bson.D{{Key: "tenant_id", Value: 1}}},
 		// {Keys: bson.D{{Key: "status", Value: 1}}},
 		// {Keys: bson.D{{Key: "type", Value: 1}}},
 		// {Keys: bson.D{{Key: "associate_id", Value: 1}}},
