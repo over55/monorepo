@@ -23,7 +23,7 @@ import (
 )
 
 type JobHistoryController interface {
-	JobHistory(ctx context.Context) (*JobHistoryResponseIDO, error)
+	JobHistory(ctx context.Context, filterBy string) (*JobHistoryResponseIDO, error)
 }
 
 type JobHistoryControllerImpl struct {

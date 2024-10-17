@@ -24,7 +24,9 @@ import {
   faArrowCircleRight,
   faBuilding,
   faBuildingUser,
-  faTimesCircle
+  faTimesCircle,
+  faUserFriends,
+  faUser
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 
@@ -327,7 +329,7 @@ function AdminJobHistoryLaunchapd() {
           {/* Page */}
           <nav className="box">
             <p className="title is-4">
-              <FontAwesomeIcon className="fas" icon={faUserGear} />
+              <FontAwesomeIcon className="fas" icon={faFilter} />
               &nbsp;Select Job History:
             </p>
 
@@ -349,7 +351,7 @@ function AdminJobHistoryLaunchapd() {
                         >
                           <FontAwesomeIcon
                             className="fas"
-                            icon={faHome}
+                            icon={faUser}
                             style={{ color: "white", fontSize: "9rem" }}
                           />
                         </div>
@@ -358,11 +360,7 @@ function AdminJobHistoryLaunchapd() {
                         <div className="media">
                           <div className="media-content">
                             <p className="title is-4">
-                              <FontAwesomeIcon
-                                className="fas"
-                                icon={faHomeUser}
-                              />
-                              &nbsp;My Job History
+                              My Job History
                             </p>
                           </div>
                         </div>
@@ -399,7 +397,7 @@ function AdminJobHistoryLaunchapd() {
                         >
                           <FontAwesomeIcon
                             className="fas"
-                            icon={faBuilding}
+                            icon={faUserFriends}
                             style={{ color: "white", fontSize: "9rem" }}
                           />
                         </div>
@@ -408,11 +406,7 @@ function AdminJobHistoryLaunchapd() {
                         <div className="media">
                           <div className="media-content">
                             <p className="title is-4">
-                              <FontAwesomeIcon
-                                className="fas"
-                                icon={faBuildingUser}
-                              />
-                              &nbsp;Team Job History
+                              Team Job History
                             </p>
                           </div>
                         </div>

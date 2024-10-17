@@ -26,7 +26,8 @@ import {
   faBuildingUser,
   faTimesCircle,
   faWrench,
-  faChevronRight
+  faChevronRight,
+  faUser
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 
@@ -189,32 +190,7 @@ function AdminMyJobHistoryListView() {
     setErrors({});
 
     let params = new Map();
-    params.set("page_size", limit); // Pagination
-    params.set("sort_field", "lexical_name"); // Sorting
-
-    if (cur !== "") {
-      // Pagination
-      params.set("cursor", cur);
-    }
-
-    // DEVELOPERS NOTE: Our `sortByValue` is string with the sort field
-    // and sort order combined with a comma seperation. Therefore we
-    // need to split as follows.
-    const sortArray = so.split(",");
-    params.set("sort_field", sortArray[0]);
-    params.set("sort_order", sortArray[1]);
-
-    // Filtering
-    if (keywords !== undefined && keywords !== null && keywords !== "") {
-      // Searhcing
-      params.set("search", keywords);
-    }
-    if (s !== undefined && s !== null && s !== "") {
-      params.set("status", s);
-    }
-    if (t !== undefined && t !== null && t !== "") {
-      params.set("type", t);
-    }
+    params.set("filter_by", "user_job_history");
 
     getJobHistoryListAPI(
       params,
@@ -279,8 +255,6 @@ function AdminMyJobHistoryListView() {
     return <Navigate to={forceURL} />;
   }
 
-  const results = [];
-
   return (
     <>
       <div className="container">
@@ -305,7 +279,7 @@ function AdminMyJobHistoryListView() {
               </li>
               <li className="is-active">
                 <Link aria-current="page">
-                  <FontAwesomeIcon className="fas" icon={faProjectDiagram} />
+                  <FontAwesomeIcon className="fas" icon={faUser} />
                   &nbsp;My Job History
                 </Link>
               </li>
@@ -329,7 +303,7 @@ function AdminMyJobHistoryListView() {
 
           {/* Page Title */}
           <h1 className="title is-2">
-            <FontAwesomeIcon className="fas" icon={faProjectDiagram} />
+            <FontAwesomeIcon className="fas" icon={faUser} />
             &nbsp;My Job History
           </h1>
           <hr />
@@ -358,8 +332,8 @@ function AdminMyJobHistoryListView() {
                 </tr>
               </thead>
               <tbody>
-                {results.userJobHistory &&
-                  results.userJobHistory.map(function (datum, i) {
+                {users.userJobHistory &&
+                  users.userJobHistory.map(function (datum, i) {
                     return (
                       <tr>
                         <td>

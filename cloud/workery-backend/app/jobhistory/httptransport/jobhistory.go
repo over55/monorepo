@@ -10,7 +10,18 @@ import (
 
 func (h *Handler) JobHistory(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	profile, err := h.Controller.JobHistory(ctx)
+
+	// Here is where you extract url parameters.
+	query := r.URL.Query()
+
+	filterBy := query.Get("filter_by")
+	if filterBy == "" {
+		err := httperror.NewForBadRequestWithSingleField("filter_by", "missing value")
+		httperror.ResponseError(w, err)
+		return
+	}
+
+	profile, err := h.Controller.JobHistory(ctx, filterBy)
 	if err != nil {
 		httperror.ResponseError(w, err)
 		return
