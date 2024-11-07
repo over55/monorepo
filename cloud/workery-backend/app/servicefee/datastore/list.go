@@ -9,7 +9,7 @@ import (
 )
 
 func (impl ServiceFeeStorerImpl) ListByFilter(ctx context.Context, f *ServiceFeePaginationListFilter) (*ServiceFeePaginationListResult, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	// Create the paginated filter based on the cursor

@@ -11,7 +11,7 @@ import (
 )
 
 func (impl BulletinStorerImpl) ListByFilter(ctx context.Context, f *BulletinPaginationListFilter) (*BulletinPaginationListResult, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	// Create the paginated filter based on the cursor
@@ -86,7 +86,7 @@ func (impl BulletinStorerImpl) ListByFilter(ctx context.Context, f *BulletinPagi
 }
 
 func (impl BulletinStorerImpl) ListAsSelectOptionByFilter(ctx context.Context, f *BulletinListFilter) ([]*BulletinAsSelectOption, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	// Get a reference to the collection

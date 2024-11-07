@@ -9,7 +9,7 @@ import (
 )
 
 func (impl ActivitySheetStorerImpl) CountByFilter(ctx context.Context, f *ActivitySheetPaginationListFilter) (int64, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	// Create the filter based on the cursor
@@ -48,7 +48,7 @@ func (impl ActivitySheetStorerImpl) CountByFilter(ctx context.Context, f *Activi
 }
 
 func (impl ActivitySheetStorerImpl) CountByLast30DaysForAssociateID(ctx context.Context, associateID primitive.ObjectID) (int64, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	// Calculate the date for 30 days ago

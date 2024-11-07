@@ -8,7 +8,7 @@ import (
 )
 
 func (impl TaskItemStorerImpl) ListByFilter(ctx context.Context, f *TaskItemPaginationListFilter) (*TaskItemPaginationListResult, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	filter, err := impl.newPaginationFilter(f)

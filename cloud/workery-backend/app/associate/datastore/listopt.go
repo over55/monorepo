@@ -11,7 +11,7 @@ import (
 )
 
 func (impl AssociateStorerImpl) ListAsSelectOptionByFilter(ctx context.Context, f *AssociateListFilter) ([]*AssociateAsSelectOption, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	// Get a reference to the collection

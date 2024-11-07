@@ -8,7 +8,7 @@ import (
 )
 
 func (impl AssociateAwayLogStorerImpl) CountByFilter(ctx context.Context, f *AssociateAwayLogPaginationListFilter) (int64, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	// Create the filter based on the cursor

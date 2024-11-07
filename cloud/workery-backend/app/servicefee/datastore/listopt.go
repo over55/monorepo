@@ -10,7 +10,7 @@ import (
 )
 
 func (impl ServiceFeeStorerImpl) ListAsSelectOptionByFilter(ctx context.Context, f *ServiceFeePaginationListFilter) ([]*ServiceFeeAsSelectOption, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	// Get a reference to the collection

@@ -10,7 +10,7 @@ import (
 )
 
 func (impl AssociateAwayLogStorerImpl) ListByFilter(ctx context.Context, f *AssociateAwayLogPaginationListFilter) (*AssociateAwayLogPaginationListResult, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	// Create the paginated filter based on the cursor
@@ -89,7 +89,7 @@ func (impl AssociateAwayLogStorerImpl) ListByFilter(ctx context.Context, f *Asso
 }
 
 func (impl AssociateAwayLogStorerImpl) ListAsSelectOptionByFilter(ctx context.Context, f *AssociateAwayLogPaginationListFilter) ([]*AssociateAwayLogAsSelectOption, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 24*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
 
 	// Get a reference to the collection
