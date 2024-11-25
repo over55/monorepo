@@ -24,7 +24,7 @@ services:
 
   db1:
     container_name: workery_db1
-    image: mongo:7.0
+    image: mongo
     command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017", "--quiet", "--logpath", "/dev/null"]
     ports:
       - 27017:27017
@@ -38,32 +38,32 @@ services:
       start_interval: 1s
       retries: 30
     volumes:
-      - "db1_data:/data/db"
-      - "db1_config:/data/configdb"
+      - "./data/db1/db:/data/db"
+      - "./data/db1/configdb:/data/configdb"
 
   db2:
     container_name: workery_db2
-    image: mongo:7.0
+    image: mongo
     command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27018", "--quiet", "--logpath", "/dev/null"]
     ports:
       - 27018:27018
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
-      - "db2_data:/data/db"
-      - "db2_config:/data/configdb"
+      - "./data/db2/db:/data/db"
+      - "./data/db2/configdb:/data/configdb"
 
   db3:
     container_name: workery_db3
-    image: mongo:7.0
+    image: mongo
     command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27019", "--quiet", "--logpath", "/dev/null"]
     ports:
       - 27019:27019
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
-      - "db3_data:/data/db"
-      - "db3_config:/data/configdb"
+      - "./data/db3/db:/data/db"
+      - "./data/db3/configdb:/data/configdb"
 
   mongo-express:
     container_name: workery_mongodb_admin

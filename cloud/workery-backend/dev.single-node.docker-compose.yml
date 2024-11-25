@@ -25,7 +25,7 @@ services:
   # The purpose of this service is to store our application data.
   db:
     container_name: workery_mongodb
-    image: mongo:7.0
+    image: mongo
     command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017", "--quiet", "--logpath", "/dev/null"]
     ports:
       - 27017:27017
@@ -39,8 +39,8 @@ services:
       start_interval: 1s
       retries: 30
     volumes:
-      - mongodb_data:/data/db
-      - mongodb_config:/data/configdb
+      - "./data/db/:/data/db"
+      - "./data/db/configdb:/data/configdb
     restart: unless-stopped
     logging:
       driver: none
