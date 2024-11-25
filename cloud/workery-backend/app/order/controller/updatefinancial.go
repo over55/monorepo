@@ -107,6 +107,12 @@ func (impl *OrderControllerImpl) validateUpdateFinancialRequest(ctx context.Cont
 			if dirtyData.InvoiceServiceFeePaymentDate == "" {
 				e["invoice_service_fee_payment_date"] = "missing value"
 			}
+			if dirtyData.InvoiceServiceFeePaymentDateFormatted.IsZero() {
+				e["invoice_service_fee_payment_date"] = "missing value"
+			}
+			if dirtyData.InvoiceActualServiceFeeAmountPaid == 0 {
+				e["invoice_actual_service_fee_amount_paid"] = "missing value"
+			}
 			// InvoiceBalanceOwingAmount             float64   `bson:"invoice_balance_owing_amount" json:"invoice_balance_owing_amount"`
 		}
 	}
