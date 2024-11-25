@@ -170,6 +170,12 @@ func (impl *TaskItemControllerImpl) validateOrderCompletionOperationRequest(ctx 
 				if dirtyData.InvoiceServiceFeePaymentDate == "" {
 					e["invoice_service_fee_payment_date"] = "missing value"
 				}
+				if dirtyData.InvoiceServiceFeePaymentDateFormatted.IsZero() {
+					e["invoice_service_fee_payment_date"] = "missing value"
+				}
+				if dirtyData.InvoiceActualServiceFeeAmountPaid == 0 {
+					e["invoice_actual_service_fee_amount_paid"] = "missing value"
+				}
 			}
 			if len(dirtyData.PaymentMethods) == 0 {
 				e["payment_methods"] = "missing value"
