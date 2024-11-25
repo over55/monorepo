@@ -2,11 +2,9 @@ package datastore
 
 import (
 	"context"
-	"log"
 	"log/slog"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
@@ -389,68 +387,68 @@ func NewDatastore(appCfg *c.Conf, loggerp *slog.Logger, client *mongo.Client) Or
 	// ctx := context.Background()
 	uc := client.Database(appCfg.DB.Name).Collection("orders")
 
-	// // For debugging purposes only.
-	// if _, err := uc.Indexes().DropAll(context.TODO()); err != nil {
-	// 	loggerp.Error("failed deleting all indexes",
-	// 		slog.Any("err", err))
+	// // // For debugging purposes only.
+	// // if _, err := uc.Indexes().DropAll(context.TODO()); err != nil {
+	// // 	loggerp.Error("failed deleting all indexes",
+	// // 		slog.Any("err", err))
+	// //
+	// // 	// It is important that we crash the app on startup to meet the
+	// // 	// requirements of `google/wire` framework.
+	// // 	log.Fatal(err)
+	// // }
 	//
+	// _, err := uc.Indexes().CreateMany(context.TODO(), []mongo.IndexModel{
+	// 	{Keys: bson.D{{Key: "wjid", Value: 1}}},
+	// 	{Keys: bson.D{{Key: "tenant_id", Value: 1}}},
+	// 	{Keys: bson.D{{Key: "wjid", Value: -1}}},
+	// 	{Keys: bson.D{{Key: "tenant_id_with_wjid", Value: 1}}},
+	// 	{Keys: bson.D{{Key: "customer_id", Value: 1}}},
+	// 	{Keys: bson.D{{Key: "associate_id", Value: 1}}},
+	// 	{Keys: bson.D{{Key: "start_date", Value: 1}}},
+	// 	{Keys: bson.D{{Key: "completion_date", Value: 1}}},
+	// 	{Keys: bson.D{{Key: "assignment_date", Value: -1}}},
+	// 	{Keys: bson.D{{Key: "status", Value: 1}}},
+	// 	{Keys: bson.D{{Key: "type", Value: 1}}},
+	// 	{Keys: bson.D{{Key: "customer_lexical_name", Value: 1}}},
+	// 	{Keys: bson.D{{Key: "associate_lexical_name", Value: 1}}},
+	// 	{Keys: bson.D{
+	// 		{"wjid", "text"},
+	// 		{"customer_organization_name", "text"},
+	// 		{"customer_name", "text"},
+	// 		{"customer_lexical_name", "text"},
+	// 		{"customer_email", "text"},
+	// 		{"customer_phone", "text"},
+	// 		{"customer_other_phone", "text"},
+	// 		{"customer_full_address_without_postal_code", "text"},
+	// 		{"customer_tags", "text"},
+	// 		{"associate_organization_name", "text"},
+	// 		{"associate_name", "text"},
+	// 		{"associate_lexical_name", "text"},
+	// 		{"associate_email", "text"},
+	// 		{"associate_phone", "text"},
+	// 		{"associate_other_phone", "text"},
+	// 		{"associate_full_address_without_postal_code", "text"},
+	// 		{"associate_tags", "text"},
+	// 		{"associate_skill_sets", "text"},
+	// 		{"associate_insurance_requirements", "text"},
+	// 		{"associate_vehicle_types", "text"},
+	// 		{"tenant_id_with_wjid", "text"},
+	// 		{"description", "text"},
+	// 		{"closing_reason_other", "text"},
+	// 		{"invoice_service_fee_name", "text"},
+	// 		{"invoice_service_fee_description", "text"},
+	// 		{"latest_pending_task_description", "text"},
+	// 		{"no_survey_conducted_reason_other", "text"},
+	// 		{"tags", "text"},
+	// 		{"skill_sets", "text"},
+	// 		{"comments", "text"},
+	// 	}},
+	// })
+	// if err != nil {
 	// 	// It is important that we crash the app on startup to meet the
 	// 	// requirements of `google/wire` framework.
 	// 	log.Fatal(err)
 	// }
-
-	_, err := uc.Indexes().CreateMany(context.TODO(), []mongo.IndexModel{
-		{Keys: bson.D{{Key: "wjid", Value: 1}}},
-		{Keys: bson.D{{Key: "tenant_id", Value: 1}}},
-		{Keys: bson.D{{Key: "wjid", Value: -1}}},
-		{Keys: bson.D{{Key: "tenant_id_with_wjid", Value: 1}}},
-		{Keys: bson.D{{Key: "customer_id", Value: 1}}},
-		{Keys: bson.D{{Key: "associate_id", Value: 1}}},
-		{Keys: bson.D{{Key: "start_date", Value: 1}}},
-		{Keys: bson.D{{Key: "completion_date", Value: 1}}},
-		{Keys: bson.D{{Key: "assignment_date", Value: -1}}},
-		{Keys: bson.D{{Key: "status", Value: 1}}},
-		{Keys: bson.D{{Key: "type", Value: 1}}},
-		{Keys: bson.D{{Key: "customer_lexical_name", Value: 1}}},
-		{Keys: bson.D{{Key: "associate_lexical_name", Value: 1}}},
-		{Keys: bson.D{
-			{"wjid", "text"},
-			{"customer_organization_name", "text"},
-			{"customer_name", "text"},
-			{"customer_lexical_name", "text"},
-			{"customer_email", "text"},
-			{"customer_phone", "text"},
-			{"customer_other_phone", "text"},
-			{"customer_full_address_without_postal_code", "text"},
-			{"customer_tags", "text"},
-			{"associate_organization_name", "text"},
-			{"associate_name", "text"},
-			{"associate_lexical_name", "text"},
-			{"associate_email", "text"},
-			{"associate_phone", "text"},
-			{"associate_other_phone", "text"},
-			{"associate_full_address_without_postal_code", "text"},
-			{"associate_tags", "text"},
-			{"associate_skill_sets", "text"},
-			{"associate_insurance_requirements", "text"},
-			{"associate_vehicle_types", "text"},
-			{"tenant_id_with_wjid", "text"},
-			{"description", "text"},
-			{"closing_reason_other", "text"},
-			{"invoice_service_fee_name", "text"},
-			{"invoice_service_fee_description", "text"},
-			{"latest_pending_task_description", "text"},
-			{"no_survey_conducted_reason_other", "text"},
-			{"tags", "text"},
-			{"skill_sets", "text"},
-			{"comments", "text"},
-		}},
-	})
-	if err != nil {
-		// It is important that we crash the app on startup to meet the
-		// requirements of `google/wire` framework.
-		log.Fatal(err)
-	}
 
 	s := &OrderStorerImpl{
 		Logger:     loggerp,
