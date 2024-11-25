@@ -15,6 +15,7 @@ import (
 	"github.com/over55/monorepo/cloud/workery-backend/config"
 	"github.com/over55/monorepo/cloud/workery-backend/config/constants"
 	"github.com/over55/monorepo/cloud/workery-backend/provider/blacklist"
+	ipcb "github.com/over55/monorepo/cloud/workery-backend/provider/ipcountryblocker"
 	"github.com/over55/monorepo/cloud/workery-backend/provider/jwt"
 	"github.com/over55/monorepo/cloud/workery-backend/provider/time"
 	"github.com/over55/monorepo/cloud/workery-backend/provider/uuid"
@@ -31,6 +32,7 @@ type middleware struct {
 	JWT               jwt.Provider
 	UUID              uuid.Provider
 	Blacklist         blacklist.Provider
+	IPCountryBlocker  ipcb.Provider
 	GatewayController gateway_c.GatewayController
 }
 
@@ -41,6 +43,7 @@ func NewMiddleware(
 	timep time.Provider,
 	jwtp jwt.Provider,
 	blp blacklist.Provider,
+	ipcountryblocker ipcb.Provider,
 	gatewayController gateway_c.GatewayController,
 ) Middleware {
 	return &middleware{
@@ -49,12 +52,14 @@ func NewMiddleware(
 		Time:              timep,
 		JWT:               jwtp,
 		Blacklist:         blp,
+		IPCountryBlocker:  ipcountryblocker,
 		GatewayController: gatewayController,
 	}
 }
 
 // Attach function attaches to HTTP router to apply for every API call.
 func (mid *middleware) Attach(fn http.HandlerFunc) http.HandlerFunc {
+
 	// Attach our middleware handlers here. Please note that all our middleware
 	// will start from the bottom and proceed upwards.
 	// Ex: `RateLimitMiddleware` will be executed first and
@@ -63,6 +68,7 @@ func (mid *middleware) Attach(fn http.HandlerFunc) http.HandlerFunc {
 	fn = mid.PostJWTProcessorMiddleware(fn) // Note: Must be above `JWTProcessorMiddleware`.
 	fn = mid.JWTProcessorMiddleware(fn)     // Note: Must be above `PreJWTProcessorMiddleware`.
 	fn = mid.PreJWTProcessorMiddleware(fn)  // Note: Must be above `URLProcessorMiddleware` and `IPAddressMiddleware`.
+	fn = mid.EnforceRestrictCountryIPsMiddleware(fn)
 	fn = mid.EnforceBlacklistMiddleware(fn)
 	fn = mid.IPAddressMiddleware(fn)
 	fn = mid.URLProcessorMiddleware(fn)
@@ -71,6 +77,33 @@ func (mid *middleware) Attach(fn http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		// Flow to the next middleware.
 		fn(w, r)
+	}
+}
+
+func (mid *middleware) EnforceRestrictCountryIPsMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// Open our program's context based on the request and save the
+		// slash-seperated array from our URL path.
+		ctx := r.Context()
+
+		ipAddress, _ := ctx.Value(constants.SessionIPAddress).(string)
+		// proxies, _ := ctx.Value(constants.SessionProxies).(string)
+
+		// DEVELOPERS NOTE:
+		// What is `ZZ` ? -> \https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#ZZ
+
+		if !mid.IPCountryBlocker.IsAllowedIPAddress(ipAddress) {
+			// mid.Logger.Warn("rejected request by country",
+			// 	slog.Any("url", r.URL.Path),
+			// 	slog.String("ip_address", ipAddress),
+			// 	slog.String("country", mid.IPCountryBlocker.CountryOfIPAddress(ipAddress)),
+			// 	slog.String("proxies", proxies),
+			// 	slog.Any("middleware", "EnforceRestrictCountryIPsMiddleware"))
+			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+			return
+		}
+
+		next(w, r.WithContext(ctx))
 	}
 }
 

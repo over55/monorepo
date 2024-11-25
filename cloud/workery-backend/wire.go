@@ -87,6 +87,7 @@ import (
 	"github.com/over55/monorepo/cloud/workery-backend/inputport/http/middleware"
 	tq "github.com/over55/monorepo/cloud/workery-backend/inputport/taskqueue"
 	"github.com/over55/monorepo/cloud/workery-backend/provider/blacklist"
+	"github.com/over55/monorepo/cloud/workery-backend/provider/ipcountryblocker"
 	"github.com/over55/monorepo/cloud/workery-backend/provider/jobseekerid"
 	"github.com/over55/monorepo/cloud/workery-backend/provider/jwt"
 	"github.com/over55/monorepo/cloud/workery-backend/provider/kmutex"
@@ -115,6 +116,7 @@ func InitializeEvent() Application {
 		kmutex.NewProvider,
 		mongodb.NewProvider,
 		taskqueue.NewProvider,
+		ipcountryblocker.NewProvider,
 		blacklist.NewProvider,
 		mongodbcache.NewCache,
 		s3_storage.NewStorage,

@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 )
 
 type Conf struct {
@@ -22,6 +23,7 @@ type serverConf struct {
 	BackendDomainName       string
 	FrontendDomainName      string
 	Enable2FAOnRegistration bool
+	AllowedCountries        []string
 }
 
 type dbConfig struct {
@@ -59,6 +61,7 @@ func New() *Conf {
 	c.AppServer.BackendDomainName = getEnv("WORKERY_BACKEND_API_DOMAIN_NAME", true)
 	c.AppServer.FrontendDomainName = getEnv("WORKERY_BACKEND_APP_DOMAIN_NAME", true)
 	c.AppServer.Enable2FAOnRegistration = getEnvBool("WORKERY_BACKEND_APP_ENABLE_2FA_ON_REGISTRATION", false, false)
+	c.AppServer.AllowedCountries = getStringsArrEnv("WORKERY_BACKEND_ALLOWED_COUNTRIES", true)
 
 	c.DB.URI = getEnv("WORKERY_BACKEND_DB_URI", true)
 	c.DB.Name = getEnv("WORKERY_BACKEND_DB_NAME", true)
@@ -99,4 +102,12 @@ func getEnvBool(key string, required bool, defaultValue bool) bool {
 		log.Fatalf("Invalid boolean value for environment variable %s", key)
 	}
 	return value
+}
+
+func getStringsArrEnv(key string, required bool) []string {
+	value := os.Getenv(key)
+	if required && value == "" {
+		log.Fatalf("Environment variable not found: %s", key)
+	}
+	return strings.Split(value, ",")
 }
