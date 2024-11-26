@@ -68,7 +68,7 @@ func (mid *middleware) Attach(fn http.HandlerFunc) http.HandlerFunc {
 	fn = mid.PostJWTProcessorMiddleware(fn) // Note: Must be above `JWTProcessorMiddleware`.
 	fn = mid.JWTProcessorMiddleware(fn)     // Note: Must be above `PreJWTProcessorMiddleware`.
 	fn = mid.PreJWTProcessorMiddleware(fn)  // Note: Must be above `URLProcessorMiddleware` and `IPAddressMiddleware`.
-	fn = mid.EnforceRestrictCountryIPsMiddleware(fn)
+	// fn = mid.EnforceRestrictCountryIPsMiddleware(fn)
 	fn = mid.EnforceBlacklistMiddleware(fn)
 	fn = mid.IPAddressMiddleware(fn)
 	fn = mid.URLProcessorMiddleware(fn)
@@ -80,32 +80,50 @@ func (mid *middleware) Attach(fn http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func (mid *middleware) EnforceRestrictCountryIPsMiddleware(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		// Open our program's context based on the request and save the
-		// slash-seperated array from our URL path.
-		ctx := r.Context()
-
-		ipAddress, _ := ctx.Value(constants.SessionIPAddress).(string)
-		// proxies, _ := ctx.Value(constants.SessionProxies).(string)
-
-		// DEVELOPERS NOTE:
-		// What is `ZZ` ? -> \https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#ZZ
-
-		if !mid.IPCountryBlocker.IsAllowedIPAddress(ipAddress) {
-			// mid.Logger.Warn("rejected request by country",
-			// 	slog.Any("url", r.URL.Path),
-			// 	slog.String("ip_address", ipAddress),
-			// 	slog.String("country", mid.IPCountryBlocker.CountryOfIPAddress(ipAddress)),
-			// 	slog.String("proxies", proxies),
-			// 	slog.Any("middleware", "EnforceRestrictCountryIPsMiddleware"))
-			http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
-			return
-		}
-
-		next(w, r.WithContext(ctx))
-	}
-}
+// func (mid *middleware) EnforceRestrictCountryIPsMiddleware(next http.HandlerFunc) http.HandlerFunc {
+// 	return func(w http.ResponseWriter, r *http.Request) {
+// 		// Open our program's context based on the request and save the
+// 		// slash-seperated array from our URL path.
+// 		ctx := r.Context()
+//
+// 		// The following code will lookup the URL path in a whitelist and
+// 		// if the visited path matches then we will skip URL protection.
+// 		// We do this because a majority of API endpoints are protected
+// 		// by authorization.
+//
+// 		urlSplit := ctx.Value("url_split").([]string)
+// 		skipPath := map[string]bool{
+// 			"health-check": true,
+// 		}
+//
+// 		if len(urlSplit) >= 3 { // ex: /api/v1/health-check
+// 			// Allow checking of health
+// 			if skipPath[urlSplit[2]] {
+// 				next(w, r.WithContext(ctx)) // Flow to the next middleware.
+// 			}
+// 		} else {
+// 			ipAddress, _ := ctx.Value(constants.SessionIPAddress).(string)
+// 			// proxies, _ := ctx.Value(constants.SessionProxies).(string)
+//
+// 			// DEVELOPERS NOTE:
+// 			// What is `ZZ` ? -> \https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2#ZZ
+//
+// 			if !mid.IPCountryBlocker.IsAllowedIPAddress(ipAddress) {
+// 				// mid.Logger.Warn("rejected request by country",
+// 				// 	slog.Any("url", r.URL.Path),
+// 				// 	slog.String("ip_address", ipAddress),
+// 				// 	slog.String("country", mid.IPCountryBlocker.CountryOfIPAddress(ipAddress)),
+// 				// 	slog.String("proxies", proxies),
+// 				// 	slog.Any("middleware", "EnforceRestrictCountryIPsMiddleware"))
+// 				http.Error(w, http.StatusText(http.StatusForbidden), http.StatusForbidden)
+// 				return
+// 			}
+//
+// 			next(w, r.WithContext(ctx))
+// 		}
+//
+// 	}
+// }
 
 // Note: This middleware must have `IPAddressMiddleware` executed first before running.
 func (mid *middleware) EnforceBlacklistMiddleware(next http.HandlerFunc) http.HandlerFunc {
