@@ -17,7 +17,7 @@ import (
 )
 
 var (
-	// Flags for import_tenant_v2 command
+	// Flags for create_tenant command
 	publicID           int64
 	alternateName      string
 	description        string
@@ -37,36 +37,36 @@ var (
 )
 
 func init() {
-	// Bind flags to variables for the import_tenant_v2 command.
-	importTenantV2Cmd.Flags().Int64Var(&publicID, "public-id", 0, "Public ID of the tenant")
-	importTenantV2Cmd.Flags().StringVarP(&alternateName, "alternate-name", "a", "", "Alternate name of the tenant")
-	importTenantV2Cmd.Flags().StringVarP(&description, "description", "d", "", "Description of the tenant")
-	importTenantV2Cmd.Flags().StringVarP(&name, "name", "n", "", "Name of the tenant")
-	importTenantV2Cmd.Flags().StringVarP(&url, "url", "u", "", "URL of the tenant")
-	importTenantV2Cmd.Flags().IntVar(&status, "status", 1, "Status of the tenant (e.g., 1 for active)")
-	importTenantV2Cmd.Flags().StringVarP(&timezone, "timezone", "t", "America/Toronto", "Timezone of the tenant")
-	importTenantV2Cmd.Flags().StringVar(&createdAtStr, "created-at", "", "Creation timestamp in RFC3339 format (e.g., 2023-01-01T15:04:05Z)")
-	importTenantV2Cmd.Flags().StringVar(&modifiedAtStr, "modified-at", "", "Last modified timestamp in RFC3339 format (e.g., 2023-01-01T15:04:05Z)")
-	importTenantV2Cmd.Flags().StringVar(&addressCountry, "address-country", "", "Country of the tenant's address")
-	importTenantV2Cmd.Flags().StringVar(&addressRegion, "address-region", "", "Region/State of the tenant's address")
-	importTenantV2Cmd.Flags().StringVar(&addressLocality, "address-locality", "", "City/Locality of the tenant's address")
-	importTenantV2Cmd.Flags().StringVar(&postalCode, "postal-code", "", "Postal code of the tenant's address")
-	importTenantV2Cmd.Flags().StringVar(&streetAddress, "street-address", "", "Street address of the tenant")
-	importTenantV2Cmd.Flags().StringVar(&streetAddressExtra, "street-address-extra", "", "Extra street address information")
-	importTenantV2Cmd.Flags().StringVarP(&schemaName, "schema-name", "s", "", "Database schema name for the tenant")
+	// Bind flags to variables for the create_tenant command.
+	createTenantCmd.Flags().Int64Var(&publicID, "public-id", 0, "Public ID of the tenant")
+	createTenantCmd.Flags().StringVarP(&alternateName, "alternate-name", "a", "", "Alternate name of the tenant")
+	createTenantCmd.Flags().StringVarP(&description, "description", "d", "", "Description of the tenant")
+	createTenantCmd.Flags().StringVarP(&name, "name", "n", "", "Name of the tenant")
+	createTenantCmd.Flags().StringVarP(&url, "url", "u", "", "URL of the tenant")
+	createTenantCmd.Flags().IntVar(&status, "status", 1, "Status of the tenant (e.g., 1 for active)")
+	createTenantCmd.Flags().StringVarP(&timezone, "timezone", "t", "America/Toronto", "Timezone of the tenant")
+	createTenantCmd.Flags().StringVar(&createdAtStr, "created-at", "", "Creation timestamp in RFC3339 format (e.g., 2023-01-01T15:04:05Z)")
+	createTenantCmd.Flags().StringVar(&modifiedAtStr, "modified-at", "", "Last modified timestamp in RFC3339 format (e.g., 2023-01-01T15:04:05Z)")
+	createTenantCmd.Flags().StringVar(&addressCountry, "address-country", "", "Country of the tenant's address")
+	createTenantCmd.Flags().StringVar(&addressRegion, "address-region", "", "Region/State of the tenant's address")
+	createTenantCmd.Flags().StringVar(&addressLocality, "address-locality", "", "City/Locality of the tenant's address")
+	createTenantCmd.Flags().StringVar(&postalCode, "postal-code", "", "Postal code of the tenant's address")
+	createTenantCmd.Flags().StringVar(&streetAddress, "street-address", "", "Street address of the tenant")
+	createTenantCmd.Flags().StringVar(&streetAddressExtra, "street-address-extra", "", "Extra street address information")
+	createTenantCmd.Flags().StringVarP(&schemaName, "schema-name", "s", "", "Database schema name for the tenant")
 
 	// Mark required flags.
-	importTenantV2Cmd.MarkFlagRequired("name")
-	importTenantV2Cmd.MarkFlagRequired("schema-name")
+	createTenantCmd.MarkFlagRequired("name")
+	createTenantCmd.MarkFlagRequired("schema-name")
 
-	rootCmd.AddCommand(importTenantV2Cmd)
+	rootCmd.AddCommand(createTenantCmd)
 }
 
-var importTenantV2Cmd = &cobra.Command{
-	Use:     "import_tenant_v2",
+var createTenantCmd = &cobra.Command{
+	Use:     "create_tenant",
 	Short:   "Create a new tenant using command-line arguments",
 	Long:    `This command creates a new tenant in the database with details provided via flags.`,
-	Example: `  workery-cli import_tenant_v2 --name "Example Corp" --schema-name "example_corp_db" -d "A sample tenant" -u "https://example.com"`,
+	Example: `  workery-cli create_tenant --name "Example Corp" --schema-name "example_corp_db" -d "A sample tenant" -u "https://example.com"`,
 	Run: func(cmd *cobra.Command, args []string) {
 		cfg := config.New()
 		mc := mongodb.NewStorage(cfg)
