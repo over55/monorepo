@@ -1,7 +1,7 @@
 // File Path: monorepo/web/workery-frontend/src/services/API/DashboardAPI.js
 
 import { camelizeKeys } from "humps";
-import { createAuthenticatedAxios } from "../helpers/AuthenticatedAxios";
+import { createAuthenticatedAxios } from "../Helpers/AuthenticatedAxios";
 
 /**
  * DashboardAPI handles dashboard-related API calls

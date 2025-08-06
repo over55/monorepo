@@ -1,7 +1,7 @@
 // File Path: monorepo/web/workery-frontend/src/services/API/TwoFactorAuthAPI.js
 
 import { camelizeKeys } from "humps";
-import { createAuthenticatedAxios } from "../helpers/AuthenticatedAxios";
+import { createAuthenticatedAxios } from "../Helpers/AuthenticatedAxios";
 
 /**
  * TwoFactorAuthAPI handles all 2FA-related API calls

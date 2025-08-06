@@ -1,7 +1,7 @@
 // File Path: monorepo/web/workery-frontend/src/services/API/TenantAPI.js
 
 import { camelizeKeys, decamelizeKeys } from "humps";
-import { createAuthenticatedAxios } from "../helpers/AuthenticatedAxios";
+import { createAuthenticatedAxios } from "../Helpers/AuthenticatedAxios";
 
 /**
  * TenantAPI handles all tenant-related API calls
