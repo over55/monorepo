@@ -5,13 +5,15 @@ import { VersionAPI } from "./API/VersionAPI";
 import { PasswordResetAPI } from "./API/PasswordResetAPI";
 import { TenantAPI } from "./API/TenantAPI";
 import { DashboardAPI } from "./API/DashboardAPI";
+import { TwoFactorAuthAPI } from "./API/TwoFactorAuthAPI";
 import { TokenStorage } from "./Storage/TokenStorage";
 import { AuthManager } from "./Manager/AuthManager";
 import { VersionManager } from "./Manager/VersionManager";
 import { PasswordResetManager } from "./Manager/PasswordResetManager";
 import { TenantManager } from "./Manager/TenantManager";
 import { DashboardManager } from "./Manager/DashboardManager";
-import { getAPIBaseURL, API_ENDPOINTS, ENV_CONFIG } from "./config/APIConfig";
+import { TwoFactorAuthManager } from "./Manager/TwoFactorAuthManager";
+import { getAPIBaseURL, API_ENDPOINTS, ENV_CONFIG } from "./Config/APIConfig";
 
 /**
  * Services container for dependency injection
@@ -54,6 +56,13 @@ class ServicesContainer {
     const dashboardAPI = new DashboardAPI(baseURL, API_ENDPOINTS, tokenStorage);
     this._services.set("dashboardAPI", dashboardAPI);
 
+    const twoFactorAuthAPI = new TwoFactorAuthAPI(
+      baseURL,
+      API_ENDPOINTS,
+      tokenStorage,
+    );
+    this._services.set("twoFactorAuthAPI", twoFactorAuthAPI);
+
     // Initialize manager services (combine API and storage layers)
 
     // AuthManager needs AuthAPI and TokenStorage
@@ -76,6 +85,10 @@ class ServicesContainer {
     const dashboardManager = new DashboardManager(dashboardAPI);
     this._services.set("dashboardManager", dashboardManager);
 
+    // TwoFactorAuthManager needs TwoFactorAuthAPI
+    const twoFactorAuthManager = new TwoFactorAuthManager(twoFactorAuthAPI);
+    this._services.set("twoFactorAuthManager", twoFactorAuthManager);
+
     this._initialized = true;
 
     if (ENV_CONFIG.IS_DEVELOPMENT) {
@@ -88,6 +101,7 @@ class ServicesContainer {
         passwordResetManager: ["passwordResetAPI"],
         tenantManager: ["tenantAPI"],
         dashboardManager: ["dashboardAPI"],
+        twoFactorAuthManager: ["twoFactorAuthAPI"],
       });
       console.groupEnd();
     }
@@ -135,6 +149,10 @@ class ServicesContainer {
     return this.get("dashboardManager");
   }
 
+  getTwoFactorAuthManager() {
+    return this.get("twoFactorAuthManager");
+  }
+
   /**
    * Convenience getters for storage services
    */
@@ -163,6 +181,10 @@ class ServicesContainer {
 
   getDashboardAPI() {
     return this.get("dashboardAPI");
+  }
+
+  getTwoFactorAuthAPI() {
+    return this.get("twoFactorAuthAPI");
   }
 
   /**
@@ -278,6 +300,11 @@ export function useDashboardManager() {
   return services.getDashboardManager();
 }
 
+export function useTwoFactorAuthManager() {
+  const services = useServices();
+  return services.getTwoFactorAuthManager();
+}
+
 /**
  * Hooks to access storage services
  */
@@ -312,6 +339,11 @@ export function useTenantAPI() {
 export function useDashboardAPI() {
   const services = useServices();
   return services.getDashboardAPI();
+}
+
+export function useTwoFactorAuthAPI() {
+  const services = useServices();
+  return services.getTwoFactorAuthAPI();
 }
 
 /**
