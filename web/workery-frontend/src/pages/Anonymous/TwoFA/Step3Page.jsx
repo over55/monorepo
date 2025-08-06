@@ -1,13 +1,12 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Anonymous/TwoFA/ValidationPage.jsx
+// File Path: monorepo/web/workery-frontend/src/pages/Anonymous/TwoFA/Step3Page.jsx
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import {
   useAuthManager,
   useTwoFactorAuthManager,
 } from "../../../services/Services";
-import { getRoleRedirectPath } from "../../../constants/Roles";
 
-function TwoFAValidationPage() {
+function TwoFAStep3Page() {
   ////
   //// URL Parameters.
   ////
@@ -29,7 +28,7 @@ function TwoFAValidationPage() {
 
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const [token, setToken] = useState("");
+  const [verificationToken, setVerificationToken] = useState("");
   const [submittedParamToken, setSubmittedParamToken] = useState(false);
 
   ////
@@ -50,7 +49,8 @@ function TwoFAValidationPage() {
     setErrors({});
 
     // Validate token
-    const validationError = twoFactorAuthManager.validateOTPCode(token);
+    const validationError =
+      twoFactorAuthManager.validateOTPCode(verificationToken);
     if (validationError) {
       setErrors(validationError);
       window.scrollTo(0, 0);
@@ -60,38 +60,37 @@ function TwoFAValidationPage() {
     setIsLoading(true);
 
     try {
-      console.log("TwoFAValidationPage: Validating OTP token for login");
+      console.log("TwoFAStep3Page: Verifying OTP token");
 
       // Clean token (remove whitespace)
-      const cleanedToken = token.replace(/\s/g, "");
+      const cleanedToken = verificationToken.replace(/\s/g, "");
 
-      // Validate OTP for login
-      const validateResponse = await twoFactorAuthManager.validateOTP(
-        { token: cleanedToken },
+      // Verify OTP during setup
+      const verifyResponse = await twoFactorAuthManager.verifyOTP(
+        { verification_token: cleanedToken },
         onUnauthorized,
       );
 
       console.log(
-        "TwoFAValidationPage: OTP validation successful",
-        validateResponse,
+        "TwoFAStep3Page: OTP verification successful",
+        verifyResponse,
       );
 
-      // Handle successful validation - redirect based on user role
-      if (validateResponse.user && validateResponse.user.role) {
-        const redirectPath = getRoleRedirectPath(validateResponse.user.role);
-        console.log(
-          `TwoFAValidationPage: Redirecting to ${redirectPath} for role ${validateResponse.user.role}`,
-        );
-        navigate(redirectPath);
+      // Check if we have a backup code in the response
+      if (verifyResponse.otp_backup_code || verifyResponse.otpBackupCode) {
+        const backupCode =
+          verifyResponse.otp_backup_code || verifyResponse.otpBackupCode;
+        navigate(`/login/2fa/backup-code?v=${backupCode}`);
       } else {
-        // Fallback redirect
+        // No backup code provided, redirect based on role
+        // This shouldn't happen in normal flow, but handle gracefully
         console.log(
-          "TwoFAValidationPage: No user role in response, redirecting to dashboard",
+          "TwoFAStep3Page: No backup code in response, redirecting to dashboard",
         );
         navigate("/dashboard");
       }
     } catch (error) {
-      console.error("TwoFAValidationPage: OTP validation failed", error);
+      console.error("TwoFAStep3Page: OTP verification failed", error);
       setErrors(error);
       window.scrollTo(0, 0);
     } finally {
@@ -103,13 +102,14 @@ function TwoFAValidationPage() {
    * Handle form field changes
    */
   const handleTokenChange = (e) => {
-    setToken(e.target.value);
+    setVerificationToken(e.target.value);
 
     // Clear errors when user starts typing
-    if (errors.token) {
+    if (errors.verificationToken || errors.verification_token) {
       setErrors((prev) => ({
         ...prev,
-        token: null,
+        verificationToken: null,
+        verification_token: null,
       }));
     }
   };
@@ -125,10 +125,10 @@ function TwoFAValidationPage() {
       // Start the page at the top
       window.scrollTo(0, 0);
 
-      // Check if user is authenticated (they should be to access 2FA validation)
+      // Check if user is authenticated
       if (!authManager.isAuthenticated()) {
         console.log(
-          "TwoFAValidationPage: User not authenticated, redirecting to login",
+          "TwoFAStep3Page: User not authenticated, redirecting to login",
         );
         navigate("/login");
         return;
@@ -141,10 +141,8 @@ function TwoFAValidationPage() {
         paramToken !== null &&
         paramToken !== ""
       ) {
-        console.log(
-          "TwoFAValidationPage: Auto-submitting token from URL parameter",
-        );
-        setToken(paramToken);
+        console.log("TwoFAStep3Page: Auto-submitting token from URL parameter");
+        setVerificationToken(paramToken);
         setSubmittedParamToken(true);
 
         // Auto-submit the token
@@ -158,28 +156,29 @@ function TwoFAValidationPage() {
   /**
    * Handle automatic submission for Apple 2FA
    */
-  const handleAutoSubmit = async (autoToken) => {
+  const handleAutoSubmit = async (token) => {
     setIsLoading(true);
 
     try {
-      const validateResponse = await twoFactorAuthManager.validateOTP(
-        { token: autoToken },
+      const verifyResponse = await twoFactorAuthManager.verifyOTP(
+        { verification_token: token },
         onUnauthorized,
       );
 
       console.log(
-        "TwoFAValidationPage: Auto-validation successful",
-        validateResponse,
+        "TwoFAStep3Page: Auto-verification successful",
+        verifyResponse,
       );
 
-      if (validateResponse.user && validateResponse.user.role) {
-        const redirectPath = getRoleRedirectPath(validateResponse.user.role);
-        navigate(redirectPath);
+      if (verifyResponse.otp_backup_code || verifyResponse.otpBackupCode) {
+        const backupCode =
+          verifyResponse.otp_backup_code || verifyResponse.otpBackupCode;
+        navigate(`/login/2fa/backup-code?v=${backupCode}`);
       } else {
         navigate("/dashboard");
       }
     } catch (error) {
-      console.error("TwoFAValidationPage: Auto-validation failed", error);
+      console.error("TwoFAStep3Page: Auto-verification failed", error);
       setErrors(error);
       window.scrollTo(0, 0);
     } finally {
@@ -199,22 +198,40 @@ function TwoFAValidationPage() {
             <div>
               <div>
                 <div>
-                  {/* Logo */}
-                  <nav style={{ textAlign: "center", marginBottom: "20px" }}>
-                    <figure>
-                      <Link to="/">
-                        <img
-                          src="/img/workery-logo.jpeg"
-                          alt="Workery Logo"
-                          style={{ width: "256px" }}
-                        />
-                      </Link>
-                    </figure>
+                  {/* Progress Wizard */}
+                  <nav
+                    style={{
+                      backgroundColor: "#d4edda",
+                      padding: "15px",
+                      borderRadius: "4px",
+                      marginBottom: "20px",
+                    }}
+                  >
+                    <p>
+                      <strong>Step 3 of 3</strong>
+                    </p>
+                    <div
+                      style={{
+                        width: "100%",
+                        backgroundColor: "#e0e0e0",
+                        borderRadius: "4px",
+                        height: "8px",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: "100%",
+                          backgroundColor: "#28a745",
+                          height: "8px",
+                          borderRadius: "4px",
+                        }}
+                      ></div>
+                    </div>
                   </nav>
 
                   {/* Page Content */}
-                  <h1 style={{ textAlign: "center", marginBottom: "10px" }}>
-                    Two-Factor Authentication
+                  <h1 style={{ textAlign: "center", marginBottom: "20px" }}>
+                    Setup Two-Factor Authentication
                   </h1>
 
                   {/* Error Display */}
@@ -242,42 +259,45 @@ function TwoFAValidationPage() {
                   )}
 
                   <p style={{ color: "#666", marginBottom: "20px" }}>
-                    Open the two-step verification app on your mobile device,
-                    get your token and input here to finish your login.
+                    Open the two-step verification app on your mobile device to
+                    get your verification code.
                   </p>
 
                   {/* Form */}
                   <form onSubmit={handleSubmit}>
                     <div style={{ marginBottom: "20px" }}>
                       <label
-                        htmlFor="token"
+                        htmlFor="verificationToken"
                         style={{
                           display: "block",
                           fontWeight: "bold",
                           marginBottom: "5px",
                         }}
                       >
-                        Enter your Token:
+                        Enter your Verification Token:
                       </label>
                       <input
-                        id="token"
+                        id="verificationToken"
                         type="text"
                         placeholder="See your authenticator app"
-                        value={token}
+                        value={verificationToken}
                         onChange={handleTokenChange}
                         disabled={isLoading}
                         style={{
                           width: "100%",
                           maxWidth: "380px",
                           padding: "10px",
-                          border: errors.token
-                            ? "2px solid red"
-                            : "1px solid #ccc",
+                          border:
+                            errors.verificationToken ||
+                            errors.verification_token
+                              ? "2px solid red"
+                              : "1px solid #ccc",
                           borderRadius: "4px",
                           fontSize: "16px",
                         }}
                       />
-                      {errors.token && (
+                      {(errors.verificationToken ||
+                        errors.verification_token) && (
                         <div
                           style={{
                             color: "red",
@@ -285,7 +305,8 @@ function TwoFAValidationPage() {
                             marginTop: "5px",
                           }}
                         >
-                          {errors.token}
+                          {errors.verificationToken ||
+                            errors.verification_token}
                         </div>
                       )}
                     </div>
@@ -300,7 +321,7 @@ function TwoFAValidationPage() {
                       }}
                     >
                       <Link
-                        to="/login"
+                        to="/login/2fa/step-2"
                         style={{
                           padding: "10px 20px",
                           backgroundColor: "transparent",
@@ -311,43 +332,31 @@ function TwoFAValidationPage() {
                           cursor: "pointer",
                         }}
                       >
-                        ← Back to Login
+                        ← Back
                       </Link>
 
                       <button
                         type="submit"
-                        disabled={isLoading || !token.trim()}
+                        disabled={isLoading || !verificationToken.trim()}
                         style={{
                           padding: "10px 20px",
                           backgroundColor:
-                            isLoading || !token.trim() ? "#ccc" : "#28a745",
+                            isLoading || !verificationToken.trim()
+                              ? "#ccc"
+                              : "#28a745",
                           color: "white",
                           border: "none",
                           borderRadius: "4px",
                           cursor:
-                            isLoading || !token.trim()
+                            isLoading || !verificationToken.trim()
                               ? "not-allowed"
                               : "pointer",
                         }}
                       >
-                        {isLoading ? "Validating..." : "✓ Validate"}
+                        {isLoading ? "Verifying..." : "✓ Submit and Verify"}
                       </button>
                     </div>
                   </form>
-
-                  {/* Backup Code Recovery Link */}
-                  <div style={{ textAlign: "right", marginTop: "20px" }}>
-                    <Link
-                      to="/login/2fa/backup-code-recovery"
-                      style={{
-                        color: "#666",
-                        fontSize: "14px",
-                        textDecoration: "none",
-                      }}
-                    >
-                      <strong>Use 2FA Backup Code →</strong>
-                    </Link>
-                  </div>
 
                   {/* Copyright */}
                   <div style={{ textAlign: "center", marginTop: "40px" }}>
@@ -371,7 +380,8 @@ function TwoFAValidationPage() {
                           Authenticated:{" "}
                           {authManager.isAuthenticated() ? "Yes" : "No"}
                         </li>
-                        <li>Token Length: {token.length}</li>
+                        <li>Step: 3 of 3 (Verification)</li>
+                        <li>Token Length: {verificationToken.length}</li>
                         <li>Has URL Token: {paramToken ? "Yes" : "No"}</li>
                         <li>
                           Submitted Param Token:{" "}
@@ -380,9 +390,13 @@ function TwoFAValidationPage() {
                         <li>Loading: {isLoading ? "Yes" : "No"}</li>
                       </ul>
 
-                      <h5>Auth State:</h5>
+                      <h5>Setup State:</h5>
                       <pre>
-                        {JSON.stringify(authManager.getAuthState(), null, 2)}
+                        {JSON.stringify(
+                          twoFactorAuthManager.getSetupState(),
+                          null,
+                          2,
+                        )}
                       </pre>
                     </div>
                   )}
@@ -396,4 +410,4 @@ function TwoFAValidationPage() {
   );
 }
 
-export default TwoFAValidationPage;
+export default TwoFAStep3Page;

@@ -28,7 +28,11 @@ import JobSeekerDashboardPage from "./pages/JobSeeker/Dashboard/Page";
 
 // 2FA pages
 import TwoFAStep1Page from "./pages/Anonymous/TwoFA/Step1Page";
+import TwoFAStep2Page from "./pages/Anonymous/TwoFA/Step2Page";
+import TwoFAStep3Page from "./pages/Anonymous/TwoFA/Step3Page";
 import TwoFAValidationPage from "./pages/Anonymous/TwoFA/ValidationPage";
+import TwoFABackupCodeGeneratePage from "./pages/Anonymous/TwoFA/BackupCodeGeneratePage";
+import TwoFABackupCodeRecoveryPage from "./pages/Anonymous/TwoFA/BackupCodeRecoveryPage";
 
 // Error pages
 import NotFoundPage from "./pages/Error/NotFoundPage";
@@ -67,23 +71,17 @@ function AppRouter() {
             <Route path="/login" element={<LoginPage />} />
 
             {/* 2FA pages */}
+            <Route path="/login/2fa/step-1" element={<TwoFAStep1Page />} />
+            <Route path="/login/2fa/step-2" element={<TwoFAStep2Page />} />
+            <Route path="/login/2fa/step-3" element={<TwoFAStep3Page />} />
+            <Route path="/login/2fa" element={<TwoFAValidationPage />} />
             <Route
-              path="/login/2fa/step-1"
-              element={
-                <PlaceholderPage
-                  title="2FA Setup"
-                  description="Two-factor authentication setup wizard (Step 1)"
-                />
-              }
+              path="/login/2fa/backup-code"
+              element={<TwoFABackupCodeGeneratePage />}
             />
             <Route
-              path="/login/2fa"
-              element={
-                <PlaceholderPage
-                  title="2FA Validation"
-                  description="Two-factor authentication validation"
-                />
-              }
+              path="/login/2fa/backup-code-recovery"
+              element={<TwoFABackupCodeRecoveryPage />}
             />
 
             {/* Root/Executive routes */}
@@ -177,7 +175,7 @@ function AppRouter() {
             <Route
               path="/404"
               element={
-                <PlaceholderPage
+                <NotFoundPage
                   title="Page Not Found"
                   description="The page you're looking for doesn't exist."
                 />

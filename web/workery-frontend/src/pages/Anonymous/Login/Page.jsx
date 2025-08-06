@@ -138,29 +138,46 @@ function LoginPage() {
     // Determine redirect URL based on 2FA status and role
     let redirectUrl;
 
-    if (profile.otpEnabled === false) {
-      // No 2FA enabled, redirect based on role
+    // IMPORTANT: Check if 2FA is disabled first
+    if (
+      profile.otpEnabled === false ||
+      profile.otpEnabled === null ||
+      profile.otpEnabled === undefined
+    ) {
+      // No 2FA enabled, redirect directly to role-based dashboard
       console.log(
-        "LoginPage: No 2FA enabled, redirecting based on role:",
+        "LoginPage: 2FA is disabled (otpEnabled:",
+        profile.otpEnabled,
+        "), redirecting based on role:",
         profile.role,
       );
       redirectUrl = getRoleRedirectPath(profile.role);
     } else {
-      // 2FA is enabled, check if it's verified
-      if (profile.otpVerified === false) {
+      // 2FA is enabled, check if it's been set up and verified
+      console.log("LoginPage: 2FA is enabled, checking verification status");
+
+      if (
+        profile.otpVerified === false ||
+        profile.otpVerified === null ||
+        profile.otpVerified === undefined
+      ) {
         console.log(
-          "LoginPage: 2FA enabled but not verified, redirecting to setup wizard",
+          "LoginPage: 2FA enabled but not verified (otpVerified:",
+          profile.otpVerified,
+          "), redirecting to setup wizard",
         );
         redirectUrl = "/login/2fa/step-1";
       } else {
         console.log(
-          "LoginPage: 2FA enabled and verified, redirecting to validation",
+          "LoginPage: 2FA enabled and verified (otpVerified:",
+          profile.otpVerified,
+          "), redirecting to validation",
         );
         redirectUrl = "/login/2fa";
       }
     }
 
-    console.log(`LoginPage: Redirecting to: ${redirectUrl}`);
+    console.log(`LoginPage: Final redirect decision: ${redirectUrl}`);
     navigate(redirectUrl);
   };
 
