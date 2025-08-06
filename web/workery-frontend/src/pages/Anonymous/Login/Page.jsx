@@ -218,6 +218,14 @@ function LoginPage() {
   };
 
   /**
+   * Handle form submission
+   */
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    handleSubmitAsync();
+  };
+
+  /**
    * Utility functions
    */
   const hasErrors = () => Object.keys(errors).length > 0;
@@ -242,42 +250,130 @@ function LoginPage() {
     });
   }
 
-  // Public API for parent components
-  const loginPageAPI = {
-    // Form data
-    formData,
-    errors,
-    loading,
-    isSubmitted,
-
-    // Actions
-    handleFieldChange,
-    handleSubmitAsync,
-    handleSubmitCallbacks,
-    resetForm,
-
-    // Getters
-    hasErrors,
-    isFormValid,
-
-    // State setters
-    setFormData,
-    setErrors,
-    setLoading,
-  };
-
   return (
-    <>
-      {/*
-        Business logic only - no GUI as requested.
+    <div>
+      <h1>Login to Workery</h1>
 
-        To use this logic:
-        - Call handleSubmitAsync() or handleSubmitCallbacks()
-        - Use handleFieldChange(field, value) for form updates
-        - Check loading, errors, formData states
-        - Use resetForm() to clear everything
-      */}
-    </>
+      <form onSubmit={handleSubmit}>
+        <div>
+          <label htmlFor="email">Email Address:</label>
+          <br />
+          <input
+            id="email"
+            type="email"
+            value={formData.email}
+            onChange={(e) => handleFieldChange("email", e.target.value)}
+            disabled={loading}
+            placeholder="Enter your email"
+            size="30"
+          />
+          {errors.email && (
+            <div>
+              <strong>Error:</strong> {errors.email}
+            </div>
+          )}
+        </div>
+
+        <br />
+
+        <div>
+          <label htmlFor="password">Password:</label>
+          <br />
+          <input
+            id="password"
+            type="password"
+            value={formData.password}
+            onChange={(e) => handleFieldChange("password", e.target.value)}
+            disabled={loading}
+            placeholder="Enter your password"
+            size="30"
+          />
+          {errors.password && (
+            <div>
+              <strong>Error:</strong> {errors.password}
+            </div>
+          )}
+        </div>
+
+        <br />
+
+        {errors.auth && (
+          <div>
+            <strong>Login Error:</strong> {errors.auth}
+          </div>
+        )}
+
+        <br />
+
+        <button type="submit" disabled={loading || !isFormValid()}>
+          {loading ? "Logging in..." : "Login"}
+        </button>
+
+        <br />
+        <br />
+
+        <button type="button" onClick={resetForm} disabled={loading}>
+          Reset Form
+        </button>
+      </form>
+
+      <hr />
+
+      <h3>Navigation</h3>
+      <ul>
+        <li>
+          <Link to="/">Back to Home</Link>
+        </li>
+        <li>
+          <Link to="/forgot-password">Forgot your password?</Link>
+        </li>
+      </ul>
+
+      <hr />
+
+      <h3>Alternative Login Methods</h3>
+      <button
+        type="button"
+        onClick={handleSubmitCallbacks}
+        disabled={loading || !isFormValid()}
+      >
+        Login with Callbacks
+      </button>
+
+      {import.meta.env.DEV && (
+        <>
+          <hr />
+          <details>
+            <summary>Debug Information (Development Only)</summary>
+            <h4>Form State:</h4>
+            <ul>
+              <li>Email: {formData.email || "(empty)"}</li>
+              <li>Password: {formData.password ? "[HIDDEN]" : "(empty)"}</li>
+              <li>Loading: {loading ? "Yes" : "No"}</li>
+              <li>Submitted: {isSubmitted ? "Yes" : "No"}</li>
+              <li>Form Valid: {isFormValid() ? "Yes" : "No"}</li>
+              <li>Has Errors: {hasErrors() ? "Yes" : "No"}</li>
+            </ul>
+
+            {Object.keys(errors).length > 0 && (
+              <>
+                <h4>Current Errors:</h4>
+                <pre>{JSON.stringify(errors, null, 2)}</pre>
+              </>
+            )}
+
+            <h4>Available Actions:</h4>
+            <ul>
+              <li>handleFieldChange(field, value)</li>
+              <li>handleSubmitAsync()</li>
+              <li>handleSubmitCallbacks()</li>
+              <li>resetForm()</li>
+              <li>validateForm()</li>
+            </ul>
+          </details>
+        </>
+      )}
+    </div>
   );
 }
 
