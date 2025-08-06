@@ -175,7 +175,7 @@ function AppRouter() {
             <Route
               path="/404"
               element={
-                <NotFoundPage
+                <PlaceholderPage
                   title="Page Not Found"
                   description="The page you're looking for doesn't exist."
                 />

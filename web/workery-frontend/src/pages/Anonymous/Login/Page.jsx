@@ -2,7 +2,11 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { useAuthManager } from "../../../services/Services";
-import { getRoleRedirectPath } from "../../../constants/Roles";
+import {
+  getRoleRedirectPath,
+  ROLE_REDIRECT_PATHS,
+  ROLE_NAMES,
+} from "../../../constants/Roles";
 
 function LoginPage() {
   ////
@@ -121,13 +125,22 @@ function LoginPage() {
   /**
    * Handle successful login with proper role-based and 2FA redirects
    */
-  const handleLoginSuccess = (profile) => {
+  const handleLoginSuccess = (loginResponse) => {
     console.log("LoginPage: Login successful", {
-      id: profile.id,
-      email: profile.email,
-      role: profile.role,
-      otpEnabled: profile.otpEnabled,
-      otpVerified: profile.otpVerified,
+      id: loginResponse.user.id,
+      email: loginResponse.user.email,
+      role: loginResponse.user.role,
+      roleType: typeof loginResponse.user.role,
+      otpEnabled: loginResponse.user.otpEnabled,
+      otpVerified: loginResponse.user.otpVerified,
+    });
+
+    // Debug role mapping
+    console.log("LoginPage: Role mapping debug", {
+      userRole: loginResponse.user.role,
+      availableRolePaths: ROLE_REDIRECT_PATHS,
+      roleNames: ROLE_NAMES,
+      calculatedPath: getRoleRedirectPath(loginResponse.user.role),
     });
 
     // Clear form and errors
@@ -140,37 +153,49 @@ function LoginPage() {
 
     // IMPORTANT: Check if 2FA is disabled first
     if (
-      profile.otpEnabled === false ||
-      profile.otpEnabled === null ||
-      profile.otpEnabled === undefined
+      loginResponse.user.otpEnabled === false ||
+      loginResponse.user.otpEnabled === null ||
+      loginResponse.user.otpEnabled === undefined
     ) {
       // No 2FA enabled, redirect directly to role-based dashboard
       console.log(
         "LoginPage: 2FA is disabled (otpEnabled:",
-        profile.otpEnabled,
+        loginResponse.user.otpEnabled,
         "), redirecting based on role:",
-        profile.role,
+        loginResponse.user.role,
       );
-      redirectUrl = getRoleRedirectPath(profile.role);
+      redirectUrl = getRoleRedirectPath(loginResponse.user.role);
+
+      // Additional safety check
+      if (redirectUrl === "/501") {
+        console.error(
+          "LoginPage: Role redirect returned 501! Role:",
+          loginResponse.user.role,
+          "Type:",
+          typeof loginResponse.user.role,
+        );
+        // Fallback to a safe redirect
+        redirectUrl = "/dashboard";
+      }
     } else {
       // 2FA is enabled, check if it's been set up and verified
       console.log("LoginPage: 2FA is enabled, checking verification status");
 
       if (
-        profile.otpVerified === false ||
-        profile.otpVerified === null ||
-        profile.otpVerified === undefined
+        loginResponse.user.otpVerified === false ||
+        loginResponse.user.otpVerified === null ||
+        loginResponse.user.otpVerified === undefined
       ) {
         console.log(
           "LoginPage: 2FA enabled but not verified (otpVerified:",
-          profile.otpVerified,
+          loginResponse.user.otpVerified,
           "), redirecting to setup wizard",
         );
         redirectUrl = "/login/2fa/step-1";
       } else {
         console.log(
           "LoginPage: 2FA enabled and verified (otpVerified:",
-          profile.otpVerified,
+          loginResponse.user.otpVerified,
           "), redirecting to validation",
         );
         redirectUrl = "/login/2fa";
@@ -232,12 +257,12 @@ function LoginPage() {
       console.log("LoginPage: Attempting login", { email: formData.email });
 
       // Attempt login
-      const profile = await authManager.login({
+      const loginResponse = await authManager.login({
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
       });
 
-      handleLoginSuccess(profile);
+      handleLoginSuccess(loginResponse);
     } catch (error) {
       handleLoginError(error);
     } finally {

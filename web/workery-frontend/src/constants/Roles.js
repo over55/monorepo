@@ -32,7 +32,7 @@ export const ROLE_NAMES = {
  * Default redirect paths for each role after login
  */
 export const ROLE_REDIRECT_PATHS = {
-  [EXECUTIVE_ROLE_ID]: "/root/tenants",
+  [EXECUTIVE_ROLE_ID]: "/root/dashboard",
   [MANAGEMENT_ROLE_ID]: "/admin/dashboard",
   [FRONTLINE_ROLE_ID]: "/admin/dashboard",
   [ASSOCIATE_ROLE_ID]: "/a/dashboard",
@@ -42,27 +42,48 @@ export const ROLE_REDIRECT_PATHS = {
 
 /**
  * Gets the redirect path for a given role
- * @param {number} roleId - The role ID
+ * @param {number|string} roleId - The role ID (handles both number and string)
  * @returns {string} - The redirect path, defaults to /501 for unknown roles
  */
 export function getRoleRedirectPath(roleId) {
-  return ROLE_REDIRECT_PATHS[roleId] || "/501";
+  // Convert to number to handle string inputs from API
+  const numericRoleId =
+    typeof roleId === "string" ? parseInt(roleId, 10) : roleId;
+
+  // Log for debugging
+  if (process.env.NODE_ENV === "development") {
+    console.log("getRoleRedirectPath:", {
+      originalRoleId: roleId,
+      originalType: typeof roleId,
+      numericRoleId: numericRoleId,
+      foundPath: ROLE_REDIRECT_PATHS[numericRoleId],
+      allPaths: ROLE_REDIRECT_PATHS,
+    });
+  }
+
+  return ROLE_REDIRECT_PATHS[numericRoleId] || "/501";
 }
 
 /**
  * Gets the role name for a given role ID
- * @param {number} roleId - The role ID
+ * @param {number|string} roleId - The role ID (handles both number and string)
  * @returns {string} - The role name, defaults to "Unknown" for unknown roles
  */
 export function getRoleName(roleId) {
-  return ROLE_NAMES[roleId] || "Unknown";
+  // Convert to number to handle string inputs from API
+  const numericRoleId =
+    typeof roleId === "string" ? parseInt(roleId, 10) : roleId;
+  return ROLE_NAMES[numericRoleId] || "Unknown";
 }
 
 /**
  * Checks if a role ID is valid
- * @param {number} roleId - The role ID to check
+ * @param {number|string} roleId - The role ID to check (handles both number and string)
  * @returns {boolean} - True if the role ID is valid
  */
 export function isValidRole(roleId) {
-  return Object.keys(ROLE_NAMES).includes(String(roleId));
+  // Convert to number to handle string inputs from API
+  const numericRoleId =
+    typeof roleId === "string" ? parseInt(roleId, 10) : roleId;
+  return Object.keys(ROLE_NAMES).includes(String(numericRoleId));
 }
