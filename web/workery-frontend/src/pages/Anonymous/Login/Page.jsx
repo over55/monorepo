@@ -252,92 +252,120 @@ function LoginPage() {
 
   return (
     <div>
-      <h1>Login to Workery</h1>
+      <h1>🔐 Login to Workery</h1>
+
+      <p>Please enter your credentials to access your account.</p>
+
+      <br />
 
       <form onSubmit={handleSubmit}>
-        <div>
-          <label htmlFor="email">Email Address:</label>
+        <fieldset>
+          <legend>Login Credentials</legend>
+
           <br />
-          <input
-            id="email"
-            type="email"
-            value={formData.email}
-            onChange={(e) => handleFieldChange("email", e.target.value)}
-            disabled={loading}
-            placeholder="Enter your email"
-            size="30"
-          />
-          {errors.email && (
-            <div>
-              <strong>Error:</strong> {errors.email}
-            </div>
-          )}
-        </div>
 
-        <br />
-
-        <div>
-          <label htmlFor="password">Password:</label>
-          <br />
-          <input
-            id="password"
-            type="password"
-            value={formData.password}
-            onChange={(e) => handleFieldChange("password", e.target.value)}
-            disabled={loading}
-            placeholder="Enter your password"
-            size="30"
-          />
-          {errors.password && (
-            <div>
-              <strong>Error:</strong> {errors.password}
-            </div>
-          )}
-        </div>
-
-        <br />
-
-        {errors.auth && (
           <div>
-            <strong>Login Error:</strong> {errors.auth}
+            <label htmlFor="email">
+              <strong>Email Address:</strong>
+            </label>
+            <br />
+            <input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => handleFieldChange("email", e.target.value)}
+              disabled={loading}
+              placeholder="Enter your email address"
+              size="40"
+            />
+            <br />
+            {errors.email && (
+              <div>
+                ❌ <strong>Email Error:</strong> {errors.email}
+              </div>
+            )}
           </div>
-        )}
 
-        <br />
+          <br />
+          <br />
 
-        <button type="submit" disabled={loading || !isFormValid()}>
-          {loading ? "Logging in..." : "Login"}
-        </button>
+          <div>
+            <label htmlFor="password">
+              <strong>Password:</strong>
+            </label>
+            <br />
+            <input
+              id="password"
+              type="password"
+              value={formData.password}
+              onChange={(e) => handleFieldChange("password", e.target.value)}
+              disabled={loading}
+              placeholder="Enter your password"
+              size="40"
+            />
+            <br />
+            {errors.password && (
+              <div>
+                ❌ <strong>Password Error:</strong> {errors.password}
+              </div>
+            )}
+          </div>
 
-        <br />
-        <br />
+          <br />
+          <br />
 
-        <button type="button" onClick={resetForm} disabled={loading}>
-          Reset Form
-        </button>
+          {errors.auth && (
+            <>
+              <div>
+                ❌ <strong>Authentication Error:</strong> {errors.auth}
+              </div>
+              <br />
+            </>
+          )}
+
+          <div>
+            <button type="submit" disabled={loading || !isFormValid()}>
+              {loading ? "🔄 Logging in..." : "✅ Login to Account"}
+            </button>
+            &nbsp;&nbsp;&nbsp;
+            <button type="button" onClick={resetForm} disabled={loading}>
+              🔄 Clear Form
+            </button>
+          </div>
+
+          <br />
+        </fieldset>
       </form>
 
-      <hr />
-
-      <h3>Navigation</h3>
-      <ul>
-        <li>
-          <Link to="/">Back to Home</Link>
-        </li>
-        <li>
-          <Link to="/forgot-password">Forgot your password?</Link>
-        </li>
-      </ul>
+      <br />
+      <br />
 
       <hr />
 
-      <h3>Alternative Login Methods</h3>
+      <h3>📍 Navigation Options</h3>
+
+      <p>
+        <Link to="/">🏠 Back to Home Page</Link>
+      </p>
+
+      <p>
+        <Link to="/forgot-password">🔑 Forgot your password?</Link>
+      </p>
+
+      <br />
+
+      <hr />
+
+      <h3>🔧 Developer Options</h3>
+
+      <p>Alternative login method for testing:</p>
+
       <button
         type="button"
         onClick={handleSubmitCallbacks}
         disabled={loading || !isFormValid()}
       >
-        Login with Callbacks
+        🧪 Login with Callbacks (Dev Testing)
       </button>
 
       {import.meta.env.DEV && (
