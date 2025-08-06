@@ -76,6 +76,11 @@ export const API_ENDPOINTS = {
   ACCOUNT_PROFILE: "/profile",
   ACCOUNT_CHANGE_PASSWORD: "/profile/change-password",
   ACCOUNT_AVATAR: "/account/operation/avatar",
+
+  // Tenant endpoints
+  TENANTS: "/tenants",
+  TENANT_DETAIL: "/tenant/{id}",
+  TENANT_UPDATE_TAX_RATE: "/tenants/operations/update-tax-rate",
 };
 
 /**
@@ -97,6 +102,9 @@ export function getFullAPIUrls() {
     ACCOUNT_PROFILE: `${httpServer}${basePath}${API_ENDPOINTS.ACCOUNT_PROFILE}`,
     ACCOUNT_CHANGE_PASSWORD: `${httpServer}${basePath}${API_ENDPOINTS.ACCOUNT_CHANGE_PASSWORD}`,
     ACCOUNT_AVATAR: `${httpServer}${basePath}${API_ENDPOINTS.ACCOUNT_AVATAR}`,
+    TENANTS: `${httpServer}${basePath}${API_ENDPOINTS.TENANTS}`,
+    TENANT_DETAIL: `${httpServer}${basePath}${API_ENDPOINTS.TENANT_DETAIL}`,
+    TENANT_UPDATE_TAX_RATE: `${httpServer}${basePath}${API_ENDPOINTS.TENANT_UPDATE_TAX_RATE}`,
   };
 }
 

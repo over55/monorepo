@@ -4,7 +4,7 @@ import { camelizeKeys, decamelizeKeys } from "humps";
 import { createAuthenticatedAxios } from "../helpers/AuthenticatedAxios";
 
 /**
- * TenantAPI handles tenant-related API calls
+ * TenantAPI handles all tenant-related API calls
  */
 export class TenantAPI {
   constructor(baseURL, endpoints, tokenStorage) {
@@ -16,8 +16,140 @@ export class TenantAPI {
     if (process.env.NODE_ENV === "development") {
       console.log("TenantAPI initialized with:", {
         baseURL: this.baseURL,
+        tenantsEndpoint: this.endpoints.TENANTS,
+        tenantDetailEndpoint: this.endpoints.TENANT_DETAIL,
         executiveVisitsTenantEndpoint: this.endpoints.EXECUTIVE_VISITS_TENANT,
+        updateTaxRateEndpoint: this.endpoints.TENANT_UPDATE_TAX_RATE,
       });
+    }
+  }
+
+  /**
+   * Gets list of tenants with optional filtering, sorting, and pagination
+   * @param {Object} params - Query parameters { page, limit, search, sortBy, sortOrder }
+   * @param {Function} onUnauthorizedCallback - Called when token refresh fails
+   * @returns {Promise<Object>} - Tenants list with pagination data
+   */
+  async getTenants(params = {}, onUnauthorizedCallback = null) {
+    try {
+      // Create authenticated axios instance
+      const authenticatedAxios = createAuthenticatedAxios(
+        this.baseURL,
+        this.tokenStorage,
+        onUnauthorizedCallback,
+      );
+
+      // Build query parameters
+      const queryParams = new URLSearchParams();
+
+      // Add pagination params
+      if (params.page) queryParams.append("page", params.page);
+      if (params.limit) queryParams.append("page_size", params.limit);
+
+      // Add search params
+      if (params.search) queryParams.append("search", params.search);
+
+      // Add sorting params
+      if (params.sortBy && params.sortOrder) {
+        queryParams.append("sort_by", `${params.sortBy},${params.sortOrder}`);
+      }
+
+      // Add filtering params
+      if (params.status) queryParams.append("status", params.status);
+      if (params.type) queryParams.append("type", params.type);
+
+      const queryString = queryParams.toString();
+      const url = queryString
+        ? `${this.endpoints.TENANTS}?${queryString}`
+        : this.endpoints.TENANTS;
+
+      // Make the API call
+      const response = await authenticatedAxios.get(url);
+
+      // Convert response from snake_case to camelCase
+      const camelizedData = camelizeKeys(response.data);
+
+      return camelizedData;
+    } catch (error) {
+      throw this._formatError(error);
+    }
+  }
+
+  /**
+   * Gets details for a specific tenant
+   * @param {number} tenantId - The ID of the tenant
+   * @param {Function} onUnauthorizedCallback - Called when token refresh fails
+   * @returns {Promise<Object>} - Tenant details
+   */
+  async getTenantDetail(tenantId, onUnauthorizedCallback = null) {
+    try {
+      // Validate tenant ID
+      if (!tenantId || typeof tenantId !== "number") {
+        throw {
+          tenantId: "Valid tenant ID is required",
+        };
+      }
+
+      // Create authenticated axios instance
+      const authenticatedAxios = createAuthenticatedAxios(
+        this.baseURL,
+        this.tokenStorage,
+        onUnauthorizedCallback,
+      );
+
+      // Replace {id} placeholder in endpoint
+      const url = this.endpoints.TENANT_DETAIL.replace("{id}", tenantId);
+
+      // Make the API call
+      const response = await authenticatedAxios.get(url);
+
+      // Convert response from snake_case to camelCase
+      const camelizedData = camelizeKeys(response.data);
+
+      return camelizedData;
+    } catch (error) {
+      throw this._formatError(error);
+    }
+  }
+
+  /**
+   * Updates a specific tenant
+   * @param {number} tenantId - The ID of the tenant
+   * @param {Object} tenantData - Tenant data to update
+   * @param {Function} onUnauthorizedCallback - Called when token refresh fails
+   * @returns {Promise<Object>} - Updated tenant data
+   */
+  async updateTenant(tenantId, tenantData, onUnauthorizedCallback = null) {
+    try {
+      // Validate tenant ID
+      if (!tenantId || typeof tenantId !== "number") {
+        throw {
+          tenantId: "Valid tenant ID is required",
+        };
+      }
+
+      // Create authenticated axios instance
+      const authenticatedAxios = createAuthenticatedAxios(
+        this.baseURL,
+        this.tokenStorage,
+        onUnauthorizedCallback,
+      );
+
+      // Convert camelCase to snake_case for API
+      const decamelizedData = decamelizeKeys(tenantData);
+
+      // Replace {id} placeholder in endpoint
+      const url = this.endpoints.TENANT_DETAIL.replace("{id}", tenantId);
+
+      // Make the API call
+      const response = await authenticatedAxios.put(url, decamelizedData);
+
+      // Convert response from snake_case to camelCase
+      const camelizedData = camelizeKeys(response.data);
+
+      return camelizedData;
+    } catch (error) {
+      throw this._formatError(error);
     }
   }
 
@@ -46,6 +178,122 @@ export class TenantAPI {
         this.endpoints.EXECUTIVE_VISITS_TENANT,
         requestData,
       );
+
+      // Convert response from snake_case to camelCase
+      const camelizedData = camelizeKeys(response.data);
+
+      return camelizedData;
+    } catch (error) {
+      throw this._formatError(error);
+    }
+  }
+
+  /**
+   * Updates tax rate for a tenant (operation endpoint)
+   * @param {Object} taxRateData - Tax rate update data { tenantId, taxRate }
+   * @param {Function} onUnauthorizedCallback - Called when token refresh fails
+   * @returns {Promise<Object>} - Tax rate update response
+   */
+  async updateTaxRate(taxRateData, onUnauthorizedCallback = null) {
+    try {
+      // Validate required fields
+      if (!taxRateData.tenantId || typeof taxRateData.tenantId !== "number") {
+        throw {
+          tenantId: "Valid tenant ID is required",
+        };
+      }
+
+      if (!taxRateData.taxRate || typeof taxRateData.taxRate !== "number") {
+        throw {
+          taxRate: "Valid tax rate is required",
+        };
+      }
+
+      // Create authenticated axios instance
+      const authenticatedAxios = createAuthenticatedAxios(
+        this.baseURL,
+        this.tokenStorage,
+        onUnauthorizedCallback,
+      );
+
+      // Convert camelCase to snake_case for API
+      const decamelizedData = decamelizeKeys(taxRateData);
+
+      // Make the API call
+      const response = await authenticatedAxios.post(
+        this.endpoints.TENANT_UPDATE_TAX_RATE,
+        decamelizedData,
+      );
+
+      // Convert response from snake_case to camelCase
+      const camelizedData = camelizeKeys(response.data);
+
+      return camelizedData;
+    } catch (error) {
+      throw this._formatError(error);
+    }
+  }
+
+  /**
+   * Creates a new tenant
+   * @param {Object} tenantData - Tenant data to create
+   * @param {Function} onUnauthorizedCallback - Called when token refresh fails
+   * @returns {Promise<Object>} - Created tenant data
+   */
+  async createTenant(tenantData, onUnauthorizedCallback = null) {
+    try {
+      // Create authenticated axios instance
+      const authenticatedAxios = createAuthenticatedAxios(
+        this.baseURL,
+        this.tokenStorage,
+        onUnauthorizedCallback,
+      );
+
+      // Convert camelCase to snake_case for API
+      const decamelizedData = decamelizeKeys(tenantData);
+
+      // Make the API call
+      const response = await authenticatedAxios.post(
+        this.endpoints.TENANTS,
+        decamelizedData,
+      );
+
+      // Convert response from snake_case to camelCase
+      const camelizedData = camelizeKeys(response.data);
+
+      return camelizedData;
+    } catch (error) {
+      throw this._formatError(error);
+    }
+  }
+
+  /**
+   * Archives/deactivates a tenant
+   * @param {number} tenantId - The ID of the tenant to archive
+   * @param {Function} onUnauthorizedCallback - Called when token refresh fails
+   * @returns {Promise<Object>} - Archive response
+   */
+  async archiveTenant(tenantId, onUnauthorizedCallback = null) {
+    try {
+      // Validate tenant ID
+      if (!tenantId || typeof tenantId !== "number") {
+        throw {
+          tenantId: "Valid tenant ID is required",
+        };
+      }
+
+      // Create authenticated axios instance
+      const authenticatedAxios = createAuthenticatedAxios(
+        this.baseURL,
+        this.tokenStorage,
+        onUnauthorizedCallback,
+      );
+
+      // Replace {id} placeholder in endpoint
+      const url = this.endpoints.TENANT_DETAIL.replace("{id}", tenantId);
+
+      // Make the API call with DELETE method
+      const response = await authenticatedAxios.delete(url);
 
       // Convert response from snake_case to camelCase
       const camelizedData = camelizeKeys(response.data);

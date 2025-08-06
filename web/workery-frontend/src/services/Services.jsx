@@ -10,6 +10,7 @@ import { AccountAPI } from "./API/AccountAPI";
 import { TokenStorage } from "./Storage/TokenStorage";
 import { AccountStorage } from "./Storage/AccountStorage";
 import { DashboardStorage } from "./Storage/DashboardStorage";
+import { TenantStorage } from "./Storage/TenantStorage";
 import { AuthManager } from "./Manager/AuthManager";
 import { VersionManager } from "./Manager/VersionManager";
 import { PasswordResetManager } from "./Manager/PasswordResetManager";
@@ -49,6 +50,9 @@ class ServicesContainer {
 
     const dashboardStorage = new DashboardStorage();
     this._services.set("dashboardStorage", dashboardStorage);
+
+    const tenantStorage = new TenantStorage();
+    this._services.set("tenantStorage", tenantStorage);
 
     // Initialize API services (depend on configuration)
     const authAPI = new AuthAPI(baseURL, API_ENDPOINTS);
@@ -90,8 +94,8 @@ class ServicesContainer {
     const passwordResetManager = new PasswordResetManager(passwordResetAPI);
     this._services.set("passwordResetManager", passwordResetManager);
 
-    // TenantManager needs TenantAPI
-    const tenantManager = new TenantManager(tenantAPI);
+    // TenantManager needs TenantAPI and TenantStorage
+    const tenantManager = new TenantManager(tenantAPI, tenantStorage);
     this._services.set("tenantManager", tenantManager);
 
     // DashboardManager needs DashboardAPI and DashboardStorage
@@ -119,7 +123,7 @@ class ServicesContainer {
         authManager: ["authAPI", "tokenStorage"],
         versionManager: ["versionAPI"],
         passwordResetManager: ["passwordResetAPI"],
-        tenantManager: ["tenantAPI"],
+        tenantManager: ["tenantAPI", "tenantStorage"],
         dashboardManager: ["dashboardAPI", "dashboardStorage"],
         twoFactorAuthManager: ["twoFactorAuthAPI"],
         accountManager: ["accountAPI", "accountStorage"],
@@ -191,6 +195,10 @@ class ServicesContainer {
 
   getDashboardStorage() {
     return this.get("dashboardStorage");
+  }
+
+  getTenantStorage() {
+    return this.get("tenantStorage");
   }
 
   /**
@@ -363,6 +371,11 @@ export function useAccountStorage() {
 export function useDashboardStorage() {
   const services = useServices();
   return services.getDashboardStorage();
+}
+
+export function useTenantStorage() {
+  const services = useServices();
+  return services.getTenantStorage();
 }
 
 /**
