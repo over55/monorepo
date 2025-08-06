@@ -89,7 +89,7 @@ function AppRouter() {
             <Route
               path="/root/tenants"
               element={
-                <PlaceholderPage
+                <RootTenantListPage
                   title="Tenants List"
                   description="List of all tenants/organizations in the system"
                 />
