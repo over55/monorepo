@@ -1,4 +1,4 @@
-// File Path: monorepo/web/workery-frontend/src/services/config/APIConfig.js
+// File Path: monorepo/web/workery-frontend/src/services/Config/APIConfig.js
 
 /**
  * API Configuration - Simple Vite version
@@ -84,6 +84,9 @@ export function getFullAPIUrls() {
     LOGIN: `${httpServer}${basePath}${API_ENDPOINTS.LOGIN}`,
     LOGOUT: `${httpServer}${basePath}${API_ENDPOINTS.LOGOUT}`,
     REFRESH_TOKEN: `${httpServer}${basePath}${API_ENDPOINTS.REFRESH_TOKEN}`,
+    FORGOT_PASSWORD: `${httpServer}${basePath}${API_ENDPOINTS.FORGOT_PASSWORD}`,
+    PASSWORD_RESET: `${httpServer}${basePath}${API_ENDPOINTS.PASSWORD_RESET}`,
+    VERSION: `${httpServer}${basePath}${API_ENDPOINTS.VERSION}`,
     DASHBOARD: `${httpServer}${basePath}${API_ENDPOINTS.DASHBOARD}`,
   };
 }
