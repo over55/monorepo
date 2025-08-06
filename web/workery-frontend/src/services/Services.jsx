@@ -1,9 +1,11 @@
 // File Path: monorepo/web/workery-frontend/src/services/Services.jsx
 import React, { createContext, useContext, useMemo } from "react";
 import { AuthAPI } from "./API/AuthAPI";
+import { GatewayAPI } from "./API/GatewayAPI";
 import { TokenStorage } from "./Storage/TokenStorage";
 import { AuthManager } from "./Manager/AuthManager";
-import { getAPIBaseURL, API_ENDPOINTS, ENV_CONFIG } from "./config/APIConfig";
+import { GatewayManager } from "./Manager/GatewayManager";
+import { getAPIBaseURL, API_ENDPOINTS, ENV_CONFIG } from "./Config/APIConfig";
 
 /**
  * Services container for dependency injection
@@ -33,15 +35,22 @@ class ServicesContainer {
     const authAPI = new AuthAPI(baseURL, API_ENDPOINTS);
     this._services.set("authAPI", authAPI);
 
+    const gatewayAPI = new GatewayAPI(baseURL, API_ENDPOINTS);
+    this._services.set("gatewayAPI", gatewayAPI);
+
     // Initialize manager services (combine API and storage)
     const authManager = new AuthManager(authAPI, tokenStorage);
     this._services.set("authManager", authManager);
+
+    const gatewayManager = new GatewayManager(gatewayAPI, tokenStorage);
+    this._services.set("gatewayManager", gatewayManager);
 
     this._initialized = true;
 
     if (ENV_CONFIG.IS_DEVELOPMENT) {
       console.log("✅ Services initialized");
       console.log("🔗 API URL:", baseURL);
+      console.log("📦 Available services:", Array.from(this._services.keys()));
     }
   }
 
@@ -62,18 +71,32 @@ class ServicesContainer {
   }
 
   /**
-   * Convenience getters
+   * Convenience getters for managers
    */
   getAuthManager() {
     return this.get("authManager");
   }
 
+  getGatewayManager() {
+    return this.get("gatewayManager");
+  }
+
+  /**
+   * Convenience getters for storage
+   */
   getTokenStorage() {
     return this.get("tokenStorage");
   }
 
+  /**
+   * Convenience getters for APIs
+   */
   getAuthAPI() {
     return this.get("authAPI");
+  }
+
+  getGatewayAPI() {
+    return this.get("gatewayAPI");
   }
 
   /**
@@ -96,6 +119,16 @@ class ServicesContainer {
    */
   isInitialized() {
     return this._initialized;
+  }
+
+  /**
+   * Get all available service names
+   */
+  getServiceNames() {
+    if (!this._initialized) {
+      this.initialize();
+    }
+    return Array.from(this._services.keys());
   }
 }
 
@@ -135,6 +168,11 @@ export function useAuthManager() {
   return services.getAuthManager();
 }
 
+export function useGatewayManager() {
+  const services = useServices();
+  return services.getGatewayManager();
+}
+
 export function useTokenStorage() {
   const services = useServices();
   return services.getTokenStorage();
@@ -145,11 +183,18 @@ export function useAuthAPI() {
   return services.getAuthAPI();
 }
 
+export function useGatewayAPI() {
+  const services = useServices();
+  return services.getGatewayAPI();
+}
+
 // Legacy singleton for gradual migration
 const legacyServices = new ServicesContainer();
 
 export const getAuthManager = () => legacyServices.getAuthManager();
+export const getGatewayManager = () => legacyServices.getGatewayManager();
 export const getTokenStorage = () => legacyServices.getTokenStorage();
 export const getAuthAPI = () => legacyServices.getAuthAPI();
+export const getGatewayAPI = () => legacyServices.getGatewayAPI();
 
 export default legacyServices;

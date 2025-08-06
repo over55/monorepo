@@ -4,7 +4,7 @@ import {
   getAPIBaseURL,
   getAppBaseURL,
   ENV_CONFIG,
-} from "../../../services/config/APIConfig";
+} from "../../../services/Config/APIConfig";
 
 /**
  * Simple Debug Component for Vite Environment
