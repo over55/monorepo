@@ -16,7 +16,7 @@ const styles = {
 };
 
 // Main App component
-function App() {
+function AppRouter() {
   return (
     <ServiceProvider>
       <Router>
@@ -35,4 +35,4 @@ function App() {
   );
 }
 
-export default App;
+export default AppRouter;
