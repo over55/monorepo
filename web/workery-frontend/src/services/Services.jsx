@@ -8,6 +8,8 @@ import { DashboardAPI } from "./API/DashboardAPI";
 import { TwoFactorAuthAPI } from "./API/TwoFactorAuthAPI";
 import { AccountAPI } from "./API/AccountAPI";
 import { TokenStorage } from "./Storage/TokenStorage";
+import { AccountStorage } from "./Storage/AccountStorage";
+import { DashboardStorage } from "./Storage/DashboardStorage";
 import { AuthManager } from "./Manager/AuthManager";
 import { VersionManager } from "./Manager/VersionManager";
 import { PasswordResetManager } from "./Manager/PasswordResetManager";
@@ -41,6 +43,12 @@ class ServicesContainer {
     // Initialize storage services (no dependencies)
     const tokenStorage = new TokenStorage();
     this._services.set("tokenStorage", tokenStorage);
+
+    const accountStorage = new AccountStorage();
+    this._services.set("accountStorage", accountStorage);
+
+    const dashboardStorage = new DashboardStorage();
+    this._services.set("dashboardStorage", dashboardStorage);
 
     // Initialize API services (depend on configuration)
     const authAPI = new AuthAPI(baseURL, API_ENDPOINTS);
@@ -86,16 +94,19 @@ class ServicesContainer {
     const tenantManager = new TenantManager(tenantAPI);
     this._services.set("tenantManager", tenantManager);
 
-    // DashboardManager needs DashboardAPI
-    const dashboardManager = new DashboardManager(dashboardAPI);
+    // DashboardManager needs DashboardAPI and DashboardStorage
+    const dashboardManager = new DashboardManager(
+      dashboardAPI,
+      dashboardStorage,
+    );
     this._services.set("dashboardManager", dashboardManager);
 
     // TwoFactorAuthManager needs TwoFactorAuthAPI
     const twoFactorAuthManager = new TwoFactorAuthManager(twoFactorAuthAPI);
     this._services.set("twoFactorAuthManager", twoFactorAuthManager);
 
-    // AccountManager needs AccountAPI
-    const accountManager = new AccountManager(accountAPI);
+    // AccountManager needs AccountAPI and AccountStorage
+    const accountManager = new AccountManager(accountAPI, accountStorage);
     this._services.set("accountManager", accountManager);
 
     this._initialized = true;
@@ -109,9 +120,9 @@ class ServicesContainer {
         versionManager: ["versionAPI"],
         passwordResetManager: ["passwordResetAPI"],
         tenantManager: ["tenantAPI"],
-        dashboardManager: ["dashboardAPI"],
+        dashboardManager: ["dashboardAPI", "dashboardStorage"],
         twoFactorAuthManager: ["twoFactorAuthAPI"],
-        accountManager: ["accountAPI"],
+        accountManager: ["accountAPI", "accountStorage"],
       });
       console.groupEnd();
     }
@@ -172,6 +183,14 @@ class ServicesContainer {
    */
   getTokenStorage() {
     return this.get("tokenStorage");
+  }
+
+  getAccountStorage() {
+    return this.get("accountStorage");
+  }
+
+  getDashboardStorage() {
+    return this.get("dashboardStorage");
   }
 
   /**
@@ -334,6 +353,16 @@ export function useAccountManager() {
 export function useTokenStorage() {
   const services = useServices();
   return services.getTokenStorage();
+}
+
+export function useAccountStorage() {
+  const services = useServices();
+  return services.getAccountStorage();
+}
+
+export function useDashboardStorage() {
+  const services = useServices();
+  return services.getDashboardStorage();
 }
 
 /**

@@ -2,65 +2,62 @@
 
 /**
  * AccountManager handles all account/profile-related business logic
- * Combines AccountAPI with validation, state management, and error handling
+ * Combines AccountAPI with AccountStorage for complete account management
  */
 export class AccountManager {
-  constructor(accountAPI) {
+  constructor(accountAPI, accountStorage) {
     this.accountAPI = accountAPI;
-    this.profileCache = {
-      data: null,
-      timestamp: null,
-      isLoading: false,
-    };
-    this.CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+    this.accountStorage = accountStorage;
   }
 
   /**
-   * Gets account/profile details with automatic caching
+   * Gets account/profile details with automatic caching via AccountStorage
    * @param {Function} onUnauthorizedCallback - Called when authentication fails
    * @param {boolean} forceRefresh - Whether to bypass cache and force fresh data
    * @returns {Promise<Object>} - User profile data
    */
   async getAccountDetail(onUnauthorizedCallback = null, forceRefresh = false) {
     try {
-      // Check cache first (unless force refresh is requested)
-      if (!forceRefresh && this._isProfileCacheValid()) {
-        console.log("AccountManager: Using cached profile data");
-        return this.profileCache.data;
+      // Check storage cache first (unless force refresh is requested)
+      if (!forceRefresh) {
+        const cachedProfile = this.accountStorage.getProfileFromCache();
+        if (cachedProfile) {
+          return cachedProfile;
+        }
       }
 
       // Prevent multiple simultaneous requests
-      if (this.profileCache.isLoading) {
+      if (this.accountStorage.isProfileCacheLoading()) {
         console.log("AccountManager: Profile request already in progress");
         return this._waitForCurrentProfileRequest();
       }
 
-      this.profileCache.isLoading = true;
+      this.accountStorage.setProfileCacheLoading(true);
 
       console.log("AccountManager: Fetching fresh profile data");
 
-      // Fetch fresh data from API
-      const profileData = await this.accountAPI.getAccountDetail(
-        onUnauthorizedCallback,
-      );
+      try {
+        // Fetch fresh data from API
+        const profileData = await this.accountAPI.getAccountDetail(
+          onUnauthorizedCallback,
+        );
 
-      // Update cache
-      this.profileCache = {
-        data: profileData,
-        timestamp: Date.now(),
-        isLoading: false,
-      };
+        // Save to storage cache
+        this.accountStorage.saveProfileToCache(profileData);
 
-      console.log("AccountManager: Profile data fetched successfully:", {
-        id: profileData.id,
-        email: profileData.email,
-        firstName: profileData.firstName,
-        lastName: profileData.lastName,
-      });
+        console.log("AccountManager: Profile data fetched successfully:", {
+          id: profileData.id,
+          email: profileData.email,
+          firstName: profileData.firstName,
+          lastName: profileData.lastName,
+        });
 
-      return profileData;
+        return profileData;
+      } finally {
+        this.accountStorage.setProfileCacheLoading(false);
+      }
     } catch (error) {
-      this.profileCache.isLoading = false;
+      this.accountStorage.setProfileCacheLoading(false);
       console.error("AccountManager: Failed to get profile", error);
       throw error;
     }
@@ -89,7 +86,7 @@ export class AccountManager {
       );
 
       // Clear profile cache since data has been updated
-      this.clearProfileCache();
+      this.accountStorage.clearProfileCache();
 
       console.log("AccountManager: Profile updated successfully");
 
@@ -162,7 +159,7 @@ export class AccountManager {
       );
 
       // Clear profile cache since avatar has been updated
-      this.clearProfileCache();
+      this.accountStorage.clearProfileCache();
 
       console.log("AccountManager: Avatar uploaded successfully");
 
@@ -286,42 +283,26 @@ export class AccountManager {
   }
 
   /**
-   * Clears the profile cache
+   * Clears the profile cache via AccountStorage
    */
   clearProfileCache() {
-    this.profileCache = {
-      data: null,
-      timestamp: null,
-      isLoading: false,
-    };
-    console.log("AccountManager: Profile cache cleared");
+    this.accountStorage.clearProfileCache();
   }
 
   /**
-   * Gets current cache state information
+   * Gets current cache state information from AccountStorage
    * @returns {Object} - Cache state details
    */
   getProfileCacheInfo() {
-    return {
-      hasCachedData: !!this.profileCache.data,
-      cacheAge: this.profileCache.timestamp
-        ? Date.now() - this.profileCache.timestamp
-        : null,
-      isLoading: this.profileCache.isLoading,
-      isValid: this._isProfileCacheValid(),
-      cacheDuration: this.CACHE_DURATION,
-    };
+    return this.accountStorage.getProfileCacheInfo();
   }
 
   /**
-   * Sets cache duration
+   * Sets cache duration via AccountStorage
    * @param {number} durationMs - Cache duration in milliseconds
    */
   setProfileCacheDuration(durationMs) {
-    this.CACHE_DURATION = durationMs;
-    console.log(
-      `AccountManager: Profile cache duration set to ${durationMs}ms (${durationMs / 1000 / 60} minutes)`,
-    );
+    this.accountStorage.setCacheDuration(durationMs);
   }
 
   /**
@@ -456,20 +437,6 @@ export class AccountManager {
   }
 
   /**
-   * Checks if profile cache is still valid
-   * @private
-   * @returns {boolean}
-   */
-  _isProfileCacheValid() {
-    if (!this.profileCache.data || !this.profileCache.timestamp) {
-      return false;
-    }
-
-    const age = Date.now() - this.profileCache.timestamp;
-    return age < this.CACHE_DURATION;
-  }
-
-  /**
    * Waits for current profile request to complete
    * @private
    * @returns {Promise<Object>}
@@ -477,10 +444,13 @@ export class AccountManager {
   _waitForCurrentProfileRequest() {
     return new Promise((resolve, reject) => {
       const checkInterval = setInterval(() => {
-        if (!this.profileCache.isLoading) {
+        if (!this.accountStorage.isProfileCacheLoading()) {
           clearInterval(checkInterval);
-          if (this.profileCache.data) {
-            resolve(this.profileCache.data);
+
+          // Try to get cached data
+          const cachedData = this.accountStorage.getProfileFromCache();
+          if (cachedData) {
+            resolve(cachedData);
           } else {
             reject(new Error("Profile request failed"));
           }
