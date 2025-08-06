@@ -88,6 +88,7 @@ export function getFullAPIUrls() {
     PASSWORD_RESET: `${httpServer}${basePath}${API_ENDPOINTS.PASSWORD_RESET}`,
     VERSION: `${httpServer}${basePath}${API_ENDPOINTS.VERSION}`,
     DASHBOARD: `${httpServer}${basePath}${API_ENDPOINTS.DASHBOARD}`,
+    EXECUTIVE_VISITS_TENANT: `${httpServer}${basePath}${API_ENDPOINTS.EXECUTIVE_VISITS_TENANT}`,
   };
 }
 
