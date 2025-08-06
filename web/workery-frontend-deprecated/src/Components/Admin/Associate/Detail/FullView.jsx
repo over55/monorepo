@@ -1,3 +1,4 @@
+// File Path: web/workery-frontend-deprecated/src/Components/Admin/Associate/Detail/FullView.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -1189,17 +1190,15 @@ function AdminAssociateDetailFull() {
                         </tr>
                       </thead>
                       <tbody>
-                      <tr>
-                        <th
-                          className="has-background-light"
-                          style={{ width: "30%" }}
-                        >
-                          ID:
-                        </th>
-                        <td>
-                          {associate.publicId}
-                        </td>
-                      </tr>
+                        <tr>
+                          <th
+                            className="has-background-light"
+                            style={{ width: "30%" }}
+                          >
+                            ID:
+                          </th>
+                          <td>{associate.publicId}</td>
+                        </tr>
                         <tr>
                           <th
                             className="has-background-light"

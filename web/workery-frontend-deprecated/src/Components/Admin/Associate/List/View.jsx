@@ -1,3 +1,4 @@
+// File Path: web/workery-frontend-deprecated/src/Components/Admin/Associate/List/View.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -55,7 +56,7 @@ import {
   DEFAULT_ASSOCIATE_STATUS_FILTER_OPTION,
   LIST_VIEW_TYPE_TABULAR,
   LIST_VIEW_TYPE_GRID,
-  ASSOCIATE_IS_JOB_SEEKER_YES
+  ASSOCIATE_IS_JOB_SEEKER_YES,
 } from "../../../../Constants/App";
 import AdminAssociateListDesktop from "./TabularDesktop";
 import AdminAssociateListMobile from "./TabularMobile";
@@ -157,7 +158,7 @@ function AdminAssociateList() {
       type,
       joinDatetGTE,
       isJobSeeker,
-      hasTaxID
+      hasTaxID,
     );
   }
 
@@ -312,7 +313,7 @@ function AdminAssociateList() {
         type,
         joinDatetGTE,
         isJobSeeker,
-        hasTaxID
+        hasTaxID,
       );
     }
 
@@ -327,7 +328,7 @@ function AdminAssociateList() {
     type,
     joinDatetGTE,
     isJobSeeker,
-    hasTaxID
+    hasTaxID,
   ]);
 
   ////

@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/Dashboard/View.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -547,47 +548,80 @@ function AdminDashboard() {
                 </div>
 
                 {/* User History */}
-                <section class="hero has-background-link-light mb-6 p-5" style={{ borderRadius: "15px" }}>
+                <section
+                  class="hero has-background-link-light mb-6 p-5"
+                  style={{ borderRadius: "15px" }}
+                >
                   <div class="hero-body">
                     <p class="title">
-                    <h1 className="title is-1 is-size-3-mobile">
-                      <FontAwesomeIcon className="fas" icon={faUser} />
-                      &nbsp;My Job History
-                    </h1>
+                      <h1 className="title is-1 is-size-3-mobile">
+                        <FontAwesomeIcon className="fas" icon={faUser} />
+                        &nbsp;My Job History
+                      </h1>
                     </p>
-                    <p class="subtitle">To view your history for work orders then please <Link to={`/admin/job-history/my-job-history`} className="is-small">
-                      click here&nbsp;<FontAwesomeIcon className="mdi" icon={faArrowRight} /></Link> to get started.</p>
+                    <p class="subtitle">
+                      To view your history for work orders then please{" "}
+                      <Link
+                        to={`/admin/job-history/my-job-history`}
+                        className="is-small"
+                      >
+                        click here&nbsp;
+                        <FontAwesomeIcon className="mdi" icon={faArrowRight} />
+                      </Link>{" "}
+                      to get started.
+                    </p>
                   </div>
                 </section>
 
                 {/* Team History */}
-                <section class="hero has-background-info-light mb-6 p-5" style={{ borderRadius: "15px" }}>
+                <section
+                  class="hero has-background-info-light mb-6 p-5"
+                  style={{ borderRadius: "15px" }}
+                >
                   <div class="hero-body">
                     <p class="title">
-                    <h1 className="title is-1 is-size-3-mobile">
-                      <FontAwesomeIcon className="fas" icon={faUserFriends} />
-                      &nbsp;Team Job History
-                    </h1>
+                      <h1 className="title is-1 is-size-3-mobile">
+                        <FontAwesomeIcon className="fas" icon={faUserFriends} />
+                        &nbsp;Team Job History
+                      </h1>
                     </p>
-                    <p class="subtitle">To view the team's history for work orders then please <Link to={`/admin/job-history/team-job-history`} className="is-small">
-                      click here&nbsp;<FontAwesomeIcon className="mdi" icon={faArrowRight} /></Link> to get started.</p>
+                    <p class="subtitle">
+                      To view the team's history for work orders then please{" "}
+                      <Link
+                        to={`/admin/job-history/team-job-history`}
+                        className="is-small"
+                      >
+                        click here&nbsp;
+                        <FontAwesomeIcon className="mdi" icon={faArrowRight} />
+                      </Link>{" "}
+                      to get started.
+                    </p>
                   </div>
                 </section>
 
                 {/* Comments */}
-                <section class="hero has-background-primary-light p-5" style={{ borderRadius: "15px" }}>
+                <section
+                  class="hero has-background-primary-light p-5"
+                  style={{ borderRadius: "15px" }}
+                >
                   <div class="hero-body">
                     <p class="title">
-                    <h1 className="title is-1 is-size-3-mobile">
-                      <FontAwesomeIcon className="fas" icon={faMessage} />
-                      &nbsp;Comments
-                    </h1>
+                      <h1 className="title is-1 is-size-3-mobile">
+                        <FontAwesomeIcon className="fas" icon={faMessage} />
+                        &nbsp;Comments
+                      </h1>
                     </p>
-                    <p class="subtitle">To view the most recent comments in the entire system sorted by latest to oldest then please <Link to={`/admin/all-comments`} className="is-small">
-                      click here&nbsp;<FontAwesomeIcon className="mdi" icon={faArrowRight} /></Link> to get started.</p>
+                    <p class="subtitle">
+                      To view the most recent comments in the entire system
+                      sorted by latest to oldest then please{" "}
+                      <Link to={`/admin/all-comments`} className="is-small">
+                        click here&nbsp;
+                        <FontAwesomeIcon className="mdi" icon={faArrowRight} />
+                      </Link>{" "}
+                      to get started.
+                    </p>
                   </div>
                 </section>
-
               </nav>
 
               <div className="has-text-right">

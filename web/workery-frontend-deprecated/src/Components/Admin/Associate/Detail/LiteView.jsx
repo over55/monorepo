@@ -1,3 +1,4 @@
+// File Path: web/workery-frontend-deprecated/src/Components/Admin/Associate/Detail/LiteView.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -57,9 +58,7 @@ import {
   CLIENT_TYPE_OF_FILTER_OPTIONS,
   CLIENT_ORGANIZATION_TYPE_OPTIONS,
 } from "../../../../Constants/FieldOptions";
-import {
-  ASSOCIATE_IS_JOB_SEEKER_YES
-} from "../../../../Constants/App";
+import { ASSOCIATE_IS_JOB_SEEKER_YES } from "../../../../Constants/App";
 
 function AdminAssociateDetailLite() {
   ////
@@ -456,7 +455,8 @@ function AdminAssociateDetailLite() {
                                       />
                                     </li>
                                   )}
-                                  {associate.isJobSeeker === ASSOCIATE_IS_JOB_SEEKER_YES && (
+                                  {associate.isJobSeeker ===
+                                    ASSOCIATE_IS_JOB_SEEKER_YES && (
                                     <li>Job seeker - looking for employment</li>
                                   )}
                                 </ul>
