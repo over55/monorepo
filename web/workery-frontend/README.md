@@ -1,19 +1,12 @@
-![alt tag](https://github.com/over55/workery-django/blob/master/workery/static/img/compressed-logo.png)
-# Workery (Frontend)
+# React + Vite
 
-Sample **.env** file:
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-```text
-# DEPRECATED
-REACT_APP_API_HOST=http://overfiftyfive.com:80
+Currently, two official plugins are available:
 
-# Workery Backend API Web-Service
-REACT_APP_API_DOMAIN=overfiftyfive.com:80
-REACT_APP_API_PROTOCOL=http
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
 
-# Workery Frontend
-REACT_APP_WWW_DOMAIN=localhost:3000
-REACT_APP_WWW_PROTOCOL=http
-REACT_APP_IMAGE_UPLOAD_MAX_FILESIZE_IN_BYTES=10485760  # Note "1048576" bytes is "1 mega byte".
-REACT_APP_IMAGE_UPLOAD_MAX_FILESIZE_ERROR_MESSAGE="File is too large. The maximum size is 10 MB."
-```
+## Expanding the ESLint configuration
+
+If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
