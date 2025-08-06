@@ -3,10 +3,14 @@ import React, { createContext, useContext, useMemo } from "react";
 import { AuthAPI } from "./API/AuthAPI";
 import { VersionAPI } from "./API/VersionAPI";
 import { PasswordResetAPI } from "./API/PasswordResetAPI";
+import { TenantAPI } from "./API/TenantAPI";
+import { DashboardAPI } from "./API/DashboardAPI";
 import { TokenStorage } from "./Storage/TokenStorage";
 import { AuthManager } from "./Manager/AuthManager";
 import { VersionManager } from "./Manager/VersionManager";
 import { PasswordResetManager } from "./Manager/PasswordResetManager";
+import { TenantManager } from "./Manager/TenantManager";
+import { DashboardManager } from "./Manager/DashboardManager";
 import { getAPIBaseURL, API_ENDPOINTS, ENV_CONFIG } from "./config/APIConfig";
 
 /**
@@ -44,6 +48,12 @@ class ServicesContainer {
     const passwordResetAPI = new PasswordResetAPI(baseURL, API_ENDPOINTS);
     this._services.set("passwordResetAPI", passwordResetAPI);
 
+    const tenantAPI = new TenantAPI(baseURL, API_ENDPOINTS, tokenStorage);
+    this._services.set("tenantAPI", tenantAPI);
+
+    const dashboardAPI = new DashboardAPI(baseURL, API_ENDPOINTS, tokenStorage);
+    this._services.set("dashboardAPI", dashboardAPI);
+
     // Initialize manager services (combine API and storage layers)
 
     // AuthManager needs AuthAPI and TokenStorage
@@ -58,6 +68,14 @@ class ServicesContainer {
     const passwordResetManager = new PasswordResetManager(passwordResetAPI);
     this._services.set("passwordResetManager", passwordResetManager);
 
+    // TenantManager needs TenantAPI
+    const tenantManager = new TenantManager(tenantAPI);
+    this._services.set("tenantManager", tenantManager);
+
+    // DashboardManager needs DashboardAPI
+    const dashboardManager = new DashboardManager(dashboardAPI);
+    this._services.set("dashboardManager", dashboardManager);
+
     this._initialized = true;
 
     if (ENV_CONFIG.IS_DEVELOPMENT) {
@@ -68,6 +86,8 @@ class ServicesContainer {
         authManager: ["authAPI", "tokenStorage"],
         versionManager: ["versionAPI"],
         passwordResetManager: ["passwordResetAPI"],
+        tenantManager: ["tenantAPI"],
+        dashboardManager: ["dashboardAPI"],
       });
       console.groupEnd();
     }
@@ -107,6 +127,14 @@ class ServicesContainer {
     return this.get("passwordResetManager");
   }
 
+  getTenantManager() {
+    return this.get("tenantManager");
+  }
+
+  getDashboardManager() {
+    return this.get("dashboardManager");
+  }
+
   /**
    * Convenience getters for storage services
    */
@@ -127,6 +155,14 @@ class ServicesContainer {
 
   getPasswordResetAPI() {
     return this.get("passwordResetAPI");
+  }
+
+  getTenantAPI() {
+    return this.get("tenantAPI");
+  }
+
+  getDashboardAPI() {
+    return this.get("dashboardAPI");
   }
 
   /**
@@ -232,12 +268,30 @@ export function usePasswordResetManager() {
   return services.getPasswordResetManager();
 }
 
+export function useTenantManager() {
+  const services = useServices();
+  return services.getTenantManager();
+}
+
+export function useDashboardManager() {
+  const services = useServices();
+  return services.getDashboardManager();
+}
+
 /**
  * Hooks to access storage services
  */
 export function useTokenStorage() {
   const services = useServices();
   return services.getTokenStorage();
+}
+
+/**
+ * Hooks to access API services (for direct access if needed)
+ */
+export function useAuthAPI() {
+  const services = useServices();
+  return services.getAuthAPI();
 }
 
 export function useVersionAPI() {
@@ -248,6 +302,16 @@ export function useVersionAPI() {
 export function usePasswordResetAPI() {
   const services = useServices();
   return services.getPasswordResetAPI();
+}
+
+export function useTenantAPI() {
+  const services = useServices();
+  return services.getTenantAPI();
+}
+
+export function useDashboardAPI() {
+  const services = useServices();
+  return services.getDashboardAPI();
 }
 
 /**
