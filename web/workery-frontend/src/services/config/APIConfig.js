@@ -1,3 +1,5 @@
+// File Path: monorepo/web/workery-frontend/src/services/config/APIConfig.js
+
 /**
  * API Configuration - Simple Vite version
  */

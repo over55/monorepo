@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend/src/pages/Anonymous/Index/DebugEnv.jsx
 import React from "react";
 import {
   getAPIBaseURL,

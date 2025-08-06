@@ -1,3 +1,4 @@
+// File Path: web/workery-frontend/src/pages/Anonymous/Login/Page.jsx
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { useAuthManager } from "../../../services/Services";

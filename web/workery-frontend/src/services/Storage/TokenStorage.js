@@ -1,3 +1,5 @@
+// File Path: monorepo/web/workery-frontend/src/services/Storage/TokenStorage.js
+
 /**
  * TokenStorage handles all token-related local storage operations
  */

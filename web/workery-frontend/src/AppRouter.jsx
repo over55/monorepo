@@ -1,4 +1,4 @@
-// File: src/App.jsx
+// File Path: src/AppRouter.jsx
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
 import { ServiceProvider } from "./services/Services";

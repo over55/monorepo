@@ -1,3 +1,5 @@
+// File Path: monorepo/web/workery-frontend/src/services/Manager/AuthManager.js
+
 /**
  * AuthManager combines AuthAPI and TokenStorage to provide
  * high-level authentication business logic

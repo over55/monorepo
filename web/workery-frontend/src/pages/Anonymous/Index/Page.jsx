@@ -1,4 +1,4 @@
-// File: monorepo/web/workery-frontend/src/pages/Anonymous/Index/Page.jsx
+// File Path: monorepo/web/workery-frontend/src/pages/Anonymous/Index/Page.jsx
 import { useState, useEffect } from "react";
 import { Link } from "react-router";
 import DebugEnv from "./DebugEnv";

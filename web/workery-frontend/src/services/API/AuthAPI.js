@@ -1,3 +1,5 @@
+// File Path: monorepo/web/workery-frontend/src/services/API/AuthAPI.js
+
 import axios from "axios";
 import { camelizeKeys, decamelizeKeys } from "humps";
 
