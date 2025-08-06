@@ -5,6 +5,7 @@ import { ServiceProvider } from "./services/Services";
 
 // Front-facing pages
 import IndexPage from "./pages/Anonymous/Index/Page";
+import LoginPage from "./pages/Anonymous/Login/Page";
 
 // Styles
 const styles = {
@@ -23,6 +24,7 @@ function App() {
           <Routes>
             {/* Front-facing pages */}
             <Route path="/" element={<IndexPage />} />
+            <Route path="/login" element={<LoginPage />} />
 
             {/* Redirect any unknown routes to home */}
             <Route path="*" element={<Navigate to="/" />} />

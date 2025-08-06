@@ -47,3 +47,18 @@ $RECYCLE.BIN/
 .directory
 .idea  # PyCharm
 */.idea/
+
+
+#—————————————————————————————
+# Application Specific Ignores
+#—————————————————————————————
+
+# Do not share developer's private notebook
+private.txt
+private_prod.md
+private.md
+private_*.md
+todo.txt
+private_docs
+private_docs/*
+_md/*
