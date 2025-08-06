@@ -1,8 +1,8 @@
 // File Path: monorepo/web/workery-frontend/src/services/Manager/AuthManager.js
 
 /**
- * AuthManager combines AuthAPI and TokenStorage to provide
- * high-level authentication business logic
+ * AuthManager handles all authentication-related business logic
+ * Combines AuthAPI and TokenStorage to provide complete authentication workflows
  */
 export class AuthManager {
   constructor(authAPI, tokenStorage) {
@@ -29,15 +29,39 @@ export class AuthManager {
           accessToken: profile.accessToken,
           refreshToken: profile.refreshToken,
         });
+
+        console.log("AuthManager: Login successful, tokens saved");
       } else {
         throw new Error("Login response missing required tokens");
       }
 
       return profile;
     } catch (error) {
+      console.error("AuthManager: Login failed", error);
       // Clean up any partial state on error
       this.tokenStorage.clearTokens();
       throw error;
+    }
+  }
+
+  /**
+   * Performs complete logout workflow
+   * Calls the logout API and cleans up local tokens
+   * @returns {Promise<void>}
+   */
+  async logout() {
+    try {
+      // Call the logout API endpoint
+      await this.authAPI.logout();
+
+      console.log("AuthManager: Logout API call successful");
+    } catch (error) {
+      console.error("AuthManager: Logout API call failed", error);
+      // Continue with local cleanup even if API call fails
+    } finally {
+      // Always clean up local tokens
+      this.tokenStorage.clearTokens();
+      console.log("AuthManager: Cleared tokens after logout");
     }
   }
 
@@ -73,10 +97,28 @@ export class AuthManager {
   }
 
   /**
-   * Logs out the user
+   * Callback-based version of logout for compatibility
+   * @param {Function} onSuccessCallback
+   * @param {Function} onErrorCallback
+   * @param {Function} onDoneCallback
    */
-  logout() {
-    this.tokenStorage.clearTokens();
+  logoutWithCallbacks(onSuccessCallback, onErrorCallback, onDoneCallback) {
+    this.logout()
+      .then(() => {
+        if (onSuccessCallback) {
+          onSuccessCallback(null);
+        }
+      })
+      .catch((error) => {
+        if (onErrorCallback) {
+          onErrorCallback(error);
+        }
+      })
+      .finally(() => {
+        if (onDoneCallback) {
+          onDoneCallback();
+        }
+      });
   }
 
   /**
@@ -101,5 +143,44 @@ export class AuthManager {
    */
   getRefreshToken() {
     return this.tokenStorage.getRefreshToken();
+  }
+
+  /**
+   * Gets current authentication state information
+   * @returns {Object} - Authentication state details
+   */
+  getAuthState() {
+    const tokens = this.tokenStorage.getTokens();
+    return {
+      isAuthenticated: this.isAuthenticated(),
+      hasAccessToken: !!tokens.accessToken,
+      hasRefreshToken: !!tokens.refreshToken,
+      tokens: {
+        accessToken: tokens.accessToken ? "[PRESENT]" : null,
+        refreshToken: tokens.refreshToken ? "[PRESENT]" : null,
+      },
+    };
+  }
+
+  /**
+   * Clears only authentication data (not full storage)
+   */
+  clearAuthData() {
+    this.tokenStorage.clearTokens();
+    console.log("AuthManager: Cleared authentication data");
+  }
+
+  /**
+   * Validates current session
+   * @returns {Promise<boolean>} - True if session is valid
+   */
+  async validateSession() {
+    if (!this.isAuthenticated()) {
+      return false;
+    }
+
+    // TODO: Add API call to validate token with server
+    // For now, just check if tokens exist
+    return true;
   }
 }

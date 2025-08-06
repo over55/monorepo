@@ -1,64 +1,23 @@
-// File Path: monorepo/web/workery-frontend/src/services/API/GatewayAPI.js
+// File Path: monorepo/web/workery-frontend/src/services/API/PasswordResetAPI.js
 
 import axios from "axios";
-import { camelizeKeys, decamelizeKeys } from "humps";
+import { camelizeKeys } from "humps";
 
 /**
- * GatewayAPI handles general gateway-related API calls
- * These are typically unauthenticated endpoints for system information and password recovery
+ * PasswordResetAPI handles password recovery-related API calls
  */
-export class GatewayAPI {
+export class PasswordResetAPI {
   constructor(baseURL, endpoints) {
     this.baseURL = baseURL;
     this.endpoints = endpoints;
 
     // Debug log in development
     if (process.env.NODE_ENV === "development") {
-      console.log("GatewayAPI initialized with:", {
+      console.log("PasswordResetAPI initialized with:", {
         baseURL: this.baseURL,
-        versionEndpoint: this.endpoints.VERSION,
-        logoutEndpoint: this.endpoints.LOGOUT,
         forgotPasswordEndpoint: this.endpoints.FORGOT_PASSWORD,
         passwordResetEndpoint: this.endpoints.PASSWORD_RESET,
       });
-    }
-  }
-
-  /**
-   * Gets version information from the API
-   * @returns {Promise<Object>} - Version information
-   */
-  async getVersion() {
-    try {
-      const apiClient = this._createBasicClient();
-
-      const response = await apiClient.get(this.endpoints.VERSION);
-
-      // Convert snake_case response to camelCase
-      const data = camelizeKeys(response.data);
-
-      return data;
-    } catch (error) {
-      throw this._formatError(error);
-    }
-  }
-
-  /**
-   * Performs logout API call
-   * @returns {Promise<null>} - Always resolves to null on success
-   */
-  async logout() {
-    try {
-      const apiClient = this._createBasicClient();
-
-      // Send empty data object for logout
-      const data = {};
-      await apiClient.post(this.endpoints.LOGOUT, data);
-
-      // Logout API typically returns null or empty response
-      return null;
-    } catch (error) {
-      throw this._formatError(error);
     }
   }
 
