@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Root/Tenant/ListDesktop.jsx
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -64,7 +65,10 @@ function RootTenantListDesktop(props) {
                           className="button is-small is-primary"
                           type="button"
                         >
-                          <FontAwesomeIcon className="mdi" icon={faCircleInfo} />
+                          <FontAwesomeIcon
+                            className="mdi"
+                            icon={faCircleInfo}
+                          />
                           &nbsp;View
                         </Link>
                         <Link

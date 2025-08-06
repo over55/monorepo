@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Root/Tenant/ListMobile.jsx
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Scroll from "react-scroll";
