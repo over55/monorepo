@@ -240,14 +240,6 @@ export function useTokenStorage() {
   return services.getTokenStorage();
 }
 
-/**
- * Hooks to access API services (for direct access if needed)
- */
-export function useAuthAPI() {
-  const services = useServices();
-  return services.getAuthAPI();
-}
-
 export function useVersionAPI() {
   const services = useServices();
   return services.getVersionAPI();
