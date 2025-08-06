@@ -1,4 +1,4 @@
-// File Path: monorepo/web/workery-frontend/src/services/helpers/AuthenticatedAxios.js
+// File Path: monorepo/web/workery-frontend/src/services/Helpers/AuthenticatedAxios.js
 
 import axios from "axios";
 import { camelizeKeys } from "humps";
