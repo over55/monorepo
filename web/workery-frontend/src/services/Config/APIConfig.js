@@ -71,6 +71,11 @@ export const API_ENDPOINTS = {
   VALIDATE_OTP: "/otp/validate",
   DISABLE_OTP: "/otp/disable",
   RECOVERY_OTP: "/otp/recovery",
+
+  // Account endpoints
+  ACCOUNT_PROFILE: "/profile",
+  ACCOUNT_CHANGE_PASSWORD: "/profile/change-password",
+  ACCOUNT_AVATAR: "/account/operation/avatar",
 };
 
 /**
@@ -89,6 +94,9 @@ export function getFullAPIUrls() {
     VERSION: `${httpServer}${basePath}${API_ENDPOINTS.VERSION}`,
     DASHBOARD: `${httpServer}${basePath}${API_ENDPOINTS.DASHBOARD}`,
     EXECUTIVE_VISITS_TENANT: `${httpServer}${basePath}${API_ENDPOINTS.EXECUTIVE_VISITS_TENANT}`,
+    ACCOUNT_PROFILE: `${httpServer}${basePath}${API_ENDPOINTS.ACCOUNT_PROFILE}`,
+    ACCOUNT_CHANGE_PASSWORD: `${httpServer}${basePath}${API_ENDPOINTS.ACCOUNT_CHANGE_PASSWORD}`,
+    ACCOUNT_AVATAR: `${httpServer}${basePath}${API_ENDPOINTS.ACCOUNT_AVATAR}`,
   };
 }
 

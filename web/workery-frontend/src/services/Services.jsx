@@ -6,6 +6,7 @@ import { PasswordResetAPI } from "./API/PasswordResetAPI";
 import { TenantAPI } from "./API/TenantAPI";
 import { DashboardAPI } from "./API/DashboardAPI";
 import { TwoFactorAuthAPI } from "./API/TwoFactorAuthAPI";
+import { AccountAPI } from "./API/AccountAPI";
 import { TokenStorage } from "./Storage/TokenStorage";
 import { AuthManager } from "./Manager/AuthManager";
 import { VersionManager } from "./Manager/VersionManager";
@@ -13,6 +14,7 @@ import { PasswordResetManager } from "./Manager/PasswordResetManager";
 import { TenantManager } from "./Manager/TenantManager";
 import { DashboardManager } from "./Manager/DashboardManager";
 import { TwoFactorAuthManager } from "./Manager/TwoFactorAuthManager";
+import { AccountManager } from "./Manager/AccountManager";
 import { getAPIBaseURL, API_ENDPOINTS, ENV_CONFIG } from "./Config/APIConfig";
 
 /**
@@ -63,6 +65,9 @@ class ServicesContainer {
     );
     this._services.set("twoFactorAuthAPI", twoFactorAuthAPI);
 
+    const accountAPI = new AccountAPI(baseURL, API_ENDPOINTS, tokenStorage);
+    this._services.set("accountAPI", accountAPI);
+
     // Initialize manager services (combine API and storage layers)
 
     // AuthManager needs AuthAPI and TokenStorage
@@ -89,6 +94,10 @@ class ServicesContainer {
     const twoFactorAuthManager = new TwoFactorAuthManager(twoFactorAuthAPI);
     this._services.set("twoFactorAuthManager", twoFactorAuthManager);
 
+    // AccountManager needs AccountAPI
+    const accountManager = new AccountManager(accountAPI);
+    this._services.set("accountManager", accountManager);
+
     this._initialized = true;
 
     if (ENV_CONFIG.IS_DEVELOPMENT) {
@@ -102,6 +111,7 @@ class ServicesContainer {
         tenantManager: ["tenantAPI"],
         dashboardManager: ["dashboardAPI"],
         twoFactorAuthManager: ["twoFactorAuthAPI"],
+        accountManager: ["accountAPI"],
       });
       console.groupEnd();
     }
@@ -153,6 +163,10 @@ class ServicesContainer {
     return this.get("twoFactorAuthManager");
   }
 
+  getAccountManager() {
+    return this.get("accountManager");
+  }
+
   /**
    * Convenience getters for storage services
    */
@@ -185,6 +199,10 @@ class ServicesContainer {
 
   getTwoFactorAuthAPI() {
     return this.get("twoFactorAuthAPI");
+  }
+
+  getAccountAPI() {
+    return this.get("accountAPI");
   }
 
   /**
@@ -305,6 +323,11 @@ export function useTwoFactorAuthManager() {
   return services.getTwoFactorAuthManager();
 }
 
+export function useAccountManager() {
+  const services = useServices();
+  return services.getAccountManager();
+}
+
 /**
  * Hooks to access storage services
  */
@@ -344,6 +367,11 @@ export function useDashboardAPI() {
 export function useTwoFactorAuthAPI() {
   const services = useServices();
   return services.getTwoFactorAuthAPI();
+}
+
+export function useAccountAPI() {
+  const services = useServices();
+  return services.getAccountAPI();
 }
 
 /**
