@@ -91,6 +91,38 @@ import AdminCustomerDetailMoreUnarchivePage from "./pages/Admin/Customer/Detail/
 import AdminCustomerDetailMoreUnbanPage from "./pages/Admin/Customer/Detail/More/Unban/Page";
 import AdminCustomerDetailMoreUpgradePage from "./pages/Admin/Customer/Detail/More/Upgrade/Page";
 
+// Admin associate pages.
+import AdminAssociateListPage from "./pages/Admin/Associate/List/Page";
+import AdminAssociateAddStep1PartAPage from "./pages/Admin/Associate/Add/Step1PartAPage";
+import AdminAssociateAddStep1PartBPage from "./pages/Admin/Associate/Add/Step1PartBPage";
+import AdminAssociateAddStep2Page from "./pages/Admin/Associate/Add/Step2Page";
+import AdminAssociateAddStep3Page from "./pages/Admin/Associate/Add/Step3Page";
+import AdminAssociateAddStep4Page from "./pages/Admin/Associate/Add/Step4Page";
+import AdminAssociateAddStep5Page from "./pages/Admin/Associate/Add/Step5Page";
+import AdminAssociateAddStep6Page from "./pages/Admin/Associate/Add/Step6Page";
+import AdminAssociateSearchCriteriaPagePage from "./pages/Admin/Associate/Search/CriteriaPage";
+import AdminAssociateSearchResultPagePage from "./pages/Admin/Associate/Search/ResultPage";
+import AdminAssociateUpdatePage from "./pages/Admin/Associate/Update/Page";
+import AdminAssociateDetailLitePage from "./pages/Admin/Associate/Detail/LitePage";
+import AdminAssociateDetailFullPage from "./pages/Admin/Associate/Detail/FullPage";
+import AdminAssociateDetailCommentListPage from "./pages/Admin/Associate/Detail/Comment/List/Page";
+import AdminAssociateDetailOrderListPage from "./pages/Admin/Associate/Detail/Order/List/Page";
+import AdminAssociateDetailAttachmentAddPage from "./pages/Admin/Associate/Detail/Attachment/Add/Page";
+import AdminAssociateDetailAttachmentListPage from "./pages/Admin/Associate/Detail/Attachment/List/Page";
+import AdminAssociateDetailAttachmentDetailPage from "./pages/Admin/Associate/Detail/Attachment/Detail/Page";
+import AdminAssociateDetailAttachmentUpdatePage from "./pages/Admin/Associate/Detail/Attachment/Update/Page";
+import AdminAssociateDetailMorePage from "./pages/Admin/Associate/Detail/More/Page";
+import AdminAssociateDetailMore2FAPage from "./pages/Admin/Associate/Detail/More/2FA/Page";
+import AdminAssociateDetailMoreArchivePage from "./pages/Admin/Associate/Detail/More/Archive/Page";
+import AdminAssociateDetailMoreAvatarPage from "./pages/Admin/Associate/Detail/More/Avatar/Page";
+import AdminAssociateDetailMoreBanPage from "./pages/Admin/Associate/Detail/More/Ban/Page";
+import AdminAssociateDetailMoreChangePasswordPage from "./pages/Admin/Associate/Detail/More/ChangePassword/Page";
+import AdminAssociateDetailMoreDeletePage from "./pages/Admin/Associate/Detail/More/Delete/Page";
+import AdminAssociateDetailMoreDowngradePage from "./pages/Admin/Associate/Detail/More/Downgrade/Page";
+import AdminAssociateDetailMoreUnarchivePage from "./pages/Admin/Associate/Detail/More/Unarchive/Page";
+import AdminAssociateDetailMoreUnbanPage from "./pages/Admin/Associate/Detail/More/Unban/Page";
+import AdminAssociateDetailMoreUpgradePage from "./pages/Admin/Associate/Detail/More/Upgrade/Page";
+
 // Associate pages
 import AssociateDashboardPage from "./pages/Associate/Dashboard/Page";
 
