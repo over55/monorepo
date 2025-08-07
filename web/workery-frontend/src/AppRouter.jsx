@@ -36,6 +36,10 @@ import SettingServiceFeeCreatePage from "./pages/Admin/Setting/ServiceFee/Create
 import SettingServiceFeeListPage from "./pages/Admin/Setting/ServiceFee/List/Page";
 import SettingServiceFeeDetailPage from "./pages/Admin/Setting/ServiceFee/Detail/Page";
 import SettingServiceFeeUpdatePage from "./pages/Admin/Setting/ServiceFee/Update/Page";
+import SettingNOCCreatePage from "./pages/Admin/Setting/NOC/Create/Page";
+import SettingNOCListPage from "./pages/Admin/Setting/NOC/List/Page";
+import SettingNOCDetailPage from "./pages/Admin/Setting/NOC/Detail/Page";
+import SettingNOCUpdatePage from "./pages/Admin/Setting/NOC/Update/Page";
 
 // Associate pages
 import AssociateDashboardPage from "./pages/Associate/Dashboard/Page";
