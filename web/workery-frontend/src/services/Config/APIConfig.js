@@ -220,6 +220,10 @@ export const API_ENDPOINTS = {
   // Associate Away Log endpoints
   ASSOCIATE_AWAY_LOGS: "/associate-away-logs",
   ASSOCIATE_AWAY_LOG_DETAIL: "/associate-away-log/{id}",
+
+  // Job History endpoints
+  JOB_HISTORY: "/job-history",
+  JOB_HISTORY_DETAIL: "/job-history/{id}",
 };
 
 /**
@@ -340,6 +344,8 @@ export function getFullAPIUrls() {
     BULLETIN_ARCHIVE_OPERATION: `${httpServer}${basePath}${API_ENDPOINTS.BULLETIN_ARCHIVE_OPERATION}`,
     ASSOCIATE_AWAY_LOGS: `${httpServer}${basePath}${API_ENDPOINTS.ASSOCIATE_AWAY_LOGS}`,
     ASSOCIATE_AWAY_LOG_DETAIL: `${httpServer}${basePath}${API_ENDPOINTS.ASSOCIATE_AWAY_LOG_DETAIL}`,
+    JOB_HISTORY: `${httpServer}${basePath}${API_ENDPOINTS.JOB_HISTORY}`,
+    JOB_HISTORY_DETAIL: `${httpServer}${basePath}${API_ENDPOINTS.JOB_HISTORY_DETAIL}`,
   };
 }
 
