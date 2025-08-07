@@ -10,6 +10,7 @@ import { AccountAPI } from "./API/AccountAPI";
 import { VehicleTypeAPI } from "./API/VehicleTypeAPI";
 import { TagAPI } from "./API/TagAPI";
 import { SkillSetAPI } from "./API/SkillSetAPI";
+import { ServiceFeeAPI } from "./API/ServiceFeeAPI";
 import { TokenStorage } from "./Storage/TokenStorage";
 import { AccountStorage } from "./Storage/AccountStorage";
 import { DashboardStorage } from "./Storage/DashboardStorage";
@@ -17,6 +18,7 @@ import { TenantStorage } from "./Storage/TenantStorage";
 import { VehicleTypeStorage } from "./Storage/VehicleTypeStorage";
 import { TagStorage } from "./Storage/TagStorage";
 import { SkillSetStorage } from "./Storage/SkillSetStorage";
+import { ServiceFeeStorage } from "./Storage/ServiceFeeStorage";
 import { AuthManager } from "./Manager/AuthManager";
 import { VersionManager } from "./Manager/VersionManager";
 import { PasswordResetManager } from "./Manager/PasswordResetManager";
@@ -27,6 +29,7 @@ import { AccountManager } from "./Manager/AccountManager";
 import { VehicleTypeManager } from "./Manager/VehicleTypeManager";
 import { TagManager } from "./Manager/TagManager";
 import { SkillSetManager } from "./Manager/SkillSetManager";
+import { ServiceFeeManager } from "./Manager/ServiceFeeManager";
 import { getAPIBaseURL, API_ENDPOINTS, ENV_CONFIG } from "./Config/APIConfig";
 
 /**
@@ -72,6 +75,9 @@ class ServicesContainer {
     const skillSetStorage = new SkillSetStorage();
     this._services.set("skillSetStorage", skillSetStorage);
 
+    const serviceFeeStorage = new ServiceFeeStorage();
+    this._services.set("serviceFeeStorage", serviceFeeStorage);
+
     // Initialize API services (depend on configuration)
     const authAPI = new AuthAPI(baseURL, API_ENDPOINTS);
     this._services.set("authAPI", authAPI);
@@ -110,6 +116,13 @@ class ServicesContainer {
 
     const skillSetAPI = new SkillSetAPI(baseURL, API_ENDPOINTS, tokenStorage);
     this._services.set("skillSetAPI", skillSetAPI);
+
+    const serviceFeeAPI = new ServiceFeeAPI(
+      baseURL,
+      API_ENDPOINTS,
+      tokenStorage,
+    );
+    this._services.set("serviceFeeAPI", serviceFeeAPI);
 
     // Initialize manager services (combine API and storage layers)
 
@@ -159,6 +172,13 @@ class ServicesContainer {
     const skillSetManager = new SkillSetManager(skillSetAPI, skillSetStorage);
     this._services.set("skillSetManager", skillSetManager);
 
+    // ServiceFeeManager needs ServiceFeeAPI and ServiceFeeStorage
+    const serviceFeeManager = new ServiceFeeManager(
+      serviceFeeAPI,
+      serviceFeeStorage,
+    );
+    this._services.set("serviceFeeManager", serviceFeeManager);
+
     this._initialized = true;
 
     if (ENV_CONFIG.IS_DEVELOPMENT) {
@@ -176,6 +196,7 @@ class ServicesContainer {
         vehicleTypeManager: ["vehicleTypeAPI", "vehicleTypeStorage"],
         tagManager: ["tagAPI", "tagStorage"],
         skillSetManager: ["skillSetAPI", "skillSetStorage"],
+        serviceFeeManager: ["serviceFeeAPI", "serviceFeeStorage"],
       });
       console.groupEnd();
     }
@@ -243,6 +264,10 @@ class ServicesContainer {
     return this.get("skillSetManager");
   }
 
+  getServiceFeeManager() {
+    return this.get("serviceFeeManager");
+  }
+
   /**
    * Convenience getters for storage services
    */
@@ -272,6 +297,10 @@ class ServicesContainer {
 
   getSkillSetStorage() {
     return this.get("skillSetStorage");
+  }
+
+  getServiceFeeStorage() {
+    return this.get("serviceFeeStorage");
   }
 
   /**
@@ -315,6 +344,10 @@ class ServicesContainer {
 
   getSkillSetAPI() {
     return this.get("skillSetAPI");
+  }
+
+  getServiceFeeAPI() {
+    return this.get("serviceFeeAPI");
   }
 
   /**
@@ -455,6 +488,11 @@ export function useSkillSetManager() {
   return services.getSkillSetManager();
 }
 
+export function useServiceFeeManager() {
+  const services = useServices();
+  return services.getServiceFeeManager();
+}
+
 /**
  * Hooks to access storage services
  */
@@ -491,6 +529,11 @@ export function useTagStorage() {
 export function useSkillSetStorage() {
   const services = useServices();
   return services.getSkillSetStorage();
+}
+
+export function useServiceFeeStorage() {
+  const services = useServices();
+  return services.getServiceFeeStorage();
 }
 
 /**
@@ -544,6 +587,11 @@ export function useTagAPI() {
 export function useSkillSetAPI() {
   const services = useServices();
   return services.getSkillSetAPI();
+}
+
+export function useServiceFeeAPI() {
+  const services = useServices();
+  return services.getServiceFeeAPI();
 }
 
 /**
