@@ -10,6 +10,7 @@ import { AccountAPI } from "./API/AccountAPI";
 import { CustomerAPI } from "./API/CustomerAPI";
 import { AssociateAPI } from "./API/AssociateAPI";
 import { StaffAPI } from "./API/StaffAPI";
+import { OrderAPI } from "./API/OrderAPI";
 import { VehicleTypeAPI } from "./API/VehicleTypeAPI";
 import { TagAPI } from "./API/TagAPI";
 import { SkillSetAPI } from "./API/SkillSetAPI";
@@ -27,6 +28,7 @@ import { TenantStorage } from "./Storage/TenantStorage";
 import { CustomerStorage } from "./Storage/CustomerStorage";
 import { AssociateStorage } from "./Storage/AssociateStorage";
 import { StaffStorage } from "./Storage/StaffStorage";
+import { OrderStorage } from "./Storage/OrderStorage";
 import { VehicleTypeStorage } from "./Storage/VehicleTypeStorage";
 import { TagStorage } from "./Storage/TagStorage";
 import { SkillSetStorage } from "./Storage/SkillSetStorage";
@@ -47,6 +49,7 @@ import { AccountManager } from "./Manager/AccountManager";
 import { CustomerManager } from "./Manager/CustomerManager";
 import { AssociateManager } from "./Manager/AssociateManager";
 import { StaffManager } from "./Manager/StaffManager";
+import { OrderManager } from "./Manager/OrderManager";
 import { VehicleTypeManager } from "./Manager/VehicleTypeManager";
 import { TagManager } from "./Manager/TagManager";
 import { SkillSetManager } from "./Manager/SkillSetManager";
@@ -101,6 +104,9 @@ class ServicesContainer {
 
     const staffStorage = new StaffStorage();
     this._services.set("staffStorage", staffStorage);
+
+    const orderStorage = new OrderStorage();
+    this._services.set("orderStorage", orderStorage);
 
     const vehicleTypeStorage = new VehicleTypeStorage();
     this._services.set("vehicleTypeStorage", vehicleTypeStorage);
@@ -169,6 +175,9 @@ class ServicesContainer {
 
     const staffAPI = new StaffAPI(baseURL, API_ENDPOINTS, tokenStorage);
     this._services.set("staffAPI", staffAPI);
+
+    const orderAPI = new OrderAPI(baseURL, API_ENDPOINTS, tokenStorage);
+    this._services.set("orderAPI", orderAPI);
 
     const vehicleTypeAPI = new VehicleTypeAPI(
       baseURL,
@@ -264,6 +273,10 @@ class ServicesContainer {
     const staffManager = new StaffManager(staffAPI, staffStorage);
     this._services.set("staffManager", staffManager);
 
+    // OrderManager needs OrderAPI and OrderStorage
+    const orderManager = new OrderManager(orderAPI, orderStorage);
+    this._services.set("orderManager", orderManager);
+
     // VehicleTypeManager needs VehicleTypeAPI and VehicleTypeStorage
     const vehicleTypeManager = new VehicleTypeManager(
       vehicleTypeAPI,
@@ -336,6 +349,7 @@ class ServicesContainer {
         customerManager: ["customerAPI", "customerStorage"],
         associateManager: ["associateAPI", "associateStorage"],
         staffManager: ["staffAPI", "staffStorage"],
+        orderManager: ["orderAPI", "orderStorage"],
         vehicleTypeManager: ["vehicleTypeAPI", "vehicleTypeStorage"],
         tagManager: ["tagAPI", "tagStorage"],
         skillSetManager: ["skillSetAPI", "skillSetStorage"],
@@ -419,6 +433,10 @@ class ServicesContainer {
     return this.get("staffManager");
   }
 
+  getOrderManager() {
+    return this.get("orderManager");
+  }
+
   getVehicleTypeManager() {
     return this.get("vehicleTypeManager");
   }
@@ -488,6 +506,10 @@ class ServicesContainer {
 
   getStaffStorage() {
     return this.get("staffStorage");
+  }
+
+  getOrderStorage() {
+    return this.get("orderStorage");
   }
 
   getVehicleTypeStorage() {
@@ -571,6 +593,10 @@ class ServicesContainer {
 
   getStaffAPI() {
     return this.get("staffAPI");
+  }
+
+  getOrderAPI() {
+    return this.get("orderAPI");
   }
 
   getVehicleTypeAPI() {
@@ -751,6 +777,11 @@ export function useStaffManager() {
   return services.getStaffManager();
 }
 
+export function useOrderManager() {
+  const services = useServices();
+  return services.getOrderManager();
+}
+
 export function useVehicleTypeManager() {
   const services = useServices();
   return services.getVehicleTypeManager();
@@ -837,6 +868,11 @@ export function useAssociateStorage() {
 export function useStaffStorage() {
   const services = useServices();
   return services.getStaffStorage();
+}
+
+export function useOrderStorage() {
+  const services = useServices();
+  return services.getOrderStorage();
 }
 
 export function useVehicleTypeStorage() {
@@ -940,6 +976,11 @@ export function useAssociateAPI() {
 export function useStaffAPI() {
   const services = useServices();
   return services.getStaffAPI();
+}
+
+export function useOrderAPI() {
+  const services = useServices();
+  return services.getOrderAPI();
 }
 
 export function useVehicleTypeAPI() {
