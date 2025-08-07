@@ -82,20 +82,34 @@ export const API_ENDPOINTS = {
   TENANT_DETAIL: "/tenant/{id}",
   TENANT_UPDATE_TAX_RATE: "/tenants/operations/update-tax-rate",
 
+  // Customer endpoints (renamed from Client)
+  CUSTOMERS: "/customers",
+  CUSTOMER_DETAIL: "/customer/{id}",
+  CUSTOMER_COUNT: "/customers/count",
+  CUSTOMER_ARCHIVE_OPERATION: "/customers/operation/archive",
+  CUSTOMER_CREATE_COMMENT_OPERATION: "/customers/operation/create-comment",
+  CUSTOMER_UPGRADE_OPERATION: "/customers/operation/upgrade",
+  CUSTOMER_DOWNGRADE_OPERATION: "/customers/operation/downgrade",
+  CUSTOMER_AVATAR_OPERATION: "/customers/operation/avatar",
+  CUSTOMER_CHANGE_PASSWORD_OPERATION: "/customers/operations/change-password",
+  CUSTOMER_CHANGE_2FA_OPERATION: "/customers/operations/change-2fa",
+  CUSTOMER_BAN_OPERATION: "/customers/operations/ban",
+  CUSTOMER_UNBAN_OPERATION: "/customers/operations/unban",
+
   // Vehicle Type endpoints
   VEHICLE_TYPES: "/vehicle-types",
   VEHICLE_TYPE_DETAIL: "/vehicle-type/{id}",
-  VEHICLE_TYPE_SELECT_OPTIONS: "/vehicle-types/operation/select-options",
+  VEHICLE_TYPE_SELECT_OPTIONS: "/vehicle-types/select-options",
 
   // Tag endpoints
   TAGS: "/tags",
   TAG_DETAIL: "/tag/{id}",
-  TAG_SELECT_OPTIONS: "/tags/operation/select-options",
+  TAG_SELECT_OPTIONS: "/tags/select-options",
 
   // Skill Set endpoints
   SKILL_SETS: "/skill-sets",
   SKILL_SET_DETAIL: "/skill-set/{id}",
-  SKILL_SET_SELECT_OPTIONS: "/skill-sets/operation/select-options",
+  SKILL_SET_SELECT_OPTIONS: "/skill-sets/select-options",
 
   // National Occupational Classification endpoints
   NATIONAL_OCCUPATIONAL_CLASSIFICATIONS:
@@ -122,7 +136,7 @@ export const API_ENDPOINTS = {
   // Service Fee endpoints
   SERVICE_FEES: "/service-fees",
   SERVICE_FEE_DETAIL: "/service-fee/{id}",
-  SERVICE_FEE_SELECT_OPTIONS: "/service-fees/operation/select-options",
+  SERVICE_FEE_SELECT_OPTIONS: "/service-fees/select-options",
 
   // Comment endpoints
   COMMENTS: "/comments",
@@ -159,6 +173,18 @@ export function getFullAPIUrls() {
     TENANTS: `${httpServer}${basePath}${API_ENDPOINTS.TENANTS}`,
     TENANT_DETAIL: `${httpServer}${basePath}${API_ENDPOINTS.TENANT_DETAIL}`,
     TENANT_UPDATE_TAX_RATE: `${httpServer}${basePath}${API_ENDPOINTS.TENANT_UPDATE_TAX_RATE}`,
+    CUSTOMERS: `${httpServer}${basePath}${API_ENDPOINTS.CUSTOMERS}`,
+    CUSTOMER_DETAIL: `${httpServer}${basePath}${API_ENDPOINTS.CUSTOMER_DETAIL}`,
+    CUSTOMER_COUNT: `${httpServer}${basePath}${API_ENDPOINTS.CUSTOMER_COUNT}`,
+    CUSTOMER_ARCHIVE_OPERATION: `${httpServer}${basePath}${API_ENDPOINTS.CUSTOMER_ARCHIVE_OPERATION}`,
+    CUSTOMER_CREATE_COMMENT_OPERATION: `${httpServer}${basePath}${API_ENDPOINTS.CUSTOMER_CREATE_COMMENT_OPERATION}`,
+    CUSTOMER_UPGRADE_OPERATION: `${httpServer}${basePath}${API_ENDPOINTS.CUSTOMER_UPGRADE_OPERATION}`,
+    CUSTOMER_DOWNGRADE_OPERATION: `${httpServer}${basePath}${API_ENDPOINTS.CUSTOMER_DOWNGRADE_OPERATION}`,
+    CUSTOMER_AVATAR_OPERATION: `${httpServer}${basePath}${API_ENDPOINTS.CUSTOMER_AVATAR_OPERATION}`,
+    CUSTOMER_CHANGE_PASSWORD_OPERATION: `${httpServer}${basePath}${API_ENDPOINTS.CUSTOMER_CHANGE_PASSWORD_OPERATION}`,
+    CUSTOMER_CHANGE_2FA_OPERATION: `${httpServer}${basePath}${API_ENDPOINTS.CUSTOMER_CHANGE_2FA_OPERATION}`,
+    CUSTOMER_BAN_OPERATION: `${httpServer}${basePath}${API_ENDPOINTS.CUSTOMER_BAN_OPERATION}`,
+    CUSTOMER_UNBAN_OPERATION: `${httpServer}${basePath}${API_ENDPOINTS.CUSTOMER_UNBAN_OPERATION}`,
     VEHICLE_TYPES: `${httpServer}${basePath}${API_ENDPOINTS.VEHICLE_TYPES}`,
     VEHICLE_TYPE_DETAIL: `${httpServer}${basePath}${API_ENDPOINTS.VEHICLE_TYPE_DETAIL}`,
     VEHICLE_TYPE_SELECT_OPTIONS: `${httpServer}${basePath}${API_ENDPOINTS.VEHICLE_TYPE_SELECT_OPTIONS}`,
