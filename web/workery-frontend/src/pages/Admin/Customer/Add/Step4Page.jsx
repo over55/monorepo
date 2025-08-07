@@ -1,7 +1,16 @@
 // File Path: web/workery-frontend/src/pages/Admin/Customer/Add/Step4Page.jsx
 
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
+import { theme, globalStyles } from "../../../../constants/Theme";
+import {
+  Card,
+  Button,
+  Alert,
+  Loading,
+  Breadcrumb,
+  FormGroup,
+} from "../../../../components/UI";
 
 // Country options
 const COUNTRY_OPTIONS = [
@@ -112,72 +121,42 @@ function AdminCustomerAddStep4Page() {
     }
   };
 
-  const onSubmitClick = (e) => {
-    console.log("onSubmitClick: Beginning...");
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log("handleSubmit: Beginning...");
 
     let newErrors = {};
-    let hasErrors = false;
 
     // Validation for billing address
-    if (postalCode === "") {
-      newErrors["postalCode"] = "missing value";
-      hasErrors = true;
-    }
-    if (addressLine1 === "") {
-      newErrors["addressLine1"] = "missing value";
-      hasErrors = true;
-    }
-    if (city === "") {
-      newErrors["city"] = "missing value";
-      hasErrors = true;
-    }
-    if (region === "") {
-      newErrors["region"] = "missing value";
-      hasErrors = true;
-    }
-    if (country === "") {
-      newErrors["country"] = "missing value";
-      hasErrors = true;
-    }
+    if (!country) newErrors.country = "Country is required";
+    if (!region) newErrors.region = "Province/Territory is required";
+    if (!city.trim()) newErrors.city = "City is required";
+    if (!addressLine1.trim())
+      newErrors.addressLine1 = "Address Line 1 is required";
+    if (!postalCode.trim()) newErrors.postalCode = "Postal Code is required";
 
     // Validation for shipping address if enabled
-    if (hasShippingAddress === true) {
-      if (shippingName === "") {
-        newErrors["shippingName"] = "missing value";
-        hasErrors = true;
-      }
-      if (shippingPhone === "") {
-        newErrors["shippingPhone"] = "missing value";
-        hasErrors = true;
-      }
-      if (shippingCountry === "") {
-        newErrors["shippingCountry"] = "missing value";
-        hasErrors = true;
-      }
-      if (shippingRegion === "") {
-        newErrors["shippingRegion"] = "missing value";
-        hasErrors = true;
-      }
-      if (shippingCity === "") {
-        newErrors["shippingCity"] = "missing value";
-        hasErrors = true;
-      }
-      if (shippingAddressLine1 === "") {
-        newErrors["shippingAddressLine1"] = "missing value";
-        hasErrors = true;
-      }
-      if (shippingPostalCode === "") {
-        newErrors["shippingPostalCode"] = "missing value";
-        hasErrors = true;
-      }
+    if (hasShippingAddress) {
+      if (!shippingName.trim()) newErrors.shippingName = "Name is required";
+      if (!shippingPhone.trim()) newErrors.shippingPhone = "Phone is required";
+      if (!shippingCountry) newErrors.shippingCountry = "Country is required";
+      if (!shippingRegion)
+        newErrors.shippingRegion = "Province/Territory is required";
+      if (!shippingCity.trim()) newErrors.shippingCity = "City is required";
+      if (!shippingAddressLine1.trim())
+        newErrors.shippingAddressLine1 = "Address Line 1 is required";
+      if (!shippingPostalCode.trim())
+        newErrors.shippingPostalCode = "Postal Code is required";
     }
 
-    if (hasErrors) {
+    if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       window.scrollTo(0, 0);
-      console.log("onSubmitClick: Ending with error.");
+      console.log("handleSubmit: Ending with error.");
       return;
     }
+
+    setErrors({});
 
     // Save data to sessionStorage
     const updatedCustomerData = {
@@ -205,411 +184,455 @@ function AdminCustomerAddStep4Page() {
     );
     setCustomerData(updatedCustomerData);
 
-    console.log("onSubmitClick: Ending with success.");
+    console.log("handleSubmit: Ending with success.");
 
     // Navigate to next step
     navigate("/admin/customers/add/step-5");
   };
 
+  const breadcrumbItems = [
+    { label: "Dashboard", path: "/admin/dashboard", icon: "🏠" },
+    { label: "Customers", path: "/admin/customers", icon: "👥" },
+    { label: "New", icon: "➕" },
+  ];
+
   return (
-    <div className="container">
-      <section className="section">
-        {/* Desktop Breadcrumbs */}
-        <nav
-          className="breadcrumb has-background-light is-hidden-touch p-4"
-          aria-label="breadcrumbs"
+    <div style={globalStyles.container}>
+      <Breadcrumb items={breadcrumbItems} />
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "20px",
+        }}
+      >
+        <h1 style={{ fontSize: "28px", fontWeight: "bold", margin: 0 }}>
+          ➕ New Customer
+        </h1>
+      </div>
+
+      <div
+        style={{
+          padding: "1rem",
+          backgroundColor: "#f5f5f5",
+          borderRadius: "6px",
+          marginBottom: "20px",
+        }}
+      >
+        <p style={{ ...globalStyles.label, marginBottom: "0.5rem" }}>
+          Step 4 of 6: Address
+        </p>
+        <progress
+          style={{ width: "100%" }}
+          className="progress is-success"
+          value="67"
+          max="100"
         >
-          <ul>
-            <li>
-              <Link to="/admin/dashboard" aria-current="page">
-                🏠 Dashboard
-              </Link>
-            </li>
-            <li>
-              <Link to="/admin/customers" aria-current="page">
-                👥 Customers
-              </Link>
-            </li>
-            <li className="is-active">
-              <Link aria-current="page">➕ New</Link>
-            </li>
-          </ul>
-        </nav>
+          67%
+        </progress>
+      </div>
 
-        {/* Mobile Breadcrumbs */}
-        <nav
-          className="breadcrumb has-background-light is-hidden-desktop p-4"
-          aria-label="breadcrumbs"
-        >
-          <ul>
-            <li>
-              <Link to="/admin/customers" aria-current="page">
-                ← Back to Customers
-              </Link>
-            </li>
-          </ul>
-        </nav>
+      <Card>
+        {isFetching ? (
+          <Loading message="Saving..." />
+        ) : (
+          <form onSubmit={handleSubmit}>
+            {errors.message && (
+              <Alert
+                type="error"
+                onClose={() => setErrors((prev) => ({ ...prev, message: "" }))}
+              >
+                {errors.message}
+              </Alert>
+            )}
 
-        {/* Page Title */}
-        <h1 className="title is-2">👥 Customers</h1>
-        <h4 className="subtitle is-4">➕ New Customer</h4>
-        <hr />
+            <FormGroup>
+              <label style={{ display: "flex", alignItems: "center" }}>
+                <input
+                  type="checkbox"
+                  checked={hasShippingAddress}
+                  onChange={(e) => setHasShippingAddress(e.target.checked)}
+                  style={{ marginRight: "10px" }}
+                />
+                Has shipping address different than billing address
+              </label>
+            </FormGroup>
 
-        {/* Progress Wizard */}
-        <nav className="box has-background-light">
-          <p className="subtitle is-5">Step 4 of 6</p>
-          <progress className="progress is-success" value="67" max="100">
-            67%
-          </progress>
-        </nav>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: hasShippingAddress ? "1fr 1fr" : "1fr",
+                gap: "40px",
+                marginTop: "20px",
+              }}
+            >
+              {/* Billing Address Column */}
+              <div>
+                <h3
+                  style={{
+                    fontSize: "18px",
+                    fontWeight: "bold",
+                    marginBottom: "20px",
+                    borderBottom: "1px solid #eee",
+                    paddingBottom: "10px",
+                  }}
+                >
+                  {hasShippingAddress ? "Billing Address" : "Address"}
+                </h3>
 
-        {/* Page Content */}
-        <nav className="box">
-          <p className="title is-4">📍 Address</p>
-
-          {isFetching ? (
-            <div>Submitting...</div>
-          ) : (
-            <>
-              {errors.message && (
-                <div className="notification is-danger">{errors.message}</div>
-              )}
-
-              <div className="container">
-                <div className="field">
-                  <label className="checkbox">
-                    <input
-                      type="checkbox"
-                      checked={hasShippingAddress}
-                      onChange={(e) => setHasShippingAddress(e.target.checked)}
-                    />
-                    &nbsp;Has shipping address different than billing address
+                <FormGroup>
+                  <label style={globalStyles.label}>
+                    Country <span style={{ color: "red" }}>*</span>
                   </label>
-                </div>
-
-                <div className="columns">
-                  <div className="column">
-                    {hasShippingAddress && (
-                      <p className="subtitle is-6">Billing Address</p>
-                    )}
-
-                    <div className="field">
-                      <label className="label">Country *</label>
-                      <div className="control">
-                        <div className="select" style={{ maxWidth: "160px" }}>
-                          <select
-                            value={country}
-                            onChange={(e) => setCountry(e.target.value)}
-                          >
-                            {COUNTRY_OPTIONS.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                      {errors.country && (
-                        <p className="help is-danger">{errors.country}</p>
-                      )}
-                    </div>
-
-                    <div className="field">
-                      <label className="label">Province/Territory *</label>
-                      <div className="control">
-                        <div className="select" style={{ maxWidth: "280px" }}>
-                          <select
-                            value={region}
-                            onChange={(e) => setRegion(e.target.value)}
-                          >
-                            {getRegionOptions(country).map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      </div>
-                      {errors.region && (
-                        <p className="help is-danger">{errors.region}</p>
-                      )}
-                    </div>
-
-                    <div className="field">
-                      <label className="label">City *</label>
-                      <div className="control">
-                        <input
-                          className="input"
-                          type="text"
-                          placeholder="Text input"
-                          value={city}
-                          onChange={(e) => setCity(e.target.value)}
-                          style={{ maxWidth: "380px" }}
-                        />
-                      </div>
-                      {errors.city && (
-                        <p className="help is-danger">{errors.city}</p>
-                      )}
-                    </div>
-
-                    <div className="field">
-                      <label className="label">Address Line 1 *</label>
-                      <div className="control">
-                        <input
-                          className="input"
-                          type="text"
-                          placeholder="Text input"
-                          value={addressLine1}
-                          onChange={(e) => setAddressLine1(e.target.value)}
-                          style={{ maxWidth: "380px" }}
-                        />
-                      </div>
-                      {errors.addressLine1 && (
-                        <p className="help is-danger">{errors.addressLine1}</p>
-                      )}
-                    </div>
-
-                    <div className="field">
-                      <label className="label">Address Line 2 (Optional)</label>
-                      <div className="control">
-                        <input
-                          className="input"
-                          type="text"
-                          placeholder="Text input"
-                          value={addressLine2}
-                          onChange={(e) => setAddressLine2(e.target.value)}
-                          style={{ maxWidth: "380px" }}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="field">
-                      <label className="label">Postal Code *</label>
-                      <div className="control">
-                        <input
-                          className="input"
-                          type="text"
-                          placeholder="Text input"
-                          value={postalCode}
-                          onChange={(e) => setPostalCode(e.target.value)}
-                          style={{ maxWidth: "100px" }}
-                        />
-                      </div>
-                      {errors.postalCode && (
-                        <p className="help is-danger">{errors.postalCode}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {hasShippingAddress && (
-                    <div className="column">
-                      <p className="subtitle is-6">Shipping Address</p>
-
-                      <div className="field">
-                        <label className="label">Name *</label>
-                        <div className="control">
-                          <input
-                            className="input"
-                            type="text"
-                            placeholder="Text input"
-                            value={shippingName}
-                            onChange={(e) => setShippingName(e.target.value)}
-                            style={{ maxWidth: "350px" }}
-                          />
-                        </div>
-                        <p className="help">
-                          The name to contact for this shipping address
-                        </p>
-                        {errors.shippingName && (
-                          <p className="help is-danger">
-                            {errors.shippingName}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="field">
-                        <label className="label">Phone *</label>
-                        <div className="control">
-                          <input
-                            className="input"
-                            type="text"
-                            placeholder="Text input"
-                            value={shippingPhone}
-                            onChange={(e) => setShippingPhone(e.target.value)}
-                            style={{ maxWidth: "150px" }}
-                          />
-                        </div>
-                        <p className="help">
-                          The contact phone number for this shipping address
-                        </p>
-                        {errors.shippingPhone && (
-                          <p className="help is-danger">
-                            {errors.shippingPhone}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="field">
-                        <label className="label">Country *</label>
-                        <div className="control">
-                          <div className="select" style={{ maxWidth: "160px" }}>
-                            <select
-                              value={shippingCountry}
-                              onChange={(e) =>
-                                setShippingCountry(e.target.value)
-                              }
-                            >
-                              {COUNTRY_OPTIONS.map((option) => (
-                                <option key={option.value} value={option.value}>
-                                  {option.label}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        </div>
-                        {errors.shippingCountry && (
-                          <p className="help is-danger">
-                            {errors.shippingCountry}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="field">
-                        <label className="label">Province/Territory *</label>
-                        <div className="control">
-                          <div className="select" style={{ maxWidth: "280px" }}>
-                            <select
-                              value={shippingRegion}
-                              onChange={(e) =>
-                                setShippingRegion(e.target.value)
-                              }
-                            >
-                              {getRegionOptions(shippingCountry).map(
-                                (option) => (
-                                  <option
-                                    key={option.value}
-                                    value={option.value}
-                                  >
-                                    {option.label}
-                                  </option>
-                                ),
-                              )}
-                            </select>
-                          </div>
-                        </div>
-                        {errors.shippingRegion && (
-                          <p className="help is-danger">
-                            {errors.shippingRegion}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="field">
-                        <label className="label">City *</label>
-                        <div className="control">
-                          <input
-                            className="input"
-                            type="text"
-                            placeholder="Text input"
-                            value={shippingCity}
-                            onChange={(e) => setShippingCity(e.target.value)}
-                            style={{ maxWidth: "380px" }}
-                          />
-                        </div>
-                        {errors.shippingCity && (
-                          <p className="help is-danger">
-                            {errors.shippingCity}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="field">
-                        <label className="label">Address Line 1 *</label>
-                        <div className="control">
-                          <input
-                            className="input"
-                            type="text"
-                            placeholder="Text input"
-                            value={shippingAddressLine1}
-                            onChange={(e) =>
-                              setShippingAddressLine1(e.target.value)
-                            }
-                            style={{ maxWidth: "380px" }}
-                          />
-                        </div>
-                        {errors.shippingAddressLine1 && (
-                          <p className="help is-danger">
-                            {errors.shippingAddressLine1}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="field">
-                        <label className="label">
-                          Address Line 2 (Optional)
-                        </label>
-                        <div className="control">
-                          <input
-                            className="input"
-                            type="text"
-                            placeholder="Text input"
-                            value={shippingAddressLine2}
-                            onChange={(e) =>
-                              setShippingAddressLine2(e.target.value)
-                            }
-                            style={{ maxWidth: "380px" }}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="field">
-                        <label className="label">Postal Code *</label>
-                        <div className="control">
-                          <input
-                            className="input"
-                            type="text"
-                            placeholder="Text input"
-                            value={shippingPostalCode}
-                            onChange={(e) =>
-                              setShippingPostalCode(e.target.value)
-                            }
-                            style={{ maxWidth: "100px" }}
-                          />
-                        </div>
-                        {errors.shippingPostalCode && (
-                          <p className="help is-danger">
-                            {errors.shippingPostalCode}
-                          </p>
-                        )}
-                      </div>
+                  <select
+                    value={country}
+                    onChange={(e) => setCountry(e.target.value)}
+                    style={{
+                      ...globalStyles.input,
+                      borderColor: errors.country ? theme.colors.error : "#ddd",
+                    }}
+                  >
+                    {COUNTRY_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.country && (
+                    <div style={globalStyles.errorMessage}>
+                      {errors.country}
                     </div>
                   )}
-                </div>
+                </FormGroup>
 
-                <div className="columns pt-5">
-                  <div className="column is-half">
-                    <Link
-                      className="button is-medium is-fullwidth-mobile"
-                      to="/admin/customers/add/step-3"
-                    >
-                      ← Back
-                    </Link>
-                  </div>
-                  <div className="column is-half has-text-right">
-                    <button
-                      className="button is-medium is-primary is-fullwidth-mobile"
-                      onClick={onSubmitClick}
-                      type="button"
-                    >
-                      Next →
-                    </button>
-                  </div>
-                </div>
+                <FormGroup>
+                  <label style={globalStyles.label}>
+                    Province/Territory <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <select
+                    value={region}
+                    onChange={(e) => setRegion(e.target.value)}
+                    style={{
+                      ...globalStyles.input,
+                      borderColor: errors.region ? theme.colors.error : "#ddd",
+                    }}
+                  >
+                    {getRegionOptions(country).map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.region && (
+                    <div style={globalStyles.errorMessage}>{errors.region}</div>
+                  )}
+                </FormGroup>
+
+                <FormGroup>
+                  <label style={globalStyles.label}>
+                    City <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Toronto"
+                    value={city}
+                    onChange={(e) => setCity(e.target.value)}
+                    style={{
+                      ...globalStyles.input,
+                      borderColor: errors.city ? theme.colors.error : "#ddd",
+                    }}
+                  />
+                  {errors.city && (
+                    <div style={globalStyles.errorMessage}>{errors.city}</div>
+                  )}
+                </FormGroup>
+
+                <FormGroup>
+                  <label style={globalStyles.label}>
+                    Address Line 1 <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 123 Main St"
+                    value={addressLine1}
+                    onChange={(e) => setAddressLine1(e.target.value)}
+                    style={{
+                      ...globalStyles.input,
+                      borderColor: errors.addressLine1
+                        ? theme.colors.error
+                        : "#ddd",
+                    }}
+                  />
+                  {errors.addressLine1 && (
+                    <div style={globalStyles.errorMessage}>
+                      {errors.addressLine1}
+                    </div>
+                  )}
+                </FormGroup>
+
+                <FormGroup>
+                  <label style={globalStyles.label}>Address Line 2</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Apt 4B"
+                    value={addressLine2}
+                    onChange={(e) => setAddressLine2(e.target.value)}
+                    style={globalStyles.input}
+                  />
+                </FormGroup>
+
+                <FormGroup>
+                  <label style={globalStyles.label}>
+                    Postal Code <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. A1A 1A1"
+                    value={postalCode}
+                    onChange={(e) => setPostalCode(e.target.value)}
+                    style={{
+                      ...globalStyles.input,
+                      borderColor: errors.postalCode
+                        ? theme.colors.error
+                        : "#ddd",
+                      maxWidth: "150px",
+                    }}
+                  />
+                  {errors.postalCode && (
+                    <div style={globalStyles.errorMessage}>
+                      {errors.postalCode}
+                    </div>
+                  )}
+                </FormGroup>
               </div>
-            </>
-          )}
-        </nav>
-      </section>
+
+              {/* Shipping Address Column */}
+              {hasShippingAddress && (
+                <div>
+                  <h3
+                    style={{
+                      fontSize: "18px",
+                      fontWeight: "bold",
+                      marginBottom: "20px",
+                      borderBottom: "1px solid #eee",
+                      paddingBottom: "10px",
+                    }}
+                  >
+                    Shipping Address
+                  </h3>
+
+                  <FormGroup>
+                    <label style={globalStyles.label}>
+                      Name <span style={{ color: "red" }}>*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Jane Doe"
+                      value={shippingName}
+                      onChange={(e) => setShippingName(e.target.value)}
+                      style={{
+                        ...globalStyles.input,
+                        borderColor: errors.shippingName
+                          ? theme.colors.error
+                          : "#ddd",
+                      }}
+                    />
+                    {errors.shippingName && (
+                      <div style={globalStyles.errorMessage}>
+                        {errors.shippingName}
+                      </div>
+                    )}
+                  </FormGroup>
+
+                  <FormGroup>
+                    <label style={globalStyles.label}>
+                      Phone <span style={{ color: "red" }}>*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 555-555-5555"
+                      value={shippingPhone}
+                      onChange={(e) => setShippingPhone(e.target.value)}
+                      style={{
+                        ...globalStyles.input,
+                        borderColor: errors.shippingPhone
+                          ? theme.colors.error
+                          : "#ddd",
+                      }}
+                    />
+                    {errors.shippingPhone && (
+                      <div style={globalStyles.errorMessage}>
+                        {errors.shippingPhone}
+                      </div>
+                    )}
+                  </FormGroup>
+
+                  <FormGroup>
+                    <label style={globalStyles.label}>
+                      Country <span style={{ color: "red" }}>*</span>
+                    </label>
+                    <select
+                      value={shippingCountry}
+                      onChange={(e) => setShippingCountry(e.target.value)}
+                      style={{
+                        ...globalStyles.input,
+                        borderColor: errors.shippingCountry
+                          ? theme.colors.error
+                          : "#ddd",
+                      }}
+                    >
+                      {COUNTRY_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.shippingCountry && (
+                      <div style={globalStyles.errorMessage}>
+                        {errors.shippingCountry}
+                      </div>
+                    )}
+                  </FormGroup>
+
+                  <FormGroup>
+                    <label style={globalStyles.label}>
+                      Province/Territory <span style={{ color: "red" }}>*</span>
+                    </label>
+                    <select
+                      value={shippingRegion}
+                      onChange={(e) => setShippingRegion(e.target.value)}
+                      style={{
+                        ...globalStyles.input,
+                        borderColor: errors.shippingRegion
+                          ? theme.colors.error
+                          : "#ddd",
+                      }}
+                    >
+                      {getRegionOptions(shippingCountry).map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.shippingRegion && (
+                      <div style={globalStyles.errorMessage}>
+                        {errors.shippingRegion}
+                      </div>
+                    )}
+                  </FormGroup>
+
+                  <FormGroup>
+                    <label style={globalStyles.label}>
+                      City <span style={{ color: "red" }}>*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Vancouver"
+                      value={shippingCity}
+                      onChange={(e) => setShippingCity(e.target.value)}
+                      style={{
+                        ...globalStyles.input,
+                        borderColor: errors.shippingCity
+                          ? theme.colors.error
+                          : "#ddd",
+                      }}
+                    />
+                    {errors.shippingCity && (
+                      <div style={globalStyles.errorMessage}>
+                        {errors.shippingCity}
+                      </div>
+                    )}
+                  </FormGroup>
+
+                  <FormGroup>
+                    <label style={globalStyles.label}>
+                      Address Line 1 <span style={{ color: "red" }}>*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 456 Oak Ave"
+                      value={shippingAddressLine1}
+                      onChange={(e) => setShippingAddressLine1(e.target.value)}
+                      style={{
+                        ...globalStyles.input,
+                        borderColor: errors.shippingAddressLine1
+                          ? theme.colors.error
+                          : "#ddd",
+                      }}
+                    />
+                    {errors.shippingAddressLine1 && (
+                      <div style={globalStyles.errorMessage}>
+                        {errors.shippingAddressLine1}
+                      </div>
+                    )}
+                  </FormGroup>
+
+                  <FormGroup>
+                    <label style={globalStyles.label}>Address Line 2</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. Suite 100"
+                      value={shippingAddressLine2}
+                      onChange={(e) => setShippingAddressLine2(e.target.value)}
+                      style={globalStyles.input}
+                    />
+                  </FormGroup>
+
+                  <FormGroup>
+                    <label style={globalStyles.label}>
+                      Postal Code <span style={{ color: "red" }}>*</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. B2B 2B2"
+                      value={shippingPostalCode}
+                      onChange={(e) => setShippingPostalCode(e.target.value)}
+                      style={{
+                        ...globalStyles.input,
+                        borderColor: errors.shippingPostalCode
+                          ? theme.colors.error
+                          : "#ddd",
+                        maxWidth: "150px",
+                      }}
+                    />
+                    {errors.shippingPostalCode && (
+                      <div style={globalStyles.errorMessage}>
+                        {errors.shippingPostalCode}
+                      </div>
+                    )}
+                  </FormGroup>
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginTop: "30px",
+                paddingTop: "20px",
+                borderTop: "1px solid #eee",
+              }}
+            >
+              <Button
+                type="button"
+                onClick={() => navigate("/admin/customers/add/step-3")}
+                variant="outline"
+                disabled={isFetching}
+              >
+                ← Back
+              </Button>
+              <Button type="submit" variant="primary" disabled={isFetching}>
+                {isFetching ? "Saving..." : "Next →"}
+              </Button>
+            </div>
+          </form>
+        )}
+      </Card>
     </div>
   );
 }

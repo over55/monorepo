@@ -1,7 +1,16 @@
 // File Path: web/workery-frontend/src/pages/Admin/Customer/Add/Step5Page.jsx
 
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
+import {
+  Card,
+  Button,
+  Alert,
+  Loading,
+  Breadcrumb,
+  FormGroup,
+} from "../../../../components/UI";
+import { theme, globalStyles } from "../../../../constants/Theme";
 
 // Gender options
 const GENDER_OPTIONS = [
@@ -54,7 +63,7 @@ function AdminCustomerAddStep5Page() {
     customerData.additionalComment || "",
   );
   const [preferredLanguage, setPreferredLanguage] = useState(
-    customerData.preferredLanguage || "English",
+    customerData.preferredLanguage || "",
   );
   const [password, setPassword] = useState(customerData.password || "");
   const [passwordRepeated, setPasswordRepeated] = useState(
@@ -63,65 +72,70 @@ function AdminCustomerAddStep5Page() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    setFetching(false);
+    // In a real scenario, you might set isFetching to true here
+    // before an async call and false on completion/error.
+    // For this step, it's kept false.
   }, []);
 
   // Handle how hear about us change
   const handleHowHearChange = (value) => {
     setHowDidYouHearAboutUsID(value);
     setIsHowDidYouHearAboutUsOther(value === "5"); // "Other" option
+    if (errors.howDidYouHearAboutUsID) {
+      setErrors((prev) => ({ ...prev, howDidYouHearAboutUsID: null }));
+    }
   };
 
-  const onSubmitClick = (e) => {
-    console.log("onSubmitClick: Beginning...");
-    let newErrors = {};
-    let hasErrors = false;
+  const validateForm = () => {
+    const newErrors = {};
 
-    // Validation
-    if (howDidYouHearAboutUsID === "") {
-      newErrors["howDidYouHearAboutUsID"] = "missing value";
-      hasErrors = true;
-    } else {
-      if (
-        isHowDidYouHearAboutUsOther === true &&
-        howDidYouHearAboutUsOther === ""
-      ) {
-        newErrors["howDidYouHearAboutUsOther"] = "missing value";
-        hasErrors = true;
+    if (!howDidYouHearAboutUsID) {
+      newErrors.howDidYouHearAboutUsID = "This field is required";
+    } else if (
+      howDidYouHearAboutUsID === "5" &&
+      !howDidYouHearAboutUsOther.trim()
+    ) {
+      newErrors.howDidYouHearAboutUsOther =
+        "Please specify how you heard about us";
+    }
+
+    if (gender === 0) {
+      newErrors.gender = "Gender is required";
+    } else if (gender === 1 && !genderOther.trim()) {
+      newErrors.genderOther = "Please specify the gender";
+    }
+
+    if (!joinDate) {
+      newErrors.joinDate = "Join date is required";
+    }
+
+    if (!preferredLanguage) {
+      newErrors.preferredLanguage = "Preferred language is required";
+    }
+
+    if (password || passwordRepeated) {
+      if (password !== passwordRepeated) {
+        newErrors.password = "Passwords do not match";
+        newErrors.passwordRepeated = "Passwords do not match";
       }
     }
 
-    if (gender === undefined || gender === null || gender === 0) {
-      newErrors["gender"] = "missing value";
-      hasErrors = true;
-    }
+    return newErrors;
+  };
 
-    if (
-      preferredLanguage === undefined ||
-      preferredLanguage === null ||
-      preferredLanguage === ""
-    ) {
-      newErrors["preferredLanguage"] = "missing value";
-      hasErrors = true;
-    }
+  const onSubmitClick = (e) => {
+    e.preventDefault();
+    console.log("onSubmitClick: Beginning...");
 
-    if (password !== passwordRepeated) {
-      newErrors["password"] = "does not match";
-      newErrors["passwordRepeated"] = "does not match";
-      hasErrors = true;
-    }
-
-    if (joinDate === undefined || joinDate === null || joinDate === "") {
-      newErrors["joinDate"] = "missing value";
-      hasErrors = true;
-    }
-
-    if (hasErrors) {
-      setErrors(newErrors);
+    const formErrors = validateForm();
+    if (Object.keys(formErrors).length > 0) {
+      setErrors(formErrors);
       window.scrollTo(0, 0);
-      console.log("onSubmitClick: Ending with error.");
+      console.log("onSubmitClick: Ending with error.", formErrors);
       return;
     }
+
+    setErrors({});
 
     // Save data to sessionStorage
     const updatedCustomerData = {
@@ -146,325 +160,361 @@ function AdminCustomerAddStep5Page() {
     setCustomerData(updatedCustomerData);
 
     console.log("onSubmitClick: Ending with success.");
-
-    // Navigate to next step
     navigate("/admin/customers/add/step-6");
   };
 
+  const breadcrumbItems = [
+    { label: "Dashboard", path: "/admin/dashboard", icon: "🏠" },
+    { label: "Customers", path: "/admin/customers", icon: "👥" },
+    { label: "New", icon: "➕" },
+  ];
+
   return (
-    <div className="container">
-      <section className="section">
-        {/* Desktop Breadcrumbs */}
-        <nav
-          className="breadcrumb has-background-light is-hidden-touch p-4"
-          aria-label="breadcrumbs"
+    <div style={globalStyles.container}>
+      <Breadcrumb items={breadcrumbItems} />
+
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "20px",
+        }}
+      >
+        <h1 style={{ fontSize: "28px", fontWeight: "bold", margin: 0 }}>
+          ➕ New Customer
+        </h1>
+      </div>
+
+      {errors.message && (
+        <Alert
+          type="error"
+          onClose={() => setErrors((prev) => ({ ...prev, message: null }))}
         >
-          <ul>
-            <li>
-              <Link to="/admin/dashboard" aria-current="page">
-                🏠 Dashboard
-              </Link>
-            </li>
-            <li>
-              <Link to="/admin/customers" aria-current="page">
-                👥 Customers
-              </Link>
-            </li>
-            <li className="is-active">
-              <Link aria-current="page">➕ New</Link>
-            </li>
-          </ul>
-        </nav>
+          {errors.message}
+        </Alert>
+      )}
 
-        {/* Mobile Breadcrumbs */}
-        <nav
-          className="breadcrumb has-background-light is-hidden-desktop p-4"
-          aria-label="breadcrumbs"
+      {/* Progress Wizard */}
+      <Card style={{ marginBottom: "20px" }}>
+        <p style={{ ...globalStyles.label, marginBottom: "10px" }}>
+          Step 5 of 6: Metrics
+        </p>
+        <progress
+          className="progress is-success"
+          value="83"
+          max="100"
+          style={{ width: "100%" }}
         >
-          <ul>
-            <li>
-              <Link to="/admin/customers" aria-current="page">
-                ← Back to Customers
-              </Link>
-            </li>
-          </ul>
-        </nav>
+          83%
+        </progress>
+      </Card>
 
-        {/* Page Title */}
-        <h1 className="title is-2">👥 Customers</h1>
-        <h4 className="subtitle is-4">➕ New Customer</h4>
-        <hr />
+      <Card>
+        {isFetching ? (
+          <Loading message="Loading form..." />
+        ) : (
+          <form onSubmit={onSubmitClick}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+                gap: "20px",
+              }}
+            >
+              <FormGroup>
+                <label style={globalStyles.label}>Tags (Optional)</label>
+                <input
+                  type="text"
+                  placeholder="Enter tags separated by commas"
+                  value={tags.join(", ")}
+                  onChange={(e) =>
+                    setTags(e.target.value.split(",").map((tag) => tag.trim()))
+                  }
+                  style={globalStyles.input}
+                  disabled={isFetching}
+                />
+                <div style={globalStyles.helpText}>
+                  Pick the tags you would like to associate with this client.
+                </div>
+              </FormGroup>
 
-        {/* Progress Wizard */}
-        <nav className="box has-background-light">
-          <p className="subtitle is-5">Step 5 of 6</p>
-          <progress className="progress is-success" value="83" max="100">
-            83%
-          </progress>
-        </nav>
+              <FormGroup>
+                <label style={globalStyles.label}>
+                  How did you hear about us?{" "}
+                  <span style={{ color: "red" }}>*</span>
+                </label>
+                <select
+                  value={howDidYouHearAboutUsID}
+                  onChange={(e) => handleHowHearChange(e.target.value)}
+                  style={{
+                    ...globalStyles.input,
+                    borderColor: errors.howDidYouHearAboutUsID
+                      ? theme.colors.error
+                      : "#ddd",
+                  }}
+                  disabled={isFetching}
+                >
+                  {HOW_HEAR_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                {errors.howDidYouHearAboutUsID && (
+                  <div style={globalStyles.errorMessage}>
+                    {errors.howDidYouHearAboutUsID}
+                  </div>
+                )}
+              </FormGroup>
 
-        {/* Page Content */}
-        <nav className="box">
-          <p className="title is-4">📊 Metrics</p>
-
-          <p className="has-text-grey pb-4">
-            Please fill out all the required fields before submitting this form.
-          </p>
-
-          {isFetching ? (
-            <div>Submitting...</div>
-          ) : (
-            <>
-              {errors.message && (
-                <div className="notification is-danger">{errors.message}</div>
+              {isHowDidYouHearAboutUsOther && (
+                <FormGroup>
+                  <label style={globalStyles.label}>
+                    Please specify <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Please specify"
+                    value={howDidYouHearAboutUsOther}
+                    onChange={(e) =>
+                      setHowDidYouHearAboutUsOther(e.target.value)
+                    }
+                    style={{
+                      ...globalStyles.input,
+                      borderColor: errors.howDidYouHearAboutUsOther
+                        ? theme.colors.error
+                        : "#ddd",
+                    }}
+                    disabled={isFetching}
+                  />
+                  {errors.howDidYouHearAboutUsOther && (
+                    <div style={globalStyles.errorMessage}>
+                      {errors.howDidYouHearAboutUsOther}
+                    </div>
+                  )}
+                </FormGroup>
               )}
 
-              <div className="container">
-                <div className="field">
-                  <label className="label">Tags (Optional)</label>
-                  <div className="control">
-                    <input
-                      className="input"
-                      type="text"
-                      placeholder="Enter tags separated by commas"
-                      value={tags.join(", ")}
-                      onChange={(e) =>
-                        setTags(
-                          e.target.value.split(",").map((tag) => tag.trim()),
-                        )
-                      }
-                      style={{ maxWidth: "320px" }}
-                    />
-                  </div>
-                  <p className="help">
-                    Pick the tags you would like to associate with this client.
-                  </p>
-                </div>
+              <FormGroup>
+                <label style={globalStyles.label}>
+                  Gender <span style={{ color: "red" }}>*</span>
+                </label>
+                <select
+                  value={gender}
+                  onChange={(e) => setGender(parseInt(e.target.value))}
+                  style={{
+                    ...globalStyles.input,
+                    borderColor: errors.gender ? theme.colors.error : "#ddd",
+                  }}
+                  disabled={isFetching}
+                >
+                  {GENDER_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                {errors.gender && (
+                  <div style={globalStyles.errorMessage}>{errors.gender}</div>
+                )}
+              </FormGroup>
 
-                <div className="field">
-                  <label className="label">How did you hear about us? *</label>
-                  <div className="control">
-                    <div className="select" style={{ maxWidth: "520px" }}>
-                      <select
-                        value={howDidYouHearAboutUsID}
-                        onChange={(e) => handleHowHearChange(e.target.value)}
-                      >
-                        {HOW_HEAR_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
+              {gender === 1 && (
+                <FormGroup>
+                  <label style={globalStyles.label}>
+                    Gender (Other) <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Please specify gender"
+                    value={genderOther}
+                    onChange={(e) => setGenderOther(e.target.value)}
+                    style={{
+                      ...globalStyles.input,
+                      borderColor: errors.genderOther
+                        ? theme.colors.error
+                        : "#ddd",
+                    }}
+                    disabled={isFetching}
+                  />
+                  {errors.genderOther && (
+                    <div style={globalStyles.errorMessage}>
+                      {errors.genderOther}
                     </div>
-                  </div>
-                  {errors.howDidYouHearAboutUsID && (
-                    <p className="help is-danger">
-                      {errors.howDidYouHearAboutUsID}
-                    </p>
                   )}
-                </div>
+                </FormGroup>
+              )}
 
-                {isHowDidYouHearAboutUsOther && (
-                  <div className="field">
-                    <label className="label">
-                      How did you hear about us? (Other) *
-                    </label>
-                    <div className="control">
-                      <input
-                        className="input"
-                        type="text"
-                        placeholder="Text input"
-                        value={howDidYouHearAboutUsOther}
-                        onChange={(e) =>
-                          setHowDidYouHearAboutUsOther(e.target.value)
-                        }
-                        style={{ maxWidth: "100%" }}
-                      />
-                    </div>
-                    {errors.howDidYouHearAboutUsOther && (
-                      <p className="help is-danger">
-                        {errors.howDidYouHearAboutUsOther}
-                      </p>
-                    )}
+              <FormGroup>
+                <label style={globalStyles.label}>Birth Date (Optional)</label>
+                <input
+                  type="date"
+                  value={birthDate}
+                  onChange={(e) => setBirthDate(e.target.value)}
+                  style={globalStyles.input}
+                  disabled={isFetching}
+                />
+              </FormGroup>
+
+              <FormGroup>
+                <label style={globalStyles.label}>
+                  Join Date <span style={{ color: "red" }}>*</span>
+                </label>
+                <input
+                  type="date"
+                  value={joinDate}
+                  onChange={(e) => setJoinDate(e.target.value)}
+                  style={{
+                    ...globalStyles.input,
+                    borderColor: errors.joinDate ? theme.colors.error : "#ddd",
+                  }}
+                  disabled={isFetching}
+                />
+                <div style={globalStyles.helpText}>
+                  This indicates when the user joined the workery.
+                </div>
+                {errors.joinDate && (
+                  <div style={globalStyles.errorMessage}>{errors.joinDate}</div>
+                )}
+              </FormGroup>
+
+              <FormGroup>
+                <label style={globalStyles.label}>
+                  Additional Comment (Optional)
+                </label>
+                <textarea
+                  placeholder="Max 638 characters"
+                  value={additionalComment}
+                  onChange={(e) => setAdditionalComment(e.target.value)}
+                  rows={4}
+                  style={globalStyles.input}
+                  disabled={isFetching}
+                />
+              </FormGroup>
+
+              <FormGroup>
+                <label style={globalStyles.label}>
+                  Preferred Language <span style={{ color: "red" }}>*</span>
+                </label>
+                <div style={{ marginTop: "10px" }}>
+                  <label
+                    style={{
+                      marginRight: "20px",
+                      cursor: "pointer",
+                      fontWeight: "normal",
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="preferredLanguage"
+                      value="English"
+                      checked={preferredLanguage === "English"}
+                      onChange={(e) => setPreferredLanguage(e.target.value)}
+                      disabled={isFetching}
+                    />
+                    &nbsp;English
+                  </label>
+                  <label style={{ cursor: "pointer", fontWeight: "normal" }}>
+                    <input
+                      type="radio"
+                      name="preferredLanguage"
+                      value="French"
+                      checked={preferredLanguage === "French"}
+                      onChange={(e) => setPreferredLanguage(e.target.value)}
+                      disabled={isFetching}
+                    />
+                    &nbsp;French
+                  </label>
+                </div>
+                {errors.preferredLanguage && (
+                  <div style={globalStyles.errorMessage}>
+                    {errors.preferredLanguage}
                   </div>
                 )}
+              </FormGroup>
 
-                <div className="field">
-                  <label className="label">Gender *</label>
-                  <div className="control">
-                    <div className="select">
-                      <select
-                        value={gender}
-                        onChange={(e) => setGender(parseInt(e.target.value))}
-                      >
-                        {GENDER_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                  {errors.gender && (
-                    <p className="help is-danger">{errors.gender}</p>
-                  )}
-                </div>
+              <h2
+                style={{
+                  ...globalStyles.label,
+                  fontSize: "1.2rem",
+                  gridColumn: "1 / -1",
+                  marginTop: "20px",
+                  borderTop: "1px solid #eee",
+                  paddingTop: "20px",
+                }}
+              >
+                🔑 Login Credentials
+              </h2>
 
-                {gender === 1 && (
-                  <div className="field">
-                    <label className="label">Gender (Other) *</label>
-                    <div className="control">
-                      <input
-                        className="input"
-                        type="text"
-                        placeholder="Text input"
-                        value={genderOther}
-                        onChange={(e) => setGenderOther(e.target.value)}
-                        style={{ maxWidth: "380px" }}
-                      />
-                    </div>
-                    {errors.genderOther && (
-                      <p className="help is-danger">{errors.genderOther}</p>
-                    )}
+              <FormGroup>
+                <label style={globalStyles.label}>Password (Optional)</label>
+                <input
+                  type="password"
+                  placeholder="Leave blank if not setting a password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  style={{
+                    ...globalStyles.input,
+                    borderColor: errors.password ? theme.colors.error : "#ddd",
+                  }}
+                  disabled={isFetching}
+                />
+                {errors.password && (
+                  <div style={globalStyles.errorMessage}>{errors.password}</div>
+                )}
+              </FormGroup>
+
+              <FormGroup>
+                <label style={globalStyles.label}>
+                  Password Repeated (Optional)
+                </label>
+                <input
+                  type="password"
+                  placeholder="Repeat password here"
+                  value={passwordRepeated}
+                  onChange={(e) => setPasswordRepeated(e.target.value)}
+                  style={{
+                    ...globalStyles.input,
+                    borderColor: errors.passwordRepeated
+                      ? theme.colors.error
+                      : "#ddd",
+                  }}
+                  disabled={isFetching}
+                />
+                {errors.passwordRepeated && (
+                  <div style={globalStyles.errorMessage}>
+                    {errors.passwordRepeated}
                   </div>
                 )}
+              </FormGroup>
+            </div>
 
-                <div className="field">
-                  <label className="label">Birth Date (Optional)</label>
-                  <div className="control">
-                    <input
-                      className="input"
-                      type="date"
-                      value={birthDate}
-                      onChange={(e) => setBirthDate(e.target.value)}
-                      style={{ maxWidth: "180px" }}
-                    />
-                  </div>
-                </div>
-
-                <div className="field">
-                  <label className="label">Join Date *</label>
-                  <div className="control">
-                    <input
-                      className="input"
-                      type="date"
-                      value={joinDate}
-                      onChange={(e) => setJoinDate(e.target.value)}
-                      style={{ maxWidth: "180px" }}
-                    />
-                  </div>
-                  <p className="help">
-                    This indicates when the user joined the workery
-                  </p>
-                  {errors.joinDate && (
-                    <p className="help is-danger">{errors.joinDate}</p>
-                  )}
-                </div>
-
-                <div className="field">
-                  <label className="label">Additional Comment (Optional)</label>
-                  <div className="control">
-                    <textarea
-                      className="textarea"
-                      placeholder="Text input"
-                      value={additionalComment}
-                      onChange={(e) => setAdditionalComment(e.target.value)}
-                      rows={4}
-                      style={{ maxWidth: "280px" }}
-                    />
-                  </div>
-                  <p className="help">Max 638 characters</p>
-                </div>
-
-                <div className="field">
-                  <label className="label">Preferred Language *</label>
-                  <div className="control">
-                    <label className="radio">
-                      <input
-                        type="radio"
-                        name="preferredLanguage"
-                        value="English"
-                        checked={preferredLanguage === "English"}
-                        onChange={(e) => setPreferredLanguage(e.target.value)}
-                      />
-                      &nbsp;English
-                    </label>
-                    <br />
-                    <label className="radio">
-                      <input
-                        type="radio"
-                        name="preferredLanguage"
-                        value="French"
-                        checked={preferredLanguage === "French"}
-                        onChange={(e) => setPreferredLanguage(e.target.value)}
-                      />
-                      &nbsp;French
-                    </label>
-                  </div>
-                  {errors.preferredLanguage && (
-                    <p className="help is-danger">{errors.preferredLanguage}</p>
-                  )}
-                </div>
-
-                <p className="title is-6 mt-2">🔑 Login Credentials</p>
-
-                <div className="field">
-                  <label className="label">Password (Optional)</label>
-                  <div className="control">
-                    <input
-                      className="input"
-                      type="password"
-                      placeholder="Password input"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      style={{ maxWidth: "380px" }}
-                    />
-                  </div>
-                  {errors.password && (
-                    <p className="help is-danger">{errors.password}</p>
-                  )}
-                </div>
-
-                <div className="field">
-                  <label className="label">Password Repeated (Optional)</label>
-                  <div className="control">
-                    <input
-                      className="input"
-                      type="password"
-                      placeholder="Password input again"
-                      value={passwordRepeated}
-                      onChange={(e) => setPasswordRepeated(e.target.value)}
-                      style={{ maxWidth: "380px" }}
-                    />
-                  </div>
-                  {errors.passwordRepeated && (
-                    <p className="help is-danger">{errors.passwordRepeated}</p>
-                  )}
-                </div>
-
-                <div className="columns pt-5">
-                  <div className="column is-half">
-                    <Link
-                      className="button is-medium is-fullwidth-mobile"
-                      to="/admin/customers/add/step-4"
-                    >
-                      ← Back
-                    </Link>
-                  </div>
-                  <div className="column is-half has-text-right">
-                    <button
-                      className="button is-medium is-primary is-fullwidth-mobile"
-                      onClick={onSubmitClick}
-                    >
-                      Next →
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-        </nav>
-      </section>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginTop: "30px",
+                paddingTop: "20px",
+                borderTop: "1px solid #eee",
+              }}
+            >
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => navigate("/admin/customers/add/step-4")}
+                disabled={isFetching}
+              >
+                ← Back
+              </Button>
+              <Button type="submit" variant="primary" disabled={isFetching}>
+                {isFetching ? "Saving..." : "Next →"}
+              </Button>
+            </div>
+          </form>
+        )}
+      </Card>
     </div>
   );
 }

@@ -2,6 +2,15 @@
 
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
+import { theme, globalStyles } from "../../../../constants/Theme";
+import {
+  Card,
+  Button,
+  Alert,
+  Loading,
+  Breadcrumb,
+  FormGroup,
+} from "../../../../components/UI";
 
 // Customer type constants
 const COMMERCIAL_CUSTOMER_TYPE_OF_ID = 3;
@@ -27,82 +36,80 @@ function AdminCustomerAddStep3Page() {
   const navigate = useNavigate();
 
   // Get existing customer data from sessionStorage
-  const [customerData, setCustomerData] = useState(() => {
+  const [customerData] = useState(() => {
     const saved = sessionStorage.getItem("workery_customer_add_data");
     return saved ? JSON.parse(saved) : {};
   });
 
+  // Form state
+  const [formData, setFormData] = useState({
+    organizationName: customerData.organizationName || "",
+    organizationType: customerData.organizationType || 0,
+    firstName: customerData.firstName || "",
+    lastName: customerData.lastName || "",
+    email: customerData.email || "",
+    phone: customerData.phone || "",
+    phoneType: customerData.phoneType || 0,
+    phoneExtension: customerData.phoneExtension || "",
+    otherPhone: customerData.otherPhone || "",
+    otherPhoneType: customerData.otherPhoneType || 0,
+    otherPhoneExtension: customerData.otherPhoneExtension || "",
+    isOkToText: customerData.isOkToText || false,
+    isOkToEmail: customerData.isOkToEmail || false,
+  });
+
   // Component state
-  const [errors, setErrors] = useState({});
-  const [isFetching, setFetching] = useState(false);
-  const [organizationName, setOrganizationName] = useState(
-    customerData.organizationName || "",
-  );
-  const [organizationType, setOrganizationType] = useState(
-    customerData.organizationType || 0,
-  );
-  const [email, setEmail] = useState(customerData.email || "");
-  const [phone, setPhone] = useState(customerData.phone || "");
-  const [phoneExtension, setPhoneExtension] = useState(
-    customerData.phoneExtension || "",
-  );
-  const [phoneType, setPhoneType] = useState(customerData.phoneType || 0);
-  const [firstName, setFirstName] = useState(customerData.firstName || "");
-  const [lastName, setLastName] = useState(customerData.lastName || "");
-  const [otherPhone, setOtherPhone] = useState(customerData.otherPhone || "");
-  const [otherPhoneType, setOtherPhoneType] = useState(
-    customerData.otherPhoneType || 0,
-  );
-  const [otherPhoneExtension, setOtherPhoneExtension] = useState(
-    customerData.otherPhoneExtension || "",
-  );
-  const [isOkToText, setIsOkToText] = useState(
-    customerData.isOkToText || false,
-  );
-  const [isOkToEmail, setIsOkToEmail] = useState(
-    customerData.isOkToEmail || false,
-  );
+  const [formErrors, setFormErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    setFetching(false);
+    setLoading(false);
   }, []);
 
-  const onSubmitClick = (e) => {
-    console.log("onSubmitClick: Beginning...");
+  const handleInputChange = (field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+    if (formErrors[field]) {
+      setFormErrors((prev) => ({
+        ...prev,
+        [field]: null,
+      }));
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log("handleSubmit: Beginning...");
     let newErrors = {};
-    let hasErrors = false;
 
     // Validation
     if (customerData.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID) {
-      if (organizationName === "") {
-        newErrors["organizationName"] = "missing value";
-        hasErrors = true;
+      if (!formData.organizationName) {
+        newErrors.organizationName = "Organization name is required";
       }
-      if (organizationType === 0) {
-        newErrors["organizationType"] = "missing value";
-        hasErrors = true;
+      if (formData.organizationType === 0) {
+        newErrors.organizationType = "Organization type is required";
       }
     }
-    if (firstName === "") {
-      newErrors["firstName"] = "missing value";
-      hasErrors = true;
+    if (!formData.firstName) {
+      newErrors.firstName = "First name is required";
     }
-    if (lastName === "") {
-      newErrors["lastName"] = "missing value";
-      hasErrors = true;
+    if (!formData.lastName) {
+      newErrors.lastName = "Last name is required";
     }
-    if (phone === "") {
-      newErrors["phone"] = "missing value";
-      hasErrors = true;
+    if (!formData.phone) {
+      newErrors.phone = "Phone number is required";
     }
-    if (phoneType === 0) {
-      newErrors["phoneType"] = "missing value";
-      hasErrors = true;
+    if (formData.phoneType === 0) {
+      newErrors.phoneType = "Phone type is required";
     }
 
-    if (hasErrors) {
-      setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      setFormErrors(newErrors);
       window.scrollTo(0, 0);
       return;
     }
@@ -110,355 +117,402 @@ function AdminCustomerAddStep3Page() {
     // Save data to sessionStorage
     const updatedCustomerData = {
       ...customerData,
-      organizationName,
-      organizationType,
-      firstName,
-      lastName,
-      email,
-      phone,
-      phoneType,
-      phoneExtension,
-      otherPhone,
-      otherPhoneType,
-      otherPhoneExtension,
-      isOkToText,
-      isOkToEmail,
+      ...formData,
     };
 
     sessionStorage.setItem(
       "workery_customer_add_data",
       JSON.stringify(updatedCustomerData),
     );
-    setCustomerData(updatedCustomerData);
 
     // Navigate to next step
     navigate("/admin/customers/add/step-4");
   };
 
+  const breadcrumbItems = [
+    { label: "Dashboard", path: "/admin/dashboard", icon: "🏠" },
+    { label: "Customers", path: "/admin/customers", icon: "👥" },
+    { label: "New", icon: "➕" },
+  ];
+
   return (
-    <div className="container">
-      <section className="section py-6">
-        {/* Desktop Breadcrumbs */}
-        <nav
-          className="breadcrumb has-background-light is-hidden-touch p-4 mb-5"
-          aria-label="breadcrumbs"
-        >
-          <ul>
-            <li>
-              <Link to="/admin/dashboard" aria-current="page">
-                🏠 Dashboard
-              </Link>
-            </li>
-            <li>
-              <Link to="/admin/customers" aria-current="page">
-                👥 Customers
-              </Link>
-            </li>
-            <li className="is-active">
-              <Link aria-current="page">➕ New</Link>
-            </li>
-          </ul>
-        </nav>
+    <div style={globalStyles.container}>
+      <Breadcrumb items={breadcrumbItems} />
 
-        {/* Mobile Breadcrumbs */}
-        <nav
-          className="breadcrumb has-background-light is-hidden-desktop p-4 mb-5"
-          aria-label="breadcrumbs"
-        >
-          <ul>
-            <li>
-              <Link to="/admin/customers" aria-current="page">
-                ← Back to Customers
-              </Link>
-            </li>
-          </ul>
-        </nav>
+      <h1 style={{ fontSize: "28px", fontWeight: "bold", margin: "20px 0" }}>
+        👥 New Customer
+      </h1>
 
-        {/* Page Title */}
-        <h1 className="title is-2 mb-4">👥 Customers</h1>
-        <h4 className="subtitle is-4 mb-5">➕ New Customer</h4>
-        <hr />
+      {/* Progress Wizard */}
+      <nav className="box has-background-light mb-5">
+        <p className="subtitle is-5">Step 3 of 6</p>
+        <progress className="progress is-success" value="50" max="100">
+          50%
+        </progress>
+      </nav>
 
-        {/* Progress Wizard */}
-        <nav className="box has-background-light mb-5">
-          <p className="subtitle is-5">Step 3 of 6</p>
-          <progress className="progress is-success" value="50" max="100">
-            50%
-          </progress>
-        </nav>
-
-        {/* Page Content */}
-        <nav className="box p-6">
-          <p className="title is-4 mb-5">🆔 Contact</p>
-
-          <p className="has-text-grey pb-4 mb-5">
-            Please fill out all the required fields before submitting this form.
+      <Card>
+        <form onSubmit={handleSubmit}>
+          <h2
+            style={{
+              fontSize: "22px",
+              fontWeight: "bold",
+              marginBottom: "10px",
+            }}
+          >
+            🆔 Contact Information
+          </h2>
+          <p style={{ color: "#888", marginBottom: "30px" }}>
+            Please fill out all the required fields before continuing.
           </p>
 
-          {isFetching ? (
-            <div>Submitting...</div>
+          {loading ? (
+            <Loading message="Loading..." />
           ) : (
             <>
-              {errors.message && (
-                <div className="notification is-danger">{errors.message}</div>
+              {error && (
+                <Alert type="error" onClose={() => setError(null)}>
+                  {error}
+                </Alert>
               )}
 
-              <div className="container">
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+                  gap: "20px",
+                }}
+              >
                 {/* Organization fields for commercial customers */}
                 {customerData.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID && (
                   <>
-                    <div className="field mb-5">
-                      <label className="label">Organization Name *</label>
-                      <div className="control">
-                        <input
-                          className="input"
-                          type="text"
-                          placeholder="Text input"
-                          value={organizationName}
-                          onChange={(e) => setOrganizationName(e.target.value)}
-                          style={{ maxWidth: "380px" }}
-                        />
-                      </div>
-                      {errors.organizationName && (
-                        <p className="help is-danger">
-                          {errors.organizationName}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="field mb-5">
-                      <label className="label">Organization Type *</label>
-                      <div className="control">
-                        <div className="select">
-                          <select
-                            value={organizationType}
-                            onChange={(e) =>
-                              setOrganizationType(parseInt(e.target.value))
-                            }
-                          >
-                            {CLIENT_ORGANIZATION_TYPE_OPTIONS.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
+                    <FormGroup>
+                      <label style={globalStyles.label}>
+                        Organization Name{" "}
+                        <span style={{ color: "red" }}>*</span>
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Enter organization name"
+                        value={formData.organizationName}
+                        onChange={(e) =>
+                          handleInputChange("organizationName", e.target.value)
+                        }
+                        style={{
+                          ...globalStyles.input,
+                          borderColor: formErrors.organizationName
+                            ? theme.colors.error
+                            : "#ddd",
+                        }}
+                      />
+                      {formErrors.organizationName && (
+                        <div style={globalStyles.errorMessage}>
+                          {formErrors.organizationName}
                         </div>
-                      </div>
-                      {errors.organizationType && (
-                        <p className="help is-danger">
-                          {errors.organizationType}
-                        </p>
                       )}
-                    </div>
+                    </FormGroup>
+
+                    <FormGroup>
+                      <label style={globalStyles.label}>
+                        Organization Type{" "}
+                        <span style={{ color: "red" }}>*</span>
+                      </label>
+                      <select
+                        value={formData.organizationType}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "organizationType",
+                            parseInt(e.target.value),
+                          )
+                        }
+                        style={{
+                          ...globalStyles.input,
+                          borderColor: formErrors.organizationType
+                            ? theme.colors.error
+                            : "#ddd",
+                        }}
+                      >
+                        {CLIENT_ORGANIZATION_TYPE_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      {formErrors.organizationType && (
+                        <div style={globalStyles.errorMessage}>
+                          {formErrors.organizationType}
+                        </div>
+                      )}
+                    </FormGroup>
                   </>
                 )}
 
-                <div className="field mb-5">
-                  <label className="label">First Name *</label>
-                  <div className="control">
-                    <input
-                      className="input"
-                      type="text"
-                      placeholder="Text input"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      style={{ maxWidth: "380px" }}
-                    />
-                  </div>
-                  {errors.firstName && (
-                    <p className="help is-danger">{errors.firstName}</p>
+                <FormGroup>
+                  <label style={globalStyles.label}>
+                    First Name <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter first name"
+                    value={formData.firstName}
+                    onChange={(e) =>
+                      handleInputChange("firstName", e.target.value)
+                    }
+                    style={{
+                      ...globalStyles.input,
+                      borderColor: formErrors.firstName
+                        ? theme.colors.error
+                        : "#ddd",
+                    }}
+                  />
+                  {formErrors.firstName && (
+                    <div style={globalStyles.errorMessage}>
+                      {formErrors.firstName}
+                    </div>
                   )}
-                </div>
+                </FormGroup>
 
-                <div className="field mb-5">
-                  <label className="label">Last Name *</label>
-                  <div className="control">
-                    <input
-                      className="input"
-                      type="text"
-                      placeholder="Text input"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      style={{ maxWidth: "380px" }}
-                    />
-                  </div>
-                  {errors.lastName && (
-                    <p className="help is-danger">{errors.lastName}</p>
+                <FormGroup>
+                  <label style={globalStyles.label}>
+                    Last Name <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter last name"
+                    value={formData.lastName}
+                    onChange={(e) =>
+                      handleInputChange("lastName", e.target.value)
+                    }
+                    style={{
+                      ...globalStyles.input,
+                      borderColor: formErrors.lastName
+                        ? theme.colors.error
+                        : "#ddd",
+                    }}
+                  />
+                  {formErrors.lastName && (
+                    <div style={globalStyles.errorMessage}>
+                      {formErrors.lastName}
+                    </div>
                   )}
-                </div>
+                </FormGroup>
 
-                <div className="field mb-5">
-                  <label className="label">Email (Optional)</label>
-                  <div className="control">
-                    <input
-                      className="input"
-                      type="email"
-                      placeholder="Text input"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      style={{ maxWidth: "380px" }}
-                    />
-                  </div>
+                <FormGroup>
+                  <label style={globalStyles.label}>Email (Optional)</label>
+                  <input
+                    type="email"
+                    placeholder="Enter email address"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange("email", e.target.value)}
+                    style={{
+                      ...globalStyles.input,
+                      borderColor: formErrors.email
+                        ? theme.colors.error
+                        : "#ddd",
+                    }}
+                  />
                   <p className="help">
-                    Optional field if not set then workery will generate a
-                    temporary email.
+                    If not set, a temporary email will be generated.
                   </p>
-                  {errors.email && (
-                    <p className="help is-danger">{errors.email}</p>
+                  {formErrors.email && (
+                    <div style={globalStyles.errorMessage}>
+                      {formErrors.email}
+                    </div>
                   )}
-                </div>
+                </FormGroup>
 
-                <div className="field mb-5">
-                  <label className="checkbox">
+                <FormGroup>
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      cursor: "pointer",
+                      marginTop: "25px",
+                    }}
+                  >
                     <input
                       type="checkbox"
-                      checked={isOkToEmail}
-                      onChange={(e) => setIsOkToEmail(e.target.checked)}
+                      checked={formData.isOkToEmail}
+                      onChange={(e) =>
+                        handleInputChange("isOkToEmail", e.target.checked)
+                      }
+                      style={{ marginRight: "10px" }}
                     />
-                    &nbsp;I agree to receive electronic email
+                    I agree to receive electronic email
                   </label>
-                </div>
+                </FormGroup>
 
-                <div className="field mb-5">
-                  <label className="label">Phone *</label>
-                  <div className="control">
+                <FormGroup>
+                  <label style={globalStyles.label}>
+                    Phone <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter phone number"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange("phone", e.target.value)}
+                    style={{
+                      ...globalStyles.input,
+                      borderColor: formErrors.phone
+                        ? theme.colors.error
+                        : "#ddd",
+                    }}
+                  />
+                  {formErrors.phone && (
+                    <div style={globalStyles.errorMessage}>
+                      {formErrors.phone}
+                    </div>
+                  )}
+                </FormGroup>
+
+                <FormGroup>
+                  <label style={globalStyles.label}>
+                    Phone Type <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <select
+                    value={formData.phoneType}
+                    onChange={(e) =>
+                      handleInputChange("phoneType", parseInt(e.target.value))
+                    }
+                    style={{
+                      ...globalStyles.input,
+                      borderColor: formErrors.phoneType
+                        ? theme.colors.error
+                        : "#ddd",
+                    }}
+                  >
+                    {CLIENT_PHONE_TYPE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  {formErrors.phoneType && (
+                    <div style={globalStyles.errorMessage}>
+                      {formErrors.phoneType}
+                    </div>
+                  )}
+                </FormGroup>
+
+                {formData.phoneType === CLIENT_PHONE_TYPE_WORK && (
+                  <FormGroup>
+                    <label style={globalStyles.label}>
+                      Phone Extension (Optional)
+                    </label>
                     <input
-                      className="input"
                       type="text"
-                      placeholder="Text input"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      style={{ maxWidth: "200px" }}
+                      placeholder="e.g., 123"
+                      value={formData.phoneExtension}
+                      onChange={(e) =>
+                        handleInputChange("phoneExtension", e.target.value)
+                      }
+                      style={globalStyles.input}
                     />
-                  </div>
-                  {errors.phone && (
-                    <p className="help is-danger">{errors.phone}</p>
-                  )}
-                </div>
-
-                <div className="field mb-5">
-                  <label className="label">Phone Type *</label>
-                  <div className="control">
-                    <div className="select">
-                      <select
-                        value={phoneType}
-                        onChange={(e) => setPhoneType(parseInt(e.target.value))}
-                      >
-                        {CLIENT_PHONE_TYPE_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                  {errors.phoneType && (
-                    <p className="help is-danger">{errors.phoneType}</p>
-                  )}
-                </div>
-
-                {phoneType === CLIENT_PHONE_TYPE_WORK && (
-                  <div className="field mb-5">
-                    <label className="label">Phone Extension (Optional)</label>
-                    <div className="control">
-                      <input
-                        className="input"
-                        type="text"
-                        placeholder="Text input"
-                        value={phoneExtension}
-                        onChange={(e) => setPhoneExtension(e.target.value)}
-                        style={{ maxWidth: "100px" }}
-                      />
-                    </div>
-                  </div>
+                  </FormGroup>
                 )}
 
-                <div className="field mb-5">
-                  <label className="checkbox">
+                <FormGroup>
+                  <label
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      cursor: "pointer",
+                      marginTop: "25px",
+                    }}
+                  >
                     <input
                       type="checkbox"
-                      checked={isOkToText}
-                      onChange={(e) => setIsOkToText(e.target.checked)}
+                      checked={formData.isOkToText}
+                      onChange={(e) =>
+                        handleInputChange("isOkToText", e.target.checked)
+                      }
+                      style={{ marginRight: "10px" }}
                     />
-                    &nbsp;I agree to receive texts to my phone
+                    I agree to receive texts to my phone
                   </label>
-                </div>
+                </FormGroup>
 
-                <div className="field mb-5">
-                  <label className="label">Other Phone (Optional)</label>
-                  <div className="control">
-                    <input
-                      className="input"
-                      type="text"
-                      placeholder="Text input"
-                      value={otherPhone}
-                      onChange={(e) => setOtherPhone(e.target.value)}
-                      style={{ maxWidth: "200px" }}
-                    />
-                  </div>
-                </div>
+                <FormGroup>
+                  <label style={globalStyles.label}>
+                    Other Phone (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Enter other phone number"
+                    value={formData.otherPhone}
+                    onChange={(e) =>
+                      handleInputChange("otherPhone", e.target.value)
+                    }
+                    style={globalStyles.input}
+                  />
+                </FormGroup>
 
-                <div className="field mb-5">
-                  <label className="label">Other Phone Type (Optional)</label>
-                  <div className="control">
-                    <div className="select">
-                      <select
-                        value={otherPhoneType}
-                        onChange={(e) =>
-                          setOtherPhoneType(parseInt(e.target.value))
-                        }
-                      >
-                        {CLIENT_PHONE_TYPE_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
+                <FormGroup>
+                  <label style={globalStyles.label}>
+                    Other Phone Type (Optional)
+                  </label>
+                  <select
+                    value={formData.otherPhoneType}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "otherPhoneType",
+                        parseInt(e.target.value),
+                      )
+                    }
+                    style={globalStyles.input}
+                  >
+                    {CLIENT_PHONE_TYPE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </FormGroup>
 
-                {otherPhoneType === CLIENT_PHONE_TYPE_WORK && (
-                  <div className="field mb-5">
-                    <label className="label">
+                {formData.otherPhoneType === CLIENT_PHONE_TYPE_WORK && (
+                  <FormGroup>
+                    <label style={globalStyles.label}>
                       Other Phone Extension (Optional)
                     </label>
-                    <div className="control">
-                      <input
-                        className="input"
-                        type="text"
-                        placeholder="Text input"
-                        value={otherPhoneExtension}
-                        onChange={(e) => setOtherPhoneExtension(e.target.value)}
-                        style={{ maxWidth: "100px" }}
-                      />
-                    </div>
-                  </div>
+                    <input
+                      type="text"
+                      placeholder="e.g., 456"
+                      value={formData.otherPhoneExtension}
+                      onChange={(e) =>
+                        handleInputChange("otherPhoneExtension", e.target.value)
+                      }
+                      style={globalStyles.input}
+                    />
+                  </FormGroup>
                 )}
+              </div>
 
-                <div className="columns pt-5">
-                  <div className="column is-half">
-                    <Link
-                      className="button is-medium is-fullwidth-mobile"
-                      to="/admin/customers/add/step-2"
-                    >
-                      ← Back
-                    </Link>
-                  </div>
-                  <div className="column is-half has-text-right">
-                    <button
-                      className="button is-medium is-primary is-fullwidth-mobile"
-                      onClick={onSubmitClick}
-                    >
-                      Next →
-                    </button>
-                  </div>
-                </div>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  marginTop: "30px",
+                  paddingTop: "20px",
+                  borderTop: "1px solid #eee",
+                }}
+              >
+                <Button
+                  type="button"
+                  onClick={() => navigate("/admin/customers/add/step-2")}
+                  variant="outline"
+                  disabled={loading}
+                >
+                  ← Back
+                </Button>
+                <Button type="submit" variant="primary" disabled={loading}>
+                  {loading ? "Saving..." : "Next →"}
+                </Button>
               </div>
             </>
           )}
-        </nav>
-      </section>
+        </form>
+      </Card>
     </div>
   );
 }
