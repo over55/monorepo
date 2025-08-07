@@ -1,7 +1,8 @@
-// File Path: src/AppRouter.jsx
+// File Path: src/AppRouter.jsx - UPDATED VERSION
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
 import { ServiceProvider } from "./services/Services";
+import Layout from "./components/Layout/Layout";
 
 // Front-facing pages
 import IndexPage from "./pages/Anonymous/Index/Page";
@@ -66,11 +67,11 @@ function AppRouter() {
       <Router>
         <div style={styles.app}>
           <Routes>
-            {/* Front-facing pages */}
+            {/* Front-facing pages (NO LAYOUT) */}
             <Route path="/" element={<IndexPage />} />
             <Route path="/login" element={<LoginPage />} />
 
-            {/* 2FA pages */}
+            {/* 2FA pages (NO LAYOUT) */}
             <Route path="/login/2fa/step-1" element={<TwoFAStep1Page />} />
             <Route path="/login/2fa/step-2" element={<TwoFAStep2Page />} />
             <Route path="/login/2fa/step-3" element={<TwoFAStep3Page />} />
@@ -84,103 +85,232 @@ function AppRouter() {
               element={<TwoFABackupCodeRecoveryPage />}
             />
 
-            {/* Root/Executive routes */}
+            {/* Root/Executive routes (NO LAYOUT) */}
             <Route path="/root/dashboard" element={<RootDashboardPage />} />
-            <Route
-              path="/root/tenants"
-              element={
-                <RootTenantListPage
-                  title="Tenants List"
-                  description="List of all tenants/organizations in the system"
-                />
-              }
-            />
+            <Route path="/root/tenants" element={<RootTenantListPage />} />
             <Route
               path="/root/tenant/:tid"
-              element={
-                <RootTenantDetailPage
-                  title="Tenant Details"
-                  description="Detailed view of a specific tenant"
-                />
-              }
+              element={<RootTenantDetailPage />}
             />
             <Route
               path="/root/tenant/:tid/edit"
-              element={
-                <RootTenantUpdatePage
-                  title="Edit Tenant"
-                  description="Edit tenant information"
-                />
-              }
+              element={<RootTenantUpdatePage />}
             />
             <Route
               path="/root/tenant/:tid/start"
               element={<ToTenantRedirector />}
             />
 
-            {/* Admin routes (Management/Frontline) */}
+            {/* Admin routes (WITH LAYOUT) */}
             <Route
               path="/admin/dashboard"
               element={
-                <AdminDashboardPage
-                  title="Admin Dashboard"
-                  description="Dashboard for management and frontline staff"
-                />
+                <Layout>
+                  <AdminDashboardPage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/tasks"
+              element={
+                <Layout>
+                  <PlaceholderPage
+                    title="Tasks"
+                    description="Task management system"
+                  />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/clients"
+              element={
+                <Layout>
+                  <PlaceholderPage
+                    title="Clients"
+                    description="Client management system"
+                  />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/associates"
+              element={
+                <Layout>
+                  <PlaceholderPage
+                    title="Associates"
+                    description="Associate management system"
+                  />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/orders"
+              element={
+                <Layout>
+                  <PlaceholderPage
+                    title="Work Orders"
+                    description="Work order management system"
+                  />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/skill-sets"
+              element={
+                <Layout>
+                  <PlaceholderPage
+                    title="Skill Sets"
+                    description="Skill set management system"
+                  />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/incidents"
+              element={
+                <Layout>
+                  <PlaceholderPage
+                    title="Incidents"
+                    description="Incident management system"
+                  />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/job-history"
+              element={
+                <Layout>
+                  <PlaceholderPage
+                    title="Job History"
+                    description="Job history tracking system"
+                  />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/all-comments"
+              element={
+                <Layout>
+                  <PlaceholderPage
+                    title="Comments"
+                    description="Comment management system"
+                  />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/financials"
+              element={
+                <Layout>
+                  <PlaceholderPage
+                    title="Financials"
+                    description="Financial management system"
+                  />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/reports"
+              element={
+                <Layout>
+                  <PlaceholderPage
+                    title="Reports"
+                    description="Reporting system"
+                  />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/staff"
+              element={
+                <Layout>
+                  <PlaceholderPage
+                    title="Staff"
+                    description="Staff management system"
+                  />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/settings"
+              element={
+                <Layout>
+                  <PlaceholderPage
+                    title="Settings"
+                    description="System settings"
+                  />
+                </Layout>
               }
             />
 
-            {/* Associate routes */}
+            {/* Associate routes (WITH LAYOUT) */}
             <Route
               path="/a/dashboard"
               element={
-                <PlaceholderPage
-                  title="Associate Dashboard"
-                  description="Dashboard for associates"
-                />
+                <Layout>
+                  <PlaceholderPage
+                    title="Associate Dashboard"
+                    description="Dashboard for associates"
+                  />
+                </Layout>
               }
             />
 
-            {/* Customer routes */}
+            {/* Customer routes (WITH LAYOUT) */}
             <Route
               path="/c/dashboard"
               element={
-                <PlaceholderPage
-                  title="Customer Dashboard"
-                  description="Dashboard for customers"
-                />
+                <Layout>
+                  <PlaceholderPage
+                    title="Customer Dashboard"
+                    description="Dashboard for customers"
+                  />
+                </Layout>
               }
             />
 
-            {/* Job Seeker routes */}
+            {/* Job Seeker routes (WITH LAYOUT) */}
             <Route
               path="/js/dashboard"
               element={
-                <PlaceholderPage
-                  title="Job Seeker Dashboard"
-                  description="Dashboard for job seekers"
-                />
+                <Layout>
+                  <PlaceholderPage
+                    title="Job Seeker Dashboard"
+                    description="Dashboard for job seekers"
+                  />
+                </Layout>
               }
             />
 
-            {/* Error routes */}
+            {/* Account route (WITH LAYOUT) */}
             <Route
-              path="/501"
+              path="/account"
               element={
-                <PlaceholderPage
-                  title="Server Error"
-                  description="An internal server error has occurred."
-                />
+                <Layout>
+                  <PlaceholderPage
+                    title="My Profile"
+                    description="User profile management"
+                  />
+                </Layout>
               }
             />
+
+            {/* Help routes (WITH LAYOUT) */}
             <Route
-              path="/404"
+              path="/help"
               element={
-                <PlaceholderPage
-                  title="Page Not Found"
-                  description="The page you're looking for doesn't exist."
-                />
+                <Layout>
+                  <PlaceholderPage
+                    title="Help"
+                    description="Help and support"
+                  />
+                </Layout>
               }
             />
+
+            {/* Error routes (NO LAYOUT) */}
+            <Route path="/501" element={<ServerErrorPage />} />
+            <Route path="/404" element={<NotFoundPage />} />
 
             {/* Catch-all route for unknown paths */}
             <Route path="*" element={<Navigate to="/404" />} />
