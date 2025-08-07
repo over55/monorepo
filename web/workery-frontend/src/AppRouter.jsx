@@ -20,18 +20,19 @@ import AdminDashboardPage from "./pages/Admin/Dashboard/Page";
 
 // Settings pages
 import SettingDashboardPage from "./pages/Admin/Setting/Page";
-
-// VehicleType pages
 import SettingVehicleTypeCreatePage from "./pages/Admin/Setting/VehicleType/Create/Page";
 import SettingVehicleTypeListPage from "./pages/Admin/Setting/VehicleType/List/Page";
 import SettingVehicleTypeDetailPage from "./pages/Admin/Setting/VehicleType/Detail/Page";
 import SettingVehicleTypeUpdatePage from "./pages/Admin/Setting/VehicleType/Update/Page";
-
 // Tag pages
 import SettingTagCreatePage from "./pages/Admin/Setting/Tag/Create/Page";
 import SettingTagListPage from "./pages/Admin/Setting/Tag/List/Page";
 import SettingTagDetailPage from "./pages/Admin/Setting/Tag/Detail/Page";
 import SettingTagUpdatePage from "./pages/Admin/Setting/Tag/Update/Page";
+import SettingSkillSetCreatePage from "./pages/Admin/Setting/SkillSet/Create/Page";
+import SettingSkillSetListPage from "./pages/Admin/Setting/SkillSet/List/Page";
+import SettingSkillSetDetailPage from "./pages/Admin/Setting/SkillSet/Detail/Page";
+import SettingSkillSetUpdatePage from "./pages/Admin/Setting/SkillSet/Update/Page";
 
 // Associate pages
 import AssociateDashboardPage from "./pages/Associate/Dashboard/Page";
@@ -1907,7 +1908,31 @@ function AppRouter() {
               path="/admin/settings/skill-sets"
               element={
                 <Layout>
-                  <PlaceholderPage title="Skill Sets Settings" />
+                  <SettingSkillSetListPage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/settings/skill-sets/create"
+              element={
+                <Layout>
+                  <SettingSkillSetCreatePage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/settings/skill-set/:id/detail"
+              element={
+                <Layout>
+                  <SettingSkillSetDetailPage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/settings/skill-set/:id/update"
+              element={
+                <Layout>
+                  <SettingSkillSetUpdatePage />
                 </Layout>
               }
             />
