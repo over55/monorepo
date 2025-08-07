@@ -18,7 +18,7 @@ import ToTenantRedirector from "./pages/Root/ToTenant/Redirector";
 // Admin pages (Management/Frontline)
 import AdminDashboardPage from "./pages/Admin/Dashboard/Page";
 
-// Settings pages
+// Admin settings pages
 import SettingDashboardPage from "./pages/Admin/Setting/Page";
 import SettingVehicleTypeCreatePage from "./pages/Admin/Setting/VehicleType/Create/Page";
 import SettingVehicleTypeListPage from "./pages/Admin/Setting/VehicleType/List/Page";
@@ -53,13 +53,43 @@ import SettingBulletinCreatePage from "./pages/Admin/Setting/Bulletin/Create/Pag
 import SettingBulletinListPage from "./pages/Admin/Setting/Bulletin/List/Page";
 import SettingBulletinDetailPage from "./pages/Admin/Setting/Bulletin/Detail/Page";
 import SettingBulletinUpdatePage from "./pages/Admin/Setting/Bulletin/Update/Page";
-
-// Associate Away Log pages
 import SettingAssociateAwayLogListPage from "./pages/Admin/Setting/AssociateAwayLog/List/Page";
 import SettingAssociateAwayLogDetailPage from "./pages/Admin/Setting/AssociateAwayLog/Detail/Page";
 import SettingAssociateAwayLogCreatePage from "./pages/Admin/Setting/AssociateAwayLog/Create/Page";
 import SettingAssociateAwayLogUpdatePage from "./pages/Admin/Setting/AssociateAwayLog/Update/Page";
 import SettingAssociateAwayLogDeletePage from "./pages/Admin/Setting/AssociateAwayLog/Delete/Page";
+
+// Admin client pages.
+import AdminCustomerListPage from "./pages/Admin/Customer/List/Page";
+import AdminCustomerAddStep1PartAPage from "./pages/Admin/Customer/Add/Step1PartAPage";
+import AdminCustomerAddStep1PartBPage from "./pages/Admin/Customer/Add/Step1PartBPage";
+import AdminCustomerAddStep2Page from "./pages/Admin/Customer/Add/Step2Page";
+import AdminCustomerAddStep3Page from "./pages/Admin/Customer/Add/Step3Page";
+import AdminCustomerAddStep4Page from "./pages/Admin/Customer/Add/Step4Page";
+import AdminCustomerAddStep5Page from "./pages/Admin/Customer/Add/Step5Page";
+import AdminCustomerAddStep6Page from "./pages/Admin/Customer/Add/Step6Page";
+import AdminCustomerSearchCriteriaPagePage from "./pages/Admin/Customer/Search/CriteriaPage";
+import AdminCustomerSearchResultPagePage from "./pages/Admin/Customer/Search/ResultPage";
+import AdminCustomerUpdatePage from "./pages/Admin/Customer/Update/Page";
+import AdminCustomerDetailLitePage from "./pages/Admin/Customer/Detail/LitePage";
+import AdminCustomerDetailFullPage from "./pages/Admin/Customer/Detail/FullPage";
+import AdminCustomerDetailOrderListPage from "./pages/Admin/Customer/Detail/Order/List/Page";
+import AdminCustomerDetailCommentListPage from "./pages/Admin/Customer/Detail/Comment/List/Page";
+import AdminCustomerDetailAttachmentAddPage from "./pages/Admin/Customer/Detail/Attachment/Add/Page";
+import AdminCustomerDetailAttachmentListPage from "./pages/Admin/Customer/Detail/Attachment/List/Page";
+import AdminCustomerDetailAttachmentDetailPage from "./pages/Admin/Customer/Detail/Attachment/Detail/Page";
+import AdminCustomerDetailAttachmentUpdatePage from "./pages/Admin/Customer/Detail/Attachment/Update/Page";
+import AdminCustomerDetailMorePage from "./pages/Admin/Customer/Detail/More/Page";
+import AdminCustomerDetailMore2FAPage from "./pages/Admin/Customer/Detail/More/2FA/Page";
+import AdminCustomerDetailMoreArchivePage from "./pages/Admin/Customer/Detail/More/Archive/Page";
+import AdminCustomerDetailMoreAvatarPage from "./pages/Admin/Customer/Detail/More/Avatar/Page";
+import AdminCustomerDetailMoreBanPage from "./pages/Admin/Customer/Detail/More/Ban/Page";
+import AdminCustomerDetailMoreChangePasswordPage from "./pages/Admin/Customer/Detail/More/ChangePassword/Page";
+import AdminCustomerDetailMoreDeletePage from "./pages/Admin/Customer/Detail/More/Delete/Page";
+import AdminCustomerDetailMoreDowngradePage from "./pages/Admin/Customer/Detail/More/Downgrade/Page";
+import AdminCustomerDetailMoreUnarchivePage from "./pages/Admin/Customer/Detail/More/Unarchive/Page";
+import AdminCustomerDetailMoreUnbanPage from "./pages/Admin/Customer/Detail/More/Unban/Page";
+import AdminCustomerDetailMoreUpgradePage from "./pages/Admin/Customer/Detail/More/Upgrade/Page";
 
 // Associate pages
 import AssociateDashboardPage from "./pages/Associate/Dashboard/Page";
