@@ -1,4 +1,4 @@
-// File Path: src/AppRouter.jsx - UPDATED VERSION
+// File Path: monorepo/web/workery-frontend/src/AppRouter.jsx
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
 import { ServiceProvider } from "./services/Services";
@@ -53,10 +53,13 @@ import SettingBulletinCreatePage from "./pages/Admin/Setting/Bulletin/Create/Pag
 import SettingBulletinListPage from "./pages/Admin/Setting/Bulletin/List/Page";
 import SettingBulletinDetailPage from "./pages/Admin/Setting/Bulletin/Detail/Page";
 import SettingBulletinUpdatePage from "./pages/Admin/Setting/Bulletin/Update/Page";
-import SettingAssociateAwayLogCreatePage from "./pages/Admin/Setting/AssociateAwayLog/Create/Page";
+
+// Associate Away Log pages
 import SettingAssociateAwayLogListPage from "./pages/Admin/Setting/AssociateAwayLog/List/Page";
 import SettingAssociateAwayLogDetailPage from "./pages/Admin/Setting/AssociateAwayLog/Detail/Page";
+import SettingAssociateAwayLogCreatePage from "./pages/Admin/Setting/AssociateAwayLog/Create/Page";
 import SettingAssociateAwayLogUpdatePage from "./pages/Admin/Setting/AssociateAwayLog/Update/Page";
+import SettingAssociateAwayLogDeletePage from "./pages/Admin/Setting/AssociateAwayLog/Delete/Page";
 
 // Associate pages
 import AssociateDashboardPage from "./pages/Associate/Dashboard/Page";
@@ -2016,6 +2019,8 @@ function AppRouter() {
                 </Layout>
               }
             />
+
+            {/* Associate Away Log Routes */}
             <Route
               path="/admin/settings/associate-away-logs"
               element={
@@ -2048,6 +2053,15 @@ function AppRouter() {
                 </Layout>
               }
             />
+            <Route
+              path="/admin/settings/associate-away-log/:id/delete"
+              element={
+                <Layout>
+                  <SettingAssociateAwayLogDeletePage />
+                </Layout>
+              }
+            />
+
             <Route
               path="/admin/settings/insurance-requirements"
               element={
