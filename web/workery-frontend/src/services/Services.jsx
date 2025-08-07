@@ -11,6 +11,7 @@ import { CustomerAPI } from "./API/CustomerAPI";
 import { AssociateAPI } from "./API/AssociateAPI";
 import { StaffAPI } from "./API/StaffAPI";
 import { OrderAPI } from "./API/OrderAPI";
+import { TaskAPI } from "./API/TaskAPI";
 import { VehicleTypeAPI } from "./API/VehicleTypeAPI";
 import { TagAPI } from "./API/TagAPI";
 import { SkillSetAPI } from "./API/SkillSetAPI";
@@ -29,6 +30,7 @@ import { CustomerStorage } from "./Storage/CustomerStorage";
 import { AssociateStorage } from "./Storage/AssociateStorage";
 import { StaffStorage } from "./Storage/StaffStorage";
 import { OrderStorage } from "./Storage/OrderStorage";
+import { TaskStorage } from "./Storage/TaskStorage";
 import { VehicleTypeStorage } from "./Storage/VehicleTypeStorage";
 import { TagStorage } from "./Storage/TagStorage";
 import { SkillSetStorage } from "./Storage/SkillSetStorage";
@@ -50,6 +52,7 @@ import { CustomerManager } from "./Manager/CustomerManager";
 import { AssociateManager } from "./Manager/AssociateManager";
 import { StaffManager } from "./Manager/StaffManager";
 import { OrderManager } from "./Manager/OrderManager";
+import { TaskManager } from "./Manager/TaskManager";
 import { VehicleTypeManager } from "./Manager/VehicleTypeManager";
 import { TagManager } from "./Manager/TagManager";
 import { SkillSetManager } from "./Manager/SkillSetManager";
@@ -107,6 +110,9 @@ class ServicesContainer {
 
     const orderStorage = new OrderStorage();
     this._services.set("orderStorage", orderStorage);
+
+    const taskStorage = new TaskStorage();
+    this._services.set("taskStorage", taskStorage);
 
     const vehicleTypeStorage = new VehicleTypeStorage();
     this._services.set("vehicleTypeStorage", vehicleTypeStorage);
@@ -178,6 +184,9 @@ class ServicesContainer {
 
     const orderAPI = new OrderAPI(baseURL, API_ENDPOINTS, tokenStorage);
     this._services.set("orderAPI", orderAPI);
+
+    const taskAPI = new TaskAPI(baseURL, API_ENDPOINTS, tokenStorage);
+    this._services.set("taskAPI", taskAPI);
 
     const vehicleTypeAPI = new VehicleTypeAPI(
       baseURL,
@@ -277,6 +286,10 @@ class ServicesContainer {
     const orderManager = new OrderManager(orderAPI, orderStorage);
     this._services.set("orderManager", orderManager);
 
+    // TaskManager needs TaskAPI and TaskStorage
+    const taskManager = new TaskManager(taskAPI, taskStorage);
+    this._services.set("taskManager", taskManager);
+
     // VehicleTypeManager needs VehicleTypeAPI and VehicleTypeStorage
     const vehicleTypeManager = new VehicleTypeManager(
       vehicleTypeAPI,
@@ -350,6 +363,7 @@ class ServicesContainer {
         associateManager: ["associateAPI", "associateStorage"],
         staffManager: ["staffAPI", "staffStorage"],
         orderManager: ["orderAPI", "orderStorage"],
+        taskManager: ["taskAPI", "taskStorage"],
         vehicleTypeManager: ["vehicleTypeAPI", "vehicleTypeStorage"],
         tagManager: ["tagAPI", "tagStorage"],
         skillSetManager: ["skillSetAPI", "skillSetStorage"],
@@ -437,6 +451,10 @@ class ServicesContainer {
     return this.get("orderManager");
   }
 
+  getTaskManager() {
+    return this.get("taskManager");
+  }
+
   getVehicleTypeManager() {
     return this.get("vehicleTypeManager");
   }
@@ -510,6 +528,10 @@ class ServicesContainer {
 
   getOrderStorage() {
     return this.get("orderStorage");
+  }
+
+  getTaskStorage() {
+    return this.get("taskStorage");
   }
 
   getVehicleTypeStorage() {
@@ -597,6 +619,10 @@ class ServicesContainer {
 
   getOrderAPI() {
     return this.get("orderAPI");
+  }
+
+  getTaskAPI() {
+    return this.get("taskAPI");
   }
 
   getVehicleTypeAPI() {
@@ -782,6 +808,11 @@ export function useOrderManager() {
   return services.getOrderManager();
 }
 
+export function useTaskManager() {
+  const services = useServices();
+  return services.getTaskManager();
+}
+
 export function useVehicleTypeManager() {
   const services = useServices();
   return services.getVehicleTypeManager();
@@ -873,6 +904,11 @@ export function useStaffStorage() {
 export function useOrderStorage() {
   const services = useServices();
   return services.getOrderStorage();
+}
+
+export function useTaskStorage() {
+  const services = useServices();
+  return services.getTaskStorage();
 }
 
 export function useVehicleTypeStorage() {
@@ -981,6 +1017,11 @@ export function useStaffAPI() {
 export function useOrderAPI() {
   const services = useServices();
   return services.getOrderAPI();
+}
+
+export function useTaskAPI() {
+  const services = useServices();
+  return services.getTaskAPI();
 }
 
 export function useVehicleTypeAPI() {

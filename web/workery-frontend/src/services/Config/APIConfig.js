@@ -127,6 +127,17 @@ export const API_ENDPOINTS = {
   ORDER_POSTPONE_OPERATION: "/orders/operation/postpone",
   ORDER_TRANSFER_OPERATION: "/orders/operation/transfer",
 
+  // Task endpoints
+  TASKS: "/tasks",
+  TASK_DETAIL: "/task/{id}",
+  TASK_COUNT: "/tasks/count",
+  TASK_ASSIGNABLE_ASSOCIATES: "/task/{id}/assignable-associates",
+  TASK_ASSIGN_ASSOCIATE_OPERATION: "/tasks/operation/assign-associate",
+  TASK_ORDER_COMPLETION_OPERATION: "/tasks/operation/order-completion",
+  TASK_SURVEY_OPERATION: "/tasks/operation/survey",
+  TASK_POSTPONE_OPERATION: "/tasks/operation/postpone",
+  TASK_CLOSE_OPERATION: "/tasks/operation/close",
+
   // Vehicle Type endpoints
   VEHICLE_TYPES: "/vehicle-types",
   VEHICLE_TYPE_DETAIL: "/vehicle-type/{id}",
@@ -255,6 +266,15 @@ export function getFullAPIUrls() {
     ORDER_FILE_UPLOAD_OPERATION: `${httpServer}${basePath}${API_ENDPOINTS.ORDER_FILE_UPLOAD_OPERATION}`,
     ORDER_POSTPONE_OPERATION: `${httpServer}${basePath}${API_ENDPOINTS.ORDER_POSTPONE_OPERATION}`,
     ORDER_TRANSFER_OPERATION: `${httpServer}${basePath}${API_ENDPOINTS.ORDER_TRANSFER_OPERATION}`,
+    TASKS: `${httpServer}${basePath}${API_ENDPOINTS.TASKS}`,
+    TASK_DETAIL: `${httpServer}${basePath}${API_ENDPOINTS.TASK_DETAIL}`,
+    TASK_COUNT: `${httpServer}${basePath}${API_ENDPOINTS.TASK_COUNT}`,
+    TASK_ASSIGNABLE_ASSOCIATES: `${httpServer}${basePath}${API_ENDPOINTS.TASK_ASSIGNABLE_ASSOCIATES}`,
+    TASK_ASSIGN_ASSOCIATE_OPERATION: `${httpServer}${basePath}${API_ENDPOINTS.TASK_ASSIGN_ASSOCIATE_OPERATION}`,
+    TASK_ORDER_COMPLETION_OPERATION: `${httpServer}${basePath}${API_ENDPOINTS.TASK_ORDER_COMPLETION_OPERATION}`,
+    TASK_SURVEY_OPERATION: `${httpServer}${basePath}${API_ENDPOINTS.TASK_SURVEY_OPERATION}`,
+    TASK_POSTPONE_OPERATION: `${httpServer}${basePath}${API_ENDPOINTS.TASK_POSTPONE_OPERATION}`,
+    TASK_CLOSE_OPERATION: `${httpServer}${basePath}${API_ENDPOINTS.TASK_CLOSE_OPERATION}`,
     ASSOCIATES: `${httpServer}${basePath}${API_ENDPOINTS.ASSOCIATES}`,
     ASSOCIATE_DETAIL: `${httpServer}${basePath}${API_ENDPOINTS.ASSOCIATE_DETAIL}`,
     ASSOCIATE_ARCHIVE_OPERATION: `${httpServer}${basePath}${API_ENDPOINTS.ASSOCIATE_ARCHIVE_OPERATION}`,
