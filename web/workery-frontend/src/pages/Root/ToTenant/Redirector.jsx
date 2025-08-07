@@ -1,41 +1,24 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Root/ToTenant/Redirector.jsx
+// File Path: web/workery-frontend/src/pages/Root/ToTenant/Redirector.jsx
+
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
 import { useTenantManager, useAuthManager } from "../../../services/Services";
+import { Loading, Alert } from "../../../components/UI";
+import { globalStyles } from "../../../constants/Theme";
 
 function ToTenantRedirector() {
-  ////
-  //// URL Parameters.
-  ////
-
   const { tid } = useParams();
-
-  ////
-  //// Services.
-  ////
-
   const tenantManager = useTenantManager();
   const authManager = useAuthManager();
   const navigate = useNavigate();
 
-  ////
-  //// Component states.
-  ////
-
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-
-  ////
-  //// Event handling.
-  ////
+  const [status, setStatus] = useState("Initializing...");
 
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
   };
-
-  ////
-  //// Misc.
-  ////
 
   useEffect(() => {
     let mounted = true;
@@ -47,15 +30,16 @@ function ToTenantRedirector() {
       );
       setIsLoading(true);
       setErrors({});
+      setStatus("Accessing tenant...");
 
-      // Validate tenant ID (should be a string ObjectID)
+      // Validate tenant ID
       if (!tid || typeof tid !== "string" || tid.trim() === "") {
         setErrors({ tenantId: "Invalid tenant ID" });
         setIsLoading(false);
         return;
       }
 
-      // Use the modern async/await approach - pass tid as string directly
+      // Execute the tenant visit
       tenantManager
         .executiveVisitsTenant(tid, onUnauthorized)
         .then((response) => {
@@ -63,85 +47,111 @@ function ToTenantRedirector() {
             "ToTenantRedirector: Executive visit successful:",
             response,
           );
+          setStatus("Access granted! Redirecting...");
 
-          // Redirect to admin dashboard after successful visit
-          navigate("/admin/dashboard");
+          // Small delay to show success message
+          setTimeout(() => {
+            navigate("/admin/dashboard");
+          }, 500);
         })
         .catch((error) => {
           console.error("ToTenantRedirector: Executive visit failed:", error);
-          setErrors(error);
-
-          // Scroll to top to show errors
+          setErrors({
+            access:
+              error.message || "Failed to access tenant. Please try again.",
+          });
+          setStatus("Access failed");
           window.scrollTo(0, 0);
         })
         .finally(() => {
-          setIsLoading(false);
+          if (mounted) {
+            setIsLoading(false);
+          }
         });
     }
 
-    return () => (mounted = false);
+    return () => {
+      mounted = false;
+    };
   }, [tid, tenantManager, navigate]);
 
-  ////
-  //// Component rendering.
-  ////
+  const styles = {
+    container: {
+      ...globalStyles.container,
+      display: "flex",
+      flexDirection: "column",
+      justifyContent: "center",
+      alignItems: "center",
+      minHeight: "100vh",
+      textAlign: "center",
+    },
+    statusCard: {
+      ...globalStyles.card,
+      maxWidth: "500px",
+      width: "100%",
+      padding: "40px",
+    },
+    statusIcon: {
+      fontSize: "48px",
+      marginBottom: "20px",
+    },
+    statusTitle: {
+      fontSize: "24px",
+      marginBottom: "10px",
+    },
+    statusMessage: {
+      fontSize: "16px",
+      color: "#666",
+      marginBottom: "20px",
+    },
+    errorContainer: {
+      marginTop: "20px",
+    },
+    backButton: {
+      marginTop: "20px",
+      padding: "10px 20px",
+      backgroundColor: "#6c757d",
+      color: "white",
+      border: "none",
+      borderRadius: "4px",
+      cursor: "pointer",
+      textDecoration: "none",
+      display: "inline-block",
+    },
+  };
 
   return (
-    <div>
-      <div>
-        <section>
-          <div>
-            <div>
-              <div>
-                <div>
-                  <h1>ACCESSING...</h1>
-
-                  {/* Loading indicator */}
-                  {isLoading && (
-                    <div>
-                      <p>Please wait while we set up your tenant access...</p>
-                    </div>
-                  )}
-
-                  {/* Error display */}
-                  {Object.keys(errors).length > 0 && (
-                    <div style={{ color: "red", marginTop: "20px" }}>
-                      <h3>Error occurred:</h3>
-                      {Object.entries(errors).map(([key, value]) => (
-                        <div key={key}>
-                          <strong>{key}:</strong>{" "}
-                          {typeof value === "string"
-                            ? value
-                            : JSON.stringify(value)}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-
-                  {/* Debug info in development */}
-                  {import.meta.env.DEV && (
-                    <div
-                      style={{
-                        marginTop: "20px",
-                        padding: "10px",
-                        backgroundColor: "#f5f5f5",
-                      }}
-                    >
-                      <h4>Debug Info:</h4>
-                      <p>Tenant ID from URL: {tid}</p>
-                      <p>Tenant ID Type: {typeof tid}</p>
-                      <p>Loading: {isLoading ? "Yes" : "No"}</p>
-                      <p>
-                        Has Errors:{" "}
-                        {Object.keys(errors).length > 0 ? "Yes" : "No"}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
+    <div style={styles.container}>
+      <div style={styles.statusCard}>
+        {isLoading ? (
+          <>
+            <div style={styles.statusIcon}>🔄</div>
+            <h1 style={styles.statusTitle}>ACCESSING TENANT</h1>
+            <p style={styles.statusMessage}>{status}</p>
+            <Loading message="Please wait while we set up your tenant access..." />
+          </>
+        ) : Object.keys(errors).length > 0 ? (
+          <>
+            <div style={styles.statusIcon}>❌</div>
+            <h1 style={styles.statusTitle}>ACCESS FAILED</h1>
+            <div style={styles.errorContainer}>
+              {errors.tenantId && <Alert type="error">{errors.tenantId}</Alert>}
+              {errors.access && <Alert type="error">{errors.access}</Alert>}
             </div>
-          </div>
-        </section>
+            <button
+              onClick={() => navigate("/root/tenants")}
+              style={styles.backButton}
+            >
+              ← Back to Tenants
+            </button>
+          </>
+        ) : (
+          <>
+            <div style={styles.statusIcon}>✅</div>
+            <h1 style={styles.statusTitle}>ACCESS GRANTED</h1>
+            <p style={styles.statusMessage}>Redirecting to dashboard...</p>
+          </>
+        )}
       </div>
     </div>
   );

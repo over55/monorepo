@@ -1,44 +1,23 @@
-// File Path: monorepo/web/workery-frontend/src/components/Layout/TopNavbar.jsx
+// File Path: web/workery-frontend/src/components/Layout/TopNavbar.jsx
+
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { useAuthManager, useAccountManager } from "../../services/Services";
-import {
-  EXECUTIVE_ROLE_ID,
-  MANAGEMENT_ROLE_ID,
-  FRONTLINE_ROLE_ID,
-  ASSOCIATE_ROLE_ID,
-  CUSTOMER_ROLE_ID,
-  ASSOCIATE_JOB_SEEKER_ROLE_ID,
-} from "../../constants/Roles";
+import { theme } from "../../constants/Theme";
+import { getRoleRedirectPath } from "../../constants/Roles";
 
-function TopNavbar({ onMenuToggle, isMenuOpen }) {
-  ////
-  //// Services.
-  ////
-
+function TopNavbar({ onMenuToggle, isMenuOpen, isMobile }) {
   const authManager = useAuthManager();
   const accountManager = useAccountManager();
   const navigate = useNavigate();
   const location = useLocation();
 
-  ////
-  //// Component states.
-  ////
-
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  ////
-  //// Event handling.
-  ////
 
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
   };
-
-  ////
-  //// Misc.
-  ////
 
   useEffect(() => {
     let mounted = true;
@@ -71,40 +50,26 @@ function TopNavbar({ onMenuToggle, isMenuOpen }) {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [location.pathname]); // Re-fetch when route changes
 
-  ////
-  //// Component rendering.
-  ////
-
-  // Paths where top navbar should not be shown
-  const ignorePathsArr = [
+  // Paths where navbar should not be shown
+  const hiddenPaths = [
     "/",
     "/register",
-    "/register-successful",
     "/index",
     "/login",
-    "/login/2fa",
-    "/login/2fa/step-1",
-    "/login/2fa/step-2",
-    "/login/2fa/step-3",
-    "/login/2fa/step-3/backup-code",
-    "/login/2fa/backup-code",
-    "/login/2fa/backup-code-recovery",
     "/logout",
     "/verify",
     "/forgot-password",
     "/password-reset",
-    "/root/dashboard",
-    "/root/tenants",
-    "/root/tenant",
     "/terms",
     "/privacy",
   ];
 
-  const shouldHideNavbar = ignorePathsArr.some(
+  const shouldHideNavbar = hiddenPaths.some(
     (path) =>
-      location.pathname === path || location.pathname.startsWith(path + "/"),
+      location.pathname === path ||
+      (path !== "/" && location.pathname.startsWith(path)),
   );
 
   if (shouldHideNavbar || isLoading || !currentUser) {
@@ -118,7 +83,7 @@ function TopNavbar({ onMenuToggle, isMenuOpen }) {
       left: 0,
       right: 0,
       height: "60px",
-      backgroundColor: "#1a1a1a",
+      backgroundColor: theme.colors.dark,
       color: "white",
       display: "flex",
       alignItems: "center",
@@ -137,21 +102,18 @@ function TopNavbar({ onMenuToggle, isMenuOpen }) {
       alignItems: "center",
     },
     logoImage: {
-      height: "28px",
+      height: "30px",
       width: "auto",
     },
     hamburger: {
       background: "none",
       border: "none",
       color: "white",
-      fontSize: "18px",
+      fontSize: "20px",
       cursor: "pointer",
       padding: "8px",
       borderRadius: "4px",
-      transition: "background-color 0.2s",
-    },
-    hamburgerHover: {
-      backgroundColor: "rgba(255,255,255,0.1)",
+      transition: `background-color ${theme.transitions.fast}`,
     },
     rightSection: {
       display: "flex",
@@ -164,21 +126,8 @@ function TopNavbar({ onMenuToggle, isMenuOpen }) {
     },
   };
 
-  const getDashboardPath = (roleId) => {
-    switch (roleId) {
-      case EXECUTIVE_ROLE_ID:
-      case MANAGEMENT_ROLE_ID:
-      case FRONTLINE_ROLE_ID:
-        return "/admin/dashboard";
-      case CUSTOMER_ROLE_ID:
-        return "/c/dashboard";
-      case ASSOCIATE_ROLE_ID:
-        return "/a/dashboard";
-      case ASSOCIATE_JOB_SEEKER_ROLE_ID:
-        return "/js/dashboard";
-      default:
-        return "/admin/dashboard";
-    }
+  const getDashboardPath = () => {
+    return getRoleRedirectPath(currentUser.roleId) || "/dashboard";
   };
 
   return (
@@ -188,12 +137,18 @@ function TopNavbar({ onMenuToggle, isMenuOpen }) {
           onClick={onMenuToggle}
           style={styles.hamburger}
           title="Toggle Menu"
+          onMouseEnter={(e) => {
+            e.target.style.backgroundColor = "rgba(255,255,255,0.1)";
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.backgroundColor = "transparent";
+          }}
         >
           {isMenuOpen ? "✕" : "☰"}
         </button>
 
         <div style={styles.logo}>
-          <Link to={getDashboardPath(currentUser.roleId)}>
+          <Link to={getDashboardPath()}>
             <img
               src="/img/compressed-logo.png"
               alt="Workery Logo"
@@ -205,7 +160,11 @@ function TopNavbar({ onMenuToggle, isMenuOpen }) {
 
       <div style={styles.rightSection}>
         <div style={styles.userInfo}>
-          Welcome, {currentUser.firstName || currentUser.email}
+          {isMobile ? (
+            <span>{currentUser.firstName || "User"}</span>
+          ) : (
+            <span>Welcome, {currentUser.firstName || currentUser.email}</span>
+          )}
         </div>
       </div>
     </nav>

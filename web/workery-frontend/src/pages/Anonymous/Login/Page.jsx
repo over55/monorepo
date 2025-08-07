@@ -1,31 +1,18 @@
 // File Path: web/workery-frontend/src/pages/Anonymous/Login/Page.jsx
+
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { useAuthManager } from "../../../services/Services";
-import {
-  getRoleRedirectPath,
-  ROLE_REDIRECT_PATHS,
-  ROLE_NAMES,
-} from "../../../constants/Roles";
+import { getRoleRedirectPath } from "../../../constants/Roles";
+import { theme, globalStyles } from "../../../constants/Theme";
+import { Card, Input, Button, Alert } from "../../../components/UI";
 
 function LoginPage() {
-  ////
-  //// URL Parameters.
-  ////
-
   const [searchParams] = useSearchParams();
   const isUnauthorized = searchParams.get("unauthorized");
 
-  ////
-  //// Services.
-  ////
-
   const authManager = useAuthManager();
   const navigate = useNavigate();
-
-  ////
-  //// Component states.
-  ////
 
   const [formData, setFormData] = useState({
     email: "",
@@ -33,27 +20,14 @@ function LoginPage() {
   });
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [validation, setValidation] = useState({
-    email: false,
-    password: false,
-  });
   const [rememberMe, setRememberMe] = useState(false);
 
-  ////
-  //// Event handling.
-  ////
-
-  /**
-   * Check if user is already authenticated on component mount
-   */
   useEffect(() => {
     let mounted = true;
 
     if (mounted) {
-      // Start the page at the top
       window.scrollTo(0, 0);
 
-      // Check if user is already authenticated
       if (authManager.isAuthenticated()) {
         console.log("LoginPage: User already authenticated, redirecting...");
         navigate("/dashboard");
@@ -63,481 +37,212 @@ function LoginPage() {
     return () => (mounted = false);
   }, [authManager, navigate]);
 
-  /**
-   * Handle form field changes
-   */
   const handleFieldChange = (field, value) => {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
     }));
 
-    // Clear field-specific error and validation when user starts typing
+    // Clear errors when user types
     if (errors[field]) {
       setErrors((prev) => ({
         ...prev,
         [field]: null,
       }));
     }
-
-    if (validation[field]) {
-      setValidation((prev) => ({
-        ...prev,
-        [field]: false,
-      }));
-    }
-
-    // Clear general auth error when user modifies form
-    if (errors.auth) {
-      setErrors((prev) => ({
-        ...prev,
-        auth: null,
-      }));
-    }
   };
 
-  /**
-   * Validate form data
-   */
   const validateForm = () => {
     const newErrors = {};
-    const newValidation = {};
 
-    // Email validation
     if (!formData.email || !formData.email.trim()) {
-      newErrors.email = "value is missing";
+      newErrors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = "Please enter a valid email address";
-    } else {
-      newValidation.email = true;
     }
 
-    // Password validation
     if (!formData.password || !formData.password.trim()) {
-      newErrors.password = "value is missing";
-    } else {
-      newValidation.password = true;
+      newErrors.password = "Password is required";
     }
 
-    return { newErrors, newValidation };
+    return newErrors;
   };
 
-  /**
-   * Handle successful login with proper role-based and 2FA redirects
-   */
-  const handleLoginSuccess = (loginResponse) => {
-    console.log("LoginPage: Login successful", {
-      id: loginResponse.user.id,
-      email: loginResponse.user.email,
-      role: loginResponse.user.role,
-      roleType: typeof loginResponse.user.role,
-      otpEnabled: loginResponse.user.otpEnabled,
-      otpVerified: loginResponse.user.otpVerified,
-    });
-
-    // Debug role mapping
-    console.log("LoginPage: Role mapping debug", {
-      userRole: loginResponse.user.role,
-      availableRolePaths: ROLE_REDIRECT_PATHS,
-      roleNames: ROLE_NAMES,
-      calculatedPath: getRoleRedirectPath(loginResponse.user.role),
-    });
-
-    // Clear form and errors
-    setFormData({ email: "", password: "" });
-    setErrors({});
-    setValidation({ email: false, password: false });
-
-    // Determine redirect URL based on 2FA status and role
-    let redirectUrl;
-
-    // IMPORTANT: Check if 2FA is disabled first
-    if (
-      loginResponse.user.otpEnabled === false ||
-      loginResponse.user.otpEnabled === null ||
-      loginResponse.user.otpEnabled === undefined
-    ) {
-      // No 2FA enabled, redirect directly to role-based dashboard
-      console.log(
-        "LoginPage: 2FA is disabled (otpEnabled:",
-        loginResponse.user.otpEnabled,
-        "), redirecting based on role:",
-        loginResponse.user.role,
-      );
-      redirectUrl = getRoleRedirectPath(loginResponse.user.role);
-
-      // Additional safety check
-      if (redirectUrl === "/501") {
-        console.error(
-          "LoginPage: Role redirect returned 501! Role:",
-          loginResponse.user.role,
-          "Type:",
-          typeof loginResponse.user.role,
-        );
-        // Fallback to a safe redirect
-        redirectUrl = "/dashboard";
-      }
-    } else {
-      // 2FA is enabled, check if it's been set up and verified
-      console.log("LoginPage: 2FA is enabled, checking verification status");
-
-      if (
-        loginResponse.user.otpVerified === false ||
-        loginResponse.user.otpVerified === null ||
-        loginResponse.user.otpVerified === undefined
-      ) {
-        console.log(
-          "LoginPage: 2FA enabled but not verified (otpVerified:",
-          loginResponse.user.otpVerified,
-          "), redirecting to setup wizard",
-        );
-        redirectUrl = "/login/2fa/step-1";
-      } else {
-        console.log(
-          "LoginPage: 2FA enabled and verified (otpVerified:",
-          loginResponse.user.otpVerified,
-          "), redirecting to validation",
-        );
-        redirectUrl = "/login/2fa";
-      }
-    }
-
-    console.log(`LoginPage: Final redirect decision: ${redirectUrl}`);
-    navigate(redirectUrl);
-  };
-
-  /**
-   * Handle login error
-   */
-  const handleLoginError = (error) => {
-    console.error("LoginPage: Login failed", error);
-
-    // Format errors for display
-    let formattedErrors = {};
-
-    if (error.auth) {
-      formattedErrors.auth = error.auth;
-    } else if (error.email) {
-      formattedErrors.email = error.email;
-    } else if (error.password) {
-      formattedErrors.password = error.password;
-    } else if (error.message) {
-      formattedErrors.auth = error.message;
-    } else {
-      formattedErrors.auth = "An unexpected error occurred. Please try again.";
-    }
-
-    setErrors(formattedErrors);
-
-    // Scroll to top to show errors
-    window.scrollTo(0, 0);
-  };
-
-  /**
-   * Handle form submission
-   */
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const { newErrors, newValidation } = validateForm();
-
-    // Update validation state
-    setValidation(newValidation);
-    setErrors(newErrors);
-
-    if (Object.keys(newErrors).length > 0) {
-      console.log("LoginPage: Form validation failed");
+    const validationErrors = validateForm();
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
       window.scrollTo(0, 0);
       return;
     }
 
     setLoading(true);
+    setErrors({});
 
     try {
       console.log("LoginPage: Attempting login", { email: formData.email });
 
-      // Attempt login
       const loginResponse = await authManager.login({
         email: formData.email.trim().toLowerCase(),
         password: formData.password,
       });
 
-      handleLoginSuccess(loginResponse);
+      console.log("LoginPage: Login successful", {
+        id: loginResponse.user.id,
+        role: loginResponse.user.role,
+        otpEnabled: loginResponse.user.otpEnabled,
+        otpVerified: loginResponse.user.otpVerified,
+      });
+
+      // Clear form
+      setFormData({ email: "", password: "" });
+
+      // Handle redirect based on 2FA status
+      if (loginResponse.user.otpEnabled === false) {
+        const redirectUrl = getRoleRedirectPath(loginResponse.user.role);
+        console.log(`LoginPage: Redirecting to ${redirectUrl}`);
+        navigate(redirectUrl);
+      } else if (!loginResponse.user.otpVerified) {
+        console.log("LoginPage: 2FA not verified, redirecting to setup");
+        navigate("/login/2fa/step-1");
+      } else {
+        console.log("LoginPage: 2FA enabled, redirecting to validation");
+        navigate("/login/2fa");
+      }
     } catch (error) {
-      handleLoginError(error);
+      console.error("LoginPage: Login failed", error);
+      setErrors({
+        auth: error.message || "Invalid email or password. Please try again.",
+      });
+      window.scrollTo(0, 0);
     } finally {
       setLoading(false);
     }
   };
 
-  /**
-   * Utility functions
-   */
-  const resetForm = () => {
-    setFormData({ email: "", password: "" });
-    setErrors({});
-    setValidation({ email: false, password: false });
-    setLoading(false);
+  const styles = {
+    container: {
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      minHeight: "100vh",
+      backgroundColor: theme.colors.light,
+      padding: "20px",
+    },
+    loginCard: {
+      maxWidth: "400px",
+      width: "100%",
+    },
+    logoContainer: {
+      textAlign: "center",
+      marginBottom: "30px",
+    },
+    logo: {
+      width: "200px",
+      maxWidth: "80%",
+      height: "auto",
+    },
+    title: {
+      textAlign: "center",
+      marginTop: "20px",
+      marginBottom: "10px",
+      fontSize: "24px",
+    },
+    checkboxContainer: {
+      display: "flex",
+      alignItems: "center",
+      marginBottom: "20px",
+    },
+    checkbox: {
+      marginRight: "8px",
+    },
+    linksContainer: {
+      textAlign: "center",
+      marginTop: "20px",
+    },
+    copyright: {
+      textAlign: "center",
+      marginTop: "30px",
+      color: "#666",
+      fontSize: "14px",
+    },
   };
 
-  ////
-  //// Component rendering.
-  ////
-
   return (
-    <div>
-      <div>
-        <section>
-          <div>
-            <div>
-              <div>
-                <div>
-                  {/* Logo */}
-                  <nav>
-                    <div style={{ textAlign: "center" }}>
-                      <figure>
-                        <img
-                          src="/img/workery-logo.jpeg"
-                          alt="Workery Logo"
-                          style={{ width: "256px" }}
-                        />
-                      </figure>
-                    </div>
-                  </nav>
+    <div style={styles.container}>
+      <Card style={styles.loginCard}>
+        <div style={styles.logoContainer}>
+          <img
+            src="/img/workery-logo.jpeg"
+            alt="Workery Logo"
+            style={styles.logo}
+          />
+        </div>
 
-                  {/* Login Form */}
-                  <form onSubmit={handleSubmit}>
-                    <h1 style={{ textAlign: "center" }}>Sign In</h1>
+        <h1 style={styles.title}>Sign In</h1>
 
-                    {/* Unauthorized Message */}
-                    {isUnauthorized === "true" && (
-                      <div
-                        style={{
-                          color: "red",
-                          border: "1px solid red",
-                          padding: "10px",
-                          marginBottom: "15px",
-                          borderRadius: "4px",
-                          backgroundColor: "#ffebee",
-                        }}
-                      >
-                        <strong>⚠ Your session has ended.</strong>
-                        <br />
-                        Please login again
-                      </div>
-                    )}
+        {isUnauthorized === "true" && (
+          <Alert type="warning">
+            <strong>⚠ Your session has ended.</strong>
+            <br />
+            Please login again
+          </Alert>
+        )}
 
-                    {/* General Error Display */}
-                    {errors.auth && (
-                      <div
-                        style={{
-                          color: "red",
-                          border: "1px solid red",
-                          padding: "10px",
-                          marginBottom: "15px",
-                          borderRadius: "4px",
-                          backgroundColor: "#ffebee",
-                        }}
-                      >
-                        <strong>Error:</strong> {errors.auth}
-                      </div>
-                    )}
+        {errors.auth && <Alert type="error">{errors.auth}</Alert>}
 
-                    {/* Email Field */}
-                    <div style={{ marginBottom: "15px" }}>
-                      <label htmlFor="email">
-                        <strong>Email:</strong>
-                      </label>
-                      <br />
-                      <input
-                        id="email"
-                        type="email"
-                        placeholder="Email"
-                        value={formData.email}
-                        onChange={(e) =>
-                          handleFieldChange("email", e.target.value)
-                        }
-                        disabled={loading}
-                        style={{
-                          width: "100%",
-                          padding: "10px",
-                          border: errors.email
-                            ? "2px solid red"
-                            : validation.email
-                              ? "2px solid green"
-                              : "1px solid #ccc",
-                          borderRadius: "4px",
-                          fontSize: "16px",
-                        }}
-                      />
-                      {errors.email && (
-                        <div
-                          style={{
-                            color: "red",
-                            fontSize: "14px",
-                            marginTop: "5px",
-                          }}
-                        >
-                          {errors.email}
-                        </div>
-                      )}
-                    </div>
+        <form onSubmit={handleSubmit}>
+          <Input
+            label="Email"
+            type="email"
+            placeholder="Enter your email"
+            value={formData.email}
+            onChange={(e) => handleFieldChange("email", e.target.value)}
+            error={errors.email}
+            disabled={loading}
+            required
+          />
 
-                    {/* Password Field */}
-                    <div style={{ marginBottom: "15px" }}>
-                      <label htmlFor="password">
-                        <strong>Password:</strong>
-                      </label>
-                      <br />
-                      <input
-                        id="password"
-                        type="password"
-                        placeholder="Password"
-                        value={formData.password}
-                        onChange={(e) =>
-                          handleFieldChange("password", e.target.value)
-                        }
-                        disabled={loading}
-                        style={{
-                          width: "100%",
-                          padding: "10px",
-                          border: errors.password
-                            ? "2px solid red"
-                            : validation.password
-                              ? "2px solid green"
-                              : "1px solid #ccc",
-                          borderRadius: "4px",
-                          fontSize: "16px",
-                        }}
-                      />
-                      {errors.password && (
-                        <div
-                          style={{
-                            color: "red",
-                            fontSize: "14px",
-                            marginTop: "5px",
-                          }}
-                        >
-                          {errors.password}
-                        </div>
-                      )}
-                    </div>
+          <Input
+            label="Password"
+            type="password"
+            placeholder="Enter your password"
+            value={formData.password}
+            onChange={(e) => handleFieldChange("password", e.target.value)}
+            error={errors.password}
+            disabled={loading}
+            required
+          />
 
-                    {/* Remember Me Checkbox */}
-                    <div style={{ marginBottom: "20px" }}>
-                      <input
-                        type="checkbox"
-                        id="rememberMe"
-                        checked={rememberMe}
-                        onChange={(e) => setRememberMe(e.target.checked)}
-                        disabled={loading}
-                      />
-                      <label
-                        htmlFor="rememberMe"
-                        style={{ marginLeft: "8px", fontSize: "14px" }}
-                      >
-                        Remember Me
-                      </label>
-                    </div>
-
-                    {/* Submit Button */}
-                    <button
-                      type="submit"
-                      disabled={loading}
-                      style={{
-                        width: "100%",
-                        padding: "12px",
-                        backgroundColor: loading ? "#ccc" : "#007bff",
-                        color: "white",
-                        border: "none",
-                        borderRadius: "4px",
-                        fontSize: "16px",
-                        cursor: loading ? "not-allowed" : "pointer",
-                      }}
-                    >
-                      {loading ? "Signing In..." : "Submit →"}
-                    </button>
-
-                    {/* Reset Button */}
-                    <button
-                      type="button"
-                      onClick={resetForm}
-                      disabled={loading}
-                      style={{
-                        width: "100%",
-                        padding: "8px",
-                        backgroundColor: "transparent",
-                        border: "1px solid #ccc",
-                        borderRadius: "4px",
-                        marginTop: "10px",
-                        cursor: loading ? "not-allowed" : "pointer",
-                      }}
-                    >
-                      Clear Form
-                    </button>
-                  </form>
-
-                  {/* Additional Links */}
-                  <nav style={{ textAlign: "center", marginTop: "20px" }}>
-                    <div>
-                      <Link to="/forgot-password">Forgot Password?</Link>
-                    </div>
-                  </nav>
-
-                  {/* Copyright */}
-                  <div style={{ textAlign: "center", marginTop: "30px" }}>
-                    <p>© 2024 Over 55 (London) Inc.</p>
-                  </div>
-
-                  {/* Debug Info (Development Only) */}
-                  {import.meta.env.DEV && (
-                    <div
-                      style={{
-                        marginTop: "30px",
-                        padding: "15px",
-                        backgroundColor: "#f5f5f5",
-                        borderRadius: "4px",
-                        fontSize: "12px",
-                      }}
-                    >
-                      <h4>Debug Info (Development Only):</h4>
-                      <ul>
-                        <li>Email: {formData.email || "(empty)"}</li>
-                        <li>
-                          Password: {formData.password ? "[HIDDEN]" : "(empty)"}
-                        </li>
-                        <li>Loading: {loading ? "Yes" : "No"}</li>
-                        <li>Remember Me: {rememberMe ? "Yes" : "No"}</li>
-                        <li>Is Unauthorized: {isUnauthorized || "No"}</li>
-                        <li>
-                          Has Errors:{" "}
-                          {Object.keys(errors).length > 0 ? "Yes" : "No"}
-                        </li>
-                        <li>
-                          Validation: Email={validation.email ? "✓" : "✗"},
-                          Password={validation.password ? "✓" : "✗"}
-                        </li>
-                      </ul>
-
-                      {Object.keys(errors).length > 0 && (
-                        <>
-                          <h5>Current Errors:</h5>
-                          <pre>{JSON.stringify(errors, null, 2)}</pre>
-                        </>
-                      )}
-
-                      <h5>Auth State:</h5>
-                      <pre>
-                        {JSON.stringify(authManager.getAuthState(), null, 2)}
-                      </pre>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
+          <div style={styles.checkboxContainer}>
+            <input
+              type="checkbox"
+              id="rememberMe"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              disabled={loading}
+              style={styles.checkbox}
+            />
+            <label htmlFor="rememberMe">Remember Me</label>
           </div>
-        </section>
-      </div>
+
+          <Button type="submit" variant="primary" fullWidth disabled={loading}>
+            {loading ? "Signing In..." : "Submit →"}
+          </Button>
+        </form>
+
+        <div style={styles.linksContainer}>
+          <Link to="/forgot-password" style={{ color: theme.colors.primary }}>
+            Forgot Password?
+          </Link>
+        </div>
+
+        <div style={styles.copyright}>
+          <p>© 2024 Over 55 (London) Inc.</p>
+        </div>
+      </Card>
     </div>
   );
 }

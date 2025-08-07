@@ -1,37 +1,29 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Root/Tenant/Detail/Page.jsx
+// File Path: web/workery-frontend/src/pages/Root/Tenant/Detail/Page.jsx
+
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import {
   useTenantManager,
   useAuthManager,
 } from "../../../../services/Services";
+import { theme, globalStyles } from "../../../../constants/Theme";
+import {
+  Card,
+  Button,
+  Alert,
+  Loading,
+  Breadcrumb,
+} from "../../../../components/UI";
 
 function RootTenantDetailPage() {
-  ////
-  //// URL Parameters.
-  ////
-
   const { tid } = useParams();
-
-  ////
-  //// Services.
-  ////
-
   const tenantManager = useTenantManager();
   const authManager = useAuthManager();
   const navigate = useNavigate();
 
-  ////
-  //// Component states.
-  ////
-
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [tenant, setTenant] = useState(null);
-
-  ////
-  //// Event handling.
-  ////
 
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
@@ -58,26 +50,12 @@ function RootTenantDetailPage() {
         "RootTenantDetailPage: Failed to fetch tenant detail:",
         error,
       );
-      setErrors(error);
+      setErrors({ fetch: error.message || "Failed to load tenant details" });
       window.scrollTo(0, 0);
     } finally {
       setIsLoading(false);
     }
   };
-
-  const handleLogout = async () => {
-    try {
-      await authManager.logout();
-      navigate("/login");
-    } catch (error) {
-      console.error("RootTenantDetailPage: Logout failed:", error);
-      navigate("/login");
-    }
-  };
-
-  ////
-  //// Misc.
-  ////
 
   useEffect(() => {
     let mounted = true;
@@ -85,19 +63,16 @@ function RootTenantDetailPage() {
     if (mounted) {
       window.scrollTo(0, 0);
 
-      // Check authentication
       if (!authManager.isAuthenticated()) {
         navigate("/login?unauthorized=true");
         return;
       }
 
-      // Validate tenant ID
       if (!tid || typeof tid !== "string" || tid.trim() === "") {
         setErrors({ tenantId: "Invalid tenant ID" });
         return;
       }
 
-      // Fetch tenant details
       fetchTenantDetail(tid);
     }
 
@@ -106,650 +81,204 @@ function RootTenantDetailPage() {
     };
   }, [tid]);
 
-  ////
-  //// Component rendering.
-  ////
-
   if (isLoading) {
-    return (
-      <div style={{ textAlign: "center", padding: "40px" }}>
-        <h1>Loading Tenant Details...</h1>
-      </div>
-    );
+    return <Loading message="Loading Tenant Details..." />;
   }
 
+  const styles = {
+    detailSection: {
+      marginBottom: "30px",
+    },
+    sectionTitle: {
+      fontSize: "18px",
+      marginBottom: "15px",
+      color: theme.colors.secondary,
+      display: "flex",
+      alignItems: "center",
+      gap: "8px",
+    },
+    detailGrid: {
+      display: "grid",
+      gap: "15px",
+      gridTemplateColumns: "1fr",
+      maxWidth: "600px",
+    },
+    detailItem: {
+      display: "flex",
+      flexDirection: "column",
+    },
+    detailLabel: {
+      fontWeight: "bold",
+      marginBottom: "5px",
+      fontSize: "14px",
+      color: "#333",
+    },
+    detailValue: {
+      padding: "10px",
+      backgroundColor: "#f8f9fa",
+      borderRadius: "4px",
+      fontSize: "14px",
+      color: "#666",
+    },
+    actionButtons: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginTop: "40px",
+      flexWrap: "wrap",
+      gap: "10px",
+    },
+  };
+
   return (
-    <div style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto" }}>
-      <section>
-        {/* Desktop Breadcrumbs */}
-        <nav
-          aria-label="breadcrumbs"
-          style={{
-            backgroundColor: "#f5f5f5",
-            padding: "15px",
-            borderRadius: "4px",
-            marginBottom: "20px",
-            display: window.innerWidth > 768 ? "block" : "none",
-          }}
+    <div style={globalStyles.container}>
+      <Breadcrumb
+        items={[
+          { label: "Admin Dashboard", path: "/root/dashboard", icon: "📊" },
+          { label: "Tenants", path: "/root/tenants", icon: "🏢" },
+          { label: "Detail", icon: "ℹ️" },
+        ]}
+      />
+
+      {errors.fetch && <Alert type="error">{errors.fetch}</Alert>}
+      {errors.tenantId && <Alert type="error">{errors.tenantId}</Alert>}
+
+      {tenant && (
+        <Card
+          title="🏢 Tenant Details"
+          actions={
+            <Link to={`/root/tenant/${tid}/edit`}>
+              <Button variant="warning">✏️ Edit</Button>
+            </Link>
+          }
         >
-          <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-            <li>
-              <Link to="/root/dashboard" style={{ textDecoration: "none" }}>
-                📊 Admin Dashboard
-              </Link>
-              {" > "}
-              <Link to="/root/tenants" style={{ textDecoration: "none" }}>
-                🏢 Tenants
-              </Link>
-              {" > "}
-              <span>ℹ️ Detail</span>
-            </li>
-          </ul>
-        </nav>
+          {/* Identification Section */}
+          <div style={styles.detailSection}>
+            <h2 style={styles.sectionTitle}>🆔 Identification</h2>
+            <hr style={{ marginBottom: "15px" }} />
 
-        {/* Mobile Breadcrumbs */}
-        <nav
-          aria-label="breadcrumbs"
-          style={{
-            backgroundColor: "#f5f5f5",
-            padding: "15px",
-            borderRadius: "4px",
-            marginBottom: "20px",
-            display: window.innerWidth <= 768 ? "block" : "none",
-          }}
-        >
-          <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-            <li>
-              <Link to="/root/tenants" style={{ textDecoration: "none" }}>
-                ← Back to Organizations
-              </Link>
-            </li>
-          </ul>
-        </nav>
-
-        {/* Page */}
-        <div
-          style={{
-            border: "1px solid #ddd",
-            borderRadius: "4px",
-            padding: "20px",
-            backgroundColor: "white",
-          }}
-        >
-          {/* Page Header */}
-          {tenant && (
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "20px",
-                flexWrap: "wrap",
-              }}
-            >
-              <div>
-                <h1 style={{ margin: 0, fontSize: "24px" }}>🏢 Tenant</h1>
-              </div>
-              <div>
-                <Link
-                  to={`/root/tenant/${tid}/edit`}
-                  style={{
-                    padding: "8px 16px",
-                    backgroundColor: "#ffc107",
-                    color: "black",
-                    textDecoration: "none",
-                    borderRadius: "4px",
-                    display: "inline-block",
-                  }}
-                >
-                  ✏️ Edit
-                </Link>
-              </div>
-            </div>
-          )}
-
-          {/* Error Display */}
-          {Object.keys(errors).length > 0 && (
-            <div
-              style={{
-                color: "red",
-                border: "1px solid red",
-                padding: "10px",
-                marginBottom: "20px",
-                borderRadius: "4px",
-                backgroundColor: "#ffebee",
-              }}
-            >
-              <strong>Error occurred:</strong>
-              {Object.entries(errors).map(([key, value]) => (
-                <div key={key}>
-                  <strong>{key}:</strong>{" "}
-                  {typeof value === "string" ? value : JSON.stringify(value)}
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Tenant Details */}
-          {tenant && (
-            <div>
-              {/* Identification Section */}
-              <div style={{ marginBottom: "30px" }}>
-                <h2
-                  style={{
-                    fontSize: "18px",
-                    marginBottom: "15px",
-                    color: "#666",
-                  }}
-                >
-                  🆔 Identification
-                </h2>
-                <hr style={{ marginBottom: "15px" }} />
-
-                <div
-                  style={{
-                    display: "grid",
-                    gap: "15px",
-                    gridTemplateColumns: "1fr",
-                    maxWidth: "600px",
-                  }}
-                >
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontWeight: "bold",
-                        marginBottom: "5px",
-                      }}
-                    >
-                      Schema Name:
-                    </label>
-                    <p
-                      style={{
-                        margin: 0,
-                        padding: "8px",
-                        backgroundColor: "#f8f9fa",
-                        borderRadius: "4px",
-                      }}
-                    >
-                      {tenant.schemaName || "N/A"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontWeight: "bold",
-                        marginBottom: "5px",
-                      }}
-                    >
-                      Name:
-                    </label>
-                    <p
-                      style={{
-                        margin: 0,
-                        padding: "8px",
-                        backgroundColor: "#f8f9fa",
-                        borderRadius: "4px",
-                      }}
-                    >
-                      {tenant.name || "N/A"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontWeight: "bold",
-                        marginBottom: "5px",
-                      }}
-                    >
-                      Alternate Name:
-                    </label>
-                    <p
-                      style={{
-                        margin: 0,
-                        padding: "8px",
-                        backgroundColor: "#f8f9fa",
-                        borderRadius: "4px",
-                      }}
-                    >
-                      {tenant.alternateName || "N/A"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontWeight: "bold",
-                        marginBottom: "5px",
-                      }}
-                    >
-                      Description:
-                    </label>
-                    <p
-                      style={{
-                        margin: 0,
-                        padding: "8px",
-                        backgroundColor: "#f8f9fa",
-                        borderRadius: "4px",
-                      }}
-                    >
-                      {tenant.description || "N/A"}
-                    </p>
-                  </div>
+            <div style={styles.detailGrid}>
+              <div style={styles.detailItem}>
+                <label style={styles.detailLabel}>Schema Name:</label>
+                <div style={styles.detailValue}>
+                  {tenant.schemaName || "N/A"}
                 </div>
               </div>
 
-              {/* Contact Section */}
-              <div style={{ marginBottom: "30px" }}>
-                <h2
-                  style={{
-                    fontSize: "18px",
-                    marginBottom: "15px",
-                    color: "#666",
-                  }}
-                >
-                  📞 Contact
-                </h2>
-                <hr style={{ marginBottom: "15px" }} />
+              <div style={styles.detailItem}>
+                <label style={styles.detailLabel}>Name:</label>
+                <div style={styles.detailValue}>{tenant.name || "N/A"}</div>
+              </div>
 
-                <div
-                  style={{
-                    display: "grid",
-                    gap: "15px",
-                    gridTemplateColumns: "1fr",
-                    maxWidth: "600px",
-                  }}
-                >
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontWeight: "bold",
-                        marginBottom: "5px",
-                      }}
-                    >
-                      Email:
-                    </label>
-                    <p
-                      style={{
-                        margin: 0,
-                        padding: "8px",
-                        backgroundColor: "#f8f9fa",
-                        borderRadius: "4px",
-                      }}
-                    >
-                      {tenant.email || "N/A"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontWeight: "bold",
-                        marginBottom: "5px",
-                      }}
-                    >
-                      Telephone:
-                    </label>
-                    <p
-                      style={{
-                        margin: 0,
-                        padding: "8px",
-                        backgroundColor: "#f8f9fa",
-                        borderRadius: "4px",
-                      }}
-                    >
-                      {tenant.telephone || "N/A"}
-                    </p>
-                  </div>
+              <div style={styles.detailItem}>
+                <label style={styles.detailLabel}>Alternate Name:</label>
+                <div style={styles.detailValue}>
+                  {tenant.alternateName || "N/A"}
                 </div>
               </div>
 
-              {/* Address Section */}
-              <div style={{ marginBottom: "30px" }}>
-                <h2
-                  style={{
-                    fontSize: "18px",
-                    marginBottom: "15px",
-                    color: "#666",
-                  }}
-                >
-                  📍 Address
-                </h2>
-                <hr style={{ marginBottom: "15px" }} />
-
-                <div
-                  style={{
-                    display: "grid",
-                    gap: "15px",
-                    gridTemplateColumns: "1fr",
-                    maxWidth: "600px",
-                  }}
-                >
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontWeight: "bold",
-                        marginBottom: "5px",
-                      }}
-                    >
-                      Country:
-                    </label>
-                    <p
-                      style={{
-                        margin: 0,
-                        padding: "8px",
-                        backgroundColor: "#f8f9fa",
-                        borderRadius: "4px",
-                      }}
-                    >
-                      {tenant.addressCountry || "N/A"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontWeight: "bold",
-                        marginBottom: "5px",
-                      }}
-                    >
-                      State/Province:
-                    </label>
-                    <p
-                      style={{
-                        margin: 0,
-                        padding: "8px",
-                        backgroundColor: "#f8f9fa",
-                        borderRadius: "4px",
-                      }}
-                    >
-                      {tenant.addressRegion || "N/A"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontWeight: "bold",
-                        marginBottom: "5px",
-                      }}
-                    >
-                      City:
-                    </label>
-                    <p
-                      style={{
-                        margin: 0,
-                        padding: "8px",
-                        backgroundColor: "#f8f9fa",
-                        borderRadius: "4px",
-                      }}
-                    >
-                      {tenant.addressLocality || "N/A"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontWeight: "bold",
-                        marginBottom: "5px",
-                      }}
-                    >
-                      Postal Code:
-                    </label>
-                    <p
-                      style={{
-                        margin: 0,
-                        padding: "8px",
-                        backgroundColor: "#f8f9fa",
-                        borderRadius: "4px",
-                      }}
-                    >
-                      {tenant.postalCode || "N/A"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontWeight: "bold",
-                        marginBottom: "5px",
-                      }}
-                    >
-                      Address:
-                    </label>
-                    <p
-                      style={{
-                        margin: 0,
-                        padding: "8px",
-                        backgroundColor: "#f8f9fa",
-                        borderRadius: "4px",
-                      }}
-                    >
-                      {tenant.streetAddress || "N/A"}
-                    </p>
-                  </div>
-
-                  <div>
-                    <label
-                      style={{
-                        display: "block",
-                        fontWeight: "bold",
-                        marginBottom: "5px",
-                      }}
-                    >
-                      Address (Extra line):
-                    </label>
-                    <p
-                      style={{
-                        margin: 0,
-                        padding: "8px",
-                        backgroundColor: "#f8f9fa",
-                        borderRadius: "4px",
-                      }}
-                    >
-                      {tenant.streetAddressExtra || "N/A"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Navigation Buttons */}
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginTop: "40px",
-                  flexWrap: "wrap",
-                  gap: "10px",
-                }}
-              >
-                <div>
-                  {/* Desktop Back Button */}
-                  <Link
-                    to="/root/tenants"
-                    style={{
-                      padding: "10px 20px",
-                      backgroundColor: "#6c757d",
-                      color: "white",
-                      textDecoration: "none",
-                      borderRadius: "4px",
-                      display:
-                        window.innerWidth > 768 ? "inline-block" : "none",
-                    }}
-                  >
-                    ← Back
-                  </Link>
-                  {/* Mobile Back Button */}
-                  <Link
-                    to="/root/tenants"
-                    style={{
-                      padding: "10px 20px",
-                      backgroundColor: "#6c757d",
-                      color: "white",
-                      textDecoration: "none",
-                      borderRadius: "4px",
-                      display: window.innerWidth <= 768 ? "block" : "none",
-                      width: "100%",
-                      textAlign: "center",
-                      marginBottom: "10px",
-                    }}
-                  >
-                    ← Back
-                  </Link>
-                </div>
-                <div>
-                  {/* Desktop Edit Button */}
-                  <Link
-                    to={`/root/tenant/${tid}/edit`}
-                    style={{
-                      padding: "10px 20px",
-                      backgroundColor: "#007bff",
-                      color: "white",
-                      textDecoration: "none",
-                      borderRadius: "4px",
-                      display:
-                        window.innerWidth > 768 ? "inline-block" : "none",
-                    }}
-                  >
-                    ✏️ Edit
-                  </Link>
-                  {/* Mobile Edit Button */}
-                  <Link
-                    to={`/root/tenant/${tid}/edit`}
-                    style={{
-                      padding: "10px 20px",
-                      backgroundColor: "#007bff",
-                      color: "white",
-                      textDecoration: "none",
-                      borderRadius: "4px",
-                      display: window.innerWidth <= 768 ? "block" : "none",
-                      width: "100%",
-                      textAlign: "center",
-                    }}
-                  >
-                    ✏️ Edit
-                  </Link>
+              <div style={styles.detailItem}>
+                <label style={styles.detailLabel}>Description:</label>
+                <div style={styles.detailValue}>
+                  {tenant.description || "N/A"}
                 </div>
               </div>
             </div>
-          )}
-
-          {/* No Tenant Found */}
-          {!tenant && !isLoading && (
-            <div style={{ textAlign: "center", padding: "40px" }}>
-              <h2>Tenant Not Found</h2>
-              <p>The requested tenant could not be found.</p>
-              <Link
-                to="/root/tenants"
-                style={{ color: "#007bff", textDecoration: "none" }}
-              >
-                ← Back to Tenants List
-              </Link>
-            </div>
-          )}
-        </div>
-
-        {/* Bottom Page Logout Link */}
-        <div style={{ textAlign: "right", color: "#666", marginTop: "20px" }}>
-          <button
-            onClick={handleLogout}
-            style={{
-              background: "none",
-              border: "none",
-              color: "#666",
-              textDecoration: "underline",
-              cursor: "pointer",
-              fontSize: "14px",
-            }}
-          >
-            Logout →
-          </button>
-        </div>
-
-        {/* Debug info in development */}
-        {import.meta.env.DEV && (
-          <div
-            style={{
-              marginTop: "40px",
-              padding: "20px",
-              backgroundColor: "#f5f5f5",
-              borderRadius: "4px",
-              fontSize: "12px",
-            }}
-          >
-            <h4>Debug Info (Development Only):</h4>
-            <ul>
-              <li>
-                Authenticated: {authManager.isAuthenticated() ? "Yes" : "No"}
-              </li>
-              <li>Tenant ID from URL: {tid}</li>
-              <li>Loading: {isLoading ? "Yes" : "No"}</li>
-              <li>Has Tenant Data: {tenant ? "Yes" : "No"}</li>
-              <li>
-                Has Errors: {Object.keys(errors).length > 0 ? "Yes" : "No"}
-              </li>
-            </ul>
-
-            {tenant && (
-              <div>
-                <h5>Tenant Data Summary:</h5>
-                <pre
-                  style={{
-                    fontSize: "10px",
-                    backgroundColor: "#fff",
-                    padding: "10px",
-                    borderRadius: "4px",
-                  }}
-                >
-                  {JSON.stringify(
-                    {
-                      id: tenant.id,
-                      name: tenant.name,
-                      schemaName: tenant.schemaName,
-                      email: tenant.email,
-                      hasAddress: !!(
-                        tenant.streetAddress || tenant.addressLocality
-                      ),
-                    },
-                    null,
-                    2,
-                  )}
-                </pre>
-              </div>
-            )}
-
-            {Object.keys(errors).length > 0 && (
-              <div>
-                <h5>Current Errors:</h5>
-                <pre
-                  style={{
-                    fontSize: "10px",
-                    backgroundColor: "#fff",
-                    padding: "10px",
-                    borderRadius: "4px",
-                  }}
-                >
-                  {JSON.stringify(errors, null, 2)}
-                </pre>
-              </div>
-            )}
           </div>
-        )}
-      </section>
+
+          {/* Contact Section */}
+          <div style={styles.detailSection}>
+            <h2 style={styles.sectionTitle}>📞 Contact</h2>
+            <hr style={{ marginBottom: "15px" }} />
+
+            <div style={styles.detailGrid}>
+              <div style={styles.detailItem}>
+                <label style={styles.detailLabel}>Email:</label>
+                <div style={styles.detailValue}>{tenant.email || "N/A"}</div>
+              </div>
+
+              <div style={styles.detailItem}>
+                <label style={styles.detailLabel}>Telephone:</label>
+                <div style={styles.detailValue}>
+                  {tenant.telephone || "N/A"}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Address Section */}
+          <div style={styles.detailSection}>
+            <h2 style={styles.sectionTitle}>📍 Address</h2>
+            <hr style={{ marginBottom: "15px" }} />
+
+            <div style={styles.detailGrid}>
+              <div style={styles.detailItem}>
+                <label style={styles.detailLabel}>Country:</label>
+                <div style={styles.detailValue}>
+                  {tenant.addressCountry || "N/A"}
+                </div>
+              </div>
+
+              <div style={styles.detailItem}>
+                <label style={styles.detailLabel}>State/Province:</label>
+                <div style={styles.detailValue}>
+                  {tenant.addressRegion || "N/A"}
+                </div>
+              </div>
+
+              <div style={styles.detailItem}>
+                <label style={styles.detailLabel}>City:</label>
+                <div style={styles.detailValue}>
+                  {tenant.addressLocality || "N/A"}
+                </div>
+              </div>
+
+              <div style={styles.detailItem}>
+                <label style={styles.detailLabel}>Postal Code:</label>
+                <div style={styles.detailValue}>
+                  {tenant.postalCode || "N/A"}
+                </div>
+              </div>
+
+              <div style={styles.detailItem}>
+                <label style={styles.detailLabel}>Street Address:</label>
+                <div style={styles.detailValue}>
+                  {tenant.streetAddress || "N/A"}
+                </div>
+              </div>
+
+              <div style={styles.detailItem}>
+                <label style={styles.detailLabel}>Address (Extra line):</label>
+                <div style={styles.detailValue}>
+                  {tenant.streetAddressExtra || "N/A"}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Navigation Buttons */}
+          <div style={styles.actionButtons}>
+            <Link to="/root/tenants">
+              <Button variant="secondary">← Back</Button>
+            </Link>
+            <Link to={`/root/tenant/${tid}/edit`}>
+              <Button variant="primary">✏️ Edit</Button>
+            </Link>
+          </div>
+        </Card>
+      )}
+
+      {!tenant && !isLoading && (
+        <Card>
+          <div style={{ textAlign: "center", padding: "40px" }}>
+            <h2>Tenant Not Found</h2>
+            <p>The requested tenant could not be found.</p>
+            <Link to="/root/tenants">
+              <Button variant="primary">← Back to Tenants List</Button>
+            </Link>
+          </div>
+        </Card>
+      )}
     </div>
   );
 }

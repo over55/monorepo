@@ -1,7 +1,10 @@
-// File Path: monorepo/web/workery-frontend/src/components/Layout/Sidebar.jsx
+// File Path: web/workery-frontend/src/components/Layout/Sidebar.jsx
+
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { useAuthManager, useAccountManager } from "../../services/Services";
+import { theme } from "../../constants/Theme";
+import { Modal, Button } from "../UI";
 import {
   EXECUTIVE_ROLE_ID,
   MANAGEMENT_ROLE_ID,
@@ -11,36 +14,22 @@ import {
   ASSOCIATE_JOB_SEEKER_ROLE_ID,
 } from "../../constants/Roles";
 
-function Sidebar({ isOpen, onClose }) {
-  ////
-  //// Services.
-  ////
-
+function Sidebar({ isOpen, onClose, isMobile }) {
   const authManager = useAuthManager();
   const accountManager = useAccountManager();
   const navigate = useNavigate();
   const location = useLocation();
 
-  ////
-  //// Component states.
-  ////
-
   const [currentUser, setCurrentUser] = useState(null);
   const [showLogoutWarning, setShowLogoutWarning] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [taskItemActiveCount, setTaskItemActiveCount] = useState(0); // TODO: Implement with task service
-
-  ////
-  //// Event handling.
-  ////
 
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
   };
 
   const handleLinkClick = () => {
-    // Close hamburger menu on mobile
-    if (window.innerWidth <= 768) {
+    if (isMobile) {
       onClose();
     }
   };
@@ -54,10 +43,6 @@ function Sidebar({ isOpen, onClose }) {
       navigate("/login");
     }
   };
-
-  ////
-  //// Misc.
-  ////
 
   useEffect(() => {
     let mounted = true;
@@ -90,40 +75,26 @@ function Sidebar({ isOpen, onClose }) {
     return () => {
       mounted = false;
     };
-  }, []);
-
-  ////
-  //// Component rendering.
-  ////
+  }, [location.pathname]);
 
   // Paths where sidebar should not be shown
-  const ignorePathsArr = [
+  const hiddenPaths = [
     "/",
     "/register",
-    "/register-successful",
     "/index",
     "/login",
-    "/login/2fa",
-    "/login/2fa/step-1",
-    "/login/2fa/step-2",
-    "/login/2fa/step-3",
-    "/login/2fa/step-3/backup-code",
-    "/login/2fa/backup-code",
-    "/login/2fa/backup-code-recovery",
     "/logout",
     "/verify",
     "/forgot-password",
     "/password-reset",
-    "/root/dashboard",
-    "/root/tenants",
-    "/root/tenant",
     "/terms",
     "/privacy",
   ];
 
-  const shouldHideSidebar = ignorePathsArr.some(
+  const shouldHideSidebar = hiddenPaths.some(
     (path) =>
-      location.pathname === path || location.pathname.startsWith(path + "/"),
+      location.pathname === path ||
+      (path !== "/" && location.pathname.startsWith(path)),
   );
 
   if (shouldHideSidebar || isLoading || !currentUser) {
@@ -137,13 +108,14 @@ function Sidebar({ isOpen, onClose }) {
       left: 0,
       width: "250px",
       height: "100vh",
-      backgroundColor: "#1a1a1a",
+      backgroundColor: theme.colors.dark,
       color: "#e0e0e0",
       transform: isOpen ? "translateX(0)" : "translateX(-100%)",
-      transition: "transform 0.3s ease-in-out",
+      transition: `transform ${theme.transitions.normal}`,
       zIndex: 1000,
       overflowY: "auto",
-      padding: "20px 0",
+      paddingTop: "80px",
+      paddingBottom: "20px",
     },
     overlay: {
       position: "fixed",
@@ -154,16 +126,6 @@ function Sidebar({ isOpen, onClose }) {
       backgroundColor: "rgba(0, 0, 0, 0.5)",
       zIndex: 999,
       display: isOpen ? "block" : "none",
-    },
-    logo: {
-      padding: "20px",
-      textAlign: "center",
-      borderBottom: "1px solid #333",
-      marginBottom: "20px",
-    },
-    logoImage: {
-      maxWidth: "150px",
-      height: "auto",
     },
     menuSection: {
       marginBottom: "30px",
@@ -191,65 +153,23 @@ function Sidebar({ isOpen, onClose }) {
       color: "#e0e0e0",
       textDecoration: "none",
       borderRadius: "4px",
-      transition: "background-color 0.2s",
-    },
-    menuLinkHover: {
-      backgroundColor: "#333",
+      transition: `background-color ${theme.transitions.fast}`,
     },
     menuLinkActive: {
-      backgroundColor: "#007bff",
+      backgroundColor: theme.colors.primary,
       color: "white",
     },
-    modal: {
-      position: "fixed",
-      top: 0,
-      left: 0,
-      width: "100vw",
-      height: "100vh",
-      backgroundColor: "rgba(0, 0, 0, 0.5)",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      zIndex: 2000,
-    },
-    modalCard: {
-      backgroundColor: "white",
-      borderRadius: "8px",
-      padding: "20px",
-      maxWidth: "400px",
-      width: "90%",
-    },
-    modalHeader: {
-      marginBottom: "15px",
-    },
-    modalTitle: {
-      margin: 0,
-      fontSize: "18px",
-      fontWeight: "bold",
-    },
-    modalBody: {
-      marginBottom: "20px",
-      color: "#666",
-    },
-    modalFooter: {
-      display: "flex",
-      gap: "10px",
-      justifyContent: "flex-end",
-    },
-    button: {
-      padding: "8px 16px",
+    logoutButton: {
+      display: "block",
+      width: "100%",
+      textAlign: "left",
+      padding: "10px 15px",
+      color: "#e0e0e0",
+      background: "none",
       border: "none",
       borderRadius: "4px",
       cursor: "pointer",
-      fontSize: "14px",
-    },
-    buttonPrimary: {
-      backgroundColor: "#28a745",
-      color: "white",
-    },
-    buttonSecondary: {
-      backgroundColor: "#6c757d",
-      color: "white",
+      transition: `background-color ${theme.transitions.fast}`,
     },
   };
 
@@ -262,6 +182,87 @@ function Sidebar({ isOpen, onClose }) {
     ...(isActivePath(path) ? styles.menuLinkActive : {}),
   });
 
+  // Get menu items based on user role
+  const getMenuSections = () => {
+    const sections = [];
+
+    // Staff menu for executive, management, and frontline roles
+    if (
+      [EXECUTIVE_ROLE_ID, MANAGEMENT_ROLE_ID, FRONTLINE_ROLE_ID].includes(
+        currentUser.roleId,
+      )
+    ) {
+      sections.push({
+        label: "Staff",
+        items: [
+          { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
+          { path: "/admin/tasks", label: "Tasks", icon: "📋" },
+          { path: "/admin/clients", label: "Clients", icon: "👤" },
+          { path: "/admin/associates", label: "Associates", icon: "👷" },
+          { path: "/admin/orders", label: "Work Orders", icon: "🔧" },
+          { path: "/admin/skill-sets", label: "Skill Sets", icon: "🎓" },
+          { path: "/admin/incidents", label: "Incidents", icon: "🔥" },
+          { path: "/admin/job-history", label: "Job History", icon: "📊" },
+          { path: "/admin/all-comments", label: "Comments", icon: "💬" },
+        ],
+      });
+
+      sections.push({
+        label: "Administration",
+        items: [
+          { path: "/admin/financials", label: "Financials", icon: "💳" },
+          { path: "/admin/reports", label: "Reports", icon: "📈" },
+          { path: "/admin/staff", label: "Staff", icon: "👔" },
+          { path: "/admin/settings", label: "Settings", icon: "⚙️" },
+        ],
+      });
+    }
+
+    // Customer menu
+    if (currentUser.roleId === CUSTOMER_ROLE_ID) {
+      sections.push({
+        label: "Member",
+        items: [
+          { path: "/c/dashboard", label: "Dashboard", icon: "📊" },
+          { path: "/c/orders", label: "My Service Requests", icon: "🔧" },
+          { path: "/c/financials", label: "My Financials", icon: "💳" },
+          { path: "/c/associates", label: "My Associates", icon: "👷" },
+        ],
+      });
+    }
+
+    // Associate menu
+    if (currentUser.roleId === ASSOCIATE_ROLE_ID) {
+      sections.push({
+        label: "Associate",
+        items: [
+          { path: "/a/dashboard", label: "Dashboard", icon: "📊" },
+          { path: "/a/orders", label: "My Work Orders", icon: "🔧" },
+          { path: "/a/financials", label: "My Financials", icon: "💳" },
+          { path: "/a/clients", label: "My Clients", icon: "👤" },
+        ],
+      });
+    }
+
+    // Job Seeker menu
+    if (currentUser.roleId === ASSOCIATE_JOB_SEEKER_ROLE_ID) {
+      sections.push({
+        label: "Job Seeker",
+        items: [
+          { path: "/js/dashboard", label: "Dashboard", icon: "📊" },
+          { path: "/js/find-work", label: "Find Work", icon: "🔍" },
+          { path: "/js/documents", label: "My Documents", icon: "💼" },
+          { path: "/js/advisor", label: "My Advisor", icon: "👔" },
+          { path: "/js/learning", label: "Learning & Goals", icon: "⭐" },
+        ],
+      });
+    }
+
+    return sections;
+  };
+
+  const menuSections = getMenuSections();
+
   return (
     <>
       {/* Overlay */}
@@ -269,303 +270,35 @@ function Sidebar({ isOpen, onClose }) {
 
       {/* Sidebar */}
       <div style={styles.sidebar}>
-        {/* Logo */}
-        <div style={styles.logo}>
-          <Link to="/admin/dashboard" onClick={handleLinkClick}>
-            <img
-              src="/img/compressed-logo.png"
-              alt="Workery Logo"
-              style={styles.logoImage}
-            />
-          </Link>
-        </div>
-
-        {/* Staff Menu */}
-        {(currentUser.roleId === EXECUTIVE_ROLE_ID ||
-          currentUser.roleId === MANAGEMENT_ROLE_ID ||
-          currentUser.roleId === FRONTLINE_ROLE_ID) && (
-          <>
-            <div style={styles.menuSection}>
-              <div style={styles.menuLabel}>Staff</div>
-              <ul style={styles.menuList}>
-                <li style={styles.menuItem}>
+        {/* Menu Sections */}
+        {menuSections.map((section, index) => (
+          <div key={index} style={styles.menuSection}>
+            <div style={styles.menuLabel}>{section.label}</div>
+            <ul style={styles.menuList}>
+              {section.items.map((item, idx) => (
+                <li key={idx} style={styles.menuItem}>
                   <Link
-                    to="/admin/dashboard"
-                    style={getLinkStyle("dashboard")}
+                    to={item.path}
+                    style={getLinkStyle(item.path)}
                     onClick={handleLinkClick}
+                    onMouseEnter={(e) => {
+                      if (!isActivePath(item.path)) {
+                        e.target.style.backgroundColor = "#333";
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActivePath(item.path)) {
+                        e.target.style.backgroundColor = "transparent";
+                      }
+                    }}
                   >
-                    📊 Dashboard
+                    {item.icon} {item.label}
                   </Link>
                 </li>
-                <li style={styles.menuItem}>
-                  <Link
-                    to="/admin/tasks"
-                    style={getLinkStyle("task")}
-                    onClick={handleLinkClick}
-                  >
-                    📋 Tasks
-                    {taskItemActiveCount > 0 && ` (${taskItemActiveCount})`}
-                  </Link>
-                </li>
-                <li style={styles.menuItem}>
-                  <Link
-                    to="/admin/clients"
-                    style={getLinkStyle("client")}
-                    onClick={handleLinkClick}
-                  >
-                    👤 Clients
-                  </Link>
-                </li>
-                <li style={styles.menuItem}>
-                  <Link
-                    to="/admin/associates"
-                    style={getLinkStyle("associate")}
-                    onClick={handleLinkClick}
-                  >
-                    👷 Associates
-                  </Link>
-                </li>
-                <li style={styles.menuItem}>
-                  <Link
-                    to="/admin/orders"
-                    style={getLinkStyle("order")}
-                    onClick={handleLinkClick}
-                  >
-                    🔧 Work Orders
-                  </Link>
-                </li>
-                <li style={styles.menuItem}>
-                  <Link
-                    to="/admin/skill-sets"
-                    style={getLinkStyle("skill-set")}
-                    onClick={handleLinkClick}
-                  >
-                    🎓 Skill Sets
-                  </Link>
-                </li>
-                <li style={styles.menuItem}>
-                  <Link
-                    to="/admin/incidents"
-                    style={getLinkStyle("incidents")}
-                    onClick={handleLinkClick}
-                  >
-                    🔥 Incidents
-                  </Link>
-                </li>
-                <li style={styles.menuItem}>
-                  <Link
-                    to="/admin/job-history"
-                    style={getLinkStyle("job-history")}
-                    onClick={handleLinkClick}
-                  >
-                    📊 Job History
-                  </Link>
-                </li>
-                <li style={styles.menuItem}>
-                  <Link
-                    to="/admin/all-comments"
-                    style={getLinkStyle("all-comments")}
-                    onClick={handleLinkClick}
-                  >
-                    💬 Comments
-                  </Link>
-                </li>
-              </ul>
-            </div>
-
-            <div style={styles.menuSection}>
-              <div style={styles.menuLabel}>Administration</div>
-              <ul style={styles.menuList}>
-                <li style={styles.menuItem}>
-                  <Link
-                    to="/admin/financials"
-                    style={getLinkStyle("financial")}
-                    onClick={handleLinkClick}
-                  >
-                    💳 Financials
-                  </Link>
-                </li>
-                <li style={styles.menuItem}>
-                  <Link
-                    to="/admin/reports"
-                    style={getLinkStyle("report")}
-                    onClick={handleLinkClick}
-                  >
-                    📈 Reports
-                  </Link>
-                </li>
-                <li style={styles.menuItem}>
-                  <Link
-                    to="/admin/staff"
-                    style={getLinkStyle("staff")}
-                    onClick={handleLinkClick}
-                  >
-                    👔 Staff
-                  </Link>
-                </li>
-                <li style={styles.menuItem}>
-                  <Link
-                    to="/admin/settings"
-                    style={getLinkStyle("setting")}
-                    onClick={handleLinkClick}
-                  >
-                    ⚙️ Settings
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </>
-        )}
-
-        {/* Customer Menu */}
-        {currentUser.roleId === CUSTOMER_ROLE_ID && (
-          <>
-            <div style={styles.menuSection}>
-              <div style={styles.menuLabel}>Member</div>
-              <ul style={styles.menuList}>
-                <li style={styles.menuItem}>
-                  <Link
-                    to="/c/dashboard"
-                    style={getLinkStyle("dashboard")}
-                    onClick={handleLinkClick}
-                  >
-                    📊 Dashboard
-                  </Link>
-                </li>
-                <li style={styles.menuItem}>
-                  <Link
-                    to="/c/orders"
-                    style={getLinkStyle("order")}
-                    onClick={handleLinkClick}
-                  >
-                    🔧 My Service Requests
-                  </Link>
-                </li>
-                <li style={styles.menuItem}>
-                  <Link
-                    to="/c/financials"
-                    style={getLinkStyle("financial")}
-                    onClick={handleLinkClick}
-                  >
-                    💳 My Financials
-                  </Link>
-                </li>
-                <li style={styles.menuItem}>
-                  <Link
-                    to="/c/associates"
-                    style={getLinkStyle("associate")}
-                    onClick={handleLinkClick}
-                  >
-                    👷 My Associates
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </>
-        )}
-
-        {/* Associate Menu */}
-        {currentUser.roleId === ASSOCIATE_ROLE_ID && (
-          <>
-            <div style={styles.menuSection}>
-              <div style={styles.menuLabel}>Associate</div>
-              <ul style={styles.menuList}>
-                <li style={styles.menuItem}>
-                  <Link
-                    to="/a/dashboard"
-                    style={getLinkStyle("dashboard")}
-                    onClick={handleLinkClick}
-                  >
-                    📊 Dashboard
-                  </Link>
-                </li>
-                <li style={styles.menuItem}>
-                  <Link
-                    to="/a/orders"
-                    style={getLinkStyle("order")}
-                    onClick={handleLinkClick}
-                  >
-                    🔧 My Work Orders
-                  </Link>
-                </li>
-                <li style={styles.menuItem}>
-                  <Link
-                    to="/a/financials"
-                    style={getLinkStyle("financial")}
-                    onClick={handleLinkClick}
-                  >
-                    💳 My Financials
-                  </Link>
-                </li>
-                <li style={styles.menuItem}>
-                  <Link
-                    to="/a/clients"
-                    style={getLinkStyle("client")}
-                    onClick={handleLinkClick}
-                  >
-                    👤 My Clients
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </>
-        )}
-
-        {/* Job Seeker Menu */}
-        {currentUser.roleId === ASSOCIATE_JOB_SEEKER_ROLE_ID && (
-          <>
-            <div style={styles.menuSection}>
-              <div style={styles.menuLabel}>Job Seeker</div>
-              <ul style={styles.menuList}>
-                <li style={styles.menuItem}>
-                  <Link
-                    to="/js/dashboard"
-                    style={getLinkStyle("dashboard")}
-                    onClick={handleLinkClick}
-                  >
-                    📊 Dashboard
-                  </Link>
-                </li>
-                <li style={styles.menuItem}>
-                  <Link
-                    to="/js/find-work"
-                    style={getLinkStyle("find-work")}
-                    onClick={handleLinkClick}
-                  >
-                    🔍 Find Work
-                  </Link>
-                </li>
-                <li style={styles.menuItem}>
-                  <Link
-                    to="/js/documents"
-                    style={getLinkStyle("documents")}
-                    onClick={handleLinkClick}
-                  >
-                    💼 My Documents
-                  </Link>
-                </li>
-                <li style={styles.menuItem}>
-                  <Link
-                    to="/js/advisor"
-                    style={getLinkStyle("advisor")}
-                    onClick={handleLinkClick}
-                  >
-                    👔 My Advisor
-                  </Link>
-                </li>
-                <li style={styles.menuItem}>
-                  <Link
-                    to="/js/learning"
-                    style={getLinkStyle("learning")}
-                    onClick={handleLinkClick}
-                  >
-                    ⭐ Learning & Goals
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </>
-        )}
+              ))}
+            </ul>
+          </div>
+        ))}
 
         {/* Account Menu */}
         <div style={styles.menuSection}>
@@ -576,6 +309,16 @@ function Sidebar({ isOpen, onClose }) {
                 to="/help"
                 style={getLinkStyle("help")}
                 onClick={handleLinkClick}
+                onMouseEnter={(e) => {
+                  if (!isActivePath("help")) {
+                    e.target.style.backgroundColor = "#333";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActivePath("help")) {
+                    e.target.style.backgroundColor = "transparent";
+                  }
+                }}
               >
                 ❓ Help
               </Link>
@@ -585,6 +328,16 @@ function Sidebar({ isOpen, onClose }) {
                 to="/account"
                 style={getLinkStyle("account")}
                 onClick={handleLinkClick}
+                onMouseEnter={(e) => {
+                  if (!isActivePath("account")) {
+                    e.target.style.backgroundColor = "#333";
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActivePath("account")) {
+                    e.target.style.backgroundColor = "transparent";
+                  }
+                }}
               >
                 👤 My Profile
               </Link>
@@ -592,13 +345,12 @@ function Sidebar({ isOpen, onClose }) {
             <li style={styles.menuItem}>
               <button
                 onClick={() => setShowLogoutWarning(true)}
-                style={{
-                  ...styles.menuLink,
-                  background: "none",
-                  border: "none",
-                  width: "100%",
-                  textAlign: "left",
-                  cursor: "pointer",
+                style={styles.logoutButton}
+                onMouseEnter={(e) => {
+                  e.target.style.backgroundColor = "#333";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.backgroundColor = "transparent";
                 }}
               >
                 🚪 Sign Off
@@ -609,39 +361,29 @@ function Sidebar({ isOpen, onClose }) {
       </div>
 
       {/* Logout Confirmation Modal */}
-      {showLogoutWarning && (
-        <div style={styles.modal}>
-          <div style={styles.modalCard}>
-            <div style={styles.modalHeader}>
-              <h3 style={styles.modalTitle}>Are you sure?</h3>
-            </div>
-            <div style={styles.modalBody}>
-              You are about to log out of the system and you'll need to log in
-              again next time. Are you sure you want to continue?
-            </div>
-            <div style={styles.modalFooter}>
-              <button
-                onClick={() => setShowLogoutWarning(false)}
-                style={{
-                  ...styles.button,
-                  ...styles.buttonSecondary,
-                }}
-              >
-                No
-              </button>
-              <button
-                onClick={handleLogoutConfirm}
-                style={{
-                  ...styles.button,
-                  ...styles.buttonPrimary,
-                }}
-              >
-                Yes
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        isOpen={showLogoutWarning}
+        onClose={() => setShowLogoutWarning(false)}
+        title="Are you sure?"
+        footer={
+          <>
+            <Button
+              onClick={() => setShowLogoutWarning(false)}
+              variant="secondary"
+            >
+              No
+            </Button>
+            <Button onClick={handleLogoutConfirm} variant="success">
+              Yes
+            </Button>
+          </>
+        }
+      >
+        <p>
+          You are about to log out of the system and you'll need to log in again
+          next time. Are you sure you want to continue?
+        </p>
+      </Modal>
     </>
   );
 }
