@@ -11,6 +11,7 @@ import { VehicleTypeAPI } from "./API/VehicleTypeAPI";
 import { TagAPI } from "./API/TagAPI";
 import { SkillSetAPI } from "./API/SkillSetAPI";
 import { NOCAPI } from "./API/NOCAPI";
+import { NAICSAPI } from "./API/NAICSAPI";
 import { ServiceFeeAPI } from "./API/ServiceFeeAPI";
 import { TokenStorage } from "./Storage/TokenStorage";
 import { AccountStorage } from "./Storage/AccountStorage";
@@ -20,6 +21,7 @@ import { VehicleTypeStorage } from "./Storage/VehicleTypeStorage";
 import { TagStorage } from "./Storage/TagStorage";
 import { SkillSetStorage } from "./Storage/SkillSetStorage";
 import { NOCStorage } from "./Storage/NOCStorage";
+import { NAICSStorage } from "./Storage/NAICSStorage";
 import { ServiceFeeStorage } from "./Storage/ServiceFeeStorage";
 import { AuthManager } from "./Manager/AuthManager";
 import { VersionManager } from "./Manager/VersionManager";
@@ -32,6 +34,7 @@ import { VehicleTypeManager } from "./Manager/VehicleTypeManager";
 import { TagManager } from "./Manager/TagManager";
 import { SkillSetManager } from "./Manager/SkillSetManager";
 import { NOCManager } from "./Manager/NOCManager";
+import { NAICSManager } from "./Manager/NAICSManager";
 import { ServiceFeeManager } from "./Manager/ServiceFeeManager";
 import { getAPIBaseURL, API_ENDPOINTS, ENV_CONFIG } from "./Config/APIConfig";
 
@@ -81,6 +84,9 @@ class ServicesContainer {
     const nocStorage = new NOCStorage();
     this._services.set("nocStorage", nocStorage);
 
+    const naicsStorage = new NAICSStorage();
+    this._services.set("naicsStorage", naicsStorage);
+
     const serviceFeeStorage = new ServiceFeeStorage();
     this._services.set("serviceFeeStorage", serviceFeeStorage);
 
@@ -125,6 +131,9 @@ class ServicesContainer {
 
     const nocAPI = new NOCAPI(baseURL, API_ENDPOINTS, tokenStorage);
     this._services.set("nocAPI", nocAPI);
+
+    const naicsAPI = new NAICSAPI(baseURL, API_ENDPOINTS, tokenStorage);
+    this._services.set("naicsAPI", naicsAPI);
 
     const serviceFeeAPI = new ServiceFeeAPI(
       baseURL,
@@ -185,6 +194,10 @@ class ServicesContainer {
     const nocManager = new NOCManager(nocAPI, nocStorage);
     this._services.set("nocManager", nocManager);
 
+    // NAICSManager needs NAICSAPI and NAICSStorage
+    const naicsManager = new NAICSManager(naicsAPI, naicsStorage);
+    this._services.set("naicsManager", naicsManager);
+
     // ServiceFeeManager needs ServiceFeeAPI and ServiceFeeStorage
     const serviceFeeManager = new ServiceFeeManager(
       serviceFeeAPI,
@@ -210,6 +223,7 @@ class ServicesContainer {
         tagManager: ["tagAPI", "tagStorage"],
         skillSetManager: ["skillSetAPI", "skillSetStorage"],
         nocManager: ["nocAPI", "nocStorage"],
+        naicsManager: ["naicsAPI", "naicsStorage"],
         serviceFeeManager: ["serviceFeeAPI", "serviceFeeStorage"],
       });
       console.groupEnd();
@@ -282,6 +296,10 @@ class ServicesContainer {
     return this.get("nocManager");
   }
 
+  getNAICSManager() {
+    return this.get("naicsManager");
+  }
+
   getServiceFeeManager() {
     return this.get("serviceFeeManager");
   }
@@ -319,6 +337,10 @@ class ServicesContainer {
 
   getNOCStorage() {
     return this.get("nocStorage");
+  }
+
+  getNAICSStorage() {
+    return this.get("naicsStorage");
   }
 
   getServiceFeeStorage() {
@@ -370,6 +392,10 @@ class ServicesContainer {
 
   getNOCAPI() {
     return this.get("nocAPI");
+  }
+
+  getNAICSAPI() {
+    return this.get("naicsAPI");
   }
 
   getServiceFeeAPI() {
@@ -519,6 +545,11 @@ export function useNOCManager() {
   return services.getNOCManager();
 }
 
+export function useNAICSManager() {
+  const services = useServices();
+  return services.getNAICSManager();
+}
+
 export function useServiceFeeManager() {
   const services = useServices();
   return services.getServiceFeeManager();
@@ -565,6 +596,11 @@ export function useSkillSetStorage() {
 export function useNOCStorage() {
   const services = useServices();
   return services.getNOCStorage();
+}
+
+export function useNAICSStorage() {
+  const services = useServices();
+  return services.getNAICSStorage();
 }
 
 export function useServiceFeeStorage() {
@@ -628,6 +664,11 @@ export function useSkillSetAPI() {
 export function useNOCAPI() {
   const services = useServices();
   return services.getNOCAPI();
+}
+
+export function useNAICSAPI() {
+  const services = useServices();
+  return services.getNAICSAPI();
 }
 
 export function useServiceFeeAPI() {
