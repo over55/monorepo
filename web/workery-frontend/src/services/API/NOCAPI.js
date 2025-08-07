@@ -1,12 +1,11 @@
 // File Path: monorepo/web/workery-frontend/src/services/API/NOCAPI.js
 
-import { camelizeKeys } from "humps";
+import { camelizeKeys, decamelizeKeys } from "humps";
 import { createAuthenticatedAxios } from "../Helpers/AuthenticatedAxios";
 import { DateTime } from "luxon";
 
 /**
  * NOCAPI handles all National Occupational Classification-related API calls
- * This is primarily a read-only reference data API
  */
 export class NOCAPI {
   constructor(baseURL, endpoints, tokenStorage) {
@@ -18,9 +17,11 @@ export class NOCAPI {
     if (process.env.NODE_ENV === "development") {
       console.log("NOCAPI initialized with:", {
         baseURL: this.baseURL,
-        nocListEndpoint: this.endpoints.NOC_LIST,
-        nocDetailEndpoint: this.endpoints.NOC_DETAIL,
-        nocSelectOptionsEndpoint: this.endpoints.NOC_SELECT_OPTIONS,
+        nocListEndpoint: this.endpoints.NATIONAL_OCCUPATIONAL_CLASSIFICATIONS,
+        nocDetailEndpoint:
+          this.endpoints.NATIONAL_OCCUPATIONAL_CLASSIFICATION_DETAIL,
+        nocSelectOptionsEndpoint:
+          this.endpoints.NATIONAL_OCCUPATIONAL_CLASSIFICATION_SELECT_OPTIONS,
       });
     }
   }
@@ -41,7 +42,7 @@ export class NOCAPI {
 
       // Make the API call
       const response = await authenticatedAxios.get(
-        this.endpoints.NOC_SELECT_OPTIONS,
+        this.endpoints.NATIONAL_OCCUPATIONAL_CLASSIFICATION_SELECT_OPTIONS,
       );
 
       // Convert response from snake_case to camelCase
@@ -54,12 +55,12 @@ export class NOCAPI {
   }
 
   /**
-   * Gets list of National Occupational Classifications with optional filtering, sorting, and pagination
+   * Gets list of NOCs with optional filtering, sorting, and pagination
    * @param {Object} params - Query parameters { page, limit, search, sortBy, sortOrder }
    * @param {Function} onUnauthorizedCallback - Called when token refresh fails
-   * @returns {Promise<Object>} - NOC list with pagination data
+   * @returns {Promise<Object>} - NOCs list with pagination data
    */
-  async getNOCList(params = {}, onUnauthorizedCallback = null) {
+  async getNOCs(params = {}, onUnauthorizedCallback = null) {
     try {
       // Create authenticated axios instance
       const authenticatedAxios = createAuthenticatedAxios(
@@ -98,8 +99,8 @@ export class NOCAPI {
 
       const queryString = queryParams.toString();
       const url = queryString
-        ? `${this.endpoints.NOC_LIST}?${queryString}`
-        : this.endpoints.NOC_LIST;
+        ? `${this.endpoints.NATIONAL_OCCUPATIONAL_CLASSIFICATIONS}?${queryString}`
+        : this.endpoints.NATIONAL_OCCUPATIONAL_CLASSIFICATIONS;
 
       // Make the API call
       const response = await authenticatedAxios.get(url);
@@ -129,7 +130,7 @@ export class NOCAPI {
   }
 
   /**
-   * Gets details for a specific National Occupational Classification
+   * Gets details for a specific NOC
    * @param {string|number} nocId - The ID of the NOC
    * @param {Function} onUnauthorizedCallback - Called when token refresh fails
    * @returns {Promise<Object>} - NOC details
@@ -151,7 +152,11 @@ export class NOCAPI {
       );
 
       // Replace {id} placeholder in endpoint
-      const url = this.endpoints.NOC_DETAIL.replace("{id}", nocId);
+      const url =
+        this.endpoints.NATIONAL_OCCUPATIONAL_CLASSIFICATION_DETAIL.replace(
+          "{id}",
+          nocId,
+        );
 
       // Make the API call
       const response = await authenticatedAxios.get(url);
@@ -165,52 +170,6 @@ export class NOCAPI {
       }
 
       return data;
-    } catch (error) {
-      throw this._formatError(error);
-    }
-  }
-
-  /**
-   * Search NOCs by code or title
-   * @param {string} query - Search query
-   * @param {Object} options - Search options { limit, includeDetails }
-   * @param {Function} onUnauthorizedCallback - Called when token refresh fails
-   * @returns {Promise<Object>} - Search results
-   */
-  async searchNOCs(query, options = {}, onUnauthorizedCallback = null) {
-    try {
-      if (!query || typeof query !== "string" || !query.trim()) {
-        throw {
-          query: "Search query is required",
-        };
-      }
-
-      const searchParams = {
-        search: query.trim(),
-        limit: options.limit || 50,
-        ...options,
-      };
-
-      return await this.getNOCList(searchParams, onUnauthorizedCallback);
-    } catch (error) {
-      throw this._formatError(error);
-    }
-  }
-
-  /**
-   * Gets NOCs by category or skill level
-   * @param {Object} filters - Filter criteria { category, skillLevel, majorGroup }
-   * @param {Function} onUnauthorizedCallback - Called when token refresh fails
-   * @returns {Promise<Object>} - Filtered NOC results
-   */
-  async getNOCsByCategory(filters = {}, onUnauthorizedCallback = null) {
-    try {
-      const params = {
-        limit: 100, // Default larger limit for category searches
-        ...filters,
-      };
-
-      return await this.getNOCList(params, onUnauthorizedCallback);
     } catch (error) {
       throw this._formatError(error);
     }

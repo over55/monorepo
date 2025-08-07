@@ -96,6 +96,19 @@ export const API_ENDPOINTS = {
   SKILL_SETS: "/skill-sets",
   SKILL_SET_DETAIL: "/skill-set/{id}",
   SKILL_SET_SELECT_OPTIONS: "/skill-sets/operation/select-options",
+
+  // National Occupational Classification endpoints
+  NATIONAL_OCCUPATIONAL_CLASSIFICATIONS:
+    "/national-occupational-classifications",
+  NATIONAL_OCCUPATIONAL_CLASSIFICATION_DETAIL:
+    "/national-occupational-classification/{id}",
+  NATIONAL_OCCUPATIONAL_CLASSIFICATION_SELECT_OPTIONS:
+    "/national-occupational-classifications/select-options",
+
+  // Service Fee endpoints
+  SERVICE_FEES: "/service-fees",
+  SERVICE_FEE_DETAIL: "/service-fee/{id}",
+  SERVICE_FEE_SELECT_OPTIONS: "/service-fees/operation/select-options",
 };
 
 /**
@@ -129,6 +142,12 @@ export function getFullAPIUrls() {
     SKILL_SETS: `${httpServer}${basePath}${API_ENDPOINTS.SKILL_SETS}`,
     SKILL_SET_DETAIL: `${httpServer}${basePath}${API_ENDPOINTS.SKILL_SET_DETAIL}`,
     SKILL_SET_SELECT_OPTIONS: `${httpServer}${basePath}${API_ENDPOINTS.SKILL_SET_SELECT_OPTIONS}`,
+    NATIONAL_OCCUPATIONAL_CLASSIFICATIONS: `${httpServer}${basePath}${API_ENDPOINTS.NATIONAL_OCCUPATIONAL_CLASSIFICATIONS}`,
+    NATIONAL_OCCUPATIONAL_CLASSIFICATION_DETAIL: `${httpServer}${basePath}${API_ENDPOINTS.NATIONAL_OCCUPATIONAL_CLASSIFICATION_DETAIL}`,
+    NATIONAL_OCCUPATIONAL_CLASSIFICATION_SELECT_OPTIONS: `${httpServer}${basePath}${API_ENDPOINTS.NATIONAL_OCCUPATIONAL_CLASSIFICATION_SELECT_OPTIONS}`,
+    SERVICE_FEES: `${httpServer}${basePath}${API_ENDPOINTS.SERVICE_FEES}`,
+    SERVICE_FEE_DETAIL: `${httpServer}${basePath}${API_ENDPOINTS.SERVICE_FEE_DETAIL}`,
+    SERVICE_FEE_SELECT_OPTIONS: `${httpServer}${basePath}${API_ENDPOINTS.SERVICE_FEE_SELECT_OPTIONS}`,
   };
 }
 

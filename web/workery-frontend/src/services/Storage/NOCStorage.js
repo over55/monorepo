@@ -3,122 +3,104 @@
 /**
  * NOCStorage handles all National Occupational Classification-related data storage operations
  * Manages NOC caching, local storage, and data persistence
- * Since NOC is reference data, uses longer cache durations
  */
 export class NOCStorage {
   constructor() {
-    this.NOC_LIST_CACHE_KEY = "WORKERY_NOC_LIST_CACHE";
-    this.NOC_LIST_TIMESTAMP_KEY = "WORKERY_NOC_LIST_TIMESTAMP";
+    this.NOCS_CACHE_KEY = "WORKERY_NOCS_CACHE";
+    this.NOCS_TIMESTAMP_KEY = "WORKERY_NOCS_TIMESTAMP";
     this.NOC_SELECT_OPTIONS_CACHE_KEY = "WORKERY_NOC_SELECT_OPTIONS_CACHE";
     this.NOC_SELECT_OPTIONS_TIMESTAMP_KEY =
       "WORKERY_NOC_SELECT_OPTIONS_TIMESTAMP";
-    this.NOC_DETAIL_CACHE_KEY_PREFIX = "WORKERY_NOC_DETAIL_CACHE_";
-    this.NOC_DETAIL_TIMESTAMP_KEY_PREFIX = "WORKERY_NOC_DETAIL_TIMESTAMP_";
-
-    // Longer cache durations for reference data
-    this.DEFAULT_CACHE_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
-    this.SELECT_OPTIONS_CACHE_DURATION = 2 * 60 * 60 * 1000; // 2 hours for select options
-    this.DETAIL_CACHE_DURATION = 60 * 60 * 1000; // 1 hour for individual NOC details
+    this.DEFAULT_CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
+    this.SELECT_OPTIONS_CACHE_DURATION = 30 * 60 * 1000; // 30 minutes for select options
 
     // In-memory cache for current session
     this.memoryCache = {
-      nocList: null,
-      nocListTimestamp: null,
-      isNOCListLoading: false,
+      nocs: null,
+      nocsTimestamp: null,
+      isNocsLoading: false,
       selectOptions: null,
       selectOptionsTimestamp: null,
       isSelectOptionsLoading: false,
-      nocDetails: new Map(), // Cache individual NOC details by ID
-      nocDetailTimestamps: new Map(),
     };
 
     if (process.env.NODE_ENV === "development") {
-      console.log(
-        "NOCStorage initialized with longer cache durations for reference data",
-      );
+      console.log("NOCStorage initialized");
     }
   }
 
   /**
-   * Gets NOC list from cache (memory first, then localStorage)
+   * Gets NOCs list from cache (memory first, then localStorage)
    * @param {number} maxAge - Maximum age of cache in milliseconds
-   * @returns {Object|null} - Cached NOC data or null if not found/expired
+   * @returns {Object|null} - Cached NOCs data or null if not found/expired
    */
-  getNOCListFromCache(maxAge = this.DEFAULT_CACHE_DURATION) {
+  getNocsFromCache(maxAge = this.DEFAULT_CACHE_DURATION) {
     // Check memory cache first (fastest)
-    if (this._isNOCListMemoryCacheValid(maxAge)) {
-      console.log("NOCStorage: Using memory cache for NOC list");
-      return this.memoryCache.nocList;
+    if (this._isNocsMemoryCacheValid(maxAge)) {
+      console.log("NOCStorage: Using memory cache for NOCs list");
+      return this.memoryCache.nocs;
     }
 
     // Check localStorage cache
     try {
-      const cachedNOCList = localStorage.getItem(this.NOC_LIST_CACHE_KEY);
-      const cachedTimestamp = localStorage.getItem(this.NOC_LIST_TIMESTAMP_KEY);
+      const cachedNocs = localStorage.getItem(this.NOCS_CACHE_KEY);
+      const cachedTimestamp = localStorage.getItem(this.NOCS_TIMESTAMP_KEY);
 
-      if (cachedNOCList && cachedTimestamp) {
+      if (cachedNocs && cachedTimestamp) {
         const timestamp = parseInt(cachedTimestamp);
         const age = Date.now() - timestamp;
 
         if (age < maxAge) {
-          const nocListData = JSON.parse(cachedNOCList);
+          const nocsData = JSON.parse(cachedNocs);
 
           // Update memory cache with localStorage data
-          this.memoryCache.nocList = nocListData;
-          this.memoryCache.nocListTimestamp = timestamp;
-          this.memoryCache.isNOCListLoading = false;
+          this.memoryCache.nocs = nocsData;
+          this.memoryCache.nocsTimestamp = timestamp;
+          this.memoryCache.isNocsLoading = false;
 
-          console.log("NOCStorage: Using localStorage cache for NOC list");
-          return nocListData;
+          console.log("NOCStorage: Using localStorage cache for NOCs list");
+          return nocsData;
         } else {
           console.log("NOCStorage: localStorage cache expired, clearing");
-          this._clearNOCListLocalStorageCache();
+          this._clearNocsLocalStorageCache();
         }
       }
     } catch (error) {
-      console.error(
-        "NOCStorage: Error reading NOC list from localStorage",
-        error,
-      );
-      this._clearNOCListLocalStorageCache();
+      console.error("NOCStorage: Error reading NOCs from localStorage", error);
+      this._clearNocsLocalStorageCache();
     }
 
     return null;
   }
 
   /**
-   * Saves NOC list to cache (both memory and localStorage)
-   * @param {Object} nocListData - NOC data to cache
+   * Saves NOCs list to cache (both memory and localStorage)
+   * @param {Object} nocsData - NOCs data to cache
    */
-  saveNOCListToCache(nocListData) {
-    if (!nocListData) {
-      console.warn(
-        "NOCStorage: Attempted to save null/undefined NOC list data",
-      );
+  saveNocsToCache(nocsData) {
+    if (!nocsData) {
+      console.warn("NOCStorage: Attempted to save null/undefined NOCs data");
       return;
     }
 
     const timestamp = Date.now();
 
     // Save to memory cache
-    this.memoryCache.nocList = nocListData;
-    this.memoryCache.nocListTimestamp = timestamp;
-    this.memoryCache.isNOCListLoading = false;
+    this.memoryCache.nocs = nocsData;
+    this.memoryCache.nocsTimestamp = timestamp;
+    this.memoryCache.isNocsLoading = false;
 
     // Save to localStorage
     try {
-      localStorage.setItem(
-        this.NOC_LIST_CACHE_KEY,
-        JSON.stringify(nocListData),
-      );
-      localStorage.setItem(this.NOC_LIST_TIMESTAMP_KEY, timestamp.toString());
+      localStorage.setItem(this.NOCS_CACHE_KEY, JSON.stringify(nocsData));
+      localStorage.setItem(this.NOCS_TIMESTAMP_KEY, timestamp.toString());
 
-      console.log("NOCStorage: NOC list cached successfully", {
+      console.log("NOCStorage: NOCs list cached successfully", {
         timestamp: new Date(timestamp).toISOString(),
-        count: nocListData.results ? nocListData.results.length : 0,
+        count: nocsData.results ? nocsData.results.length : 0,
       });
     } catch (error) {
-      console.error("NOCStorage: Error saving NOC list to localStorage", error);
+      console.error("NOCStorage: Error saving NOCs to localStorage", error);
       // Continue with memory cache even if localStorage fails
     }
   }
@@ -222,117 +204,18 @@ export class NOCStorage {
   }
 
   /**
-   * Gets individual NOC detail from cache
-   * @param {string|number} nocId - NOC ID
-   * @param {number} maxAge - Maximum age of cache in milliseconds
-   * @returns {Object|null} - Cached NOC detail or null if not found/expired
+   * Clears NOCs cache (memory and localStorage)
    */
-  getNOCDetailFromCache(nocId, maxAge = this.DETAIL_CACHE_DURATION) {
-    const cacheKey = `${nocId}`;
-
-    // Check memory cache first
-    if (this.memoryCache.nocDetails.has(cacheKey)) {
-      const timestamp = this.memoryCache.nocDetailTimestamps.get(cacheKey);
-      if (timestamp && Date.now() - timestamp < maxAge) {
-        console.log(`NOCStorage: Using memory cache for NOC detail ${nocId}`);
-        return this.memoryCache.nocDetails.get(cacheKey);
-      } else {
-        // Remove expired memory cache
-        this.memoryCache.nocDetails.delete(cacheKey);
-        this.memoryCache.nocDetailTimestamps.delete(cacheKey);
-      }
-    }
-
-    // Check localStorage cache
-    try {
-      const localStorageKey = `${this.NOC_DETAIL_CACHE_KEY_PREFIX}${nocId}`;
-      const timestampKey = `${this.NOC_DETAIL_TIMESTAMP_KEY_PREFIX}${nocId}`;
-
-      const cachedDetail = localStorage.getItem(localStorageKey);
-      const cachedTimestamp = localStorage.getItem(timestampKey);
-
-      if (cachedDetail && cachedTimestamp) {
-        const timestamp = parseInt(cachedTimestamp);
-        const age = Date.now() - timestamp;
-
-        if (age < maxAge) {
-          const detailData = JSON.parse(cachedDetail);
-
-          // Update memory cache
-          this.memoryCache.nocDetails.set(cacheKey, detailData);
-          this.memoryCache.nocDetailTimestamps.set(cacheKey, timestamp);
-
-          console.log(
-            `NOCStorage: Using localStorage cache for NOC detail ${nocId}`,
-          );
-          return detailData;
-        } else {
-          // Clean up expired localStorage cache
-          localStorage.removeItem(localStorageKey);
-          localStorage.removeItem(timestampKey);
-        }
-      }
-    } catch (error) {
-      console.error(
-        `NOCStorage: Error reading NOC detail ${nocId} from localStorage`,
-        error,
-      );
-    }
-
-    return null;
-  }
-
-  /**
-   * Saves individual NOC detail to cache
-   * @param {string|number} nocId - NOC ID
-   * @param {Object} detailData - NOC detail data to cache
-   */
-  saveNOCDetailToCache(nocId, detailData) {
-    if (!detailData) {
-      console.warn(
-        `NOCStorage: Attempted to save null/undefined NOC detail data for ${nocId}`,
-      );
-      return;
-    }
-
-    const timestamp = Date.now();
-    const cacheKey = `${nocId}`;
-
-    // Save to memory cache
-    this.memoryCache.nocDetails.set(cacheKey, detailData);
-    this.memoryCache.nocDetailTimestamps.set(cacheKey, timestamp);
-
-    // Save to localStorage
-    try {
-      const localStorageKey = `${this.NOC_DETAIL_CACHE_KEY_PREFIX}${nocId}`;
-      const timestampKey = `${this.NOC_DETAIL_TIMESTAMP_KEY_PREFIX}${nocId}`;
-
-      localStorage.setItem(localStorageKey, JSON.stringify(detailData));
-      localStorage.setItem(timestampKey, timestamp.toString());
-
-      console.log(`NOCStorage: NOC detail ${nocId} cached successfully`);
-    } catch (error) {
-      console.error(
-        `NOCStorage: Error saving NOC detail ${nocId} to localStorage`,
-        error,
-      );
-      // Continue with memory cache even if localStorage fails
-    }
-  }
-
-  /**
-   * Clears NOC list cache (memory and localStorage)
-   */
-  clearNOCListCache() {
+  clearNocsCache() {
     // Clear memory cache
-    this.memoryCache.nocList = null;
-    this.memoryCache.nocListTimestamp = null;
-    this.memoryCache.isNOCListLoading = false;
+    this.memoryCache.nocs = null;
+    this.memoryCache.nocsTimestamp = null;
+    this.memoryCache.isNocsLoading = false;
 
     // Clear localStorage cache
-    this._clearNOCListLocalStorageCache();
+    this._clearNocsLocalStorageCache();
 
-    console.log("NOCStorage: NOC list cache cleared");
+    console.log("NOCStorage: NOCs cache cleared");
   }
 
   /**
@@ -351,58 +234,28 @@ export class NOCStorage {
   }
 
   /**
-   * Clears all NOC detail caches
-   */
-  clearNOCDetailCaches() {
-    // Clear memory cache
-    this.memoryCache.nocDetails.clear();
-    this.memoryCache.nocDetailTimestamps.clear();
-
-    // Clear localStorage cache
-    try {
-      const keys = Object.keys(localStorage);
-      keys.forEach((key) => {
-        if (
-          key.startsWith(this.NOC_DETAIL_CACHE_KEY_PREFIX) ||
-          key.startsWith(this.NOC_DETAIL_TIMESTAMP_KEY_PREFIX)
-        ) {
-          localStorage.removeItem(key);
-        }
-      });
-    } catch (error) {
-      console.error(
-        "NOCStorage: Error clearing NOC detail caches from localStorage",
-        error,
-      );
-    }
-
-    console.log("NOCStorage: All NOC detail caches cleared");
-  }
-
-  /**
    * Clears all NOC caches
    */
   clearAllCache() {
-    this.clearNOCListCache();
+    this.clearNocsCache();
     this.clearSelectOptionsCache();
-    this.clearNOCDetailCaches();
-    console.log("NOCStorage: All NOC caches cleared");
+    console.log("NOCStorage: All caches cleared");
   }
 
   /**
-   * Sets loading state for NOC list cache
+   * Sets loading state for NOCs cache
    * @param {boolean} isLoading - Loading state
    */
-  setNOCListCacheLoading(isLoading) {
-    this.memoryCache.isNOCListLoading = isLoading;
+  setNocsCacheLoading(isLoading) {
+    this.memoryCache.isNocsLoading = isLoading;
   }
 
   /**
-   * Gets loading state from NOC list cache
+   * Gets loading state from NOCs cache
    * @returns {boolean} - Current loading state
    */
-  isNOCListCacheLoading() {
-    return this.memoryCache.isNOCListLoading;
+  isNocsCacheLoading() {
+    return this.memoryCache.isNocsLoading;
   }
 
   /**
@@ -425,28 +278,28 @@ export class NOCStorage {
    * Gets cache information for debugging
    * @returns {Object} - Cache state information
    */
-  getNOCCacheInfo() {
-    const nocListMemoryValid = this._isNOCListMemoryCacheValid();
-    const nocListLocalStorageValid = this._isNOCListLocalStorageCacheValid();
+  getNocsCacheInfo() {
+    const nocsMemoryValid = this._isNocsMemoryCacheValid();
+    const nocsLocalStorageValid = this._isNocsLocalStorageCacheValid();
     const selectOptionsMemoryValid = this._isSelectOptionsMemoryCacheValid();
     const selectOptionsLocalStorageValid =
       this._isSelectOptionsLocalStorageCacheValid();
 
     return {
-      nocList: {
+      nocs: {
         memoryCache: {
-          hasData: !!this.memoryCache.nocList,
-          timestamp: this.memoryCache.nocListTimestamp,
-          age: this.memoryCache.nocListTimestamp
-            ? Date.now() - this.memoryCache.nocListTimestamp
+          hasData: !!this.memoryCache.nocs,
+          timestamp: this.memoryCache.nocsTimestamp,
+          age: this.memoryCache.nocsTimestamp
+            ? Date.now() - this.memoryCache.nocsTimestamp
             : null,
-          isValid: nocListMemoryValid,
-          isLoading: this.memoryCache.isNOCListLoading,
+          isValid: nocsMemoryValid,
+          isLoading: this.memoryCache.isNocsLoading,
         },
         localStorage: {
-          hasData: !!localStorage.getItem(this.NOC_LIST_CACHE_KEY),
-          timestamp: localStorage.getItem(this.NOC_LIST_TIMESTAMP_KEY),
-          isValid: nocListLocalStorageValid,
+          hasData: !!localStorage.getItem(this.NOCS_CACHE_KEY),
+          timestamp: localStorage.getItem(this.NOCS_TIMESTAMP_KEY),
+          isValid: nocsLocalStorageValid,
         },
         cacheDuration: this.DEFAULT_CACHE_DURATION,
       },
@@ -469,15 +322,11 @@ export class NOCStorage {
         },
         cacheDuration: this.SELECT_OPTIONS_CACHE_DURATION,
       },
-      nocDetails: {
-        memoryCacheCount: this.memoryCache.nocDetails.size,
-        detailCacheDuration: this.DETAIL_CACHE_DURATION,
-      },
     };
   }
 
   /**
-   * Sets cache duration for NOC list
+   * Sets cache duration for NOCs
    * @param {number} durationMs - Cache duration in milliseconds
    */
   setCacheDuration(durationMs) {
@@ -502,7 +351,7 @@ export class NOCStorage {
    * Saves NOC preferences to localStorage
    * @param {Object} preferences - NOC preferences object
    */
-  saveNOCPreferences(preferences) {
+  saveNocPreferences(preferences) {
     try {
       localStorage.setItem(
         "WORKERY_NOC_PREFERENCES",
@@ -519,10 +368,10 @@ export class NOCStorage {
 
   /**
    * Gets NOC preferences from localStorage
-   * @param {number} maxAge - Maximum age in milliseconds (default: 7 days for preferences)
+   * @param {number} maxAge - Maximum age in milliseconds (default: 24 hours)
    * @returns {Object|null} - NOC preferences or null if not found/expired
    */
-  getNOCPreferences(maxAge = 7 * 24 * 60 * 60 * 1000) {
+  getNocPreferences(maxAge = 24 * 60 * 60 * 1000) {
     try {
       const stored = localStorage.getItem("WORKERY_NOC_PREFERENCES");
 
@@ -547,7 +396,7 @@ export class NOCStorage {
   /**
    * Clears NOC preferences
    */
-  clearNOCPreferences() {
+  clearNocPreferences() {
     localStorage.removeItem("WORKERY_NOC_PREFERENCES");
     console.log("NOCStorage: NOC preferences cleared");
   }
@@ -555,9 +404,9 @@ export class NOCStorage {
   /**
    * Clears all NOC-related data from storage
    */
-  clearAllNOCData() {
+  clearAllNocData() {
     this.clearAllCache();
-    this.clearNOCPreferences();
+    this.clearNocPreferences();
 
     console.log("NOCStorage: All NOC data cleared");
   }
@@ -566,20 +415,20 @@ export class NOCStorage {
    * Private helper methods for cache validation
    */
 
-  _isNOCListMemoryCacheValid(maxAge = this.DEFAULT_CACHE_DURATION) {
-    if (!this.memoryCache.nocList || !this.memoryCache.nocListTimestamp) {
+  _isNocsMemoryCacheValid(maxAge = this.DEFAULT_CACHE_DURATION) {
+    if (!this.memoryCache.nocs || !this.memoryCache.nocsTimestamp) {
       return false;
     }
-    const age = Date.now() - this.memoryCache.nocListTimestamp;
+    const age = Date.now() - this.memoryCache.nocsTimestamp;
     return age < maxAge;
   }
 
-  _isNOCListLocalStorageCacheValid(maxAge = this.DEFAULT_CACHE_DURATION) {
+  _isNocsLocalStorageCacheValid(maxAge = this.DEFAULT_CACHE_DURATION) {
     try {
-      const timestamp = localStorage.getItem(this.NOC_LIST_TIMESTAMP_KEY);
-      const nocList = localStorage.getItem(this.NOC_LIST_CACHE_KEY);
+      const timestamp = localStorage.getItem(this.NOCS_TIMESTAMP_KEY);
+      const nocs = localStorage.getItem(this.NOCS_CACHE_KEY);
 
-      if (!timestamp || !nocList) {
+      if (!timestamp || !nocs) {
         return false;
       }
 
@@ -625,9 +474,9 @@ export class NOCStorage {
     }
   }
 
-  _clearNOCListLocalStorageCache() {
-    localStorage.removeItem(this.NOC_LIST_CACHE_KEY);
-    localStorage.removeItem(this.NOC_LIST_TIMESTAMP_KEY);
+  _clearNocsLocalStorageCache() {
+    localStorage.removeItem(this.NOCS_CACHE_KEY);
+    localStorage.removeItem(this.NOCS_TIMESTAMP_KEY);
   }
 
   _clearSelectOptionsLocalStorageCache() {
