@@ -122,7 +122,7 @@ function AppRouter() {
             <Route
               path="/admin/dashboard"
               element={
-                <PlaceholderPage
+                <AdminDashboardPage
                   title="Admin Dashboard"
                   description="Dashboard for management and frontline staff"
                 />
