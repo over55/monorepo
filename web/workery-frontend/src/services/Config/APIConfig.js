@@ -148,6 +148,13 @@ export const API_ENDPOINTS = {
   FINANCIAL_DETAIL: "/financial/{id}",
   FINANCIAL_SELECT_OPTIONS: "/financials/select-options",
 
+  // Attachment endpoints
+  ATTACHMENTS: "/attachments",
+  ATTACHMENT_DETAIL: "/attachment/{id}",
+  ATTACHMENT_UPLOAD: "/attachments/upload",
+  ATTACHMENT_DOWNLOAD: "/attachment/{id}/download",
+  ATTACHMENT_THUMBNAIL: "/attachment/{id}/thumbnail",
+
   // Vehicle Type endpoints
   VEHICLE_TYPES: "/vehicle-types",
   VEHICLE_TYPE_DETAIL: "/vehicle-type/{id}",
@@ -291,6 +298,11 @@ export function getFullAPIUrls() {
     FINANCIALS: `${httpServer}${basePath}${API_ENDPOINTS.FINANCIALS}`,
     FINANCIAL_DETAIL: `${httpServer}${basePath}${API_ENDPOINTS.FINANCIAL_DETAIL}`,
     FINANCIAL_SELECT_OPTIONS: `${httpServer}${basePath}${API_ENDPOINTS.FINANCIAL_SELECT_OPTIONS}`,
+    ATTACHMENTS: `${httpServer}${basePath}${API_ENDPOINTS.ATTACHMENTS}`,
+    ATTACHMENT_DETAIL: `${httpServer}${basePath}${API_ENDPOINTS.ATTACHMENT_DETAIL}`,
+    ATTACHMENT_UPLOAD: `${httpServer}${basePath}${API_ENDPOINTS.ATTACHMENT_UPLOAD}`,
+    ATTACHMENT_DOWNLOAD: `${httpServer}${basePath}${API_ENDPOINTS.ATTACHMENT_DOWNLOAD}`,
+    ATTACHMENT_THUMBNAIL: `${httpServer}${basePath}${API_ENDPOINTS.ATTACHMENT_THUMBNAIL}`,
     ASSOCIATES: `${httpServer}${basePath}${API_ENDPOINTS.ASSOCIATES}`,
     ASSOCIATE_DETAIL: `${httpServer}${basePath}${API_ENDPOINTS.ASSOCIATE_DETAIL}`,
     ASSOCIATE_ARCHIVE_OPERATION: `${httpServer}${basePath}${API_ENDPOINTS.ASSOCIATE_ARCHIVE_OPERATION}`,
