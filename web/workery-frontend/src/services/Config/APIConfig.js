@@ -123,6 +123,14 @@ export const API_ENDPOINTS = {
   SERVICE_FEES: "/service-fees",
   SERVICE_FEE_DETAIL: "/service-fee/{id}",
   SERVICE_FEE_SELECT_OPTIONS: "/service-fees/operation/select-options",
+
+  // Comment endpoints
+  COMMENTS: "/comments",
+
+  // Bulletin endpoints
+  BULLETINS: "/bulletins",
+  BULLETIN_DETAIL: "/bulletin/{id}",
+  BULLETIN_ARCHIVE_OPERATION: "/bulletins/operation/archive",
 };
 
 /**
@@ -168,6 +176,10 @@ export function getFullAPIUrls() {
     SERVICE_FEES: `${httpServer}${basePath}${API_ENDPOINTS.SERVICE_FEES}`,
     SERVICE_FEE_DETAIL: `${httpServer}${basePath}${API_ENDPOINTS.SERVICE_FEE_DETAIL}`,
     SERVICE_FEE_SELECT_OPTIONS: `${httpServer}${basePath}${API_ENDPOINTS.SERVICE_FEE_SELECT_OPTIONS}`,
+    COMMENTS: `${httpServer}${basePath}${API_ENDPOINTS.COMMENTS}`,
+    BULLETINS: `${httpServer}${basePath}${API_ENDPOINTS.BULLETINS}`,
+    BULLETIN_DETAIL: `${httpServer}${basePath}${API_ENDPOINTS.BULLETIN_DETAIL}`,
+    BULLETIN_ARCHIVE_OPERATION: `${httpServer}${basePath}${API_ENDPOINTS.BULLETIN_ARCHIVE_OPERATION}`,
   };
 }
 

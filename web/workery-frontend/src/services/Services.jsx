@@ -14,6 +14,8 @@ import { NOCAPI } from "./API/NOCAPI";
 import { NAICSAPI } from "./API/NAICSAPI";
 import { InsuranceRequirementAPI } from "./API/InsuranceRequirementAPI";
 import { ServiceFeeAPI } from "./API/ServiceFeeAPI";
+import { CommentAPI } from "./API/CommentAPI";
+import { BulletinAPI } from "./API/BulletinAPI";
 import { TokenStorage } from "./Storage/TokenStorage";
 import { AccountStorage } from "./Storage/AccountStorage";
 import { DashboardStorage } from "./Storage/DashboardStorage";
@@ -25,6 +27,8 @@ import { NOCStorage } from "./Storage/NOCStorage";
 import { NAICSStorage } from "./Storage/NAICSStorage";
 import { InsuranceRequirementStorage } from "./Storage/InsuranceRequirementStorage";
 import { ServiceFeeStorage } from "./Storage/ServiceFeeStorage";
+import { CommentStorage } from "./Storage/CommentStorage";
+import { BulletinStorage } from "./Storage/BulletinStorage";
 import { AuthManager } from "./Manager/AuthManager";
 import { VersionManager } from "./Manager/VersionManager";
 import { PasswordResetManager } from "./Manager/PasswordResetManager";
@@ -39,6 +43,8 @@ import { NOCManager } from "./Manager/NOCManager";
 import { NAICSManager } from "./Manager/NAICSManager";
 import { InsuranceRequirementManager } from "./Manager/InsuranceRequirementManager";
 import { ServiceFeeManager } from "./Manager/ServiceFeeManager";
+import { CommentManager } from "./Manager/CommentManager";
+import { BulletinManager } from "./Manager/BulletinManager";
 import { getAPIBaseURL, API_ENDPOINTS, ENV_CONFIG } from "./Config/APIConfig";
 
 /**
@@ -99,6 +105,12 @@ class ServicesContainer {
     const serviceFeeStorage = new ServiceFeeStorage();
     this._services.set("serviceFeeStorage", serviceFeeStorage);
 
+    const commentStorage = new CommentStorage();
+    this._services.set("commentStorage", commentStorage);
+
+    const bulletinStorage = new BulletinStorage();
+    this._services.set("bulletinStorage", bulletinStorage);
+
     // Initialize API services (depend on configuration)
     const authAPI = new AuthAPI(baseURL, API_ENDPOINTS);
     this._services.set("authAPI", authAPI);
@@ -157,6 +169,12 @@ class ServicesContainer {
       tokenStorage,
     );
     this._services.set("serviceFeeAPI", serviceFeeAPI);
+
+    const commentAPI = new CommentAPI(baseURL, API_ENDPOINTS, tokenStorage);
+    this._services.set("commentAPI", commentAPI);
+
+    const bulletinAPI = new BulletinAPI(baseURL, API_ENDPOINTS, tokenStorage);
+    this._services.set("bulletinAPI", bulletinAPI);
 
     // Initialize manager services (combine API and storage layers)
 
@@ -231,6 +249,14 @@ class ServicesContainer {
     );
     this._services.set("serviceFeeManager", serviceFeeManager);
 
+    // CommentManager needs CommentAPI and CommentStorage
+    const commentManager = new CommentManager(commentAPI, commentStorage);
+    this._services.set("commentManager", commentManager);
+
+    // BulletinManager needs BulletinAPI and BulletinStorage
+    const bulletinManager = new BulletinManager(bulletinAPI, bulletinStorage);
+    this._services.set("bulletinManager", bulletinManager);
+
     this._initialized = true;
 
     if (ENV_CONFIG.IS_DEVELOPMENT) {
@@ -255,6 +281,8 @@ class ServicesContainer {
           "insuranceRequirementStorage",
         ],
         serviceFeeManager: ["serviceFeeAPI", "serviceFeeStorage"],
+        commentManager: ["commentAPI", "commentStorage"],
+        bulletinManager: ["bulletinAPI", "bulletinStorage"],
       });
       console.groupEnd();
     }
@@ -338,6 +366,14 @@ class ServicesContainer {
     return this.get("serviceFeeManager");
   }
 
+  getCommentManager() {
+    return this.get("commentManager");
+  }
+
+  getBulletinManager() {
+    return this.get("bulletinManager");
+  }
+
   /**
    * Convenience getters for storage services
    */
@@ -383,6 +419,14 @@ class ServicesContainer {
 
   getServiceFeeStorage() {
     return this.get("serviceFeeStorage");
+  }
+
+  getCommentStorage() {
+    return this.get("commentStorage");
+  }
+
+  getBulletinStorage() {
+    return this.get("bulletinStorage");
   }
 
   /**
@@ -442,6 +486,14 @@ class ServicesContainer {
 
   getServiceFeeAPI() {
     return this.get("serviceFeeAPI");
+  }
+
+  getCommentAPI() {
+    return this.get("commentAPI");
+  }
+
+  getBulletinAPI() {
+    return this.get("bulletinAPI");
   }
 
   /**
@@ -602,6 +654,16 @@ export function useServiceFeeManager() {
   return services.getServiceFeeManager();
 }
 
+export function useCommentManager() {
+  const services = useServices();
+  return services.getCommentManager();
+}
+
+export function useBulletinManager() {
+  const services = useServices();
+  return services.getBulletinManager();
+}
+
 /**
  * Hooks to access storage services
  */
@@ -658,6 +720,16 @@ export function useInsuranceRequirementStorage() {
 export function useServiceFeeStorage() {
   const services = useServices();
   return services.getServiceFeeStorage();
+}
+
+export function useCommentStorage() {
+  const services = useServices();
+  return services.getCommentStorage();
+}
+
+export function useBulletinStorage() {
+  const services = useServices();
+  return services.getBulletinStorage();
 }
 
 /**
@@ -731,6 +803,16 @@ export function useInsuranceRequirementAPI() {
 export function useServiceFeeAPI() {
   const services = useServices();
   return services.getServiceFeeAPI();
+}
+
+export function useCommentAPI() {
+  const services = useServices();
+  return services.getCommentAPI();
+}
+
+export function useBulletinAPI() {
+  const services = useServices();
+  return services.getBulletinAPI();
 }
 
 /**
