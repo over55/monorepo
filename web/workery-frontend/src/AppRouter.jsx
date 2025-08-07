@@ -107,7 +107,7 @@ function AppRouter() {
             <Route
               path="/root/tenant/:tid/edit"
               element={
-                <PlaceholderPage
+                <RootTenantUpdatePage
                   title="Edit Tenant"
                   description="Edit tenant information"
                 />
