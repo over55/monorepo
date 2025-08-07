@@ -40,6 +40,10 @@ import SettingNOCSearchPage from "./pages/Admin/Setting/NOC/Search/Page";
 import SettingNOCSearchResultPage from "./pages/Admin/Setting/NOC/SearchResult/Page";
 import SettingNAICSSearchPage from "./pages/Admin/Setting/NAICS/Search/Page";
 import SettingNAICSSearchResultPage from "./pages/Admin/Setting/NAICS/SearchResult/Page";
+import SettingInsuranceRequirementCreatePage from "./pages/Admin/Setting/InsuranceRequirement/Create/Page";
+import SettingInsuranceRequirementListPage from "./pages/Admin/Setting/InsuranceRequirement/List/Page";
+import SettingInsuranceRequirementDetailPage from "./pages/Admin/Setting/InsuranceRequirement/Detail/Page";
+import SettingInsuranceRequirementUpdatePage from "./pages/Admin/Setting/InsuranceRequirement/Update/Page";
 
 // Associate pages
 import AssociateDashboardPage from "./pages/Associate/Dashboard/Page";
@@ -1987,7 +1991,31 @@ function AppRouter() {
               path="/admin/settings/insurance-requirements"
               element={
                 <Layout>
-                  <PlaceholderPage title="Insurance Requirements" />
+                  <SettingTagListPage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/settings/insurance-requirement/create"
+              element={
+                <Layout>
+                  <SettingTagCreatePage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/settings/insurance-requirement/:id/detail"
+              element={
+                <Layout>
+                  <SettingTagDetailPage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/settings/insurance-requirement/:id/update"
+              element={
+                <Layout>
+                  <SettingTagUpdatePage />
                 </Layout>
               }
             />
