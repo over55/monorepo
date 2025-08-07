@@ -49,6 +49,10 @@ import SettingHowHearAboutUsItemCreatePage from "./pages/Admin/Setting/HowHearAb
 import SettingHowHearAboutUsItemListPage from "./pages/Admin/Setting/HowHearAboutUsItem/List/Page";
 import SettingHowHearAboutUsItemDetailPage from "./pages/Admin/Setting/HowHearAboutUsItem/Detail/Page";
 import SettingHowHearAboutUsItemUpdatePage from "./pages/Admin/Setting/HowHearAboutUsItem/Update/Page";
+import SettingBulletinCreatePage from "./pages/Admin/Setting/Bulletin/Create/Page";
+import SettingBulletinListPage from "./pages/Admin/Setting/Bulletin/List/Page";
+import SettingBulletinDetailPage from "./pages/Admin/Setting/Bulletin/Detail/Page";
+import SettingBulletinUpdatePage from "./pages/Admin/Setting/Bulletin/Update/Page";
 
 // Associate pages
 import AssociateDashboardPage from "./pages/Associate/Dashboard/Page";
@@ -1916,7 +1920,31 @@ function AppRouter() {
               path="/admin/settings/bulletins"
               element={
                 <Layout>
-                  <PlaceholderPage title="Bulletins" />
+                  <SettingBulletinListPage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/settings/bulletin/create"
+              element={
+                <Layout>
+                  <SettingBulletinCreatePage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/settings/bulletin/:id/detail"
+              element={
+                <Layout>
+                  <SettingBulletinDetailPage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/settings/bulletin/:id/update"
+              element={
+                <Layout>
+                  <SettingBulletinUpdatePage />
                 </Layout>
               }
             />
