@@ -81,6 +81,11 @@ export const API_ENDPOINTS = {
   TENANTS: "/tenants",
   TENANT_DETAIL: "/tenant/{id}",
   TENANT_UPDATE_TAX_RATE: "/tenants/operations/update-tax-rate",
+
+  // Vehicle Type endpoints
+  VEHICLE_TYPES: "/vehicle-types",
+  VEHICLE_TYPE_DETAIL: "/vehicle-type/{id}",
+  VEHICLE_TYPE_SELECT_OPTIONS: "/vehicle-types/operation/select-options",
 };
 
 /**
@@ -105,6 +110,9 @@ export function getFullAPIUrls() {
     TENANTS: `${httpServer}${basePath}${API_ENDPOINTS.TENANTS}`,
     TENANT_DETAIL: `${httpServer}${basePath}${API_ENDPOINTS.TENANT_DETAIL}`,
     TENANT_UPDATE_TAX_RATE: `${httpServer}${basePath}${API_ENDPOINTS.TENANT_UPDATE_TAX_RATE}`,
+    VEHICLE_TYPES: `${httpServer}${basePath}${API_ENDPOINTS.VEHICLE_TYPES}`,
+    VEHICLE_TYPE_DETAIL: `${httpServer}${basePath}${API_ENDPOINTS.VEHICLE_TYPE_DETAIL}`,
+    VEHICLE_TYPE_SELECT_OPTIONS: `${httpServer}${basePath}${API_ENDPOINTS.VEHICLE_TYPE_SELECT_OPTIONS}`,
   };
 }
 

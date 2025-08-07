@@ -7,10 +7,12 @@ import { TenantAPI } from "./API/TenantAPI";
 import { DashboardAPI } from "./API/DashboardAPI";
 import { TwoFactorAuthAPI } from "./API/TwoFactorAuthAPI";
 import { AccountAPI } from "./API/AccountAPI";
+import { VehicleTypeAPI } from "./API/VehicleTypeAPI";
 import { TokenStorage } from "./Storage/TokenStorage";
 import { AccountStorage } from "./Storage/AccountStorage";
 import { DashboardStorage } from "./Storage/DashboardStorage";
 import { TenantStorage } from "./Storage/TenantStorage";
+import { VehicleTypeStorage } from "./Storage/VehicleTypeStorage";
 import { AuthManager } from "./Manager/AuthManager";
 import { VersionManager } from "./Manager/VersionManager";
 import { PasswordResetManager } from "./Manager/PasswordResetManager";
@@ -18,6 +20,7 @@ import { TenantManager } from "./Manager/TenantManager";
 import { DashboardManager } from "./Manager/DashboardManager";
 import { TwoFactorAuthManager } from "./Manager/TwoFactorAuthManager";
 import { AccountManager } from "./Manager/AccountManager";
+import { VehicleTypeManager } from "./Manager/VehicleTypeManager";
 import { getAPIBaseURL, API_ENDPOINTS, ENV_CONFIG } from "./Config/APIConfig";
 
 /**
@@ -54,6 +57,9 @@ class ServicesContainer {
     const tenantStorage = new TenantStorage();
     this._services.set("tenantStorage", tenantStorage);
 
+    const vehicleTypeStorage = new VehicleTypeStorage();
+    this._services.set("vehicleTypeStorage", vehicleTypeStorage);
+
     // Initialize API services (depend on configuration)
     const authAPI = new AuthAPI(baseURL, API_ENDPOINTS);
     this._services.set("authAPI", authAPI);
@@ -79,6 +85,13 @@ class ServicesContainer {
 
     const accountAPI = new AccountAPI(baseURL, API_ENDPOINTS, tokenStorage);
     this._services.set("accountAPI", accountAPI);
+
+    const vehicleTypeAPI = new VehicleTypeAPI(
+      baseURL,
+      API_ENDPOINTS,
+      tokenStorage,
+    );
+    this._services.set("vehicleTypeAPI", vehicleTypeAPI);
 
     // Initialize manager services (combine API and storage layers)
 
@@ -113,6 +126,13 @@ class ServicesContainer {
     const accountManager = new AccountManager(accountAPI, accountStorage);
     this._services.set("accountManager", accountManager);
 
+    // VehicleTypeManager needs VehicleTypeAPI and VehicleTypeStorage
+    const vehicleTypeManager = new VehicleTypeManager(
+      vehicleTypeAPI,
+      vehicleTypeStorage,
+    );
+    this._services.set("vehicleTypeManager", vehicleTypeManager);
+
     this._initialized = true;
 
     if (ENV_CONFIG.IS_DEVELOPMENT) {
@@ -127,6 +147,7 @@ class ServicesContainer {
         dashboardManager: ["dashboardAPI", "dashboardStorage"],
         twoFactorAuthManager: ["twoFactorAuthAPI"],
         accountManager: ["accountAPI", "accountStorage"],
+        vehicleTypeManager: ["vehicleTypeAPI", "vehicleTypeStorage"],
       });
       console.groupEnd();
     }
@@ -182,6 +203,10 @@ class ServicesContainer {
     return this.get("accountManager");
   }
 
+  getVehicleTypeManager() {
+    return this.get("vehicleTypeManager");
+  }
+
   /**
    * Convenience getters for storage services
    */
@@ -199,6 +224,10 @@ class ServicesContainer {
 
   getTenantStorage() {
     return this.get("tenantStorage");
+  }
+
+  getVehicleTypeStorage() {
+    return this.get("vehicleTypeStorage");
   }
 
   /**
@@ -230,6 +259,10 @@ class ServicesContainer {
 
   getAccountAPI() {
     return this.get("accountAPI");
+  }
+
+  getVehicleTypeAPI() {
+    return this.get("vehicleTypeAPI");
   }
 
   /**
@@ -355,6 +388,11 @@ export function useAccountManager() {
   return services.getAccountManager();
 }
 
+export function useVehicleTypeManager() {
+  const services = useServices();
+  return services.getVehicleTypeManager();
+}
+
 /**
  * Hooks to access storage services
  */
@@ -376,6 +414,11 @@ export function useDashboardStorage() {
 export function useTenantStorage() {
   const services = useServices();
   return services.getTenantStorage();
+}
+
+export function useVehicleTypeStorage() {
+  const services = useServices();
+  return services.getVehicleTypeStorage();
 }
 
 /**
@@ -414,6 +457,11 @@ export function useTwoFactorAuthAPI() {
 export function useAccountAPI() {
   const services = useServices();
   return services.getAccountAPI();
+}
+
+export function useVehicleTypeAPI() {
+  const services = useServices();
+  return services.getVehicleTypeAPI();
 }
 
 /**

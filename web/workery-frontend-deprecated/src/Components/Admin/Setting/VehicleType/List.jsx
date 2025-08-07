@@ -1,3 +1,4 @@
+// File Path: web/workery-frontend-deprecated/src/Components/Admin/Setting/VehicleType/List.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
