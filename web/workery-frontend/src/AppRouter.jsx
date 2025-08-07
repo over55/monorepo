@@ -53,6 +53,10 @@ import SettingBulletinCreatePage from "./pages/Admin/Setting/Bulletin/Create/Pag
 import SettingBulletinListPage from "./pages/Admin/Setting/Bulletin/List/Page";
 import SettingBulletinDetailPage from "./pages/Admin/Setting/Bulletin/Detail/Page";
 import SettingBulletinUpdatePage from "./pages/Admin/Setting/Bulletin/Update/Page";
+import SettingAssociateAwayLogCreatePage from "./pages/Admin/Setting/AssociateAwayLog/Create/Page";
+import SettingAssociateAwayLogListPage from "./pages/Admin/Setting/AssociateAwayLog/List/Page";
+import SettingAssociateAwayLogDetailPage from "./pages/Admin/Setting/AssociateAwayLog/Detail/Page";
+import SettingAssociateAwayLogUpdatePage from "./pages/Admin/Setting/AssociateAwayLog/Update/Page";
 
 // Associate pages
 import AssociateDashboardPage from "./pages/Associate/Dashboard/Page";
@@ -2016,7 +2020,31 @@ function AppRouter() {
               path="/admin/settings/associate-away-logs"
               element={
                 <Layout>
-                  <PlaceholderPage title="Associate Away Logs" />
+                  <SettingAssociateAwayLogListPage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/settings/associate-away-log/create"
+              element={
+                <Layout>
+                  <SettingAssociateAwayLogCreatePage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/settings/associate-away-log/:id/detail"
+              element={
+                <Layout>
+                  <SettingAssociateAwayLogDetailPage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/settings/associate-away-log/:id/update"
+              element={
+                <Layout>
+                  <SettingAssociateAwayLogUpdatePage />
                 </Layout>
               }
             />
