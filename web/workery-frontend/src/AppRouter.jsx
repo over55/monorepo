@@ -24,7 +24,6 @@ import SettingVehicleTypeCreatePage from "./pages/Admin/Setting/VehicleType/Crea
 import SettingVehicleTypeListPage from "./pages/Admin/Setting/VehicleType/List/Page";
 import SettingVehicleTypeDetailPage from "./pages/Admin/Setting/VehicleType/Detail/Page";
 import SettingVehicleTypeUpdatePage from "./pages/Admin/Setting/VehicleType/Update/Page";
-// Tag pages
 import SettingTagCreatePage from "./pages/Admin/Setting/Tag/Create/Page";
 import SettingTagListPage from "./pages/Admin/Setting/Tag/List/Page";
 import SettingTagDetailPage from "./pages/Admin/Setting/Tag/Detail/Page";
@@ -33,6 +32,10 @@ import SettingSkillSetCreatePage from "./pages/Admin/Setting/SkillSet/Create/Pag
 import SettingSkillSetListPage from "./pages/Admin/Setting/SkillSet/List/Page";
 import SettingSkillSetDetailPage from "./pages/Admin/Setting/SkillSet/Detail/Page";
 import SettingSkillSetUpdatePage from "./pages/Admin/Setting/SkillSet/Update/Page";
+import SettingServiceFeeCreatePage from "./pages/Admin/Setting/ServiceFee/Create/Page";
+import SettingServiceFeeListPage from "./pages/Admin/Setting/ServiceFee/List/Page";
+import SettingServiceFeeDetailPage from "./pages/Admin/Setting/ServiceFee/Detail/Page";
+import SettingServiceFeeUpdatePage from "./pages/Admin/Setting/ServiceFee/Update/Page";
 
 // Associate pages
 import AssociateDashboardPage from "./pages/Associate/Dashboard/Page";
@@ -1913,7 +1916,7 @@ function AppRouter() {
               }
             />
             <Route
-              path="/admin/settings/skill-sets/create"
+              path="/admin/settings/skill-set/create"
               element={
                 <Layout>
                   <SettingSkillSetCreatePage />
@@ -1988,7 +1991,31 @@ function AppRouter() {
               path="/admin/settings/service-fees"
               element={
                 <Layout>
-                  <PlaceholderPage title="Service Fees" />
+                  <SettingServiceFeeListPage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/settings/service-fees/create"
+              element={
+                <Layout>
+                  <SettingServiceFeeCreatePage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/settings/service-fee/:id/detail"
+              element={
+                <Layout>
+                  <SettingServiceFeeDetailPage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/settings/service-fee/:id/update"
+              element={
+                <Layout>
+                  <SettingServiceFeeUpdatePage />
                 </Layout>
               }
             />
