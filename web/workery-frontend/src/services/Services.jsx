@@ -12,6 +12,7 @@ import { AssociateAPI } from "./API/AssociateAPI";
 import { StaffAPI } from "./API/StaffAPI";
 import { OrderAPI } from "./API/OrderAPI";
 import { TaskAPI } from "./API/TaskAPI";
+import { ActivitySheetAPI } from "./API/ActivitySheetAPI";
 import { VehicleTypeAPI } from "./API/VehicleTypeAPI";
 import { TagAPI } from "./API/TagAPI";
 import { SkillSetAPI } from "./API/SkillSetAPI";
@@ -31,6 +32,7 @@ import { AssociateStorage } from "./Storage/AssociateStorage";
 import { StaffStorage } from "./Storage/StaffStorage";
 import { OrderStorage } from "./Storage/OrderStorage";
 import { TaskStorage } from "./Storage/TaskStorage";
+import { ActivitySheetStorage } from "./Storage/ActivitySheetStorage";
 import { VehicleTypeStorage } from "./Storage/VehicleTypeStorage";
 import { TagStorage } from "./Storage/TagStorage";
 import { SkillSetStorage } from "./Storage/SkillSetStorage";
@@ -53,6 +55,7 @@ import { AssociateManager } from "./Manager/AssociateManager";
 import { StaffManager } from "./Manager/StaffManager";
 import { OrderManager } from "./Manager/OrderManager";
 import { TaskManager } from "./Manager/TaskManager";
+import { ActivitySheetManager } from "./Manager/ActivitySheetManager";
 import { VehicleTypeManager } from "./Manager/VehicleTypeManager";
 import { TagManager } from "./Manager/TagManager";
 import { SkillSetManager } from "./Manager/SkillSetManager";
@@ -113,6 +116,9 @@ class ServicesContainer {
 
     const taskStorage = new TaskStorage();
     this._services.set("taskStorage", taskStorage);
+
+    const activitySheetStorage = new ActivitySheetStorage();
+    this._services.set("activitySheetStorage", activitySheetStorage);
 
     const vehicleTypeStorage = new VehicleTypeStorage();
     this._services.set("vehicleTypeStorage", vehicleTypeStorage);
@@ -187,6 +193,13 @@ class ServicesContainer {
 
     const taskAPI = new TaskAPI(baseURL, API_ENDPOINTS, tokenStorage);
     this._services.set("taskAPI", taskAPI);
+
+    const activitySheetAPI = new ActivitySheetAPI(
+      baseURL,
+      API_ENDPOINTS,
+      tokenStorage,
+    );
+    this._services.set("activitySheetAPI", activitySheetAPI);
 
     const vehicleTypeAPI = new VehicleTypeAPI(
       baseURL,
@@ -290,6 +303,13 @@ class ServicesContainer {
     const taskManager = new TaskManager(taskAPI, taskStorage);
     this._services.set("taskManager", taskManager);
 
+    // ActivitySheetManager needs ActivitySheetAPI and ActivitySheetStorage
+    const activitySheetManager = new ActivitySheetManager(
+      activitySheetAPI,
+      activitySheetStorage,
+    );
+    this._services.set("activitySheetManager", activitySheetManager);
+
     // VehicleTypeManager needs VehicleTypeAPI and VehicleTypeStorage
     const vehicleTypeManager = new VehicleTypeManager(
       vehicleTypeAPI,
@@ -364,6 +384,7 @@ class ServicesContainer {
         staffManager: ["staffAPI", "staffStorage"],
         orderManager: ["orderAPI", "orderStorage"],
         taskManager: ["taskAPI", "taskStorage"],
+        activitySheetManager: ["activitySheetAPI", "activitySheetStorage"],
         vehicleTypeManager: ["vehicleTypeAPI", "vehicleTypeStorage"],
         tagManager: ["tagAPI", "tagStorage"],
         skillSetManager: ["skillSetAPI", "skillSetStorage"],
@@ -455,6 +476,10 @@ class ServicesContainer {
     return this.get("taskManager");
   }
 
+  getActivitySheetManager() {
+    return this.get("activitySheetManager");
+  }
+
   getVehicleTypeManager() {
     return this.get("vehicleTypeManager");
   }
@@ -532,6 +557,10 @@ class ServicesContainer {
 
   getTaskStorage() {
     return this.get("taskStorage");
+  }
+
+  getActivitySheetStorage() {
+    return this.get("activitySheetStorage");
   }
 
   getVehicleTypeStorage() {
@@ -623,6 +652,10 @@ class ServicesContainer {
 
   getTaskAPI() {
     return this.get("taskAPI");
+  }
+
+  getActivitySheetAPI() {
+    return this.get("activitySheetAPI");
   }
 
   getVehicleTypeAPI() {
@@ -813,6 +846,11 @@ export function useTaskManager() {
   return services.getTaskManager();
 }
 
+export function useActivitySheetManager() {
+  const services = useServices();
+  return services.getActivitySheetManager();
+}
+
 export function useVehicleTypeManager() {
   const services = useServices();
   return services.getVehicleTypeManager();
@@ -909,6 +947,11 @@ export function useOrderStorage() {
 export function useTaskStorage() {
   const services = useServices();
   return services.getTaskStorage();
+}
+
+export function useActivitySheetStorage() {
+  const services = useServices();
+  return services.getActivitySheetStorage();
 }
 
 export function useVehicleTypeStorage() {
@@ -1022,6 +1065,11 @@ export function useOrderAPI() {
 export function useTaskAPI() {
   const services = useServices();
   return services.getTaskAPI();
+}
+
+export function useActivitySheetAPI() {
+  const services = useServices();
+  return services.getActivitySheetAPI();
 }
 
 export function useVehicleTypeAPI() {
