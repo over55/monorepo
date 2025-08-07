@@ -26,6 +26,7 @@ import { CommentAPI } from "./API/CommentAPI";
 import { BulletinAPI } from "./API/BulletinAPI";
 import { AssociateAwayLogAPI } from "./API/AssociateAwayLogAPI";
 import { JobHistoryAPI } from "./API/JobHistoryAPI";
+import { OrderIncidentAPI } from "./API/OrderIncidentAPI";
 import { TokenStorage } from "./Storage/TokenStorage";
 import { AccountStorage } from "./Storage/AccountStorage";
 import { DashboardStorage } from "./Storage/DashboardStorage";
@@ -49,6 +50,7 @@ import { CommentStorage } from "./Storage/CommentStorage";
 import { BulletinStorage } from "./Storage/BulletinStorage";
 import { AssociateAwayLogStorage } from "./Storage/AssociateAwayLogStorage";
 import { JobHistoryStorage } from "./Storage/JobHistoryStorage";
+import { OrderIncidentStorage } from "./Storage/OrderIncidentStorage";
 import { AuthManager } from "./Manager/AuthManager";
 import { VersionManager } from "./Manager/VersionManager";
 import { PasswordResetManager } from "./Manager/PasswordResetManager";
@@ -75,6 +77,7 @@ import { CommentManager } from "./Manager/CommentManager";
 import { BulletinManager } from "./Manager/BulletinManager";
 import { AssociateAwayLogManager } from "./Manager/AssociateAwayLogManager";
 import { JobHistoryManager } from "./Manager/JobHistoryManager";
+import { OrderIncidentManager } from "./Manager/OrderIncidentManager";
 import { getAPIBaseURL, API_ENDPOINTS, ENV_CONFIG } from "./Config/APIConfig";
 
 /**
@@ -170,6 +173,9 @@ class ServicesContainer {
 
     const jobHistoryStorage = new JobHistoryStorage();
     this._services.set("jobHistoryStorage", jobHistoryStorage);
+
+    const orderIncidentStorage = new OrderIncidentStorage();
+    this._services.set("orderIncidentStorage", orderIncidentStorage);
 
     // Initialize API services (depend on configuration)
     const authAPI = new AuthAPI(baseURL, API_ENDPOINTS);
@@ -281,6 +287,13 @@ class ServicesContainer {
       tokenStorage,
     );
     this._services.set("jobHistoryAPI", jobHistoryAPI);
+
+    const orderIncidentAPI = new OrderIncidentAPI(
+      baseURL,
+      API_ENDPOINTS,
+      tokenStorage,
+    );
+    this._services.set("orderIncidentAPI", orderIncidentAPI);
 
     // Initialize manager services (combine API and storage layers)
 
@@ -421,6 +434,13 @@ class ServicesContainer {
     );
     this._services.set("jobHistoryManager", jobHistoryManager);
 
+    // OrderIncidentManager needs OrderIncidentAPI and OrderIncidentStorage
+    const orderIncidentManager = new OrderIncidentManager(
+      orderIncidentAPI,
+      orderIncidentStorage,
+    );
+    this._services.set("orderIncidentManager", orderIncidentManager);
+
     this._initialized = true;
 
     if (ENV_CONFIG.IS_DEVELOPMENT) {
@@ -460,6 +480,7 @@ class ServicesContainer {
           "associateAwayLogStorage",
         ],
         jobHistoryManager: ["jobHistoryAPI", "jobHistoryStorage"],
+        orderIncidentManager: ["orderIncidentAPI", "orderIncidentStorage"],
       });
       console.groupEnd();
     }
@@ -591,6 +612,10 @@ class ServicesContainer {
     return this.get("jobHistoryManager");
   }
 
+  getOrderIncidentManager() {
+    return this.get("orderIncidentManager");
+  }
+
   /**
    * Convenience getters for storage services
    */
@@ -684,6 +709,10 @@ class ServicesContainer {
 
   getJobHistoryStorage() {
     return this.get("jobHistoryStorage");
+  }
+
+  getOrderIncidentStorage() {
+    return this.get("orderIncidentStorage");
   }
 
   /**
@@ -791,6 +820,10 @@ class ServicesContainer {
 
   getJobHistoryAPI() {
     return this.get("jobHistoryAPI");
+  }
+
+  getOrderIncidentAPI() {
+    return this.get("orderIncidentAPI");
   }
 
   // ... rest of the methods remain the same ...
@@ -960,6 +993,11 @@ export function useJobHistoryManager() {
   return services.getJobHistoryManager();
 }
 
+export function useOrderIncidentManager() {
+  const services = useServices();
+  return services.getOrderIncidentManager();
+}
+
 /**
  * Hooks to access storage services
  */
@@ -1076,6 +1114,11 @@ export function useAssociateAwayLogStorage() {
 export function useJobHistoryStorage() {
   const services = useServices();
   return services.getJobHistoryStorage();
+}
+
+export function useOrderIncidentStorage() {
+  const services = useServices();
+  return services.getOrderIncidentStorage();
 }
 
 /**
@@ -1209,6 +1252,11 @@ export function useAssociateAwayLogAPI() {
 export function useJobHistoryAPI() {
   const services = useServices();
   return services.getJobHistoryAPI();
+}
+
+export function useOrderIncidentAPI() {
+  const services = useServices();
+  return services.getOrderIncidentAPI();
 }
 
 /**

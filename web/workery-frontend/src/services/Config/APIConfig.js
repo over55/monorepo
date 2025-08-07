@@ -127,6 +127,17 @@ export const API_ENDPOINTS = {
   ORDER_POSTPONE_OPERATION: "/orders/operation/postpone",
   ORDER_TRANSFER_OPERATION: "/orders/operation/transfer",
 
+  // Order Incident endpoints
+  ORDER_INCIDENTS: "/order-incidents",
+  ORDER_INCIDENT_DETAIL: "/order-incident/{id}",
+  ORDER_INCIDENT_SELECT_OPTIONS: "/order-incidents/select-options",
+  ORDER_INCIDENT_ARCHIVE_OPERATION: "/order-incidents/operation/archive",
+  ORDER_INCIDENT_CREATE_COMMENT_OPERATION:
+    "/order-incidents/operation/create-comment",
+  ORDER_INCIDENT_FILE_UPLOAD_OPERATION:
+    "/order-incidents/operation/file-upload",
+  ORDER_INCIDENT_STATISTICS: "/order-incidents/statistics",
+
   // Task endpoints
   TASKS: "/tasks",
   TASK_DETAIL: "/task/{id}",
