@@ -86,6 +86,11 @@ export const API_ENDPOINTS = {
   VEHICLE_TYPES: "/vehicle-types",
   VEHICLE_TYPE_DETAIL: "/vehicle-type/{id}",
   VEHICLE_TYPE_SELECT_OPTIONS: "/vehicle-types/operation/select-options",
+
+  // Tag endpoints
+  TAGS: "/tags",
+  TAG_DETAIL: "/tag/{id}",
+  TAG_SELECT_OPTIONS: "/tags/operation/select-options",
 };
 
 /**
@@ -113,6 +118,9 @@ export function getFullAPIUrls() {
     VEHICLE_TYPES: `${httpServer}${basePath}${API_ENDPOINTS.VEHICLE_TYPES}`,
     VEHICLE_TYPE_DETAIL: `${httpServer}${basePath}${API_ENDPOINTS.VEHICLE_TYPE_DETAIL}`,
     VEHICLE_TYPE_SELECT_OPTIONS: `${httpServer}${basePath}${API_ENDPOINTS.VEHICLE_TYPE_SELECT_OPTIONS}`,
+    TAGS: `${httpServer}${basePath}${API_ENDPOINTS.TAGS}`,
+    TAG_DETAIL: `${httpServer}${basePath}${API_ENDPOINTS.TAG_DETAIL}`,
+    TAG_SELECT_OPTIONS: `${httpServer}${basePath}${API_ENDPOINTS.TAG_SELECT_OPTIONS}`,
   };
 }
 
