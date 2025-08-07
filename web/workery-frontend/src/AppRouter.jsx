@@ -44,6 +44,7 @@ import SettingInsuranceRequirementCreatePage from "./pages/Admin/Setting/Insuran
 import SettingInsuranceRequirementListPage from "./pages/Admin/Setting/InsuranceRequirement/List/Page";
 import SettingInsuranceRequirementDetailPage from "./pages/Admin/Setting/InsuranceRequirement/Detail/Page";
 import SettingInsuranceRequirementUpdatePage from "./pages/Admin/Setting/InsuranceRequirement/Update/Page";
+import SettingInactiveClientListPage from "./pages/Admin/Setting/InactiveClient/List/Page";
 
 // Associate pages
 import AssociateDashboardPage from "./pages/Associate/Dashboard/Page";
@@ -1991,7 +1992,7 @@ function AppRouter() {
               path="/admin/settings/insurance-requirements"
               element={
                 <Layout>
-                  <SettingTagListPage />
+                  <SettingInsuranceRequirementListPage />
                 </Layout>
               }
             />
@@ -1999,7 +2000,7 @@ function AppRouter() {
               path="/admin/settings/insurance-requirement/create"
               element={
                 <Layout>
-                  <SettingTagCreatePage />
+                  <SettingInsuranceRequirementCreatePage />
                 </Layout>
               }
             />
@@ -2007,7 +2008,7 @@ function AppRouter() {
               path="/admin/settings/insurance-requirement/:id/detail"
               element={
                 <Layout>
-                  <SettingTagDetailPage />
+                  <SettingInsuranceRequirementDetailPage />
                 </Layout>
               }
             />
@@ -2015,7 +2016,7 @@ function AppRouter() {
               path="/admin/settings/insurance-requirement/:id/update"
               element={
                 <Layout>
-                  <SettingTagUpdatePage />
+                  <SettingInsuranceRequirementUpdatePage />
                 </Layout>
               }
             />
@@ -2055,7 +2056,7 @@ function AppRouter() {
               path="/admin/settings/inactive-clients"
               element={
                 <Layout>
-                  <PlaceholderPage title="Inactive Clients" />
+                  <SettingInactiveClientListPage />
                 </Layout>
               }
             />
