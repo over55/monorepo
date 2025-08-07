@@ -1,5 +1,34 @@
 // File Path: web/workery-frontend/src/services/Services.jsx
 import React, { createContext, useContext, useMemo } from "react";
+import { getAPIBaseURL, API_ENDPOINTS, ENV_CONFIG } from "./Config/APIConfig";
+
+// Import all Storage services
+import { TokenStorage } from "./Storage/TokenStorage";
+import { AccountStorage } from "./Storage/AccountStorage";
+import { DashboardStorage } from "./Storage/DashboardStorage";
+import { TenantStorage } from "./Storage/TenantStorage";
+import { CustomerStorage } from "./Storage/CustomerStorage";
+import { AssociateStorage } from "./Storage/AssociateStorage";
+import { StaffStorage } from "./Storage/StaffStorage";
+import { OrderStorage } from "./Storage/OrderStorage";
+import { TaskStorage } from "./Storage/TaskStorage";
+import { ActivitySheetStorage } from "./Storage/ActivitySheetStorage";
+import { FinancialStorage } from "./Storage/FinancialStorage";
+import { AttachmentStorage } from "./Storage/AttachmentStorage";
+import { VehicleTypeStorage } from "./Storage/VehicleTypeStorage";
+import { TagStorage } from "./Storage/TagStorage";
+import { SkillSetStorage } from "./Storage/SkillSetStorage";
+import { NOCStorage } from "./Storage/NOCStorage";
+import { NAICSStorage } from "./Storage/NAICSStorage";
+import { InsuranceRequirementStorage } from "./Storage/InsuranceRequirementStorage";
+import { ServiceFeeStorage } from "./Storage/ServiceFeeStorage";
+import { CommentStorage } from "./Storage/CommentStorage";
+import { BulletinStorage } from "./Storage/BulletinStorage";
+import { AssociateAwayLogStorage } from "./Storage/AssociateAwayLogStorage";
+import { JobHistoryStorage } from "./Storage/JobHistoryStorage";
+import { OrderIncidentStorage } from "./Storage/OrderIncidentStorage";
+
+// Import all API services
 import { AuthAPI } from "./API/AuthAPI";
 import { VersionAPI } from "./API/VersionAPI";
 import { PasswordResetAPI } from "./API/PasswordResetAPI";
@@ -27,30 +56,8 @@ import { BulletinAPI } from "./API/BulletinAPI";
 import { AssociateAwayLogAPI } from "./API/AssociateAwayLogAPI";
 import { JobHistoryAPI } from "./API/JobHistoryAPI";
 import { OrderIncidentAPI } from "./API/OrderIncidentAPI";
-import { TokenStorage } from "./Storage/TokenStorage";
-import { AccountStorage } from "./Storage/AccountStorage";
-import { DashboardStorage } from "./Storage/DashboardStorage";
-import { TenantStorage } from "./Storage/TenantStorage";
-import { CustomerStorage } from "./Storage/CustomerStorage";
-import { AssociateStorage } from "./Storage/AssociateStorage";
-import { StaffStorage } from "./Storage/StaffStorage";
-import { OrderStorage } from "./Storage/OrderStorage";
-import { TaskStorage } from "./Storage/TaskStorage";
-import { ActivitySheetStorage } from "./Storage/ActivitySheetStorage";
-import { FinancialStorage } from "./Storage/FinancialStorage";
-import { AttachmentStorage } from "./Storage/AttachmentStorage";
-import { VehicleTypeStorage } from "./Storage/VehicleTypeStorage";
-import { TagStorage } from "./Storage/TagStorage";
-import { SkillSetStorage } from "./Storage/SkillSetStorage";
-import { NOCStorage } from "./Storage/NOCStorage";
-import { NAICSStorage } from "./Storage/NAICSStorage";
-import { InsuranceRequirementStorage } from "./Storage/InsuranceRequirementStorage";
-import { ServiceFeeStorage } from "./Storage/ServiceFeeStorage";
-import { CommentStorage } from "./Storage/CommentStorage";
-import { BulletinStorage } from "./Storage/BulletinStorage";
-import { AssociateAwayLogStorage } from "./Storage/AssociateAwayLogStorage";
-import { JobHistoryStorage } from "./Storage/JobHistoryStorage";
-import { OrderIncidentStorage } from "./Storage/OrderIncidentStorage";
+
+// Import all Manager services
 import { AuthManager } from "./Manager/AuthManager";
 import { VersionManager } from "./Manager/VersionManager";
 import { PasswordResetManager } from "./Manager/PasswordResetManager";
@@ -78,768 +85,626 @@ import { BulletinManager } from "./Manager/BulletinManager";
 import { AssociateAwayLogManager } from "./Manager/AssociateAwayLogManager";
 import { JobHistoryManager } from "./Manager/JobHistoryManager";
 import { OrderIncidentManager } from "./Manager/OrderIncidentManager";
-import { getAPIBaseURL, API_ENDPOINTS, ENV_CONFIG } from "./Config/APIConfig";
 
 /**
- * Services container for dependency injection
- * Manages all service instances and their dependencies
+ * Service Definition Registry
+ * Defines all services, their dependencies, and factory functions
+ */
+const SERVICE_DEFINITIONS = {
+  // Storage Services (no dependencies)
+  storage: {
+    token: {
+      factory: () => new TokenStorage(),
+      singleton: true,
+    },
+    account: {
+      factory: () => new AccountStorage(),
+      singleton: true,
+    },
+    dashboard: {
+      factory: () => new DashboardStorage(),
+      singleton: true,
+    },
+    tenant: {
+      factory: () => new TenantStorage(),
+      singleton: true,
+    },
+    customer: {
+      factory: () => new CustomerStorage(),
+      singleton: true,
+    },
+    associate: {
+      factory: () => new AssociateStorage(),
+      singleton: true,
+    },
+    staff: {
+      factory: () => new StaffStorage(),
+      singleton: true,
+    },
+    order: {
+      factory: () => new OrderStorage(),
+      singleton: true,
+    },
+    task: {
+      factory: () => new TaskStorage(),
+      singleton: true,
+    },
+    activitySheet: {
+      factory: () => new ActivitySheetStorage(),
+      singleton: true,
+    },
+    financial: {
+      factory: () => new FinancialStorage(),
+      singleton: true,
+    },
+    attachment: {
+      factory: () => new AttachmentStorage(),
+      singleton: true,
+    },
+    vehicleType: {
+      factory: () => new VehicleTypeStorage(),
+      singleton: true,
+    },
+    tag: {
+      factory: () => new TagStorage(),
+      singleton: true,
+    },
+    skillSet: {
+      factory: () => new SkillSetStorage(),
+      singleton: true,
+    },
+    noc: {
+      factory: () => new NOCStorage(),
+      singleton: true,
+    },
+    naics: {
+      factory: () => new NAICSStorage(),
+      singleton: true,
+    },
+    insuranceRequirement: {
+      factory: () => new InsuranceRequirementStorage(),
+      singleton: true,
+    },
+    serviceFee: {
+      factory: () => new ServiceFeeStorage(),
+      singleton: true,
+    },
+    comment: {
+      factory: () => new CommentStorage(),
+      singleton: true,
+    },
+    bulletin: {
+      factory: () => new BulletinStorage(),
+      singleton: true,
+    },
+    associateAwayLog: {
+      factory: () => new AssociateAwayLogStorage(),
+      singleton: true,
+    },
+    jobHistory: {
+      factory: () => new JobHistoryStorage(),
+      singleton: true,
+    },
+    orderIncident: {
+      factory: () => new OrderIncidentStorage(),
+      singleton: true,
+    },
+  },
+
+  // API Services
+  api: {
+    auth: {
+      factory: (deps) => new AuthAPI(deps.baseURL, deps.endpoints),
+      dependencies: ["baseURL", "endpoints"],
+      singleton: true,
+    },
+    version: {
+      factory: (deps) => new VersionAPI(deps.baseURL, deps.endpoints),
+      dependencies: ["baseURL", "endpoints"],
+      singleton: true,
+    },
+    passwordReset: {
+      factory: (deps) => new PasswordResetAPI(deps.baseURL, deps.endpoints),
+      dependencies: ["baseURL", "endpoints"],
+      singleton: true,
+    },
+    tenant: {
+      factory: (deps) =>
+        new TenantAPI(deps.baseURL, deps.endpoints, deps.tokenStorage),
+      dependencies: ["baseURL", "endpoints", "storage:token"],
+      singleton: true,
+    },
+    dashboard: {
+      factory: (deps) =>
+        new DashboardAPI(deps.baseURL, deps.endpoints, deps.tokenStorage),
+      dependencies: ["baseURL", "endpoints", "storage:token"],
+      singleton: true,
+    },
+    twoFactorAuth: {
+      factory: (deps) =>
+        new TwoFactorAuthAPI(deps.baseURL, deps.endpoints, deps.tokenStorage),
+      dependencies: ["baseURL", "endpoints", "storage:token"],
+      singleton: true,
+    },
+    account: {
+      factory: (deps) =>
+        new AccountAPI(deps.baseURL, deps.endpoints, deps.tokenStorage),
+      dependencies: ["baseURL", "endpoints", "storage:token"],
+      singleton: true,
+    },
+    customer: {
+      factory: (deps) =>
+        new CustomerAPI(deps.baseURL, deps.endpoints, deps.tokenStorage),
+      dependencies: ["baseURL", "endpoints", "storage:token"],
+      singleton: true,
+    },
+    associate: {
+      factory: (deps) =>
+        new AssociateAPI(deps.baseURL, deps.endpoints, deps.tokenStorage),
+      dependencies: ["baseURL", "endpoints", "storage:token"],
+      singleton: true,
+    },
+    staff: {
+      factory: (deps) =>
+        new StaffAPI(deps.baseURL, deps.endpoints, deps.tokenStorage),
+      dependencies: ["baseURL", "endpoints", "storage:token"],
+      singleton: true,
+    },
+    order: {
+      factory: (deps) =>
+        new OrderAPI(deps.baseURL, deps.endpoints, deps.tokenStorage),
+      dependencies: ["baseURL", "endpoints", "storage:token"],
+      singleton: true,
+    },
+    task: {
+      factory: (deps) =>
+        new TaskAPI(deps.baseURL, deps.endpoints, deps.tokenStorage),
+      dependencies: ["baseURL", "endpoints", "storage:token"],
+      singleton: true,
+    },
+    activitySheet: {
+      factory: (deps) =>
+        new ActivitySheetAPI(deps.baseURL, deps.endpoints, deps.tokenStorage),
+      dependencies: ["baseURL", "endpoints", "storage:token"],
+      singleton: true,
+    },
+    financial: {
+      factory: (deps) =>
+        new FinancialAPI(deps.baseURL, deps.endpoints, deps.tokenStorage),
+      dependencies: ["baseURL", "endpoints", "storage:token"],
+      singleton: true,
+    },
+    attachment: {
+      factory: (deps) =>
+        new AttachmentAPI(deps.baseURL, deps.endpoints, deps.tokenStorage),
+      dependencies: ["baseURL", "endpoints", "storage:token"],
+      singleton: true,
+    },
+    vehicleType: {
+      factory: (deps) =>
+        new VehicleTypeAPI(deps.baseURL, deps.endpoints, deps.tokenStorage),
+      dependencies: ["baseURL", "endpoints", "storage:token"],
+      singleton: true,
+    },
+    tag: {
+      factory: (deps) =>
+        new TagAPI(deps.baseURL, deps.endpoints, deps.tokenStorage),
+      dependencies: ["baseURL", "endpoints", "storage:token"],
+      singleton: true,
+    },
+    skillSet: {
+      factory: (deps) =>
+        new SkillSetAPI(deps.baseURL, deps.endpoints, deps.tokenStorage),
+      dependencies: ["baseURL", "endpoints", "storage:token"],
+      singleton: true,
+    },
+    noc: {
+      factory: (deps) =>
+        new NOCAPI(deps.baseURL, deps.endpoints, deps.tokenStorage),
+      dependencies: ["baseURL", "endpoints", "storage:token"],
+      singleton: true,
+    },
+    naics: {
+      factory: (deps) =>
+        new NAICSAPI(deps.baseURL, deps.endpoints, deps.tokenStorage),
+      dependencies: ["baseURL", "endpoints", "storage:token"],
+      singleton: true,
+    },
+    insuranceRequirement: {
+      factory: (deps) =>
+        new InsuranceRequirementAPI(
+          deps.baseURL,
+          deps.endpoints,
+          deps.tokenStorage,
+        ),
+      dependencies: ["baseURL", "endpoints", "storage:token"],
+      singleton: true,
+    },
+    serviceFee: {
+      factory: (deps) =>
+        new ServiceFeeAPI(deps.baseURL, deps.endpoints, deps.tokenStorage),
+      dependencies: ["baseURL", "endpoints", "storage:token"],
+      singleton: true,
+    },
+    comment: {
+      factory: (deps) =>
+        new CommentAPI(deps.baseURL, deps.endpoints, deps.tokenStorage),
+      dependencies: ["baseURL", "endpoints", "storage:token"],
+      singleton: true,
+    },
+    bulletin: {
+      factory: (deps) =>
+        new BulletinAPI(deps.baseURL, deps.endpoints, deps.tokenStorage),
+      dependencies: ["baseURL", "endpoints", "storage:token"],
+      singleton: true,
+    },
+    associateAwayLog: {
+      factory: (deps) =>
+        new AssociateAwayLogAPI(
+          deps.baseURL,
+          deps.endpoints,
+          deps.tokenStorage,
+        ),
+      dependencies: ["baseURL", "endpoints", "storage:token"],
+      singleton: true,
+    },
+    jobHistory: {
+      factory: (deps) =>
+        new JobHistoryAPI(deps.baseURL, deps.endpoints, deps.tokenStorage),
+      dependencies: ["baseURL", "endpoints", "storage:token"],
+      singleton: true,
+    },
+    orderIncident: {
+      factory: (deps) =>
+        new OrderIncidentAPI(deps.baseURL, deps.endpoints, deps.tokenStorage),
+      dependencies: ["baseURL", "endpoints", "storage:token"],
+      singleton: true,
+    },
+  },
+
+  // Manager Services
+  manager: {
+    auth: {
+      factory: (deps) => new AuthManager(deps.authAPI, deps.tokenStorage),
+      dependencies: ["api:auth", "storage:token"],
+      singleton: true,
+    },
+    version: {
+      factory: (deps) => new VersionManager(deps.versionAPI),
+      dependencies: ["api:version"],
+      singleton: true,
+    },
+    passwordReset: {
+      factory: (deps) => new PasswordResetManager(deps.passwordResetAPI),
+      dependencies: ["api:passwordReset"],
+      singleton: true,
+    },
+    tenant: {
+      factory: (deps) => new TenantManager(deps.tenantAPI, deps.tenantStorage),
+      dependencies: ["api:tenant", "storage:tenant"],
+      singleton: true,
+    },
+    dashboard: {
+      factory: (deps) =>
+        new DashboardManager(deps.dashboardAPI, deps.dashboardStorage),
+      dependencies: ["api:dashboard", "storage:dashboard"],
+      singleton: true,
+    },
+    twoFactorAuth: {
+      factory: (deps) => new TwoFactorAuthManager(deps.twoFactorAuthAPI),
+      dependencies: ["api:twoFactorAuth"],
+      singleton: true,
+    },
+    account: {
+      factory: (deps) =>
+        new AccountManager(deps.accountAPI, deps.accountStorage),
+      dependencies: ["api:account", "storage:account"],
+      singleton: true,
+    },
+    customer: {
+      factory: (deps) =>
+        new CustomerManager(deps.customerAPI, deps.customerStorage),
+      dependencies: ["api:customer", "storage:customer"],
+      singleton: true,
+    },
+    associate: {
+      factory: (deps) =>
+        new AssociateManager(deps.associateAPI, deps.associateStorage),
+      dependencies: ["api:associate", "storage:associate"],
+      singleton: true,
+    },
+    staff: {
+      factory: (deps) => new StaffManager(deps.staffAPI, deps.staffStorage),
+      dependencies: ["api:staff", "storage:staff"],
+      singleton: true,
+    },
+    order: {
+      factory: (deps) => new OrderManager(deps.orderAPI, deps.orderStorage),
+      dependencies: ["api:order", "storage:order"],
+      singleton: true,
+    },
+    task: {
+      factory: (deps) => new TaskManager(deps.taskAPI, deps.taskStorage),
+      dependencies: ["api:task", "storage:task"],
+      singleton: true,
+    },
+    activitySheet: {
+      factory: (deps) =>
+        new ActivitySheetManager(
+          deps.activitySheetAPI,
+          deps.activitySheetStorage,
+        ),
+      dependencies: ["api:activitySheet", "storage:activitySheet"],
+      singleton: true,
+    },
+    financial: {
+      factory: (deps) =>
+        new FinancialManager(deps.financialAPI, deps.financialStorage),
+      dependencies: ["api:financial", "storage:financial"],
+      singleton: true,
+    },
+    attachment: {
+      factory: (deps) =>
+        new AttachmentManager(deps.attachmentAPI, deps.attachmentStorage),
+      dependencies: ["api:attachment", "storage:attachment"],
+      singleton: true,
+    },
+    vehicleType: {
+      factory: (deps) =>
+        new VehicleTypeManager(deps.vehicleTypeAPI, deps.vehicleTypeStorage),
+      dependencies: ["api:vehicleType", "storage:vehicleType"],
+      singleton: true,
+    },
+    tag: {
+      factory: (deps) => new TagManager(deps.tagAPI, deps.tagStorage),
+      dependencies: ["api:tag", "storage:tag"],
+      singleton: true,
+    },
+    skillSet: {
+      factory: (deps) =>
+        new SkillSetManager(deps.skillSetAPI, deps.skillSetStorage),
+      dependencies: ["api:skillSet", "storage:skillSet"],
+      singleton: true,
+    },
+    noc: {
+      factory: (deps) => new NOCManager(deps.nocAPI, deps.nocStorage),
+      dependencies: ["api:noc", "storage:noc"],
+      singleton: true,
+    },
+    naics: {
+      factory: (deps) => new NAICSManager(deps.naicsAPI, deps.naicsStorage),
+      dependencies: ["api:naics", "storage:naics"],
+      singleton: true,
+    },
+    insuranceRequirement: {
+      factory: (deps) =>
+        new InsuranceRequirementManager(
+          deps.insuranceRequirementAPI,
+          deps.insuranceRequirementStorage,
+        ),
+      dependencies: [
+        "api:insuranceRequirement",
+        "storage:insuranceRequirement",
+      ],
+      singleton: true,
+    },
+    serviceFee: {
+      factory: (deps) =>
+        new ServiceFeeManager(deps.serviceFeeAPI, deps.serviceFeeStorage),
+      dependencies: ["api:serviceFee", "storage:serviceFee"],
+      singleton: true,
+    },
+    comment: {
+      factory: (deps) =>
+        new CommentManager(deps.commentAPI, deps.commentStorage),
+      dependencies: ["api:comment", "storage:comment"],
+      singleton: true,
+    },
+    bulletin: {
+      factory: (deps) =>
+        new BulletinManager(deps.bulletinAPI, deps.bulletinStorage),
+      dependencies: ["api:bulletin", "storage:bulletin"],
+      singleton: true,
+    },
+    associateAwayLog: {
+      factory: (deps) =>
+        new AssociateAwayLogManager(
+          deps.associateAwayLogAPI,
+          deps.associateAwayLogStorage,
+        ),
+      dependencies: ["api:associateAwayLog", "storage:associateAwayLog"],
+      singleton: true,
+    },
+    jobHistory: {
+      factory: (deps) =>
+        new JobHistoryManager(deps.jobHistoryAPI, deps.jobHistoryStorage),
+      dependencies: ["api:jobHistory", "storage:jobHistory"],
+      singleton: true,
+    },
+    orderIncident: {
+      factory: (deps) =>
+        new OrderIncidentManager(
+          deps.orderIncidentAPI,
+          deps.orderIncidentStorage,
+        ),
+      dependencies: ["api:orderIncident", "storage:orderIncident"],
+      singleton: true,
+    },
+  },
+};
+
+/**
+ * Enhanced Services Container with automatic dependency resolution
  */
 class ServicesContainer {
   constructor() {
-    this._services = new Map();
+    this._instances = new Map();
+    this._config = null;
     this._initialized = false;
   }
 
   /**
-   * Initialize all services with their dependencies
+   * Initialize the container synchronously
    */
   initialize() {
     if (this._initialized) {
       return;
     }
 
-    // Get API base URL from Vite environment variables
-    const baseURL = getAPIBaseURL();
-
-    // Initialize storage services (no dependencies)
-    const tokenStorage = new TokenStorage();
-    this._services.set("tokenStorage", tokenStorage);
-
-    const accountStorage = new AccountStorage();
-    this._services.set("accountStorage", accountStorage);
-
-    const dashboardStorage = new DashboardStorage();
-    this._services.set("dashboardStorage", dashboardStorage);
-
-    const tenantStorage = new TenantStorage();
-    this._services.set("tenantStorage", tenantStorage);
-
-    const customerStorage = new CustomerStorage();
-    this._services.set("customerStorage", customerStorage);
-
-    const associateStorage = new AssociateStorage();
-    this._services.set("associateStorage", associateStorage);
-
-    const staffStorage = new StaffStorage();
-    this._services.set("staffStorage", staffStorage);
-
-    const orderStorage = new OrderStorage();
-    this._services.set("orderStorage", orderStorage);
-
-    const taskStorage = new TaskStorage();
-    this._services.set("taskStorage", taskStorage);
-
-    const activitySheetStorage = new ActivitySheetStorage();
-    this._services.set("activitySheetStorage", activitySheetStorage);
-
-    const financialStorage = new FinancialStorage();
-    this._services.set("financialStorage", financialStorage);
-
-    const attachmentStorage = new AttachmentStorage();
-    this._services.set("attachmentStorage", attachmentStorage);
-
-    const vehicleTypeStorage = new VehicleTypeStorage();
-    this._services.set("vehicleTypeStorage", vehicleTypeStorage);
-
-    const tagStorage = new TagStorage();
-    this._services.set("tagStorage", tagStorage);
-
-    const skillSetStorage = new SkillSetStorage();
-    this._services.set("skillSetStorage", skillSetStorage);
-
-    const nocStorage = new NOCStorage();
-    this._services.set("nocStorage", nocStorage);
-
-    const naicsStorage = new NAICSStorage();
-    this._services.set("naicsStorage", naicsStorage);
-
-    const insuranceRequirementStorage = new InsuranceRequirementStorage();
-    this._services.set(
-      "insuranceRequirementStorage",
-      insuranceRequirementStorage,
-    );
-
-    const serviceFeeStorage = new ServiceFeeStorage();
-    this._services.set("serviceFeeStorage", serviceFeeStorage);
-
-    const commentStorage = new CommentStorage();
-    this._services.set("commentStorage", commentStorage);
-
-    const bulletinStorage = new BulletinStorage();
-    this._services.set("bulletinStorage", bulletinStorage);
-
-    const associateAwayLogStorage = new AssociateAwayLogStorage();
-    this._services.set("associateAwayLogStorage", associateAwayLogStorage);
-
-    const jobHistoryStorage = new JobHistoryStorage();
-    this._services.set("jobHistoryStorage", jobHistoryStorage);
-
-    const orderIncidentStorage = new OrderIncidentStorage();
-    this._services.set("orderIncidentStorage", orderIncidentStorage);
-
-    // Initialize API services (depend on configuration)
-    const authAPI = new AuthAPI(baseURL, API_ENDPOINTS);
-    this._services.set("authAPI", authAPI);
-
-    const versionAPI = new VersionAPI(baseURL, API_ENDPOINTS);
-    this._services.set("versionAPI", versionAPI);
-
-    const passwordResetAPI = new PasswordResetAPI(baseURL, API_ENDPOINTS);
-    this._services.set("passwordResetAPI", passwordResetAPI);
-
-    const tenantAPI = new TenantAPI(baseURL, API_ENDPOINTS, tokenStorage);
-    this._services.set("tenantAPI", tenantAPI);
-
-    const dashboardAPI = new DashboardAPI(baseURL, API_ENDPOINTS, tokenStorage);
-    this._services.set("dashboardAPI", dashboardAPI);
-
-    const twoFactorAuthAPI = new TwoFactorAuthAPI(
-      baseURL,
-      API_ENDPOINTS,
-      tokenStorage,
-    );
-    this._services.set("twoFactorAuthAPI", twoFactorAuthAPI);
-
-    const accountAPI = new AccountAPI(baseURL, API_ENDPOINTS, tokenStorage);
-    this._services.set("accountAPI", accountAPI);
-
-    const customerAPI = new CustomerAPI(baseURL, API_ENDPOINTS, tokenStorage);
-    this._services.set("customerAPI", customerAPI);
-
-    const associateAPI = new AssociateAPI(baseURL, API_ENDPOINTS, tokenStorage);
-    this._services.set("associateAPI", associateAPI);
-
-    const staffAPI = new StaffAPI(baseURL, API_ENDPOINTS, tokenStorage);
-    this._services.set("staffAPI", staffAPI);
-
-    const orderAPI = new OrderAPI(baseURL, API_ENDPOINTS, tokenStorage);
-    this._services.set("orderAPI", orderAPI);
-
-    const taskAPI = new TaskAPI(baseURL, API_ENDPOINTS, tokenStorage);
-    this._services.set("taskAPI", taskAPI);
-
-    const activitySheetAPI = new ActivitySheetAPI(
-      baseURL,
-      API_ENDPOINTS,
-      tokenStorage,
-    );
-    this._services.set("activitySheetAPI", activitySheetAPI);
-
-    const financialAPI = new FinancialAPI(baseURL, API_ENDPOINTS, tokenStorage);
-    this._services.set("financialAPI", financialAPI);
-
-    const attachmentAPI = new AttachmentAPI(
-      baseURL,
-      API_ENDPOINTS,
-      tokenStorage,
-    );
-    this._services.set("attachmentAPI", attachmentAPI);
-
-    const vehicleTypeAPI = new VehicleTypeAPI(
-      baseURL,
-      API_ENDPOINTS,
-      tokenStorage,
-    );
-    this._services.set("vehicleTypeAPI", vehicleTypeAPI);
-
-    const tagAPI = new TagAPI(baseURL, API_ENDPOINTS, tokenStorage);
-    this._services.set("tagAPI", tagAPI);
-
-    const skillSetAPI = new SkillSetAPI(baseURL, API_ENDPOINTS, tokenStorage);
-    this._services.set("skillSetAPI", skillSetAPI);
-
-    const nocAPI = new NOCAPI(baseURL, API_ENDPOINTS, tokenStorage);
-    this._services.set("nocAPI", nocAPI);
-
-    const naicsAPI = new NAICSAPI(baseURL, API_ENDPOINTS, tokenStorage);
-    this._services.set("naicsAPI", naicsAPI);
-
-    const insuranceRequirementAPI = new InsuranceRequirementAPI(
-      baseURL,
-      API_ENDPOINTS,
-      tokenStorage,
-    );
-    this._services.set("insuranceRequirementAPI", insuranceRequirementAPI);
-
-    const serviceFeeAPI = new ServiceFeeAPI(
-      baseURL,
-      API_ENDPOINTS,
-      tokenStorage,
-    );
-    this._services.set("serviceFeeAPI", serviceFeeAPI);
-
-    const commentAPI = new CommentAPI(baseURL, API_ENDPOINTS, tokenStorage);
-    this._services.set("commentAPI", commentAPI);
-
-    const bulletinAPI = new BulletinAPI(baseURL, API_ENDPOINTS, tokenStorage);
-    this._services.set("bulletinAPI", bulletinAPI);
-
-    const associateAwayLogAPI = new AssociateAwayLogAPI(
-      baseURL,
-      API_ENDPOINTS,
-      tokenStorage,
-    );
-    this._services.set("associateAwayLogAPI", associateAwayLogAPI);
-
-    const jobHistoryAPI = new JobHistoryAPI(
-      baseURL,
-      API_ENDPOINTS,
-      tokenStorage,
-    );
-    this._services.set("jobHistoryAPI", jobHistoryAPI);
-
-    const orderIncidentAPI = new OrderIncidentAPI(
-      baseURL,
-      API_ENDPOINTS,
-      tokenStorage,
-    );
-    this._services.set("orderIncidentAPI", orderIncidentAPI);
-
-    // Initialize manager services (combine API and storage layers)
-
-    // AuthManager needs AuthAPI and TokenStorage
-    const authManager = new AuthManager(authAPI, tokenStorage);
-    this._services.set("authManager", authManager);
-
-    // VersionManager only needs VersionAPI
-    const versionManager = new VersionManager(versionAPI);
-    this._services.set("versionManager", versionManager);
-
-    // PasswordResetManager only needs PasswordResetAPI
-    const passwordResetManager = new PasswordResetManager(passwordResetAPI);
-    this._services.set("passwordResetManager", passwordResetManager);
-
-    // TenantManager needs TenantAPI and TenantStorage
-    const tenantManager = new TenantManager(tenantAPI, tenantStorage);
-    this._services.set("tenantManager", tenantManager);
-
-    // DashboardManager needs DashboardAPI and DashboardStorage
-    const dashboardManager = new DashboardManager(
-      dashboardAPI,
-      dashboardStorage,
-    );
-    this._services.set("dashboardManager", dashboardManager);
-
-    // TwoFactorAuthManager needs TwoFactorAuthAPI
-    const twoFactorAuthManager = new TwoFactorAuthManager(twoFactorAuthAPI);
-    this._services.set("twoFactorAuthManager", twoFactorAuthManager);
-
-    // AccountManager needs AccountAPI and AccountStorage
-    const accountManager = new AccountManager(accountAPI, accountStorage);
-    this._services.set("accountManager", accountManager);
-
-    // CustomerManager needs CustomerAPI and CustomerStorage
-    const customerManager = new CustomerManager(customerAPI, customerStorage);
-    this._services.set("customerManager", customerManager);
-
-    // AssociateManager needs AssociateAPI and AssociateStorage
-    const associateManager = new AssociateManager(
-      associateAPI,
-      associateStorage,
-    );
-    this._services.set("associateManager", associateManager);
-
-    // StaffManager needs StaffAPI and StaffStorage
-    const staffManager = new StaffManager(staffAPI, staffStorage);
-    this._services.set("staffManager", staffManager);
-
-    // OrderManager needs OrderAPI and OrderStorage
-    const orderManager = new OrderManager(orderAPI, orderStorage);
-    this._services.set("orderManager", orderManager);
-
-    // TaskManager needs TaskAPI and TaskStorage
-    const taskManager = new TaskManager(taskAPI, taskStorage);
-    this._services.set("taskManager", taskManager);
-
-    // ActivitySheetManager needs ActivitySheetAPI and ActivitySheetStorage
-    const activitySheetManager = new ActivitySheetManager(
-      activitySheetAPI,
-      activitySheetStorage,
-    );
-    this._services.set("activitySheetManager", activitySheetManager);
-
-    // FinancialManager needs FinancialAPI and FinancialStorage
-    const financialManager = new FinancialManager(
-      financialAPI,
-      financialStorage,
-    );
-    this._services.set("financialManager", financialManager);
-
-    // AttachmentManager needs AttachmentAPI and AttachmentStorage
-    const attachmentManager = new AttachmentManager(
-      attachmentAPI,
-      attachmentStorage,
-    );
-    this._services.set("attachmentManager", attachmentManager);
-
-    // VehicleTypeManager needs VehicleTypeAPI and VehicleTypeStorage
-    const vehicleTypeManager = new VehicleTypeManager(
-      vehicleTypeAPI,
-      vehicleTypeStorage,
-    );
-    this._services.set("vehicleTypeManager", vehicleTypeManager);
-
-    // TagManager needs TagAPI and TagStorage
-    const tagManager = new TagManager(tagAPI, tagStorage);
-    this._services.set("tagManager", tagManager);
-
-    // SkillSetManager needs SkillSetAPI and SkillSetStorage
-    const skillSetManager = new SkillSetManager(skillSetAPI, skillSetStorage);
-    this._services.set("skillSetManager", skillSetManager);
-
-    // NOCManager needs NOCAPI and NOCStorage
-    const nocManager = new NOCManager(nocAPI, nocStorage);
-    this._services.set("nocManager", nocManager);
-
-    // NAICSManager needs NAICSAPI and NAICSStorage
-    const naicsManager = new NAICSManager(naicsAPI, naicsStorage);
-    this._services.set("naicsManager", naicsManager);
-
-    // InsuranceRequirementManager needs InsuranceRequirementAPI and InsuranceRequirementStorage
-    const insuranceRequirementManager = new InsuranceRequirementManager(
-      insuranceRequirementAPI,
-      insuranceRequirementStorage,
-    );
-    this._services.set(
-      "insuranceRequirementManager",
-      insuranceRequirementManager,
-    );
-
-    // ServiceFeeManager needs ServiceFeeAPI and ServiceFeeStorage
-    const serviceFeeManager = new ServiceFeeManager(
-      serviceFeeAPI,
-      serviceFeeStorage,
-    );
-    this._services.set("serviceFeeManager", serviceFeeManager);
-
-    // CommentManager needs CommentAPI and CommentStorage
-    const commentManager = new CommentManager(commentAPI, commentStorage);
-    this._services.set("commentManager", commentManager);
-
-    // BulletinManager needs BulletinAPI and BulletinStorage
-    const bulletinManager = new BulletinManager(bulletinAPI, bulletinStorage);
-    this._services.set("bulletinManager", bulletinManager);
-
-    // AssociateAwayLogManager needs AssociateAwayLogAPI and AssociateAwayLogStorage
-    const associateAwayLogManager = new AssociateAwayLogManager(
-      associateAwayLogAPI,
-      associateAwayLogStorage,
-    );
-    this._services.set("associateAwayLogManager", associateAwayLogManager);
-
-    // JobHistoryManager needs JobHistoryAPI and JobHistoryStorage
-    const jobHistoryManager = new JobHistoryManager(
-      jobHistoryAPI,
-      jobHistoryStorage,
-    );
-    this._services.set("jobHistoryManager", jobHistoryManager);
-
-    // OrderIncidentManager needs OrderIncidentAPI and OrderIncidentStorage
-    const orderIncidentManager = new OrderIncidentManager(
-      orderIncidentAPI,
-      orderIncidentStorage,
-    );
-    this._services.set("orderIncidentManager", orderIncidentManager);
+    // Set up configuration
+    this._config = {
+      baseURL: getAPIBaseURL(),
+      endpoints: API_ENDPOINTS,
+    };
 
     this._initialized = true;
 
     if (ENV_CONFIG.IS_DEVELOPMENT) {
-      console.group("✅ Services Initialized");
-      console.log("🔗 API URL:", baseURL);
-      console.log("📦 Available services:", Array.from(this._services.keys()));
-      console.log("🏗️ Service dependency map:", {
-        authManager: ["authAPI", "tokenStorage"],
-        versionManager: ["versionAPI"],
-        passwordResetManager: ["passwordResetAPI"],
-        tenantManager: ["tenantAPI", "tenantStorage"],
-        dashboardManager: ["dashboardAPI", "dashboardStorage"],
-        twoFactorAuthManager: ["twoFactorAuthAPI"],
-        accountManager: ["accountAPI", "accountStorage"],
-        customerManager: ["customerAPI", "customerStorage"],
-        associateManager: ["associateAPI", "associateStorage"],
-        staffManager: ["staffAPI", "staffStorage"],
-        orderManager: ["orderAPI", "orderStorage"],
-        taskManager: ["taskAPI", "taskStorage"],
-        activitySheetManager: ["activitySheetAPI", "activitySheetStorage"],
-        financialManager: ["financialAPI", "financialStorage"],
-        attachmentManager: ["attachmentAPI", "attachmentStorage"],
-        vehicleTypeManager: ["vehicleTypeAPI", "vehicleTypeStorage"],
-        tagManager: ["tagAPI", "tagStorage"],
-        skillSetManager: ["skillSetAPI", "skillSetStorage"],
-        nocManager: ["nocAPI", "nocStorage"],
-        naicsManager: ["naicsAPI", "naicsStorage"],
-        insuranceRequirementManager: [
-          "insuranceRequirementAPI",
-          "insuranceRequirementStorage",
-        ],
-        serviceFeeManager: ["serviceFeeAPI", "serviceFeeStorage"],
-        commentManager: ["commentAPI", "commentStorage"],
-        bulletinManager: ["bulletinAPI", "bulletinStorage"],
-        associateAwayLogManager: [
-          "associateAwayLogAPI",
-          "associateAwayLogStorage",
-        ],
-        jobHistoryManager: ["jobHistoryAPI", "jobHistoryStorage"],
-        orderIncidentManager: ["orderIncidentAPI", "orderIncidentStorage"],
-      });
+      console.group("🚀 Services Container Initialization");
+      console.log("📍 API Base URL:", this._config.baseURL);
+      console.log("🔧 Environment:", ENV_CONFIG.MODE);
       console.groupEnd();
     }
   }
 
   /**
-   * Get a service by name
+   * Resolve dependencies for a service
    */
-  get(serviceName) {
+  _resolveDependencies(dependencies = []) {
+    const resolved = { ...this._config };
+
+    for (const dep of dependencies) {
+      if (dep.includes(":")) {
+        // Service dependency (e.g., 'storage:token')
+        const [type, name] = dep.split(":");
+        const serviceKey = this._normalizeServiceKey(name, type);
+        resolved[serviceKey] = this._getOrCreateService(type, name);
+      } else {
+        // Config dependency (already in resolved)
+      }
+    }
+
+    return resolved;
+  }
+
+  /**
+   * Normalize service key for dependency injection
+   */
+  _normalizeServiceKey(name, type) {
+    // Special handling for API type to match expected naming
+    if (type === "api") {
+      return `${name}API`;
+    }
+    if (type === "storage") {
+      return `${name}Storage`;
+    }
+    // For other types, capitalize first letter
+    const suffix = type.charAt(0).toUpperCase() + type.slice(1);
+    return `${name}${suffix}`;
+  }
+
+  /**
+   * Get or create a service instance
+   */
+  _getOrCreateService(type, name) {
+    const key = `${type}:${name}`;
+
+    // Check if instance already exists
+    if (this._instances.has(key)) {
+      return this._instances.get(key);
+    }
+
+    // Get service definition
+    const definition = SERVICE_DEFINITIONS[type]?.[name];
+    if (!definition) {
+      throw new Error(`Service definition not found: ${key}`);
+    }
+
+    // Resolve dependencies
+    const dependencies = this._resolveDependencies(definition.dependencies);
+
+    // Create instance
+    const instance = definition.factory(dependencies);
+
+    // Store if singleton
+    if (definition.singleton) {
+      this._instances.set(key, instance);
+    }
+
+    if (ENV_CONFIG.IS_DEVELOPMENT) {
+      console.log(`✅ Created service: ${key}`);
+    }
+
+    return instance;
+  }
+
+  /**
+   * Get a service by type and name
+   */
+  get(type, name) {
+    // Initialize on first use if not already initialized
     if (!this._initialized) {
       this.initialize();
     }
 
-    const service = this._services.get(serviceName);
+    const service = this._getOrCreateService(type, name);
     if (!service) {
-      const availableServices = Array.from(this._services.keys()).join(", ");
-      throw new Error(
-        `Service '${serviceName}' not found. Available services: ${availableServices}`,
-      );
+      throw new Error(`Service not found: ${type}:${name}`);
     }
 
     return service;
   }
 
   /**
-   * Convenience getters for managers (primary interface)
+   * Get all available services for debugging
    */
-  getAuthManager() {
-    return this.get("authManager");
-  }
-
-  getVersionManager() {
-    return this.get("versionManager");
-  }
-
-  getPasswordResetManager() {
-    return this.get("passwordResetManager");
-  }
-
-  getTenantManager() {
-    return this.get("tenantManager");
-  }
-
-  getDashboardManager() {
-    return this.get("dashboardManager");
-  }
-
-  getTwoFactorAuthManager() {
-    return this.get("twoFactorAuthManager");
-  }
-
-  getAccountManager() {
-    return this.get("accountManager");
-  }
-
-  getCustomerManager() {
-    return this.get("customerManager");
-  }
-
-  getAssociateManager() {
-    return this.get("associateManager");
-  }
-
-  getStaffManager() {
-    return this.get("staffManager");
-  }
-
-  getOrderManager() {
-    return this.get("orderManager");
-  }
-
-  getTaskManager() {
-    return this.get("taskManager");
-  }
-
-  getActivitySheetManager() {
-    return this.get("activitySheetManager");
-  }
-
-  getFinancialManager() {
-    return this.get("financialManager");
-  }
-
-  getAttachmentManager() {
-    return this.get("attachmentManager");
-  }
-
-  getVehicleTypeManager() {
-    return this.get("vehicleTypeManager");
-  }
-
-  getTagManager() {
-    return this.get("tagManager");
-  }
-
-  getSkillSetManager() {
-    return this.get("skillSetManager");
-  }
-
-  getNOCManager() {
-    return this.get("nocManager");
-  }
-
-  getNAICSManager() {
-    return this.get("naicsManager");
-  }
-
-  getInsuranceRequirementManager() {
-    return this.get("insuranceRequirementManager");
-  }
-
-  getServiceFeeManager() {
-    return this.get("serviceFeeManager");
-  }
-
-  getCommentManager() {
-    return this.get("commentManager");
-  }
-
-  getBulletinManager() {
-    return this.get("bulletinManager");
-  }
-
-  getAssociateAwayLogManager() {
-    return this.get("associateAwayLogManager");
-  }
-
-  getJobHistoryManager() {
-    return this.get("jobHistoryManager");
-  }
-
-  getOrderIncidentManager() {
-    return this.get("orderIncidentManager");
+  getAvailableServices() {
+    const services = {};
+    for (const [type, definitions] of Object.entries(SERVICE_DEFINITIONS)) {
+      services[type] = Object.keys(definitions);
+    }
+    return services;
   }
 
   /**
-   * Convenience getters for storage services
+   * Get initialization status
    */
-  getTokenStorage() {
-    return this.get("tokenStorage");
-  }
-
-  getAccountStorage() {
-    return this.get("accountStorage");
-  }
-
-  getDashboardStorage() {
-    return this.get("dashboardStorage");
-  }
-
-  getTenantStorage() {
-    return this.get("tenantStorage");
-  }
-
-  getCustomerStorage() {
-    return this.get("customerStorage");
-  }
-
-  getAssociateStorage() {
-    return this.get("associateStorage");
-  }
-
-  getStaffStorage() {
-    return this.get("staffStorage");
-  }
-
-  getOrderStorage() {
-    return this.get("orderStorage");
-  }
-
-  getTaskStorage() {
-    return this.get("taskStorage");
-  }
-
-  getActivitySheetStorage() {
-    return this.get("activitySheetStorage");
-  }
-
-  getFinancialStorage() {
-    return this.get("financialStorage");
-  }
-
-  getAttachmentStorage() {
-    return this.get("attachmentStorage");
-  }
-
-  getVehicleTypeStorage() {
-    return this.get("vehicleTypeStorage");
-  }
-
-  getTagStorage() {
-    return this.get("tagStorage");
-  }
-
-  getSkillSetStorage() {
-    return this.get("skillSetStorage");
-  }
-
-  getNOCStorage() {
-    return this.get("nocStorage");
-  }
-
-  getNAICSStorage() {
-    return this.get("naicsStorage");
-  }
-
-  getInsuranceRequirementStorage() {
-    return this.get("insuranceRequirementStorage");
-  }
-
-  getServiceFeeStorage() {
-    return this.get("serviceFeeStorage");
-  }
-
-  getCommentStorage() {
-    return this.get("commentStorage");
-  }
-
-  getBulletinStorage() {
-    return this.get("bulletinStorage");
-  }
-
-  getAssociateAwayLogStorage() {
-    return this.get("associateAwayLogStorage");
-  }
-
-  getJobHistoryStorage() {
-    return this.get("jobHistoryStorage");
-  }
-
-  getOrderIncidentStorage() {
-    return this.get("orderIncidentStorage");
+  isInitialized() {
+    return this._initialized;
   }
 
   /**
-   * Convenience getters for API services (for direct access if needed)
+   * Clear all cached instances (useful for testing)
    */
-  getAuthAPI() {
-    return this.get("authAPI");
+  clear() {
+    this._instances.clear();
+    this._initialized = false;
   }
-
-  getVersionAPI() {
-    return this.get("versionAPI");
-  }
-
-  getPasswordResetAPI() {
-    return this.get("passwordResetAPI");
-  }
-
-  getTenantAPI() {
-    return this.get("tenantAPI");
-  }
-
-  getDashboardAPI() {
-    return this.get("dashboardAPI");
-  }
-
-  getTwoFactorAuthAPI() {
-    return this.get("twoFactorAuthAPI");
-  }
-
-  getAccountAPI() {
-    return this.get("accountAPI");
-  }
-
-  getCustomerAPI() {
-    return this.get("customerAPI");
-  }
-
-  getAssociateAPI() {
-    return this.get("associateAPI");
-  }
-
-  getStaffAPI() {
-    return this.get("staffAPI");
-  }
-
-  getOrderAPI() {
-    return this.get("orderAPI");
-  }
-
-  getTaskAPI() {
-    return this.get("taskAPI");
-  }
-
-  getActivitySheetAPI() {
-    return this.get("activitySheetAPI");
-  }
-
-  getFinancialAPI() {
-    return this.get("financialAPI");
-  }
-
-  getAttachmentAPI() {
-    return this.get("attachmentAPI");
-  }
-
-  getVehicleTypeAPI() {
-    return this.get("vehicleTypeAPI");
-  }
-
-  getTagAPI() {
-    return this.get("tagAPI");
-  }
-
-  getSkillSetAPI() {
-    return this.get("skillSetAPI");
-  }
-
-  getNOCAPI() {
-    return this.get("nocAPI");
-  }
-
-  getNAICSAPI() {
-    return this.get("naicsAPI");
-  }
-
-  getInsuranceRequirementAPI() {
-    return this.get("insuranceRequirementAPI");
-  }
-
-  getServiceFeeAPI() {
-    return this.get("serviceFeeAPI");
-  }
-
-  getCommentAPI() {
-    return this.get("commentAPI");
-  }
-
-  getBulletinAPI() {
-    return this.get("bulletinAPI");
-  }
-
-  getAssociateAwayLogAPI() {
-    return this.get("associateAwayLogAPI");
-  }
-
-  getJobHistoryAPI() {
-    return this.get("jobHistoryAPI");
-  }
-
-  getOrderIncidentAPI() {
-    return this.get("orderIncidentAPI");
-  }
-
-  // ... rest of the methods remain the same ...
 }
 
-// Create React Context for services
+// Create singleton instance
+let containerInstance = null;
+
+/**
+ * Get or create the container instance
+ */
+function getContainer() {
+  if (!containerInstance) {
+    containerInstance = new ServicesContainer();
+    containerInstance.initialize();
+  }
+  return containerInstance;
+}
+
+// React Context
 const ServicesContext = createContext(null);
 
 /**
- * ServiceProvider component - wraps your app
+ * ServiceProvider component - Required to wrap your app
  */
 export function ServiceProvider({ children }) {
   const services = useMemo(() => {
-    const container = new ServicesContainer();
-    container.initialize();
-    return container;
+    return getContainer();
   }, []);
 
   return (
@@ -851,8 +716,9 @@ export function ServiceProvider({ children }) {
 
 /**
  * Base hook to access services container
+ * @internal This is primarily for internal use. Components should use specific manager hooks.
  */
-export function useServices() {
+function useServices() {
   const services = useContext(ServicesContext);
   if (!services) {
     throw new Error("useServices must be used within a ServiceProvider");
@@ -861,412 +727,100 @@ export function useServices() {
 }
 
 /**
- * Hooks to access specific managers (primary interface)
+ * Generic hook factory for services
+ * @internal
  */
-export function useAuthManager() {
-  const services = useServices();
-  return services.getAuthManager();
-}
-
-export function useVersionManager() {
-  const services = useServices();
-  return services.getVersionManager();
-}
-
-export function usePasswordResetManager() {
-  const services = useServices();
-  return services.getPasswordResetManager();
-}
-
-export function useTenantManager() {
-  const services = useServices();
-  return services.getTenantManager();
-}
-
-export function useDashboardManager() {
-  const services = useServices();
-  return services.getDashboardManager();
-}
-
-export function useTwoFactorAuthManager() {
-  const services = useServices();
-  return services.getTwoFactorAuthManager();
-}
-
-export function useAccountManager() {
-  const services = useServices();
-  return services.getAccountManager();
-}
-
-export function useCustomerManager() {
-  const services = useServices();
-  return services.getCustomerManager();
-}
-
-export function useAssociateManager() {
-  const services = useServices();
-  return services.getAssociateManager();
-}
-
-export function useStaffManager() {
-  const services = useServices();
-  return services.getStaffManager();
-}
-
-export function useOrderManager() {
-  const services = useServices();
-  return services.getOrderManager();
-}
-
-export function useTaskManager() {
-  const services = useServices();
-  return services.getTaskManager();
-}
-
-export function useActivitySheetManager() {
-  const services = useServices();
-  return services.getActivitySheetManager();
-}
-
-export function useFinancialManager() {
-  const services = useServices();
-  return services.getFinancialManager();
-}
-
-export function useAttachmentManager() {
-  const services = useServices();
-  return services.getAttachmentManager();
-}
-
-export function useVehicleTypeManager() {
-  const services = useServices();
-  return services.getVehicleTypeManager();
-}
-
-export function useTagManager() {
-  const services = useServices();
-  return services.getTagManager();
-}
-
-export function useSkillSetManager() {
-  const services = useServices();
-  return services.getSkillSetManager();
-}
-
-export function useNOCManager() {
-  const services = useServices();
-  return services.getNOCManager();
-}
-
-export function useNAICSManager() {
-  const services = useServices();
-  return services.getNAICSManager();
-}
-
-export function useInsuranceRequirementManager() {
-  const services = useServices();
-  return services.getInsuranceRequirementManager();
-}
-
-export function useServiceFeeManager() {
-  const services = useServices();
-  return services.getServiceFeeManager();
-}
-
-export function useCommentManager() {
-  const services = useServices();
-  return services.getCommentManager();
-}
-
-export function useBulletinManager() {
-  const services = useServices();
-  return services.getBulletinManager();
-}
-
-export function useAssociateAwayLogManager() {
-  const services = useServices();
-  return services.getAssociateAwayLogManager();
-}
-
-export function useJobHistoryManager() {
-  const services = useServices();
-  return services.getJobHistoryManager();
-}
-
-export function useOrderIncidentManager() {
-  const services = useServices();
-  return services.getOrderIncidentManager();
+function createServiceHook(type, name) {
+  return function useService() {
+    const services = useServices();
+    return services.get(type, name);
+  };
 }
 
 /**
- * Hooks to access storage services
+ * Manager Hooks (Primary Public Interface)
+ * These are the only service hooks that should be used by components.
+ * Managers handle all business logic and coordinate between API and Storage layers.
  */
-export function useTokenStorage() {
-  const services = useServices();
-  return services.getTokenStorage();
-}
-
-export function useAccountStorage() {
-  const services = useServices();
-  return services.getAccountStorage();
-}
-
-export function useDashboardStorage() {
-  const services = useServices();
-  return services.getDashboardStorage();
-}
-
-export function useTenantStorage() {
-  const services = useServices();
-  return services.getTenantStorage();
-}
-
-export function useCustomerStorage() {
-  const services = useServices();
-  return services.getCustomerStorage();
-}
-
-export function useAssociateStorage() {
-  const services = useServices();
-  return services.getAssociateStorage();
-}
-
-export function useStaffStorage() {
-  const services = useServices();
-  return services.getStaffStorage();
-}
-
-export function useOrderStorage() {
-  const services = useServices();
-  return services.getOrderStorage();
-}
-
-export function useTaskStorage() {
-  const services = useServices();
-  return services.getTaskStorage();
-}
-
-export function useActivitySheetStorage() {
-  const services = useServices();
-  return services.getActivitySheetStorage();
-}
-
-export function useFinancialStorage() {
-  const services = useServices();
-  return services.getFinancialStorage();
-}
-
-export function useAttachmentStorage() {
-  const services = useServices();
-  return services.getAttachmentStorage();
-}
-
-export function useVehicleTypeStorage() {
-  const services = useServices();
-  return services.getVehicleTypeStorage();
-}
-
-export function useTagStorage() {
-  const services = useServices();
-  return services.getTagStorage();
-}
-
-export function useSkillSetStorage() {
-  const services = useServices();
-  return services.getSkillSetStorage();
-}
-
-export function useNOCStorage() {
-  const services = useServices();
-  return services.getNOCStorage();
-}
-
-export function useNAICSStorage() {
-  const services = useServices();
-  return services.getNAICSStorage();
-}
-
-export function useInsuranceRequirementStorage() {
-  const services = useServices();
-  return services.getInsuranceRequirementStorage();
-}
-
-export function useServiceFeeStorage() {
-  const services = useServices();
-  return services.getServiceFeeStorage();
-}
-
-export function useCommentStorage() {
-  const services = useServices();
-  return services.getCommentStorage();
-}
-
-export function useBulletinStorage() {
-  const services = useServices();
-  return services.getBulletinStorage();
-}
-
-export function useAssociateAwayLogStorage() {
-  const services = useServices();
-  return services.getAssociateAwayLogStorage();
-}
-
-export function useJobHistoryStorage() {
-  const services = useServices();
-  return services.getJobHistoryStorage();
-}
-
-export function useOrderIncidentStorage() {
-  const services = useServices();
-  return services.getOrderIncidentStorage();
-}
+export const useAuthManager = createServiceHook("manager", "auth");
+export const useVersionManager = createServiceHook("manager", "version");
+export const usePasswordResetManager = createServiceHook(
+  "manager",
+  "passwordReset",
+);
+export const useTenantManager = createServiceHook("manager", "tenant");
+export const useDashboardManager = createServiceHook("manager", "dashboard");
+export const useTwoFactorAuthManager = createServiceHook(
+  "manager",
+  "twoFactorAuth",
+);
+export const useAccountManager = createServiceHook("manager", "account");
+export const useCustomerManager = createServiceHook("manager", "customer");
+export const useAssociateManager = createServiceHook("manager", "associate");
+export const useStaffManager = createServiceHook("manager", "staff");
+export const useOrderManager = createServiceHook("manager", "order");
+export const useTaskManager = createServiceHook("manager", "task");
+export const useActivitySheetManager = createServiceHook(
+  "manager",
+  "activitySheet",
+);
+export const useFinancialManager = createServiceHook("manager", "financial");
+export const useAttachmentManager = createServiceHook("manager", "attachment");
+export const useVehicleTypeManager = createServiceHook(
+  "manager",
+  "vehicleType",
+);
+export const useTagManager = createServiceHook("manager", "tag");
+export const useSkillSetManager = createServiceHook("manager", "skillSet");
+export const useNOCManager = createServiceHook("manager", "noc");
+export const useNAICSManager = createServiceHook("manager", "naics");
+export const useInsuranceRequirementManager = createServiceHook(
+  "manager",
+  "insuranceRequirement",
+);
+export const useServiceFeeManager = createServiceHook("manager", "serviceFee");
+export const useCommentManager = createServiceHook("manager", "comment");
+export const useBulletinManager = createServiceHook("manager", "bulletin");
+export const useAssociateAwayLogManager = createServiceHook(
+  "manager",
+  "associateAwayLog",
+);
+export const useJobHistoryManager = createServiceHook("manager", "jobHistory");
+export const useOrderIncidentManager = createServiceHook(
+  "manager",
+  "orderIncident",
+);
 
 /**
- * Hooks to access API services (for direct access if needed)
+ * Internal service hooks - NOT EXPORTED
+ * Storage and API services should only be accessed through Managers
  */
-export function useAuthAPI() {
-  const services = useServices();
-  return services.getAuthAPI();
-}
-
-export function useVersionAPI() {
-  const services = useServices();
-  return services.getVersionAPI();
-}
-
-export function usePasswordResetAPI() {
-  const services = useServices();
-  return services.getPasswordResetAPI();
-}
-
-export function useTenantAPI() {
-  const services = useServices();
-  return services.getTenantAPI();
-}
-
-export function useDashboardAPI() {
-  const services = useServices();
-  return services.getDashboardAPI();
-}
-
-export function useTwoFactorAuthAPI() {
-  const services = useServices();
-  return services.getTwoFactorAuthAPI();
-}
-
-export function useAccountAPI() {
-  const services = useServices();
-  return services.getAccountAPI();
-}
-
-export function useCustomerAPI() {
-  const services = useServices();
-  return services.getCustomerAPI();
-}
-
-export function useAssociateAPI() {
-  const services = useServices();
-  return services.getAssociateAPI();
-}
-
-export function useStaffAPI() {
-  const services = useServices();
-  return services.getStaffAPI();
-}
-
-export function useOrderAPI() {
-  const services = useServices();
-  return services.getOrderAPI();
-}
-
-export function useTaskAPI() {
-  const services = useServices();
-  return services.getTaskAPI();
-}
-
-export function useActivitySheetAPI() {
-  const services = useServices();
-  return services.getActivitySheetAPI();
-}
-
-export function useFinancialAPI() {
-  const services = useServices();
-  return services.getFinancialAPI();
-}
-
-export function useAttachmentAPI() {
-  const services = useServices();
-  return services.getAttachmentAPI();
-}
-
-export function useVehicleTypeAPI() {
-  const services = useServices();
-  return services.getVehicleTypeAPI();
-}
-
-export function useTagAPI() {
-  const services = useServices();
-  return services.getTagAPI();
-}
-
-export function useSkillSetAPI() {
-  const services = useServices();
-  return services.getSkillSetAPI();
-}
-
-export function useNOCAPI() {
-  const services = useServices();
-  return services.getNOCAPI();
-}
-
-export function useNAICSAPI() {
-  const services = useServices();
-  return services.getNAICSAPI();
-}
-
-export function useInsuranceRequirementAPI() {
-  const services = useServices();
-  return services.getInsuranceRequirementAPI();
-}
-
-export function useServiceFeeAPI() {
-  const services = useServices();
-  return services.getServiceFeeAPI();
-}
-
-export function useCommentAPI() {
-  const services = useServices();
-  return services.getCommentAPI();
-}
-
-export function useBulletinAPI() {
-  const services = useServices();
-  return services.getBulletinAPI();
-}
-
-export function useAssociateAwayLogAPI() {
-  const services = useServices();
-  return services.getAssociateAwayLogAPI();
-}
-
-export function useJobHistoryAPI() {
-  const services = useServices();
-  return services.getJobHistoryAPI();
-}
-
-export function useOrderIncidentAPI() {
-  const services = useServices();
-  return services.getOrderIncidentAPI();
-}
+// const useTokenStorage = createServiceHook('storage', 'token');
+// const useAuthAPI = createServiceHook('api', 'auth');
+// ... etc
 
 /**
- * Hook for debugging services
+ * Debug hook for service information
+ * @internal For debugging purposes only
  */
 export function useServiceInfo() {
   const services = useServices();
   return {
-    serviceNames: services.getServiceNames(),
-    serviceInfo: services.getServiceInfo(),
+    availableServices: services.getAvailableServices(),
     isInitialized: services.isInitialized(),
   };
 }
+
+/**
+ * Testing utilities
+ * @internal For testing purposes only
+ */
+export const testUtils = {
+  resetContainer: () => {
+    if (containerInstance) {
+      containerInstance.clear();
+    }
+    containerInstance = null;
+  },
+  getContainer: () => containerInstance,
+};
