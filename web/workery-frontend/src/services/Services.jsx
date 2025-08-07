@@ -27,6 +27,7 @@ import { BulletinStorage } from "./Storage/BulletinStorage";
 import { AssociateAwayLogStorage } from "./Storage/AssociateAwayLogStorage";
 import { JobHistoryStorage } from "./Storage/JobHistoryStorage";
 import { OrderIncidentStorage } from "./Storage/OrderIncidentStorage";
+import { HowHearAboutUsItemStorage } from "./Storage/HowHearAboutUsItemStorage";
 
 // Import all API services
 import { AuthAPI } from "./API/AuthAPI";
@@ -56,6 +57,7 @@ import { BulletinAPI } from "./API/BulletinAPI";
 import { AssociateAwayLogAPI } from "./API/AssociateAwayLogAPI";
 import { JobHistoryAPI } from "./API/JobHistoryAPI";
 import { OrderIncidentAPI } from "./API/OrderIncidentAPI";
+import { HowHearAboutUsItemAPI } from "./API/HowHearAboutUsItemAPI";
 
 // Import all Manager services
 import { AuthManager } from "./Manager/AuthManager";
@@ -85,6 +87,7 @@ import { BulletinManager } from "./Manager/BulletinManager";
 import { AssociateAwayLogManager } from "./Manager/AssociateAwayLogManager";
 import { JobHistoryManager } from "./Manager/JobHistoryManager";
 import { OrderIncidentManager } from "./Manager/OrderIncidentManager";
+import { HowHearAboutUsItemManager } from "./Manager/HowHearAboutUsItemManager";
 
 /**
  * Service Definition Registry
@@ -187,6 +190,10 @@ const SERVICE_DEFINITIONS = {
     },
     orderIncident: {
       factory: () => new OrderIncidentStorage(),
+      singleton: true,
+    },
+    howHearAboutUsItem: {
+      factory: () => new HowHearAboutUsItemStorage(),
       singleton: true,
     },
   },
@@ -360,6 +367,16 @@ const SERVICE_DEFINITIONS = {
       dependencies: ["baseURL", "endpoints", "storage:token"],
       singleton: true,
     },
+    howHearAboutUsItem: {
+      factory: (deps) =>
+        new HowHearAboutUsItemAPI(
+          deps.baseURL,
+          deps.endpoints,
+          deps.tokenStorage,
+        ),
+      dependencies: ["baseURL", "endpoints", "storage:token"],
+      singleton: true,
+    },
   },
 
   // Manager Services
@@ -528,6 +545,15 @@ const SERVICE_DEFINITIONS = {
           deps.orderIncidentStorage,
         ),
       dependencies: ["api:orderIncident", "storage:orderIncident"],
+      singleton: true,
+    },
+    howHearAboutUsItem: {
+      factory: (deps) =>
+        new HowHearAboutUsItemManager(
+          deps.howHearAboutUsItemAPI,
+          deps.howHearAboutUsItemStorage,
+        ),
+      dependencies: ["api:howHearAboutUsItem", "storage:howHearAboutUsItem"],
       singleton: true,
     },
   },
@@ -790,6 +816,10 @@ export const useOrderIncidentManager = createServiceHook(
   "manager",
   "orderIncident",
 );
+export const useHowHearAboutUsItemManager = createServiceHook(
+  "manager",
+  "howHearAboutUsItem",
+);
 
 /**
  * Internal service hooks - NOT EXPORTED
@@ -810,17 +840,3 @@ export function useServiceInfo() {
     isInitialized: services.isInitialized(),
   };
 }
-
-/**
- * Testing utilities
- * @internal For testing purposes only
- */
-export const testUtils = {
-  resetContainer: () => {
-    if (containerInstance) {
-      containerInstance.clear();
-    }
-    containerInstance = null;
-  },
-  getContainer: () => containerInstance,
-};

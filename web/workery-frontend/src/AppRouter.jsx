@@ -45,6 +45,10 @@ import SettingInsuranceRequirementListPage from "./pages/Admin/Setting/Insurance
 import SettingInsuranceRequirementDetailPage from "./pages/Admin/Setting/InsuranceRequirement/Detail/Page";
 import SettingInsuranceRequirementUpdatePage from "./pages/Admin/Setting/InsuranceRequirement/Update/Page";
 import SettingInactiveClientListPage from "./pages/Admin/Setting/InactiveClient/List/Page";
+import SettingHowHearAboutUsItemCreatePage from "./pages/Admin/Setting/HowHearAboutUsItem/Create/Page";
+import SettingHowHearAboutUsItemListPage from "./pages/Admin/Setting/HowHearAboutUsItem/List/Page";
+import SettingHowHearAboutUsItemDetailPage from "./pages/Admin/Setting/HowHearAboutUsItem/Detail/Page";
+import SettingHowHearAboutUsItemUpdatePage from "./pages/Admin/Setting/HowHearAboutUsItem/Update/Page";
 
 // Associate pages
 import AssociateDashboardPage from "./pages/Associate/Dashboard/Page";
@@ -2096,7 +2100,31 @@ function AppRouter() {
               path="/admin/settings/how-hear-about-us-items"
               element={
                 <Layout>
-                  <PlaceholderPage title="How Hear About Us Items" />
+                  <SettingHowHearAboutUsItemListPage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/settings/how-hear-about-us-item/create"
+              element={
+                <Layout>
+                  <SettingHowHearAboutUsItemCreatePage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/settings/how-hear-about-us-item/:id/detail"
+              element={
+                <Layout>
+                  <SettingHowHearAboutUsItemDetailPage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/settings/how-hear-about-us-item/:id/update"
+              element={
+                <Layout>
+                  <SettingHowHearAboutUsItemUpdatePage />
                 </Layout>
               }
             />
