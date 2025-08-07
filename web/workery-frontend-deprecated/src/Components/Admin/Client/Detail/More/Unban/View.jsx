@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/Client/Detail/More/Unban/View.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -74,7 +75,7 @@ function AdminClientUnbanOperation() {
     setErrors({});
     setFetching(true);
     postUnbanClientAPI(
-     {
+      {
         customer_id: cid,
       },
       onUnbanSuccess,
@@ -285,8 +286,9 @@ function AdminClientUnbanOperation() {
                           &nbsp;Warning
                         </p>
                         <p>
-                          You are about to <b>unban</b> this client. This will remove the <i>banner warning</i> from this client. Are you sure you want to
-                          continue?
+                          You are about to <b>unban</b> this client. This will
+                          remove the <i>banner warning</i> from this client. Are
+                          you sure you want to continue?
                         </p>
                       </div>
                     </article>

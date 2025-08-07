@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/Client/Search/Result.jsx
 import React, { useState, useEffect } from "react";
 import { Link, useSearchParams, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -22,7 +23,7 @@ import {
   faSearch,
   faClose,
   faCheckCircle,
-  faBan
+  faBan,
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 import { DateTime } from "luxon";
@@ -541,7 +542,7 @@ function AdminClientSearchResult() {
                             return (
                               <div className="column is-4">
                                 <div
-                                  className={`card ${datum.isBanned ? "has-background-danger-light": "has-background-info-light"} m-4`}
+                                  className={`card ${datum.isBanned ? "has-background-danger-light" : "has-background-info-light"} m-4`}
                                   key={`id_${datum.id}`}
                                 >
                                   {/* HEADER */}
@@ -570,11 +571,17 @@ function AdminClientSearchResult() {
                                           </strong>
                                         )}
                                         {datum.isBanned && (
-                                            <><br/>
-                                            <i style={{fontSize: "16px"}}>(<FontAwesomeIcon
-                                              className="fas"
-                                              icon={faBan}
-                                            />Banned)</i></>
+                                          <>
+                                            <br />
+                                            <i style={{ fontSize: "16px" }}>
+                                              (
+                                              <FontAwesomeIcon
+                                                className="fas"
+                                                icon={faBan}
+                                              />
+                                              Banned)
+                                            </i>
+                                          </>
                                         )}
                                       </Link>
                                     </p>
@@ -593,10 +600,16 @@ function AdminClientSearchResult() {
                                   {/* BODY */}
                                   <div className="card-content">
                                     <div className="content">
-                                      {datum.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID && <>
-                                          <u>{datum.firstName}&nbsp;{datum.lastName}</u>
-                                           <br />
-                                      </>}
+                                      {datum.type ===
+                                        COMMERCIAL_CUSTOMER_TYPE_OF_ID && (
+                                        <>
+                                          <u>
+                                            {datum.firstName}&nbsp;
+                                            {datum.lastName}
+                                          </u>
+                                          <br />
+                                        </>
+                                      )}
                                       {datum.addressLine1}
                                       <br />
                                       {datum.city}, {datum.region}
@@ -614,7 +627,9 @@ function AdminClientSearchResult() {
                                       )}
                                       <br />
                                       {datum.email ? (
-                                        <EmailTextFormatter value={datum.email} />
+                                        <EmailTextFormatter
+                                          value={datum.email}
+                                        />
                                       ) : (
                                         <>-</>
                                       )}

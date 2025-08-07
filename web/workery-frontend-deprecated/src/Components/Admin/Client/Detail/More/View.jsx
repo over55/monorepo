@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/Client/Detail/More/View.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -30,7 +31,7 @@ import {
   faArchive,
   faBoxOpen,
   faTrashCan,
-  faHomeUser
+  faHomeUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 import { useParams } from "react-router-dom";

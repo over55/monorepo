@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/Client/Add/Step5.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -74,7 +75,9 @@ function AdminClientAddStep5() {
   const [additionalComment, setAdditionalComment] = useState(
     addCustomer.additionalComment,
   );
-  const [preferredLanguage, setPreferredLanguage] = useState(addCustomer.preferredLanguage);
+  const [preferredLanguage, setPreferredLanguage] = useState(
+    addCustomer.preferredLanguage,
+  );
   // const [skillSets, setSkillSets] = useState([]);
   const [password, setPassword] = useState(addCustomer.password);
   const [passwordRepeated, setPasswordRepeated] = useState(
@@ -110,7 +113,11 @@ function AdminClientAddStep5() {
       newErrors["gender"] = "missing value";
       hasErrors = true;
     }
-    if (preferredLanguage === undefined || preferredLanguage === null || preferredLanguage === "") {
+    if (
+      preferredLanguage === undefined ||
+      preferredLanguage === null ||
+      preferredLanguage === ""
+    ) {
       newErrors["preferredLanguage"] = "missing value";
       hasErrors = true;
     }
@@ -120,9 +127,14 @@ function AdminClientAddStep5() {
       hasErrors = true;
     }
 
-    if (joinDate === undefined || joinDate === null || joinDate === "" || joinDate === '0001-01-01T00:00:00Z') {
-        newErrors["joinDate"] = "missing value";
-        hasErrors = true;
+    if (
+      joinDate === undefined ||
+      joinDate === null ||
+      joinDate === "" ||
+      joinDate === "0001-01-01T00:00:00Z"
+    ) {
+      newErrors["joinDate"] = "missing value";
+      hasErrors = true;
     }
 
     if (hasErrors) {

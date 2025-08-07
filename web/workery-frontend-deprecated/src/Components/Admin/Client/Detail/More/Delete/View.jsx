@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/Client/Detail/More/Delete/View.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -30,7 +31,10 @@ import {
 import { useRecoilState } from "recoil";
 import { useParams } from "react-router-dom";
 
-import { getClientDetailAPI, deleteClientAPI } from "../../../../../../API/Client";
+import {
+  getClientDetailAPI,
+  deleteClientAPI,
+} from "../../../../../../API/Client";
 import FormErrorBox from "../../../../../Reusable/FormErrorBox";
 import AlertBanner from "../../../../../Reusable/EveryPage/AlertBanner";
 import PageLoadingContent from "../../../../../Reusable/PageLoadingContent";

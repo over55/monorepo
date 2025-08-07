@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/Client/Detail/LiteView.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -25,7 +26,7 @@ import {
   faChartPie,
   faBuilding,
   faEllipsis,
-  faArrowUpRightFromSquare
+  faArrowUpRightFromSquare,
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 import { useParams } from "react-router-dom";
@@ -226,7 +227,8 @@ function AdminClientDetailLite() {
                   >
                     <FontAwesomeIcon className="mdi" icon={faPencil} />
                     &nbsp;Edit
-                  </Link>&nbsp;
+                  </Link>
+                  &nbsp;
                   <Link
                     to={`/admin/orders/add/step-2-from-launchpad?id=${client && cid}&fn=${client && client.firstName}&ln=${client && client.lastName}`}
                     className="button is-success is-fullwidth-mobile"
@@ -448,7 +450,8 @@ function AdminClientDetailLite() {
                         >
                           <FontAwesomeIcon className="fas" icon={faPencil} />
                           &nbsp;Edit
-                        </Link>&nbsp;
+                        </Link>
+                        &nbsp;
                         <Link
                           to={`/admin/orders/add/step-2-from-launchpad?id=${client && cid}&fn=${client && client.firstName}&ln=${client && client.lastName}`}
                           className="button is-success is-fullwidth-mobile"

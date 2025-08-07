@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/Client/Detail/Attachment/List.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -371,7 +372,10 @@ function AdminClientDetailAttachmentList() {
                 ></button>
               </header>
               <section className="modal-card-body">
-                You are about to <b>delete</b> this attachment; it will no longer appear on your dashboard and will be permently removed. This action cannot be undone. Are you sure you would like to continue?
+                You are about to <b>delete</b> this attachment; it will no
+                longer appear on your dashboard and will be permently removed.
+                This action cannot be undone. Are you sure you would like to
+                continue?
               </section>
               <footer className="modal-card-foot">
                 <button

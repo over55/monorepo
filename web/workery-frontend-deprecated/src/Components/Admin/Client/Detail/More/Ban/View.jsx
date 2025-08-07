@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/Client/Detail/More/Ban/View.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -289,11 +290,14 @@ function AdminClientBanOperation() {
                           &nbsp;Warning
                         </p>
                         <p>
-                          You are about to <b>ban</b> this client from our system. This means the client will still appear in search results but will have the <i>banned banner displayed</i>. Are you sure you want to continue?
+                          You are about to <b>ban</b> this client from our
+                          system. This means the client will still appear in
+                          search results but will have the{" "}
+                          <i>banned banner displayed</i>. Are you sure you want
+                          to continue?
                         </p>
                       </div>
                     </article>
-
 
                     <FormSelectField
                       label="Banning Reason"
@@ -305,22 +309,22 @@ function AdminClientBanOperation() {
                       onChange={(e) =>
                         setBanningReason(parseInt(e.target.value))
                       }
-                      options={
-                        CLIENT_BANNING_REASON_OPTIONS_WITH_EMPTY_OPTIONS
-                      }
+                      options={CLIENT_BANNING_REASON_OPTIONS_WITH_EMPTY_OPTIONS}
                     />
 
-                    {banningReason === 1 && <FormInputField
-                      label="Banning Reason (Other)"
-                      name="banningReasonOther"
-                      placeholder="Text input"
-                      value={banningReasonOther}
-                      errorText={errors && errors.banningReasonOther}
-                      helpText="Please write a short reason."
-                      onChange={(e) => setBanningReasonOther(e.target.value)}
-                      isRequired={true}
-                      maxWidth="680px"
-                    />}
+                    {banningReason === 1 && (
+                      <FormInputField
+                        label="Banning Reason (Other)"
+                        name="banningReasonOther"
+                        placeholder="Text input"
+                        value={banningReasonOther}
+                        errorText={errors && errors.banningReasonOther}
+                        helpText="Please write a short reason."
+                        onChange={(e) => setBanningReasonOther(e.target.value)}
+                        isRequired={true}
+                        maxWidth="680px"
+                      />
+                    )}
 
                     {/* Bottom Navigation */}
                     <div className="columns pt-5">

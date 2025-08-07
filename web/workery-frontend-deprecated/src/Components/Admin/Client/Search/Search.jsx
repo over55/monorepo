@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/Client/Search/Search.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -79,7 +80,8 @@ function AdminClientSearch() {
       return;
     }
 
-    let aURL = "/admin/clients/search-result?fn=" +
+    let aURL =
+      "/admin/clients/search-result?fn=" +
       firstName +
       "&ln=" +
       lastName +
@@ -94,8 +96,7 @@ function AdminClientSearch() {
 
     console.log("aURL:", aURL);
 
-    setForceURL(aURL
-    );
+    setForceURL(aURL);
   };
 
   ////
