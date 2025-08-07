@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Menu/Sidebar.jsx
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -27,7 +28,7 @@ import {
   faSearch,
   faStar,
   faMessage,
-  faProjectDiagram
+  faProjectDiagram,
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 
@@ -42,7 +43,7 @@ import {
   FRONTLINE_ROLE_ID,
   ASSOCIATE_ROLE_ID,
   CUSTOMER_ROLE_ID,
-  ASSOCIATE_JOB_SEEKER_ROLE_ID
+  ASSOCIATE_JOB_SEEKER_ROLE_ID,
 } from "../../Constants/App";
 
 export default (props) => {
@@ -388,7 +389,7 @@ export default (props) => {
         </div>
       )}
 
-       {/*
+      {/*
           --------------------
           CUSTOMER (Original)
           --------------------
@@ -622,110 +623,111 @@ export default (props) => {
         <div
           className={`column is-one-fifth has-background-black ${onHamburgerClicked ? "" : "is-hidden"}`}
         >
-        <nav className="level is-hidden-mobile">
-          <div className="level-item has-text-centered">
-            <figure className="image">
-            <Link
-              onClick={onLinkClickCloseHamburgerMenuIfMobile}
-              to="/js/dashboard"
-              className={`has-text-grey-light ${location.pathname.includes("dashboard") && "is-active"}`}
-            >
-              <img
-                src="/img/compressed-logo.png"
-                style={{ maxWidth: "200px" }}
-              />
-              </Link>
-            </figure>
-          </div>
-        </nav>
-        <aside className="menu p-4">
-          <p className="menu-label has-text-grey-light">Job Seeker</p>
-          <ul className="menu-list">
-            <li>
-              <Link
-                onClick={onLinkClickCloseHamburgerMenuIfMobile}
-                to="/js/dashboard"
-                className={`has-text-grey-light ${location.pathname.includes("dashboard") && "is-active"}`}
-              >
-                <FontAwesomeIcon className="fas" icon={faTachometer} />
-                &nbsp;Dashboard
-              </Link>
-            </li>
-            <li>
-              <Link
-                onClick={onLinkClickCloseHamburgerMenuIfMobile}
-                to="/501"
-                className={`has-text-grey-light ${location.pathname.includes("order") && "is-active"}`}
-              >
-                <FontAwesomeIcon className="fas" icon={faSearch} />
-                &nbsp;Find Work
-              </Link>
-            </li>
+          <nav className="level is-hidden-mobile">
+            <div className="level-item has-text-centered">
+              <figure className="image">
+                <Link
+                  onClick={onLinkClickCloseHamburgerMenuIfMobile}
+                  to="/js/dashboard"
+                  className={`has-text-grey-light ${location.pathname.includes("dashboard") && "is-active"}`}
+                >
+                  <img
+                    src="/img/compressed-logo.png"
+                    style={{ maxWidth: "200px" }}
+                  />
+                </Link>
+              </figure>
+            </div>
+          </nav>
+          <aside className="menu p-4">
+            <p className="menu-label has-text-grey-light">Job Seeker</p>
+            <ul className="menu-list">
+              <li>
+                <Link
+                  onClick={onLinkClickCloseHamburgerMenuIfMobile}
+                  to="/js/dashboard"
+                  className={`has-text-grey-light ${location.pathname.includes("dashboard") && "is-active"}`}
+                >
+                  <FontAwesomeIcon className="fas" icon={faTachometer} />
+                  &nbsp;Dashboard
+                </Link>
+              </li>
+              <li>
+                <Link
+                  onClick={onLinkClickCloseHamburgerMenuIfMobile}
+                  to="/501"
+                  className={`has-text-grey-light ${location.pathname.includes("order") && "is-active"}`}
+                >
+                  <FontAwesomeIcon className="fas" icon={faSearch} />
+                  &nbsp;Find Work
+                </Link>
+              </li>
 
-            <li><Link
-              onClick={onLinkClickCloseHamburgerMenuIfMobile}
-              to="/501"
-              className={`has-text-grey-light ${location.pathname.includes("financial") && "is-active"}`}
-            >
-              <FontAwesomeIcon className="fas" icon={faBriefcase} />
-              &nbsp;My Documents
-            </Link>
-            </li>
-            <li>
-              <Link
-                onClick={onLinkClickCloseHamburgerMenuIfMobile}
-                to="/501"
-                className={`has-text-grey-light ${location.pathname.includes("client") && "is-active"}`}
-              >
-                <FontAwesomeIcon className="fas" icon={faUserTie} />
-                &nbsp;My Advisor
-              </Link>
-            </li>
-            <li>
-              <Link
-                onClick={onLinkClickCloseHamburgerMenuIfMobile}
-                to="/501"
-                className={`has-text-grey-light ${location.pathname.includes("client") && "is-active"}`}
-              >
-                <FontAwesomeIcon className="fas" icon={faStar} />
-                &nbsp;Learning & Goals
-              </Link>
-            </li>
-          </ul>
+              <li>
+                <Link
+                  onClick={onLinkClickCloseHamburgerMenuIfMobile}
+                  to="/501"
+                  className={`has-text-grey-light ${location.pathname.includes("financial") && "is-active"}`}
+                >
+                  <FontAwesomeIcon className="fas" icon={faBriefcase} />
+                  &nbsp;My Documents
+                </Link>
+              </li>
+              <li>
+                <Link
+                  onClick={onLinkClickCloseHamburgerMenuIfMobile}
+                  to="/501"
+                  className={`has-text-grey-light ${location.pathname.includes("client") && "is-active"}`}
+                >
+                  <FontAwesomeIcon className="fas" icon={faUserTie} />
+                  &nbsp;My Advisor
+                </Link>
+              </li>
+              <li>
+                <Link
+                  onClick={onLinkClickCloseHamburgerMenuIfMobile}
+                  to="/501"
+                  className={`has-text-grey-light ${location.pathname.includes("client") && "is-active"}`}
+                >
+                  <FontAwesomeIcon className="fas" icon={faStar} />
+                  &nbsp;Learning & Goals
+                </Link>
+              </li>
+            </ul>
 
-          <p className="menu-label has-text-grey-light">Account</p>
-          <ul className="menu-list">
-            <li>
-              <Link
-                onClick={onLinkClickCloseHamburgerMenuIfMobile}
-                to="/js/help"
-                className={`has-text-grey-light ${location.pathname.includes("help") && "is-active"}`}
-              >
-                <FontAwesomeIcon className="fas" icon={faQuestionCircle} />
-                &nbsp;Help
-              </Link>
-            </li>
-            <li>
-              <Link
-                onClick={onLinkClickCloseHamburgerMenuIfMobile}
-                to="/account"
-                className={`has-text-grey-light ${location.pathname.includes("account") && "is-active"}`}
-              >
-                <FontAwesomeIcon className="fas" icon={faUser} />
-                &nbsp;My Profile
-              </Link>
-            </li>
-            <li>
-              <a
-                onClick={(e) => setShowLogoutWarning(true)}
-                className={`has-text-grey-light ${location.pathname.includes("logout") && "is-active"}`}
-              >
-                <FontAwesomeIcon className="fas" icon={faSignOut} />
-                &nbsp;Sign Off
-              </a>
-            </li>
-          </ul>
-        </aside>
+            <p className="menu-label has-text-grey-light">Account</p>
+            <ul className="menu-list">
+              <li>
+                <Link
+                  onClick={onLinkClickCloseHamburgerMenuIfMobile}
+                  to="/js/help"
+                  className={`has-text-grey-light ${location.pathname.includes("help") && "is-active"}`}
+                >
+                  <FontAwesomeIcon className="fas" icon={faQuestionCircle} />
+                  &nbsp;Help
+                </Link>
+              </li>
+              <li>
+                <Link
+                  onClick={onLinkClickCloseHamburgerMenuIfMobile}
+                  to="/account"
+                  className={`has-text-grey-light ${location.pathname.includes("account") && "is-active"}`}
+                >
+                  <FontAwesomeIcon className="fas" icon={faUser} />
+                  &nbsp;My Profile
+                </Link>
+              </li>
+              <li>
+                <a
+                  onClick={(e) => setShowLogoutWarning(true)}
+                  className={`has-text-grey-light ${location.pathname.includes("logout") && "is-active"}`}
+                >
+                  <FontAwesomeIcon className="fas" icon={faSignOut} />
+                  &nbsp;Sign Off
+                </a>
+              </li>
+            </ul>
+          </aside>
         </div>
       )}
     </>

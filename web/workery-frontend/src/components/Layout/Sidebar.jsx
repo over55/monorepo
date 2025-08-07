@@ -23,6 +23,7 @@ function Sidebar({ isOpen, onClose, isMobile }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [showLogoutWarning, setShowLogoutWarning] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [taskItemActiveCount, setTaskItemActiveCount] = useState(0); // TODO: Connect to actual task count
 
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
@@ -81,12 +82,23 @@ function Sidebar({ isOpen, onClose, isMobile }) {
   const hiddenPaths = [
     "/",
     "/register",
+    "/register-successful",
     "/index",
     "/login",
+    "/login/2fa",
+    "/login/2fa/step-1",
+    "/login/2fa/step-2",
+    "/login/2fa/step-3",
+    "/login/2fa/step-3/backup-code",
+    "/login/2fa/backup-code",
+    "/login/2fa/backup-code-recovery",
     "/logout",
     "/verify",
     "/forgot-password",
     "/password-reset",
+    "/root/dashboard",
+    "/root/tenants",
+    "/root/tenant",
     "/terms",
     "/privacy",
   ];
@@ -126,6 +138,16 @@ function Sidebar({ isOpen, onClose, isMobile }) {
       backgroundColor: "rgba(0, 0, 0, 0.5)",
       zIndex: 999,
       display: isOpen ? "block" : "none",
+    },
+    logoSection: {
+      textAlign: "center",
+      padding: "20px",
+      borderBottom: "1px solid #333",
+      marginBottom: "20px",
+    },
+    logoImage: {
+      maxWidth: "150px",
+      height: "auto",
     },
     menuSection: {
       marginBottom: "30px",
@@ -171,6 +193,14 @@ function Sidebar({ isOpen, onClose, isMobile }) {
       cursor: "pointer",
       transition: `background-color ${theme.transitions.fast}`,
     },
+    taskCount: {
+      backgroundColor: "#28a745",
+      color: "white",
+      borderRadius: "10px",
+      padding: "2px 6px",
+      fontSize: "11px",
+      marginLeft: "5px",
+    },
   };
 
   const isActivePath = (path) => {
@@ -186,17 +216,33 @@ function Sidebar({ isOpen, onClose, isMobile }) {
   const getMenuSections = () => {
     const sections = [];
 
+    // Debug logging
+    console.log("Current user in sidebar:", currentUser);
+    console.log(
+      "User role:",
+      currentUser?.role,
+      "User roleId:",
+      currentUser?.roleId,
+    );
+
     // Staff menu for executive, management, and frontline roles
+    // Check both role and roleId properties for compatibility
+    const userRole = currentUser.role || currentUser.roleId;
     if (
       [EXECUTIVE_ROLE_ID, MANAGEMENT_ROLE_ID, FRONTLINE_ROLE_ID].includes(
-        currentUser.roleId,
+        userRole,
       )
     ) {
       sections.push({
         label: "Staff",
         items: [
           { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
-          { path: "/admin/tasks", label: "Tasks", icon: "📋" },
+          {
+            path: "/admin/tasks",
+            label: "Tasks",
+            icon: "📋",
+            badge: taskItemActiveCount > 0 ? taskItemActiveCount : null,
+          },
           { path: "/admin/clients", label: "Clients", icon: "👤" },
           { path: "/admin/associates", label: "Associates", icon: "👷" },
           { path: "/admin/orders", label: "Work Orders", icon: "🔧" },
@@ -219,7 +265,7 @@ function Sidebar({ isOpen, onClose, isMobile }) {
     }
 
     // Customer menu
-    if (currentUser.roleId === CUSTOMER_ROLE_ID) {
+    if (userRole === CUSTOMER_ROLE_ID) {
       sections.push({
         label: "Member",
         items: [
@@ -232,7 +278,7 @@ function Sidebar({ isOpen, onClose, isMobile }) {
     }
 
     // Associate menu
-    if (currentUser.roleId === ASSOCIATE_ROLE_ID) {
+    if (userRole === ASSOCIATE_ROLE_ID) {
       sections.push({
         label: "Associate",
         items: [
@@ -245,7 +291,7 @@ function Sidebar({ isOpen, onClose, isMobile }) {
     }
 
     // Job Seeker menu
-    if (currentUser.roleId === ASSOCIATE_JOB_SEEKER_ROLE_ID) {
+    if (userRole === ASSOCIATE_JOB_SEEKER_ROLE_ID) {
       sections.push({
         label: "Job Seeker",
         items: [
@@ -263,6 +309,25 @@ function Sidebar({ isOpen, onClose, isMobile }) {
 
   const menuSections = getMenuSections();
 
+  // Get dashboard path based on role
+  const getDashboardPath = () => {
+    const userRole = currentUser.role || currentUser.roleId;
+    if (
+      [EXECUTIVE_ROLE_ID, MANAGEMENT_ROLE_ID, FRONTLINE_ROLE_ID].includes(
+        userRole,
+      )
+    ) {
+      return "/admin/dashboard";
+    } else if (userRole === CUSTOMER_ROLE_ID) {
+      return "/c/dashboard";
+    } else if (userRole === ASSOCIATE_ROLE_ID) {
+      return "/a/dashboard";
+    } else if (userRole === ASSOCIATE_JOB_SEEKER_ROLE_ID) {
+      return "/js/dashboard";
+    }
+    return "/admin/dashboard";
+  };
+
   return (
     <>
       {/* Overlay */}
@@ -270,6 +335,17 @@ function Sidebar({ isOpen, onClose, isMobile }) {
 
       {/* Sidebar */}
       <div style={styles.sidebar}>
+        {/* Logo Section */}
+        <div style={styles.logoSection}>
+          <Link to={getDashboardPath()} onClick={handleLinkClick}>
+            <img
+              src="/img/compressed-logo.png"
+              alt="Workery Logo"
+              style={styles.logoImage}
+            />
+          </Link>
+        </div>
+
         {/* Menu Sections */}
         {menuSections.map((section, index) => (
           <div key={index} style={styles.menuSection}>
@@ -293,6 +369,9 @@ function Sidebar({ isOpen, onClose, isMobile }) {
                     }}
                   >
                     {item.icon} {item.label}
+                    {item.badge && (
+                      <span style={styles.taskCount}>({item.badge})</span>
+                    )}
                   </Link>
                 </li>
               ))}
