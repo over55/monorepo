@@ -227,6 +227,13 @@ export class StaffAPI {
       // Convert camelCase to snake_case for API
       let decamelizedData = decamelizeKeys(staffData);
 
+      // BUGFIX: Handle howDidYouHearAboutUs field correctly
+      if (staffData.howDidYouHearAboutUsID) {
+        decamelizedData.how_did_you_hear_about_us_id =
+          staffData.howDidYouHearAboutUsID;
+        delete decamelizedData.how_did_you_hear_about_us_i_d;
+      }
+
       console.log("createStaff: post-fix:", decamelizedData);
 
       // Make the API call
@@ -278,6 +285,11 @@ export class StaffAPI {
       // Convert response from snake_case to camelCase
       let data = camelizeKeys(response.data);
 
+      // BUGFIX: Handle howDidYouHearAboutUs field correctly
+      if (data.howDidYouHearAboutUsId) {
+        data.howDidYouHearAboutUsID = data.howDidYouHearAboutUsId;
+      }
+
       // Log for debugging in development
       if (process.env.NODE_ENV === "development") {
         console.log("StaffAPI: Retrieved staff detail:", data);
@@ -319,6 +331,13 @@ export class StaffAPI {
 
       // Convert camelCase to snake_case for API
       let decamelizedData = decamelizeKeys(staffData);
+
+      // BUGFIX: Handle howDidYouHearAboutUs field correctly
+      if (staffData.howDidYouHearAboutUsID) {
+        decamelizedData.how_did_you_hear_about_us_id =
+          staffData.howDidYouHearAboutUsID;
+        delete decamelizedData.how_did_you_hear_about_us_i_d;
+      }
 
       // BUGFIX: Ensure ID is properly set
       decamelizedData.id = staffData.id || staffId;
