@@ -12,6 +12,7 @@ import { TagAPI } from "./API/TagAPI";
 import { SkillSetAPI } from "./API/SkillSetAPI";
 import { NOCAPI } from "./API/NOCAPI";
 import { NAICSAPI } from "./API/NAICSAPI";
+import { InsuranceRequirementAPI } from "./API/InsuranceRequirementAPI";
 import { ServiceFeeAPI } from "./API/ServiceFeeAPI";
 import { TokenStorage } from "./Storage/TokenStorage";
 import { AccountStorage } from "./Storage/AccountStorage";
@@ -22,6 +23,7 @@ import { TagStorage } from "./Storage/TagStorage";
 import { SkillSetStorage } from "./Storage/SkillSetStorage";
 import { NOCStorage } from "./Storage/NOCStorage";
 import { NAICSStorage } from "./Storage/NAICSStorage";
+import { InsuranceRequirementStorage } from "./Storage/InsuranceRequirementStorage";
 import { ServiceFeeStorage } from "./Storage/ServiceFeeStorage";
 import { AuthManager } from "./Manager/AuthManager";
 import { VersionManager } from "./Manager/VersionManager";
@@ -35,6 +37,7 @@ import { TagManager } from "./Manager/TagManager";
 import { SkillSetManager } from "./Manager/SkillSetManager";
 import { NOCManager } from "./Manager/NOCManager";
 import { NAICSManager } from "./Manager/NAICSManager";
+import { InsuranceRequirementManager } from "./Manager/InsuranceRequirementManager";
 import { ServiceFeeManager } from "./Manager/ServiceFeeManager";
 import { getAPIBaseURL, API_ENDPOINTS, ENV_CONFIG } from "./Config/APIConfig";
 
@@ -87,6 +90,12 @@ class ServicesContainer {
     const naicsStorage = new NAICSStorage();
     this._services.set("naicsStorage", naicsStorage);
 
+    const insuranceRequirementStorage = new InsuranceRequirementStorage();
+    this._services.set(
+      "insuranceRequirementStorage",
+      insuranceRequirementStorage,
+    );
+
     const serviceFeeStorage = new ServiceFeeStorage();
     this._services.set("serviceFeeStorage", serviceFeeStorage);
 
@@ -134,6 +143,13 @@ class ServicesContainer {
 
     const naicsAPI = new NAICSAPI(baseURL, API_ENDPOINTS, tokenStorage);
     this._services.set("naicsAPI", naicsAPI);
+
+    const insuranceRequirementAPI = new InsuranceRequirementAPI(
+      baseURL,
+      API_ENDPOINTS,
+      tokenStorage,
+    );
+    this._services.set("insuranceRequirementAPI", insuranceRequirementAPI);
 
     const serviceFeeAPI = new ServiceFeeAPI(
       baseURL,
@@ -198,6 +214,16 @@ class ServicesContainer {
     const naicsManager = new NAICSManager(naicsAPI, naicsStorage);
     this._services.set("naicsManager", naicsManager);
 
+    // InsuranceRequirementManager needs InsuranceRequirementAPI and InsuranceRequirementStorage
+    const insuranceRequirementManager = new InsuranceRequirementManager(
+      insuranceRequirementAPI,
+      insuranceRequirementStorage,
+    );
+    this._services.set(
+      "insuranceRequirementManager",
+      insuranceRequirementManager,
+    );
+
     // ServiceFeeManager needs ServiceFeeAPI and ServiceFeeStorage
     const serviceFeeManager = new ServiceFeeManager(
       serviceFeeAPI,
@@ -224,6 +250,10 @@ class ServicesContainer {
         skillSetManager: ["skillSetAPI", "skillSetStorage"],
         nocManager: ["nocAPI", "nocStorage"],
         naicsManager: ["naicsAPI", "naicsStorage"],
+        insuranceRequirementManager: [
+          "insuranceRequirementAPI",
+          "insuranceRequirementStorage",
+        ],
         serviceFeeManager: ["serviceFeeAPI", "serviceFeeStorage"],
       });
       console.groupEnd();
@@ -300,6 +330,10 @@ class ServicesContainer {
     return this.get("naicsManager");
   }
 
+  getInsuranceRequirementManager() {
+    return this.get("insuranceRequirementManager");
+  }
+
   getServiceFeeManager() {
     return this.get("serviceFeeManager");
   }
@@ -341,6 +375,10 @@ class ServicesContainer {
 
   getNAICSStorage() {
     return this.get("naicsStorage");
+  }
+
+  getInsuranceRequirementStorage() {
+    return this.get("insuranceRequirementStorage");
   }
 
   getServiceFeeStorage() {
@@ -396,6 +434,10 @@ class ServicesContainer {
 
   getNAICSAPI() {
     return this.get("naicsAPI");
+  }
+
+  getInsuranceRequirementAPI() {
+    return this.get("insuranceRequirementAPI");
   }
 
   getServiceFeeAPI() {
@@ -550,6 +592,11 @@ export function useNAICSManager() {
   return services.getNAICSManager();
 }
 
+export function useInsuranceRequirementManager() {
+  const services = useServices();
+  return services.getInsuranceRequirementManager();
+}
+
 export function useServiceFeeManager() {
   const services = useServices();
   return services.getServiceFeeManager();
@@ -601,6 +648,11 @@ export function useNOCStorage() {
 export function useNAICSStorage() {
   const services = useServices();
   return services.getNAICSStorage();
+}
+
+export function useInsuranceRequirementStorage() {
+  const services = useServices();
+  return services.getInsuranceRequirementStorage();
 }
 
 export function useServiceFeeStorage() {
@@ -669,6 +721,11 @@ export function useNOCAPI() {
 export function useNAICSAPI() {
   const services = useServices();
   return services.getNAICSAPI();
+}
+
+export function useInsuranceRequirementAPI() {
+  const services = useServices();
+  return services.getInsuranceRequirementAPI();
 }
 
 export function useServiceFeeAPI() {
