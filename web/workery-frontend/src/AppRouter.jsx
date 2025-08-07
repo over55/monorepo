@@ -36,10 +36,10 @@ import SettingServiceFeeCreatePage from "./pages/Admin/Setting/ServiceFee/Create
 import SettingServiceFeeListPage from "./pages/Admin/Setting/ServiceFee/List/Page";
 import SettingServiceFeeDetailPage from "./pages/Admin/Setting/ServiceFee/Detail/Page";
 import SettingServiceFeeUpdatePage from "./pages/Admin/Setting/ServiceFee/Update/Page";
-import SettingNOCCreatePage from "./pages/Admin/Setting/NOC/Create/Page";
-import SettingNOCListPage from "./pages/Admin/Setting/NOC/List/Page";
-import SettingNOCDetailPage from "./pages/Admin/Setting/NOC/Detail/Page";
-import SettingNOCUpdatePage from "./pages/Admin/Setting/NOC/Update/Page";
+import SettingNOCSearchPage from "./pages/Admin/Setting/NOC/Search/Page";
+import SettingNOCSearchResultPage from "./pages/Admin/Setting/NOC/SearchResult/Page";
+import SettingNAICSSearchPage from "./pages/Admin/Setting/NAICS/Search/Page";
+import SettingNAICSSearchResultPage from "./pages/Admin/Setting/NAICS/SearchResult/Page";
 
 // Associate pages
 import AssociateDashboardPage from "./pages/Associate/Dashboard/Page";
@@ -2075,7 +2075,7 @@ function AppRouter() {
               path="/admin/settings/noc/search"
               element={
                 <Layout>
-                  <PlaceholderPage title="NOC Search" />
+                  <SettingNOCSearchPage />
                 </Layout>
               }
             />
@@ -2083,7 +2083,7 @@ function AppRouter() {
               path="/admin/settings/noc/search-result"
               element={
                 <Layout>
-                  <PlaceholderPage title="NOC Search Result" />
+                  <SettingNOCSearchResultPage />
                 </Layout>
               }
             />
@@ -2091,7 +2091,7 @@ function AppRouter() {
               path="/admin/settings/naics/search"
               element={
                 <Layout>
-                  <PlaceholderPage title="NAICS Search" />
+                  <SettingNAICSSearchPage />
                 </Layout>
               }
             />
@@ -2099,7 +2099,7 @@ function AppRouter() {
               path="/admin/settings/naics/search-result"
               element={
                 <Layout>
-                  <PlaceholderPage title="NAICS Search Result" />
+                  <SettingNAICSSearchResultPage />
                 </Layout>
               }
             />
