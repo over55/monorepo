@@ -1,7 +1,7 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Root/ToTenant/Redirector.jsx
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router";
-import { useTenantManager } from "../../../services/Services";
+import { useTenantManager, useAuthManager } from "../../../services/Services";
 
 function ToTenantRedirector() {
   ////
@@ -15,6 +15,7 @@ function ToTenantRedirector() {
   ////
 
   const tenantManager = useTenantManager();
+  const authManager = useAuthManager();
   const navigate = useNavigate();
 
   ////
@@ -47,18 +48,16 @@ function ToTenantRedirector() {
       setIsLoading(true);
       setErrors({});
 
-      // Convert tid to number since it comes as string from URL params
-      const tenantId = parseInt(tid, 10);
-
-      if (isNaN(tenantId)) {
+      // Validate tenant ID (should be a string ObjectID)
+      if (!tid || typeof tid !== "string" || tid.trim() === "") {
         setErrors({ tenantId: "Invalid tenant ID" });
         setIsLoading(false);
         return;
       }
 
-      // Use the modern async/await approach
+      // Use the modern async/await approach - pass tid as string directly
       tenantManager
-        .executiveVisitsTenant(tenantId, onUnauthorized)
+        .executiveVisitsTenant(tid, onUnauthorized)
         .then((response) => {
           console.log(
             "ToTenantRedirector: Executive visit successful:",
@@ -130,6 +129,7 @@ function ToTenantRedirector() {
                     >
                       <h4>Debug Info:</h4>
                       <p>Tenant ID from URL: {tid}</p>
+                      <p>Tenant ID Type: {typeof tid}</p>
                       <p>Loading: {isLoading ? "Yes" : "No"}</p>
                       <p>
                         Has Errors:{" "}
