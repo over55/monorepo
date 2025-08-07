@@ -131,6 +131,10 @@ export const API_ENDPOINTS = {
   BULLETINS: "/bulletins",
   BULLETIN_DETAIL: "/bulletin/{id}",
   BULLETIN_ARCHIVE_OPERATION: "/bulletins/operation/archive",
+
+  // Associate Away Log endpoints
+  ASSOCIATE_AWAY_LOGS: "/associate-away-logs",
+  ASSOCIATE_AWAY_LOG_DETAIL: "/associate-away-log/{id}",
 };
 
 /**
@@ -180,6 +184,8 @@ export function getFullAPIUrls() {
     BULLETINS: `${httpServer}${basePath}${API_ENDPOINTS.BULLETINS}`,
     BULLETIN_DETAIL: `${httpServer}${basePath}${API_ENDPOINTS.BULLETIN_DETAIL}`,
     BULLETIN_ARCHIVE_OPERATION: `${httpServer}${basePath}${API_ENDPOINTS.BULLETIN_ARCHIVE_OPERATION}`,
+    ASSOCIATE_AWAY_LOGS: `${httpServer}${basePath}${API_ENDPOINTS.ASSOCIATE_AWAY_LOGS}`,
+    ASSOCIATE_AWAY_LOG_DETAIL: `${httpServer}${basePath}${API_ENDPOINTS.ASSOCIATE_AWAY_LOG_DETAIL}`,
   };
 }
 

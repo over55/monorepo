@@ -16,6 +16,7 @@ import { InsuranceRequirementAPI } from "./API/InsuranceRequirementAPI";
 import { ServiceFeeAPI } from "./API/ServiceFeeAPI";
 import { CommentAPI } from "./API/CommentAPI";
 import { BulletinAPI } from "./API/BulletinAPI";
+import { AssociateAwayLogAPI } from "./API/AssociateAwayLogAPI";
 import { TokenStorage } from "./Storage/TokenStorage";
 import { AccountStorage } from "./Storage/AccountStorage";
 import { DashboardStorage } from "./Storage/DashboardStorage";
@@ -29,6 +30,7 @@ import { InsuranceRequirementStorage } from "./Storage/InsuranceRequirementStora
 import { ServiceFeeStorage } from "./Storage/ServiceFeeStorage";
 import { CommentStorage } from "./Storage/CommentStorage";
 import { BulletinStorage } from "./Storage/BulletinStorage";
+import { AssociateAwayLogStorage } from "./Storage/AssociateAwayLogStorage";
 import { AuthManager } from "./Manager/AuthManager";
 import { VersionManager } from "./Manager/VersionManager";
 import { PasswordResetManager } from "./Manager/PasswordResetManager";
@@ -45,6 +47,7 @@ import { InsuranceRequirementManager } from "./Manager/InsuranceRequirementManag
 import { ServiceFeeManager } from "./Manager/ServiceFeeManager";
 import { CommentManager } from "./Manager/CommentManager";
 import { BulletinManager } from "./Manager/BulletinManager";
+import { AssociateAwayLogManager } from "./Manager/AssociateAwayLogManager";
 import { getAPIBaseURL, API_ENDPOINTS, ENV_CONFIG } from "./Config/APIConfig";
 
 /**
@@ -111,6 +114,9 @@ class ServicesContainer {
     const bulletinStorage = new BulletinStorage();
     this._services.set("bulletinStorage", bulletinStorage);
 
+    const associateAwayLogStorage = new AssociateAwayLogStorage();
+    this._services.set("associateAwayLogStorage", associateAwayLogStorage);
+
     // Initialize API services (depend on configuration)
     const authAPI = new AuthAPI(baseURL, API_ENDPOINTS);
     this._services.set("authAPI", authAPI);
@@ -175,6 +181,13 @@ class ServicesContainer {
 
     const bulletinAPI = new BulletinAPI(baseURL, API_ENDPOINTS, tokenStorage);
     this._services.set("bulletinAPI", bulletinAPI);
+
+    const associateAwayLogAPI = new AssociateAwayLogAPI(
+      baseURL,
+      API_ENDPOINTS,
+      tokenStorage,
+    );
+    this._services.set("associateAwayLogAPI", associateAwayLogAPI);
 
     // Initialize manager services (combine API and storage layers)
 
@@ -257,6 +270,13 @@ class ServicesContainer {
     const bulletinManager = new BulletinManager(bulletinAPI, bulletinStorage);
     this._services.set("bulletinManager", bulletinManager);
 
+    // AssociateAwayLogManager needs AssociateAwayLogAPI and AssociateAwayLogStorage
+    const associateAwayLogManager = new AssociateAwayLogManager(
+      associateAwayLogAPI,
+      associateAwayLogStorage,
+    );
+    this._services.set("associateAwayLogManager", associateAwayLogManager);
+
     this._initialized = true;
 
     if (ENV_CONFIG.IS_DEVELOPMENT) {
@@ -283,6 +303,10 @@ class ServicesContainer {
         serviceFeeManager: ["serviceFeeAPI", "serviceFeeStorage"],
         commentManager: ["commentAPI", "commentStorage"],
         bulletinManager: ["bulletinAPI", "bulletinStorage"],
+        associateAwayLogManager: [
+          "associateAwayLogAPI",
+          "associateAwayLogStorage",
+        ],
       });
       console.groupEnd();
     }
@@ -374,6 +398,10 @@ class ServicesContainer {
     return this.get("bulletinManager");
   }
 
+  getAssociateAwayLogManager() {
+    return this.get("associateAwayLogManager");
+  }
+
   /**
    * Convenience getters for storage services
    */
@@ -427,6 +455,10 @@ class ServicesContainer {
 
   getBulletinStorage() {
     return this.get("bulletinStorage");
+  }
+
+  getAssociateAwayLogStorage() {
+    return this.get("associateAwayLogStorage");
   }
 
   /**
@@ -494,6 +526,10 @@ class ServicesContainer {
 
   getBulletinAPI() {
     return this.get("bulletinAPI");
+  }
+
+  getAssociateAwayLogAPI() {
+    return this.get("associateAwayLogAPI");
   }
 
   /**
@@ -664,6 +700,11 @@ export function useBulletinManager() {
   return services.getBulletinManager();
 }
 
+export function useAssociateAwayLogManager() {
+  const services = useServices();
+  return services.getAssociateAwayLogManager();
+}
+
 /**
  * Hooks to access storage services
  */
@@ -730,6 +771,11 @@ export function useCommentStorage() {
 export function useBulletinStorage() {
   const services = useServices();
   return services.getBulletinStorage();
+}
+
+export function useAssociateAwayLogStorage() {
+  const services = useServices();
+  return services.getAssociateAwayLogStorage();
 }
 
 /**
@@ -813,6 +859,11 @@ export function useCommentAPI() {
 export function useBulletinAPI() {
   const services = useServices();
   return services.getBulletinAPI();
+}
+
+export function useAssociateAwayLogAPI() {
+  const services = useServices();
+  return services.getAssociateAwayLogAPI();
 }
 
 /**
