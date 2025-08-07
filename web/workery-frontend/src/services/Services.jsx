@@ -13,6 +13,7 @@ import { StaffAPI } from "./API/StaffAPI";
 import { OrderAPI } from "./API/OrderAPI";
 import { TaskAPI } from "./API/TaskAPI";
 import { ActivitySheetAPI } from "./API/ActivitySheetAPI";
+import { FinancialAPI } from "./API/FinancialAPI";
 import { VehicleTypeAPI } from "./API/VehicleTypeAPI";
 import { TagAPI } from "./API/TagAPI";
 import { SkillSetAPI } from "./API/SkillSetAPI";
@@ -33,6 +34,7 @@ import { StaffStorage } from "./Storage/StaffStorage";
 import { OrderStorage } from "./Storage/OrderStorage";
 import { TaskStorage } from "./Storage/TaskStorage";
 import { ActivitySheetStorage } from "./Storage/ActivitySheetStorage";
+import { FinancialStorage } from "./Storage/FinancialStorage";
 import { VehicleTypeStorage } from "./Storage/VehicleTypeStorage";
 import { TagStorage } from "./Storage/TagStorage";
 import { SkillSetStorage } from "./Storage/SkillSetStorage";
@@ -56,6 +58,7 @@ import { StaffManager } from "./Manager/StaffManager";
 import { OrderManager } from "./Manager/OrderManager";
 import { TaskManager } from "./Manager/TaskManager";
 import { ActivitySheetManager } from "./Manager/ActivitySheetManager";
+import { FinancialManager } from "./Manager/FinancialManager";
 import { VehicleTypeManager } from "./Manager/VehicleTypeManager";
 import { TagManager } from "./Manager/TagManager";
 import { SkillSetManager } from "./Manager/SkillSetManager";
@@ -119,6 +122,9 @@ class ServicesContainer {
 
     const activitySheetStorage = new ActivitySheetStorage();
     this._services.set("activitySheetStorage", activitySheetStorage);
+
+    const financialStorage = new FinancialStorage();
+    this._services.set("financialStorage", financialStorage);
 
     const vehicleTypeStorage = new VehicleTypeStorage();
     this._services.set("vehicleTypeStorage", vehicleTypeStorage);
@@ -200,6 +206,9 @@ class ServicesContainer {
       tokenStorage,
     );
     this._services.set("activitySheetAPI", activitySheetAPI);
+
+    const financialAPI = new FinancialAPI(baseURL, API_ENDPOINTS, tokenStorage);
+    this._services.set("financialAPI", financialAPI);
 
     const vehicleTypeAPI = new VehicleTypeAPI(
       baseURL,
@@ -310,6 +319,13 @@ class ServicesContainer {
     );
     this._services.set("activitySheetManager", activitySheetManager);
 
+    // FinancialManager needs FinancialAPI and FinancialStorage
+    const financialManager = new FinancialManager(
+      financialAPI,
+      financialStorage,
+    );
+    this._services.set("financialManager", financialManager);
+
     // VehicleTypeManager needs VehicleTypeAPI and VehicleTypeStorage
     const vehicleTypeManager = new VehicleTypeManager(
       vehicleTypeAPI,
@@ -385,6 +401,7 @@ class ServicesContainer {
         orderManager: ["orderAPI", "orderStorage"],
         taskManager: ["taskAPI", "taskStorage"],
         activitySheetManager: ["activitySheetAPI", "activitySheetStorage"],
+        financialManager: ["financialAPI", "financialStorage"],
         vehicleTypeManager: ["vehicleTypeAPI", "vehicleTypeStorage"],
         tagManager: ["tagAPI", "tagStorage"],
         skillSetManager: ["skillSetAPI", "skillSetStorage"],
@@ -480,6 +497,10 @@ class ServicesContainer {
     return this.get("activitySheetManager");
   }
 
+  getFinancialManager() {
+    return this.get("financialManager");
+  }
+
   getVehicleTypeManager() {
     return this.get("vehicleTypeManager");
   }
@@ -561,6 +582,10 @@ class ServicesContainer {
 
   getActivitySheetStorage() {
     return this.get("activitySheetStorage");
+  }
+
+  getFinancialStorage() {
+    return this.get("financialStorage");
   }
 
   getVehicleTypeStorage() {
@@ -656,6 +681,10 @@ class ServicesContainer {
 
   getActivitySheetAPI() {
     return this.get("activitySheetAPI");
+  }
+
+  getFinancialAPI() {
+    return this.get("financialAPI");
   }
 
   getVehicleTypeAPI() {
@@ -851,6 +880,11 @@ export function useActivitySheetManager() {
   return services.getActivitySheetManager();
 }
 
+export function useFinancialManager() {
+  const services = useServices();
+  return services.getFinancialManager();
+}
+
 export function useVehicleTypeManager() {
   const services = useServices();
   return services.getVehicleTypeManager();
@@ -952,6 +986,11 @@ export function useTaskStorage() {
 export function useActivitySheetStorage() {
   const services = useServices();
   return services.getActivitySheetStorage();
+}
+
+export function useFinancialStorage() {
+  const services = useServices();
+  return services.getFinancialStorage();
 }
 
 export function useVehicleTypeStorage() {
@@ -1070,6 +1109,11 @@ export function useTaskAPI() {
 export function useActivitySheetAPI() {
   const services = useServices();
   return services.getActivitySheetAPI();
+}
+
+export function useFinancialAPI() {
+  const services = useServices();
+  return services.getFinancialAPI();
 }
 
 export function useVehicleTypeAPI() {

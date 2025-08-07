@@ -143,6 +143,11 @@ export const API_ENDPOINTS = {
   ACTIVITY_SHEET_DETAIL: "/activity-sheet/{id}",
   ACTIVITY_SHEET_SELECT_OPTIONS: "/activity-sheets/select-options",
 
+  // Financial endpoints
+  FINANCIALS: "/financials",
+  FINANCIAL_DETAIL: "/financial/{id}",
+  FINANCIAL_SELECT_OPTIONS: "/financials/select-options",
+
   // Vehicle Type endpoints
   VEHICLE_TYPES: "/vehicle-types",
   VEHICLE_TYPE_DETAIL: "/vehicle-type/{id}",
@@ -283,6 +288,9 @@ export function getFullAPIUrls() {
     ACTIVITY_SHEETS: `${httpServer}${basePath}${API_ENDPOINTS.ACTIVITY_SHEETS}`,
     ACTIVITY_SHEET_DETAIL: `${httpServer}${basePath}${API_ENDPOINTS.ACTIVITY_SHEET_DETAIL}`,
     ACTIVITY_SHEET_SELECT_OPTIONS: `${httpServer}${basePath}${API_ENDPOINTS.ACTIVITY_SHEET_SELECT_OPTIONS}`,
+    FINANCIALS: `${httpServer}${basePath}${API_ENDPOINTS.FINANCIALS}`,
+    FINANCIAL_DETAIL: `${httpServer}${basePath}${API_ENDPOINTS.FINANCIAL_DETAIL}`,
+    FINANCIAL_SELECT_OPTIONS: `${httpServer}${basePath}${API_ENDPOINTS.FINANCIAL_SELECT_OPTIONS}`,
     ASSOCIATES: `${httpServer}${basePath}${API_ENDPOINTS.ASSOCIATES}`,
     ASSOCIATE_DETAIL: `${httpServer}${basePath}${API_ENDPOINTS.ASSOCIATE_DETAIL}`,
     ASSOCIATE_ARCHIVE_OPERATION: `${httpServer}${basePath}${API_ENDPOINTS.ASSOCIATE_ARCHIVE_OPERATION}`,
