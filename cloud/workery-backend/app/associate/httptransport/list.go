@@ -19,7 +19,7 @@ func (h *Handler) LiteList(w http.ResponseWriter, r *http.Request) {
 	f := &c_s.AssociatePaginationListFilter{
 		Cursor:    "",
 		PageSize:  25,
-		SortField: "last_name",
+		SortField: "lexical_name",
 		SortOrder: c_s.OrderAscending,
 	}
 

@@ -1055,20 +1055,9 @@ export class AssociateManager {
       validatedParams.search = params.search.trim();
     }
 
-    // Validate sorting
+    // Validate sorting - FIXED: Only include backend-supported sort fields
     if (params.sortBy && typeof params.sortBy === "string") {
-      const allowedSortFields = [
-        "lexical_name",
-        "first_name",
-        "last_name",
-        "email",
-        "phone",
-        "created_at",
-        "updated_at",
-        "status",
-        "type_of",
-        "join_date",
-      ];
+      const allowedSortFields = ["lexical_name", "join_date"];
       if (allowedSortFields.includes(params.sortBy)) {
         validatedParams.sortBy = params.sortBy;
 
