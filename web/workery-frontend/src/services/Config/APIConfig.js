@@ -91,6 +91,11 @@ export const API_ENDPOINTS = {
   TAGS: "/tags",
   TAG_DETAIL: "/tag/{id}",
   TAG_SELECT_OPTIONS: "/tags/operation/select-options",
+
+  // Skill Set endpoints
+  SKILL_SETS: "/skill-sets",
+  SKILL_SET_DETAIL: "/skill-set/{id}",
+  SKILL_SET_SELECT_OPTIONS: "/skill-sets/operation/select-options",
 };
 
 /**
@@ -121,6 +126,9 @@ export function getFullAPIUrls() {
     TAGS: `${httpServer}${basePath}${API_ENDPOINTS.TAGS}`,
     TAG_DETAIL: `${httpServer}${basePath}${API_ENDPOINTS.TAG_DETAIL}`,
     TAG_SELECT_OPTIONS: `${httpServer}${basePath}${API_ENDPOINTS.TAG_SELECT_OPTIONS}`,
+    SKILL_SETS: `${httpServer}${basePath}${API_ENDPOINTS.SKILL_SETS}`,
+    SKILL_SET_DETAIL: `${httpServer}${basePath}${API_ENDPOINTS.SKILL_SET_DETAIL}`,
+    SKILL_SET_SELECT_OPTIONS: `${httpServer}${basePath}${API_ENDPOINTS.SKILL_SET_SELECT_OPTIONS}`,
   };
 }
 

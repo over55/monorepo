@@ -9,12 +9,14 @@ import { TwoFactorAuthAPI } from "./API/TwoFactorAuthAPI";
 import { AccountAPI } from "./API/AccountAPI";
 import { VehicleTypeAPI } from "./API/VehicleTypeAPI";
 import { TagAPI } from "./API/TagAPI";
+import { SkillSetAPI } from "./API/SkillSetAPI";
 import { TokenStorage } from "./Storage/TokenStorage";
 import { AccountStorage } from "./Storage/AccountStorage";
 import { DashboardStorage } from "./Storage/DashboardStorage";
 import { TenantStorage } from "./Storage/TenantStorage";
 import { VehicleTypeStorage } from "./Storage/VehicleTypeStorage";
 import { TagStorage } from "./Storage/TagStorage";
+import { SkillSetStorage } from "./Storage/SkillSetStorage";
 import { AuthManager } from "./Manager/AuthManager";
 import { VersionManager } from "./Manager/VersionManager";
 import { PasswordResetManager } from "./Manager/PasswordResetManager";
@@ -24,6 +26,7 @@ import { TwoFactorAuthManager } from "./Manager/TwoFactorAuthManager";
 import { AccountManager } from "./Manager/AccountManager";
 import { VehicleTypeManager } from "./Manager/VehicleTypeManager";
 import { TagManager } from "./Manager/TagManager";
+import { SkillSetManager } from "./Manager/SkillSetManager";
 import { getAPIBaseURL, API_ENDPOINTS, ENV_CONFIG } from "./Config/APIConfig";
 
 /**
@@ -66,6 +69,9 @@ class ServicesContainer {
     const tagStorage = new TagStorage();
     this._services.set("tagStorage", tagStorage);
 
+    const skillSetStorage = new SkillSetStorage();
+    this._services.set("skillSetStorage", skillSetStorage);
+
     // Initialize API services (depend on configuration)
     const authAPI = new AuthAPI(baseURL, API_ENDPOINTS);
     this._services.set("authAPI", authAPI);
@@ -101,6 +107,9 @@ class ServicesContainer {
 
     const tagAPI = new TagAPI(baseURL, API_ENDPOINTS, tokenStorage);
     this._services.set("tagAPI", tagAPI);
+
+    const skillSetAPI = new SkillSetAPI(baseURL, API_ENDPOINTS, tokenStorage);
+    this._services.set("skillSetAPI", skillSetAPI);
 
     // Initialize manager services (combine API and storage layers)
 
@@ -146,6 +155,10 @@ class ServicesContainer {
     const tagManager = new TagManager(tagAPI, tagStorage);
     this._services.set("tagManager", tagManager);
 
+    // SkillSetManager needs SkillSetAPI and SkillSetStorage
+    const skillSetManager = new SkillSetManager(skillSetAPI, skillSetStorage);
+    this._services.set("skillSetManager", skillSetManager);
+
     this._initialized = true;
 
     if (ENV_CONFIG.IS_DEVELOPMENT) {
@@ -162,6 +175,7 @@ class ServicesContainer {
         accountManager: ["accountAPI", "accountStorage"],
         vehicleTypeManager: ["vehicleTypeAPI", "vehicleTypeStorage"],
         tagManager: ["tagAPI", "tagStorage"],
+        skillSetManager: ["skillSetAPI", "skillSetStorage"],
       });
       console.groupEnd();
     }
@@ -225,6 +239,10 @@ class ServicesContainer {
     return this.get("tagManager");
   }
 
+  getSkillSetManager() {
+    return this.get("skillSetManager");
+  }
+
   /**
    * Convenience getters for storage services
    */
@@ -250,6 +268,10 @@ class ServicesContainer {
 
   getTagStorage() {
     return this.get("tagStorage");
+  }
+
+  getSkillSetStorage() {
+    return this.get("skillSetStorage");
   }
 
   /**
@@ -289,6 +311,10 @@ class ServicesContainer {
 
   getTagAPI() {
     return this.get("tagAPI");
+  }
+
+  getSkillSetAPI() {
+    return this.get("skillSetAPI");
   }
 
   /**
@@ -424,6 +450,11 @@ export function useTagManager() {
   return services.getTagManager();
 }
 
+export function useSkillSetManager() {
+  const services = useServices();
+  return services.getSkillSetManager();
+}
+
 /**
  * Hooks to access storage services
  */
@@ -455,6 +486,11 @@ export function useVehicleTypeStorage() {
 export function useTagStorage() {
   const services = useServices();
   return services.getTagStorage();
+}
+
+export function useSkillSetStorage() {
+  const services = useServices();
+  return services.getSkillSetStorage();
 }
 
 /**
@@ -503,6 +539,11 @@ export function useVehicleTypeAPI() {
 export function useTagAPI() {
   const services = useServices();
   return services.getTagAPI();
+}
+
+export function useSkillSetAPI() {
+  const services = useServices();
+  return services.getSkillSetAPI();
 }
 
 /**
