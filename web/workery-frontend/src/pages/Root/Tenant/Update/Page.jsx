@@ -227,7 +227,7 @@ function RootTenantUpdatePage() {
     <div style={globalStyles.container}>
       <Breadcrumb
         items={[
-          { label: "Admin Dashboard", path: "/root/dashboard", icon: "📊" },
+          { label: "Root Dashboard", path: "/root/dashboard", icon: "📊" },
           { label: "Tenants", path: "/root/tenants", icon: "🏢" },
           { label: "Detail", path: `/root/tenant/${tid}`, icon: "ℹ️" },
           { label: "Update", icon: "✏️" },
