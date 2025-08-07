@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/API/TAskItem.js
 import getCustomAxios from "../Helpers/customAxios";
 import { camelizeKeys, decamelizeKeys, decamelize } from "humps";
 import { DateTime } from "luxon";
@@ -28,7 +29,7 @@ export function getTaskItemListAPI(
   filtersMap.forEach((value, key) => {
     let decamelizedkey = decamelize(key);
     if (aURL.indexOf("?") > -1) {
-      aURL += "&" + decamelizedkey + "=" + encodeURIComponent(value);;
+      aURL += "&" + decamelizedkey + "=" + encodeURIComponent(value);
     } else {
       aURL += "?" + decamelizedkey + "=" + encodeURIComponent(value);
     }
@@ -82,7 +83,7 @@ export function getTaskItemCountAPI(
   filtersMap.forEach((value, key) => {
     let decamelizedkey = decamelize(key);
     if (aURL.indexOf("?") > -1) {
-      aURL += "&" + decamelizedkey + "=" + encodeURIComponent(value);;
+      aURL += "&" + decamelizedkey + "=" + encodeURIComponent(value);
     } else {
       aURL += "?" + decamelizedkey + "=" + encodeURIComponent(value);
     }
@@ -198,11 +199,11 @@ export function getTaskItemDetailAPI(
       // For debugging purposeso pnly.
       console.log("getTaskItemDetailAPI | pre-fix | data:", data);
       try {
-          data.customerID = data.customerId
-          data.associateID = data.associateId
-          data.associateServiceFeeID = data.associateServiceFeeId
+        data.customerID = data.customerId;
+        data.associateID = data.associateId;
+        data.associateServiceFeeID = data.associateServiceFeeId;
       } catch (e) {
-          console.log("getTaskItemDetailAPI | pre-fix | exception:", e);
+        console.log("getTaskItemDetailAPI | pre-fix | exception:", e);
       }
       console.log("getTaskItemDetailAPI | post-fix | data:", data);
 

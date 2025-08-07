@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/API/Gateway.js
 import getCustomAxios from "../Helpers/customAxios";
 import axios from "axios";
 import { camelizeKeys, decamelizeKeys } from "humps";

@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/API/OrderIncident.js
 import getCustomAxios from "../Helpers/customAxios";
 import { camelizeKeys, decamelizeKeys, decamelize } from "humps";
 import { DateTime } from "luxon";
@@ -7,9 +8,8 @@ import {
   WORKERY_ORDER_INCIDENT_API_ENDPOINT,
   WORKERY_ORDER_INCIDENT_SELECT_OPTIONS_API_ENDPOINT,
   WORKERY_ORDER_INCIDENT_CREATE_COMMENT_OPERATION_API_ENDPOINT,
-  WORKERY_ORDER_INCIDENT_CREATE_ATTACHMENT_OPERATION_API_ENDPOINT
+  WORKERY_ORDER_INCIDENT_CREATE_ATTACHMENT_OPERATION_API_ENDPOINT,
 } from "../Constants/API";
-
 
 export function postOrderIncidentAttachmentCreateAPI(
   formdata,
@@ -21,12 +21,16 @@ export function postOrderIncidentAttachmentCreateAPI(
   const axios = getCustomAxios(onUnauthorizedCallback);
 
   axios
-    .post(WORKERY_ORDER_INCIDENT_CREATE_ATTACHMENT_OPERATION_API_ENDPOINT, formdata, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-        Accept: "application/json",
+    .post(
+      WORKERY_ORDER_INCIDENT_CREATE_ATTACHMENT_OPERATION_API_ENDPOINT,
+      formdata,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          Accept: "application/json",
+        },
       },
-    })
+    )
     .then((successResponse) => {
       const responseData = successResponse.data;
 
@@ -117,7 +121,7 @@ export function getOrderIncidentListAPI(
   filtersMap.forEach((value, key) => {
     let decamelizedkey = decamelize(key);
     if (aURL.indexOf("?") > -1) {
-      aURL += "&" + decamelizedkey + "=" + encodeURIComponent(value);;
+      aURL += "&" + decamelizedkey + "=" + encodeURIComponent(value);
     } else {
       aURL += "?" + decamelizedkey + "=" + encodeURIComponent(value);
     }
@@ -247,17 +251,13 @@ export function getOrderIncidentDetailAPI(
 
       // Bugfixes.
       // console.log("getOrderIncidentListAPI | pre-fix | results:", data);
-      if (
-        data !== undefined &&
-        data !== null &&
-        data !== ""
-      ) {
-          data.createdAt = DateTime.fromISO(data.createdAt).toLocaleString(
-            DateTime.DATETIME_MED,
-          );
-          data.modifiedAt = DateTime.fromISO(data.modifiedAt).toLocaleString(
-            DateTime.DATETIME_MED,
-          );
+      if (data !== undefined && data !== null && data !== "") {
+        data.createdAt = DateTime.fromISO(data.createdAt).toLocaleString(
+          DateTime.DATETIME_MED,
+        );
+        data.modifiedAt = DateTime.fromISO(data.modifiedAt).toLocaleString(
+          DateTime.DATETIME_MED,
+        );
       }
 
       // For debugging purposeso pnly.

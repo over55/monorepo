@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/API/NAICS.js
 import getCustomAxios from "../Helpers/customAxios";
 import { camelizeKeys, decamelizeKeys, decamelize } from "humps";
 import { DateTime } from "luxon";
@@ -17,7 +18,8 @@ export function getNorthAmericaIndustryClassificationSystemSelectOptionListAPI(
   const axios = getCustomAxios(onUnauthorizedCallback);
 
   // The following code will generate the url argument for the url based on the map.
-  let aURL = WORKERY_NORTH_AMERICA_INDUSTRY_CLASSIFICATION_SYSTEM_SELECT_OPTIONS_API_ENDPOINT;
+  let aURL =
+    WORKERY_NORTH_AMERICA_INDUSTRY_CLASSIFICATION_SYSTEM_SELECT_OPTIONS_API_ENDPOINT;
 
   axios
     .get(aURL)
@@ -51,7 +53,7 @@ export function getNorthAmericaIndustryClassificationSystemListAPI(
   filtersMap.forEach((value, key) => {
     let decamelizedkey = decamelize(key);
     if (aURL.indexOf("?") > -1) {
-      aURL += "&" + decamelizedkey + "=" + encodeURIComponent(value);;
+      aURL += "&" + decamelizedkey + "=" + encodeURIComponent(value);
     } else {
       aURL += "?" + decamelizedkey + "=" + encodeURIComponent(value);
     }
@@ -100,7 +102,12 @@ export function getNorthAmericaIndustryClassificationSystemDetailAPI(
 ) {
   const axios = getCustomAxios(onUnauthorizedCallback);
   axios
-    .get(WORKERY_NORTH_AMERICA_INDUSTRY_CLASSIFICATION_SYSTEM_API_ENDPOINT.replace("{id}", organizationID))
+    .get(
+      WORKERY_NORTH_AMERICA_INDUSTRY_CLASSIFICATION_SYSTEM_API_ENDPOINT.replace(
+        "{id}",
+        organizationID,
+      ),
+    )
     .then((successResponse) => {
       const responseData = successResponse.data;
 

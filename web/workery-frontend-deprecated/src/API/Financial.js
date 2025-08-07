@@ -1,10 +1,9 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/API/Financial.js
 import getCustomAxios from "../Helpers/customAxios";
 import { camelizeKeys, decamelizeKeys, decamelize } from "humps";
 import { DateTime } from "luxon";
 
-import {
-  WORKERY_ORDER_FINANCIAL_UPDATE_API_URL,
-} from "../Constants/API";
+import { WORKERY_ORDER_FINANCIAL_UPDATE_API_URL } from "../Constants/API";
 
 export function putFinancialUpdateAPI(
   decamelizedData,
@@ -16,7 +15,13 @@ export function putFinancialUpdateAPI(
   const axios = getCustomAxios(onUnauthorizedCallback);
 
   axios
-    .put(WORKERY_ORDER_FINANCIAL_UPDATE_API_URL.replace("XXX", decamelizedData.wjid), decamelizedData)
+    .put(
+      WORKERY_ORDER_FINANCIAL_UPDATE_API_URL.replace(
+        "XXX",
+        decamelizedData.wjid,
+      ),
+      decamelizedData,
+    )
     .then((successResponse) => {
       const responseData = successResponse.data;
 

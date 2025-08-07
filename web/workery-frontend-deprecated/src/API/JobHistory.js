@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/API/JobHistory.js
 import getCustomAxios from "../Helpers/customAxios";
 import { camelizeKeys, decamelizeKeys, decamelize } from "humps";
 import { DateTime } from "luxon";
@@ -18,7 +19,7 @@ export function getJobHistoryListAPI(
   filtersMap.forEach((value, key) => {
     let decamelizedkey = decamelize(key);
     if (aURL.indexOf("?") > -1) {
-      aURL += "&" + decamelizedkey + "=" + encodeURIComponent(value);;
+      aURL += "&" + decamelizedkey + "=" + encodeURIComponent(value);
     } else {
       aURL += "?" + decamelizedkey + "=" + encodeURIComponent(value);
     }

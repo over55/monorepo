@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/API/Client.js
 import getCustomAxios from "../Helpers/customAxios";
 import { camelizeKeys, decamelizeKeys, decamelize } from "humps";
 import { DateTime } from "luxon";
@@ -14,7 +15,7 @@ import {
   WORKERY_CLIENT_CHANGE_PASSWORD_OPERATION_API_ENDPOINT,
   WORKERY_CLIENT_CHANGE_2FA_OPERATION_API_URL,
   WORKERY_CLIENT_BAN_OPERATION_API_ENDPOINT,
-  WORKERY_CLIENT_UNBAN_OPERATION_API_ENDPOINT
+  WORKERY_CLIENT_UNBAN_OPERATION_API_ENDPOINT,
   // WORKERY_CLIENTS_SELECT_OPTIONS_API_ENDPOINT
 } from "../Constants/API";
 
