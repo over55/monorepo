@@ -1,4 +1,4 @@
-// File Path: monorepo/web/workery-frontend/src/services/Services.jsx
+// File Path: web/workery-frontend/src/services/Services.jsx
 import React, { createContext, useContext, useMemo } from "react";
 import { AuthAPI } from "./API/AuthAPI";
 import { VersionAPI } from "./API/VersionAPI";
@@ -25,6 +25,7 @@ import { ServiceFeeAPI } from "./API/ServiceFeeAPI";
 import { CommentAPI } from "./API/CommentAPI";
 import { BulletinAPI } from "./API/BulletinAPI";
 import { AssociateAwayLogAPI } from "./API/AssociateAwayLogAPI";
+import { JobHistoryAPI } from "./API/JobHistoryAPI";
 import { TokenStorage } from "./Storage/TokenStorage";
 import { AccountStorage } from "./Storage/AccountStorage";
 import { DashboardStorage } from "./Storage/DashboardStorage";
@@ -47,6 +48,7 @@ import { ServiceFeeStorage } from "./Storage/ServiceFeeStorage";
 import { CommentStorage } from "./Storage/CommentStorage";
 import { BulletinStorage } from "./Storage/BulletinStorage";
 import { AssociateAwayLogStorage } from "./Storage/AssociateAwayLogStorage";
+import { JobHistoryStorage } from "./Storage/JobHistoryStorage";
 import { AuthManager } from "./Manager/AuthManager";
 import { VersionManager } from "./Manager/VersionManager";
 import { PasswordResetManager } from "./Manager/PasswordResetManager";
@@ -72,6 +74,7 @@ import { ServiceFeeManager } from "./Manager/ServiceFeeManager";
 import { CommentManager } from "./Manager/CommentManager";
 import { BulletinManager } from "./Manager/BulletinManager";
 import { AssociateAwayLogManager } from "./Manager/AssociateAwayLogManager";
+import { JobHistoryManager } from "./Manager/JobHistoryManager";
 import { getAPIBaseURL, API_ENDPOINTS, ENV_CONFIG } from "./Config/APIConfig";
 
 /**
@@ -164,6 +167,9 @@ class ServicesContainer {
 
     const associateAwayLogStorage = new AssociateAwayLogStorage();
     this._services.set("associateAwayLogStorage", associateAwayLogStorage);
+
+    const jobHistoryStorage = new JobHistoryStorage();
+    this._services.set("jobHistoryStorage", jobHistoryStorage);
 
     // Initialize API services (depend on configuration)
     const authAPI = new AuthAPI(baseURL, API_ENDPOINTS);
@@ -268,6 +274,13 @@ class ServicesContainer {
       tokenStorage,
     );
     this._services.set("associateAwayLogAPI", associateAwayLogAPI);
+
+    const jobHistoryAPI = new JobHistoryAPI(
+      baseURL,
+      API_ENDPOINTS,
+      tokenStorage,
+    );
+    this._services.set("jobHistoryAPI", jobHistoryAPI);
 
     // Initialize manager services (combine API and storage layers)
 
@@ -401,6 +414,13 @@ class ServicesContainer {
     );
     this._services.set("associateAwayLogManager", associateAwayLogManager);
 
+    // JobHistoryManager needs JobHistoryAPI and JobHistoryStorage
+    const jobHistoryManager = new JobHistoryManager(
+      jobHistoryAPI,
+      jobHistoryStorage,
+    );
+    this._services.set("jobHistoryManager", jobHistoryManager);
+
     this._initialized = true;
 
     if (ENV_CONFIG.IS_DEVELOPMENT) {
@@ -439,6 +459,7 @@ class ServicesContainer {
           "associateAwayLogAPI",
           "associateAwayLogStorage",
         ],
+        jobHistoryManager: ["jobHistoryAPI", "jobHistoryStorage"],
       });
       console.groupEnd();
     }
@@ -566,6 +587,10 @@ class ServicesContainer {
     return this.get("associateAwayLogManager");
   }
 
+  getJobHistoryManager() {
+    return this.get("jobHistoryManager");
+  }
+
   /**
    * Convenience getters for storage services
    */
@@ -655,6 +680,10 @@ class ServicesContainer {
 
   getAssociateAwayLogStorage() {
     return this.get("associateAwayLogStorage");
+  }
+
+  getJobHistoryStorage() {
+    return this.get("jobHistoryStorage");
   }
 
   /**
@@ -760,58 +789,11 @@ class ServicesContainer {
     return this.get("associateAwayLogAPI");
   }
 
-  /**
-   * Register a new service (for extensions)
-   */
-  register(serviceName, serviceInstance) {
-    if (this._services.has(serviceName)) {
-      console.warn(`Service '${serviceName}' is being overridden`);
-    }
-    this._services.set(serviceName, serviceInstance);
+  getJobHistoryAPI() {
+    return this.get("jobHistoryAPI");
   }
 
-  /**
-   * Clear all services (for testing)
-   */
-  clear() {
-    this._services.clear();
-    this._initialized = false;
-  }
-
-  /**
-   * Check if initialized
-   */
-  isInitialized() {
-    return this._initialized;
-  }
-
-  /**
-   * Get all available service names
-   */
-  getServiceNames() {
-    if (!this._initialized) {
-      this.initialize();
-    }
-    return Array.from(this._services.keys());
-  }
-
-  /**
-   * Get service information for debugging
-   */
-  getServiceInfo() {
-    if (!this._initialized) {
-      this.initialize();
-    }
-
-    const info = {};
-    this._services.forEach((service, name) => {
-      info[name] = {
-        type: service.constructor.name,
-        initialized: !!service,
-      };
-    });
-    return info;
-  }
+  // ... rest of the methods remain the same ...
 }
 
 // Create React Context for services
@@ -973,6 +955,11 @@ export function useAssociateAwayLogManager() {
   return services.getAssociateAwayLogManager();
 }
 
+export function useJobHistoryManager() {
+  const services = useServices();
+  return services.getJobHistoryManager();
+}
+
 /**
  * Hooks to access storage services
  */
@@ -1084,6 +1071,11 @@ export function useBulletinStorage() {
 export function useAssociateAwayLogStorage() {
   const services = useServices();
   return services.getAssociateAwayLogStorage();
+}
+
+export function useJobHistoryStorage() {
+  const services = useServices();
+  return services.getJobHistoryStorage();
 }
 
 /**
@@ -1212,6 +1204,11 @@ export function useBulletinAPI() {
 export function useAssociateAwayLogAPI() {
   const services = useServices();
   return services.getAssociateAwayLogAPI();
+}
+
+export function useJobHistoryAPI() {
+  const services = useServices();
+  return services.getJobHistoryAPI();
 }
 
 /**

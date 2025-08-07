@@ -1,6 +1,6 @@
-// File Path: monorepo/web/workery-frontend/src/services/API/JobHistoryAPI.js
+// File Path: web/workery-frontend/src/services/API/JobHistoryAPI.js
 
-import { camelizeKeys, decamelizeKeys } from "humps";
+import { camelizeKeys, decamelizeKeys, decamelize } from "humps";
 import { createAuthenticatedAxios } from "../Helpers/AuthenticatedAxios";
 import { DateTime } from "luxon";
 
@@ -24,8 +24,8 @@ export class JobHistoryAPI {
   }
 
   /**
-   * Gets list of job history records with optional filtering, sorting, and pagination
-   * @param {Object} params - Query parameters { page, limit, search, sortBy, sortOrder, associateId, customerId, startDate, endDate, status }
+   * Gets list of job history with optional filtering, sorting, and pagination
+   * @param {Object} params - Query parameters { page, limit, search, sortBy, sortOrder }
    * @param {Function} onUnauthorizedCallback - Called when token refresh fails
    * @returns {Promise<Object>} - Job history list with pagination data
    */
@@ -53,39 +53,9 @@ export class JobHistoryAPI {
         queryParams.append("sort_by", `${params.sortBy},${params.sortOrder}`);
       }
 
-      // Add filtering params
-      if (params.associateId)
-        queryParams.append("associate_id", params.associateId);
-      if (params.customerId)
-        queryParams.append("customer_id", params.customerId);
-      if (params.orderId) queryParams.append("order_id", params.orderId);
-      if (params.status) queryParams.append("status", params.status);
-
-      // Add date range filters
-      if (params.startDate) queryParams.append("start_date", params.startDate);
-      if (params.endDate) queryParams.append("end_date", params.endDate);
-
-      // Add job type filter
-      if (params.jobType) queryParams.append("job_type", params.jobType);
-
       // Add any additional filters
       Object.keys(params).forEach((key) => {
-        if (
-          ![
-            "page",
-            "limit",
-            "search",
-            "sortBy",
-            "sortOrder",
-            "associateId",
-            "customerId",
-            "orderId",
-            "status",
-            "startDate",
-            "endDate",
-            "jobType",
-          ].includes(key)
-        ) {
+        if (!["page", "limit", "search", "sortBy", "sortOrder"].includes(key)) {
           if (
             params[key] !== undefined &&
             params[key] !== null &&
@@ -107,7 +77,7 @@ export class JobHistoryAPI {
       // Convert response from snake_case to camelCase
       const data = camelizeKeys(response.data);
 
-      // Process date formatting for results
+      // Process date formatting for results (matching old implementation)
       if (
         data.results &&
         Array.isArray(data.results) &&
@@ -119,26 +89,6 @@ export class JobHistoryAPI {
               DateTime.DATETIME_MED,
             );
           }
-          if (item.updatedAt) {
-            item.updatedAt = DateTime.fromISO(item.updatedAt).toLocaleString(
-              DateTime.DATETIME_MED,
-            );
-          }
-          if (item.completedAt) {
-            item.completedAt = DateTime.fromISO(
-              item.completedAt,
-            ).toLocaleString(DateTime.DATETIME_MED);
-          }
-          if (item.startDate) {
-            item.startDate = DateTime.fromISO(item.startDate).toLocaleString(
-              DateTime.DATE_MED,
-            );
-          }
-          if (item.completionDate) {
-            item.completionDate = DateTime.fromISO(
-              item.completionDate,
-            ).toLocaleString(DateTime.DATE_MED);
-          }
         });
       }
 
@@ -149,8 +99,62 @@ export class JobHistoryAPI {
   }
 
   /**
-   * Gets details for a specific job history record
-   * @param {string|number} jobHistoryId - The ID of the job history record
+   * Gets job history using legacy filtersMap approach for backward compatibility
+   * @param {Map} filtersMap - Map of filter key-value pairs
+   * @param {Function} onUnauthorizedCallback - Called when token refresh fails
+   * @returns {Promise<Object>} - Job history list with pagination data
+   */
+  async getJobHistoryWithFiltersMap(
+    filtersMap = new Map(),
+    onUnauthorizedCallback = null,
+  ) {
+    try {
+      // Create authenticated axios instance
+      const authenticatedAxios = createAuthenticatedAxios(
+        this.baseURL,
+        this.tokenStorage,
+        onUnauthorizedCallback,
+      );
+
+      // Build URL with filters map (matching old implementation exactly)
+      let aURL = this.endpoints.JOB_HISTORY;
+      filtersMap.forEach((value, key) => {
+        let decamelizedkey = decamelize(key);
+        if (aURL.indexOf("?") > -1) {
+          aURL += "&" + decamelizedkey + "=" + encodeURIComponent(value);
+        } else {
+          aURL += "?" + decamelizedkey + "=" + encodeURIComponent(value);
+        }
+      });
+
+      // Make the API call
+      const response = await authenticatedAxios.get(aURL);
+
+      // Convert response from snake_case to camelCase
+      const data = camelizeKeys(response.data);
+
+      // Process date formatting for results (matching old implementation)
+      if (
+        data.results !== undefined &&
+        data.results !== null &&
+        data.results.length > 0
+      ) {
+        data.results.forEach((item, index) => {
+          item.createdAt = DateTime.fromISO(item.createdAt).toLocaleString(
+            DateTime.DATETIME_MED,
+          );
+        });
+      }
+
+      return data;
+    } catch (error) {
+      throw this._formatError(error);
+    }
+  }
+
+  /**
+   * Gets details for a specific job history entry
+   * @param {string|number} jobHistoryId - The ID of the job history entry
    * @param {Function} onUnauthorizedCallback - Called when token refresh fails
    * @returns {Promise<Object>} - Job history details
    */
@@ -183,33 +187,13 @@ export class JobHistoryAPI {
       const response = await authenticatedAxios.get(url);
 
       // Convert response from snake_case to camelCase
-      const data = camelizeKeys(response.data);
+      let data = camelizeKeys(response.data);
 
-      // Format dates
+      // Process date formatting
       if (data.createdAt) {
         data.createdAt = DateTime.fromISO(data.createdAt).toLocaleString(
           DateTime.DATETIME_MED,
         );
-      }
-      if (data.updatedAt) {
-        data.updatedAt = DateTime.fromISO(data.updatedAt).toLocaleString(
-          DateTime.DATETIME_MED,
-        );
-      }
-      if (data.completedAt) {
-        data.completedAt = DateTime.fromISO(data.completedAt).toLocaleString(
-          DateTime.DATETIME_MED,
-        );
-      }
-      if (data.startDate) {
-        data.startDate = DateTime.fromISO(data.startDate).toLocaleString(
-          DateTime.DATE_MED,
-        );
-      }
-      if (data.completionDate) {
-        data.completionDate = DateTime.fromISO(
-          data.completionDate,
-        ).toLocaleString(DateTime.DATE_MED);
       }
 
       // Log for debugging in development
@@ -224,12 +208,12 @@ export class JobHistoryAPI {
   }
 
   /**
-   * Gets job history statistics
-   * @param {Object} params - Query parameters { associateId, customerId, startDate, endDate, jobType }
+   * Creates a new job history entry
+   * @param {Object} jobHistoryData - Job history data to create
    * @param {Function} onUnauthorizedCallback - Called when token refresh fails
-   * @returns {Promise<Object>} - Job history statistics
+   * @returns {Promise<Object>} - Created job history data
    */
-  async getJobHistoryStats(params = {}, onUnauthorizedCallback = null) {
+  async createJobHistory(jobHistoryData, onUnauthorizedCallback = null) {
     try {
       // Create authenticated axios instance
       const authenticatedAxios = createAuthenticatedAxios(
@@ -238,24 +222,18 @@ export class JobHistoryAPI {
         onUnauthorizedCallback,
       );
 
-      // Build query parameters
-      const queryParams = new URLSearchParams();
+      console.log("createJobHistory: pre-fix:", jobHistoryData);
 
-      if (params.associateId)
-        queryParams.append("associate_id", params.associateId);
-      if (params.customerId)
-        queryParams.append("customer_id", params.customerId);
-      if (params.startDate) queryParams.append("start_date", params.startDate);
-      if (params.endDate) queryParams.append("end_date", params.endDate);
-      if (params.jobType) queryParams.append("job_type", params.jobType);
+      // Convert camelCase to snake_case for API
+      let decamelizedData = decamelizeKeys(jobHistoryData);
 
-      const queryString = queryParams.toString();
-      const url = queryString
-        ? `${this.endpoints.JOB_HISTORY}/stats?${queryString}`
-        : `${this.endpoints.JOB_HISTORY}/stats`;
+      console.log("createJobHistory: post-fix:", decamelizedData);
 
       // Make the API call
-      const response = await authenticatedAxios.get(url);
+      const response = await authenticatedAxios.post(
+        this.endpoints.JOB_HISTORY,
+        decamelizedData,
+      );
 
       // Convert response from snake_case to camelCase
       const data = camelizeKeys(response.data);
@@ -267,68 +245,25 @@ export class JobHistoryAPI {
   }
 
   /**
-   * Exports job history data
-   * @param {Object} params - Export parameters { format, associateId, customerId, startDate, endDate, jobType }
+   * Updates a specific job history entry
+   * @param {string|number} jobHistoryId - The ID of the job history entry
+   * @param {Object} jobHistoryData - Job history data to update
    * @param {Function} onUnauthorizedCallback - Called when token refresh fails
-   * @returns {Promise<Object>} - Export response data
+   * @returns {Promise<Object>} - Updated job history data
    */
-  async exportJobHistory(params = {}, onUnauthorizedCallback = null) {
-    try {
-      // Create authenticated axios instance
-      const authenticatedAxios = createAuthenticatedAxios(
-        this.baseURL,
-        this.tokenStorage,
-        onUnauthorizedCallback,
-      );
-
-      // Build query parameters
-      const queryParams = new URLSearchParams();
-
-      if (params.format) queryParams.append("format", params.format);
-      if (params.associateId)
-        queryParams.append("associate_id", params.associateId);
-      if (params.customerId)
-        queryParams.append("customer_id", params.customerId);
-      if (params.startDate) queryParams.append("start_date", params.startDate);
-      if (params.endDate) queryParams.append("end_date", params.endDate);
-      if (params.jobType) queryParams.append("job_type", params.jobType);
-
-      const queryString = queryParams.toString();
-      const url = queryString
-        ? `${this.endpoints.JOB_HISTORY}/export?${queryString}`
-        : `${this.endpoints.JOB_HISTORY}/export`;
-
-      // Make the API call
-      const response = await authenticatedAxios.get(url, {
-        responseType: "blob", // Handle file downloads
-      });
-
-      return response;
-    } catch (error) {
-      throw this._formatError(error);
-    }
-  }
-
-  /**
-   * Gets job history summary for a specific associate
-   * @param {string|number} associateId - The ID of the associate
-   * @param {Object} params - Query parameters { startDate, endDate, jobType }
-   * @param {Function} onUnauthorizedCallback - Called when token refresh fails
-   * @returns {Promise<Object>} - Associate job history summary
-   */
-  async getAssociateJobHistorySummary(
-    associateId,
-    params = {},
+  async updateJobHistory(
+    jobHistoryId,
+    jobHistoryData,
     onUnauthorizedCallback = null,
   ) {
     try {
-      // Validate associate ID
+      // Validate job history ID
       if (
-        !associateId ||
-        (typeof associateId !== "string" && typeof associateId !== "number")
+        !jobHistoryId ||
+        (typeof jobHistoryId !== "string" && typeof jobHistoryId !== "number")
       ) {
         throw {
-          associateId: "Valid associate ID is required",
+          jobHistoryId: "Valid job history ID is required",
         };
       }
 
@@ -339,19 +274,24 @@ export class JobHistoryAPI {
         onUnauthorizedCallback,
       );
 
-      // Build query parameters
-      const queryParams = new URLSearchParams();
-      queryParams.append("associate_id", associateId);
+      console.log("updateJobHistory: pre-fix:", jobHistoryData);
 
-      if (params.startDate) queryParams.append("start_date", params.startDate);
-      if (params.endDate) queryParams.append("end_date", params.endDate);
-      if (params.jobType) queryParams.append("job_type", params.jobType);
+      // Convert camelCase to snake_case for API
+      let decamelizedData = decamelizeKeys(jobHistoryData);
 
-      const queryString = queryParams.toString();
-      const url = `${this.endpoints.JOB_HISTORY}/associate-summary?${queryString}`;
+      // Ensure ID is properly set
+      decamelizedData.id = jobHistoryData.id || jobHistoryId;
+
+      console.log("updateJobHistory: post-fix:", decamelizedData);
+
+      // Replace {id} placeholder in endpoint
+      const url = this.endpoints.JOB_HISTORY_DETAIL.replace(
+        "{id}",
+        jobHistoryId,
+      );
 
       // Make the API call
-      const response = await authenticatedAxios.get(url);
+      const response = await authenticatedAxios.put(url, decamelizedData);
 
       // Convert response from snake_case to camelCase
       const data = camelizeKeys(response.data);
@@ -363,25 +303,20 @@ export class JobHistoryAPI {
   }
 
   /**
-   * Gets job history summary for a specific customer
-   * @param {string|number} customerId - The ID of the customer
-   * @param {Object} params - Query parameters { startDate, endDate, jobType }
+   * Deletes a specific job history entry
+   * @param {string|number} jobHistoryId - The ID of the job history entry to delete
    * @param {Function} onUnauthorizedCallback - Called when token refresh fails
-   * @returns {Promise<Object>} - Customer job history summary
+   * @returns {Promise<Object>} - Delete response data
    */
-  async getCustomerJobHistorySummary(
-    customerId,
-    params = {},
-    onUnauthorizedCallback = null,
-  ) {
+  async deleteJobHistory(jobHistoryId, onUnauthorizedCallback = null) {
     try {
-      // Validate customer ID
+      // Validate job history ID
       if (
-        !customerId ||
-        (typeof customerId !== "string" && typeof customerId !== "number")
+        !jobHistoryId ||
+        (typeof jobHistoryId !== "string" && typeof jobHistoryId !== "number")
       ) {
         throw {
-          customerId: "Valid customer ID is required",
+          jobHistoryId: "Valid job history ID is required",
         };
       }
 
@@ -392,24 +327,63 @@ export class JobHistoryAPI {
         onUnauthorizedCallback,
       );
 
-      // Build query parameters
-      const queryParams = new URLSearchParams();
-      queryParams.append("customer_id", customerId);
-
-      if (params.startDate) queryParams.append("start_date", params.startDate);
-      if (params.endDate) queryParams.append("end_date", params.endDate);
-      if (params.jobType) queryParams.append("job_type", params.jobType);
-
-      const queryString = queryParams.toString();
-      const url = `${this.endpoints.JOB_HISTORY}/customer-summary?${queryString}`;
+      // Replace {id} placeholder in endpoint
+      const url = this.endpoints.JOB_HISTORY_DETAIL.replace(
+        "{id}",
+        jobHistoryId,
+      );
 
       // Make the API call
-      const response = await authenticatedAxios.get(url);
+      const response = await authenticatedAxios.delete(url);
 
       // Convert response from snake_case to camelCase
       const data = camelizeKeys(response.data);
 
       return data;
+    } catch (error) {
+      throw this._formatError(error);
+    }
+  }
+
+  /**
+   * Archives a specific job history entry
+   * @param {string|number} jobHistoryId - The ID of the job history entry to archive
+   * @param {Function} onUnauthorizedCallback - Called when token refresh fails
+   * @returns {Promise<Object>} - Archive response data
+   */
+  async archiveJobHistory(jobHistoryId, onUnauthorizedCallback = null) {
+    try {
+      // Validate job history ID
+      if (
+        !jobHistoryId ||
+        (typeof jobHistoryId !== "string" && typeof jobHistoryId !== "number")
+      ) {
+        throw {
+          jobHistoryId: "Valid job history ID is required",
+        };
+      }
+
+      // Create authenticated axios instance
+      const authenticatedAxios = createAuthenticatedAxios(
+        this.baseURL,
+        this.tokenStorage,
+        onUnauthorizedCallback,
+      );
+
+      const data = {
+        job_history_id: jobHistoryId,
+      };
+
+      // Make the API call (assuming archive endpoint exists)
+      const response = await authenticatedAxios.post(
+        this.endpoints.JOB_HISTORY_ARCHIVE_OPERATION || `/job-history/archive`,
+        data,
+      );
+
+      // Convert response from snake_case to camelCase
+      const responseData = camelizeKeys(response.data);
+
+      return responseData;
     } catch (error) {
       throw this._formatError(error);
     }
