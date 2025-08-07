@@ -186,7 +186,7 @@ function SettingInactiveClientDetailPage() {
           </Button>
           <Button
             variant="info"
-            onClick={() => navigate(`/admin/client/${id}`)}
+            onClick={() => navigate(`/admin/customer/${id}`)}
           >
             👁️ View Full Profile
           </Button>
@@ -567,13 +567,13 @@ function SettingInactiveClientDetailPage() {
           </Button>
           <Button
             variant="info"
-            onClick={() => navigate(`/admin/client/${id}`)}
+            onClick={() => navigate(`/admin/customer/${id}`)}
           >
             👁️ View Full Client Profile
           </Button>
           <Button
             variant="success"
-            onClick={() => navigate(`/admin/client/${id}/edit`)}
+            onClick={() => navigate(`/admin/customer/${id}/edit`)}
           >
             ♻️ Reactivate Client
           </Button>

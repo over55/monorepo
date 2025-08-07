@@ -367,7 +367,7 @@ function SettingInactiveClientListPage() {
             <div style={{ marginTop: "15px" }}>
               <Button
                 variant="outline"
-                onClick={() => navigate("/admin/clients")}
+                onClick={() => navigate("/admin/customers")}
               >
                 📋 View Active Clients
               </Button>
@@ -457,7 +457,7 @@ function SettingInactiveClientListPage() {
                   variant="info"
                   onClick={() => {
                     setShowDetailModal(false);
-                    navigate(`/admin/client/${selectedClient.id}`);
+                    navigate(`/admin/customer/${selectedClient.id}`);
                   }}
                 >
                   👁️ View Full Profile

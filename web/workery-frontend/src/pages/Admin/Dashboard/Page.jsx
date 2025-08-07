@@ -159,7 +159,7 @@ function AdminDashboardPage() {
         <div style={{ ...styles.summaryCard, backgroundColor: "#e3f2fd" }}>
           <h3 style={styles.summaryTitle}>👥 Clients</h3>
           <p style={styles.summaryCount}>{dashboard.clientsCount || 0}</p>
-          <Link to="/admin/clients" style={{ fontSize: "14px" }}>
+          <Link to="/admin/customers" style={{ fontSize: "14px" }}>
             View Clients →
           </Link>
         </div>

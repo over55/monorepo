@@ -1229,245 +1229,242 @@ function AppRouter() {
               }
             />
             <Route
-              path="/admin/clients"
+              path="/admin/customers"
               element={
                 <Layout>
-                  <PlaceholderPage
-                    title="Clients"
-                    description="Client management system"
-                  />
+                  <AdminCustomerListPage />
                 </Layout>
               }
             />
             <Route
-              path="/admin/clients/search"
+              path="/admin/customers/search"
               element={
                 <Layout>
-                  <PlaceholderPage title="Client Search" />
+                  <AdminCustomerSearchCriteriaPagePage />
                 </Layout>
               }
             />
             <Route
-              path="/admin/clients/search-result"
+              path="/admin/customers/search-result"
               element={
                 <Layout>
-                  <PlaceholderPage title="Client Search Results" />
+                  <AdminCustomerSearchResultPagePage />
                 </Layout>
               }
             />
             <Route
-              path="/admin/clients/add/step-1-search"
+              path="/admin/customers/add/step-1-search"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Client - Step 1" />
+                  <AdminCustomerAddStep1PartAPage />
                 </Layout>
               }
             />
             <Route
-              path="/admin/clients/add/step-1-results"
+              path="/admin/customers/add/step-1-results"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Client - Step 1 Results" />
+                  <AdminCustomerAddStep1PartBPage />
                 </Layout>
               }
             />
             <Route
-              path="/admin/clients/add/step-2"
+              path="/admin/customers/add/step-2"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Client - Step 2" />
+                  <AdminCustomerAddStep2Page />
                 </Layout>
               }
             />
             <Route
-              path="/admin/clients/add/step-3"
+              path="/admin/customers/add/step-3"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Client - Step 3" />
+                  <AdminCustomerAddStep3Page />
                 </Layout>
               }
             />
             <Route
-              path="/admin/clients/add/step-4"
+              path="/admin/customers/add/step-4"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Client - Step 4" />
+                  <AdminCustomerAddStep4Page />
                 </Layout>
               }
             />
             <Route
-              path="/admin/clients/add/step-5"
+              path="/admin/customers/add/step-5"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Client - Step 5" />
+                  <AdminCustomerAddStep5Page />
                 </Layout>
               }
             />
             <Route
-              path="/admin/clients/add/step-6"
+              path="/admin/customers/add/step-6"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Client - Step 6" />
+                  <AdminCustomerAddStep6Page />
                 </Layout>
               }
             />
             <Route
-              path="/admin/client/:cid"
+              path="/admin/customer/:cid"
               element={
                 <Layout>
-                  <PlaceholderPage title="Client Detail" />
+                  <AdminCustomerDetailLitePage />
                 </Layout>
               }
             />
             <Route
-              path="/admin/client/:cid/detail"
+              path="/admin/customer/:cid/detail"
               element={
                 <Layout>
-                  <PlaceholderPage title="Client Detail (Full)" />
+                  <AdminCustomerDetailFullPage />
                 </Layout>
               }
             />
             <Route
-              path="/admin/client/:cid/edit"
+              path="/admin/customer/:cid/edit"
               element={
                 <Layout>
-                  <PlaceholderPage title="Edit Client" />
+                  <AdminCustomerUpdatePage />
                 </Layout>
               }
             />
             <Route
-              path="/admin/client/:cid/orders"
+              path="/admin/customer/:cid/orders"
               element={
                 <Layout>
-                  <PlaceholderPage title="Client Orders" />
+                  <AdminCustomerDetailOrderListPage />
                 </Layout>
               }
             />
             <Route
-              path="/admin/client/:cid/comments"
+              path="/admin/customer/:cid/comments"
               element={
                 <Layout>
-                  <PlaceholderPage title="Client Comments" />
+                  <AdminCustomerDetailCommentListPage />
                 </Layout>
               }
             />
             <Route
-              path="/admin/client/:cid/attachments"
+              path="/admin/customer/:cid/attachments"
               element={
                 <Layout>
-                  <PlaceholderPage title="Client Attachments" />
+                  <AdminCustomerDetailAttachmentListPage />
                 </Layout>
               }
             />
             <Route
-              path="/admin/client/:cid/attachments/add"
+              path="/admin/customer/:cid/attachments/add"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Client Attachment" />
+                  <AdminCustomerDetailAttachmentAddPage />
                 </Layout>
               }
             />
             <Route
-              path="/admin/client/:cid/attachment/:aid"
+              path="/admin/customer/:cid/attachment/:aid"
               element={
                 <Layout>
-                  <PlaceholderPage title="Client Attachment Detail" />
+                  <AdminCustomerDetailAttachmentDetailPage />
                 </Layout>
               }
             />
             <Route
-              path="/admin/client/:cid/attachment/:aid/edit"
+              path="/admin/customer/:cid/attachment/:aid/edit"
               element={
                 <Layout>
-                  <PlaceholderPage title="Edit Client Attachment" />
+                  <AdminCustomerDetailAttachmentUpdatePage />
                 </Layout>
               }
             />
             <Route
-              path="/admin/client/:cid/more"
+              path="/admin/customer/:cid/more"
               element={
                 <Layout>
-                  <PlaceholderPage title="Client More Actions" />
+                  <AdminCustomerDetailMorePage />
                 </Layout>
               }
             />
             <Route
-              path="/admin/client/:cid/avatar"
+              path="/admin/customer/:cid/avatar"
               element={
                 <Layout>
-                  <PlaceholderPage title="Client Avatar" />
+                  <AdminCustomerDetailMoreAvatarPage />
                 </Layout>
               }
             />
             <Route
-              path="/admin/client/:cid/permadelete"
+              path="/admin/customer/:cid/permadelete"
               element={
                 <Layout>
-                  <PlaceholderPage title="Delete Client" />
+                  <AdminCustomerDetailMoreDeletePage />
                 </Layout>
               }
             />
             <Route
-              path="/admin/client/:cid/archive"
+              path="/admin/customer/:cid/archive"
               element={
                 <Layout>
-                  <PlaceholderPage title="Archive Client" />
+                  <AdminCustomerDetailMoreArchivePage />
                 </Layout>
               }
             />
             <Route
-              path="/admin/client/:cid/unarchive"
+              path="/admin/customer/:cid/unarchive"
               element={
                 <Layout>
-                  <PlaceholderPage title="Unarchive Client" />
+                  <AdminCustomerDetailMoreUnarchivePage />
                 </Layout>
               }
             />
             <Route
-              path="/admin/client/:cid/upgrade"
+              path="/admin/customer/:cid/upgrade"
               element={
                 <Layout>
-                  <PlaceholderPage title="Upgrade Client" />
+                  <AdminCustomerDetailMoreUpgradePage />
                 </Layout>
               }
             />
             <Route
-              path="/admin/client/:cid/downgrade"
+              path="/admin/customer/:cid/downgrade"
               element={
                 <Layout>
-                  <PlaceholderPage title="Downgrade Client" />
+                  <AdminCustomerDetailMoreDowngradePage />
                 </Layout>
               }
             />
             <Route
-              path="/admin/client/:cid/change-2fa"
+              path="/admin/customer/:cid/change-2fa"
               element={
                 <Layout>
-                  <PlaceholderPage title="Toggle Client 2FA" />
+                  <AdminCustomerDetailMore2FAPage />
                 </Layout>
               }
             />
             <Route
-              path="/admin/client/:cid/change-password"
+              path="/admin/customer/:cid/change-password"
               element={
                 <Layout>
-                  <PlaceholderPage title="Change Client Password" />
+                  <AdminCustomerDetailMoreChangePasswordPage />
                 </Layout>
               }
             />
             <Route
-              path="/admin/client/:cid/ban"
+              path="/admin/customer/:cid/ban"
               element={
                 <Layout>
-                  <PlaceholderPage title="Ban Client" />
+                  <AdminCustomerDetailMoreBanPage />
                 </Layout>
               }
             />
             <Route
-              path="/admin/client/:cid/unban"
+              path="/admin/customer/:cid/unban"
               element={
                 <Layout>
-                  <PlaceholderPage title="Unban Client" />
+                  <AdminCustomerDetailMoreUnbanPage />
                 </Layout>
               }
             />

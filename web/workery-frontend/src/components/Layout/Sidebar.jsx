@@ -243,7 +243,7 @@ function Sidebar({ isOpen, onClose, isMobile }) {
             icon: "📋",
             badge: taskItemActiveCount > 0 ? taskItemActiveCount : null,
           },
-          { path: "/admin/clients", label: "Clients", icon: "👤" },
+          { path: "/admin/customers", label: "Customers", icon: "👤" },
           { path: "/admin/associates", label: "Associates", icon: "👷" },
           { path: "/admin/orders", label: "Work Orders", icon: "🔧" },
           { path: "/admin/skill-sets", label: "Skill Sets", icon: "🎓" },
