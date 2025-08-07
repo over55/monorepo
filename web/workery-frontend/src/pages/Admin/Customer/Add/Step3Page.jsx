@@ -137,10 +137,10 @@ function AdminCustomerAddStep3Page() {
 
   return (
     <div className="container">
-      <section className="section">
+      <section className="section py-6">
         {/* Desktop Breadcrumbs */}
         <nav
-          className="breadcrumb has-background-light is-hidden-touch p-4"
+          className="breadcrumb has-background-light is-hidden-touch p-4 mb-5"
           aria-label="breadcrumbs"
         >
           <ul>
@@ -162,7 +162,7 @@ function AdminCustomerAddStep3Page() {
 
         {/* Mobile Breadcrumbs */}
         <nav
-          className="breadcrumb has-background-light is-hidden-desktop p-4"
+          className="breadcrumb has-background-light is-hidden-desktop p-4 mb-5"
           aria-label="breadcrumbs"
         >
           <ul>
@@ -175,12 +175,12 @@ function AdminCustomerAddStep3Page() {
         </nav>
 
         {/* Page Title */}
-        <h1 className="title is-2">👥 Customers</h1>
-        <h4 className="subtitle is-4">➕ New Customer</h4>
+        <h1 className="title is-2 mb-4">👥 Customers</h1>
+        <h4 className="subtitle is-4 mb-5">➕ New Customer</h4>
         <hr />
 
         {/* Progress Wizard */}
-        <nav className="box has-background-light">
+        <nav className="box has-background-light mb-5">
           <p className="subtitle is-5">Step 3 of 6</p>
           <progress className="progress is-success" value="50" max="100">
             50%
@@ -188,10 +188,10 @@ function AdminCustomerAddStep3Page() {
         </nav>
 
         {/* Page Content */}
-        <nav className="box">
-          <p className="title is-4">🆔 Contact</p>
+        <nav className="box p-6">
+          <p className="title is-4 mb-5">🆔 Contact</p>
 
-          <p className="has-text-grey pb-4">
+          <p className="has-text-grey pb-4 mb-5">
             Please fill out all the required fields before submitting this form.
           </p>
 
@@ -207,7 +207,7 @@ function AdminCustomerAddStep3Page() {
                 {/* Organization fields for commercial customers */}
                 {customerData.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID && (
                   <>
-                    <div className="field">
+                    <div className="field mb-5">
                       <label className="label">Organization Name *</label>
                       <div className="control">
                         <input
@@ -226,7 +226,7 @@ function AdminCustomerAddStep3Page() {
                       )}
                     </div>
 
-                    <div className="field">
+                    <div className="field mb-5">
                       <label className="label">Organization Type *</label>
                       <div className="control">
                         <div className="select">
@@ -253,7 +253,7 @@ function AdminCustomerAddStep3Page() {
                   </>
                 )}
 
-                <div className="field">
+                <div className="field mb-5">
                   <label className="label">First Name *</label>
                   <div className="control">
                     <input
@@ -270,7 +270,7 @@ function AdminCustomerAddStep3Page() {
                   )}
                 </div>
 
-                <div className="field">
+                <div className="field mb-5">
                   <label className="label">Last Name *</label>
                   <div className="control">
                     <input
@@ -287,7 +287,7 @@ function AdminCustomerAddStep3Page() {
                   )}
                 </div>
 
-                <div className="field">
+                <div className="field mb-5">
                   <label className="label">Email (Optional)</label>
                   <div className="control">
                     <input
@@ -308,7 +308,7 @@ function AdminCustomerAddStep3Page() {
                   )}
                 </div>
 
-                <div className="field">
+                <div className="field mb-5">
                   <label className="checkbox">
                     <input
                       type="checkbox"
@@ -319,7 +319,7 @@ function AdminCustomerAddStep3Page() {
                   </label>
                 </div>
 
-                <div className="field">
+                <div className="field mb-5">
                   <label className="label">Phone *</label>
                   <div className="control">
                     <input
@@ -336,7 +336,7 @@ function AdminCustomerAddStep3Page() {
                   )}
                 </div>
 
-                <div className="field">
+                <div className="field mb-5">
                   <label className="label">Phone Type *</label>
                   <div className="control">
                     <div className="select">
@@ -358,7 +358,7 @@ function AdminCustomerAddStep3Page() {
                 </div>
 
                 {phoneType === CLIENT_PHONE_TYPE_WORK && (
-                  <div className="field">
+                  <div className="field mb-5">
                     <label className="label">Phone Extension (Optional)</label>
                     <div className="control">
                       <input
@@ -373,7 +373,7 @@ function AdminCustomerAddStep3Page() {
                   </div>
                 )}
 
-                <div className="field">
+                <div className="field mb-5">
                   <label className="checkbox">
                     <input
                       type="checkbox"
@@ -384,7 +384,7 @@ function AdminCustomerAddStep3Page() {
                   </label>
                 </div>
 
-                <div className="field">
+                <div className="field mb-5">
                   <label className="label">Other Phone (Optional)</label>
                   <div className="control">
                     <input
@@ -398,7 +398,7 @@ function AdminCustomerAddStep3Page() {
                   </div>
                 </div>
 
-                <div className="field">
+                <div className="field mb-5">
                   <label className="label">Other Phone Type (Optional)</label>
                   <div className="control">
                     <div className="select">
@@ -419,7 +419,7 @@ function AdminCustomerAddStep3Page() {
                 </div>
 
                 {otherPhoneType === CLIENT_PHONE_TYPE_WORK && (
-                  <div className="field">
+                  <div className="field mb-5">
                     <label className="label">
                       Other Phone Extension (Optional)
                     </label>

@@ -1,8 +1,17 @@
 // File Path: web/workery-frontend/src/pages/Admin/Customer/Add/Step1PartBPage.jsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link, useSearchParams, useNavigate } from "react-router";
 import { useCustomerManager } from "../../../../services/Services";
+import { theme, globalStyles } from "../../../../constants/Theme";
+import {
+  Card,
+  Button,
+  Alert,
+  Loading,
+  Breadcrumb,
+  Modal,
+} from "../../../../components/UI";
 
 // Customer type constants
 const RESIDENTIAL_CUSTOMER_TYPE_OF_ID = 2;
@@ -20,11 +29,11 @@ function AdminCustomerAddStep1PartBPage() {
   const phone = searchParams.get("p") || "";
 
   // Component state
-  const [errors, setErrors] = useState({});
+  const [error, setError] = useState(null);
   const [customers, setCustomers] = useState(null);
   const [selectedCustomerForDeletion, setSelectedCustomerForDeletion] =
     useState(null);
-  const [isFetching, setFetching] = useState(false);
+  const [isFetching, setFetching] = useState(true);
   const [pageSize, setPageSize] = useState(50);
   const [previousCursors, setPreviousCursors] = useState([]);
   const [nextCursor, setNextCursor] = useState("");
@@ -32,14 +41,13 @@ function AdminCustomerAddStep1PartBPage() {
   const [status, setStatus] = useState("");
   const [typeOf, setTypeOf] = useState(0);
 
-  // Fetch customers on component mount
-  useEffect(() => {
-    fetchCustomers();
-  }, []);
+  const onUnauthorized = useCallback(() => {
+    navigate("/login?unauthorized=true");
+  }, [navigate]);
 
-  const fetchCustomers = async () => {
+  const fetchCustomers = useCallback(async () => {
     setFetching(true);
-    setErrors({});
+    setError(null);
 
     try {
       // Build filters map for the search
@@ -54,6 +62,7 @@ function AdminCustomerAddStep1PartBPage() {
       if (phone) filtersMap.set("phone", phone);
       if (status) filtersMap.set("status", status);
       if (typeOf) filtersMap.set("type", typeOf);
+      if (currentCursor) filtersMap.set("cursor", currentCursor);
 
       const customersData = await customerManager.getCustomersWithFiltersMap(
         filtersMap,
@@ -61,21 +70,31 @@ function AdminCustomerAddStep1PartBPage() {
       );
 
       setCustomers(customersData);
-      if (customersData.hasNextPage) {
-        setNextCursor(customersData.nextCursor);
-      }
+      setNextCursor(customersData.hasNextPage ? customersData.nextCursor : "");
     } catch (error) {
       console.error("Error fetching customers:", error);
-      setErrors(error);
+      setError(error.message || "An unexpected error occurred.");
       window.scrollTo(0, 0);
     } finally {
       setFetching(false);
     }
-  };
+  }, [
+    customerManager,
+    pageSize,
+    firstName,
+    lastName,
+    email,
+    phone,
+    status,
+    typeOf,
+    currentCursor,
+    onUnauthorized,
+  ]);
 
-  const onUnauthorized = () => {
-    navigate("/login?unauthorized=true");
-  };
+  // Fetch customers on mount and when filters/pagination change
+  useEffect(() => {
+    fetchCustomers();
+  }, [fetchCustomers]);
 
   const onAddClientClick = () => {
     navigate("/admin/customers/add/step-2");
@@ -90,6 +109,7 @@ function AdminCustomerAddStep1PartBPage() {
   };
 
   const onDeleteConfirmButtonClick = async () => {
+    if (!selectedCustomerForDeletion) return;
     try {
       await customerManager.deleteCustomer(
         selectedCustomerForDeletion.id,
@@ -100,321 +120,374 @@ function AdminCustomerAddStep1PartBPage() {
       fetchCustomers();
     } catch (error) {
       console.error("Error deleting customer:", error);
-      setErrors(error);
+      setError(error.message || "Failed to archive customer.");
     }
   };
 
   const onNextClicked = () => {
-    let arr = [...previousCursors];
-    arr.push(currentCursor);
-    setPreviousCursors(arr);
+    setPreviousCursors((prev) => [...prev, currentCursor]);
     setCurrentCursor(nextCursor);
   };
 
   const onPreviousClicked = () => {
-    let arr = [...previousCursors];
-    const previousCursor = arr.pop();
-    setPreviousCursors(arr);
+    const newPreviousCursors = [...previousCursors];
+    const previousCursor = newPreviousCursors.pop();
+    setPreviousCursors(newPreviousCursors);
     setCurrentCursor(previousCursor);
   };
 
+  const handleFilterChange = (setter, value) => {
+    setter(value);
+    setCurrentCursor("");
+    setPreviousCursors([]);
+  };
+
+  const selectStyle = {
+    padding: "8px 12px",
+    border: "1px solid #ced4da",
+    borderRadius: "4px",
+    backgroundColor: "white",
+    fontSize: "16px",
+    width: "100%",
+  };
+
+  const customerCardStyle = {
+    border: `1px solid ${theme.colors.lightGrey}`,
+    borderRadius: "8px",
+    backgroundColor: theme.colors.infoBg,
+    margin: "10px 0",
+    overflow: "hidden",
+  };
+
   return (
-    <div className="container">
-      <section className="section">
-        {/* Desktop Breadcrumbs */}
-        <nav
-          className="breadcrumb has-background-light is-hidden-touch p-4"
-          aria-label="breadcrumbs"
+    <div style={globalStyles.container}>
+      <Breadcrumb
+        items={[
+          { path: "/admin/dashboard", label: "Dashboard", icon: "🏠" },
+          { path: "/admin/customers", label: "Customers", icon: "👥" },
+          { label: "New Customer", icon: "➕" },
+        ]}
+      />
+
+      {selectedCustomerForDeletion && (
+        <Modal
+          isOpen={!!selectedCustomerForDeletion}
+          onClose={onDeselectCustomerForDeletion}
+          title="Are you sure?"
         >
-          <ul>
-            <li>
-              <Link to="/admin/dashboard" aria-current="page">
-                🏠 Dashboard
-              </Link>
-            </li>
-            <li>
-              <Link to="/admin/customers" aria-current="page">
-                👥 Customers
-              </Link>
-            </li>
-            <li className="is-active">
-              <Link aria-current="page">➕ New</Link>
-            </li>
-          </ul>
-        </nav>
-
-        {/* Mobile Breadcrumbs */}
-        <nav
-          className="breadcrumb has-background-light is-hidden-desktop p-4"
-          aria-label="breadcrumbs"
-        >
-          <ul>
-            <li>
-              <Link to="/admin/customers" aria-current="page">
-                ← Back to Customers
-              </Link>
-            </li>
-          </ul>
-        </nav>
-
-        {/* Page Title */}
-        <h1 className="title is-2">👥 Customers</h1>
-        <h4 className="subtitle is-4">➕ New Customer</h4>
-        <hr />
-
-        {/* Delete Customer Modal */}
-        {selectedCustomerForDeletion && (
-          <div className="modal is-active">
-            <div className="modal-background"></div>
-            <div className="modal-card">
-              <header className="modal-card-head">
-                <p className="modal-card-title">Are you sure?</p>
-                <button
-                  className="delete"
-                  aria-label="close"
-                  onClick={onDeselectCustomerForDeletion}
-                ></button>
-              </header>
-              <section className="modal-card-body">
-                You are about to <b>archive</b> this user; it will no longer
-                appear on your dashboard. This action can be undone but you'll
-                need to contact the system administrator. Are you sure you would
-                like to continue?
-              </section>
-              <footer className="modal-card-foot">
-                <button
-                  className="button is-success"
-                  onClick={onDeleteConfirmButtonClick}
-                >
-                  Confirm
-                </button>
-                <button
-                  className="button"
-                  onClick={onDeselectCustomerForDeletion}
-                >
-                  Cancel
-                </button>
-              </footer>
-            </div>
+          <p>
+            You are about to <b>archive</b> this user; it will no longer appear
+            on your dashboard. This action can be undone but you'll need to
+            contact the system administrator. Are you sure you would like to
+            continue?
+          </p>
+          <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
+            <Button variant="success" onClick={onDeleteConfirmButtonClick}>
+              Confirm
+            </Button>
+            <Button variant="secondary" onClick={onDeselectCustomerForDeletion}>
+              Cancel
+            </Button>
           </div>
-        )}
+        </Modal>
+      )}
 
-        {/* Progress Wizard */}
-        <nav className="box has-background-light">
-          <p className="subtitle is-5">Step 1 of 6</p>
-          <progress className="progress is-success" value="17" max="100">
-            17%
-          </progress>
-        </nav>
+      {/* Progress Indicator */}
+      <Card>
+        <div style={{ marginBottom: "20px" }}>
+          <p
+            style={{
+              fontSize: "18px",
+              fontWeight: "600",
+              marginBottom: "10px",
+            }}
+          >
+            Step 1 of 6
+          </p>
+          <div
+            style={{
+              width: "100%",
+              height: "8px",
+              backgroundColor: "#e9ecef",
+              borderRadius: "4px",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                width: "17%",
+                height: "100%",
+                backgroundColor: theme.colors.success,
+                transition: "width 0.3s ease",
+              }}
+            />
+          </div>
+          <p style={{ fontSize: "14px", color: "#6c757d", marginTop: "5px" }}>
+            17% Complete
+          </p>
+        </div>
+      </Card>
 
-        {/* Page Table */}
-        <nav className="box" style={{ borderRadius: "20px" }}>
-          <p className="title is-4 pb-2">📊 Search results:</p>
+      <Card title="📊 Search results:">
+        {isFetching && <Loading message="Searching..." />}
+
+        <div style={{ opacity: isFetching ? 0.6 : 1 }}>
+          {error && (
+            <Alert type="error" onClose={() => setError(null)}>
+              {error}
+            </Alert>
+          )}
 
           {/* Filter Panel */}
           <div
-            className="columns has-background-light is-multiline p-2"
-            style={{ borderRadius: "20px" }}
+            style={{
+              padding: "15px",
+              backgroundColor: theme.colors.light,
+              borderRadius: "8px",
+              marginBottom: "20px",
+            }}
           >
-            <div className="column is-12">
-              <h1 className="subtitle is-5 is-underlined">
-                🔽 Filtering & Sorting
-              </h1>
-            </div>
-
-            <div className="column">
-              <div className="field">
-                <label className="label">Status</label>
-                <div className="control">
-                  <div className="select">
-                    <select
-                      value={status}
-                      onChange={(e) => setStatus(parseInt(e.target.value))}
-                    >
-                      <option value="">Pick status</option>
-                      <option value="1">Active</option>
-                      <option value="2">Archived</option>
-                    </select>
-                  </div>
-                </div>
+            <p
+              style={{
+                fontSize: "16px",
+                fontWeight: "600",
+                marginBottom: "15px",
+                borderBottom: `1px solid ${theme.colors.lightGrey}`,
+                paddingBottom: "10px",
+              }}
+            >
+              🔽 Filtering & Sorting
+            </p>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+                gap: "20px",
+              }}
+            >
+              <div>
+                <label style={{ fontWeight: "600", marginBottom: "5px" }}>
+                  Status
+                </label>
+                <select
+                  style={selectStyle}
+                  value={status}
+                  onChange={(e) =>
+                    handleFilterChange(setStatus, e.target.value)
+                  }
+                >
+                  <option value="">Pick status</option>
+                  <option value="1">Active</option>
+                  <option value="2">Archived</option>
+                </select>
               </div>
-            </div>
-
-            <div className="column">
-              <div className="field">
-                <label className="label">Type</label>
-                <div className="control">
-                  <div className="select">
-                    <select
-                      value={typeOf}
-                      onChange={(e) => setTypeOf(parseInt(e.target.value))}
-                    >
-                      <option value="0">Pick client type</option>
-                      <option value={RESIDENTIAL_CUSTOMER_TYPE_OF_ID}>
-                        Residential
-                      </option>
-                      <option value={COMMERCIAL_CUSTOMER_TYPE_OF_ID}>
-                        Commercial
-                      </option>
-                    </select>
-                  </div>
-                </div>
+              <div>
+                <label style={{ fontWeight: "600", marginBottom: "5px" }}>
+                  Type
+                </label>
+                <select
+                  style={selectStyle}
+                  value={typeOf}
+                  onChange={(e) =>
+                    handleFilterChange(setTypeOf, e.target.value)
+                  }
+                >
+                  <option value="0">Pick client type</option>
+                  <option value={RESIDENTIAL_CUSTOMER_TYPE_OF_ID}>
+                    Residential
+                  </option>
+                  <option value={COMMERCIAL_CUSTOMER_TYPE_OF_ID}>
+                    Commercial
+                  </option>
+                </select>
               </div>
             </div>
           </div>
 
-          {/* Table Contents */}
-          {isFetching ? (
-            <div>Loading...</div>
-          ) : (
+          {customers && customers.results && customers.results.length > 0 ? (
             <>
-              {errors.message && (
-                <div className="notification is-danger">{errors.message}</div>
-              )}
-
-              <div className="container mb-6">
-                {customers &&
-                customers.results &&
-                (customers.results.length > 0 || previousCursors.length > 0) ? (
-                  <>
-                    <div className="columns is-multiline">
-                      {customers.results.map((customer) => (
-                        <div className="column is-4" key={customer.id}>
-                          <div className="card has-background-info-light m-4">
-                            {/* HEADER */}
-                            <header className="card-header">
-                              <p className="card-header-title">
-                                <Link to={`/admin/customer/${customer.id}`}>
-                                  {customer.type ===
-                                    COMMERCIAL_CUSTOMER_TYPE_OF_ID && (
-                                    <strong>
-                                      🏢 {customer.organizationName}
-                                    </strong>
-                                  )}
-                                  {customer.type ===
-                                    RESIDENTIAL_CUSTOMER_TYPE_OF_ID && (
-                                    <strong>
-                                      🏠 {customer.firstName}{" "}
-                                      {customer.lastName}
-                                    </strong>
-                                  )}
-                                </Link>
-                              </p>
-                            </header>
-
-                            {/* BODY */}
-                            <div className="card-content">
-                              <div className="content">
-                                {customer.addressLine1}
-                                <br />
-                                {customer.city}, {customer.region}
-                                <br />
-                                {customer.phone ? (
-                                  <a href={`tel:${customer.phone}`}>
-                                    {customer.phone}
-                                  </a>
-                                ) : (
-                                  <>-</>
-                                )}
-                                <br />
-                                {customer.email ? (
-                                  <a href={`mailto:${customer.email}`}>
-                                    {customer.email}
-                                  </a>
-                                ) : (
-                                  <>-</>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* BOTTOM */}
-                            <footer className="card-footer">
-                              <Link
-                                to={`/admin/customer/${customer.id}`}
-                                className="card-footer-item"
-                              >
-                                Select →
-                              </Link>
-                            </footer>
-                          </div>
-                        </div>
-                      ))}
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+                  gap: "20px",
+                  marginBottom: "20px",
+                }}
+              >
+                {customers.results.map((customer) => (
+                  <div style={customerCardStyle} key={customer.id}>
+                    <header
+                      style={{
+                        padding: "12px 15px",
+                        borderBottom: `1px solid ${theme.colors.lightGrey}`,
+                        fontWeight: "bold",
+                        backgroundColor: "rgba(0,0,0,0.03)",
+                      }}
+                    >
+                      <Link
+                        to={`/admin/customer/${customer.id}`}
+                        style={{ textDecoration: "none", color: "inherit" }}
+                      >
+                        {customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID
+                          ? `🏢 ${customer.organizationName}`
+                          : `🏠 ${customer.firstName} ${customer.lastName}`}
+                      </Link>
+                    </header>
+                    <div style={{ padding: "15px", fontSize: "14px" }}>
+                      {customer.addressLine1}
+                      <br />
+                      {customer.city}, {customer.region}
+                      <br />
+                      {customer.phone ? (
+                        <a href={`tel:${customer.phone}`}>{customer.phone}</a>
+                      ) : (
+                        "—"
+                      )}
+                      <br />
+                      {customer.email ? (
+                        <a href={`mailto:${customer.email}`}>
+                          {customer.email}
+                        </a>
+                      ) : (
+                        "—"
+                      )}
                     </div>
-
-                    <div className="columns pt-4">
-                      <div className="column is-half">
-                        <div className="select">
-                          <select
-                            value={pageSize}
-                            onChange={(e) =>
-                              setPageSize(parseInt(e.target.value))
-                            }
-                          >
-                            <option value="25">25</option>
-                            <option value="50">50</option>
-                            <option value="100">100</option>
-                            <option value="250">250</option>
-                          </select>
-                        </div>
-                      </div>
-                      <div className="column is-half has-text-right">
-                        {previousCursors.length > 0 && (
-                          <button
-                            className="button"
-                            onClick={onPreviousClicked}
-                          >
-                            Previous
-                          </button>
-                        )}
-                        {customers.hasNextPage && (
-                          <button className="button" onClick={onNextClicked}>
-                            Next
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <section className="hero is-medium has-background-white-ter">
-                    <div className="hero-body">
-                      <p className="title">📊 No Customers</p>
-                      <p className="subtitle">
-                        No customers found.{" "}
-                        <b>
-                          <Link to="/admin/customers/add/step-1-search">
-                            Click here →
-                          </Link>
-                        </b>{" "}
-                        to search again.
-                      </p>
-                    </div>
-                  </section>
-                )}
+                    <footer
+                      style={{
+                        padding: "12px 15px",
+                        borderTop: `1px solid ${theme.colors.lightGrey}`,
+                        textAlign: "right",
+                      }}
+                    >
+                      <Button
+                        variant="primary"
+                        onClick={() =>
+                          navigate(`/admin/customer/${customer.id}`)
+                        }
+                      >
+                        Select →
+                      </Button>
+                    </footer>
+                  </div>
+                ))}
               </div>
 
-              <p className="title is-4 has-text-centered">- OR -</p>
-
-              <div className="columns pt-5">
-                <div className="column has-text-centered">
-                  <Link
-                    className="button is-medium is-fullwidth-mobile"
-                    to="/admin/customers/add/step-1-search"
+              {/* Pagination Controls */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  flexWrap: "wrap",
+                  gap: "15px",
+                  paddingTop: "20px",
+                  borderTop: "1px solid #eee",
+                }}
+              >
+                <div>
+                  <select
+                    value={pageSize}
+                    onChange={(e) =>
+                      handleFilterChange(setPageSize, parseInt(e.target.value))
+                    }
+                    style={selectStyle}
                   >
-                    ← Search Again
-                  </Link>
-                  &nbsp;
-                  <button
-                    className="button is-medium is-success is-fullwidth-mobile"
-                    onClick={onAddClientClick}
-                  >
-                    ➕ Add client
-                  </button>
+                    <option value="25">25 per page</option>
+                    <option value="50">50 per page</option>
+                    <option value="100">100 per page</option>
+                    <option value="250">250 per page</option>
+                  </select>
+                </div>
+                <div style={{ display: "flex", gap: "10px" }}>
+                  {previousCursors.length > 0 && (
+                    <Button onClick={onPreviousClicked}>Previous</Button>
+                  )}
+                  {customers.hasNextPage && (
+                    <Button onClick={onNextClicked}>Next</Button>
+                  )}
                 </div>
               </div>
             </>
+          ) : (
+            !isFetching && (
+              <div
+                style={{
+                  textAlign: "center",
+                  padding: "40px 20px",
+                  backgroundColor: "#f8f9fa",
+                  borderRadius: "8px",
+                }}
+              >
+                <p style={{ fontSize: "24px", fontWeight: "600" }}>
+                  📊 No Customers Found
+                </p>
+                <p style={{ fontSize: "16px", color: "#6c757d" }}>
+                  Your search did not return any results.
+                  <br />
+                  <Link to="/admin/customers/add/step-1-search">
+                    Click here to search again
+                  </Link>
+                  .
+                </p>
+              </div>
+            )
           )}
-        </nav>
-      </section>
+
+          {/* OR Divider */}
+          <div
+            style={{
+              textAlign: "center",
+              margin: "30px 0",
+              position: "relative",
+            }}
+          >
+            <div
+              style={{
+                position: "absolute",
+                top: "50%",
+                left: "0",
+                right: "0",
+                height: "1px",
+                backgroundColor: "#ddd",
+                zIndex: 0,
+              }}
+            />
+            <span
+              style={{
+                background: "white",
+                padding: "0 20px",
+                fontSize: "16px",
+                fontWeight: "600",
+                color: "#6c757d",
+                position: "relative",
+                zIndex: 1,
+              }}
+            >
+              OR
+            </span>
+          </div>
+
+          {/* Action Buttons */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              gap: "15px",
+              flexWrap: "wrap",
+            }}
+          >
+            <Button
+              variant="secondary"
+              onClick={() => navigate("/admin/customers/add/step-1-search")}
+            >
+              ← Search Again
+            </Button>
+            <Button variant="success" onClick={onAddClientClick}>
+              ➕ Add New Customer
+            </Button>
+          </div>
+        </div>
+      </Card>
     </div>
   );
 }

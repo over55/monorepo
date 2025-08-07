@@ -3,256 +3,355 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { useCustomerManager } from "../../../../services/Services";
+import { theme, globalStyles } from "../../../../constants/Theme";
+import {
+  Card,
+  Button,
+  Alert,
+  Loading,
+  Breadcrumb,
+  Input,
+  Modal,
+} from "../../../../components/UI";
 
 function AdminCustomerAddStep1PartAPage() {
   const navigate = useNavigate();
   const customerManager = useCustomerManager();
 
+  // Form state
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+  });
+
   // Component state
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [errors, setErrors] = useState({});
-  const [isFetching, setFetching] = useState(false);
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
   const [showCancelWarning, setShowCancelWarning] = useState(false);
 
   // Clear form data on mount
   useEffect(() => {
     window.scrollTo(0, 0);
-    setFetching(false);
+    setIsLoading(false);
   }, []);
 
+  // Handle form input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+
+    // Clear field-specific error when user starts typing
+    if (errors[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: null,
+      }));
+    }
+  };
+
   // Event handling
-  const onAddClientClick = (e) => {
+  const onAddClientClick = () => {
     console.log("Navigate to add client step 2");
     navigate("/admin/customers/add/step-2");
   };
 
   const onSubmitClick = (e) => {
+    e.preventDefault();
     console.log("onSubmitClick: Beginning...");
 
-    if (firstName === "" && lastName === "" && email === "" && phone === "") {
-      setErrors({
-        message: "please enter a value",
-      });
+    if (
+      !formData.firstName &&
+      !formData.lastName &&
+      !formData.email &&
+      !formData.phone
+    ) {
+      setError("Please enter at least one search criteria");
       return;
     }
 
     // Navigate to search results with query parameters
     const searchParams = new URLSearchParams();
-    if (firstName) searchParams.append("fn", firstName);
-    if (lastName) searchParams.append("ln", lastName);
-    if (email) searchParams.append("e", email);
-    if (phone) searchParams.append("p", phone);
+    if (formData.firstName) searchParams.append("fn", formData.firstName);
+    if (formData.lastName) searchParams.append("ln", formData.lastName);
+    if (formData.email) searchParams.append("e", formData.email);
+    if (formData.phone) searchParams.append("p", formData.phone);
 
     navigate(`/admin/customers/add/step-1-results?${searchParams.toString()}`);
   };
 
-  return (
-    <div className="container">
-      <section className="section">
-        {/* Desktop Breadcrumbs */}
-        <nav
-          className="breadcrumb has-background-light is-hidden-touch p-4"
-          aria-label="breadcrumbs"
-        >
-          <ul>
-            <li>
-              <Link to="/admin/dashboard" aria-current="page">
-                🏠 Dashboard
-              </Link>
-            </li>
-            <li>
-              <Link to="/admin/customers" aria-current="page">
-                👥 Customers
-              </Link>
-            </li>
-            <li className="is-active">
-              <Link aria-current="page">➕ New</Link>
-            </li>
-          </ul>
-        </nav>
+  const handleCancel = () => {
+    if (
+      formData.firstName ||
+      formData.lastName ||
+      formData.email ||
+      formData.phone
+    ) {
+      setShowCancelWarning(true);
+    } else {
+      navigate("/admin/customers");
+    }
+  };
 
-        {/* Mobile Breadcrumbs */}
-        <nav
-          className="breadcrumb has-background-light is-hidden-desktop p-4"
-          aria-label="breadcrumbs"
-        >
-          <ul>
-            <li>
-              <Link to="/admin/customers" aria-current="page">
+  return (
+    <div style={globalStyles.container}>
+      <Breadcrumb
+        items={[
+          { path: "/admin/dashboard", label: "Dashboard", icon: "🏠" },
+          { path: "/admin/customers", label: "Customers", icon: "👥" },
+          { label: "New Customer", icon: "➕" },
+        ]}
+      />
+
+      {/* Progress Indicator */}
+      <Card>
+        <div style={{ marginBottom: "20px" }}>
+          <p
+            style={{
+              fontSize: "18px",
+              fontWeight: "600",
+              marginBottom: "10px",
+            }}
+          >
+            Step 1 of 6
+          </p>
+          <div
+            style={{
+              width: "100%",
+              height: "8px",
+              backgroundColor: "#e9ecef",
+              borderRadius: "4px",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                width: "17%",
+                height: "100%",
+                backgroundColor: theme.colors.success,
+                transition: "width 0.3s ease",
+              }}
+            />
+          </div>
+          <p style={{ fontSize: "14px", color: "#6c757d", marginTop: "5px" }}>
+            17% Complete
+          </p>
+        </div>
+      </Card>
+
+      <Card title="🔍 Search for Existing Customer">
+        {/* Cancel Warning Modal */}
+        {showCancelWarning && (
+          <Modal
+            isOpen={showCancelWarning}
+            onClose={() => setShowCancelWarning(false)}
+            title="Are you sure?"
+          >
+            <p>
+              Your Customer record will be cancelled and your work will be lost.
+              This cannot be undone. Do you want to continue?
+            </p>
+            <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
+              <Button
+                variant="success"
+                onClick={() => navigate("/admin/customers")}
+              >
+                Yes
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => setShowCancelWarning(false)}
+              >
+                No
+              </Button>
+            </div>
+          </Modal>
+        )}
+
+        {/* Error Messages */}
+        {error && (
+          <Alert type="error" onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
+
+        {/* Loading Overlay */}
+        {isLoading && <Loading message="Searching..." />}
+
+        {/* Form */}
+        <form onSubmit={onSubmitClick}>
+          <div style={{ opacity: isLoading ? 0.6 : 1 }}>
+            {/* Search Fields */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+                gap: "20px",
+                marginBottom: "20px",
+              }}
+            >
+              <Input
+                label="First Name"
+                name="firstName"
+                value={formData.firstName}
+                onChange={handleInputChange}
+                error={errors.firstName}
+                placeholder="Enter first name"
+                disabled={isLoading}
+              />
+
+              <Input
+                label="Last Name"
+                name="lastName"
+                value={formData.lastName}
+                onChange={handleInputChange}
+                error={errors.lastName}
+                placeholder="Enter last name"
+                disabled={isLoading}
+              />
+
+              <Input
+                label="Email"
+                name="email"
+                type="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                error={errors.email}
+                placeholder="Enter email address"
+                disabled={isLoading}
+              />
+
+              <Input
+                label="Phone"
+                name="phone"
+                value={formData.phone}
+                onChange={handleInputChange}
+                error={errors.phone}
+                placeholder="Enter phone number"
+                disabled={isLoading}
+              />
+            </div>
+
+            {/* Form Info */}
+            <div
+              style={{
+                padding: "15px",
+                backgroundColor: theme.colors.infoBg,
+                borderRadius: "4px",
+                marginBottom: "20px",
+                fontSize: "14px",
+                color: "#0c5460",
+              }}
+            >
+              <strong>💡 Tip:</strong> Enter any combination of the fields above
+              to search for existing customers. If no matches are found, you can
+              proceed to add a new customer.
+            </div>
+
+            {/* Form Actions */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                flexWrap: "wrap",
+                gap: "15px",
+                paddingTop: "20px",
+                borderTop: "1px solid #eee",
+              }}
+            >
+              <Link
+                to="/admin/customers"
+                style={{
+                  textDecoration: "none",
+                  color: theme.colors.secondary,
+                  fontSize: "14px",
+                }}
+              >
                 ← Back to Customers
               </Link>
-            </li>
-          </ul>
-        </nav>
 
-        {/* Page Title */}
-        <h1 className="title is-2">👥 Customers</h1>
-        <h4 className="subtitle is-4">➕ New Customer</h4>
-        <hr />
-
-        {/* Progress Wizard */}
-        <nav className="box has-background-light">
-          <p className="subtitle is-5">Step 1 of 6</p>
-          <progress className="progress is-success" value="17" max="100">
-            17%
-          </progress>
-        </nav>
-
-        {/* Page Content */}
-        <nav className="box">
-          {/* Cancel Warning Modal */}
-          {showCancelWarning && (
-            <div className="modal is-active">
-              <div className="modal-background"></div>
-              <div className="modal-card">
-                <header className="modal-card-head">
-                  <p className="modal-card-title">Are you sure?</p>
-                  <button
-                    className="delete"
-                    aria-label="close"
-                    onClick={() => setShowCancelWarning(false)}
-                  ></button>
-                </header>
-                <section className="modal-card-body">
-                  Your Customer record will be cancelled and your work will be
-                  lost. This cannot be undone. Do you want to continue?
-                </section>
-                <footer className="modal-card-foot">
-                  <Link
-                    className="button is-medium is-success"
-                    to="/admin/customers"
-                  >
-                    Yes
-                  </Link>
-                  <button
-                    className="button is-medium"
-                    onClick={() => setShowCancelWarning(false)}
-                  >
-                    No
-                  </button>
-                </footer>
+              <div style={{ display: "flex", gap: "10px" }}>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleCancel}
+                  disabled={isLoading}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" variant="primary" disabled={isLoading}>
+                  {isLoading ? "Searching..." : "🔍 Search"}
+                </Button>
               </div>
             </div>
-          )}
 
-          <p className="title is-4">🔍 Search for existing customer:</p>
+            {/* OR Divider */}
+            <div
+              style={{
+                textAlign: "center",
+                margin: "30px 0",
+                position: "relative",
+              }}
+            >
+              <div
+                style={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "0",
+                  right: "0",
+                  height: "1px",
+                  backgroundColor: "#ddd",
+                }}
+              />
+              <span
+                style={{
+                  background: "white",
+                  padding: "0 20px",
+                  fontSize: "16px",
+                  fontWeight: "600",
+                  color: "#6c757d",
+                }}
+              >
+                OR
+              </span>
+            </div>
 
-          {isFetching ? (
-            <div>Loading...</div>
-          ) : (
-            <>
-              {errors.message && (
-                <div className="notification is-danger">{errors.message}</div>
-              )}
+            {/* Add New Customer Button */}
+            <div style={{ textAlign: "center" }}>
+              <Button
+                type="button"
+                variant="success"
+                onClick={onAddClientClick}
+                disabled={isLoading}
+                style={{ fontSize: "16px", padding: "12px 24px" }}
+              >
+                ➕ Add New Customer
+              </Button>
+            </div>
+          </div>
+        </form>
+      </Card>
 
-              <div className="container">
-                <div className="field">
-                  <label className="label">First Name</label>
-                  <div className="control">
-                    <input
-                      className="input"
-                      type="text"
-                      placeholder="Text input"
-                      value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
-                      style={{ maxWidth: "380px" }}
-                    />
-                  </div>
-                  {errors.firstName && (
-                    <p className="help is-danger">{errors.firstName}</p>
-                  )}
-                </div>
-
-                <div className="field">
-                  <label className="label">Last Name</label>
-                  <div className="control">
-                    <input
-                      className="input"
-                      type="text"
-                      placeholder="Text input"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      style={{ maxWidth: "380px" }}
-                    />
-                  </div>
-                  {errors.lastName && (
-                    <p className="help is-danger">{errors.lastName}</p>
-                  )}
-                </div>
-
-                <div className="field">
-                  <label className="label">Email</label>
-                  <div className="control">
-                    <input
-                      className="input"
-                      type="email"
-                      placeholder="Text input"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      style={{ maxWidth: "380px" }}
-                    />
-                  </div>
-                  {errors.email && (
-                    <p className="help is-danger">{errors.email}</p>
-                  )}
-                </div>
-
-                <div className="field">
-                  <label className="label">Phone</label>
-                  <div className="control">
-                    <input
-                      className="input"
-                      type="text"
-                      placeholder="Text input"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      style={{ maxWidth: "150px" }}
-                    />
-                  </div>
-                  {errors.phone && (
-                    <p className="help is-danger">{errors.phone}</p>
-                  )}
-                </div>
-
-                <div className="columns pt-5">
-                  <div className="column is-half">
-                    <button
-                      className="button is-medium is-fullwidth-mobile"
-                      onClick={() => setShowCancelWarning(true)}
-                    >
-                      ❌ Cancel
-                    </button>
-                  </div>
-                  <div className="column is-half has-text-right">
-                    <button
-                      className="button is-medium is-primary is-fullwidth-mobile"
-                      onClick={onSubmitClick}
-                    >
-                      🔍 Search
-                    </button>
-                  </div>
-                </div>
-
-                <p className="title is-4 has-text-centered">- OR -</p>
-
-                <div className="columns pt-5">
-                  <div className="column has-text-centered">
-                    <button
-                      className="button is-medium is-success is-fullwidth-mobile"
-                      onClick={onAddClientClick}
-                    >
-                      ➕ Add client
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-        </nav>
-      </section>
+      {/* Help Section */}
+      <Card title="💡 Search Tips" style={{ marginTop: "30px" }}>
+        <div style={{ fontSize: "14px", lineHeight: "1.6" }}>
+          <ul style={{ marginLeft: "20px" }}>
+            <li>Enter partial names to find similar matches</li>
+            <li>Use email or phone number for exact matches</li>
+            <li>Leave fields empty that you don't want to search by</li>
+            <li>Search is case-insensitive</li>
+            <li>
+              If no results are found, you can create a new customer record
+            </li>
+          </ul>
+        </div>
+      </Card>
     </div>
   );
 }
