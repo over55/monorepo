@@ -62,10 +62,12 @@ function AdminCustomerListPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // FIXED: Use page-based pagination instead of cursor-based
-  const [currentPage, setCurrentPage] = useState(1);
+  // FIXED: Use cursor-based pagination
+  const [currentCursor, setCurrentCursor] = useState("");
+  const [nextCursor, setNextCursor] = useState("");
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [cursorHistory, setCursorHistory] = useState([]); // Stack to track cursors for "Previous" functionality
   const [pageSize, setPageSize] = useState(50);
-  const [totalPages, setTotalPages] = useState(0);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -83,71 +85,74 @@ function AdminCustomerListPage() {
     navigate("/login?unauthorized=true");
   };
 
-  // FIXED: Use the modern CustomerManager.getCustomers method with proper params
+  // FIXED: Updated to use cursor-based pagination
   const fetchCustomers = useCallback(
-    async (page = 1, refresh = false) => {
-      console.log("🔄 fetchCustomers called with:", { page, refresh });
+    async (cursor = "", isNavigatingBack = false) => {
+      console.log("🔄 fetchCustomers called with cursor:", cursor);
 
       setLoading(true);
       setError(null);
 
       try {
-        // Build modern params object for CustomerManager.getCustomers
-        const params = {
-          page: page,
-          limit: pageSize,
-        };
+        // Build params using Map for legacy filtersMap approach (matching backend)
+        const filtersMap = new Map();
 
-        // Add search
-        if (searchQuery.trim()) {
-          params.search = searchQuery.trim();
+        // Add cursor if provided
+        if (cursor) {
+          filtersMap.set("cursor", cursor);
         }
+
+        // Add page size
+        filtersMap.set("pageSize", pageSize);
 
         // Add sorting
         if (sortBy) {
           const [sortField, sortOrder] = sortBy.split(",");
-          params.sortBy = sortField;
-          params.sortOrder = sortOrder;
+          filtersMap.set("sortField", sortField);
+          filtersMap.set("sortOrder", sortOrder === "DESC" ? "-1" : "1");
+        }
+
+        // Add search
+        if (searchQuery.trim()) {
+          filtersMap.set("searchText", searchQuery.trim());
         }
 
         // Add filters
         if (statusFilter) {
-          params.status = statusFilter;
+          filtersMap.set("status", statusFilter);
         }
         if (typeFilter) {
-          params.typeOf = typeFilter; // Note: using typeOf for the param name
+          filtersMap.set("type", typeFilter);
         }
 
-        console.log("🌐 Making API call with params:", params);
-
-        // FIXED: Use modern CustomerManager.getCustomers method
-        const response = await customerManager.getCustomers(
-          params,
-          onUnauthorized,
-          refresh,
+        console.log(
+          "🌐 Making API call with filters:",
+          Array.from(filtersMap.entries()),
         );
 
-        console.log("✅ API response received:");
-        console.log("Full response object:", response);
+        // Use the legacy filtersMap method that matches backend expectations
+        const response = await customerManager.getCustomersWithFiltersMap(
+          filtersMap,
+          onUnauthorized,
+          true, // force refresh
+        );
+
+        console.log("✅ API response received:", {
+          resultsCount: response.results?.length,
+          nextCursor: response.nextCursor,
+          hasNextPage: response.hasNextPage,
+          totalCount: response.count,
+        });
 
         setCustomers(response.results || []);
         setTotalCount(response.count || 0);
+        setNextCursor(response.nextCursor || "");
+        setHasNextPage(response.hasNextPage || false);
 
-        // Calculate total pages
-        const calculatedTotalPages = Math.ceil(
-          (response.count || 0) / pageSize,
-        );
-        setTotalPages(calculatedTotalPages);
-
-        console.log("📊 Pagination state updated:", {
-          currentPage: page,
-          pageSize,
-          totalCount: response.count,
-          totalPages: calculatedTotalPages,
-          resultsCount: response.results?.length,
-          hasNextPage: page < calculatedTotalPages,
-          hasPreviousPage: page > 1,
-        });
+        // Update current cursor if not navigating back
+        if (!isNavigatingBack) {
+          setCurrentCursor(cursor);
+        }
       } catch (err) {
         console.error("❌ Failed to fetch customers:", err);
         setError("Failed to load customers. Please try again.");
@@ -170,56 +175,83 @@ function AdminCustomerListPage() {
   const handleSearch = (e) => {
     e.preventDefault();
     console.log("🔍 Search triggered:", searchQuery);
-    setCurrentPage(1);
-    fetchCustomers(1, true);
+    // Reset pagination when searching
+    setCursorHistory([]);
+    setCurrentCursor("");
+    fetchCustomers("");
   };
 
   // Handle filter changes
   const handleFilterChange = useCallback(() => {
-    console.log("🔄 handleFilterChange called - resetting to page 1");
-    setCurrentPage(1);
-    fetchCustomers(1, true);
+    console.log("🔄 Filter changed - resetting pagination");
+    // Reset pagination when filters change
+    setCursorHistory([]);
+    setCurrentCursor("");
+    fetchCustomers("");
   }, [fetchCustomers]);
 
-  // FIXED: Simple page-based pagination handlers
+  // FIXED: Cursor-based pagination handlers
   const handleNextPage = () => {
     console.log("🔜 handleNextPage clicked");
-    const nextPage = currentPage + 1;
 
-    console.log("Current state:", {
-      currentPage,
-      totalPages,
-      canGoNext: currentPage < totalPages,
-      nextPage,
-    });
+    if (hasNextPage && nextCursor) {
+      console.log("✅ Going to next page with cursor:", nextCursor);
 
-    if (currentPage < totalPages) {
-      console.log("✅ Going to next page:", nextPage);
-      setCurrentPage(nextPage);
-      fetchCustomers(nextPage);
+      // Push current cursor to history for "Previous" functionality
+      setCursorHistory((prev) => [...prev, currentCursor]);
+
+      // Fetch next page
+      fetchCustomers(nextCursor);
     } else {
-      console.log("❌ Already on last page");
+      console.log("❌ No next page available");
     }
   };
 
   const handlePreviousPage = () => {
     console.log("🔙 handlePreviousPage clicked");
-    const prevPage = currentPage - 1;
 
-    console.log("Current state:", {
-      currentPage,
-      totalPages,
-      canGoPrevious: currentPage > 1,
-      prevPage,
-    });
+    if (cursorHistory.length > 0) {
+      // Pop the last cursor from history
+      const newHistory = [...cursorHistory];
+      const previousCursor = newHistory.pop();
 
-    if (currentPage > 1) {
-      console.log("✅ Going to previous page:", prevPage);
-      setCurrentPage(prevPage);
-      fetchCustomers(prevPage);
+      console.log(
+        "✅ Going to previous page with cursor:",
+        previousCursor || "start",
+      );
+
+      // Update history
+      setCursorHistory(newHistory);
+
+      // Fetch previous page
+      fetchCustomers(previousCursor || "", true);
     } else {
       console.log("❌ Already on first page");
     }
+  };
+
+  // Handle page size change
+  const handlePageSizeChange = (e) => {
+    const newPageSize = parseInt(e.target.value);
+    setPageSize(newPageSize);
+
+    // Reset pagination when page size changes
+    setCursorHistory([]);
+    setCurrentCursor("");
+
+    // Fetch with new page size
+    setTimeout(() => fetchCustomers(""), 0);
+  };
+
+  // Handle sort change
+  const handleSortChange = (e) => {
+    setSortBy(e.target.value);
+
+    // Reset pagination when sort changes
+    setCursorHistory([]);
+    setCurrentCursor("");
+
+    setTimeout(() => fetchCustomers(""), 0);
   };
 
   // Handle delete customer
@@ -231,7 +263,7 @@ function AdminCustomerListPage() {
       await customerManager.deleteCustomer(customerToDelete.id, onUnauthorized);
 
       // Refresh the current page
-      fetchCustomers(currentPage, true);
+      fetchCustomers(currentCursor);
 
       // Reset delete state
       setShowDeleteModal(false);
@@ -251,15 +283,16 @@ function AdminCustomerListPage() {
     setStatusFilter("");
     setTypeFilter("");
     setSortBy("lexical_name,ASC");
-    setCurrentPage(1);
-    fetchCustomers(1, true);
+    setCursorHistory([]);
+    setCurrentCursor("");
+    fetchCustomers("");
   }, [fetchCustomers]);
 
-  // Initial data load only
+  // Initial data load
   useEffect(() => {
     console.log("🚀 Initial useEffect - loading first page");
-    fetchCustomers(1);
-  }, []);
+    fetchCustomers("");
+  }, []); // Empty dependency array for initial load only
 
   // Table columns for tabular view
   const tableColumns = [
@@ -360,10 +393,8 @@ function AdminCustomerListPage() {
   ];
 
   // Calculate pagination info
-  const hasNextPage = currentPage < totalPages;
-  const hasPreviousPage = currentPage > 1;
-  const startItem = totalCount > 0 ? (currentPage - 1) * pageSize + 1 : 0;
-  const endItem = Math.min(currentPage * pageSize, totalCount);
+  const hasPreviousPage = cursorHistory.length > 0;
+  const currentPageNumber = cursorHistory.length + 1;
 
   return (
     <div style={globalStyles.container}>
@@ -428,10 +459,7 @@ function AdminCustomerListPage() {
             {/* Sort */}
             <Select
               value={sortBy}
-              onChange={(e) => {
-                setSortBy(e.target.value);
-                setTimeout(() => handleFilterChange(), 0);
-              }}
+              onChange={handleSortChange}
               options={CUSTOMER_SORT_OPTIONS}
               style={{ minWidth: "200px" }}
             />
@@ -515,13 +543,13 @@ function AdminCustomerListPage() {
         {/* Results */}
         {!loading && (
           <>
-            {/* Results Count and Pagination Info */}
+            {/* Results Count */}
             <div
               style={{ marginBottom: "20px", color: theme.colors.secondary }}
             >
               <div>
-                Showing {startItem}-{endItem} of <strong>{totalCount}</strong>{" "}
-                customers
+                Showing <strong>{customers.length}</strong> customers
+                {totalCount > 0 && ` (Total: ${totalCount})`}
                 {searchQuery && ` (filtered by "${searchQuery}")`}
               </div>
 
@@ -532,16 +560,14 @@ function AdminCustomerListPage() {
                 >
                   <strong>Pagination Debug:</strong>
                   <br />
-                  Page {currentPage} of {totalPages} | Page size: {pageSize} |
-                  Has next: {hasNextPage ? "Yes" : "No"} | Has previous:{" "}
+                  Page: {currentPageNumber} | Results: {customers.length} | Has
+                  next: {hasNextPage ? "Yes" : "No"} | Has previous:{" "}
                   {hasPreviousPage ? "Yes" : "No"}
                   <br />
-                  <strong>Button States:</strong> Previous disabled:{" "}
-                  {!hasPreviousPage ? "Yes" : "No"} | Next disabled:{" "}
-                  {!hasNextPage ? "Yes" : "No"}
+                  Current cursor: {currentCursor || "start"} | Next cursor:{" "}
+                  {nextCursor || "none"}
                   <br />
-                  <strong>Range:</strong> Showing items {startItem}-{endItem} of{" "}
-                  {totalCount}
+                  History stack size: {cursorHistory.length}
                 </div>
               )}
             </div>
@@ -675,7 +701,7 @@ function AdminCustomerListPage() {
                   </div>
                 )}
 
-                {/* FIXED: Simple page-based pagination */}
+                {/* FIXED: Cursor-based pagination controls */}
                 <div
                   style={{
                     display: "flex",
@@ -696,12 +722,7 @@ function AdminCustomerListPage() {
                     <span>Show:</span>
                     <Select
                       value={pageSize}
-                      onChange={(e) => {
-                        const newPageSize = parseInt(e.target.value);
-                        setPageSize(newPageSize);
-                        setCurrentPage(1);
-                        setTimeout(() => fetchCustomers(1, true), 0);
-                      }}
+                      onChange={handlePageSizeChange}
                       options={PAGE_SIZE_OPTIONS}
                       style={{ minWidth: "120px" }}
                     />
@@ -723,7 +744,13 @@ function AdminCustomerListPage() {
                     </Button>
 
                     <span style={{ padding: "0 15px", fontSize: "14px" }}>
-                      Page {currentPage} of {totalPages}
+                      Page {currentPageNumber}
+                      {totalCount > 0 && (
+                        <span style={{ color: theme.colors.secondary }}>
+                          {" "}
+                          (Total: {totalCount} customers)
+                        </span>
+                      )}
                     </span>
 
                     <Button
