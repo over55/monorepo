@@ -232,7 +232,7 @@ export class TenantManager {
   async executiveVisitsTenant(tenantID, onUnauthorizedCallback = null) {
     try {
       // Validate tenant ID
-      if (!tenantID || typeof tenantID !== "number") {
+      if (!tenantID || typeof tenantID !== "string" || tenantID.trim() === "") {
         throw {
           tenantId: "Valid tenant ID is required",
         };
@@ -561,7 +561,7 @@ export class TenantManager {
    */
 
   _validateTenantId(tenantId) {
-    if (!tenantId || typeof tenantId !== "number" || tenantId <= 0) {
+    if (!tenantId || typeof tenantId !== "string" || tenantId.trim() === "") {
       return { tenantId: "Valid tenant ID is required" };
     }
     return null;
@@ -687,8 +687,8 @@ export class TenantManager {
     // Validate tenant ID
     if (
       !taxRateData.tenantId ||
-      typeof taxRateData.tenantId !== "number" ||
-      taxRateData.tenantId <= 0
+      typeof taxRateData.tenantId !== "string" ||
+      tenantId.trim() === ""
     ) {
       errors.tenantId = "Valid tenant ID is required";
     }

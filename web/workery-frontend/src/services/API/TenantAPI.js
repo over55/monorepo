@@ -84,7 +84,7 @@ export class TenantAPI {
   async getTenantDetail(tenantId, onUnauthorizedCallback = null) {
     try {
       // Validate tenant ID
-      if (!tenantId || typeof tenantId !== "number") {
+      if (!tenantId || typeof tenantId !== "string" || tenantId.trim() === "") {
         throw {
           tenantId: "Valid tenant ID is required",
         };
@@ -122,7 +122,7 @@ export class TenantAPI {
   async updateTenant(tenantId, tenantData, onUnauthorizedCallback = null) {
     try {
       // Validate tenant ID
-      if (!tenantId || typeof tenantId !== "number") {
+      if (!tenantId || typeof tenantId !== "string" || tenantId.trim() === "") {
         throw {
           tenantId: "Valid tenant ID is required",
         };
@@ -197,7 +197,11 @@ export class TenantAPI {
   async updateTaxRate(taxRateData, onUnauthorizedCallback = null) {
     try {
       // Validate required fields
-      if (!taxRateData.tenantId || typeof taxRateData.tenantId !== "number") {
+      if (
+        !taxRateData.tenantId ||
+        typeof taxRateData.tenantId !== "string" ||
+        taxRateData.tenantId.trim() === ""
+      ) {
         throw {
           tenantId: "Valid tenant ID is required",
         };
@@ -276,7 +280,7 @@ export class TenantAPI {
   async archiveTenant(tenantId, onUnauthorizedCallback = null) {
     try {
       // Validate tenant ID
-      if (!tenantId || typeof tenantId !== "number") {
+      if (!tenantId || typeof tenantId !== "string" || tenantId.trim() === "") {
         throw {
           tenantId: "Valid tenant ID is required",
         };
