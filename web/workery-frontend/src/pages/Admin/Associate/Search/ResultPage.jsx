@@ -1,6 +1,7 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Associate/Search/ResultPage.jsx
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
+import { DateTime } from "luxon";
 import {
   useAuthManager,
   useAssociateManager,
@@ -17,31 +18,33 @@ import {
   FormGroup,
 } from "../../../../components/UI";
 
-// Constants for associate types and statuses
-const COMMERCIAL_ASSOCIATE_TYPE_OF_ID = 2;
+// Constants for associate types and statuses - matching old implementation
 const RESIDENTIAL_ASSOCIATE_TYPE_OF_ID = 1;
+const COMMERCIAL_ASSOCIATE_TYPE_OF_ID = 2;
 const ASSOCIATE_STATUS_ACTIVE = 1;
 
-// Sort options
+// Sort options - matching backend expectations
 const ASSOCIATE_SORT_OPTIONS = [
+  { value: "last_name,ASC", label: "Last Name (A-Z)" },
+  { value: "last_name,DESC", label: "Last Name (Z-A)" },
   { value: "lexical_name,ASC", label: "Name (A-Z)" },
   { value: "lexical_name,DESC", label: "Name (Z-A)" },
   { value: "join_date,DESC", label: "Newest First" },
   { value: "join_date,ASC", label: "Oldest First" },
 ];
 
-// Status filter options
+// Status filter options - matching backend expectations
 const ASSOCIATE_STATUS_FILTER_OPTIONS = [
-  { value: "", label: "All" },
-  { value: "1", label: "Active" },
-  { value: "2", label: "Archived" },
+  { value: 0, label: "All" },
+  { value: 1, label: "Active" },
+  { value: 2, label: "Archived" },
 ];
 
-// Type filter options
+// Type filter options - matching backend expectations
 const ASSOCIATE_TYPE_OF_FILTER_OPTIONS = [
-  { value: "0", label: "All" },
-  { value: "1", label: "Residential" },
-  { value: "2", label: "Commercial" },
+  { value: 0, label: "All" },
+  { value: 1, label: "Residential" },
+  { value: 2, label: "Commercial" },
 ];
 
 // Page size options
@@ -76,9 +79,9 @@ function AdminAssociateSearchResultPage() {
   const [previousCursors, setPreviousCursors] = useState([]);
   const [nextCursor, setNextCursor] = useState("");
   const [currentCursor, setCurrentCursor] = useState("");
-  const [sortByValue, setSortByValue] = useState("lexical_name,ASC");
-  const [status, setStatus] = useState(isActive ? "1" : "");
-  const [typeOf, setTypeOf] = useState("0");
+  const [sortByValue, setSortByValue] = useState("last_name,ASC"); // Default sort by last name
+  const [status, setStatus] = useState(isActive ? 1 : 0); // 1 for active only, 0 for all
+  const [typeOf, setTypeOf] = useState(0); // 0 for all types
   const [createdAtGTE, setCreatedAtGTE] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
@@ -89,104 +92,210 @@ function AdminAssociateSearchResultPage() {
     }
   }, [authManager, navigate]);
 
-  // Fetch associates list
-  const fetchList = async () => {
-    setFetching(true);
-    setErrors({});
-
-    try {
-      // Build filters map for API call
-      const filtersMap = new Map();
-      filtersMap.set("pageSize", pageSize);
-
-      if (currentCursor) {
-        filtersMap.set("cursor", currentCursor);
-      }
-
-      // Sort parameters
-      const sortArray = sortByValue.split(",");
-      filtersMap.set("sortField", sortArray[0]);
-      filtersMap.set("sortOrder", sortArray[1]);
-
-      // Search parameters from URL
-      if (firstName) filtersMap.set("firstName", firstName);
-      if (lastName) filtersMap.set("lastName", lastName);
-      if (email) filtersMap.set("email", email);
-      if (phone) filtersMap.set("phone", phone);
-      if (organizationName)
-        filtersMap.set("organizationName", organizationName);
-
-      // Filter parameters
-      if (status) filtersMap.set("status", status);
-      if (typeOf && typeOf !== "0") filtersMap.set("type", typeOf);
-      if (createdAtGTE) {
-        const date = new Date(createdAtGTE);
-        filtersMap.set("createdAtGte", date.getTime());
-      }
-
-      // Call API through manager
-      const response = await associateManager.getAssociatesWithFiltersMap(
-        filtersMap,
-        () => navigate("/login?unauthorized=true"),
-      );
-
+  // API callback handlers
+  const onAssociateListSuccess = (response) => {
+    console.log("onAssociateListSuccess: Starting...", response);
+    if (response.results !== null) {
       setAssociates(response);
       if (response.hasNextPage) {
         setNextCursor(response.nextCursor);
       }
-    } catch (error) {
-      console.error("Failed to fetch associates:", error);
-      setErrors(error);
-    } finally {
-      setFetching(false);
+    } else {
+      setAssociates({ results: [] });
     }
+  };
+
+  const onAssociateListError = (apiErr) => {
+    console.log("onAssociateListError: Starting...", apiErr);
+    setErrors(apiErr);
+    window.scrollTo(0, 0);
+  };
+
+  const onAssociateListDone = () => {
+    console.log("onAssociateListDone: Starting...");
+    setFetching(false);
+  };
+
+  // Fetch associates list
+  const fetchList = () => {
+    setFetching(true);
+    setErrors({});
+
+    console.log("fetchList: Starting with params:", {
+      firstName,
+      lastName,
+      email,
+      phone,
+      organizationName,
+      status,
+      typeOf,
+      createdAtGTE,
+      sortByValue,
+      pageSize,
+      currentCursor,
+    });
+
+    // Build filters map for API call - using exact same format as old code
+    const params = new Map();
+    params.set("page_size", pageSize);
+    params.set("sort_field", "last_name"); // Default sort field
+
+    if (currentCursor !== "") {
+      params.set("cursor", currentCursor);
+    }
+
+    // Sort parameters - matching old implementation
+    const sortArray = sortByValue.split(",");
+    params.set("sort_field", sortArray[0]);
+    params.set("sort_order", sortArray[1]);
+
+    // Search parameters from URL - using snake_case as backend expects
+    if (firstName !== undefined && firstName !== null && firstName !== "") {
+      params.set("first_name", firstName);
+    }
+    if (lastName !== undefined && lastName !== null && lastName !== "") {
+      params.set("last_name", lastName);
+    }
+    if (email !== undefined && email !== null && email !== "") {
+      params.set("email", email);
+    }
+    if (phone !== undefined && phone !== null && phone !== "") {
+      params.set("phone", phone);
+    }
+    if (
+      organizationName !== undefined &&
+      organizationName !== null &&
+      organizationName !== ""
+    ) {
+      params.set("organization_name", organizationName);
+    }
+
+    // Filter parameters
+    if (status !== undefined && status !== null && status !== 0) {
+      params.set("status", status);
+    }
+    if (typeOf !== undefined && typeOf !== null && typeOf !== 0) {
+      params.set("type", typeOf);
+    }
+    if (
+      createdAtGTE !== undefined &&
+      createdAtGTE !== null &&
+      createdAtGTE !== ""
+    ) {
+      const date = new Date(createdAtGTE);
+      const jStr = date.getTime();
+      params.set("created_at_gte", jStr);
+    }
+
+    console.log(
+      "fetchList: Calling API with params Map:",
+      Array.from(params.entries()),
+    );
+
+    // Call API through manager using callback pattern
+    associateManager.getAssociatesWithFiltersMapWithCallbacks(
+      params,
+      onAssociateListSuccess,
+      onAssociateListError,
+      onAssociateListDone,
+      () => navigate("/login?unauthorized=true"),
+      true, // Force refresh to bypass cache
+    );
   };
 
   // Fetch list when parameters change
   useEffect(() => {
-    fetchList();
-  }, [currentCursor, pageSize, sortByValue, status, typeOf, createdAtGTE]);
+    let mounted = true;
+
+    if (mounted) {
+      fetchList();
+    }
+
+    return () => {
+      mounted = false;
+    };
+  }, [
+    currentCursor,
+    pageSize,
+    sortByValue,
+    status,
+    typeOf,
+    createdAtGTE,
+    firstName,
+    lastName,
+    email,
+    phone,
+    organizationName,
+  ]);
 
   // Handle pagination
-  const onNextClicked = () => {
+  const onNextClicked = (e) => {
+    console.log("onNextClicked: Going to next page");
     const arr = [...previousCursors];
     arr.push(currentCursor);
     setPreviousCursors(arr);
     setCurrentCursor(nextCursor);
   };
 
-  const onPreviousClicked = () => {
+  const onPreviousClicked = (e) => {
+    console.log("onPreviousClicked: Going to previous page");
     const arr = [...previousCursors];
     const previousCursor = arr.pop();
     setPreviousCursors(arr);
     setCurrentCursor(previousCursor);
   };
 
-  // Handle associate deletion
-  const onDeleteConfirmButtonClick = async () => {
+  // Archive callback handlers
+  const onAssociateDeleteSuccess = (response) => {
+    console.log("onAssociateDeleteSuccess: Starting...");
+
+    // Update notification
+    setSuccessMessage("Associate archived successfully");
+    setTimeout(() => {
+      setSuccessMessage("");
+    }, 2000);
+
+    // Fetch again an updated list
+    fetchList();
+  };
+
+  const onAssociateDeleteError = (apiErr) => {
+    console.log("onAssociateDeleteError: Starting...", apiErr);
+    setErrors(apiErr);
+
+    // Update notification
+    setErrors({ message: "Failed archiving associate" });
+    setTimeout(() => {
+      setErrors({});
+    }, 2000);
+
+    window.scrollTo(0, 0);
+  };
+
+  const onAssociateDeleteDone = () => {
+    console.log("onAssociateDeleteDone: Starting...");
+    setFetching(false);
+    setSelectedAssociateForDeletion(null);
+  };
+
+  // Handle associate deletion/archiving
+  const onDeleteConfirmButtonClick = () => {
     if (!selectedAssociateForDeletion) return;
 
-    try {
-      setFetching(true);
-      await associateManager.archiveAssociate(
-        selectedAssociateForDeletion.id,
-        () => navigate("/login?unauthorized=true"),
-      );
+    console.log(
+      "onDeleteConfirmButtonClick: Archiving associate",
+      selectedAssociateForDeletion.id,
+    );
+    setFetching(true);
 
-      setSuccessMessage("Associate archived successfully");
-      setSelectedAssociateForDeletion(null);
-
-      // Refresh the list
-      fetchList();
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccessMessage(""), 3000);
-    } catch (error) {
-      console.error("Failed to archive associate:", error);
-      setErrors({ message: "Failed to archive associate" });
-    } finally {
-      setFetching(false);
-    }
+    // Call archive API through manager using callback pattern
+    associateManager.archiveAssociateWithCallbacks(
+      selectedAssociateForDeletion.id,
+      onAssociateDeleteSuccess,
+      onAssociateDeleteError,
+      onAssociateDeleteDone,
+      () => navigate("/login?unauthorized=true"),
+    );
   };
 
   // Format phone number
@@ -283,14 +392,14 @@ function AdminAssociateSearchResultPage() {
             <Select
               label="Status"
               value={status}
-              onChange={(e) => setStatus(e.target.value)}
+              onChange={(e) => setStatus(parseInt(e.target.value))}
               options={ASSOCIATE_STATUS_FILTER_OPTIONS}
             />
 
             <Select
               label="Type"
               value={typeOf}
-              onChange={(e) => setTypeOf(e.target.value)}
+              onChange={(e) => setTypeOf(parseInt(e.target.value))}
               options={ASSOCIATE_TYPE_OF_FILTER_OPTIONS}
             />
 
@@ -507,7 +616,10 @@ function AdminAssociateSearchResultPage() {
                     </label>
                     <select
                       value={pageSize}
-                      onChange={(e) => setPageSize(parseInt(e.target.value))}
+                      onChange={(e) => {
+                        console.log("Page size changed to:", e.target.value);
+                        setPageSize(parseInt(e.target.value));
+                      }}
                       style={{
                         padding: "5px 10px",
                         borderRadius: "4px",
