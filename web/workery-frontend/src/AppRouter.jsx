@@ -1110,7 +1110,7 @@ function AppRouter() {
               path="/admin/associate/:aid/comments"
               element={
                 <Layout>
-                  <PlaceholderPage title="Associate Comments" />
+                  <AdminAssociateDetailCommentListPage />
                 </Layout>
               }
             />
