@@ -1,3 +1,4 @@
+// File Path: web/workery-frontend-deprecated/src/pages/Admin/Associate/Detail/Order/List.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -135,7 +136,7 @@ function AdminAssociateDetailOrderList() {
       onOrderListSuccess,
       onOrderListError,
       onOrderListDone,
-      onUnauthorized
+      onUnauthorized,
     );
   };
 
@@ -212,7 +213,6 @@ function AdminAssociateDetailOrderList() {
   const onUnauthorized = () => {
     setForceURL("/login?unauthorized=true"); // If token expired or user is not logged in, redirect back to login.
   };
-
 
   ////
   //// Misc.

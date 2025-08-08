@@ -1102,7 +1102,7 @@ function AppRouter() {
               path="/admin/associate/:aid/orders"
               element={
                 <Layout>
-                  <PlaceholderPage title="Associate Orders" />
+                  <AdminAssociateDetailOrderListPage />
                 </Layout>
               }
             />
