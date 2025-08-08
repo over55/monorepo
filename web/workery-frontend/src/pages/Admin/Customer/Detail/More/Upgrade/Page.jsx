@@ -5,8 +5,8 @@ import { Link, useNavigate, useParams } from "react-router";
 import {
   useCustomerManager,
   useAuthManager,
-} from "../../../../../services/Services";
-import { theme, globalStyles } from "../../../../../constants/Theme";
+} from "../../../../../../services/Services";
+import { theme, globalStyles } from "../../../../../../constants/Theme";
 import {
   Card,
   Button,
@@ -16,7 +16,7 @@ import {
   Input,
   Select,
   FormGroup,
-} from "../../../../../components/UI";
+} from "../../../../../../components/UI";
 
 function AdminCustomerDetailMoreUpgradePage() {
   const { cid } = useParams();

@@ -997,10 +997,7 @@ function AppRouter() {
               path="/admin/associates"
               element={
                 <Layout>
-                  <PlaceholderPage
-                    title="Associates"
-                    description="Associate management system"
-                  />
+                  <AdminAssociateListPage />
                 </Layout>
               }
             />
