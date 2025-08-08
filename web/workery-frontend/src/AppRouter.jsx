@@ -1126,7 +1126,7 @@ function AppRouter() {
               path="/admin/associate/:aid/attachments"
               element={
                 <Layout>
-                  <PlaceholderPage title="Associate Attachments" />
+                  <AdminAssociateDetailAttachmentListPage />
                 </Layout>
               }
             />
@@ -1134,7 +1134,7 @@ function AppRouter() {
               path="/admin/associate/:aid/attachments/add"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Associate Attachment" />
+                  <AdminAssociateDetailAttachmentAddPage />
                 </Layout>
               }
             />
@@ -1142,7 +1142,7 @@ function AppRouter() {
               path="/admin/associate/:aid/attachment/:atid"
               element={
                 <Layout>
-                  <PlaceholderPage title="Associate Attachment Detail" />
+                  <AdminAssociateDetailAttachmentDetailPage />
                 </Layout>
               }
             />
@@ -1150,7 +1150,7 @@ function AppRouter() {
               path="/admin/associate/:aid/attachment/:atid/edit"
               element={
                 <Layout>
-                  <PlaceholderPage title="Edit Associate Attachment" />
+                  <AdminAssociateDetailAttachmentUpdatePage />
                 </Layout>
               }
             />

@@ -1,3 +1,4 @@
+// File Path: src/Components/Admin/Associate/Detail/Attachment/Add.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import Scroll from "react-scroll";
