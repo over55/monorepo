@@ -1118,7 +1118,7 @@ function AppRouter() {
               path="/admin/associate/:aid/more"
               element={
                 <Layout>
-                  <PlaceholderPage title="Associate More Actions" />
+                  <AdminAssociateDetailMorePage />
                 </Layout>
               }
             />
