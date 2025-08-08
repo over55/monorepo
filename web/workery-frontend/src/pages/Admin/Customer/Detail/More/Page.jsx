@@ -129,6 +129,16 @@ function AdminCustomerDetailMorePage() {
       });
     }
 
+    // Avatar
+    actions.push({
+      title: "Avatar",
+      subtitle: "Change the customer's profile picture",
+      icon: "🖼️",
+      url: `/admin/customer/${cid}/avatar`,
+      color: theme.colors.info,
+      bgColor: "#d1ecf1",
+    });
+
     // Upgrade/Downgrade (only for active customers)
     if (customer.status === 1) {
       if (customer.type === COMMERCIAL_CUSTOMER_TYPE_ID) {
