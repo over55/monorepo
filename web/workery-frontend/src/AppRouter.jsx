@@ -101,8 +101,8 @@ import AdminAssociateAddStep4Page from "./pages/Admin/Associate/Add/Step4Page";
 import AdminAssociateAddStep5Page from "./pages/Admin/Associate/Add/Step5Page";
 import AdminAssociateAddStep6Page from "./pages/Admin/Associate/Add/Step6Page";
 import AdminAssociateAddStep7Page from "./pages/Admin/Associate/Add/Step7Page";
-import AdminAssociateSearchCriteriaPagePage from "./pages/Admin/Associate/Search/CriteriaPage";
-import AdminAssociateSearchResultPagePage from "./pages/Admin/Associate/Search/ResultPage";
+import AdminAssociateSearchCriteriaPage from "./pages/Admin/Associate/Search/CriteriaPage";
+import AdminAssociateSearchResultPage from "./pages/Admin/Associate/Search/ResultPage";
 import AdminAssociateUpdatePage from "./pages/Admin/Associate/Update/Page";
 import AdminAssociateDetailLitePage from "./pages/Admin/Associate/Detail/LitePage";
 import AdminAssociateDetailFullPage from "./pages/Admin/Associate/Detail/FullPage";
@@ -1006,7 +1006,7 @@ function AppRouter() {
               path="/admin/associates/search"
               element={
                 <Layout>
-                  <PlaceholderPage title="Associate Search" />
+                  <AdminAssociateSearchCriteriaPage />
                 </Layout>
               }
             />
@@ -1014,7 +1014,7 @@ function AppRouter() {
               path="/admin/associates/search-result"
               element={
                 <Layout>
-                  <PlaceholderPage title="Associate Search Result" />
+                  <AdminAssociateSearchResultPage />
                 </Layout>
               }
             />

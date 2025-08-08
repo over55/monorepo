@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/Associate/Search/Result.jsx
 import React, { useState, useEffect } from "react";
 import { Link, useSearchParams, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -582,10 +583,16 @@ function AdminAssociateSearchResult() {
                                   {/* BODY */}
                                   <div className="card-content">
                                     <div className="content">
-                                      {datum.type === RESIDENTIAL_ASSOCIATE_TYPE_OF_ID && <>
-                                          <u>{datum.firstName}&nbsp;{datum.lastName}</u>
+                                      {datum.type ===
+                                        RESIDENTIAL_ASSOCIATE_TYPE_OF_ID && (
+                                        <>
+                                          <u>
+                                            {datum.firstName}&nbsp;
+                                            {datum.lastName}
+                                          </u>
                                           <br />
-                                      </>}
+                                        </>
+                                      )}
                                       {datum.addressLine1}
                                       <br />
                                       {datum.city}, {datum.region}
