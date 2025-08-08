@@ -68,8 +68,8 @@ import AdminCustomerAddStep3Page from "./pages/Admin/Customer/Add/Step3Page";
 import AdminCustomerAddStep4Page from "./pages/Admin/Customer/Add/Step4Page";
 import AdminCustomerAddStep5Page from "./pages/Admin/Customer/Add/Step5Page";
 import AdminCustomerAddStep6Page from "./pages/Admin/Customer/Add/Step6Page";
-import AdminCustomerSearchCriteriaPagePage from "./pages/Admin/Customer/Search/CriteriaPage";
-import AdminCustomerSearchResultPagePage from "./pages/Admin/Customer/Search/ResultPage";
+import AdminCustomerSearchCriteriaPage from "./pages/Admin/Customer/Search/CriteriaPage";
+import AdminCustomerSearchResultPage from "./pages/Admin/Customer/Search/ResultPage";
 import AdminCustomerUpdatePage from "./pages/Admin/Customer/Update/Page";
 import AdminCustomerDetailLitePage from "./pages/Admin/Customer/Detail/LitePage";
 import AdminCustomerDetailFullPage from "./pages/Admin/Customer/Detail/FullPage";
@@ -1238,7 +1238,7 @@ function AppRouter() {
               path="/admin/customers/search"
               element={
                 <Layout>
-                  <AdminCustomerSearchCriteriaPagePage />
+                  <AdminCustomerSearchCriteriaPage />
                 </Layout>
               }
             />
@@ -1246,7 +1246,7 @@ function AppRouter() {
               path="/admin/customers/search-result"
               element={
                 <Layout>
-                  <AdminCustomerSearchResultPagePage />
+                  <AdminCustomerSearchResultPage />
                 </Layout>
               }
             />
