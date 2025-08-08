@@ -97,7 +97,12 @@ function AdminAssociateListPage() {
   // Fetch associates using the new manager
   const fetchAssociates = useCallback(
     async (cursor = "", isNavigatingBack = false) => {
-      console.log("🔄 fetchAssociates called with cursor:", cursor);
+      console.log(
+        "🔄 fetchAssociates called with cursor:",
+        cursor,
+        "pageSize:",
+        pageSize,
+      );
 
       setLoading(true);
       setError(null);
@@ -111,19 +116,21 @@ function AdminAssociateListPage() {
           filtersMap.set("cursor", cursor);
         }
 
-        // Add page size
-        filtersMap.set("pageSize", pageSize);
+        // FIXED: Use the correct parameter name for page size
+        // The backend expects 'page_size' (snake_case)
+        filtersMap.set("page_size", pageSize.toString());
 
-        // Add sorting
+        // Add sorting - FIXED: Use correct parameter names
         if (sortBy) {
           const [sortField, sortOrder] = sortBy.split(",");
-          filtersMap.set("sortField", sortField);
-          filtersMap.set("sortOrder", sortOrder === "DESC" ? "-1" : "1");
+          filtersMap.set("sort_field", sortField);
+          // Backend expects 1 for ASC, -1 for DESC
+          filtersMap.set("sort_order", sortOrder === "DESC" ? "-1" : "1");
         }
 
         // Add search
         if (searchQuery.trim()) {
-          filtersMap.set("searchText", searchQuery.trim());
+          filtersMap.set("search", searchQuery.trim());
         }
 
         // Add filters
@@ -135,13 +142,13 @@ function AdminAssociateListPage() {
         }
         if (joinDateGte) {
           const date = new Date(joinDateGte);
-          filtersMap.set("joinDateGte", date.getTime());
+          filtersMap.set("join_date_gte", date.getTime().toString());
         }
         if (isJobSeeker) {
-          filtersMap.set("isJobSeeker", "1");
+          filtersMap.set("is_job_seeker", "1");
         }
         if (hasTaxId) {
-          filtersMap.set("hasTaxId", "1");
+          filtersMap.set("has_tax_id", "1");
         }
 
         console.log(
@@ -161,12 +168,30 @@ function AdminAssociateListPage() {
           nextCursor: response.nextCursor,
           hasNextPage: response.hasNextPage,
           totalCount: response.count,
+          response: response, // Log full response for debugging
         });
 
         setAssociates(response.results || []);
         setTotalCount(response.count || 0);
-        setNextCursor(response.nextCursor || "");
-        setHasNextPage(response.hasNextPage || false);
+
+        // FIXED: Properly handle pagination response
+        // The backend might return these fields in different formats
+        if (
+          response.nextCursor !== undefined &&
+          response.nextCursor !== null &&
+          response.nextCursor !== ""
+        ) {
+          setNextCursor(response.nextCursor);
+          setHasNextPage(true);
+        } else {
+          setNextCursor("");
+          setHasNextPage(false);
+        }
+
+        // Alternative: Check if hasNextPage is explicitly set
+        if (response.hasNextPage !== undefined) {
+          setHasNextPage(response.hasNextPage);
+        }
 
         // Update current cursor if not navigating back
         if (!isNavigatingBack) {
@@ -200,6 +225,8 @@ function AdminAssociateListPage() {
     // Reset pagination when searching
     setCursorHistory([]);
     setCurrentCursor("");
+    setNextCursor("");
+    setHasNextPage(false);
     fetchAssociates("");
   };
 
@@ -209,12 +236,19 @@ function AdminAssociateListPage() {
     // Reset pagination when filters change
     setCursorHistory([]);
     setCurrentCursor("");
+    setNextCursor("");
+    setHasNextPage(false);
     fetchAssociates("");
   }, [fetchAssociates]);
 
   // Pagination handlers
   const handleNextPage = () => {
-    console.log("🔜 handleNextPage clicked");
+    console.log(
+      "🔜 handleNextPage clicked, nextCursor:",
+      nextCursor,
+      "hasNextPage:",
+      hasNextPage,
+    );
 
     if (hasNextPage && nextCursor) {
       console.log("✅ Going to next page with cursor:", nextCursor);
@@ -252,18 +286,26 @@ function AdminAssociateListPage() {
     }
   };
 
-  // Handle page size change
+  // Handle page size change - FIXED
   const handlePageSizeChange = (e) => {
     const newPageSize = parseInt(e.target.value);
+    console.log("📏 Page size changing from", pageSize, "to", newPageSize);
     setPageSize(newPageSize);
 
     // Reset pagination when page size changes
     setCursorHistory([]);
     setCurrentCursor("");
-
-    // Fetch with new page size
-    setTimeout(() => fetchAssociates(""), 0);
+    setNextCursor("");
+    setHasNextPage(false);
   };
+
+  // Effect to refetch when pageSize changes
+  useEffect(() => {
+    if (pageSize) {
+      console.log("📏 Page size changed to:", pageSize, "- fetching data");
+      fetchAssociates("");
+    }
+  }, [pageSize]); // Re-fetch when pageSize changes
 
   // Handle sort change
   const handleSortChange = (e) => {
@@ -272,6 +314,8 @@ function AdminAssociateListPage() {
     // Reset pagination when sort changes
     setCursorHistory([]);
     setCurrentCursor("");
+    setNextCursor("");
+    setHasNextPage(false);
 
     setTimeout(() => fetchAssociates(""), 0);
   };
@@ -313,13 +357,15 @@ function AdminAssociateListPage() {
     setHasTaxId(false);
     setCursorHistory([]);
     setCurrentCursor("");
+    setNextCursor("");
+    setHasNextPage(false);
     setShowFilters(false);
     fetchAssociates("");
   }, [fetchAssociates]);
 
-  // Initial data load
+  // Initial data load - only on mount
   useEffect(() => {
-    console.log("🚀 Initial useEffect - loading first page");
+    console.log("🚀 Initial mount - loading first page");
     fetchAssociates("");
   }, []); // Empty dependency array for initial load only
 
@@ -406,6 +452,30 @@ function AdminAssociateListPage() {
   // Calculate pagination info
   const hasPreviousPage = cursorHistory.length > 0;
   const currentPageNumber = cursorHistory.length + 1;
+
+  // Debug info for development
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      console.log("📊 Pagination state:", {
+        currentCursor,
+        nextCursor,
+        hasNextPage,
+        hasPreviousPage,
+        cursorHistoryLength: cursorHistory.length,
+        pageSize,
+        totalCount,
+        associatesCount: associates.length,
+      });
+    }
+  }, [
+    currentCursor,
+    nextCursor,
+    hasNextPage,
+    cursorHistory,
+    pageSize,
+    totalCount,
+    associates,
+  ]);
 
   return (
     <div style={globalStyles.container}>
@@ -608,6 +678,24 @@ function AdminAssociateListPage() {
                 {totalCount > 0 && ` (Total: ${totalCount})`}
                 {searchQuery && ` (filtered by "${searchQuery}")`}
               </div>
+
+              {/* Debug info in development */}
+              {process.env.NODE_ENV === "development" && (
+                <div
+                  style={{ fontSize: "12px", marginTop: "5px", color: "#666" }}
+                >
+                  <strong>Pagination Debug:</strong>
+                  <br />
+                  Page: {currentPageNumber} | Results: {associates.length} |
+                  Page Size: {pageSize} | Has next: {hasNextPage ? "Yes" : "No"}{" "}
+                  | Has previous: {hasPreviousPage ? "Yes" : "No"}
+                  <br />
+                  Current cursor: {currentCursor || "start"} | Next cursor:{" "}
+                  {nextCursor || "none"}
+                  <br />
+                  History stack size: {cursorHistory.length}
+                </div>
+              )}
             </div>
 
             {/* Associate List */}
