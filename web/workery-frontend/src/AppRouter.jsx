@@ -100,6 +100,7 @@ import AdminAssociateAddStep3Page from "./pages/Admin/Associate/Add/Step3Page";
 import AdminAssociateAddStep4Page from "./pages/Admin/Associate/Add/Step4Page";
 import AdminAssociateAddStep5Page from "./pages/Admin/Associate/Add/Step5Page";
 import AdminAssociateAddStep6Page from "./pages/Admin/Associate/Add/Step6Page";
+import AdminAssociateAddStep7Page from "./pages/Admin/Associate/Add/Step7Page";
 import AdminAssociateSearchCriteriaPagePage from "./pages/Admin/Associate/Search/CriteriaPage";
 import AdminAssociateSearchResultPagePage from "./pages/Admin/Associate/Search/ResultPage";
 import AdminAssociateUpdatePage from "./pages/Admin/Associate/Update/Page";
@@ -1021,7 +1022,7 @@ function AppRouter() {
               path="/admin/associates/add/step-1-search"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Associate - Step 1" />
+                  <AdminAssociateAddStep1PartAPage />
                 </Layout>
               }
             />
@@ -1029,7 +1030,7 @@ function AppRouter() {
               path="/admin/associates/add/step-1-results"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Associate - Step 1 Results" />
+                  <AdminAssociateAddStep1PartBPage />
                 </Layout>
               }
             />
@@ -1037,7 +1038,7 @@ function AppRouter() {
               path="/admin/associates/add/step-2"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Associate - Step 2" />
+                  <AdminAssociateAddStep2Page />
                 </Layout>
               }
             />
@@ -1045,7 +1046,7 @@ function AppRouter() {
               path="/admin/associates/add/step-3"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Associate - Step 3" />
+                  <AdminAssociateAddStep3Page />
                 </Layout>
               }
             />
@@ -1053,7 +1054,7 @@ function AppRouter() {
               path="/admin/associates/add/step-4"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Associate - Step 4" />
+                  <AdminAssociateAddStep4Page />
                 </Layout>
               }
             />
@@ -1061,7 +1062,7 @@ function AppRouter() {
               path="/admin/associates/add/step-5"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Associate - Step 5" />
+                  <AdminAssociateAddStep5Page />
                 </Layout>
               }
             />
@@ -1069,7 +1070,7 @@ function AppRouter() {
               path="/admin/associates/add/step-6"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Associate - Step 6" />
+                  <AdminAssociateAddStep6Page />
                 </Layout>
               }
             />
@@ -1077,7 +1078,7 @@ function AppRouter() {
               path="/admin/associates/add/step-7"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Associate - Step 7" />
+                  <AdminAssociateAddStep7Page />
                 </Layout>
               }
             />
