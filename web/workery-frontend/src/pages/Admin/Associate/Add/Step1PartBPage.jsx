@@ -36,9 +36,14 @@ function AdminAssociateAddStep1PartBPage() {
     useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [pageSize, setPageSize] = useState(50);
+  const [previousCursors, setPreviousCursors] = useState([]);
+  const [nextCursor, setNextCursor] = useState("");
+  const [currentCursor, setCurrentCursor] = useState("");
+  const [actualSearchText, setActualSearchText] = useState("");
   const [status, setStatus] = useState("");
-  const [typeOf, setTypeOf] = useState("");
-  const [sortByValue, setSortByValue] = useState("lexical_name,ASC");
+  const [typeOf, setTypeOf] = useState(0);
+  const [createdAtGTE, setCreatedAtGTE] = useState(null);
+  const [sortByValue, setSortByValue] = useState("last_name,ASC");
 
   // Check authentication
   useEffect(() => {
@@ -56,10 +61,13 @@ function AdminAssociateAddStep1PartBPage() {
     lastName,
     email,
     phone,
+    currentCursor,
     pageSize,
+    actualSearchText,
+    sortByValue,
     status,
     typeOf,
-    sortByValue,
+    createdAtGTE,
   ]);
 
   const fetchAssociates = async () => {
@@ -67,41 +75,98 @@ function AdminAssociateAddStep1PartBPage() {
     setErrors({});
 
     try {
-      const params = {
-        page: 1,
-        limit: pageSize,
-      };
+      // Build filters map like the original implementation
+      const filtersMap = new Map();
 
-      // Add search parameters
-      if (firstName) params.firstName = firstName;
-      if (lastName) params.lastName = lastName;
-      if (email) params.email = email;
-      if (phone) params.phone = phone;
+      // Pagination
+      filtersMap.set("pageSize", pageSize);
+      filtersMap.set("sortField", "last_name"); // Default sort field
 
-      // Add filtering parameters
-      if (status) params.status = status;
-      if (typeOf) params.typeOf = typeOf;
-
-      // Add sorting
-      if (sortByValue) {
-        const [sortField, sortOrder] = sortByValue.split(",");
-        params.sortBy = sortField;
-        params.sortOrder = sortOrder;
+      if (currentCursor) {
+        filtersMap.set("cursor", currentCursor);
       }
 
-      const associatesData = await associateManager.getAssociates(
-        params,
+      // Sorting - split the sortByValue like original implementation
+      if (sortByValue) {
+        const sortArray = sortByValue.split(",");
+        filtersMap.set("sortField", sortArray[0]);
+        filtersMap.set("sortOrder", sortArray[1]);
+      }
+
+      // Search parameters - use exact parameter names that API expects
+      if (firstName) {
+        filtersMap.set("firstName", firstName);
+      }
+      if (lastName) {
+        filtersMap.set("lastName", lastName);
+      }
+      if (email) {
+        filtersMap.set("email", email);
+      }
+      if (phone) {
+        filtersMap.set("phone", phone);
+      }
+
+      // Additional filters
+      if (actualSearchText) {
+        filtersMap.set("search", actualSearchText);
+      }
+      if (status) {
+        filtersMap.set("status", status);
+      }
+      if (typeOf !== 0) {
+        filtersMap.set("type", typeOf);
+      }
+      if (createdAtGTE) {
+        const createdAtGTEStr = createdAtGTE.getTime();
+        filtersMap.set("createdAtGte", createdAtGTEStr);
+      }
+
+      console.log("Fetching associates with filters:", filtersMap);
+
+      // Use getAssociatesWithFiltersMap like the original implementation
+      const associatesData = await associateManager.getAssociatesWithFiltersMap(
+        filtersMap,
         () => navigate("/login?unauthorized=true"),
         true, // force refresh
       );
 
+      console.log("Associates response:", associatesData);
+
       setAssociates(associatesData.results || []);
+      if (associatesData.hasNextPage) {
+        setNextCursor(associatesData.nextCursor);
+      }
     } catch (error) {
       console.error("Failed to fetch associates:", error);
       setErrors(error);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const onNextClicked = (e) => {
+    let arr = [...previousCursors];
+    arr.push(currentCursor);
+    setPreviousCursors(arr);
+    setCurrentCursor(nextCursor);
+  };
+
+  const onPreviousClicked = (e) => {
+    let arr = [...previousCursors];
+    const previousCursor = arr.pop();
+    setPreviousCursors(arr);
+    setCurrentCursor(previousCursor);
+  };
+
+  const onSelectAssociateForDeletion = (e, associate) => {
+    console.log("onSelectAssociateForDeletion", associate);
+    setSelectedAssociateForDeletion(associate);
+  };
+
+  const onDeselectAssociateForDeletion = (e) => {
+    console.log("onDeselectAssociateForDeletion");
+    setSelectedAssociateForDeletion(null);
   };
 
   const onDeleteConfirmButtonClick = async () => {
@@ -152,15 +217,15 @@ function AdminAssociateAddStep1PartBPage() {
   ];
 
   const typeOptions = [
-    { value: "", label: "All Types" },
-    { value: "1", label: "Unassigned" },
-    { value: "2", label: "Residential" },
-    { value: "3", label: "Commercial" },
+    { value: 0, label: "All Types" },
+    { value: 1, label: "Unassigned" },
+    { value: 2, label: "Residential" },
+    { value: 3, label: "Commercial" },
   ];
 
   const sortOptions = [
-    { value: "lexical_name,ASC", label: "Name (A-Z)" },
-    { value: "lexical_name,DESC", label: "Name (Z-A)" },
+    { value: "last_name,ASC", label: "Name (A-Z)" },
+    { value: "last_name,DESC", label: "Name (Z-A)" },
     { value: "join_date,ASC", label: "Join Date (Oldest)" },
     { value: "join_date,DESC", label: "Join Date (Newest)" },
   ];
@@ -244,13 +309,13 @@ function AdminAssociateAddStep1PartBPage() {
             <Select
               label="Status"
               value={status}
-              onChange={(e) => setStatus(e.target.value)}
+              onChange={(e) => setStatus(parseInt(e.target.value) || "")}
               options={statusOptions}
             />
             <Select
               label="Type"
               value={typeOf}
-              onChange={(e) => setTypeOf(e.target.value)}
+              onChange={(e) => setTypeOf(parseInt(e.target.value))}
               options={typeOptions}
             />
             <Select
@@ -314,7 +379,8 @@ function AdminAssociateAddStep1PartBPage() {
                         >
                           {getAssociateTypeIcon(associate.type)}&nbsp;
                           {associate.type === 3
-                            ? associate.organizationName
+                            ? associate.organizationName ||
+                              `${associate.firstName} ${associate.lastName}`
                             : `${associate.firstName} ${associate.lastName}`}
                         </Link>
                       </div>
@@ -385,6 +451,18 @@ function AdminAssociateAddStep1PartBPage() {
                     onChange={(e) => setPageSize(parseInt(e.target.value))}
                     options={pageSizeOptions}
                   />
+                  <div style={{ display: "flex", gap: "0.5rem" }}>
+                    {previousCursors.length > 0 && (
+                      <Button onClick={onPreviousClicked} variant="secondary">
+                        Previous
+                      </Button>
+                    )}
+                    {nextCursor && (
+                      <Button onClick={onNextClicked} variant="secondary">
+                        Next
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </>
             ) : (
@@ -446,12 +524,12 @@ function AdminAssociateAddStep1PartBPage() {
       {/* Delete Confirmation Modal */}
       <Modal
         isOpen={!!selectedAssociateForDeletion}
-        onClose={() => setSelectedAssociateForDeletion(null)}
+        onClose={onDeselectAssociateForDeletion}
         title="Are you sure?"
         footer={
           <>
             <Button
-              onClick={() => setSelectedAssociateForDeletion(null)}
+              onClick={onDeselectAssociateForDeletion}
               variant="secondary"
             >
               Cancel
