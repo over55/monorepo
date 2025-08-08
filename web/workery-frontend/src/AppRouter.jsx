@@ -1085,7 +1085,7 @@ function AppRouter() {
               path="/admin/associate/:aid"
               element={
                 <Layout>
-                  <PlaceholderPage title="Associate Detail" />
+                  <AdminAssociateDetailLitePage />
                 </Layout>
               }
             />
@@ -1093,7 +1093,7 @@ function AppRouter() {
               path="/admin/associate/:aid/detail"
               element={
                 <Layout>
-                  <PlaceholderPage title="Associate Detail (Full)" />
+                  <AdminAssociateDetailFullPage />
                 </Layout>
               }
             />
