@@ -1228,7 +1228,7 @@ function AppRouter() {
               path="/admin/associate/:aid/archive"
               element={
                 <Layout>
-                  <PlaceholderPage title="Archive Associate" />
+                  <AdminAssociateDetailMoreArchivePage />
                 </Layout>
               }
             />
