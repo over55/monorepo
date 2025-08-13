@@ -17,7 +17,8 @@ func (h *Handler) LiteList(w http.ResponseWriter, r *http.Request) {
 		Cursor:    "",
 		PageSize:  25,
 		SortField: "assignment_date",
-		SortOrder: o_s.SortOrderAscending,
+		SortOrder: o_s.SortOrderDescending,
+		Page:      1, // Default to page 1
 	}
 
 	// Here is where you extract url parameters.
@@ -28,13 +29,24 @@ func (h *Handler) LiteList(w http.ResponseWriter, r *http.Request) {
 		f.Cursor = cursor
 	}
 
-	pageSize := query.Get("page_size")
-	if pageSize != "" {
-		pageSize, _ := strconv.ParseInt(pageSize, 10, 64)
-		if pageSize == 0 || pageSize > 250 {
-			pageSize = 250
+	// Handle page-based pagination
+	pageStr := query.Get("page")
+	if pageStr != "" {
+		pageInt, err := strconv.ParseInt(pageStr, 10, 64)
+		if err == nil && pageInt > 0 {
+			f.Page = pageInt
 		}
-		f.PageSize = pageSize
+	}
+
+	pageSizeStr := query.Get("page_size")
+	if pageSizeStr != "" {
+		pageSizeInt, err := strconv.ParseInt(pageSizeStr, 10, 64)
+		if err == nil {
+			if pageSizeInt == 0 || pageSizeInt > 250 {
+				pageSizeInt = 250
+			}
+			f.PageSize = pageSizeInt
+		}
 	}
 
 	sortField := query.Get("sort_field")
@@ -51,18 +63,17 @@ func (h *Handler) LiteList(w http.ResponseWriter, r *http.Request) {
 
 	typeOfStr := query.Get("type")
 	if typeOfStr != "" {
-		typeOf, _ := strconv.ParseInt(typeOfStr, 10, 64)
-		if typeOf > 0 {
-			f.Type = int8(typeOf)
-
+		typeOfInt, err := strconv.ParseInt(typeOfStr, 10, 64)
+		if err == nil && typeOfInt > 0 {
+			f.Type = int8(typeOfInt)
 		}
 	}
 
 	statusStr := query.Get("status")
 	if statusStr != "" {
-		status, _ := strconv.ParseInt(statusStr, 10, 64)
-		if status > 0 {
-			f.Status = int8(status)
+		statusInt, err := strconv.ParseInt(statusStr, 10, 64)
+		if err == nil && statusInt > 0 {
+			f.Status = int8(statusInt)
 		}
 	}
 
@@ -95,12 +106,12 @@ func (h *Handler) LiteList(w http.ResponseWriter, r *http.Request) {
 	}
 	customerID := query.Get("customer_id")
 	if customerID != "" {
-		customerID, err := primitive.ObjectIDFromHex(customerID)
+		customerIDObj, err := primitive.ObjectIDFromHex(customerID)
 		if err != nil {
 			httperror.ResponseError(w, err)
 			return
 		}
-		f.CustomerID = customerID
+		f.CustomerID = customerIDObj
 	}
 
 	associateOrganizationName := query.Get("associate_organization_name")
@@ -125,12 +136,12 @@ func (h *Handler) LiteList(w http.ResponseWriter, r *http.Request) {
 	}
 	associateID := query.Get("associate_id")
 	if associateID != "" {
-		associateID, err := primitive.ObjectIDFromHex(associateID)
+		associateIDObj, err := primitive.ObjectIDFromHex(associateID)
 		if err != nil {
 			httperror.ResponseError(w, err)
 			return
 		}
-		f.AssociateID = associateID
+		f.AssociateID = associateIDObj
 	}
 	orderWJID := query.Get("order_wjid")
 	if orderWJID != "" {
@@ -139,23 +150,13 @@ func (h *Handler) LiteList(w http.ResponseWriter, r *http.Request) {
 
 	tenantID := query.Get("tenant_id")
 	if tenantID != "" {
-		tenantID, err := primitive.ObjectIDFromHex(tenantID)
+		tenantIDObj, err := primitive.ObjectIDFromHex(tenantID)
 		if err != nil {
 			httperror.ResponseError(w, err)
 			return
 		}
-		f.TenantID = tenantID
+		f.TenantID = tenantIDObj
 	}
-
-	// createdAtGTEStr := query.Get("created_at_gte")
-	// if createdAtGTEStr != "" {
-	// 	createdAtGTE, err := timekit.ParseJavaScriptTimeString(createdAtGTEStr)
-	// 	if err != nil {
-	// 		httperror.ResponseError(w, err)
-	// 		return
-	// 	}
-	// 	f.CreatedAtGTE = createdAtGTE
-	// }
 
 	// Perform our database operation.
 	res, err := h.Controller.LiteListAndCountByFilter(ctx, f)

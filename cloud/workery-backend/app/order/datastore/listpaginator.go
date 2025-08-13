@@ -22,7 +22,8 @@ type OrderPaginationListFilter struct {
 	Cursor    string
 	PageSize  int64
 	SortField string
-	SortOrder int8 // 1=ascending | -1=descending
+	SortOrder int8  // 1=ascending | -1=descending
+	Page      int64 // Add page number support
 
 	// Filter related.
 	TenantID                  primitive.ObjectID
@@ -117,6 +118,7 @@ func (impl OrderStorerImpl) newPaginationFilter(f *OrderPaginationListFilter) (b
 			return nil, fmt.Errorf("unsupported sort field for `%v`, only supported fields are `associate_lexical_name`, `customer_lexical_name`, `start_date`, `created_at`, `modified_at` and `assignment_date`", f.SortField)
 		}
 	}
+	// If no cursor is provided, return empty filter (offset-based pagination will be handled in options)
 	return bson.M{}, nil
 }
 
@@ -198,20 +200,27 @@ func (impl OrderStorerImpl) newPaginationFilterBasedOnTimestamp(f *OrderPaginati
 // newPaginatorOptions will generate the mongodb options which will support the
 // paginator in ordering the data to work.
 func (impl OrderStorerImpl) newPaginationOptions(f *OrderPaginationListFilter) (*options.FindOptions, error) {
-	options := options.Find().SetLimit(f.PageSize)
+	opts := options.Find().SetLimit(f.PageSize)
+
+	// Add offset-based pagination support when no cursor is provided
+	if len(f.Cursor) == 0 && f.Page > 0 {
+		// Calculate skip based on page number
+		skip := (f.Page - 1) * f.PageSize
+		opts = opts.SetSkip(skip)
+	}
 
 	// DEVELOPERS NOTE:
 	// We want to be able to return a list without sorting so we will need to
 	// run the following code.
 	if f.SortField != "" {
-		options = options.
+		opts = opts.
 			SetSort(bson.D{
 				{f.SortField, f.SortOrder},
 				{"_id", f.SortOrder}, // Include _id in sorting for consistency
 			})
 	}
 
-	return options, nil
+	return opts, nil
 }
 
 // newPaginatorLiteNextCursor will return the base64 encoded next cursor which works

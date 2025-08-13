@@ -83,13 +83,12 @@ func (impl OrderStorerImpl) CountByFilter(ctx context.Context, f *OrderPaginatio
 		filter["status"] = bson.M{"$in": f.Statuses}
 	}
 	if f.OrderWJID != "" {
-		// NOTE: This is how you find the exact.
-		// wjidInt, err := strconv.ParseUint(f.OrderWJID, 10, 64)
-		// if err == nil {
-		// 	filter["wjid"] = bson.M{"$eq": wjidInt}
-		// }
-
 		filter["tenant_id_with_wjid"] = bson.M{"$regex": primitive.Regex{Pattern: f.OrderWJID, Options: "i"}}
+	}
+
+	// IMPORTANT: Add full-text search filter for SearchText
+	if f.SearchText != "" {
+		filter["$text"] = bson.M{"$search": f.SearchText}
 	}
 
 	// Create a slice to store conditions
@@ -138,9 +137,6 @@ func (impl OrderStorerImpl) CountByFilter(ctx context.Context, f *OrderPaginatio
 		filter["$and"] = conditions
 	}
 
-	// impl.Logger.Debug("counting w/ filter:",
-	// 	slog.Any("filter", filter))
-
 	// Use the CountDocuments method to count the matching documents.
 	count, err := impl.Collection.CountDocuments(ctx, filter)
 	if err != nil {
@@ -162,9 +158,6 @@ func (impl OrderStorerImpl) CountByAssociateID(ctx context.Context, tenantID pri
 		filter["associate_id"] = tenantID
 	}
 
-	// impl.Logger.Debug("counting w/ filter:",
-	// 	slog.Any("filter", filter))
-
 	// Use the CountDocuments method to count the matching documents.
 	count, err := impl.Collection.CountDocuments(ctx, filter)
 	if err != nil {
@@ -185,9 +178,6 @@ func (impl OrderStorerImpl) CountByTenantID(ctx context.Context, tenantID primit
 	if !tenantID.IsZero() {
 		filter["tenant_id"] = tenantID
 	}
-
-	// impl.Logger.Debug("counting w/ filter:",
-	// 	slog.Any("filter", filter))
 
 	// Use the CountDocuments method to count the matching documents.
 	count, err := impl.Collection.CountDocuments(ctx, filter)
