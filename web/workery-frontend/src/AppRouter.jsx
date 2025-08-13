@@ -1257,6 +1257,22 @@ function AppRouter() {
               }
             />
             <Route
+              path="/admin/associate/:aid/ban"
+              element={
+                <Layout>
+                  <AdminAssociateDetailMoreBanPage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/associate/:aid/unban"
+              element={
+                <Layout>
+                  <AdminCustomerDetailMoreUnbanPage />
+                </Layout>
+              }
+            />
+            <Route
               path="/admin/customers"
               element={
                 <Layout>
