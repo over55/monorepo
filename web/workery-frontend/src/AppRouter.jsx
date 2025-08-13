@@ -1212,7 +1212,7 @@ function AppRouter() {
               path="/admin/associate/:aid/avatar"
               element={
                 <Layout>
-                  <PlaceholderPage title="Associate Avatar" />
+                  <AdminAssociateDetailMoreAvatarPage />
                 </Layout>
               }
             />
