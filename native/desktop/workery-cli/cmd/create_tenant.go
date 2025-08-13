@@ -122,6 +122,13 @@ var createTenantCmd = &cobra.Command{
 			log.Panic(err)
 		}
 		log.Println("Finished creating tenant.")
-		fmt.Println("Created tenant ID#", tenant.ID.Hex())
+
+		fetchedTenant, err := tenantStorer.GetByID(ctx, tenant.ID)
+		if err != nil {
+			log.Fatalf("Failed to retrieve created tenant: %v", err)
+		}
+		fmt.Println("Tenant Creation Details")
+		fmt.Println("ID", fetchedTenant.ID.Hex())
+		fmt.Println("Public ID", fetchedTenant.PublicID)
 	},
 }
