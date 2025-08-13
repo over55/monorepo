@@ -1196,7 +1196,7 @@ function AppRouter() {
               path="/admin/associate/:aid/change-2fa"
               element={
                 <Layout>
-                  <PlaceholderPage title="Toggle Associate 2FA" />
+                  <AdminAssociateDetailMore2FAPage />
                 </Layout>
               }
             />
