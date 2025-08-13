@@ -1188,7 +1188,7 @@ function AppRouter() {
               path="/admin/associate/:aid/edit"
               element={
                 <Layout>
-                  <PlaceholderPage title="Edit Associate" />
+                  <AdminAssociateUpdatePage />
                 </Layout>
               }
             />
