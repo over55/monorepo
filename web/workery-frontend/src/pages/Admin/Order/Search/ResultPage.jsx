@@ -11,6 +11,7 @@ import {
   Loading,
   Breadcrumb,
   Table,
+  Select,
 } from "../../../../components/UI";
 
 function AdminOrderSearchResultPage() {
@@ -19,13 +20,17 @@ function AdminOrderSearchResultPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
+  // State management
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
   const [orders, setOrders] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(25);
+  const [pageSize, setPageSize] = useState(25);
   const [hasSearched, setHasSearched] = useState(false);
+  const [sortBy, setSortBy] = useState("created_at,DESC");
+  const [status, setStatus] = useState("");
+  const [type, setType] = useState("");
 
   // Search criteria from URL parameters
   const searchCriteria = {
@@ -47,211 +52,162 @@ function AdminOrderSearchResultPage() {
     navigate("/login?unauthorized=true");
   };
 
-  const buildSearchFiltersMap = (page = 1) => {
-    const filtersMap = new Map();
+  const buildSearchParams = (page = 1) => {
+    const params = {
+      page: page,
+      limit: pageSize,
+    };
 
-    // Add pagination
-    filtersMap.set("page", page);
-    filtersMap.set("pageSize", pageSize);
+    // Add sorting
+    if (sortBy) {
+      const [field, order] = sortBy.split(",");
+      params.sortBy = field;
+      params.sortOrder = order;
+    }
 
-    console.log("AdminOrderSearchResult: Building filters for page:", page);
+    // Add status filter
+    if (status) {
+      params.status = status;
+    }
+
+    // Add type filter
+    if (type) {
+      params.type = type;
+    }
 
     // Add search criteria
+    if (searchCriteria.generalSearch) {
+      params.search = searchCriteria.generalSearch;
+    }
     if (searchCriteria.customerFirstName) {
-      filtersMap.set("customerFirstName", searchCriteria.customerFirstName);
+      params.customerFirstName = searchCriteria.customerFirstName;
     }
     if (searchCriteria.customerLastName) {
-      filtersMap.set("customerLastName", searchCriteria.customerLastName);
+      params.customerLastName = searchCriteria.customerLastName;
     }
     if (searchCriteria.customerEmail) {
-      filtersMap.set("customerEmail", searchCriteria.customerEmail);
+      params.customerEmail = searchCriteria.customerEmail;
     }
     if (searchCriteria.customerPhone) {
-      filtersMap.set("customerPhone", searchCriteria.customerPhone);
+      params.customerPhone = searchCriteria.customerPhone;
     }
     if (searchCriteria.customerOrganizationName) {
-      filtersMap.set(
-        "customerOrganizationName",
-        searchCriteria.customerOrganizationName,
-      );
-    }
-    if (searchCriteria.generalSearch) {
-      filtersMap.set("search", searchCriteria.generalSearch);
+      params.customerOrganizationName = searchCriteria.customerOrganizationName;
     }
     if (searchCriteria.associateFirstName) {
-      filtersMap.set("associateFirstName", searchCriteria.associateFirstName);
+      params.associateFirstName = searchCriteria.associateFirstName;
     }
     if (searchCriteria.associateLastName) {
-      filtersMap.set("associateLastName", searchCriteria.associateLastName);
+      params.associateLastName = searchCriteria.associateLastName;
     }
     if (searchCriteria.associateEmail) {
-      filtersMap.set("associateEmail", searchCriteria.associateEmail);
+      params.associateEmail = searchCriteria.associateEmail;
     }
     if (searchCriteria.associatePhone) {
-      filtersMap.set("associatePhone", searchCriteria.associatePhone);
+      params.associatePhone = searchCriteria.associatePhone;
     }
     if (searchCriteria.associateOrganizationName) {
-      filtersMap.set(
-        "associateOrganizationName",
-        searchCriteria.associateOrganizationName,
-      );
+      params.associateOrganizationName =
+        searchCriteria.associateOrganizationName;
     }
     if (searchCriteria.orderWjid) {
-      filtersMap.set("wjid", searchCriteria.orderWjid);
+      params.wjid = searchCriteria.orderWjid;
     }
 
-    console.log(
-      "AdminOrderSearchResult: Final filters map:",
-      Array.from(filtersMap.entries()),
-    );
-    return filtersMap;
+    return params;
   };
 
   const fetchOrders = async (page = 1) => {
+    if (isFetching) {
+      console.log("Already fetching, skipping duplicate request");
+      return;
+    }
+
     setFetching(true);
     setErrors({});
 
     try {
-      const filtersMap = buildSearchFiltersMap(page);
+      const params = buildSearchParams(page);
 
-      console.log(
-        "AdminOrderSearchResult: Fetching orders with filters:",
-        filtersMap,
-      );
-      console.log("AdminOrderSearchResult: Requesting page:", page);
+      console.log("Fetching orders with params:", params);
 
-      // Clear the orders cache to ensure fresh data for pagination
+      // Clear the orders cache to ensure fresh data
       orderManager.clearOrdersCache();
 
-      // Also check if OrderManager is in a loading state
-      const cacheInfo = orderManager.getOrdersCacheInfo();
-      console.log(
-        "AdminOrderSearchResult: OrderManager cache info:",
-        cacheInfo,
+      // Fetch orders using the OrderManager
+      const ordersData = await orderManager.getOrders(
+        params,
+        onUnauthorized,
+        true, // Force refresh
       );
 
-      // If OrderManager thinks it's still loading, force it to stop
-      if (cacheInfo.orders?.memoryCache?.isLoading) {
-        console.log(
-          "AdminOrderSearchResult: OrderManager was stuck in loading state, clearing...",
-        );
-        // This is a workaround - we might need to add a method to OrderManager to clear loading state
-      }
-
-      // Try alternative approach with regular getOrders method if filtersMap doesn't work well
-      let ordersData;
-      try {
-        ordersData = await orderManager.getOrdersWithFiltersMap(
-          filtersMap,
-          onUnauthorized,
-          true, // Force refresh for search results
-        );
-      } catch (error) {
-        console.log(
-          "AdminOrderSearchResult: FiltersMap method failed, trying alternative approach:",
-          error,
-        );
-
-        // Convert filtersMap to regular params object
-        const params = {};
-        filtersMap.forEach((value, key) => {
-          params[key] = value;
-        });
-
-        console.log(
-          "AdminOrderSearchResult: Trying with regular params:",
-          params,
-        );
-        ordersData = await orderManager.getOrders(params, onUnauthorized, true);
-      }
-
-      console.log("AdminOrderSearchResult: Raw orders data:", ordersData);
-      console.log("AdminOrderSearchResult: Returned page info:", {
-        requestedPage: page,
+      console.log("Orders data received:", {
         resultsCount: ordersData.results ? ordersData.results.length : 0,
         totalCount: ordersData.count,
+        page: page,
       });
-
-      // Debug: Log first order to see structure
-      if (ordersData.results && ordersData.results.length > 0) {
-        console.log(
-          "AdminOrderSearchResult: First order structure:",
-          ordersData.results[0],
-        );
-      }
 
       setOrders(ordersData.results || []);
       setTotalCount(ordersData.count || 0);
       setCurrentPage(page);
       setHasSearched(true);
-
-      console.log("AdminOrderSearchResult: Orders data loaded successfully:", {
-        count: ordersData.results ? ordersData.results.length : 0,
-        totalCount: ordersData.count,
-        currentPage: page,
-      });
     } catch (error) {
-      console.error("AdminOrderSearchResult: Failed to fetch orders:", error);
+      console.error("Failed to fetch orders:", error);
       setErrors({
         fetch: error.message || "Failed to load order search results",
       });
       setOrders([]);
       setTotalCount(0);
       setHasSearched(true);
-      window.scrollTo(0, 0);
     } finally {
       setFetching(false);
     }
   };
 
   const handlePageChange = (newPage) => {
-    console.log("AdminOrderSearchResult: Page change requested:", {
-      currentPage,
-      newPage,
-      totalPages,
-      totalCount,
-      pageSize,
-      isFetching,
-    });
-
-    // Prevent pagination if already fetching
     if (isFetching) {
-      console.log(
-        "AdminOrderSearchResult: Page change rejected - already fetching",
-      );
       return;
     }
 
+    const totalPages = Math.ceil(totalCount / pageSize);
+
     if (newPage >= 1 && newPage <= totalPages && newPage !== currentPage) {
-      console.log(
-        "AdminOrderSearchResult: Proceeding with page change to:",
-        newPage,
-      );
-
-      // Set a timeout to prevent infinite loading states
-      const timeoutId = setTimeout(() => {
-        console.log(
-          "AdminOrderSearchResult: Pagination timeout - forcing loading state to false",
-        );
-        setFetching(false);
-      }, 10000); // 10 second timeout
-
-      fetchOrders(newPage).finally(() => {
-        clearTimeout(timeoutId);
-      });
-
+      console.log(`Changing to page ${newPage} of ${totalPages}`);
+      fetchOrders(newPage);
       window.scrollTo(0, 0);
-    } else {
-      console.log("AdminOrderSearchResult: Page change rejected:", {
-        reason:
-          newPage < 1
-            ? "Page below 1"
-            : newPage > totalPages
-              ? "Page above total"
-              : newPage === currentPage
-                ? "Same page"
-                : "Unknown",
-      });
+    }
+  };
+
+  const handlePageSizeChange = (newPageSize) => {
+    const newSize = parseInt(newPageSize);
+    if (newSize !== pageSize) {
+      setPageSize(newSize);
+      setCurrentPage(1); // Reset to first page
+      // Will trigger useEffect to refetch
+    }
+  };
+
+  const handleSortChange = (newSort) => {
+    if (newSort !== sortBy) {
+      setSortBy(newSort);
+      setCurrentPage(1); // Reset to first page
+      // Will trigger useEffect to refetch
+    }
+  };
+
+  const handleStatusChange = (newStatus) => {
+    if (newStatus !== status) {
+      setStatus(newStatus);
+      setCurrentPage(1); // Reset to first page
+      // Will trigger useEffect to refetch
+    }
+  };
+
+  const handleTypeChange = (newType) => {
+    if (newType !== type) {
+      setType(newType);
+      setCurrentPage(1); // Reset to first page
+      // Will trigger useEffect to refetch
     }
   };
 
@@ -277,6 +233,9 @@ function AdminOrderSearchResultPage() {
     if (searchCriteria.customerEmail) {
       criteria.push(`Customer Email: "${searchCriteria.customerEmail}"`);
     }
+    if (searchCriteria.customerPhone) {
+      criteria.push(`Customer Phone: "${searchCriteria.customerPhone}"`);
+    }
     if (searchCriteria.customerOrganizationName) {
       criteria.push(
         `Customer Org: "${searchCriteria.customerOrganizationName}"`,
@@ -293,6 +252,9 @@ function AdminOrderSearchResultPage() {
     }
     if (searchCriteria.associateEmail) {
       criteria.push(`Associate Email: "${searchCriteria.associateEmail}"`);
+    }
+    if (searchCriteria.associatePhone) {
+      criteria.push(`Associate Phone: "${searchCriteria.associatePhone}"`);
     }
     if (searchCriteria.associateOrganizationName) {
       criteria.push(
@@ -313,6 +275,23 @@ function AdminOrderSearchResultPage() {
         ? current[key]
         : defaultValue;
     }, obj);
+  };
+
+  // Format date helper
+  const formatDate = (dateString) => {
+    if (!dateString) return "Not set";
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString();
+    } catch {
+      return dateString;
+    }
+  };
+
+  // Format status helper
+  const formatStatus = (status) => {
+    if (!status) return "UNKNOWN";
+    return status.toString().replace(/_/g, " ").toUpperCase();
   };
 
   useEffect(() => {
@@ -340,14 +319,26 @@ function AdminOrderSearchResultPage() {
         return;
       }
 
-      // Perform search
-      fetchOrders(1);
+      // Initial fetch is triggered by dependencies
     }
 
     return () => {
       mounted = false;
     };
-  }, [searchParams]);
+  }, []); // Only run once on mount
+
+  // Trigger fetch when filters or pagination changes
+  useEffect(() => {
+    if (authManager.isAuthenticated()) {
+      const hasAnyCriteria = Object.values(searchCriteria).some(
+        (value) => value && value.trim(),
+      );
+
+      if (hasAnyCriteria) {
+        fetchOrders(currentPage);
+      }
+    }
+  }, [pageSize, sortBy, status, type]); // Re-fetch when these change
 
   const breadcrumbItems = [
     { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
@@ -358,176 +349,97 @@ function AdminOrderSearchResultPage() {
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
-  // Table columns with safe field access
+  // Table columns
   const tableColumns = [
     {
-      key: "id",
+      key: "wjid",
       label: "Job #",
       render: (value, order) => {
-        try {
-          const wjid =
-            getFieldValue(order, "wjid") ||
-            getFieldValue(order, "workOrderId") ||
-            getFieldValue(order, "jobId");
-          const displayValue = wjid || `#${value}`;
-          return (
-            <span style={{ fontWeight: "600", color: theme.colors.primary }}>
-              {displayValue}
-            </span>
-          );
-        } catch (error) {
-          console.error("Error rendering job #:", error);
-          return <span>#{value}</span>;
-        }
+        const wjid = getFieldValue(order, "wjid") || `#${order.id}`;
+        return (
+          <span style={{ fontWeight: "600", color: theme.colors.primary }}>
+            {wjid}
+          </span>
+        );
       },
     },
     {
       key: "customer",
       label: "Customer",
       render: (value, order) => {
-        try {
-          const firstName =
-            getFieldValue(order, "customerFirstName") ||
-            getFieldValue(order, "customer.firstName");
-          const lastName =
-            getFieldValue(order, "customerLastName") ||
-            getFieldValue(order, "customer.lastName");
-          const orgName =
-            getFieldValue(order, "customerOrganizationName") ||
-            getFieldValue(order, "customer.organizationName");
+        const firstName = getFieldValue(order, "customerFirstName", "");
+        const lastName = getFieldValue(order, "customerLastName", "");
+        const orgName = getFieldValue(order, "customerOrganizationName", "");
 
-          let displayName = "N/A";
-          if (firstName && lastName) {
-            displayName = `${firstName} ${lastName}`;
-          } else if (orgName) {
-            displayName = orgName;
-          } else if (firstName) {
-            displayName = firstName;
-          } else if (lastName) {
-            displayName = lastName;
-          }
-
-          return <span>{displayName}</span>;
-        } catch (error) {
-          console.error("Error rendering customer:", error);
-          return <span>N/A</span>;
-        }
+        let displayName = orgName || `${firstName} ${lastName}`.trim() || "N/A";
+        return <span>{displayName}</span>;
       },
     },
     {
       key: "associate",
       label: "Associate",
       render: (value, order) => {
-        try {
-          const firstName =
-            getFieldValue(order, "associateFirstName") ||
-            getFieldValue(order, "associate.firstName");
-          const lastName =
-            getFieldValue(order, "associateLastName") ||
-            getFieldValue(order, "associate.lastName");
+        const firstName = getFieldValue(order, "associateFirstName", "");
+        const lastName = getFieldValue(order, "associateLastName", "");
 
-          let displayName = "Unassigned";
-          if (firstName && lastName) {
-            displayName = `${firstName} ${lastName}`;
-          } else if (firstName) {
-            displayName = firstName;
-          } else if (lastName) {
-            displayName = lastName;
-          }
-
-          return (
-            <span
-              style={{
-                color: displayName === "Unassigned" ? "#999" : "inherit",
-              }}
-            >
-              {displayName}
-            </span>
-          );
-        } catch (error) {
-          console.error("Error rendering associate:", error);
-          return <span style={{ color: "#999" }}>Unassigned</span>;
-        }
+        let displayName = `${firstName} ${lastName}`.trim() || "Unassigned";
+        return (
+          <span
+            style={{ color: displayName === "Unassigned" ? "#999" : "inherit" }}
+          >
+            {displayName}
+          </span>
+        );
       },
     },
     {
       key: "status",
       label: "Status",
       render: (value, order) => {
-        try {
-          const status =
-            getFieldValue(order, "status") ||
-            getFieldValue(order, "state") ||
-            "unknown";
-          const statusColors = {
-            new: "#28a745",
-            assigned: "#17a2b8",
-            in_progress: "#ffc107",
-            completed: "#6f42c1",
-            closed: "#6c757d",
-            cancelled: "#dc3545",
-          };
-          const displayStatus = status
-            ? status.toString().replace(/_/g, " ").toUpperCase()
-            : "UNKNOWN";
-          return (
-            <span
-              style={{
-                color: statusColors[status] || "#6c757d",
-                fontWeight: "600",
-                fontSize: "12px",
-              }}
-            >
-              {displayStatus}
-            </span>
-          );
-        } catch (error) {
-          console.error("Error rendering status:", error);
-          return (
-            <span
-              style={{ color: "#6c757d", fontWeight: "600", fontSize: "12px" }}
-            >
-              UNKNOWN
-            </span>
-          );
-        }
+        const status = getFieldValue(order, "status", "unknown");
+        const statusColors = {
+          1: "#28a745", // New
+          2: "#17a2b8", // Assigned
+          3: "#ffc107", // In Progress
+          4: "#6f42c1", // Completed
+          5: "#6c757d", // Closed
+          6: "#dc3545", // Cancelled
+        };
+        return (
+          <span
+            style={{
+              color: statusColors[status] || "#6c757d",
+              fontWeight: "600",
+              fontSize: "12px",
+            }}
+          >
+            {formatStatus(status)}
+          </span>
+        );
       },
     },
     {
       key: "startDate",
       label: "Start Date",
       render: (value, order) => {
-        try {
-          const startDate =
-            getFieldValue(order, "startDate") ||
-            getFieldValue(order, "scheduledDate");
-          return <span>{startDate || "Not set"}</span>;
-        } catch (error) {
-          console.error("Error rendering start date:", error);
-          return <span>Not set</span>;
-        }
+        const startDate = getFieldValue(order, "startDate");
+        return <span>{formatDate(startDate)}</span>;
       },
     },
     {
       key: "description",
       label: "Description",
       render: (value, order) => {
-        try {
-          const description =
-            getFieldValue(order, "description") ||
-            getFieldValue(order, "summary") ||
-            getFieldValue(order, "title");
-          const truncated =
-            description && description.length > 50
-              ? `${description.substring(0, 50)}...`
-              : description;
-          return (
-            <span title={description}>{truncated || "No description"}</span>
-          );
-        } catch (error) {
-          console.error("Error rendering description:", error);
-          return <span>No description</span>;
-        }
+        const description = getFieldValue(
+          order,
+          "description",
+          "No description",
+        );
+        const truncated =
+          description.length > 50
+            ? `${description.substring(0, 50)}...`
+            : description;
+        return <span title={description}>{truncated}</span>;
       },
     },
   ];
@@ -541,6 +453,17 @@ function AdminOrderSearchResultPage() {
       fontSize: "14px",
       color: "#495057",
     },
+    filterSection: {
+      backgroundColor: "#f8f9fa",
+      padding: "15px",
+      borderRadius: "8px",
+      marginBottom: "20px",
+    },
+    filterGrid: {
+      display: "grid",
+      gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+      gap: "15px",
+    },
     resultsHeader: {
       display: "flex",
       justifyContent: "space-between",
@@ -551,11 +474,16 @@ function AdminOrderSearchResultPage() {
     },
     pagination: {
       display: "flex",
-      justifyContent: "center",
+      justifyContent: "space-between",
       alignItems: "center",
-      gap: "10px",
       marginTop: "20px",
       flexWrap: "wrap",
+      gap: "10px",
+    },
+    paginationControls: {
+      display: "flex",
+      alignItems: "center",
+      gap: "10px",
     },
     pageInfo: {
       fontSize: "14px",
@@ -566,21 +494,48 @@ function AdminOrderSearchResultPage() {
       padding: "40px",
       color: "#6c757d",
     },
-    debugInfo: {
-      backgroundColor: "#f8f9fa",
-      padding: "10px",
-      borderRadius: "4px",
-      marginBottom: "10px",
-      fontSize: "12px",
-      fontFamily: "monospace",
-      maxHeight: "200px",
-      overflow: "auto",
-    },
   };
 
-  if (isFetching) {
+  if (isFetching && !hasSearched) {
     return <Loading message="Searching orders..." />;
   }
+
+  // Sort options
+  const sortOptions = [
+    { value: "created_at,DESC", label: "Newest First" },
+    { value: "created_at,ASC", label: "Oldest First" },
+    { value: "start_date,DESC", label: "Start Date (Newest)" },
+    { value: "start_date,ASC", label: "Start Date (Oldest)" },
+    { value: "customer_last_name,ASC", label: "Customer Name (A-Z)" },
+    { value: "customer_last_name,DESC", label: "Customer Name (Z-A)" },
+  ];
+
+  // Status options
+  const statusOptions = [
+    { value: "", label: "All Statuses" },
+    { value: "1", label: "New" },
+    { value: "2", label: "Assigned" },
+    { value: "3", label: "In Progress" },
+    { value: "4", label: "Completed" },
+    { value: "5", label: "Closed" },
+    { value: "6", label: "Cancelled" },
+  ];
+
+  // Type options
+  const typeOptions = [
+    { value: "", label: "All Types" },
+    { value: "1", label: "Residential" },
+    { value: "2", label: "Commercial" },
+    { value: "3", label: "Unassigned" },
+  ];
+
+  // Page size options
+  const pageSizeOptions = [
+    { value: "10", label: "10 per page" },
+    { value: "25", label: "25 per page" },
+    { value: "50", label: "50 per page" },
+    { value: "100", label: "100 per page" },
+  ];
 
   return (
     <div style={globalStyles.container}>
@@ -602,15 +557,40 @@ function AdminOrderSearchResultPage() {
         <strong>Search Criteria:</strong> {getSearchSummary()}
       </div>
 
-      {/* Debug Info in Development */}
-      {process.env.NODE_ENV === "development" && orders.length > 0 && (
-        <div style={styles.debugInfo}>
-          <strong>Debug - First Order Structure:</strong>
-          <pre>{JSON.stringify(orders[0], null, 2)}</pre>
-        </div>
-      )}
-
       <Card>
+        {/* Filters */}
+        <div style={styles.filterSection}>
+          <h3 style={{ marginBottom: "15px", fontSize: "16px" }}>
+            🔍 Filters & Sorting
+          </h3>
+          <div style={styles.filterGrid}>
+            <Select
+              label="Status"
+              value={status}
+              onChange={(e) => handleStatusChange(e.target.value)}
+              options={statusOptions}
+            />
+            <Select
+              label="Type"
+              value={type}
+              onChange={(e) => handleTypeChange(e.target.value)}
+              options={typeOptions}
+            />
+            <Select
+              label="Sort By"
+              value={sortBy}
+              onChange={(e) => handleSortChange(e.target.value)}
+              options={sortOptions}
+            />
+            <Select
+              label="Page Size"
+              value={pageSize.toString()}
+              onChange={(e) => handlePageSizeChange(e.target.value)}
+              options={pageSizeOptions}
+            />
+          </div>
+        </div>
+
         <div style={styles.resultsHeader}>
           <div>
             {hasSearched && (
@@ -618,7 +598,7 @@ function AdminOrderSearchResultPage() {
                 {totalCount > 0
                   ? `Found ${totalCount} order${totalCount === 1 ? "" : "s"}`
                   : "No orders found"}
-                {totalPages > 1 && ` (Page ${currentPage} of ${totalPages})`}
+                {totalPages > 1 && ` - Page ${currentPage} of ${totalPages}`}
               </span>
             )}
           </div>
@@ -647,46 +627,40 @@ function AdminOrderSearchResultPage() {
                 {/* Pagination */}
                 {totalPages > 1 && (
                   <div style={styles.pagination}>
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        console.log(
-                          "Previous button clicked, current page:",
-                          currentPage,
-                        );
-                        handlePageChange(currentPage - 1);
-                      }}
-                      disabled={currentPage <= 1 || isFetching}
-                    >
-                      {isFetching ? "Loading..." : "← Previous"}
-                    </Button>
+                    <div style={styles.pageInfo}>
+                      Showing {(currentPage - 1) * pageSize + 1} to{" "}
+                      {Math.min(currentPage * pageSize, totalCount)} of{" "}
+                      {totalCount} results
+                    </div>
 
-                    <span style={styles.pageInfo}>
-                      Page {currentPage} of {totalPages} ({totalCount} total
-                      results)
-                      {isFetching && " - Loading..."}
-                    </span>
+                    <div style={styles.paginationControls}>
+                      <Button
+                        variant="outline"
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage <= 1 || isFetching}
+                      >
+                        ← Previous
+                      </Button>
 
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        console.log(
-                          "Next button clicked, current page:",
-                          currentPage,
-                        );
-                        handlePageChange(currentPage + 1);
-                      }}
-                      disabled={currentPage >= totalPages || isFetching}
-                    >
-                      {isFetching ? "Loading..." : "Next →"}
-                    </Button>
+                      <span style={styles.pageInfo}>
+                        Page {currentPage} of {totalPages}
+                      </span>
+
+                      <Button
+                        variant="outline"
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage >= totalPages || isFetching}
+                      >
+                        Next →
+                      </Button>
+                    </div>
                   </div>
                 )}
               </>
             ) : (
               <div style={styles.noResults}>
                 <h3>No orders found</h3>
-                <p>Try adjusting your search criteria or search terms.</p>
+                <p>Try adjusting your search criteria or filters.</p>
                 <Link to="/admin/orders/search">
                   <Button variant="primary" style={{ marginTop: "15px" }}>
                     🔍 Try New Search
@@ -695,6 +669,10 @@ function AdminOrderSearchResultPage() {
               </div>
             )}
           </>
+        )}
+
+        {isFetching && hasSearched && (
+          <div style={{ textAlign: "center", padding: "20px" }}>Loading...</div>
         )}
       </Card>
     </div>
