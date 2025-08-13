@@ -1,4 +1,4 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Error/NotFoundPage.jsx
+// File Path: monorepo/web/workery-frontend/src/pages/Common/Error/NotFoundPage.jsx
 //
 function NotFoundPage() {
   return (

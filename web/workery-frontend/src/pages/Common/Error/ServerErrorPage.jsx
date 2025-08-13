@@ -1,4 +1,4 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Error/ServerErrorPage.jsx
+// File Path: monorepo/web/workery-frontend/src/pages/Common/Error/ServerErrorPage.jsx
 //
 function ServerErrorPage() {
   return (

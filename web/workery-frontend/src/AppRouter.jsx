@@ -4,9 +4,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
 import { ServiceProvider } from "./services/Services";
 import Layout from "./components/Layout/Layout";
 
-// Common pages
-import DashboardRedirector from "./pages/Common/DashboardRedirector";
-
 // Front-facing pages
 import IndexPage from "./pages/Anonymous/Index/Page";
 import LoginPage from "./pages/Anonymous/Login/Page";
@@ -176,9 +173,12 @@ import TwoFAValidationPage from "./pages/Anonymous/TwoFA/ValidationPage";
 import TwoFABackupCodeGeneratePage from "./pages/Anonymous/TwoFA/BackupCodeGeneratePage";
 import TwoFABackupCodeRecoveryPage from "./pages/Anonymous/TwoFA/BackupCodeRecoveryPage";
 
+// Common pages
+import DashboardRedirector from "./pages/Common/DashboardRedirector";
+
 // Error pages
-import NotFoundPage from "./pages/Error/NotFoundPage";
-import ServerErrorPage from "./pages/Error/ServerErrorPage";
+import NotFoundPage from "./pages/Common/Error/NotFoundPage";
+import ServerErrorPage from "./pages/Common/Error/ServerErrorPage";
 
 // Styles
 const styles = {
