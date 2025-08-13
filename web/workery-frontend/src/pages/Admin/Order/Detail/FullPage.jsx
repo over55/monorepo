@@ -283,7 +283,7 @@ function AdminOrderDetailFullPage() {
               }}
             >
               <Link
-                to={`/admin/order/${order.id}`}
+                to={`/admin/order/${order.wjid}`}
                 style={{
                   padding: "10px 0",
                   textDecoration: "none",
@@ -302,7 +302,7 @@ function AdminOrderDetailFullPage() {
                 Detail
               </div>
               <Link
-                to={`/admin/order/${order.id}/activity-sheets`}
+                to={`/admin/order/${order.wjid}/activity-sheets`}
                 style={{
                   padding: "10px 0",
                   textDecoration: "none",
@@ -312,7 +312,7 @@ function AdminOrderDetailFullPage() {
                 Activity Sheets
               </Link>
               <Link
-                to={`/admin/order/${order.id}/tasks`}
+                to={`/admin/order/${order.wjid}/tasks`}
                 style={{
                   padding: "10px 0",
                   textDecoration: "none",
@@ -322,7 +322,7 @@ function AdminOrderDetailFullPage() {
                 Tasks
               </Link>
               <Link
-                to={`/admin/order/${order.id}/comments`}
+                to={`/admin/order/${order.wjid}/comments`}
                 style={{
                   padding: "10px 0",
                   textDecoration: "none",
@@ -332,7 +332,7 @@ function AdminOrderDetailFullPage() {
                 Comments
               </Link>
               <Link
-                to={`/admin/order/${order.id}/attachments`}
+                to={`/admin/order/${order.wjid}/attachments`}
                 style={{
                   padding: "10px 0",
                   textDecoration: "none",
@@ -342,7 +342,7 @@ function AdminOrderDetailFullPage() {
                 Attachments
               </Link>
               <Link
-                to={`/admin/order/${order.id}/more`}
+                to={`/admin/order/${order.wjid}/more`}
                 style={{
                   padding: "10px 0",
                   textDecoration: "none",
