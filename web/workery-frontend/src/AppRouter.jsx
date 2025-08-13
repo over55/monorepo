@@ -126,6 +126,8 @@ import AdminAssociateDetailMoreUpgradePage from "./pages/Admin/Associate/Detail/
 
 // Admin order pages.
 import AdminOrderListPage from "./pages/Admin/Order/List/Page";
+import AdminOrderSearchCriteriaPage from "./pages/Admin/Order/Search/CriteriaPage";
+import AdminOrderSearchResultPage from "./pages/Admin/Order/Search/ResultPage";
 import AdminOrderAddStep1PartAPage from "./pages/Admin/Order/Add/Step1PartAPage";
 import AdminOrderAddStep1PartBPage from "./pages/Admin/Order/Add/Step1PartBPage";
 import AdminOrderAddStep2Page from "./pages/Admin/Order/Add/Step2Page";
