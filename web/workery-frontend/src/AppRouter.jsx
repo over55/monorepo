@@ -124,6 +124,31 @@ import AdminAssociateDetailMoreUnarchivePage from "./pages/Admin/Associate/Detai
 import AdminAssociateDetailMoreUnbanPage from "./pages/Admin/Associate/Detail/More/Unban/Page";
 import AdminAssociateDetailMoreUpgradePage from "./pages/Admin/Associate/Detail/More/Upgrade/Page";
 
+// Admin order pages.
+import AdminOrderListPage from "./pages/Admin/Order/List/Page";
+import AdminOrderLiteDetailPage from "./pages/Admin/Order/Detail/LitePage";
+import AdminOrderFullDetailPage from "./pages/Admin/Order/Detail/FullPage";
+import AdminOrderDetailMoreTaskListPage from "./pages/Admin/Order/Detail/FullPage";
+import AdminOrderDetailMorePage from "./pages/Admin/Order/Detail/More/Page";
+import AdminOrderDetailMoreUnassignedPage from "./pages/Admin/Order/Detail/More/Unassign/Page";
+import AdminOrderDetailMoreTransferStep1Page from "./pages/Admin/Order/Detail/More/Transfer/Step1Page";
+import AdminOrderDetailMoreTransferStep2Page from "./pages/Admin/Order/Detail/More/Transfer/Step2Page";
+import AdminOrderDetailMoreTransferStep3Page from "./pages/Admin/Order/Detail/More/Transfer/Step3Page";
+import AdminOrderDetailMoreTransferStep4Page from "./pages/Admin/Order/Detail/More/Transfer/Step4Page";
+import AdminOrderDetailMoreTransferStep5Page from "./pages/Admin/Order/Detail/More/Transfer/Step5Page";
+import AdminOrderDetailMorePostponePage from "./pages/Admin/Order/Detail/More/Postpone/Page";
+import AdminOrderDetailMoreIncidentListPage from "./pages/Admin/Order/Detail/More/Incident/List/Page";
+import AdminOrderDetailMoreIncidentDetailPage from "./pages/Admin/Order/Detail/More/Incident/Detail/Page";
+import AdminOrderDetailMoreIncidentAddPage from "./pages/Admin/Order/Detail/More/Incident/Add/Page";
+import AdminOrderDetailMoreDeletePage from "./pages/Admin/Order/Detail/More/Delete/Page";
+import AdminOrderDetailMoreClosePage from "./pages/Admin/Order/Detail/More/Close/Page";
+import AdminOrderDetailCommentListPage from "./pages/Admin/Order/Detail/Comment/List/Page";
+import AdminOrderDetailAttachmentAddPage from "./pages/Admin/Order/Detail/Attachment/Add/Page";
+import AdminOrderDetailAttachmentDetailPage from "./pages/Admin/Order/Detail/Attachment/Detail/Page";
+import AdminOrderDetailAttachmentListPage from "./pages/Admin/Order/Detail/Attachment/List/Page";
+import AdminOrderDetailAttachmentUpdatePage from "./pages/Admin/Order/Detail/Attachment/Update/Page";
+import AdminOrderDetailActivitySheetListPage from "./pages/Admin/Order/Detail/ActivitySheet/List/Page";
+
 // Admin staff pages.
 import AdminStaffListPage from "./pages/Admin/Staff/List/Page";
 import AdminStaffAddStep1PartAPage from "./pages/Admin/Staff/Add/Step1PartAPage";

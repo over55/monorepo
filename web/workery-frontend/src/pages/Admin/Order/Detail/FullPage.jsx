@@ -1,12 +1,12 @@
-// File Path: web/workery-frontend/src/pages/Admin/Order/Detail/More/Postpone/Page.jsx
+// File Path: web/workery-frontend/src/pages/Admin/Order/Detail/FullPage.jsx
 
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import {
   // useDashboardManager,
   useAuthManager,
-} from "../../../../../../services/Services";
-import { theme, globalStyles } from "../../../../../../constants/Theme";
+} from "../../../../services/Services";
+import { theme, globalStyles } from "../../../../constants/Theme";
 import {
   Card,
   Button,
@@ -17,9 +17,9 @@ import {
   Input,
   TextArea,
   Select,
-} from "../../../../../../components/UI";
+} from "../../../../components/UI";
 
-function AdminOrderDetailMorePostponePage() {
+function AdminOrderFullDetailPage() {
   // const dashboardManager = useDashboardManager();
   const authManager = useAuthManager();
   const navigate = useNavigate();
@@ -79,9 +79,9 @@ function AdminOrderDetailMorePostponePage() {
 
   return (
     <div style={globalStyles.container}>
-      <h1>Welcome to AdminOrderDetailMorePostponePage</h1>
+      <h1>Welcome to AdminOrderFullDetailPage</h1>
     </div>
   );
 }
 
-export default AdminOrderDetailMorePostponePage;
+export default AdminOrderFullDetailPage;
