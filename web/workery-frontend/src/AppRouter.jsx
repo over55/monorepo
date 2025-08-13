@@ -126,6 +126,11 @@ import AdminAssociateDetailMoreUpgradePage from "./pages/Admin/Associate/Detail/
 
 // Admin order pages.
 import AdminOrderListPage from "./pages/Admin/Order/List/Page";
+import AdminOrderAddStep1PartAPage from "./pages/Admin/Order/Add/Step1PartAPage";
+import AdminOrderAddStep1PartBPage from "./pages/Admin/Order/Add/Step1PartBPage";
+import AdminOrderAddStep2Page from "./pages/Admin/Order/Add/Step2Page";
+import AdminOrderAddStep3Page from "./pages/Admin/Order/Add/Step3Page";
+import AdminOrderAddStep4Page from "./pages/Admin/Order/Add/Step4Page";
 import AdminOrderLiteDetailPage from "./pages/Admin/Order/Detail/LitePage";
 import AdminOrderFullDetailPage from "./pages/Admin/Order/Detail/FullPage";
 import AdminOrderDetailMoreTaskListPage from "./pages/Admin/Order/Detail/FullPage";
@@ -1541,10 +1546,7 @@ function AppRouter() {
               path="/admin/orders"
               element={
                 <Layout>
-                  <PlaceholderPage
-                    title="Work Orders"
-                    description="Work order management system"
-                  />
+                  <AdminOrderListPage />
                 </Layout>
               }
             />
