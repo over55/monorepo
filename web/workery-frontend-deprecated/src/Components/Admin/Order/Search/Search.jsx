@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/Order/Search/Search.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -106,7 +107,8 @@ function AdminOrderSearch() {
       scroll.scrollToTop();
       return;
     }
-    let aURL = "/admin/orders/search-result?cfn=" +
+    let aURL =
+      "/admin/orders/search-result?cfn=" +
       customerFirstName +
       "&cln=" +
       customerLastName +
@@ -287,9 +289,7 @@ function AdminOrderSearch() {
                           name="filterByOrder"
                           checked={filterByOrder}
                           errorText={errors && errors.filterByOrder}
-                          onChange={(e, x) =>
-                            setFilterByOrder(!filterByOrder)
-                          }
+                          onChange={(e, x) => setFilterByOrder(!filterByOrder)}
                           maxWidth="180px"
                         />
 
@@ -477,9 +477,7 @@ function AdminOrderSearch() {
                               value={orderWjid}
                               errorText={errors && errors.orderWjid}
                               helpText=""
-                              onChange={(e) =>
-                                setOrderWjid(e.target.value)
-                              }
+                              onChange={(e) => setOrderWjid(e.target.value)}
                               isRequired={true}
                               maxWidth="380px"
                             />

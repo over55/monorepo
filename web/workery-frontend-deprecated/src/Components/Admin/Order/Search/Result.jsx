@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/Order/Search/Result.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate, useSearchParams } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -159,7 +160,7 @@ function AdminOrderSearchResult() {
       associateLastName,
       associateEmail,
       associatePhone,
-      orderWjid
+      orderWjid,
     );
   }
 
@@ -224,7 +225,7 @@ function AdminOrderSearchResult() {
     aln,
     ae,
     ap,
-    owjid
+    owjid,
   ) => {
     setFetching(true);
     setErrors({});
@@ -365,7 +366,7 @@ function AdminOrderSearchResult() {
         associateLastName,
         associateEmail,
         associatePhone,
-        orderWjid
+        orderWjid,
       );
 
       // If you loaded the page for the very first time.
