@@ -4,6 +4,9 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
 import { ServiceProvider } from "./services/Services";
 import Layout from "./components/Layout/Layout";
 
+// Common pages
+import DashboardRedirector from "./pages/Common/DashboardRedirector";
+
 // Front-facing pages
 import IndexPage from "./pages/Anonymous/Index/Page";
 import LoginPage from "./pages/Anonymous/Login/Page";
@@ -207,6 +210,7 @@ function AppRouter() {
           <Routes>
             {/* Front-facing pages (NO LAYOUT) */}
             <Route path="/" element={<IndexPage />} />
+            <Route path="/index" element={<IndexPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route
               path="/register"
@@ -232,6 +236,24 @@ function AppRouter() {
                 <PlaceholderPage
                   title="Employer Registration"
                   description="Step 1 of registration for employers"
+                />
+              }
+            />
+            <Route
+              path="/register-successful"
+              element={
+                <PlaceholderPage
+                  title="Registration Successful"
+                  description="Your registration was successful"
+                />
+              }
+            />
+            <Route
+              path="/verify"
+              element={
+                <PlaceholderPage
+                  title="Verify Account"
+                  description="Account verification"
                 />
               }
             />
@@ -267,6 +289,10 @@ function AppRouter() {
               element={<PlaceholderPage title="Terms of Service" />}
             />
             <Route
+              path="/terms"
+              element={<Navigate to="/terms-of-service" />}
+            />
+            <Route
               path="/privacy"
               element={<PlaceholderPage title="Privacy Policy" />}
             />
@@ -275,6 +301,10 @@ function AppRouter() {
             <Route path="/login/2fa/step-1" element={<TwoFAStep1Page />} />
             <Route path="/login/2fa/step-2" element={<TwoFAStep2Page />} />
             <Route path="/login/2fa/step-3" element={<TwoFAStep3Page />} />
+            <Route
+              path="/login/2fa/step-3/backup-code"
+              element={<TwoFABackupCodeGeneratePage />}
+            />
             <Route path="/login/2fa" element={<TwoFAValidationPage />} />
             <Route
               path="/login/2fa/backup-code"
@@ -2406,6 +2436,9 @@ function AppRouter() {
                 </Layout>
               }
             />
+
+            {/* Common pages */}
+            <Route path="/dashboard" element={<DashboardRedirector />} />
 
             {/* Error routes (NO LAYOUT) */}
             <Route path="/501" element={<ServerErrorPage />} />
