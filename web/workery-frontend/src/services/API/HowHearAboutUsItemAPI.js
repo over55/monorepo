@@ -1,6 +1,6 @@
 // File Path: web/workery-frontend/src/services/API/HowHearAboutUsItemAPI.js
 
-import { createAuthenticatedAxios } from "../helpers/AuthenticatedAxios";
+import { createAuthenticatedAxios } from "../Helpers/AuthenticatedAxios";
 import { camelizeKeys, decamelizeKeys } from "humps";
 
 /**
