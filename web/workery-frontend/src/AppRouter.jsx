@@ -1204,7 +1204,7 @@ function AppRouter() {
               path="/admin/associate/:aid/change-password"
               element={
                 <Layout>
-                  <PlaceholderPage title="Change Associate Password" />
+                  <AdminAssociateDetailMoreChangePasswordPage />
                 </Layout>
               }
             />
@@ -1220,7 +1220,7 @@ function AppRouter() {
               path="/admin/associate/:aid/permadelete"
               element={
                 <Layout>
-                  <PlaceholderPage title="Delete Associate" />
+                  <AdminAssociateDetailMoreDeletePage />
                 </Layout>
               }
             />
@@ -1236,7 +1236,7 @@ function AppRouter() {
               path="/admin/associate/:aid/unarchive"
               element={
                 <Layout>
-                  <PlaceholderPage title="Unarchive Associate" />
+                  <AdminAssociateDetailMoreUnarchivePage />
                 </Layout>
               }
             />
@@ -1244,7 +1244,7 @@ function AppRouter() {
               path="/admin/associate/:aid/upgrade"
               element={
                 <Layout>
-                  <PlaceholderPage title="Upgrade Associate" />
+                  <AdminAssociateDetailMoreUpgradePage />
                 </Layout>
               }
             />
@@ -1252,7 +1252,7 @@ function AppRouter() {
               path="/admin/associate/:aid/downgrade"
               element={
                 <Layout>
-                  <PlaceholderPage title="Downgrade Associate" />
+                  <AdminAssociateDetailMoreDowngradePage />
                 </Layout>
               }
             />
@@ -1268,7 +1268,7 @@ function AppRouter() {
               path="/admin/associate/:aid/unban"
               element={
                 <Layout>
-                  <AdminCustomerDetailMoreUnbanPage />
+                  <AdminAssociateDetailMoreUnbanPage />
                 </Layout>
               }
             />
