@@ -212,7 +212,7 @@ function AdminOrderSearchResultPage() {
   };
 
   const handleOrderClick = (order) => {
-    navigate(`/admin/order/${order.id}`);
+    navigate(`/admin/order/${order.wjid}`);
   };
 
   const getSearchSummary = () => {
