@@ -1,8 +1,8 @@
-go 1.22.5
+go 1.24.4
 
 use (
 	./cloud/bannedlist-cli
 	./cloud/statcan
 	./cloud/workery-backend
-	./cloud/workery-cli
+	./native/workery-cli
 )
