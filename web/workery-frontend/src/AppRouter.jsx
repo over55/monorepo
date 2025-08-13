@@ -133,8 +133,8 @@ import AdminOrderAddStep1PartBPage from "./pages/Admin/Order/Add/Step1PartBPage"
 import AdminOrderAddStep2Page from "./pages/Admin/Order/Add/Step2Page";
 import AdminOrderAddStep3Page from "./pages/Admin/Order/Add/Step3Page";
 import AdminOrderAddStep4Page from "./pages/Admin/Order/Add/Step4Page";
-import AdminOrderLiteDetailPage from "./pages/Admin/Order/Detail/LitePage";
-import AdminOrderFullDetailPage from "./pages/Admin/Order/Detail/FullPage";
+import AdminOrderDetailLitePage from "./pages/Admin/Order/Detail/LitePage";
+import AdminOrderDetailFullPage from "./pages/Admin/Order/Detail/FullPage";
 import AdminOrderDetailMoreTaskListPage from "./pages/Admin/Order/Detail/FullPage";
 import AdminOrderDetailMorePage from "./pages/Admin/Order/Detail/More/Page";
 import AdminOrderDetailMoreUnassignedPage from "./pages/Admin/Order/Detail/More/Unassign/Page";
@@ -1556,7 +1556,7 @@ function AppRouter() {
               path="/admin/orders/search"
               element={
                 <Layout>
-                  <PlaceholderPage title="Order Search" />
+                  <AdminOrderSearchCriteriaPage />
                 </Layout>
               }
             />
@@ -1564,7 +1564,7 @@ function AppRouter() {
               path="/admin/orders/search-result"
               element={
                 <Layout>
-                  <PlaceholderPage title="Order Search Result" />
+                  <AdminOrderSearchResultPage />
                 </Layout>
               }
             />
@@ -1572,7 +1572,7 @@ function AppRouter() {
               path="/admin/orders/add/step-1-search"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Order - Step 1" />
+                  <AdminOrderAddStep1PartAPage />
                 </Layout>
               }
             />
@@ -1580,7 +1580,7 @@ function AppRouter() {
               path="/admin/orders/add/step-1-results"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Order - Step 1 Results" />
+                  <AdminOrderAddStep1PartBPage />
                 </Layout>
               }
             />
@@ -1588,7 +1588,7 @@ function AppRouter() {
               path="/admin/orders/add/step-2"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Order - Step 2" />
+                  <AdminOrderAddStep2Page />
                 </Layout>
               }
             />
@@ -1596,7 +1596,7 @@ function AppRouter() {
               path="/admin/orders/add/step-2-from-launchpad"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Order" />
+                  <AdminOrderAddStep2Page />
                 </Layout>
               }
             />
@@ -1604,7 +1604,7 @@ function AppRouter() {
               path="/admin/orders/add/step-3"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Order - Step 3" />
+                  <AdminOrderAddStep3Page />
                 </Layout>
               }
             />
@@ -1612,7 +1612,7 @@ function AppRouter() {
               path="/admin/orders/add/step-4"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Order - Step 4" />
+                  <AdminOrderAddStep4Page />
                 </Layout>
               }
             />
@@ -1620,7 +1620,7 @@ function AppRouter() {
               path="/admin/order/:oid"
               element={
                 <Layout>
-                  <PlaceholderPage title="Order Detail" />
+                  <AdminOrderDetailLitePage />
                 </Layout>
               }
             />
@@ -1628,7 +1628,7 @@ function AppRouter() {
               path="/admin/order/:oid/full"
               element={
                 <Layout>
-                  <PlaceholderPage title="Order Detail (Full)" />
+                  <AdminOrderDetailFullPage />
                 </Layout>
               }
             />

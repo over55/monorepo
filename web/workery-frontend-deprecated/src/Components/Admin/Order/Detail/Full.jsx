@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/Order/Detail/Full.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -27,7 +28,7 @@ import {
   faBuilding,
   faEllipsis,
   faChevronRight,
-  faUserSlash
+  faUserSlash,
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 import { useParams } from "react-router-dom";
@@ -50,7 +51,7 @@ import PageLoadingContent from "../../../Reusable/PageLoadingContent";
 import {
   topAlertMessageState,
   topAlertStatusState,
-  currentUserState
+  currentUserState,
 } from "../../../../AppState";
 import {
   COMMERCIAL_CUSTOMER_TYPE_OF_ID,
@@ -59,7 +60,7 @@ import {
   ORDER_STATUS_COMPLETED_BUT_UNPAID,
   ORDER_STATUS_COMPLETED_AND_PAID,
   STAFF_TYPE_MANAGEMENT,
-  STAFF_TYPE_EXECUTIVE
+  STAFF_TYPE_EXECUTIVE,
 } from "../../../../Constants/App";
 import {
   addCustomerState,
@@ -235,28 +236,28 @@ function AdminOrderDetailFull() {
                   </p>
                 </div>
                 <div className="column is-three-quarters has-text-right">
-                {order && order.associatePublicId !== 0 &&
+                  {order && order.associatePublicId !== 0 && (
                     <>
-                        <Link
-                          to={`/admin/order/${oid}/more/unassign`}
-                          className="button is-dark is-fullwidth-mobile"
-                          disabled={order.status === 2}
-                        >
-                          <FontAwesomeIcon className="fas" icon={faUserSlash} />
-                          &nbsp;Unassign
-                        </Link>
-                        &nbsp;
+                      <Link
+                        to={`/admin/order/${oid}/more/unassign`}
+                        className="button is-dark is-fullwidth-mobile"
+                        disabled={order.status === 2}
+                      >
+                        <FontAwesomeIcon className="fas" icon={faUserSlash} />
+                        &nbsp;Unassign
+                      </Link>
+                      &nbsp;
                     </>
-                }
-                <Link
-                  to={`/admin/order/${oid}/more/close`}
-                  className="button is-danger is-fullwidth-mobile"
-                  disabled={order.status === 2}
-                >
-                  <FontAwesomeIcon className="fas" icon={faTimes} />
-                  &nbsp;Close
-                </Link>
-                &nbsp;
+                  )}
+                  <Link
+                    to={`/admin/order/${oid}/more/close`}
+                    className="button is-danger is-fullwidth-mobile"
+                    disabled={order.status === 2}
+                  >
+                    <FontAwesomeIcon className="fas" icon={faTimes} />
+                    &nbsp;Close
+                  </Link>
+                  &nbsp;
                   <Link
                     to={`/admin/order/${oid}/edit`}
                     className="button is-warning is-fullwidth-mobile"
@@ -266,29 +267,46 @@ function AdminOrderDetailFull() {
                     <FontAwesomeIcon className="mdi" icon={faPencil} />
                     &nbsp;Edit
                   </Link>
-                  {(order.latestPendingTaskId && order.latestPendingTaskId !== "000000000000000000000000") && <>
-                      &nbsp;
-                      <Link
-                        to={TaskItemUpdateURLPathFormatter(
-                          order.latestPendingTaskId,
-                          order.latestPendingTaskType,
-                        )}
-                        className="button  is-primary is-fullwidth-mobile"
-                        disabled={order.status === 2}
-                      >
-                       Go to Task&nbsp;<FontAwesomeIcon className="fas" icon={faChevronRight} />
-                      </Link>
-                  </>}
-                  {((order.status === ORDER_STATUS_COMPLETED_BUT_UNPAID || order.status === ORDER_STATUS_COMPLETED_AND_PAID) && (currentUser.role === STAFF_TYPE_MANAGEMENT || currentUser.role === STAFF_TYPE_EXECUTIVE) ) && <>
-                      &nbsp;
-                      <Link
-                        to={`/admin/financial/${oid}`}
-                        className="button is-link is-fullwidth-mobile"
-                        disabled={order.status === 2}
-                      >
-                        Go to Financials&nbsp;<FontAwesomeIcon className="fas" icon={faChevronRight} />
-                      </Link>
-                  </>}
+                  {order.latestPendingTaskId &&
+                    order.latestPendingTaskId !==
+                      "000000000000000000000000" && (
+                      <>
+                        &nbsp;
+                        <Link
+                          to={TaskItemUpdateURLPathFormatter(
+                            order.latestPendingTaskId,
+                            order.latestPendingTaskType,
+                          )}
+                          className="button  is-primary is-fullwidth-mobile"
+                          disabled={order.status === 2}
+                        >
+                          Go to Task&nbsp;
+                          <FontAwesomeIcon
+                            className="fas"
+                            icon={faChevronRight}
+                          />
+                        </Link>
+                      </>
+                    )}
+                  {(order.status === ORDER_STATUS_COMPLETED_BUT_UNPAID ||
+                    order.status === ORDER_STATUS_COMPLETED_AND_PAID) &&
+                    (currentUser.role === STAFF_TYPE_MANAGEMENT ||
+                      currentUser.role === STAFF_TYPE_EXECUTIVE) && (
+                      <>
+                        &nbsp;
+                        <Link
+                          to={`/admin/financial/${oid}`}
+                          className="button is-link is-fullwidth-mobile"
+                          disabled={order.status === 2}
+                        >
+                          Go to Financials&nbsp;
+                          <FontAwesomeIcon
+                            className="fas"
+                            icon={faChevronRight}
+                          />
+                        </Link>
+                      </>
+                    )}
                 </div>
               </div>
             )}
@@ -500,7 +518,7 @@ function AdminOrderDetailFull() {
                           </th>
                           <td>
                             <CheckboxTextFormatter
-                              checked={order.isHomeSupportService===1}
+                              checked={order.isHomeSupportService === 1}
                             />
                           </td>
                         </tr>
@@ -512,7 +530,9 @@ function AdminOrderDetailFull() {
                             Is ongoing?
                           </th>
                           <td>
-                            <CheckboxTextFormatter checked={order.isOngoing===1} />
+                            <CheckboxTextFormatter
+                              checked={order.isOngoing === 1}
+                            />
                           </td>
                         </tr>
                         <tr>
@@ -534,7 +554,11 @@ function AdminOrderDetailFull() {
                             Start date
                           </th>
                           <td>
-                            {order.startDate ? <DateTextFormatter value={order.startDate} /> : <>-</>}
+                            {order.startDate ? (
+                              <DateTextFormatter value={order.startDate} />
+                            ) : (
+                              <>-</>
+                            )}
                           </td>
                         </tr>
                         <tr>
@@ -545,7 +569,11 @@ function AdminOrderDetailFull() {
                             Completion date
                           </th>
                           <td>
-                            {order.completionDate ? <DateTextFormatter value={order.completionDate} /> : <>-</>}
+                            {order.completionDate ? (
+                              <DateTextFormatter value={order.completionDate} />
+                            ) : (
+                              <>-</>
+                            )}
                           </td>
                         </tr>
                         <tr>
@@ -584,7 +612,9 @@ function AdminOrderDetailFull() {
                           >
                             Required Task
                           </th>
-                          {(order.latestPendingTaskId && order.latestPendingTaskId !== "000000000000000000000000") ? (
+                          {order.latestPendingTaskId &&
+                          order.latestPendingTaskId !==
+                            "000000000000000000000000" ? (
                             <td>
                               {order.latestPendingTaskDescription} Click the
                               following to being:{" "}
@@ -771,26 +801,29 @@ function AdminOrderDetailFull() {
                         </Link>
                       </div>
                       <div className="column is-three-quarters has-text-right">
-                          {order && order.associatePublicId !== 0 &&
-                              <>
-                                  <Link
-                                    to={`/admin/order/${oid}/more/unassign`}
-                                    className="button is-dark is-fullwidth-mobile"
-                                    disabled={order.status === 2}
-                                  >
-                                    <FontAwesomeIcon className="fas" icon={faUserSlash} />
-                                    &nbsp;Unassign
-                                  </Link>
-                                  &nbsp;
-                              </>
-                          }
-                          <Link
-                            to={`/admin/order/${oid}/more/close`}
-                            className="button is-danger is-fullwidth-mobile"
-                            disabled={order.status === 2}
-                          >
-                            <FontAwesomeIcon className="fas" icon={faTimes} />
-                            &nbsp;Close
+                        {order && order.associatePublicId !== 0 && (
+                          <>
+                            <Link
+                              to={`/admin/order/${oid}/more/unassign`}
+                              className="button is-dark is-fullwidth-mobile"
+                              disabled={order.status === 2}
+                            >
+                              <FontAwesomeIcon
+                                className="fas"
+                                icon={faUserSlash}
+                              />
+                              &nbsp;Unassign
+                            </Link>
+                            &nbsp;
+                          </>
+                        )}
+                        <Link
+                          to={`/admin/order/${oid}/more/close`}
+                          className="button is-danger is-fullwidth-mobile"
+                          disabled={order.status === 2}
+                        >
+                          <FontAwesomeIcon className="fas" icon={faTimes} />
+                          &nbsp;Close
                         </Link>
                         &nbsp;
                         <Link
@@ -801,29 +834,46 @@ function AdminOrderDetailFull() {
                           <FontAwesomeIcon className="fas" icon={faPencil} />
                           &nbsp;Edit
                         </Link>
-                        {(order.latestPendingTaskId && order.latestPendingTaskId !== "000000000000000000000000") && <>
-                            &nbsp;
-                            <Link
-                              to={TaskItemUpdateURLPathFormatter(
-                                order.latestPendingTaskId,
-                                order.latestPendingTaskType,
-                              )}
-                              className="button is-primary is-fullwidth-mobile"
-                              disabled={order.status === 2}
-                            >
-                             Go to Task&nbsp;<FontAwesomeIcon className="fas" icon={faChevronRight} />
-                            </Link>
-                        </>}
-                        {((order.status === ORDER_STATUS_COMPLETED_BUT_UNPAID || order.status === ORDER_STATUS_COMPLETED_AND_PAID) && (currentUser.role === STAFF_TYPE_MANAGEMENT || currentUser.role === STAFF_TYPE_EXECUTIVE) ) && <>
-                            &nbsp;
-                            <Link
-                              to={`/admin/financial/${oid}`}
-                              className="button is-link is-fullwidth-mobile"
-                              disabled={order.status === 2}
-                            >
-                              Go to Financials&nbsp;<FontAwesomeIcon className="fas" icon={faChevronRight} />
-                            </Link>
-                        </>}
+                        {order.latestPendingTaskId &&
+                          order.latestPendingTaskId !==
+                            "000000000000000000000000" && (
+                            <>
+                              &nbsp;
+                              <Link
+                                to={TaskItemUpdateURLPathFormatter(
+                                  order.latestPendingTaskId,
+                                  order.latestPendingTaskType,
+                                )}
+                                className="button is-primary is-fullwidth-mobile"
+                                disabled={order.status === 2}
+                              >
+                                Go to Task&nbsp;
+                                <FontAwesomeIcon
+                                  className="fas"
+                                  icon={faChevronRight}
+                                />
+                              </Link>
+                            </>
+                          )}
+                        {(order.status === ORDER_STATUS_COMPLETED_BUT_UNPAID ||
+                          order.status === ORDER_STATUS_COMPLETED_AND_PAID) &&
+                          (currentUser.role === STAFF_TYPE_MANAGEMENT ||
+                            currentUser.role === STAFF_TYPE_EXECUTIVE) && (
+                            <>
+                              &nbsp;
+                              <Link
+                                to={`/admin/financial/${oid}`}
+                                className="button is-link is-fullwidth-mobile"
+                                disabled={order.status === 2}
+                              >
+                                Go to Financials&nbsp;
+                                <FontAwesomeIcon
+                                  className="fas"
+                                  icon={faChevronRight}
+                                />
+                              </Link>
+                            </>
+                          )}
                       </div>
                     </div>
                   </div>

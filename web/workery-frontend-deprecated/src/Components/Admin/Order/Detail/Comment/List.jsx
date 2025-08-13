@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/Order/Detail/Comment/List.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -27,7 +28,7 @@ import {
   faBuilding,
   faEllipsis,
   faArrowRight,
-  faFire
+  faFire,
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 import { useParams } from "react-router-dom";
@@ -354,21 +355,46 @@ function AdminOrderCommentList() {
                                 </b>
                               </span>
                               <br />
-                              <article className={`message ${comment.orderIncidentId !== undefined && comment.orderIncidentId !== null && comment.orderIncidentId !== "" && comment.orderIncidentId !== "000000000000000000000000" && "is-danger"}`}>
+                              <article
+                                className={`message ${comment.orderIncidentId !== undefined && comment.orderIncidentId !== null && comment.orderIncidentId !== "" && comment.orderIncidentId !== "000000000000000000000000" && "is-danger"}`}
+                              >
                                 <div className="message-body">
-                                  {comment.orderIncidentId !== undefined && comment.orderIncidentId !== null && comment.orderIncidentId !== "" && comment.orderIncidentId !== "000000000000000000000000" && <>
-                                     <FontAwesomeIcon className="fas" icon={faFire} />&nbsp;
-                                  </>}
+                                  {comment.orderIncidentId !== undefined &&
+                                    comment.orderIncidentId !== null &&
+                                    comment.orderIncidentId !== "" &&
+                                    comment.orderIncidentId !==
+                                      "000000000000000000000000" && (
+                                      <>
+                                        <FontAwesomeIcon
+                                          className="fas"
+                                          icon={faFire}
+                                        />
+                                        &nbsp;
+                                      </>
+                                    )}
                                   {comment.content}
-                                  {comment.orderIncidentId !== undefined && comment.orderIncidentId !== null && comment.orderIncidentId !== "" && comment.orderIncidentId !== "000000000000000000000000" && <>
-                                    <br />
-                                    <Link
-                                      className="is-pulled-right"
-                                      to={`/admin/order/${oid}/more/incident/${comment.orderIncidentId }`}
-                                    ><i>View incident&nbsp;<FontAwesomeIcon className="fas" icon={faArrowRight} /></i>
-                                    </Link>
-                                    <br />
-                                  </>}
+                                  {comment.orderIncidentId !== undefined &&
+                                    comment.orderIncidentId !== null &&
+                                    comment.orderIncidentId !== "" &&
+                                    comment.orderIncidentId !==
+                                      "000000000000000000000000" && (
+                                      <>
+                                        <br />
+                                        <Link
+                                          className="is-pulled-right"
+                                          to={`/admin/order/${oid}/more/incident/${comment.orderIncidentId}`}
+                                        >
+                                          <i>
+                                            View incident&nbsp;
+                                            <FontAwesomeIcon
+                                              className="fas"
+                                              icon={faArrowRight}
+                                            />
+                                          </i>
+                                        </Link>
+                                        <br />
+                                      </>
+                                    )}
                                 </div>
                               </article>
                             </div>

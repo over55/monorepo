@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/Order/Detail/Update/Update.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -26,7 +27,7 @@ import {
   faBuilding,
   faEllipsis,
   faMap,
-  faGraduationCap
+  faGraduationCap,
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 import { useParams } from "react-router-dom";
@@ -86,7 +87,7 @@ function AdminOrderUpdate() {
   //// Component states.
   ////
 
-    // --- Page related --- //
+  // --- Page related --- //
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
   const [forceURL, setForceURL] = useState("");
@@ -100,7 +101,6 @@ function AdminOrderUpdate() {
   const [description, setDescription] = useState("");
   const [skillSets, setSkillSets] = useState([]);
   const [tags, setTags] = useState([]);
-
 
   ////
   //// Event handling.
@@ -146,21 +146,21 @@ function AdminOrderUpdate() {
     // Set form related fields.
     setStartDate(response.startDate);
     if (response.isOngoing) {
-        setIsOngoing(1);
+      setIsOngoing(1);
     } else {
-        setIsOngoing(2);
+      setIsOngoing(2);
     }
     if (response.isHomeSupportService) {
-        setIsHomeSupportService(1);
+      setIsHomeSupportService(1);
     } else {
-        setIsHomeSupportService(2);
+      setIsHomeSupportService(2);
     }
     setDescription(response.description);
 
-    const skillSetsIDArray = response.skillSets.map(item => item.id);
+    const skillSetsIDArray = response.skillSets.map((item) => item.id);
     setSkillSets(skillSetsIDArray);
 
-    const tagsIDArray = response.tags.map(item => item.id);
+    const tagsIDArray = response.tags.map((item) => item.id);
     setTags(tagsIDArray);
   }
 
@@ -204,7 +204,7 @@ function AdminOrderUpdate() {
       setTopAlertMessage("");
     }, 2000);
 
-    setForceURL("/admin/order/"+oid);
+    setForceURL("/admin/order/" + oid);
   }
 
   function onUpdateError(apiErr) {
@@ -334,7 +334,7 @@ function AdminOrderUpdate() {
                   </p>
                 </div>
                 <div className="column has-text-right">
-                {/*
+                  {/*
                   <Link
                     to={`/admin/order/${oid}/edit`}
                     className="button is-small is-warning is-fullwidth-mobile"
@@ -359,101 +359,98 @@ function AdminOrderUpdate() {
 
                 {order && (
                   <div className="container">
-                  <hr />
+                    <hr />
 
-                  <p className="title is-4 pb-2">
-                    <FontAwesomeIcon className="fas" icon={faBuilding} />
-                    &nbsp;General
-                  </p>
+                    <p className="title is-4 pb-2">
+                      <FontAwesomeIcon className="fas" icon={faBuilding} />
+                      &nbsp;General
+                    </p>
 
-                  <FormRadioField
-                    label="Is this job one time or ongoing?"
-                    name="isOngoing"
-                    value={isOngoing}
-                    errorText={errors && errors.isOngoing}
-                    opt1Value={2}
-                    opt1Label="One-Time"
-                    opt2Value={1}
-                    opt2Label="Ongoing"
-                    onChange={(e) => setIsOngoing(parseInt(e.target.value))}
-                    errorText={errors && errors.isOngoing}
-                  />
-                  <FormRadioField
-                    label="Is this job a home support service?"
-                    name="isHomeSupportService"
-                    value={isHomeSupportService}
-                    errorText={errors && errors.isHomeSupportService}
-                    opt1Value={2}
-                    opt1Label="No"
-                    opt2Value={1}
-                    opt2Label="Yes"
-                    onChange={(e) =>
-                      setIsHomeSupportService(parseInt(e.target.value))
-                    }
-                    errorText={errors && errors.isHomeSupportService}
-                  />
+                    <FormRadioField
+                      label="Is this job one time or ongoing?"
+                      name="isOngoing"
+                      value={isOngoing}
+                      errorText={errors && errors.isOngoing}
+                      opt1Value={2}
+                      opt1Label="One-Time"
+                      opt2Value={1}
+                      opt2Label="Ongoing"
+                      onChange={(e) => setIsOngoing(parseInt(e.target.value))}
+                      errorText={errors && errors.isOngoing}
+                    />
+                    <FormRadioField
+                      label="Is this job a home support service?"
+                      name="isHomeSupportService"
+                      value={isHomeSupportService}
+                      errorText={errors && errors.isHomeSupportService}
+                      opt1Value={2}
+                      opt1Label="No"
+                      opt2Value={1}
+                      opt2Label="Yes"
+                      onChange={(e) =>
+                        setIsHomeSupportService(parseInt(e.target.value))
+                      }
+                      errorText={errors && errors.isHomeSupportService}
+                    />
 
-                  <FormAlternateDateField
-                    label="When should this job start? (Optional)"
-                    name="startDate"
-                    placeholder="Text input"
-                    value={startDate}
-                    helpText="Leave blank if nothing was specified by client."
-                    onChange={(date) => setStartDate(date)}
-                    isRequired={true}
-                    maxWidth="180px"
-                    errorText={errors && errors.startDate}
-                  />
+                    <FormAlternateDateField
+                      label="When should this job start? (Optional)"
+                      name="startDate"
+                      placeholder="Text input"
+                      value={startDate}
+                      helpText="Leave blank if nothing was specified by client."
+                      onChange={(date) => setStartDate(date)}
+                      isRequired={true}
+                      maxWidth="180px"
+                      errorText={errors && errors.startDate}
+                    />
 
-                  <p className="title is-4 pb-2">
-                    <FontAwesomeIcon className="fas" icon={faGraduationCap} />
-                    &nbsp;Skill Sets
-                  </p>
+                    <p className="title is-4 pb-2">
+                      <FontAwesomeIcon className="fas" icon={faGraduationCap} />
+                      &nbsp;Skill Sets
+                    </p>
 
-                  <FormTextareaField
-                    label="Describe the Job:"
-                    name="description"
-                    placeholder="Describe here..."
-                    value={description}
-                    errorText={errors && errors.description}
-                    helpText=""
-                    onChange={(e) => setDescription(e.target.value)}
-                    isRequired={true}
-                    maxWidth="280px"
-                    helpText={"Max 1,000 characters"}
-                    rows={4}
-                  />
+                    <FormTextareaField
+                      label="Describe the Job:"
+                      name="description"
+                      placeholder="Describe here..."
+                      value={description}
+                      errorText={errors && errors.description}
+                      helpText=""
+                      onChange={(e) => setDescription(e.target.value)}
+                      isRequired={true}
+                      maxWidth="280px"
+                      helpText={"Max 1,000 characters"}
+                      rows={4}
+                    />
 
-                  <FormMultiSelectFieldForSkillSets
-                    label="Please select required job skill(s):"
-                    name="skillSets"
-                    placeholder="Pick skill sets"
-                    skillSets={skillSets}
-                    setSkillSets={setSkillSets}
-                    errorText={errors && errors.skillSets}
-                    helpText="Pick at least a single skill set at minimum."
-                    isRequired={true}
-                  />
+                    <FormMultiSelectFieldForSkillSets
+                      label="Please select required job skill(s):"
+                      name="skillSets"
+                      placeholder="Pick skill sets"
+                      skillSets={skillSets}
+                      setSkillSets={setSkillSets}
+                      errorText={errors && errors.skillSets}
+                      helpText="Pick at least a single skill set at minimum."
+                      isRequired={true}
+                    />
 
-                  <p className="title is-4 pb-2">
-                    <FontAwesomeIcon className="fas" icon={faChartPie} />
-                    &nbsp;Metrics
-                  </p>
+                    <p className="title is-4 pb-2">
+                      <FontAwesomeIcon className="fas" icon={faChartPie} />
+                      &nbsp;Metrics
+                    </p>
 
-                  <FormMultiSelectFieldForTags
-                    label="Tags (Optional)"
-                    name="tags"
-                    placeholder="Pick tags"
-                    tags={tags}
-                    setTags={setTags}
-                    errorText={errors && errors.tags}
-                    helpText="Pick the tags you would like to associate with this order."
-                    isRequired={true}
-                    maxWidth="320px"
-                  />
-
-
-
+                    <FormMultiSelectFieldForTags
+                      label="Tags (Optional)"
+                      name="tags"
+                      placeholder="Pick tags"
+                      tags={tags}
+                      setTags={setTags}
+                      errorText={errors && errors.tags}
+                      helpText="Pick the tags you would like to associate with this order."
+                      isRequired={true}
+                      maxWidth="320px"
+                    />
 
                     <div className="columns pt-5">
                       <div className="column is-half">
@@ -471,7 +468,10 @@ function AdminOrderUpdate() {
                           className="button is-success is-fullwidth-mobile"
                           disabled={order.status === 2}
                         >
-                          <FontAwesomeIcon className="fas" icon={faCheckCircle} />
+                          <FontAwesomeIcon
+                            className="fas"
+                            icon={faCheckCircle}
+                          />
                           &nbsp;Save&nbsp;&&nbsp;Submit
                         </button>
                       </div>
