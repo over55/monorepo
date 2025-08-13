@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
-	// homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
-	// "github.com/spf13/viper"
+
+	"github.com/over55/monorepo/cloud/workery-backend/config"
 )
 
 var (
@@ -53,7 +53,9 @@ var rootCmd = &cobra.Command{
 	Short: "",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		// Do nothing.
+		// Initialize the configuration to ensure it is loaded before executing any command.
+		// This is useful to confirm that the configuration is set up correctly before running this CLI.
+		_ = config.New()
 	},
 }
 
