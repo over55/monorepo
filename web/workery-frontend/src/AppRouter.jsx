@@ -206,6 +206,10 @@ import AdminOrderUpdatePage from "./pages/Admin/Order/Update/Page";
 import AdminTaskItemListPage from "./pages/Admin/TaskItem/List/Page";
 import AdminTaskItemCloseOperationPage from "./pages/Admin/TaskItem/Operation/Close/Page";
 import AdminTaskItemPostponeOperationPage from "./pages/Admin/TaskItem/Operation/Postpone/Page";
+import AdminTaskItemAssignAssociateStep1Page from "./pages/Admin/TaskItem/Update/AssignAssociate/Step1Page";
+import AdminTaskItemAssignAssociateStep2Page from "./pages/Admin/TaskItem/Update/AssignAssociate/Step2Page";
+import AdminTaskItemAssignAssociateStep3Page from "./pages/Admin/TaskItem/Update/AssignAssociate/Step3Page";
+import AdminTaskItemAssignAssociateStep4Page from "./pages/Admin/TaskItem/Update/AssignAssociate/Step4Page";
 
 // Admin staff pages.
 import AdminStaffListPage from "./pages/Admin/Staff/List/Page";

@@ -82,3 +82,13 @@ export const ORDER_INCIDENT_SORT_OPTIONS = [
   { value: "title,ASC", label: "Title (A → Z)" },
   { value: "title,DESC", label: "Title (Z → A)" },
 ];
+
+export const CLIENT_PHONE_TYPE_LANDLINE = 1;
+export const CLIENT_PHONE_TYPE_MOBILE = 2;
+export const CLIENT_PHONE_TYPE_WORK = 3;
+
+export const CLIENT_PHONE_TYPE_OF_MAP = {
+  [CLIENT_PHONE_TYPE_LANDLINE]: "Landline",
+  [CLIENT_PHONE_TYPE_MOBILE]: "Mobile",
+  [CLIENT_PHONE_TYPE_WORK]: "Work",
+};
