@@ -1652,7 +1652,7 @@ function AppRouter() {
               path="/admin/order/:oid/comments"
               element={
                 <Layout>
-                  <PlaceholderPage title="Order Comments" />
+                  <AdminOrderDetailCommentListPage />
                 </Layout>
               }
             />
