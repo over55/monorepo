@@ -202,6 +202,9 @@ import AdminOrderDetailAttachmentUpdatePage from "./pages/Admin/Order/Detail/Att
 import AdminOrderDetailActivitySheetListPage from "./pages/Admin/Order/Detail/ActivitySheet/List/Page";
 import AdminOrderUpdatePage from "./pages/Admin/Order/Update/Page";
 
+// Task item pages.
+import AdminTaskItemListPage from "./pages/Admin/TaskItem/List/Page";
+
 // Admin staff pages.
 import AdminStaffListPage from "./pages/Admin/Staff/List/Page";
 import AdminStaffAddStep1PartAPage from "./pages/Admin/Staff/Add/Step1PartAPage";
@@ -1895,10 +1898,7 @@ function AppRouter() {
               path="/admin/tasks"
               element={
                 <Layout>
-                  <PlaceholderPage
-                    title="Tasks"
-                    description="Task management system"
-                  />
+                  <AdminTaskItemListPage />
                 </Layout>
               }
             />
