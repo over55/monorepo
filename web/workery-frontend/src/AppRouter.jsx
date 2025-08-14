@@ -4,10 +4,52 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router";
 import { ServiceProvider } from "./services/Services";
 import Layout from "./components/Layout/Layout";
 
+////////////////////////////////////////////////////////////////
+// Anonymous pages
+////////////////////////////////////////////////////////////////
 // Front-facing pages
 import IndexPage from "./pages/Anonymous/Index/Page";
 import LoginPage from "./pages/Anonymous/Login/Page";
 
+// 2FA pages
+import TwoFAStep1Page from "./pages/Anonymous/TwoFA/Step1Page";
+import TwoFAStep2Page from "./pages/Anonymous/TwoFA/Step2Page";
+import TwoFAStep3Page from "./pages/Anonymous/TwoFA/Step3Page";
+import TwoFAValidationPage from "./pages/Anonymous/TwoFA/ValidationPage";
+import TwoFABackupCodeGeneratePage from "./pages/Anonymous/TwoFA/BackupCodeGeneratePage";
+import TwoFABackupCodeRecoveryPage from "./pages/Anonymous/TwoFA/BackupCodeRecoveryPage";
+
+// Common pages
+import DashboardRedirector from "./pages/Common/DashboardRedirector";
+
+// Error pages
+import NotFoundPage from "./pages/Common/Error/NotFoundPage";
+import ServerErrorPage from "./pages/Common/Error/ServerErrorPage";
+
+// Styles
+const styles = {
+  app: {
+    minHeight: "100vh",
+    backgroundColor: "#f5f5f5",
+  },
+};
+
+// Placeholder component for unimplemented pages
+function PlaceholderPage({ title, description }) {
+  return (
+    <div style={{ padding: "40px", textAlign: "center" }}>
+      <h1>{title}</h1>
+      <p>{description}</p>
+      <p style={{ marginTop: "20px" }}>
+        <a href="/login">← Back to Login</a> | <a href="/">← Back to Home</a>
+      </p>
+    </div>
+  );
+}
+
+////////////////////////////////////////////////////////////////
+// Root pages
+////////////////////////////////////////////////////////////////
 // Root/Executive pages
 import RootDashboardPage from "./pages/Root/Dashboard/Page";
 import RootTenantListPage from "./pages/Root/Tenant/List/Page";
@@ -15,6 +57,9 @@ import RootTenantDetailPage from "./pages/Root/Tenant/Detail/Page";
 import RootTenantUpdatePage from "./pages/Root/Tenant/Update/Page";
 import ToTenantRedirector from "./pages/Root/ToTenant/Redirector";
 
+////////////////////////////////////////////////////////////////
+// Administration and Staff pages
+////////////////////////////////////////////////////////////////
 // Admin pages (Management/Frontline)
 import AdminDashboardPage from "./pages/Admin/Dashboard/Page";
 
@@ -189,52 +234,24 @@ import AdminStaffDetailMoreUnarchivePage from "./pages/Admin/Staff/Detail/More/U
 import AdminStaffDetailMoreUnbanPage from "./pages/Admin/Staff/Detail/More/Unban/Page";
 import AdminStaffDetailMoreUpgradePage from "./pages/Admin/Staff/Detail/More/Upgrade/Page";
 
+////////////////////////////////////////////////////////////////
 // Associate pages
+////////////////////////////////////////////////////////////////
 import AssociateDashboardPage from "./pages/Associate/Dashboard/Page";
 
+////////////////////////////////////////////////////////////////
 // Customer pages
+////////////////////////////////////////////////////////////////
 import CustomerDashboardPage from "./pages/Customer/Dashboard/Page";
 
+////////////////////////////////////////////////////////////////
 // Job Seeker pages
+////////////////////////////////////////////////////////////////
 import JobSeekerDashboardPage from "./pages/JobSeeker/Dashboard/Page";
 
-// 2FA pages
-import TwoFAStep1Page from "./pages/Anonymous/TwoFA/Step1Page";
-import TwoFAStep2Page from "./pages/Anonymous/TwoFA/Step2Page";
-import TwoFAStep3Page from "./pages/Anonymous/TwoFA/Step3Page";
-import TwoFAValidationPage from "./pages/Anonymous/TwoFA/ValidationPage";
-import TwoFABackupCodeGeneratePage from "./pages/Anonymous/TwoFA/BackupCodeGeneratePage";
-import TwoFABackupCodeRecoveryPage from "./pages/Anonymous/TwoFA/BackupCodeRecoveryPage";
-
-// Common pages
-import DashboardRedirector from "./pages/Common/DashboardRedirector";
-
-// Error pages
-import NotFoundPage from "./pages/Common/Error/NotFoundPage";
-import ServerErrorPage from "./pages/Common/Error/ServerErrorPage";
-
-// Styles
-const styles = {
-  app: {
-    minHeight: "100vh",
-    backgroundColor: "#f5f5f5",
-  },
-};
-
-// Placeholder component for unimplemented pages
-function PlaceholderPage({ title, description }) {
-  return (
-    <div style={{ padding: "40px", textAlign: "center" }}>
-      <h1>{title}</h1>
-      <p>{description}</p>
-      <p style={{ marginTop: "20px" }}>
-        <a href="/login">← Back to Login</a> | <a href="/">← Back to Home</a>
-      </p>
-    </div>
-  );
-}
-
-// Main App component
+////////////////////////////////////////////////////////////////
+// Main App Router component
+////////////////////////////////////////////////////////////////
 function AppRouter() {
   return (
     <ServiceProvider>
