@@ -1708,7 +1708,7 @@ function AppRouter() {
               path="/admin/order/:oid/more"
               element={
                 <Layout>
-                  <PlaceholderPage title="Order More Actions" />
+                  <AdminOrderDetailMorePage />
                 </Layout>
               }
             />
@@ -1716,7 +1716,7 @@ function AppRouter() {
               path="/admin/order/:oid/more/delete"
               element={
                 <Layout>
-                  <PlaceholderPage title="Delete Order" />
+                  <AdminOrderDetailMoreDeletePage />
                 </Layout>
               }
             />
@@ -1724,7 +1724,7 @@ function AppRouter() {
               path="/admin/order/:oid/more/unassign"
               element={
                 <Layout>
-                  <PlaceholderPage title="Unassign Order" />
+                  <AdminOrderDetailMoreUnassignedPage />
                 </Layout>
               }
             />
@@ -1732,7 +1732,7 @@ function AppRouter() {
               path="/admin/order/:oid/more/close"
               element={
                 <Layout>
-                  <PlaceholderPage title="Close Order" />
+                  <AdminOrderDetailMoreClosePage />
                 </Layout>
               }
             />
@@ -1740,7 +1740,7 @@ function AppRouter() {
               path="/admin/order/:oid/more/postpone"
               element={
                 <Layout>
-                  <PlaceholderPage title="Postpone Order" />
+                  <AdminOrderDetailMorePostponePage />
                 </Layout>
               }
             />
@@ -1748,7 +1748,7 @@ function AppRouter() {
               path="/admin/order/:oid/more/transfer/step-1"
               element={
                 <Layout>
-                  <PlaceholderPage title="Transfer Order - Step 1" />
+                  <AdminOrderDetailMoreTransferStep1Page />
                 </Layout>
               }
             />
@@ -1756,7 +1756,7 @@ function AppRouter() {
               path="/admin/order/:oid/more/transfer/step-2"
               element={
                 <Layout>
-                  <PlaceholderPage title="Transfer Order - Step 2" />
+                  <AdminOrderDetailMoreTransferStep2Page />
                 </Layout>
               }
             />
@@ -1764,7 +1764,7 @@ function AppRouter() {
               path="/admin/order/:oid/more/transfer/step-3"
               element={
                 <Layout>
-                  <PlaceholderPage title="Transfer Order - Step 3" />
+                  <AdminOrderDetailMoreTransferStep3Page />
                 </Layout>
               }
             />
@@ -1772,7 +1772,7 @@ function AppRouter() {
               path="/admin/order/:oid/more/transfer/step-4"
               element={
                 <Layout>
-                  <PlaceholderPage title="Transfer Order - Step 4" />
+                  <AdminOrderDetailMoreTransferStep4Page />
                 </Layout>
               }
             />
@@ -1780,7 +1780,7 @@ function AppRouter() {
               path="/admin/order/:oid/more/transfer/step-5"
               element={
                 <Layout>
-                  <PlaceholderPage title="Transfer Order - Step 5" />
+                  <AdminOrderDetailMoreTransferStep5Page />
                 </Layout>
               }
             />
@@ -1788,7 +1788,7 @@ function AppRouter() {
               path="/admin/order/:oid/more/incidents"
               element={
                 <Layout>
-                  <PlaceholderPage title="Order Incidents" />
+                  <AdminOrderDetailMoreIncidentListPage />
                 </Layout>
               }
             />
@@ -1796,7 +1796,7 @@ function AppRouter() {
               path="/admin/order/:oid/more/incidents/create"
               element={
                 <Layout>
-                  <PlaceholderPage title="Create Order Incident" />
+                  <AdminOrderDetailMoreIncidentAddPage />
                 </Layout>
               }
             />
@@ -1804,7 +1804,7 @@ function AppRouter() {
               path="/admin/order/:oid/more/incident/:oiid"
               element={
                 <Layout>
-                  <PlaceholderPage title="Order Incident Detail" />
+                  <AdminOrderDetailMoreIncidentDetailPage />
                 </Layout>
               }
             />
