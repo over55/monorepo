@@ -55,3 +55,30 @@ export const TASK_ITEM_CLOSE_REASON_OPTIONS_WITH_EMPTY_OPTION = [
   { value: 0, label: "Please select" },
   ...TASK_ITEM_CLOSE_REASON_OPTIONS,
 ];
+
+/**
+ * Order Incident Closing Reason Options
+ */
+export const ORDER_INCIDENT_CLOSING_REASON_OPTIONS = [
+  { value: 1, label: "Other (please specify)" },
+  { value: 2, label: "Resolved by associate" },
+  { value: 3, label: "Resolved by customer" },
+  { value: 4, label: "Resolved by staff" },
+  { value: 5, label: "No longer an issue" },
+  { value: 6, label: "Duplicate incident" },
+];
+
+export const ORDER_INCIDENT_CLOSING_REASON_OPTIONS_WITH_EMPTY_OPTIONS = [
+  { value: 0, label: "Please select" },
+  ...ORDER_INCIDENT_CLOSING_REASON_OPTIONS,
+];
+
+/**
+ * Order Incident Sort Options
+ */
+export const ORDER_INCIDENT_SORT_OPTIONS = [
+  { value: "created_at,DESC", label: "Newest → Oldest" },
+  { value: "created_at,ASC", label: "Oldest → Newest" },
+  { value: "title,ASC", label: "Title (A → Z)" },
+  { value: "title,DESC", label: "Title (Z → A)" },
+];
