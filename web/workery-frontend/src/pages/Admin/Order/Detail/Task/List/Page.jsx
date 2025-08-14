@@ -1,8 +1,16 @@
 // File Path: web/workery-frontend/src/pages/Admin/Order/Detail/Task/List/Page.jsx
 
 import React, { useState, useEffect } from "react";
-import { Link, useParams, useNavigate } from "react-router"; // Using react-router to match AppRouter.jsx
+import { Link, useParams, useNavigate } from "react-router";
 import { useTaskManager } from "../../../../../../services/Services";
+import { theme, globalStyles } from "../../../../../../constants/Theme";
+import {
+  Card,
+  Button,
+  Alert,
+  Loading,
+  Breadcrumb,
+} from "../../../../../../components/UI";
 
 function AdminOrderDetailMoreTaskListPage() {
   // Get order ID from URL parameters
@@ -15,7 +23,7 @@ function AdminOrderDetailMoreTaskListPage() {
   // Component state
   const [isLoading, setIsLoading] = useState(false);
   const [tasks, setTasks] = useState([]);
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -23,9 +31,11 @@ function AdminOrderDetailMoreTaskListPage() {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+
     // Validate order ID
     if (!oid) {
-      setErrors({ general: "Order ID is required" });
+      setErrors("Order ID is required");
       return;
     }
 
@@ -40,7 +50,7 @@ function AdminOrderDetailMoreTaskListPage() {
 
   const fetchTasks = async () => {
     setIsLoading(true);
-    setErrors({});
+    setErrors(null);
 
     try {
       // Create parameters with order_wjid filter - THIS IS THE KEY FIX
@@ -59,7 +69,7 @@ function AdminOrderDetailMoreTaskListPage() {
         () => {
           // Unauthorized callback
           console.log("Unauthorized access, redirecting to login");
-          navigate("/login");
+          navigate("/login?unauthorized=true");
         },
         true, // Force refresh to bypass cache and get latest data
       );
@@ -74,7 +84,7 @@ function AdminOrderDetailMoreTaskListPage() {
       }
     } catch (error) {
       console.error("Error fetching tasks:", error);
-      setErrors(error || { general: "Failed to load tasks" });
+      setErrors(error?.general || "Failed to load tasks. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -113,306 +123,501 @@ function AdminOrderDetailMoreTaskListPage() {
     return statuses[status] || `Status ${status}`;
   };
 
-  const getStatusBadgeClass = (status) => {
+  const getStatusColor = (status) => {
     switch (status) {
       case 1:
-        return "bg-yellow-100 text-yellow-800";
+        return theme.colors.warning;
       case 2:
-        return "bg-blue-100 text-blue-800";
+        return theme.colors.info;
       case 3:
-        return "bg-green-100 text-green-800";
+        return theme.colors.success;
       case 4:
-        return "bg-red-100 text-red-800";
+        return theme.colors.danger;
       default:
-        return "bg-gray-100 text-gray-800";
+        return theme.colors.secondary;
     }
   };
 
+  // Breadcrumb items
+  const breadcrumbItems = [
+    { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
+    { label: "Orders", path: "/admin/orders", icon: "🔧" },
+    { label: `Order #${oid}`, path: `/admin/order/${oid}`, icon: "📋" },
+    { label: "Tasks", icon: "✅" },
+  ];
+
   if (isLoading && tasks.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-50 p-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex justify-center items-center h-64">
-            <div className="text-gray-500">Loading tasks...</div>
-          </div>
-        </div>
+      <div style={globalStyles.container}>
+        <Loading message="Loading tasks..." />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="py-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <nav className="flex" aria-label="Breadcrumb">
-                  <ol className="flex items-center space-x-4">
-                    <li>
-                      <Link
-                        to="/admin/dashboard"
-                        className="text-gray-500 hover:text-gray-700"
-                      >
-                        Dashboard
-                      </Link>
-                    </li>
-                    <li>
-                      <span className="mx-2 text-gray-400">/</span>
-                      <Link
-                        to="/admin/orders"
-                        className="text-gray-500 hover:text-gray-700"
-                      >
-                        Orders
-                      </Link>
-                    </li>
-                    <li>
-                      <span className="mx-2 text-gray-400">/</span>
-                      <Link
-                        to={`/admin/order/${oid}`}
-                        className="text-gray-500 hover:text-gray-700"
-                      >
-                        Order #{oid}
-                      </Link>
-                    </li>
-                    <li>
-                      <span className="mx-2 text-gray-400">/</span>
-                      <span className="text-gray-900">Tasks</span>
-                    </li>
-                  </ol>
-                </nav>
-                <h1 className="mt-2 text-2xl font-bold text-gray-900">
-                  Order Tasks
-                </h1>
-                <p className="mt-1 text-sm text-gray-600">
-                  Manage tasks associated with Order #{oid}
-                </p>
-              </div>
-              <div className="flex space-x-3">
-                <button
-                  onClick={handleRefresh}
-                  disabled={isLoading}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
-                >
-                  Refresh
-                </button>
-                <Link
-                  to={`/admin/order/${oid}`}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                >
-                  Back to Order
-                </Link>
-              </div>
-            </div>
-          </div>
+    <div style={globalStyles.container}>
+      {/* Breadcrumb */}
+      <Breadcrumb items={breadcrumbItems} />
+
+      {/* Page Title */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "20px",
+        }}
+      >
+        <div>
+          <h1 style={{ margin: 0 }}>🔧 Order</h1>
+          <h4 style={{ margin: "5px 0 0 0", color: theme.colors.secondary }}>
+            ✅ Tasks
+          </h4>
         </div>
       </div>
 
       {/* Error Display */}
-      {errors.general && (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-            {errors.general}
-          </div>
-        </div>
+      {errors && (
+        <Alert type="error" onClose={() => setErrors(null)}>
+          {errors}
+        </Alert>
       )}
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white shadow rounded-lg">
-          {/* Results Summary */}
-          <div className="px-6 py-4 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-700">
-                Showing {tasks.length} of {totalCount} tasks for Order #{oid}
-              </p>
-            </div>
+      <Card>
+        {/* Header with Actions */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: "30px",
+            flexWrap: "wrap",
+            gap: "10px",
+          }}
+        >
+          <h3 style={{ margin: 0 }}>📋 Tasks for Order #{oid}</h3>
+          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+            <Button
+              variant="secondary"
+              onClick={handleRefresh}
+              disabled={isLoading}
+            >
+              🔄 Refresh
+            </Button>
+            <Link to={`/admin/order/${oid}`}>
+              <Button variant="outline">← Back to Order</Button>
+            </Link>
           </div>
-
-          {/* Tasks Table */}
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Task ID
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Type
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Title
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Due Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Created
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {tasks.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan="7"
-                      className="px-6 py-12 text-center text-gray-500"
-                    >
-                      No tasks found for this order
-                    </td>
-                  </tr>
-                ) : (
-                  tasks.map((task) => (
-                    <tr key={task.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        #{task.wjid || task.id}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {getTaskTypeLabel(task.type)}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                        <div className="max-w-xs truncate">
-                          {task.title || task.description || "No title"}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(task.status)}`}
-                        >
-                          {getTaskStatusLabel(task.status)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {task.dueDate || "-"}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {task.createdAt}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <div className="flex justify-end space-x-2">
-                          {task.status === 1 && task.type === 1 && (
-                            <Link
-                              to={`/admin/task/${task.id}/assign-associate/step-1`}
-                              className="text-indigo-600 hover:text-indigo-900"
-                            >
-                              Assign
-                            </Link>
-                          )}
-                          {task.status === 1 && task.type === 3 && (
-                            <Link
-                              to={`/admin/task/${task.id}/order-completion/step-1`}
-                              className="text-indigo-600 hover:text-indigo-900"
-                            >
-                              Complete
-                            </Link>
-                          )}
-                          {task.status === 1 && task.type === 4 && (
-                            <Link
-                              to={`/admin/task/${task.id}/survey/step-1`}
-                              className="text-indigo-600 hover:text-indigo-900"
-                            >
-                              Survey
-                            </Link>
-                          )}
-                          {task.status === 1 && (
-                            <>
-                              <Link
-                                to={`/admin/task/${task.id}/postpone`}
-                                className="text-yellow-600 hover:text-yellow-900"
-                              >
-                                Postpone
-                              </Link>
-                              <Link
-                                to={`/admin/task/${task.id}/close`}
-                                className="text-red-600 hover:text-red-900"
-                              >
-                                Close
-                              </Link>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="px-6 py-4 border-t border-gray-200">
-              <div className="flex items-center justify-between">
-                <button
-                  onClick={() => handlePageChange(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className={`px-3 py-2 text-sm font-medium rounded-md ${
-                    currentPage === 1
-                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
-                  }`}
-                >
-                  Previous
-                </button>
-
-                <div className="flex space-x-1">
-                  {[...Array(totalPages)].map((_, index) => {
-                    const page = index + 1;
-                    if (
-                      page === 1 ||
-                      page === totalPages ||
-                      (page >= currentPage - 1 && page <= currentPage + 1)
-                    ) {
-                      return (
-                        <button
-                          key={page}
-                          onClick={() => handlePageChange(page)}
-                          className={`px-3 py-2 text-sm font-medium rounded-md ${
-                            page === currentPage
-                              ? "bg-indigo-600 text-white"
-                              : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      );
-                    } else if (
-                      page === currentPage - 2 ||
-                      page === currentPage + 2
-                    ) {
-                      return (
-                        <span key={page} className="px-2 py-2 text-gray-500">
-                          ...
-                        </span>
-                      );
-                    }
-                    return null;
-                  })}
-                </div>
-
-                <button
-                  onClick={() => handlePageChange(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className={`px-3 py-2 text-sm font-medium rounded-md ${
-                    currentPage === totalPages
-                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                      : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
-                  }`}
-                >
-                  Next
-                </button>
-              </div>
-            </div>
-          )}
         </div>
-      </div>
+
+        {/* Tab Navigation */}
+        <div
+          style={{
+            borderBottom: "2px solid #e0e0e0",
+            marginBottom: "30px",
+            display: "flex",
+            gap: "20px",
+            flexWrap: "wrap",
+          }}
+        >
+          <Link
+            to={`/admin/order/${oid}`}
+            style={{
+              padding: "10px 0",
+              textDecoration: "none",
+              color: theme.colors.secondary,
+            }}
+          >
+            Summary
+          </Link>
+          <Link
+            to={`/admin/order/${oid}/full`}
+            style={{
+              padding: "10px 0",
+              textDecoration: "none",
+              color: theme.colors.secondary,
+            }}
+          >
+            Detail
+          </Link>
+          <Link
+            to={`/admin/order/${oid}/activity-sheets`}
+            style={{
+              padding: "10px 0",
+              textDecoration: "none",
+              color: theme.colors.secondary,
+            }}
+          >
+            Activity Sheets
+          </Link>
+          <div
+            style={{
+              padding: "10px 0",
+              borderBottom: "3px solid " + theme.colors.primary,
+              fontWeight: "bold",
+            }}
+          >
+            Tasks
+          </div>
+          <Link
+            to={`/admin/order/${oid}/comments`}
+            style={{
+              padding: "10px 0",
+              textDecoration: "none",
+              color: theme.colors.secondary,
+            }}
+          >
+            Comments
+          </Link>
+          <Link
+            to={`/admin/order/${oid}/attachments`}
+            style={{
+              padding: "10px 0",
+              textDecoration: "none",
+              color: theme.colors.secondary,
+            }}
+          >
+            Attachments
+          </Link>
+          <Link
+            to={`/admin/order/${oid}/more`}
+            style={{
+              padding: "10px 0",
+              textDecoration: "none",
+              color: theme.colors.secondary,
+            }}
+          >
+            More ⋯
+          </Link>
+        </div>
+
+        {/* Results Summary */}
+        <div
+          style={{
+            padding: "12px",
+            backgroundColor: theme.colors.light,
+            marginBottom: "20px",
+            borderRadius: "4px",
+          }}
+        >
+          <p
+            style={{
+              margin: 0,
+              fontSize: "14px",
+              color: theme.colors.secondary,
+            }}
+          >
+            Showing {tasks.length} of {totalCount} tasks for Order #{oid}
+          </p>
+        </div>
+
+        {/* Tasks Table */}
+        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+          <thead>
+            <tr style={{ backgroundColor: theme.colors.dark, color: "white" }}>
+              <th
+                style={{
+                  padding: "12px",
+                  textAlign: "left",
+                  fontWeight: "bold",
+                }}
+              >
+                Task ID
+              </th>
+              <th
+                style={{
+                  padding: "12px",
+                  textAlign: "left",
+                  fontWeight: "bold",
+                }}
+              >
+                Type
+              </th>
+              <th
+                style={{
+                  padding: "12px",
+                  textAlign: "left",
+                  fontWeight: "bold",
+                }}
+              >
+                Title
+              </th>
+              <th
+                style={{
+                  padding: "12px",
+                  textAlign: "left",
+                  fontWeight: "bold",
+                }}
+              >
+                Status
+              </th>
+              <th
+                style={{
+                  padding: "12px",
+                  textAlign: "left",
+                  fontWeight: "bold",
+                }}
+              >
+                Due Date
+              </th>
+              <th
+                style={{
+                  padding: "12px",
+                  textAlign: "left",
+                  fontWeight: "bold",
+                }}
+              >
+                Created
+              </th>
+              <th
+                style={{
+                  padding: "12px",
+                  textAlign: "right",
+                  fontWeight: "bold",
+                }}
+              >
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {tasks.length === 0 ? (
+              <tr>
+                <td
+                  colSpan="7"
+                  style={{
+                    padding: "40px",
+                    textAlign: "center",
+                    color: theme.colors.secondary,
+                  }}
+                >
+                  No tasks found for this order
+                </td>
+              </tr>
+            ) : (
+              tasks.map((task, index) => (
+                <tr
+                  key={task.id}
+                  style={{
+                    backgroundColor:
+                      index % 2 === 0 ? "white" : theme.colors.light,
+                  }}
+                >
+                  <td style={{ padding: "12px", fontWeight: "600" }}>
+                    #{task.wjid || task.id}
+                  </td>
+                  <td style={{ padding: "12px" }}>
+                    {getTaskTypeLabel(task.type)}
+                  </td>
+                  <td style={{ padding: "12px" }}>
+                    <div
+                      style={{
+                        maxWidth: "300px",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {task.title || task.description || "No title"}
+                    </div>
+                  </td>
+                  <td style={{ padding: "12px" }}>
+                    <span
+                      style={{
+                        color: getStatusColor(task.status),
+                        fontWeight: "600",
+                      }}
+                    >
+                      {getTaskStatusLabel(task.status)}
+                    </span>
+                  </td>
+                  <td
+                    style={{ padding: "12px", color: theme.colors.secondary }}
+                  >
+                    {task.dueDate || "-"}
+                  </td>
+                  <td
+                    style={{ padding: "12px", color: theme.colors.secondary }}
+                  >
+                    {task.createdAt}
+                  </td>
+                  <td style={{ padding: "12px", textAlign: "right" }}>
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "flex-end",
+                        gap: "8px",
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      {task.status === 1 && task.type === 1 && (
+                        <Link
+                          to={`/admin/task/${task.id}/assign-associate/step-1`}
+                          style={{
+                            color: theme.colors.primary,
+                            textDecoration: "none",
+                            fontWeight: "500",
+                          }}
+                        >
+                          Assign
+                        </Link>
+                      )}
+                      {task.status === 1 && task.type === 3 && (
+                        <Link
+                          to={`/admin/task/${task.id}/order-completion/step-1`}
+                          style={{
+                            color: theme.colors.primary,
+                            textDecoration: "none",
+                            fontWeight: "500",
+                          }}
+                        >
+                          Complete
+                        </Link>
+                      )}
+                      {task.status === 1 && task.type === 4 && (
+                        <Link
+                          to={`/admin/task/${task.id}/survey/step-1`}
+                          style={{
+                            color: theme.colors.primary,
+                            textDecoration: "none",
+                            fontWeight: "500",
+                          }}
+                        >
+                          Survey
+                        </Link>
+                      )}
+                      {task.status === 1 && (
+                        <>
+                          <span style={{ color: theme.colors.light }}>|</span>
+                          <Link
+                            to={`/admin/task/${task.id}/postpone`}
+                            style={{
+                              color: theme.colors.warning,
+                              textDecoration: "none",
+                              fontWeight: "500",
+                            }}
+                          >
+                            Postpone
+                          </Link>
+                          <span style={{ color: theme.colors.light }}>|</span>
+                          <Link
+                            to={`/admin/task/${task.id}/close`}
+                            style={{
+                              color: theme.colors.danger,
+                              textDecoration: "none",
+                              fontWeight: "500",
+                            }}
+                          >
+                            Close
+                          </Link>
+                        </>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "10px",
+              marginTop: "30px",
+              paddingTop: "20px",
+              borderTop: "1px solid #e0e0e0",
+            }}
+          >
+            <Button
+              onClick={() => handlePageChange(currentPage - 1)}
+              disabled={currentPage === 1}
+              variant="outline"
+              size="sm"
+            >
+              ← Previous
+            </Button>
+
+            <div style={{ display: "flex", gap: "5px" }}>
+              {[...Array(totalPages)].map((_, index) => {
+                const page = index + 1;
+                if (
+                  page === 1 ||
+                  page === totalPages ||
+                  (page >= currentPage - 1 && page <= currentPage + 1)
+                ) {
+                  return (
+                    <Button
+                      key={page}
+                      onClick={() => handlePageChange(page)}
+                      variant={page === currentPage ? "primary" : "outline"}
+                      size="sm"
+                      style={{ minWidth: "40px" }}
+                    >
+                      {page}
+                    </Button>
+                  );
+                } else if (
+                  page === currentPage - 2 ||
+                  page === currentPage + 2
+                ) {
+                  return (
+                    <span
+                      key={page}
+                      style={{
+                        padding: "0 5px",
+                        color: theme.colors.secondary,
+                      }}
+                    >
+                      ...
+                    </span>
+                  );
+                }
+                return null;
+              })}
+            </div>
+
+            <Button
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={currentPage === totalPages}
+              variant="outline"
+              size="sm"
+            >
+              Next →
+            </Button>
+          </div>
+        )}
+
+        {/* Bottom Action Buttons */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginTop: "30px",
+            paddingTop: "20px",
+            borderTop: totalPages <= 1 ? "1px solid #e0e0e0" : "none",
+            flexWrap: "wrap",
+            gap: "10px",
+          }}
+        >
+          <Link to={`/admin/order/${oid}`}>
+            <Button variant="outline">← Back to Order</Button>
+          </Link>
+
+          <Button
+            variant="secondary"
+            onClick={handleRefresh}
+            disabled={isLoading}
+          >
+            🔄 Refresh List
+          </Button>
+        </div>
+      </Card>
     </div>
   );
 }
