@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/Order/Detail/More/Incident/Create/View.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -303,7 +304,10 @@ function AdminOrderMoreIncidentCreate() {
           >
             <ul>
               <li className="">
-                <Link to={`/admin/order/${oid}/more/incidents`} aria-current="page">
+                <Link
+                  to={`/admin/order/${oid}/more/incidents`}
+                  aria-current="page"
+                >
                   <FontAwesomeIcon className="fas" icon={faArrowLeft} />
                   &nbsp;Back to Incidents
                 </Link>
@@ -412,7 +416,9 @@ function AdminOrderMoreIncidentCreate() {
                   errorText={errors && errors.closingReason}
                   helpText="If this incident was resolved, please select the closing reason for this incident."
                   onChange={(e) => setClosingReason(parseInt(e.target.value))}
-                  options={ORDER_INCIDENT_CLOSING_REASON_OPTIONS_WITH_EMPTY_OPTIONS}
+                  options={
+                    ORDER_INCIDENT_CLOSING_REASON_OPTIONS_WITH_EMPTY_OPTIONS
+                  }
                 />
 
                 {closingReason === 1 && (

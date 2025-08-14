@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/Order/Detail/More/Incident/Detail/View.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -13,7 +14,7 @@ import {
   faTable,
   faDownload,
   faPencil,
-  faCircleExclamation
+  faCircleExclamation,
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 import { useParams } from "react-router-dom";
@@ -33,7 +34,7 @@ import URLTextFormatter from "../../../../../../Reusable/EveryPage/URLTextFormat
 import {
   topAlertMessageState,
   topAlertStatusState,
-  currentUserState
+  currentUserState,
 } from "../../../../../../../AppState";
 import { COMMERCIAL_CUSTOMER_TYPE_OF_ID } from "../../../../../../../Constants/App";
 import { addCustomerState } from "../../../../../../../AppState";
@@ -47,7 +48,6 @@ import AttachmentCreateModal from "./ModalNewAttachment";
 import CommentCreateModal from "./ModalNewComment";
 import OrderIncidentUpdateModal from "./ModalEditIncident";
 import OrderIncidentCloseModal from "./ModalCloseIncident";
-
 
 function AdminOrderMoreIncidentDetail() {
   ////
@@ -82,15 +82,14 @@ function AdminOrderMoreIncidentDetail() {
   const [closingReason, setClosingReason] = useState(0);
   const [closingReasonOther, setReasonOther] = useState("");
   const [showCommentCreateModal, setShowCommentCreateModal] = useState(false);
-  const [showAttachmentCreateModal, setShowAttachmentCreateModal] = useState(false);
+  const [showAttachmentCreateModal, setShowAttachmentCreateModal] =
+    useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showCloseModal, setShowCloseModal] = useState(false);
 
   ////
   //// Event handling.
   ////
-
-
 
   ////
   //// API.
@@ -102,7 +101,13 @@ function AdminOrderMoreIncidentDetail() {
     console.log("onOrderSuccess: Starting...");
     setOrder(response);
 
-    getOrderIncidentDetailAPI(oiid, onIncidentSuccess, onIncidentSuccess, onIncidentDone, onUnauthorized);
+    getOrderIncidentDetailAPI(
+      oiid,
+      onIncidentSuccess,
+      onIncidentSuccess,
+      onIncidentDone,
+      onUnauthorized,
+    );
   }
 
   function onOrderError(apiErr) {
@@ -161,7 +166,13 @@ function AdminOrderMoreIncidentDetail() {
       window.scrollTo(0, 0); // Start the page at the top of the page.
 
       setFetching(true);
-      getOrderDetailAPI(oid, onOrderSuccess, onOrderError, onOrderDone, onUnauthorized);
+      getOrderDetailAPI(
+        oid,
+        onOrderSuccess,
+        onOrderError,
+        onOrderDone,
+        onUnauthorized,
+      );
     }
 
     return () => {
@@ -231,7 +242,10 @@ function AdminOrderMoreIncidentDetail() {
           >
             <ul>
               <li className="">
-                <Link to={`/admin/order/${oid}/more/incidents`} aria-current="page">
+                <Link
+                  to={`/admin/order/${oid}/more/incidents`}
+                  aria-current="page"
+                >
                   <FontAwesomeIcon className="fas" icon={faArrowLeft} />
                   &nbsp;Back to Incidents
                 </Link>
@@ -267,50 +281,61 @@ function AdminOrderMoreIncidentDetail() {
                   </p>
                 </div>
                 <div className="column is-three-quarters has-text-right">
-                    <>
-                        <button
-                          onClick={(e)=>{setShowCloseModal(true)}}
-                          className="button is-danger is-fullwidth-mobile"
-                          disabled={order.status === 2}
-                        >
-                          <FontAwesomeIcon className="fas" icon={faCircleExclamation} />
-                          &nbsp;Close
-                        </button>
-                        &nbsp;
-                    </>
-                    <>
-                        <button
-                          onClick={(e)=>{setShowEditModal(true)}}
-                          className="button is-warning is-fullwidth-mobile"
-                          disabled={order.status === 2}
-                        >
-                          <FontAwesomeIcon className="fas" icon={faPencil} />
-                          &nbsp;Edit
-                        </button>
-                        &nbsp;
-                    </>
-                    <>
-                        <button
-                          onClick={(e)=>{setShowCommentCreateModal(true)}}
-                          className="button is-dark is-fullwidth-mobile"
-                          disabled={order.status === 2}
-                        >
-                          <FontAwesomeIcon className="fas" icon={faPlus} />
-                          &nbsp;New Comment
-                        </button>
-                        &nbsp;
-                    </>
-                    <>
-                        <button
-                          onClick={(e)=>{setShowAttachmentCreateModal(true)}}
-                          className="button is-dark is-fullwidth-mobile"
-                          disabled={order.status === 2}
-                        >
-                          <FontAwesomeIcon className="fas" icon={faPlus} />
-                          &nbsp;New Attachment
-                        </button>
-                        &nbsp;
-                    </>
+                  <>
+                    <button
+                      onClick={(e) => {
+                        setShowCloseModal(true);
+                      }}
+                      className="button is-danger is-fullwidth-mobile"
+                      disabled={order.status === 2}
+                    >
+                      <FontAwesomeIcon
+                        className="fas"
+                        icon={faCircleExclamation}
+                      />
+                      &nbsp;Close
+                    </button>
+                    &nbsp;
+                  </>
+                  <>
+                    <button
+                      onClick={(e) => {
+                        setShowEditModal(true);
+                      }}
+                      className="button is-warning is-fullwidth-mobile"
+                      disabled={order.status === 2}
+                    >
+                      <FontAwesomeIcon className="fas" icon={faPencil} />
+                      &nbsp;Edit
+                    </button>
+                    &nbsp;
+                  </>
+                  <>
+                    <button
+                      onClick={(e) => {
+                        setShowCommentCreateModal(true);
+                      }}
+                      className="button is-dark is-fullwidth-mobile"
+                      disabled={order.status === 2}
+                    >
+                      <FontAwesomeIcon className="fas" icon={faPlus} />
+                      &nbsp;New Comment
+                    </button>
+                    &nbsp;
+                  </>
+                  <>
+                    <button
+                      onClick={(e) => {
+                        setShowAttachmentCreateModal(true);
+                      }}
+                      className="button is-dark is-fullwidth-mobile"
+                      disabled={order.status === 2}
+                    >
+                      <FontAwesomeIcon className="fas" icon={faPlus} />
+                      &nbsp;New Attachment
+                    </button>
+                    &nbsp;
+                  </>
                 </div>
               </div>
             )}
@@ -328,7 +353,6 @@ function AdminOrderMoreIncidentDetail() {
                 <FormErrorBox errors={errors} />
                 {order && incident && (
                   <div className="container">
-
                     {/* Tab Navigation */}
                     {/*
                     <div className="tabs is-medium is-size-6-tablet is-size-7-mobile">
@@ -348,73 +372,71 @@ function AdminOrderMoreIncidentDetail() {
                     */}
 
                     <table className="is-fullwidth table">
-                        <thead>
-                          <tr className="has-background-black">
-                            <th className="has-text-white" colSpan="2">
-                              Summary
-                            </th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr>
-                            <th
-                              className="has-background-light"
-                              style={{ width: "30%" }}
-                            >
-                              Client:
-                            </th>
-                            <td>
-                              <URLTextFormatter
-                                urlKey={order.customerName}
-                                urlValue={`/admin/client/${order.customerId}`}
-                                type={`external`}
-                              />
-                            </td>
-                          </tr>
-                          <tr>
-                            <th
-                              className="has-background-light"
-                              style={{ width: "30%" }}
-                            >
-                              Associate:
-                            </th>
-                            <td>
-                              <URLTextFormatter
-                                urlKey={order.associateName}
-                                urlValue={`/admin/client/${order.associateId}`}
-                                type={`external`}
-                              />
-                            </td>
-                          </tr>
-                          <tr>
-                            <th
-                              className="has-background-light"
-                              style={{ width: "30%" }}
-                            >
-                              Title:
-                            </th>
-                            <td>{incident.title}</td>
-                          </tr>
-                          <tr>
-                            <th
-                              className="has-background-light"
-                              style={{ width: "30%" }}
-                            >
-                              Description:
-                            </th>
-                            <td>{incident.description}</td>
-                          </tr>
-                          <tr>
-                            <th
-                              className="has-background-light"
-                              style={{ width: "30%" }}
-                            >
-                              ID:
-                            </th>
-                            <td>
-                              {incident.publicId}
-                            </td>
-                          </tr>
+                      <thead>
+                        <tr className="has-background-black">
+                          <th className="has-text-white" colSpan="2">
+                            Summary
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <th
+                            className="has-background-light"
+                            style={{ width: "30%" }}
+                          >
+                            Client:
+                          </th>
+                          <td>
+                            <URLTextFormatter
+                              urlKey={order.customerName}
+                              urlValue={`/admin/client/${order.customerId}`}
+                              type={`external`}
+                            />
+                          </td>
+                        </tr>
+                        <tr>
+                          <th
+                            className="has-background-light"
+                            style={{ width: "30%" }}
+                          >
+                            Associate:
+                          </th>
+                          <td>
+                            <URLTextFormatter
+                              urlKey={order.associateName}
+                              urlValue={`/admin/client/${order.associateId}`}
+                              type={`external`}
+                            />
+                          </td>
+                        </tr>
+                        <tr>
+                          <th
+                            className="has-background-light"
+                            style={{ width: "30%" }}
+                          >
+                            Title:
+                          </th>
+                          <td>{incident.title}</td>
+                        </tr>
+                        <tr>
+                          <th
+                            className="has-background-light"
+                            style={{ width: "30%" }}
+                          >
+                            Description:
+                          </th>
+                          <td>{incident.description}</td>
+                        </tr>
+                        <tr>
+                          <th
+                            className="has-background-light"
+                            style={{ width: "30%" }}
+                          >
+                            ID:
+                          </th>
+                          <td>{incident.publicId}</td>
+                        </tr>
                         <tr>
                           <th
                             className="has-background-light"
@@ -452,7 +474,9 @@ function AdminOrderMoreIncidentDetail() {
                             Modified at:
                           </th>
                           <td>
-                            <DateTimeTextFormatter value={incident.modifiedAt} />
+                            <DateTimeTextFormatter
+                              value={incident.modifiedAt}
+                            />
                           </td>
                         </tr>
                         <tr>
@@ -473,82 +497,86 @@ function AdminOrderMoreIncidentDetail() {
                           </th>
                           <td>{incident.modifiedFromIpAddress}</td>
                         </tr>
-                        </tbody>
+                      </tbody>
                     </table>
 
                     <hr />
 
                     {/* FEED */}
                     <table className="is-fullwidth table">
-                        <thead>
-                          <tr className="has-background-black">
-                            <th className="has-text-white" colSpan="2">
-                               Feed
-                            </th>
-                          </tr>
-                        </thead>
+                      <thead>
+                        <tr className="has-background-black">
+                          <th className="has-text-white" colSpan="2">
+                            Feed
+                          </th>
+                        </tr>
+                      </thead>
                     </table>
 
                     {incident.feed && incident.feed.length > 0 && (
                       <>
                         {incident.feed.map(function (datum, i) {
-
                           // console.log(datum); // For debugging purposes only.
 
-                          if (datum.filetype !== undefined && datum.filetype !== null && datum.filetype !== "") {
-                               return (
-                                   <div className="pb-3">
-                                     <span className="is-pulled-right has-text-grey-light">
-                                       {datum.createdByUserName} at{" "}
-                                       <b>
-                                         <DateTimeTextFormatter
-                                           value={datum.createdAt}
-                                         />
-                                       </b>
-                                     </span>
-                                     <br />
-                                     <article className="message is-link">
-                                       <div className="message-body">
-
-                                         <a
-                                           href={datum.objectUrl}
-                                           target="_blank"
-                                           rel="noreferrer"
-                                           className=""
-                                         >
-                                           <FontAwesomeIcon className="mdi" icon={faDownload} />
-                                           &nbsp;
-                                           {datum.filename ? (
-                                             <>{datum.filename}</>
-                                           ) : (
-                                             <>Download File</>
-                                           )}
-                                         </a>
-                                       </div>
-                                     </article>
-                                   </div>
-                               );
-                          } else {
-                              return (
-                                <div className="pb-3">
-                                  <span className="is-pulled-right has-text-grey-light">
-                                    {datum.createdByUserName} at{" "}
-                                    <b>
-                                      <DateTimeTextFormatter
-                                        value={datum.createdAt}
+                          if (
+                            datum.filetype !== undefined &&
+                            datum.filetype !== null &&
+                            datum.filetype !== ""
+                          ) {
+                            return (
+                              <div className="pb-3">
+                                <span className="is-pulled-right has-text-grey-light">
+                                  {datum.createdByUserName} at{" "}
+                                  <b>
+                                    <DateTimeTextFormatter
+                                      value={datum.createdAt}
+                                    />
+                                  </b>
+                                </span>
+                                <br />
+                                <article className="message is-link">
+                                  <div className="message-body">
+                                    <a
+                                      href={datum.objectUrl}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className=""
+                                    >
+                                      <FontAwesomeIcon
+                                        className="mdi"
+                                        icon={faDownload}
                                       />
-                                    </b>
-                                  </span>
-                                  <br />
-                                  <article className="message">
-                                    <div className="message-body">
-                                      {datum.content}
-                                    </div>
-                                  </article>
-                                </div>
-                              );
+                                      &nbsp;
+                                      {datum.filename ? (
+                                        <>{datum.filename}</>
+                                      ) : (
+                                        <>Download File</>
+                                      )}
+                                    </a>
+                                  </div>
+                                </article>
+                              </div>
+                            );
+                          } else {
+                            return (
+                              <div className="pb-3">
+                                <span className="is-pulled-right has-text-grey-light">
+                                  {datum.createdByUserName} at{" "}
+                                  <b>
+                                    <DateTimeTextFormatter
+                                      value={datum.createdAt}
+                                    />
+                                  </b>
+                                </span>
+                                <br />
+                                <article className="message">
+                                  <div className="message-body">
+                                    {datum.content}
+                                  </div>
+                                </article>
+                              </div>
+                            );
                           } // end Comment.
-
                         })}
                       </>
                     )}
@@ -565,49 +593,60 @@ function AdminOrderMoreIncidentDetail() {
                         </Link>
                       </div>
                       <div className="column is-three-quarters has-text-right">
-                          <>
-                              <button
-                                onClick={(e)=>{setShowCloseModal(true)}}
-                                className="button is-danger is-fullwidth-mobile"
-                                disabled={order.status === 2}
-                              >
-                                <FontAwesomeIcon className="fas" icon={faCircleExclamation} />
-                                &nbsp;Close
-                              </button>
-                              &nbsp;
-                          </>
                         <>
-                            <button
-                              onClick={(e)=>{setShowEditModal(true)}}
-                              className="button is-warning is-fullwidth-mobile"
-                              disabled={order.status === 2}
-                            >
-                              <FontAwesomeIcon className="fas" icon={faPencil} />
-                              &nbsp;Edit
-                            </button>
-                            &nbsp;
+                          <button
+                            onClick={(e) => {
+                              setShowCloseModal(true);
+                            }}
+                            className="button is-danger is-fullwidth-mobile"
+                            disabled={order.status === 2}
+                          >
+                            <FontAwesomeIcon
+                              className="fas"
+                              icon={faCircleExclamation}
+                            />
+                            &nbsp;Close
+                          </button>
+                          &nbsp;
                         </>
                         <>
-                            <button
-                              onClick={(e)=>{setShowCommentCreateModal(true)}}
-                              className="button is-dark is-fullwidth-mobile"
-                              disabled={order.status === 2}
-                            >
-                              <FontAwesomeIcon className="fas" icon={faPlus} />
-                              &nbsp;New Comment
-                            </button>
-                            &nbsp;
+                          <button
+                            onClick={(e) => {
+                              setShowEditModal(true);
+                            }}
+                            className="button is-warning is-fullwidth-mobile"
+                            disabled={order.status === 2}
+                          >
+                            <FontAwesomeIcon className="fas" icon={faPencil} />
+                            &nbsp;Edit
+                          </button>
+                          &nbsp;
                         </>
                         <>
-                            <button
-                              onClick={(e)=>{setShowAttachmentCreateModal(true)}}
-                              className="button is-dark is-fullwidth-mobile"
-                              disabled={order.status === 2}
-                            >
-                              <FontAwesomeIcon className="fas" icon={faPlus} />
-                              &nbsp;New Attachment
-                            </button>
-                            &nbsp;
+                          <button
+                            onClick={(e) => {
+                              setShowCommentCreateModal(true);
+                            }}
+                            className="button is-dark is-fullwidth-mobile"
+                            disabled={order.status === 2}
+                          >
+                            <FontAwesomeIcon className="fas" icon={faPlus} />
+                            &nbsp;New Comment
+                          </button>
+                          &nbsp;
+                        </>
+                        <>
+                          <button
+                            onClick={(e) => {
+                              setShowAttachmentCreateModal(true);
+                            }}
+                            className="button is-dark is-fullwidth-mobile"
+                            disabled={order.status === 2}
+                          >
+                            <FontAwesomeIcon className="fas" icon={faPlus} />
+                            &nbsp;New Attachment
+                          </button>
+                          &nbsp;
                         </>
                       </div>
                     </div>
@@ -628,7 +667,13 @@ function AdminOrderMoreIncidentDetail() {
         onCreated={(e) => {
           console.log("Refreshing page b/c of creation of comment");
           setFetching(true);
-          getOrderIncidentDetailAPI(oiid, onIncidentSuccess, onIncidentSuccess, onIncidentDone, onUnauthorized);
+          getOrderIncidentDetailAPI(
+            oiid,
+            onIncidentSuccess,
+            onIncidentSuccess,
+            onIncidentDone,
+            onUnauthorized,
+          );
           window.scrollTo(0, 0); // Start the page at the top of the page.
         }}
       />
@@ -641,40 +686,60 @@ function AdminOrderMoreIncidentDetail() {
         onCreated={(e) => {
           console.log("Refreshing page b/c of creation of attachment");
           setFetching(true);
-          getOrderIncidentDetailAPI(oiid, onIncidentSuccess, onIncidentSuccess, onIncidentDone, onUnauthorized);
+          getOrderIncidentDetailAPI(
+            oiid,
+            onIncidentSuccess,
+            onIncidentSuccess,
+            onIncidentDone,
+            onUnauthorized,
+          );
           window.scrollTo(0, 0); // Start the page at the top of the page.
         }}
       />
-      {incident && <>
+      {incident && (
+        <>
           <OrderIncidentUpdateModal
-              currentUser={currentUser}
-              orderID={oid}
-              orderIncidentID={oiid}
-              orderIncident={incident}
-              showModal={showEditModal}
-              setShowModal={setShowEditModal}
-              onUpdated={(e) => {
-                console.log("Refreshing page b/c of update of order incident");
-                setFetching(true);
-                getOrderIncidentDetailAPI(oiid, onIncidentSuccess, onIncidentSuccess, onIncidentDone, onUnauthorized);
-                window.scrollTo(0, 0); // Start the page at the top of the page.
-              }}
+            currentUser={currentUser}
+            orderID={oid}
+            orderIncidentID={oiid}
+            orderIncident={incident}
+            showModal={showEditModal}
+            setShowModal={setShowEditModal}
+            onUpdated={(e) => {
+              console.log("Refreshing page b/c of update of order incident");
+              setFetching(true);
+              getOrderIncidentDetailAPI(
+                oiid,
+                onIncidentSuccess,
+                onIncidentSuccess,
+                onIncidentDone,
+                onUnauthorized,
+              );
+              window.scrollTo(0, 0); // Start the page at the top of the page.
+            }}
           />
           <OrderIncidentCloseModal
-              currentUser={currentUser}
-              orderID={oid}
-              orderIncidentID={oiid}
-              orderIncident={incident}
-              showModal={showCloseModal}
-              setShowModal={setShowCloseModal}
-              onUpdated={(e) => {
-                console.log("Refreshing page b/c of update of order incident");
-                setFetching(true);
-                getOrderIncidentDetailAPI(oiid, onIncidentSuccess, onIncidentSuccess, onIncidentDone, onUnauthorized);
-                window.scrollTo(0, 0); // Start the page at the top of the page.
-              }}
+            currentUser={currentUser}
+            orderID={oid}
+            orderIncidentID={oiid}
+            orderIncident={incident}
+            showModal={showCloseModal}
+            setShowModal={setShowCloseModal}
+            onUpdated={(e) => {
+              console.log("Refreshing page b/c of update of order incident");
+              setFetching(true);
+              getOrderIncidentDetailAPI(
+                oiid,
+                onIncidentSuccess,
+                onIncidentSuccess,
+                onIncidentDone,
+                onUnauthorized,
+              );
+              window.scrollTo(0, 0); // Start the page at the top of the page.
+            }}
           />
-      </>}
+        </>
+      )}
     </>
   );
 }

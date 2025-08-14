@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/Order/Detail/More/Delete/Operation.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -27,15 +28,12 @@ import {
   faChartPie,
   faBuilding,
   faEllipsis,
-  faTrash
+  faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 import { useParams } from "react-router-dom";
 
-import {
-  getOrderDetailAPI,
-  deleteOrderAPI,
-} from "../../../../../../API/Order";
+import { getOrderDetailAPI, deleteOrderAPI } from "../../../../../../API/Order";
 import FormErrorBox from "../../../../../Reusable/FormErrorBox";
 import URLTextFormatter from "../../../../../Reusable/EveryPage/URLTextFormatter";
 import EmailTextFormatter from "../../../../../Reusable/EveryPage/EmailTextFormatter";
@@ -103,12 +101,7 @@ function AdminOrderMoreDeleteOperation() {
 
     setFetching(false);
     setErrors({});
-    deleteOrderAPI(
-      oid,
-      onOperationSuccess,
-      onOperationError,
-      onOperationDone,
-    );
+    deleteOrderAPI(oid, onOperationSuccess, onOperationError, onOperationDone);
   };
 
   ////
@@ -297,14 +290,16 @@ function AdminOrderMoreDeleteOperation() {
             ) : (
               <>
                 <p className="pb-4">
-                  You are about to permanently delete this job from workery system; it will no longer exist in our database and will impact reports / future auditing. This action can be undone. Are you sure you would like to continue?
+                  You are about to permanently delete this job from workery
+                  system; it will no longer exist in our database and will
+                  impact reports / future auditing. This action can be undone.
+                  Are you sure you would like to continue?
                 </p>
 
                 <FormErrorBox errors={errors} />
 
                 {order && (
                   <div className="container">
-
                     <div className="columns pt-5">
                       <div className="column is-half">
                         <Link

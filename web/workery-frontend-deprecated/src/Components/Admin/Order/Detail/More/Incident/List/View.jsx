@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/Order/Detail/More/Incident/List/View.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -276,7 +277,7 @@ function AdminOrderMoreIncidentList() {
     return () => {
       mounted = false;
     };
-}, [onPageLoaded, currentCursor, oid, pageSize, sortByValue, status, type]);
+  }, [onPageLoaded, currentCursor, oid, pageSize, sortByValue, status, type]);
 
   ////
   //// Component rendering.
@@ -420,10 +421,7 @@ function AdminOrderMoreIncidentList() {
                     </td>
                     <td>
                       <div className="buttons is-right">
-                        <Link
-                          to={`/501`}
-                          className="is-small"
-                        >
+                        <Link to={`/501`} className="is-small">
                           View&nbsp;
                           <FontAwesomeIcon
                             className="mdi"
@@ -638,7 +636,9 @@ function AdminOrderMoreIncidentList() {
                       <p className="subtitle">
                         No incidents.{" "}
                         <b>
-                          <Link to={`/admin/order/${oid}/more/incidents/create`}>
+                          <Link
+                            to={`/admin/order/${oid}/more/incidents/create`}
+                          >
                             Click here&nbsp;
                             <FontAwesomeIcon
                               className="mdi"
