@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/TaskItem/Update/OrderCompletion/Step2.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -97,9 +98,7 @@ function AdminTaskItemOrderCompletionStep2() {
   const [reasonComment, setReasonComment] = useState(
     addTaskItemOrderCompletion.reasonComment,
   );
-  const [visits, setVisits] = useState(
-    addTaskItemOrderCompletion.visits,
-  );
+  const [visits, setVisits] = useState(addTaskItemOrderCompletion.visits);
 
   ////
   //// Event handling.
@@ -130,7 +129,7 @@ function AdminTaskItemOrderCompletionStep2() {
         newErrors["completionDate"] = "missing value";
         hasErrors = true;
         console.log("error:completionDate:", completionDate);
-    }
+      }
       if (
         reasonComment === undefined ||
         reasonComment === null ||
@@ -206,8 +205,12 @@ function AdminTaskItemOrderCompletionStep2() {
     modifiedAddTaskItemOrderCompleted.reasonComment = reasonComment;
     modifiedAddTaskItemOrderCompleted.closingReasonComment =
       closingReasonComment;
-    if (modifiedAddTaskItemOrderCompleted.invoiceIDs === undefined || modifiedAddTaskItemOrderCompleted.invoiceIDs === null || modifiedAddTaskItemOrderCompleted.invoiceIDs === "") {
-        modifiedAddTaskItemOrderCompleted.invoiceIDs = task.orderWjid;
+    if (
+      modifiedAddTaskItemOrderCompleted.invoiceIDs === undefined ||
+      modifiedAddTaskItemOrderCompleted.invoiceIDs === null ||
+      modifiedAddTaskItemOrderCompleted.invoiceIDs === ""
+    ) {
+      modifiedAddTaskItemOrderCompleted.invoiceIDs = task.orderWjid;
     }
     modifiedAddTaskItemOrderCompleted.visits = parseInt(visits);
     setAddTaskItemOrderCompletion(modifiedAddTaskItemOrderCompleted);
@@ -364,14 +367,14 @@ function AdminTaskItemOrderCompletionStep2() {
                       wasValidated={false}
                       helpText="A decision must be recorded."
                       onChange={(e) => {
-                          // DEVELOPERS NOTE:
-                          // We will change the state of `was_completed` and
-                          // entirely reset the form below this radio field.
-                          setWasCompleted(parseInt(e.target.value))
-                          setCompletionDate(null);
-                          setReasonComment("");
-                          setReason(0);
-                          setReasonOther("");
+                        // DEVELOPERS NOTE:
+                        // We will change the state of `was_completed` and
+                        // entirely reset the form below this radio field.
+                        setWasCompleted(parseInt(e.target.value));
+                        setCompletionDate(null);
+                        setReasonComment("");
+                        setReason(0);
+                        setReasonOther("");
                       }}
                     />
 
@@ -386,16 +389,22 @@ function AdminTaskItemOrderCompletionStep2() {
                           errorText={errors && errors.completionDate}
                           helpText="If associate promises to complete in a future date, then postpone this order. Note: Future dates are not allowed."
                           onChange={(date) => {
-                              // DEVELOPERS NOTE:
-                              // This callback block only gets called when the
-                              // user successfully finishes picking a date. So
-                              // only update the state if successfully finished
-                              // picking a date; in addition, create an
-                              // auto-generated comment.
-                              setCompletionDate(date);
+                            // DEVELOPERS NOTE:
+                            // This callback block only gets called when the
+                            // user successfully finishes picking a date. So
+                            // only update the state if successfully finished
+                            // picking a date; in addition, create an
+                            // auto-generated comment.
+                            setCompletionDate(date);
 
-                              var completionDateStr = date.toISOString().slice(0, 10);
-                              setReasonComment("Job completed by Associate on "+completionDateStr+".")
+                            var completionDateStr = date
+                              .toISOString()
+                              .slice(0, 10);
+                            setReasonComment(
+                              "Job completed by Associate on " +
+                                completionDateStr +
+                                ".",
+                            );
                           }}
                           isRequired={false}
                           maxWidth="187px"

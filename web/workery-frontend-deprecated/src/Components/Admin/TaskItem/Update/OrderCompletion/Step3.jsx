@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/TaskItem/Update/OrderCompletion/Step3.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -84,7 +85,7 @@ function AdminTaskItemOrderCompletionStep3() {
   const [forceURL, setForceURL] = useState("");
   const [onPageLoaded, setOnPageLoaded] = useState(false);
   const [isCustomTaxAmount, setIsCustomTaxAmount] = useState(
-      addTaskItemOrderCompletion.invoiceIsCustomTaxAmount
+    addTaskItemOrderCompletion.invoiceIsCustomTaxAmount,
   );
   const [taxRate, setTaxRate] = useState(0.0);
   const [hasInputtedFinancials, setHasInputtedFinancials] = useState(
@@ -146,14 +147,15 @@ function AdminTaskItemOrderCompletionStep3() {
   const [invoiceServiceFee, setInvoiceServiceFee] = useState(
     addTaskItemOrderCompletion.invoiceServiceFee,
   );
-  const [invoiceServiceFeePercentage, setInvoiceServiceFeePercentage] = useState(
-    addTaskItemOrderCompletion.invoiceServiceFeePercentage !== undefined &&
-      addTaskItemOrderCompletion.invoiceServiceFeePercentage !== null &&
-      addTaskItemOrderCompletion.invoiceServiceFeePercentage !== "" &&
-      addTaskItemOrderCompletion.invoiceServiceFeePercentage !== 0
-      ? addTaskItemOrderCompletion.invoiceServiceFeePercentage
-      : task.associateServiceFeePercentage,
-  );
+  const [invoiceServiceFeePercentage, setInvoiceServiceFeePercentage] =
+    useState(
+      addTaskItemOrderCompletion.invoiceServiceFeePercentage !== undefined &&
+        addTaskItemOrderCompletion.invoiceServiceFeePercentage !== null &&
+        addTaskItemOrderCompletion.invoiceServiceFeePercentage !== "" &&
+        addTaskItemOrderCompletion.invoiceServiceFeePercentage !== 0
+        ? addTaskItemOrderCompletion.invoiceServiceFeePercentage
+        : task.associateServiceFeePercentage,
+    );
   const [isInvoiceServiceFeeOther, setIsInvoiceServiceFeeOther] = useState(
     addTaskItemOrderCompletion.isInvoiceServiceFeeOther,
   );
@@ -433,7 +435,8 @@ function AdminTaskItemOrderCompletionStep3() {
     );
     modifiedAddTaskItemOrderCompletion.invoiceTaxAmount =
       parseFloat(invoiceTaxAmount);
-    modifiedAddTaskItemOrderCompletion.invoiceIsCustomTaxAmount = isCustomTaxAmount;
+    modifiedAddTaskItemOrderCompletion.invoiceIsCustomTaxAmount =
+      isCustomTaxAmount;
     modifiedAddTaskItemOrderCompletion.invoiceTotalAmount =
       parseFloat(invoiceTotalAmount);
     modifiedAddTaskItemOrderCompletion.invoiceDepositAmount =
@@ -646,14 +649,14 @@ function AdminTaskItemOrderCompletionStep3() {
       task.associateTaxId !== "" &&
       task.associateTaxId !== "NA"
     ) {
-        if (isCustomTaxAmount === false) {
-            modifiedInvoiceTaxAmount = parseFloat(
-              (taxRate / 100.0) *
-                (modifiedInvoiceLabourAmount +
-                  modifiedInvoiceMaterialAmount +
-                  modifiedInvoiceOtherCostsAmount),
-            );
-        }
+      if (isCustomTaxAmount === false) {
+        modifiedInvoiceTaxAmount = parseFloat(
+          (taxRate / 100.0) *
+            (modifiedInvoiceLabourAmount +
+              modifiedInvoiceMaterialAmount +
+              modifiedInvoiceOtherCostsAmount),
+        );
+      }
     }
 
     // Compute the total amount.
@@ -1199,7 +1202,9 @@ function AdminTaskItemOrderCompletionStep3() {
                           name="isCustomTaxAmount"
                           checked={isCustomTaxAmount}
                           errorText={errors && errors.isCustomTaxAmount}
-                          onChange={(e, x) => setIsCustomTaxAmount(!isCustomTaxAmount)}
+                          onChange={(e, x) =>
+                            setIsCustomTaxAmount(!isCustomTaxAmount)
+                          }
                           maxWidth="180px"
                           helpText={`Would you like to override the automatic actual tax value with a custom value?`}
                         />

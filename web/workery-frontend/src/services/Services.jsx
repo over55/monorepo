@@ -13,6 +13,7 @@ import { StaffStorage } from "./Storage/StaffStorage";
 import { OrderStorage } from "./Storage/OrderStorage";
 import { TransferOperationStorage } from "./Storage/TransferOperationStorage";
 import { OrderCreationStorage } from "./Storage/OrderCreationStorage";
+import { OrderCompletionStorage } from "./Storage/OrderCompletionStorage";
 import { TaskStorage } from "./Storage/TaskStorage";
 import { ActivitySheetStorage } from "./Storage/ActivitySheetStorage";
 import { FinancialStorage } from "./Storage/FinancialStorage";
@@ -204,6 +205,10 @@ const SERVICE_DEFINITIONS = {
     },
     orderCreation: {
       factory: () => new OrderCreationStorage(),
+      singleton: true,
+    },
+    orderCompletion: {
+      factory: () => new OrderCompletionStorage(),
       singleton: true,
     },
   },
@@ -846,6 +851,10 @@ export const useTransferOperationStorage = createServiceHook(
 export const useOrderCreationStorage = createServiceHook(
   "storage",
   "orderCreation",
+);
+export const useOrderCompletionStorage = createServiceHook(
+  "storage",
+  "orderCompletion",
 );
 
 /**

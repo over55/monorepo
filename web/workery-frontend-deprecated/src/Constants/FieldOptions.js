@@ -185,9 +185,7 @@ export const CLIENT_STATUS_OPTIONS_WITH_EMPTY_OPTIONS = [
   ...CLIENT_STATUS_OPTIONS,
 ];
 
-export const CLIENT_BANNING_REASON_OPTIONS = [
-  { value: 1, label: "Other" },
-];
+export const CLIENT_BANNING_REASON_OPTIONS = [{ value: 1, label: "Other" }];
 
 export const CLIENT_BANNING_REASON_OPTIONS_WITH_EMPTY_OPTIONS = [
   { value: 0, label: "Please select" }, // EMPTY OPTION
@@ -210,7 +208,7 @@ export const ATTACHMENT_STATES = {
 export const ASSOCIATE_SORT_OPTIONS = [
   // { value: "join_date,ASC", label: "Join Date ▲" },  // Deprecated
   // { value: "join_date,DESC", label: "Join Date ▼" }, // Deprecated
-  { value: "lexical_name,ASC", label: "Last Name ▲" },  // Note: Alterantive: ↑
+  { value: "lexical_name,ASC", label: "Last Name ▲" }, // Note: Alterantive: ↑
   { value: "lexical_name,DESC", label: "Last Name ▼" }, // Note: Alterantive: ↓
 ];
 

@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/TaskItem/Update/OrderCompletion/Step1.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -231,9 +232,15 @@ function AdminTaskItemOrderCompletionStep1() {
                   </p>
                 </div>
                 <div className="column has-text-right">
-                    <Link to={`/admin/task/${tid}/order-completion/step-2`} className="button is-small is-primary is-fullwidth-mobile" type="button" disabled={task.status === 2}>
-                        Begin&nbsp;<FontAwesomeIcon className="fas" icon={faArrowRight} />
-                    </Link>
+                  <Link
+                    to={`/admin/task/${tid}/order-completion/step-2`}
+                    className="button is-small is-primary is-fullwidth-mobile"
+                    type="button"
+                    disabled={task.status === 2}
+                  >
+                    Begin&nbsp;
+                    <FontAwesomeIcon className="fas" icon={faArrowRight} />
+                  </Link>
                 </div>
               </div>
             )}

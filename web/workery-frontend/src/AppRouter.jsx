@@ -210,6 +210,11 @@ import AdminTaskItemAssignAssociateStep1Page from "./pages/Admin/TaskItem/Update
 import AdminTaskItemAssignAssociateStep2Page from "./pages/Admin/TaskItem/Update/AssignAssociate/Step2Page";
 import AdminTaskItemAssignAssociateStep3Page from "./pages/Admin/TaskItem/Update/AssignAssociate/Step3Page";
 import AdminTaskItemAssignAssociateStep4Page from "./pages/Admin/TaskItem/Update/AssignAssociate/Step4Page";
+import AdminTaskItemOrderCompletionStep1Page from "./pages/Admin/TaskItem/Update/OrderCompletion/Step1Page";
+import AdminTaskItemOrderCompletionStep2Page from "./pages/Admin/TaskItem/Update/OrderCompletion/Step2Page";
+import AdminTaskItemOrderCompletionStep3Page from "./pages/Admin/TaskItem/Update/OrderCompletion/Step3Page";
+import AdminTaskItemOrderCompletionStep4Page from "./pages/Admin/TaskItem/Update/OrderCompletion/Step4Page";
+import AdminTaskItemOrderCompletionStep5Page from "./pages/Admin/TaskItem/Update/OrderCompletion/Step5Page";
 
 // Admin staff pages.
 import AdminStaffListPage from "./pages/Admin/Staff/List/Page";
@@ -1952,7 +1957,7 @@ function AppRouter() {
               path="/admin/task/:tid/order-completion/step-1"
               element={
                 <Layout>
-                  <PlaceholderPage title="Order Completion - Step 1" />
+                  <AdminTaskItemOrderCompletionStep1Page />
                 </Layout>
               }
             />
@@ -1960,7 +1965,7 @@ function AppRouter() {
               path="/admin/task/:tid/order-completion/step-2"
               element={
                 <Layout>
-                  <PlaceholderPage title="Order Completion - Step 2" />
+                  <AdminTaskItemOrderCompletionStep2Page />
                 </Layout>
               }
             />
@@ -1968,7 +1973,7 @@ function AppRouter() {
               path="/admin/task/:tid/order-completion/step-3"
               element={
                 <Layout>
-                  <PlaceholderPage title="Order Completion - Step 3" />
+                  <AdminTaskItemOrderCompletionStep3Page />
                 </Layout>
               }
             />
@@ -1976,7 +1981,7 @@ function AppRouter() {
               path="/admin/task/:tid/order-completion/step-4"
               element={
                 <Layout>
-                  <PlaceholderPage title="Order Completion - Step 4" />
+                  <AdminTaskItemOrderCompletionStep4Page />
                 </Layout>
               }
             />
@@ -1984,7 +1989,7 @@ function AppRouter() {
               path="/admin/task/:tid/order-completion/step-5"
               element={
                 <Layout>
-                  <PlaceholderPage title="Order Completion - Step 5" />
+                  <AdminTaskItemOrderCompletionStep5Page />
                 </Layout>
               }
             />
@@ -1992,7 +1997,7 @@ function AppRouter() {
               path="/admin/task/:tid/assign-associate/step-1"
               element={
                 <Layout>
-                  <PlaceholderPage title="Assign Associate - Step 1" />
+                  <AdminTaskItemAssignAssociateStep1Page />
                 </Layout>
               }
             />
@@ -2000,7 +2005,7 @@ function AppRouter() {
               path="/admin/task/:tid/assign-associate/step-2"
               element={
                 <Layout>
-                  <PlaceholderPage title="Assign Associate - Step 2" />
+                  <AdminTaskItemAssignAssociateStep2Page />
                 </Layout>
               }
             />
@@ -2008,7 +2013,7 @@ function AppRouter() {
               path="/admin/task/:tid/assign-associate/step-3"
               element={
                 <Layout>
-                  <PlaceholderPage title="Assign Associate - Step 3" />
+                  <AdminTaskItemAssignAssociateStep3Page />
                 </Layout>
               }
             />
@@ -2016,7 +2021,7 @@ function AppRouter() {
               path="/admin/task/:tid/assign-associate/step-4"
               element={
                 <Layout>
-                  <PlaceholderPage title="Assign Associate - Step 4" />
+                  <AdminTaskItemAssignAssociateStep4Page />
                 </Layout>
               }
             />

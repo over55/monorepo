@@ -92,3 +92,92 @@ export const CLIENT_PHONE_TYPE_OF_MAP = {
   [CLIENT_PHONE_TYPE_MOBILE]: "Mobile",
   [CLIENT_PHONE_TYPE_WORK]: "Work",
 };
+
+export const ASSOCIATE_PHONE_TYPE_LANDLINE = 1;
+export const ASSOCIATE_PHONE_TYPE_MOBILE = 2;
+export const ASSOCIATE_PHONE_TYPE_WORK = 3;
+
+export const ASSOCIATE_PHONE_TYPE_OF_MAP = {
+  [ASSOCIATE_PHONE_TYPE_LANDLINE]: "Landline",
+  [ASSOCIATE_PHONE_TYPE_MOBILE]: "Mobile",
+  [ASSOCIATE_PHONE_TYPE_WORK]: "Work",
+};
+
+export const TASK_ITEM_ORDER_CANCEL_REASON_OPTIONS = [
+  {
+    value: 2,
+    label: "Quote was too high",
+  },
+  {
+    value: 3,
+    label: "Job completed by someone else",
+  },
+  {
+    value: 5,
+    label: "Work no longer needed",
+  },
+  {
+    value: 6,
+    label: "Client not satisfied with Associate",
+  },
+  {
+    value: 7,
+    label: "Client did work themselves",
+  },
+  {
+    value: 8,
+    label: "No Associate available",
+  },
+  {
+    value: 9,
+    label: "Work environment unsuitable",
+  },
+  {
+    value: 10,
+    label: "Client did not return call",
+  },
+  {
+    value: 11,
+    label: "Associate did not have necessary equipment",
+  },
+  {
+    value: 12,
+    label: "Repair not possible",
+  },
+  {
+    value: 13,
+    label: "Could not meet deadline",
+  },
+  {
+    value: 14,
+    label: "Associate did not call client",
+  },
+  {
+    value: 15,
+    label: "Member issue",
+  },
+  {
+    value: 16,
+    label: "Client billing issue",
+  },
+  {
+    value: 1,
+    label: "Other",
+  },
+];
+
+export const TASK_ITEM_ORDER_CANCEL_REASON_OPTIONS_WITH_EMPTY_OPTION = [
+  { value: 0, label: "Please select" }, // EMPTY OPTION
+  ...TASK_ITEM_ORDER_CANCEL_REASON_OPTIONS,
+];
+
+export const ORDER_INVOICE_PAYMENT_METHODS_OPTIONS = [
+  { value: 2, label: "Cash" },
+  { value: 3, label: "Cheque" },
+  { value: 4, label: "E-transfer" },
+  { value: 5, label: "Debit" },
+  { value: 6, label: "Credit" },
+  { value: 7, label: "Purchase Order" },
+  { value: 8, label: "Cryptocurrency" },
+  { value: 1, label: "Other" },
+];

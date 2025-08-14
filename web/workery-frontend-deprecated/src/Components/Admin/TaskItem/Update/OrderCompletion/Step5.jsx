@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/TaskItem/Update/OrderCompletion/Step5.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -66,7 +67,7 @@ import {
   CLIENT_ORGANIZATION_TYPE_OPTIONS,
   CLIENT_PHONE_TYPE_OF_MAP,
   TASK_ITEM_ORDER_CANCEL_REASON_OPTIONS_WITH_EMPTY_OPTION,
-  ORDER_INVOICE_PAYMENT_METHODS_OPTIONS
+  ORDER_INVOICE_PAYMENT_METHODS_OPTIONS,
 } from "../../../../../Constants/FieldOptions";
 import {
   ORDER_STATUS_COMPLETED_AND_PAID,
@@ -167,16 +168,29 @@ function AdminTaskItemOrderCompletionStep5() {
       payment_status: modifiedTask.paymentStatus,
       invoice_date: modifiedTask.invoiceDate,
       invoice_ids: modifiedTask.invoiceIDs,
-      invoice_quoted_labour_amount: parseFloat(modifiedTask.invoiceQuotedLabourAmount),
-      invoice_quoted_material_amount: parseFloat(modifiedTask.invoiceQuotedMaterialAmount),
-      invoice_quoted_other_costs_amount:
-        parseFloat(modifiedTask.invoiceQuotedOtherCostsAmount),
-      invoice_total_quote_amount: parseFloat(modifiedTask.invoiceTotalQuoteAmount),
+      invoice_quoted_labour_amount: parseFloat(
+        modifiedTask.invoiceQuotedLabourAmount,
+      ),
+      invoice_quoted_material_amount: parseFloat(
+        modifiedTask.invoiceQuotedMaterialAmount,
+      ),
+      invoice_quoted_other_costs_amount: parseFloat(
+        modifiedTask.invoiceQuotedOtherCostsAmount,
+      ),
+      invoice_total_quote_amount: parseFloat(
+        modifiedTask.invoiceTotalQuoteAmount,
+      ),
       invoice_labour_amount: parseFloat(modifiedTask.invoiceLabourAmount),
       invoice_material_amount: parseFloat(modifiedTask.invoiceMaterialAmount),
-      invoice_other_costs_amount: parseFloat(modifiedTask.invoiceOtherCostsAmount),
+      invoice_other_costs_amount: parseFloat(
+        modifiedTask.invoiceOtherCostsAmount,
+      ),
       invoice_tax_amount: parseFloat(modifiedTask.invoiceTaxAmount),
-      invoice_is_custom_tax_amount: true ? (modifiedTask.invoiceIsCustomTaxAmount === "true" || modifiedTask.invoiceIsCustomTaxAmount === true || modifiedTask.invoiceIsCustomTaxAmount === 1) : false,
+      invoice_is_custom_tax_amount: true
+        ? modifiedTask.invoiceIsCustomTaxAmount === "true" ||
+          modifiedTask.invoiceIsCustomTaxAmount === true ||
+          modifiedTask.invoiceIsCustomTaxAmount === 1
+        : false,
       invoice_total_amount: parseFloat(modifiedTask.invoiceTotalAmount),
       invoice_deposit_amount: parseFloat(modifiedTask.invoiceDepositAmount),
       invoice_amount_due: parseFloat(modifiedTask.invoiceAmountDue),
@@ -185,12 +199,16 @@ function AdminTaskItemOrderCompletionStep5() {
       invoice_service_fee: modifiedTask.invoiceServiceFee,
       invoice_service_fee_other: modifiedTask.invoiceServiceFeeOther,
       is_invoice_service_fee_other: modifiedTask.isInvoiceServiceFeeOther,
-      invoice_service_fee_amount: parseFloat(modifiedTask.invoiceServiceFeeAmount),
+      invoice_service_fee_amount: parseFloat(
+        modifiedTask.invoiceServiceFeeAmount,
+      ),
       invoice_service_fee_payment_date:
         modifiedTask.invoiceServiceFeePaymentDate,
       invoice_actual_service_fee_amount_paid:
         modifiedTask.invoiceActualServiceFeeAmountPaid,
-      invoice_balance_owing_amount: parseFloat(modifiedTask.invoiceBalanceOwingAmount),
+      invoice_balance_owing_amount: parseFloat(
+        modifiedTask.invoiceBalanceOwingAmount,
+      ),
       comment: modifiedTask.comment,
       payment_methods: modifiedTask.paymentMethods,
     };
@@ -287,7 +305,7 @@ function AdminTaskItemOrderCompletionStep5() {
     setAddTaskItemOrderCompletion(ADD_TASK_ITEM_ORDER_COMPLETION_STATE_DEFAULT);
 
     // Redirect the user to a new page.
-    setForceURL("/admin/order/"+task.orderWjid);
+    setForceURL("/admin/order/" + task.orderWjid);
   }
 
   function onOperationError(apiErr) {
@@ -805,7 +823,8 @@ function AdminTaskItemOrderCompletionStep5() {
                           <td>
                             <CheckboxTextFormatter
                               checked={
-                                addTaskItemOrderCompletion.hasInputtedFinancials === 1
+                                addTaskItemOrderCompletion.hasInputtedFinancials ===
+                                1
                               }
                             />
                           </td>
@@ -837,7 +856,8 @@ function AdminTaskItemOrderCompletionStep5() {
                                 className="has-background-light"
                                 style={{ width: "30%" }}
                               >
-                                What is the service fee payment status of this job?
+                                What is the service fee payment status of this
+                                job?
                               </th>
                               <td>
                                 <RadioTextFormatter
@@ -1087,10 +1107,14 @@ function AdminTaskItemOrderCompletionStep5() {
                                 Payment Method
                               </th>
                               <td>
-                              <MultiSelectTextFormatter
-                                selectedValues={addTaskItemOrderCompletion.paymentMethods}
-                                options={ORDER_INVOICE_PAYMENT_METHODS_OPTIONS}
-                              />
+                                <MultiSelectTextFormatter
+                                  selectedValues={
+                                    addTaskItemOrderCompletion.paymentMethods
+                                  }
+                                  options={
+                                    ORDER_INVOICE_PAYMENT_METHODS_OPTIONS
+                                  }
+                                />
                               </td>
                             </tr>
                             <tr>
@@ -1122,22 +1146,30 @@ function AdminTaskItemOrderCompletionStep5() {
 
                     <div className="columns pt-5">
                       <div className="column is-half">
-                        {(addTaskItemOrderCompletion && addTaskItemOrderCompletion.hasInputtedFinancials === 1) ? (
-                            <Link
-                              className="button is-fullwidth-mobile"
-                              to={`/admin/task/${tid}/order-completion/step-4`}
-                            >
-                              <FontAwesomeIcon className="fas" icon={faArrowLeft} />
-                              &nbsp;Back to Step 4
-                            </Link>
+                        {addTaskItemOrderCompletion &&
+                        addTaskItemOrderCompletion.hasInputtedFinancials ===
+                          1 ? (
+                          <Link
+                            className="button is-fullwidth-mobile"
+                            to={`/admin/task/${tid}/order-completion/step-4`}
+                          >
+                            <FontAwesomeIcon
+                              className="fas"
+                              icon={faArrowLeft}
+                            />
+                            &nbsp;Back to Step 4
+                          </Link>
                         ) : (
-                            <Link
-                              className="button is-fullwidth-mobile"
-                              to={`/admin/task/${tid}/order-completion/step-3`}
-                            >
-                              <FontAwesomeIcon className="fas" icon={faArrowLeft} />
-                              &nbsp;Back to Step 3
-                            </Link>
+                          <Link
+                            className="button is-fullwidth-mobile"
+                            to={`/admin/task/${tid}/order-completion/step-3`}
+                          >
+                            <FontAwesomeIcon
+                              className="fas"
+                              icon={faArrowLeft}
+                            />
+                            &nbsp;Back to Step 3
+                          </Link>
                         )}
                       </div>
                       <div className="column is-half has-text-right">
