@@ -135,7 +135,7 @@ import AdminOrderAddStep3Page from "./pages/Admin/Order/Add/Step3Page";
 import AdminOrderAddStep4Page from "./pages/Admin/Order/Add/Step4Page";
 import AdminOrderDetailLitePage from "./pages/Admin/Order/Detail/LitePage";
 import AdminOrderDetailFullPage from "./pages/Admin/Order/Detail/FullPage";
-import AdminOrderDetailMoreTaskListPage from "./pages/Admin/Order/Detail/FullPage";
+import AdminOrderDetailMoreTaskListPage from "./pages/Admin/Order/Detail/Task/List/Page";
 import AdminOrderDetailMorePage from "./pages/Admin/Order/Detail/More/Page";
 import AdminOrderDetailMoreUnassignedPage from "./pages/Admin/Order/Detail/More/Unassign/Page";
 import AdminOrderDetailMoreTransferStep1Page from "./pages/Admin/Order/Detail/More/Transfer/Step1Page";
@@ -1644,7 +1644,7 @@ function AppRouter() {
               path="/admin/order/:oid/tasks"
               element={
                 <Layout>
-                  <PlaceholderPage title="Order Tasks" />
+                  <AdminOrderDetailMoreTaskListPage />
                 </Layout>
               }
             />
