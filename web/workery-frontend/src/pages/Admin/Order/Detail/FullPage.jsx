@@ -15,10 +15,19 @@ import {
 // Constants
 const CLIENT_PHONE_TYPE_WORK = 1;
 const ASSOCIATE_PHONE_TYPE_WORK = 1;
-const ORDER_STATUS_COMPLETED_BUT_UNPAID = 4;
-const ORDER_STATUS_COMPLETED_AND_PAID = 5;
+const OrderStatusNew = 1;
+const OrderStatusDeclined = 2;
+const OrderStatusPending = 3;
+const OrderStatusCancelled = 4;
+const OrderStatusOngoing = 5;
+const OrderStatusInProgress = 6;
+const OrderStatusCompletedButUnpaid = 7;
+const OrderStatusCompletedAndPaid = 8;
+const OrderStatusArchived = 9;
 const STAFF_TYPE_MANAGEMENT = 2;
 const STAFF_TYPE_EXECUTIVE = 1;
+const ORDER_STATUS_COMPLETED_BUT_UNPAID = 4;
+const ORDER_STATUS_COMPLETED_AND_PAID = 5;
 
 function AdminOrderDetailFullPage() {
   const { oid } = useParams();
@@ -141,18 +150,41 @@ function AdminOrderDetailFullPage() {
     return new Date(dateString).toLocaleString();
   };
 
-  // Get order status text
+  // Get order status text and color
   const getOrderStatusText = (status) => {
     const statusMap = {
-      1: "New",
-      2: "Assigned",
-      3: "In Progress",
-      4: "Completed (Unpaid)",
-      5: "Completed (Paid)",
-      6: "Cancelled",
-      7: "Archived",
+      [OrderStatusNew]: "New",
+      [OrderStatusDeclined]: "Declined",
+      [OrderStatusPending]: "Pending",
+      [OrderStatusCancelled]: "Cancelled",
+      [OrderStatusOngoing]: "Ongoing",
+      [OrderStatusInProgress]: "In Progress",
+      [OrderStatusCompletedButUnpaid]: "Completed (Unpaid)",
+      [OrderStatusCompletedAndPaid]: "Completed (Paid)",
+      [OrderStatusArchived]: "Archived",
     };
     return statusMap[status] || "Unknown";
+  };
+
+  const getOrderStatusColor = (status) => {
+    switch (status) {
+      case OrderStatusNew:
+      case OrderStatusOngoing:
+      case OrderStatusInProgress:
+        return theme.colors.success;
+      case OrderStatusPending:
+        return theme.colors.warning;
+      case OrderStatusDeclined:
+      case OrderStatusCancelled:
+        return theme.colors.danger;
+      case OrderStatusCompletedButUnpaid:
+      case OrderStatusCompletedAndPaid:
+        return theme.colors.info;
+      case OrderStatusArchived:
+        return theme.colors.secondary;
+      default:
+        return theme.colors.dark;
+    }
   };
 
   // Format checkbox value
@@ -204,7 +236,7 @@ function AdminOrderDetailFullPage() {
       </div>
 
       {/* Status Alerts */}
-      {order && order.status === 2 && (
+      {order && order.status === OrderStatusArchived && (
         <Alert type="info">📁 This order is archived</Alert>
       )}
 
@@ -233,35 +265,50 @@ function AdminOrderDetailFullPage() {
             <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
               {order.associatePublicId !== 0 && (
                 <Link to={`/admin/order/${oid}/more/unassign`}>
-                  <Button variant="secondary" disabled={order.status === 2}>
+                  <Button
+                    variant="secondary"
+                    disabled={order.status === OrderStatusArchived}
+                  >
                     👤❌ Unassign
                   </Button>
                 </Link>
               )}
               <Link to={`/admin/order/${oid}/more/close`}>
-                <Button variant="danger" disabled={order.status === 2}>
+                <Button
+                  variant="danger"
+                  disabled={order.status === OrderStatusArchived}
+                >
                   ❌ Close
                 </Button>
               </Link>
               <Link to={`/admin/order/${oid}/edit`}>
-                <Button variant="warning" disabled={order.status === 2}>
+                <Button
+                  variant="warning"
+                  disabled={order.status === OrderStatusArchived}
+                >
                   ✏️ Edit
                 </Button>
               </Link>
               {order.latestPendingTaskId &&
                 order.latestPendingTaskId !== "000000000000000000000000" && (
                   <Link to={`/admin/task/${order.latestPendingTaskId}`}>
-                    <Button variant="primary" disabled={order.status === 2}>
+                    <Button
+                      variant="primary"
+                      disabled={order.status === OrderStatusArchived}
+                    >
                       Go to Task →
                     </Button>
                   </Link>
                 )}
-              {(order.status === ORDER_STATUS_COMPLETED_BUT_UNPAID ||
-                order.status === ORDER_STATUS_COMPLETED_AND_PAID) &&
+              {(order.status === OrderStatusCompletedButUnpaid ||
+                order.status === OrderStatusCompletedAndPaid) &&
                 (currentUser?.role === STAFF_TYPE_MANAGEMENT ||
                   currentUser?.role === STAFF_TYPE_EXECUTIVE) && (
                   <Link to={`/admin/financial/${oid}`}>
-                    <Button variant="info" disabled={order.status === 2}>
+                    <Button
+                      variant="info"
+                      disabled={order.status === OrderStatusArchived}
+                    >
                       Go to Financials →
                     </Button>
                   </Link>

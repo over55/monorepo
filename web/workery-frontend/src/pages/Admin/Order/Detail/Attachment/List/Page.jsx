@@ -20,6 +20,20 @@ import {
 
 function AdminOrderDetailAttachmentListPage() {
   ////
+  //// Constants
+  ////
+
+  const OrderStatusNew = 1;
+  const OrderStatusDeclined = 2;
+  const OrderStatusPending = 3;
+  const OrderStatusCancelled = 4;
+  const OrderStatusOngoing = 5;
+  const OrderStatusInProgress = 6;
+  const OrderStatusCompletedButUnpaid = 7;
+  const OrderStatusCompletedAndPaid = 8;
+  const OrderStatusArchived = 9;
+
+  ////
   //// URL Parameters.
   ////
 
@@ -336,25 +350,34 @@ function AdminOrderDetailAttachmentListPage() {
     return <Loading message="Checking authentication..." />;
   }
 
+  const canAddAttachments =
+    order &&
+    ![
+      OrderStatusDeclined,
+      OrderStatusCancelled,
+      OrderStatusCompletedAndPaid,
+      OrderStatusArchived,
+    ].includes(order.status);
+
   return (
     <div style={globalStyles.container}>
       <Breadcrumb items={breadcrumbItems} />
-
       {/* Alert Messages */}
       {alertMessage && (
         <Alert type={alertType} onClose={() => setAlertMessage("")}>
           {alertMessage}
         </Alert>
       )}
-
       {/* Page banner */}
-      {order && order.status === 2 && (
-        <Alert type="info">This order is archived.</Alert>
+      {order && order.status === OrderStatusDeclined && (
+        <Alert type="error">This order has been declined.</Alert>
       )}
-      {order && order.status === 6 && (
+      {order && order.status === OrderStatusCancelled && (
         <Alert type="warning">This order is cancelled.</Alert>
       )}
-
+      {order && order.status === OrderStatusArchived && (
+        <Alert type="info">This order is archived.</Alert>
+      )}{" "}
       {/* Page Title */}
       <div style={{ marginBottom: "20px" }}>
         <h1
@@ -366,7 +389,6 @@ function AdminOrderDetailAttachmentListPage() {
           ℹ️ Detail
         </h2>
       </div>
-
       {/* Delete Confirmation Modal */}
       <Modal
         isOpen={!!selectedAttachmentForDeletion}
@@ -392,7 +414,6 @@ function AdminOrderDetailAttachmentListPage() {
           action cannot be undone. Are you sure you would like to continue?
         </p>
       </Modal>
-
       <Card
         title="📄 Attachments"
         actions={
