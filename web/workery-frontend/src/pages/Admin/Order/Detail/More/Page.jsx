@@ -20,6 +20,17 @@ import {
   MANAGEMENT_ROLE_ID,
 } from "../../../../../constants/Roles";
 
+// Order Status Constants
+const OrderStatusNew = 1;
+const OrderStatusDeclined = 2;
+const OrderStatusPending = 3;
+const OrderStatusCancelled = 4;
+const OrderStatusOngoing = 5;
+const OrderStatusInProgress = 6;
+const OrderStatusCompletedButUnpaid = 7;
+const OrderStatusCompletedAndPaid = 8;
+const OrderStatusArchived = 9;
+
 function AdminOrderDetailMorePage() {
   const { oid } = useParams();
   const orderManager = useOrderManager();
@@ -165,7 +176,7 @@ function AdminOrderDetailMorePage() {
       </div>
 
       {/* Status Alerts */}
-      {order && order.status === 2 && (
+      {order && order.status === OrderStatusArchived && (
         <Alert type="info">📁 This order is archived</Alert>
       )}
 
