@@ -55,7 +55,7 @@ export class ActivitySheetAPI {
 
   /**
    * Gets list of activity sheets with optional filtering, sorting, and pagination
-   * @param {Object} params - Query parameters { page, limit, search, sortBy, sortOrder }
+   * @param {Object} params - Query parameters
    * @param {Function} onUnauthorizedCallback - Called when token refresh fails
    * @returns {Promise<Object>} - Activity sheets list with pagination data
    */
@@ -71,21 +71,72 @@ export class ActivitySheetAPI {
       // Build query parameters
       const queryParams = new URLSearchParams();
 
-      // Add pagination params
-      if (params.page) queryParams.append("page", params.page);
-      if (params.limit) queryParams.append("page_size", params.limit);
-
-      // Add search params
-      if (params.search) queryParams.append("search", params.search);
-
-      // Add sorting params
-      if (params.sortBy && params.sortOrder) {
-        queryParams.append("sort_by", `${params.sortBy},${params.sortOrder}`);
+      // Debug log
+      if (process.env.NODE_ENV === "development") {
+        console.log(
+          "ActivitySheetAPI.getActivitySheets - Input params:",
+          params,
+        );
       }
 
-      // Add any additional filters
+      // Add pagination params
+      if (params.page_size) {
+        queryParams.append("page_size", params.page_size);
+      }
+      if (params.cursor) {
+        queryParams.append("cursor", params.cursor);
+      }
+
+      // Add sorting params
+      if (params.sort_field) {
+        queryParams.append("sort_field", params.sort_field);
+      }
+      if (params.sort_order) {
+        queryParams.append("sort_order", params.sort_order);
+      }
+
+      // Add search params
+      if (params.search) {
+        queryParams.append("search", params.search);
+      }
+
+      // Add filter params
+      if (params.status) {
+        queryParams.append("status", params.status);
+      }
+      if (params.order_id) {
+        queryParams.append("order_id", params.order_id);
+      }
+      if (params.order_wjid) {
+        queryParams.append("order_wjid", params.order_wjid);
+      }
+      if (params.associate_id) {
+        queryParams.append("associate_id", params.associate_id);
+      }
+      if (params.tenant_id) {
+        queryParams.append("tenant_id", params.tenant_id);
+      }
+
+      // Add any additional filters that weren't explicitly handled
+      const handledParams = [
+        "page_size",
+        "cursor",
+        "sort_field",
+        "sort_order",
+        "search",
+        "status",
+        "order_id",
+        "order_wjid",
+        "associate_id",
+        "tenant_id",
+        "page",
+        "limit",
+        "sortBy",
+        "sortOrder",
+      ];
+
       Object.keys(params).forEach((key) => {
-        if (!["page", "limit", "search", "sortBy", "sortOrder"].includes(key)) {
+        if (!handledParams.includes(key)) {
           if (
             params[key] !== undefined &&
             params[key] !== null &&
@@ -100,6 +151,15 @@ export class ActivitySheetAPI {
       const url = queryString
         ? `${this.endpoints.ACTIVITY_SHEETS}?${queryString}`
         : this.endpoints.ACTIVITY_SHEETS;
+
+      // Debug log
+      if (process.env.NODE_ENV === "development") {
+        console.log("ActivitySheetAPI.getActivitySheets - Request URL:", url);
+        console.log(
+          "ActivitySheetAPI.getActivitySheets - Query string:",
+          queryString,
+        );
+      }
 
       // Make the API call
       const response = await authenticatedAxios.get(url);
@@ -122,8 +182,14 @@ export class ActivitySheetAPI {
         });
       }
 
+      // Debug log
+      if (process.env.NODE_ENV === "development") {
+        console.log("ActivitySheetAPI.getActivitySheets - Response:", data);
+      }
+
       return data;
     } catch (error) {
+      console.error("ActivitySheetAPI.getActivitySheets - Error:", error);
       throw this._formatError(error);
     }
   }

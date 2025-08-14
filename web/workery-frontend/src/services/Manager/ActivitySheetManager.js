@@ -72,7 +72,7 @@ export class ActivitySheetManager {
 
   /**
    * Gets list of activity sheets with caching, filtering, and pagination
-   * @param {Object} params - Query parameters { page, limit, search, sortBy, sortOrder }
+   * @param {Object} params - Query parameters
    * @param {Function} onUnauthorizedCallback - Called when authentication fails
    * @param {boolean} forceRefresh - Whether to bypass cache and force fresh data
    * @returns {Promise<Object>} - Activity sheets list with pagination data
@@ -83,6 +83,12 @@ export class ActivitySheetManager {
     forceRefresh = false,
   ) {
     try {
+      // For activity sheets filtered by order, always force refresh
+      // to ensure we get the latest data
+      if (params.order_wjid || params.order_id) {
+        forceRefresh = true;
+      }
+
       // Check storage cache first (unless force refresh is requested)
       if (!forceRefresh) {
         const cachedActivitySheets =
@@ -108,18 +114,20 @@ export class ActivitySheetManager {
       );
 
       try {
-        // Validate and clean parameters
-        const validatedParams = this._validateActivitySheetsParams(params);
-
-        // Fetch fresh data from API
+        // Pass parameters directly to API without validation/transformation
+        // The API will handle the parameters as needed
         const activitySheetsData =
           await this.activitySheetAPI.getActivitySheets(
-            validatedParams,
+            params,
             onUnauthorizedCallback,
           );
 
-        // Save to storage cache
-        this.activitySheetStorage.saveActivitySheetsToCache(activitySheetsData);
+        // Only cache if not filtered by specific order
+        if (!params.order_wjid && !params.order_id) {
+          this.activitySheetStorage.saveActivitySheetsToCache(
+            activitySheetsData,
+          );
+        }
 
         console.log(
           "ActivitySheetManager: Activity sheets data fetched successfully:",
@@ -127,7 +135,8 @@ export class ActivitySheetManager {
             count: activitySheetsData.results
               ? activitySheetsData.results.length
               : 0,
-            totalCount: activitySheetsData.count,
+            hasNextPage: activitySheetsData.hasNextPage,
+            params: params,
           },
         );
 
@@ -567,61 +576,6 @@ export class ActivitySheetManager {
     return null;
   }
 
-  _validateActivitySheetsParams(params) {
-    const validatedParams = {};
-
-    // Validate pagination
-    if (params.page && typeof params.page === "number" && params.page > 0) {
-      validatedParams.page = params.page;
-    }
-
-    if (
-      params.limit &&
-      typeof params.limit === "number" &&
-      params.limit > 0 &&
-      params.limit <= 1000
-    ) {
-      validatedParams.limit = params.limit;
-    }
-
-    // Validate search
-    if (
-      params.search &&
-      typeof params.search === "string" &&
-      params.search.trim()
-    ) {
-      validatedParams.search = params.search.trim();
-    }
-
-    // Validate sorting
-    if (params.sortBy && typeof params.sortBy === "string") {
-      const allowedSortFields = [
-        "name",
-        "title",
-        "created_at",
-        "updated_at",
-        "status",
-        "description",
-      ];
-      if (allowedSortFields.includes(params.sortBy)) {
-        validatedParams.sortBy = params.sortBy;
-
-        if (params.sortOrder && ["ASC", "DESC"].includes(params.sortOrder)) {
-          validatedParams.sortOrder = params.sortOrder;
-        } else {
-          validatedParams.sortOrder = "ASC";
-        }
-      }
-    }
-
-    // Validate filters
-    if (params.status && typeof params.status === "string") {
-      validatedParams.status = params.status;
-    }
-
-    return validatedParams;
-  }
-
   _validateActivitySheetData(activitySheetData, isCreate = false) {
     const errors = {};
 
@@ -632,9 +586,9 @@ export class ActivitySheetManager {
 
     // Validate name or title (required)
     const name = activitySheetData.name || activitySheetData.title;
-    if (!name || !name.trim()) {
+    if (isCreate && (!name || !name.trim())) {
       errors.name = "Activity sheet name/title is required";
-    } else if (name.length > 100) {
+    } else if (name && name.length > 100) {
       errors.name =
         "Activity sheet name/title must be less than 100 characters";
     }
@@ -649,19 +603,9 @@ export class ActivitySheetManager {
 
     // Validate status (optional)
     if (activitySheetData.status !== undefined) {
-      const validStatuses = [1, 2]; // Active, Inactive
+      const validStatuses = [1, 2, 3, 4, 5]; // Based on backend constants
       if (!validStatuses.includes(activitySheetData.status)) {
         errors.status = "Invalid activity sheet status";
-      }
-    }
-
-    // Validate sort order (optional)
-    if (activitySheetData.sortOrder !== undefined) {
-      if (
-        typeof activitySheetData.sortOrder !== "number" ||
-        activitySheetData.sortOrder < 0
-      ) {
-        errors.sortOrder = "Sort order must be a non-negative number";
       }
     }
 
