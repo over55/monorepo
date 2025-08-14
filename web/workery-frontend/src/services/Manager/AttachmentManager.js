@@ -870,6 +870,15 @@ export class AttachmentManager {
       errors.entityId = "Entity ID must be a string or number";
     }
 
+    // ADD THIS: Validate order_wjid
+    if (
+      metadata.orderWjid &&
+      typeof metadata.orderWjid !== "string" &&
+      typeof metadata.orderWjid !== "number"
+    ) {
+      errors.orderWjid = "Order WJID must be a string or number";
+    }
+
     return errors;
   }
 
@@ -955,6 +964,15 @@ export class AttachmentManager {
         typeof params.entityId === "number")
     ) {
       validatedParams.entityId = params.entityId;
+    }
+
+    // ADD THIS: Validate order_wjid parameter
+    if (
+      params.orderWjid &&
+      (typeof params.orderWjid === "string" ||
+        typeof params.orderWjid === "number")
+    ) {
+      validatedParams.orderWjid = params.orderWjid;
     }
 
     // Validate file type filter

@@ -64,6 +64,9 @@ export class AttachmentAPI {
       // Add file type filter
       if (params.fileType) queryParams.append("file_type", params.fileType);
 
+      // ADD THIS: Special handling for order_wjid
+      if (params.orderWjid) queryParams.append("order_wjid", params.orderWjid);
+
       // Add any additional filters
       Object.keys(params).forEach((key) => {
         if (
@@ -76,6 +79,7 @@ export class AttachmentAPI {
             "entityType",
             "entityId",
             "fileType",
+            "orderWjid", // ADD THIS to exclusion list
           ].includes(key)
         ) {
           if (
@@ -163,6 +167,9 @@ export class AttachmentAPI {
       if (metadata.title) formData.append("title", metadata.title);
       if (metadata.description)
         formData.append("description", metadata.description);
+
+      // ADD THIS: Handle order_wjid
+      if (metadata.orderWjid) formData.append("order_wjid", metadata.orderWjid);
 
       // Configure upload with progress tracking
       const config = {

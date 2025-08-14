@@ -62,9 +62,9 @@ function AdminOrderDetailAttachmentListPage() {
     setErrors({});
 
     try {
+      // Use order_wjid for filtering instead of entityId
       const params = {
-        entityType: "order",
-        entityId: orderId,
+        orderWjid: orderId, // Use the specific order_wjid parameter
         limit: limit,
         cursor: cur || undefined,
       };

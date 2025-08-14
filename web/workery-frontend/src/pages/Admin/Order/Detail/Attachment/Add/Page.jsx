@@ -79,8 +79,7 @@ function AdminOrderDetailAttachmentAddPage() {
 
     try {
       const metadata = {
-        entityType: "order",
-        entityId: oid,
+        orderWjid: oid, // Use order_wjid instead of entityType/entityId
         title: title.trim(),
         description: description.trim(),
       };
