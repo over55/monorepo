@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/Order/Add/Step4.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -346,7 +347,11 @@ function AdminOrderAddStep4() {
                           Start Date:
                         </th>
                         <td>
-                          {startDate ? <DateTextFormatter value={startDate} /> : <>-</>}
+                          {startDate ? (
+                            <DateTextFormatter value={startDate} />
+                          ) : (
+                            <>-</>
+                          )}
                         </td>
                       </tr>
                       <tr>
@@ -357,7 +362,7 @@ function AdminOrderAddStep4() {
                           Is Ongoing:
                         </th>
                         <td>
-                          <CheckboxTextFormatter checked={isOngoing===1} />
+                          <CheckboxTextFormatter checked={isOngoing === 1} />
                         </td>
                       </tr>
                       <tr>
@@ -369,7 +374,7 @@ function AdminOrderAddStep4() {
                         </th>
                         <td>
                           <CheckboxTextFormatter
-                            checked={isHomeSupportService===1}
+                            checked={isHomeSupportService === 1}
                           />
                         </td>
                       </tr>
