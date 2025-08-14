@@ -89,7 +89,21 @@ function AdminOrderDetailMoreTransferStep4Page() {
     fetchAssociates();
   }, [page, pageSize, sortBy, sortOrder]);
 
-  const handleSelectAssociate = (associateId, associateName) => {
+  // Helper function to get associate display name
+  const getAssociateDisplayName = (associate) => {
+    if (associate.type === COMMERCIAL_ASSOCIATE_TYPE_OF_ID) {
+      return (
+        associate.organizationName ||
+        `${associate.firstName || ""} ${associate.lastName || ""}`.trim()
+      );
+    }
+    return `${associate.firstName || ""} ${associate.lastName || ""}`.trim();
+  };
+
+  const handleSelectAssociate = (associateId, associate) => {
+    // Construct the proper display name
+    const associateName = getAssociateDisplayName(associate);
+
     const transferOp = transferOperationStorage.getTransferOperation();
     transferOp.pickedAssociateID = associateId;
     transferOp.pickedAssociateName = associateName;
@@ -172,57 +186,59 @@ function AdminOrderDetailMoreTransferStep4Page() {
                 marginBottom: "30px",
               }}
             >
-              {associates.results.map((associate) => (
-                <Card
-                  key={associate.id}
-                  style={{
-                    backgroundColor: theme.colors.infoBg,
-                    cursor: "pointer",
-                    transition: "transform 0.2s",
-                  }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.transform = "scale(1.02)")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.transform = "scale(1)")
-                  }
-                >
-                  <h4 style={{ marginBottom: "10px" }}>
-                    {associate.type === COMMERCIAL_ASSOCIATE_TYPE_OF_ID
-                      ? "🏢"
-                      : "🏠"}{" "}
-                    {associate.type === COMMERCIAL_ASSOCIATE_TYPE_OF_ID
-                      ? associate.organizationName
-                      : `${associate.firstName} ${associate.lastName}`}
-                  </h4>
-                  <p style={{ fontSize: "14px", margin: "5px 0" }}>
-                    {associate.addressLine1}
-                    <br />
-                    {associate.city}, {associate.region}
-                  </p>
-                  {associate.phone && (
-                    <p style={{ fontSize: "14px", margin: "5px 0" }}>
-                      📞 {associate.phone}
-                    </p>
-                  )}
-                  {associate.email && (
-                    <p style={{ fontSize: "14px", margin: "5px 0" }}>
-                      ✉️ {associate.email}
-                    </p>
-                  )}
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    fullWidth
-                    onClick={() =>
-                      handleSelectAssociate(associate.id, associate.name)
+              {associates.results.map((associate) => {
+                const displayName = getAssociateDisplayName(associate);
+
+                return (
+                  <Card
+                    key={associate.id}
+                    style={{
+                      backgroundColor: theme.colors.infoBg,
+                      cursor: "pointer",
+                      transition: "transform 0.2s",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.transform = "scale(1.02)")
                     }
-                    style={{ marginTop: "10px" }}
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.transform = "scale(1)")
+                    }
                   >
-                    Select →
-                  </Button>
-                </Card>
-              ))}
+                    <h4 style={{ marginBottom: "10px" }}>
+                      {associate.type === COMMERCIAL_ASSOCIATE_TYPE_OF_ID
+                        ? "🏢"
+                        : "🏠"}{" "}
+                      <strong>{displayName}</strong>
+                    </h4>
+                    <p style={{ fontSize: "14px", margin: "5px 0" }}>
+                      {associate.addressLine1}
+                      <br />
+                      {associate.city}, {associate.region}
+                    </p>
+                    {associate.phone && (
+                      <p style={{ fontSize: "14px", margin: "5px 0" }}>
+                        📞 {associate.phone}
+                      </p>
+                    )}
+                    {associate.email && (
+                      <p style={{ fontSize: "14px", margin: "5px 0" }}>
+                        ✉️ {associate.email}
+                      </p>
+                    )}
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      fullWidth
+                      onClick={() =>
+                        handleSelectAssociate(associate.id, associate)
+                      }
+                      style={{ marginTop: "10px" }}
+                    >
+                      Select →
+                    </Button>
+                  </Card>
+                );
+              })}
             </div>
 
             {/* Pagination */}

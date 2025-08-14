@@ -90,7 +90,21 @@ function AdminOrderDetailMoreTransferStep2Page() {
     fetchCustomers();
   }, [page, pageSize, sortBy, sortOrder]);
 
-  const handleSelectClient = (clientId, clientName) => {
+  // Helper function to get customer display name
+  const getCustomerDisplayName = (customer) => {
+    if (customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID) {
+      return (
+        customer.organizationName ||
+        `${customer.firstName || ""} ${customer.lastName || ""}`.trim()
+      );
+    }
+    return `${customer.firstName || ""} ${customer.lastName || ""}`.trim();
+  };
+
+  const handleSelectClient = (clientId, customer) => {
+    // Construct the proper display name
+    const clientName = getCustomerDisplayName(customer);
+
     const transferOp = transferOperationStorage.getTransferOperation();
     transferOp.pickedClientID = clientId;
     transferOp.pickedClientName = clientName;
@@ -173,57 +187,57 @@ function AdminOrderDetailMoreTransferStep2Page() {
                 marginBottom: "30px",
               }}
             >
-              {customers.results.map((customer) => (
-                <Card
-                  key={customer.id}
-                  style={{
-                    backgroundColor: theme.colors.infoBg,
-                    cursor: "pointer",
-                    transition: "transform 0.2s",
-                  }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.transform = "scale(1.02)")
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.transform = "scale(1)")
-                  }
-                >
-                  <h4 style={{ marginBottom: "10px" }}>
-                    {customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID
-                      ? "🏢"
-                      : "🏠"}{" "}
-                    {customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID
-                      ? customer.organizationName
-                      : `${customer.firstName} ${customer.lastName}`}
-                  </h4>
-                  <p style={{ fontSize: "14px", margin: "5px 0" }}>
-                    {customer.addressLine1}
-                    <br />
-                    {customer.city}, {customer.region}
-                  </p>
-                  {customer.phone && (
-                    <p style={{ fontSize: "14px", margin: "5px 0" }}>
-                      📞 {customer.phone}
-                    </p>
-                  )}
-                  {customer.email && (
-                    <p style={{ fontSize: "14px", margin: "5px 0" }}>
-                      ✉️ {customer.email}
-                    </p>
-                  )}
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    fullWidth
-                    onClick={() =>
-                      handleSelectClient(customer.id, customer.name)
+              {customers.results.map((customer) => {
+                const displayName = getCustomerDisplayName(customer);
+
+                return (
+                  <Card
+                    key={customer.id}
+                    style={{
+                      backgroundColor: theme.colors.infoBg,
+                      cursor: "pointer",
+                      transition: "transform 0.2s",
+                    }}
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.transform = "scale(1.02)")
                     }
-                    style={{ marginTop: "10px" }}
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.transform = "scale(1)")
+                    }
                   >
-                    Select →
-                  </Button>
-                </Card>
-              ))}
+                    <h4 style={{ marginBottom: "10px" }}>
+                      {customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID
+                        ? "🏢"
+                        : "🏠"}{" "}
+                      <strong>{displayName}</strong>
+                    </h4>
+                    <p style={{ fontSize: "14px", margin: "5px 0" }}>
+                      {customer.addressLine1}
+                      <br />
+                      {customer.city}, {customer.region}
+                    </p>
+                    {customer.phone && (
+                      <p style={{ fontSize: "14px", margin: "5px 0" }}>
+                        📞 {customer.phone}
+                      </p>
+                    )}
+                    {customer.email && (
+                      <p style={{ fontSize: "14px", margin: "5px 0" }}>
+                        ✉️ {customer.email}
+                      </p>
+                    )}
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      fullWidth
+                      onClick={() => handleSelectClient(customer.id, customer)}
+                      style={{ marginTop: "10px" }}
+                    >
+                      Select →
+                    </Button>
+                  </Card>
+                );
+              })}
             </div>
 
             {/* Pagination */}
