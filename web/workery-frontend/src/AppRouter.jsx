@@ -204,6 +204,8 @@ import AdminOrderUpdatePage from "./pages/Admin/Order/Update/Page";
 
 // Task item pages.
 import AdminTaskItemListPage from "./pages/Admin/TaskItem/List/Page";
+import AdminTaskItemCloseOperationPage from "./pages/Admin/TaskItem/Operation/Close/Page";
+import AdminTaskItemPostponeOperationPage from "./pages/Admin/TaskItem/Operation/Postpone/Page";
 
 // Admin staff pages.
 import AdminStaffListPage from "./pages/Admin/Staff/List/Page";
@@ -1906,7 +1908,7 @@ function AppRouter() {
               path="/admin/task/:tid/close"
               element={
                 <Layout>
-                  <PlaceholderPage title="Close Task" />
+                  <AdminTaskItemCloseOperationPage />
                 </Layout>
               }
             />
@@ -1914,7 +1916,7 @@ function AppRouter() {
               path="/admin/task/:tid/postpone"
               element={
                 <Layout>
-                  <PlaceholderPage title="Postpone Task" />
+                  <AdminTaskItemPostponeOperationPage />
                 </Layout>
               }
             />
