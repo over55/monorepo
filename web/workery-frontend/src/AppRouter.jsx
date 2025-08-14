@@ -155,6 +155,7 @@ import AdminOrderDetailAttachmentDetailPage from "./pages/Admin/Order/Detail/Att
 import AdminOrderDetailAttachmentListPage from "./pages/Admin/Order/Detail/Attachment/List/Page";
 import AdminOrderDetailAttachmentUpdatePage from "./pages/Admin/Order/Detail/Attachment/Update/Page";
 import AdminOrderDetailActivitySheetListPage from "./pages/Admin/Order/Detail/ActivitySheet/List/Page";
+import AdminOrderUpdatePage from "./pages/Admin/Order/Update/Page";
 
 // Admin staff pages.
 import AdminStaffListPage from "./pages/Admin/Staff/List/Page";
@@ -1692,7 +1693,7 @@ function AppRouter() {
               path="/admin/order/:oid/update"
               element={
                 <Layout>
-                  <PlaceholderPage title="Update Order" />
+                  <AdminOrderUpdatePage />
                 </Layout>
               }
             />
@@ -1700,7 +1701,7 @@ function AppRouter() {
               path="/admin/order/:oid/edit"
               element={
                 <Layout>
-                  <PlaceholderPage title="Edit Order" />
+                  <AdminOrderUpdatePage />
                 </Layout>
               }
             />
