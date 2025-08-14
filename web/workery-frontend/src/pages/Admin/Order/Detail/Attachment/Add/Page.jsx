@@ -1,9 +1,10 @@
 // File Path: web/workery-frontend/src/pages/Admin/Order/Detail/Attachment/Add/Page.jsx
 
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import {
-  // useDashboardManager,
+  useAttachmentManager,
+  useOrderManager,
   useAuthManager,
 } from "../../../../../../services/Services";
 import { theme, globalStyles } from "../../../../../../constants/Theme";
@@ -13,73 +14,294 @@ import {
   Alert,
   Loading,
   Breadcrumb,
-  Modal,
   Input,
   TextArea,
-  Select,
 } from "../../../../../../components/UI";
 
 function AdminOrderDetailAttachmentAddPage() {
-  // const dashboardManager = useDashboardManager();
-  const authManager = useAuthManager();
+  ////
+  //// URL Parameters.
+  ////
+
+  const { oid } = useParams();
   const navigate = useNavigate();
+
+  ////
+  //// Services.
+  ////
+
+  const attachmentManager = useAttachmentManager();
+  const orderManager = useOrderManager();
+  const authManager = useAuthManager();
+
+  ////
+  //// Component states.
+  ////
 
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
-  // const [dashboard, setDashboard] = useState({});
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState("");
 
-  // Modal states
-  // const [showBulletinModal, setShowBulletinModal] = useState(false);
+  ////
+  //// Event handling.
+  ////
 
-  // const onUnauthorized = () => {
-  //   navigate("/login?unauthorized=true");
-  // };
+  const onHandleFileChange = (event) => {
+    const file = event.target.files[0];
+    setSelectedFile(file);
+    setErrors({}); // Clear any file-related errors
+  };
 
-  // const fetchDashboard = async () => {
-  //   setFetching(true);
-  //   setErrors({});
-
-  //   try {
-  //     const dashboardData = await dashboardManager.getDashboard(onUnauthorized);
-  //     setDashboard(dashboardData);
-  //     console.log("AdminDashboard: Dashboard data loaded successfully");
-  //   } catch (error) {
-  //     console.error("AdminDashboard: Failed to fetch dashboard:", error);
-  //     setErrors({ fetch: error.message || "Failed to load dashboard data" });
-  //     window.scrollTo(0, 0);
-  //   } finally {
-  //     setFetching(false);
-  //   }
-  // };
-
-  useEffect(() => {
-    let mounted = true;
-
-    if (mounted) {
-      window.scrollTo(0, 0);
-
-      if (!authManager.isAuthenticated()) {
-        navigate("/login?unauthorized=true");
-        return;
-      }
-
-      // fetchDashboard();
+  const onSubmitClick = async () => {
+    if (!selectedFile) {
+      setErrors({ file: "Please select a file to upload" });
+      return;
     }
 
-    return () => {
-      mounted = false;
-    };
+    if (!title.trim()) {
+      setErrors({ title: "Title is required" });
+      return;
+    }
+
+    if (!description.trim()) {
+      setErrors({ description: "Description is required" });
+      return;
+    }
+
+    setFetching(true);
+    setErrors({});
+    setUploadProgress(0);
+
+    try {
+      const metadata = {
+        entityType: "order",
+        entityId: oid,
+        title: title.trim(),
+        description: description.trim(),
+      };
+
+      await attachmentManager.uploadAttachment(
+        selectedFile,
+        metadata,
+        (progress) => setUploadProgress(progress),
+        onUnauthorized,
+      );
+
+      // Show success message
+      setAlertMessage("Attachment uploaded successfully");
+      setAlertType("success");
+
+      // Redirect after short delay
+      setTimeout(() => {
+        navigate(`/admin/order/${oid}/attachments`);
+      }, 1500);
+    } catch (error) {
+      console.error("Failed to upload attachment:", error);
+      setErrors(error);
+      setAlertMessage("Failed to upload attachment");
+      setAlertType("error");
+    } finally {
+      setFetching(false);
+      setUploadProgress(0);
+    }
+  };
+
+  const onUnauthorized = () => {
+    navigate("/login?unauthorized=true");
+  };
+
+  ////
+  //// Lifecycle.
+  ////
+
+  useEffect(() => {
+    if (!authManager.isAuthenticated()) {
+      navigate("/login");
+      return;
+    }
+
+    window.scrollTo(0, 0);
   }, []);
 
-  if (isFetching) {
-    return <Loading message="Loading ..." />;
-  }
+  ////
+  //// Component rendering.
+  ////
 
-  const styles = {};
+  const breadcrumbItems = [
+    {
+      label: "Dashboard",
+      path: "/admin/dashboard",
+      icon: "📊",
+    },
+    {
+      label: "Orders",
+      path: "/admin/orders",
+      icon: "🔧",
+    },
+    {
+      label: "Detail (Attachments)",
+      path: `/admin/order/${oid}/attachments`,
+      icon: "📎",
+    },
+    {
+      label: "New",
+      icon: "➕",
+    },
+  ];
+
+  if (!authManager.isAuthenticated()) {
+    return <Loading message="Checking authentication..." />;
+  }
 
   return (
     <div style={globalStyles.container}>
-      <h1>Welcome to AdminOrderDetailAttachmentAddPage</h1>
+      <Breadcrumb items={breadcrumbItems} />
+
+      {/* Alert Messages */}
+      {alertMessage && (
+        <Alert type={alertType} onClose={() => setAlertMessage("")}>
+          {alertMessage}
+        </Alert>
+      )}
+
+      {/* Page Title */}
+      <div style={{ marginBottom: "20px" }}>
+        <h1
+          style={{ fontSize: "28px", fontWeight: "bold", margin: "0 0 8px 0" }}
+        >
+          🔧 Work Order
+        </h1>
+        <h2 style={{ fontSize: "18px", color: "#666", margin: 0 }}>
+          ℹ️ Detail
+        </h2>
+      </div>
+
+      <Card title="➕ Add Attachment">
+        {isFetching ? (
+          <Loading message="Uploading attachment..." />
+        ) : (
+          <>
+            {/* Show errors if any */}
+            {Object.keys(errors).length > 0 && (
+              <Alert type="error">
+                {Object.entries(errors).map(([key, value]) => (
+                  <div key={key}>
+                    <strong>{key}:</strong>{" "}
+                    {Array.isArray(value) ? value.join(", ") : value}
+                  </div>
+                ))}
+              </Alert>
+            )}
+
+            <div style={{ marginBottom: "20px" }}>
+              <Input
+                label="Title"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="Enter attachment title"
+                required
+                error={errors.title}
+              />
+            </div>
+
+            <div style={{ marginBottom: "20px" }}>
+              <Input
+                label="Description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Enter attachment description"
+                required
+                error={errors.description}
+              />
+            </div>
+
+            {selectedFile ? (
+              <Alert type="success">
+                ✅ File ready to upload: <strong>{selectedFile.name}</strong>
+                <br />
+                Size: {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
+              </Alert>
+            ) : (
+              <div style={{ marginBottom: "20px" }}>
+                <label style={{ ...globalStyles.label, marginBottom: "8px" }}>
+                  Select File <span style={{ color: "red" }}>*</span>
+                </label>
+                <input
+                  type="file"
+                  onChange={onHandleFileChange}
+                  style={{
+                    ...globalStyles.input,
+                    padding: "10px",
+                    cursor: "pointer",
+                  }}
+                  accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv"
+                />
+                {errors.file && (
+                  <div style={globalStyles.errorMessage}>{errors.file}</div>
+                )}
+              </div>
+            )}
+
+            {/* Upload Progress */}
+            {uploadProgress > 0 && uploadProgress < 100 && (
+              <div style={{ marginBottom: "20px" }}>
+                <div style={{ marginBottom: "8px" }}>
+                  Upload Progress: {uploadProgress}%
+                </div>
+                <div
+                  style={{
+                    width: "100%",
+                    backgroundColor: "#e9ecef",
+                    borderRadius: "4px",
+                    overflow: "hidden",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${uploadProgress}%`,
+                      height: "8px",
+                      backgroundColor: theme.colors.success,
+                      transition: "width 0.3s ease",
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Bottom Navigation */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                marginTop: "30px",
+                flexWrap: "wrap",
+                gap: "10px",
+              }}
+            >
+              <Link to={`/admin/order/${oid}/attachments`}>
+                <Button variant="secondary">← Back to Attachments</Button>
+              </Link>
+              <Button
+                onClick={onSubmitClick}
+                variant="success"
+                disabled={
+                  isFetching ||
+                  !selectedFile ||
+                  !title.trim() ||
+                  !description.trim()
+                }
+              >
+                {isFetching ? "Uploading..." : "💾 Save"}
+              </Button>
+            </div>
+          </>
+        )}
+      </Card>
     </div>
   );
 }

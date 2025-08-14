@@ -1,9 +1,9 @@
 // File Path: web/workery-frontend/src/pages/Admin/Order/Detail/Attachment/Detail/Page.jsx
 
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import {
-  // useDashboardManager,
+  useAttachmentManager,
   useAuthManager,
 } from "../../../../../../services/Services";
 import { theme, globalStyles } from "../../../../../../constants/Theme";
@@ -13,73 +13,245 @@ import {
   Alert,
   Loading,
   Breadcrumb,
-  Modal,
-  Input,
-  TextArea,
-  Select,
 } from "../../../../../../components/UI";
 
 function AdminOrderDetailAttachmentDetailPage() {
-  // const dashboardManager = useDashboardManager();
-  const authManager = useAuthManager();
+  ////
+  //// URL Parameters.
+  ////
+
+  const { oid, aid } = useParams();
   const navigate = useNavigate();
+
+  ////
+  //// Services.
+  ////
+
+  const attachmentManager = useAttachmentManager();
+  const authManager = useAuthManager();
+
+  ////
+  //// Component states.
+  ////
 
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
-  // const [dashboard, setDashboard] = useState({});
+  const [attachment, setAttachment] = useState({});
 
-  // Modal states
-  // const [showBulletinModal, setShowBulletinModal] = useState(false);
+  ////
+  //// Event handling.
+  ////
 
-  // const onUnauthorized = () => {
-  //   navigate("/login?unauthorized=true");
-  // };
+  const fetchAttachmentDetail = async (attachmentId) => {
+    setFetching(true);
+    setErrors({});
 
-  // const fetchDashboard = async () => {
-  //   setFetching(true);
-  //   setErrors({});
+    try {
+      const response = await attachmentManager.getAttachmentDetail(
+        attachmentId,
+        onUnauthorized,
+      );
+      setAttachment(response);
+    } catch (error) {
+      console.error("Failed to fetch attachment detail:", error);
+      setErrors(error);
+    } finally {
+      setFetching(false);
+    }
+  };
 
-  //   try {
-  //     const dashboardData = await dashboardManager.getDashboard(onUnauthorized);
-  //     setDashboard(dashboardData);
-  //     console.log("AdminDashboard: Dashboard data loaded successfully");
-  //   } catch (error) {
-  //     console.error("AdminDashboard: Failed to fetch dashboard:", error);
-  //     setErrors({ fetch: error.message || "Failed to load dashboard data" });
-  //     window.scrollTo(0, 0);
-  //   } finally {
-  //     setFetching(false);
-  //   }
-  // };
+  const onDownloadClick = async () => {
+    try {
+      const fileBlob = await attachmentManager.downloadAttachment(
+        aid,
+        null, // no progress callback needed for detail view
+        onUnauthorized,
+      );
+
+      // Trigger download
+      attachmentManager.triggerFileDownload(
+        fileBlob,
+        attachment.filename || "download",
+      );
+    } catch (error) {
+      console.error("Failed to download attachment:", error);
+      setErrors(error);
+    }
+  };
+
+  const onUnauthorized = () => {
+    navigate("/login?unauthorized=true");
+  };
+
+  ////
+  //// Lifecycle.
+  ////
 
   useEffect(() => {
-    let mounted = true;
-
-    if (mounted) {
-      window.scrollTo(0, 0);
-
-      if (!authManager.isAuthenticated()) {
-        navigate("/login?unauthorized=true");
-        return;
-      }
-
-      // fetchDashboard();
+    if (!authManager.isAuthenticated()) {
+      navigate("/login");
+      return;
     }
 
-    return () => {
-      mounted = false;
-    };
-  }, []);
+    if (aid) {
+      fetchAttachmentDetail(aid);
+    }
+  }, [aid]);
 
-  if (isFetching) {
-    return <Loading message="Loading ..." />;
+  ////
+  //// Component rendering.
+  ////
+
+  const breadcrumbItems = [
+    {
+      label: "Dashboard",
+      path: "/admin/dashboard",
+      icon: "📊",
+    },
+    {
+      label: "Orders",
+      path: "/admin/orders",
+      icon: "🔧",
+    },
+    {
+      label: "Detail (Attachments)",
+      path: `/admin/order/${oid}/attachments`,
+      icon: "📎",
+    },
+    {
+      label: "Attachment",
+      icon: "📄",
+    },
+  ];
+
+  if (!authManager.isAuthenticated()) {
+    return <Loading message="Checking authentication..." />;
   }
-
-  const styles = {};
 
   return (
     <div style={globalStyles.container}>
-      <h1>Welcome to AdminOrderDetailAttachmentDetailPage</h1>
+      <Breadcrumb items={breadcrumbItems} />
+
+      {/* Page Title */}
+      <div style={{ marginBottom: "20px" }}>
+        <h1
+          style={{ fontSize: "28px", fontWeight: "bold", margin: "0 0 8px 0" }}
+        >
+          🔧 Work Order
+        </h1>
+        <h2 style={{ fontSize: "18px", color: "#666", margin: 0 }}>
+          ℹ️ Detail
+        </h2>
+      </div>
+
+      <Card title="ℹ️ Attachment">
+        {isFetching ? (
+          <Loading message="Loading attachment..." />
+        ) : (
+          <>
+            {/* Show errors if any */}
+            {Object.keys(errors).length > 0 && (
+              <Alert type="error">
+                {Object.entries(errors).map(([key, value]) => (
+                  <div key={key}>
+                    <strong>{key}:</strong>{" "}
+                    {Array.isArray(value) ? value.join(", ") : value}
+                  </div>
+                ))}
+              </Alert>
+            )}
+
+            {attachment && (
+              <>
+                {/* Attachment Details */}
+                <div style={{ marginBottom: "30px" }}>
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "200px 1fr",
+                      gap: "15px",
+                      alignItems: "start",
+                    }}
+                  >
+                    <div style={{ fontWeight: "600" }}>Title:</div>
+                    <div>{attachment.title || "No title"}</div>
+
+                    <div style={{ fontWeight: "600" }}>Description:</div>
+                    <div>{attachment.description || "No description"}</div>
+
+                    <div style={{ fontWeight: "600" }}>File:</div>
+                    <div
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px",
+                      }}
+                    >
+                      <span>{attachment.filename || "Unknown file"}</span>
+                      {attachment.objectUrl ? (
+                        <a
+                          href={attachment.objectUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          style={{
+                            color: theme.colors.primary,
+                            textDecoration: "none",
+                            padding: "4px 8px",
+                            backgroundColor: "#f8f9fa",
+                            borderRadius: "4px",
+                            fontSize: "12px",
+                          }}
+                        >
+                          📥 Download
+                        </a>
+                      ) : (
+                        <Button
+                          onClick={onDownloadClick}
+                          variant="outline"
+                          size="sm"
+                        >
+                          📥 Download
+                        </Button>
+                      )}
+                    </div>
+
+                    <div style={{ fontWeight: "600" }}>Created:</div>
+                    <div>{attachment.createdAt || "Unknown"}</div>
+
+                    <div style={{ fontWeight: "600" }}>File Size:</div>
+                    <div>
+                      {attachment.fileSize
+                        ? `${(attachment.fileSize / (1024 * 1024)).toFixed(2)} MB`
+                        : "Unknown"}
+                    </div>
+
+                    <div style={{ fontWeight: "600" }}>File Type:</div>
+                    <div>{attachment.fileType || "Unknown"}</div>
+                  </div>
+                </div>
+
+                {/* Bottom Navigation */}
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    marginTop: "30px",
+                    flexWrap: "wrap",
+                    gap: "10px",
+                  }}
+                >
+                  <Link to={`/admin/order/${oid}/attachments`}>
+                    <Button variant="secondary">← Back to Attachments</Button>
+                  </Link>
+                  <Link to={`/admin/order/${oid}/attachment/${aid}/edit`}>
+                    <Button variant="warning">✏️ Edit</Button>
+                  </Link>
+                </div>
+              </>
+            )}
+          </>
+        )}
+      </Card>
     </div>
   );
 }

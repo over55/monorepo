@@ -1660,7 +1660,7 @@ function AppRouter() {
               path="/admin/order/:oid/attachments"
               element={
                 <Layout>
-                  <PlaceholderPage title="Order Attachments" />
+                  <AdminOrderDetailAttachmentListPage />
                 </Layout>
               }
             />
@@ -1668,7 +1668,7 @@ function AppRouter() {
               path="/admin/order/:oid/attachments/add"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Order Attachment" />
+                  <AdminOrderDetailAttachmentAddPage />
                 </Layout>
               }
             />
@@ -1676,7 +1676,7 @@ function AppRouter() {
               path="/admin/order/:oid/attachment/:aid"
               element={
                 <Layout>
-                  <PlaceholderPage title="Order Attachment Detail" />
+                  <AdminOrderDetailAttachmentDetailPage />
                 </Layout>
               }
             />
@@ -1684,7 +1684,7 @@ function AppRouter() {
               path="/admin/order/:oid/attachment/:aid/edit"
               element={
                 <Layout>
-                  <PlaceholderPage title="Edit Order Attachment" />
+                  <AdminOrderDetailAttachmentUpdatePage />
                 </Layout>
               }
             />
