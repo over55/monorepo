@@ -83,17 +83,63 @@ export class ActivitySheetManager {
     forceRefresh = false,
   ) {
     try {
-      // For activity sheets filtered by order, always force refresh
-      // to ensure we get the latest data
-      if (params.order_wjid || params.order_id) {
-        forceRefresh = true;
+      // Check if this is a filtered request
+      const isFilteredRequest = !!(
+        params.order_wjid ||
+        params.order_id ||
+        params.associate_id ||
+        params.status ||
+        params.search ||
+        params.cursor // Pagination also means we shouldn't use generic cache
+      );
+
+      // For filtered requests, always get fresh data and don't use cache
+      if (isFilteredRequest) {
+        console.log(
+          "ActivitySheetManager: Filtered request detected, bypassing cache",
+          params,
+        );
+
+        // Clear any existing cache to prevent stale data from showing
+        this.activitySheetStorage.clearActivitySheetsCache();
+
+        // Set loading state
+        this.activitySheetStorage.setActivitySheetsCacheLoading(true);
+
+        try {
+          // Fetch fresh data from API
+          const activitySheetsData =
+            await this.activitySheetAPI.getActivitySheets(
+              params,
+              onUnauthorizedCallback,
+            );
+
+          // Don't cache filtered results
+          console.log(
+            "ActivitySheetManager: Filtered activity sheets data fetched successfully (not cached):",
+            {
+              count: activitySheetsData.results
+                ? activitySheetsData.results.length
+                : 0,
+              hasNextPage: activitySheetsData.hasNextPage,
+              params: params,
+            },
+          );
+
+          return activitySheetsData;
+        } finally {
+          this.activitySheetStorage.setActivitySheetsCacheLoading(false);
+        }
       }
 
-      // Check storage cache first (unless force refresh is requested)
+      // For unfiltered requests, use normal caching logic
       if (!forceRefresh) {
         const cachedActivitySheets =
           this.activitySheetStorage.getActivitySheetsFromCache();
         if (cachedActivitySheets) {
+          console.log(
+            "ActivitySheetManager: Using cached activity sheets data",
+          );
           return cachedActivitySheets;
         }
       }
@@ -109,34 +155,28 @@ export class ActivitySheetManager {
       this.activitySheetStorage.setActivitySheetsCacheLoading(true);
 
       console.log(
-        "ActivitySheetManager: Fetching fresh activity sheets data",
+        "ActivitySheetManager: Fetching fresh activity sheets data (unfiltered)",
         params,
       );
 
       try {
-        // Pass parameters directly to API without validation/transformation
-        // The API will handle the parameters as needed
+        // Fetch fresh data from API
         const activitySheetsData =
           await this.activitySheetAPI.getActivitySheets(
             params,
             onUnauthorizedCallback,
           );
 
-        // Only cache if not filtered by specific order
-        if (!params.order_wjid && !params.order_id) {
-          this.activitySheetStorage.saveActivitySheetsToCache(
-            activitySheetsData,
-          );
-        }
+        // Cache unfiltered results
+        this.activitySheetStorage.saveActivitySheetsToCache(activitySheetsData);
 
         console.log(
-          "ActivitySheetManager: Activity sheets data fetched successfully:",
+          "ActivitySheetManager: Activity sheets data fetched and cached successfully:",
           {
             count: activitySheetsData.results
               ? activitySheetsData.results.length
               : 0,
             hasNextPage: activitySheetsData.hasNextPage,
-            params: params,
           },
         );
 
