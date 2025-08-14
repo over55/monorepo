@@ -13,16 +13,16 @@ import {
   Alert,
   Loading,
   Breadcrumb,
-  Table,
   Select,
 } from "../../../../../../components/UI";
 
 // Constants
 const ACTIVITY_SHEET_STATUS_MAP = {
-  1: "Pending",
-  2: "Active",
-  3: "Completed",
-  4: "Archived",
+  1: "Archived",
+  2: "Error",
+  3: "Accepted",
+  4: "Declined",
+  5: "Pending",
 };
 
 const PAGE_SIZE_OPTIONS = [
@@ -31,8 +31,6 @@ const PAGE_SIZE_OPTIONS = [
   { value: 50, label: "50" },
   { value: 100, label: "100" },
 ];
-
-const DEFAULT_ACTIVITY_SHEET_LIST_SORT_BY_VALUE = "created_at,DESC";
 
 function AdminOrderDetailActivitySheetListPage() {
   // URL Parameters
@@ -52,9 +50,8 @@ function AdminOrderDetailActivitySheetListPage() {
   const [previousCursors, setPreviousCursors] = useState([]);
   const [nextCursor, setNextCursor] = useState("");
   const [currentCursor, setCurrentCursor] = useState("");
-  const [sortByValue, setSortByValue] = useState(
-    DEFAULT_ACTIVITY_SHEET_LIST_SORT_BY_VALUE,
-  );
+  const [sortField, setSortField] = useState("created_at");
+  const [sortOrder, setSortOrder] = useState("DESC");
 
   // Handle unauthorized access
   const onUnauthorized = () => {
@@ -62,7 +59,14 @@ function AdminOrderDetailActivitySheetListPage() {
   };
 
   // Fetch activity sheets list
-  const fetchList = async (cursor, limit, keywords, sortBy, orderId) => {
+  const fetchList = async (
+    cursor,
+    limit,
+    keywords,
+    sortFieldParam,
+    sortOrderParam,
+    orderWJID,
+  ) => {
     setFetching(true);
     setErrors({});
 
@@ -74,38 +78,63 @@ function AdminOrderDetailActivitySheetListPage() {
           limit +
           ", keywords=" +
           keywords +
-          ", sortBy=" +
-          sortBy +
-          ", orderId=" +
-          orderId,
+          ", sortField=" +
+          sortFieldParam +
+          ", sortOrder=" +
+          sortOrderParam +
+          ", orderWJID=" +
+          orderWJID,
       );
 
-      // Build parameters object
-      const params = {
-        limit: limit,
-        search: keywords || "",
-      };
+      // Build parameters object for the API
+      const params = {};
+
+      // Add pagination params
+      params.page_size = limit;
 
       // Add cursor if present
       if (cursor && cursor !== "") {
         params.cursor = cursor;
       }
 
-      // Parse and add sorting
-      if (sortBy) {
-        const sortArray = sortBy.split(",");
-        if (sortArray.length === 2) {
-          params.sort_field = sortArray[0];
-          params.sort_order = sortArray[1];
+      // Add sorting parameters
+      if (sortFieldParam && sortFieldParam !== "") {
+        params.sort_field = sortFieldParam;
+      }
+
+      // Convert sortOrder to the format expected by backend
+      if (sortOrderParam === "DESC") {
+        params.sort_order = "-1";
+      } else if (sortOrderParam === "ASC") {
+        params.sort_order = "1";
+      }
+
+      // Add search if provided
+      if (keywords && keywords !== "") {
+        params.search = keywords;
+      }
+
+      // IMPORTANT: Add order_wjid filter
+      // The oid from URL params is the order's WJID (Workery Job ID)
+      if (orderWJID) {
+        params.order_wjid = String(orderWJID); // Ensure it's a string for the URL param
+      }
+
+      // Build Map for legacy API compatibility
+      const filtersMap = new Map();
+      Object.keys(params).forEach((key) => {
+        if (
+          params[key] !== undefined &&
+          params[key] !== null &&
+          params[key] !== ""
+        ) {
+          filtersMap.set(key, params[key]);
         }
-      }
+      });
 
-      // Add order filter
-      if (orderId) {
-        params.order_wjid = orderId;
-      }
+      console.log("Sending filters to API:", Array.from(filtersMap.entries()));
 
-      // Fetch data using the manager
+      // Fetch data using the manager with filters map
       const response = await activitySheetManager.getActivitySheets(
         params,
         onUnauthorized,
@@ -161,7 +190,8 @@ function AdminOrderDetailActivitySheetListPage() {
         return;
       }
 
-      fetchList(currentCursor, pageSize, "", sortByValue, oid);
+      // Pass oid (which is the order's WJID) to fetchList
+      fetchList(currentCursor, pageSize, "", sortField, sortOrder, oid);
 
       // Scroll to top on first load
       if (onPageLoaded === false) {
@@ -173,12 +203,11 @@ function AdminOrderDetailActivitySheetListPage() {
     return () => {
       mounted = false;
     };
-  }, [currentCursor, pageSize, sortByValue, oid]);
+  }, [currentCursor, pageSize, sortField, sortOrder, oid]);
 
   // Format date for display
   const formatDate = (dateString) => {
     if (!dateString) return "-";
-    // The date is already formatted by the API/Manager
     return dateString;
   };
 
@@ -228,7 +257,7 @@ function AdminOrderDetailActivitySheetListPage() {
       <Card>
         {/* Title */}
         <div style={{ marginBottom: "20px" }}>
-          <h3 style={{ margin: 0 }}>📄 Activity Sheets</h3>
+          <h3 style={{ margin: 0 }}>📄 Activity Sheets for Order #{oid}</h3>
         </div>
 
         {/* Tab Navigation */}
@@ -456,7 +485,7 @@ function AdminOrderDetailActivitySheetListPage() {
                 <div style={{ fontSize: "48px", marginBottom: "20px" }}>📄</div>
                 <h3>No Activity Sheets</h3>
                 <p style={{ color: theme.colors.secondary }}>
-                  No activity sheets yet for this order.
+                  No activity sheets found for Order #{oid}.
                 </p>
               </div>
             )}
