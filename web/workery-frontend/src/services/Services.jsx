@@ -31,6 +31,7 @@ import { AssociateAwayLogStorage } from "./Storage/AssociateAwayLogStorage";
 import { JobHistoryStorage } from "./Storage/JobHistoryStorage";
 import { OrderIncidentStorage } from "./Storage/OrderIncidentStorage";
 import { HowHearAboutUsItemStorage } from "./Storage/HowHearAboutUsItemStorage";
+import { SurveyStorage } from "./Storage/SurveyStorage";
 
 // Import all API services
 import { AuthAPI } from "./API/AuthAPI";
@@ -209,6 +210,10 @@ const SERVICE_DEFINITIONS = {
     },
     orderCompletion: {
       factory: () => new OrderCompletionStorage(),
+      singleton: true,
+    },
+    survey: {
+      factory: () => new SurveyStorage(),
       singleton: true,
     },
   },
@@ -856,6 +861,7 @@ export const useOrderCompletionStorage = createServiceHook(
   "storage",
   "orderCompletion",
 );
+export const useSurveyStorage = createServiceHook("storage", "survey");
 
 /**
  * Internal service hooks - NOT EXPORTED

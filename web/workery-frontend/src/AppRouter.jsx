@@ -215,6 +215,9 @@ import AdminTaskItemOrderCompletionStep2Page from "./pages/Admin/TaskItem/Update
 import AdminTaskItemOrderCompletionStep3Page from "./pages/Admin/TaskItem/Update/OrderCompletion/Step3Page";
 import AdminTaskItemOrderCompletionStep4Page from "./pages/Admin/TaskItem/Update/OrderCompletion/Step4Page";
 import AdminTaskItemOrderCompletionStep5Page from "./pages/Admin/TaskItem/Update/OrderCompletion/Step5Page";
+import AdminTaskItemSurveyStep1Page from "./pages/Admin/TaskItem/Update/OrderCompletion/Step1Page";
+import AdminTaskItemSurveyStep2Page from "./pages/Admin/TaskItem/Update/OrderCompletion/Step2Page";
+import AdminTaskItemSurveyStep3Page from "./pages/Admin/TaskItem/Update/OrderCompletion/Step3Page";
 
 // Admin staff pages.
 import AdminStaffListPage from "./pages/Admin/Staff/List/Page";
@@ -1933,7 +1936,7 @@ function AppRouter() {
               path="/admin/task/:tid/survey/step-1"
               element={
                 <Layout>
-                  <PlaceholderPage title="Task Survey - Step 1" />
+                  <AdminTaskItemSurveyStep1Page />
                 </Layout>
               }
             />
@@ -1941,7 +1944,7 @@ function AppRouter() {
               path="/admin/task/:tid/survey/step-2"
               element={
                 <Layout>
-                  <PlaceholderPage title="Task Survey - Step 2" />
+                  <AdminTaskItemSurveyStep2Page />
                 </Layout>
               }
             />
@@ -1949,7 +1952,7 @@ function AppRouter() {
               path="/admin/task/:tid/survey/step-3"
               element={
                 <Layout>
-                  <PlaceholderPage title="Task Survey - Step 3" />
+                  <AdminTaskItemSurveyStep3Page />
                 </Layout>
               }
             />
