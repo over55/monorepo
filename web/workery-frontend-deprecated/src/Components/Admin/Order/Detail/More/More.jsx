@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/Order/Detail/More/More.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -30,7 +31,7 @@ import {
   faChartPie,
   faBuilding,
   faEllipsis,
-  faTrash
+  faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 import { useParams } from "react-router-dom";
@@ -51,7 +52,7 @@ import DashboardBubbleLink from "../../../../Reusable/EveryPage/DashboardBubbleL
 import {
   topAlertMessageState,
   topAlertStatusState,
-  currentUserState
+  currentUserState,
 } from "../../../../../AppState";
 import { COMMERCIAL_CUSTOMER_TYPE_OF_ID } from "../../../../../Constants/App";
 import {
@@ -280,16 +281,18 @@ function AdminOrderMore() {
                       </ul>
                     </div>
                     <div className="columns is-vcentered is-multiline">
-                      {order && order.associatePublicId !== 0 && <div className="column">
-                        <DashboardBubbleLink
-                          notificationCount={``}
-                          title={`Unassign`}
-                          subtitle={`Remove the current associate from this job.`}
-                          faIcon={faUserSlash}
-                          url={`/admin/order/${oid}/more/unassign`}
-                          bgColour={`has-background-danger-dark`}
-                        />
-                      </div>}
+                      {order && order.associatePublicId !== 0 && (
+                        <div className="column">
+                          <DashboardBubbleLink
+                            notificationCount={``}
+                            title={`Unassign`}
+                            subtitle={`Remove the current associate from this job.`}
+                            faIcon={faUserSlash}
+                            url={`/admin/order/${oid}/more/unassign`}
+                            bgColour={`has-background-danger-dark`}
+                          />
+                        </div>
+                      )}
                       <div className="column">
                         <DashboardBubbleLink
                           notificationCount={``}
@@ -320,20 +323,27 @@ function AdminOrderMore() {
                           bgColour={`has-background-link-dark`}
                         />
                       </div>
-                      {(currentUser && currentUser.role === 1 || currentUser.role === 2) &&<div className="column">
-                        <DashboardBubbleLink
-                          notificationCount={``}
-                          title={`Delete Job`}
-                          subtitle={`Permanently delete this job from the system.`}
-                          faIcon={faTrash}
-                          url={`/admin/order/${oid}/more/delete`}
-                          bgColour={`has-background-dark`}
-                        />
-                      </div>}
+                      {((currentUser && currentUser.role === 1) ||
+                        currentUser.role === 2) && (
+                        <div className="column">
+                          <DashboardBubbleLink
+                            notificationCount={``}
+                            title={`Delete Job`}
+                            subtitle={`Permanently delete this job from the system.`}
+                            faIcon={faTrash}
+                            url={`/admin/order/${oid}/more/delete`}
+                            bgColour={`has-background-dark`}
+                          />
+                        </div>
+                      )}
                       <div className="column">
                         <DashboardBubbleLink
                           notificationCount={``}
-                          title={<>Incidents <span class="tag is-success">NEW</span></>}
+                          title={
+                            <>
+                              Incidents <span class="tag is-success">NEW</span>
+                            </>
+                          }
                           subtitle={`View or open any incidents with this order.`}
                           faIcon={faFire}
                           url={`/admin/order/${oid}/more/incidents`}
