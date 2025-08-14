@@ -17,6 +17,28 @@ import {
 } from "../../../../../../components/UI";
 
 // Constants
+const OrderStatusNew = 1;
+const OrderStatusDeclined = 2;
+const OrderStatusPending = 3;
+const OrderStatusCancelled = 4;
+const OrderStatusOngoing = 5;
+const OrderStatusInProgress = 6;
+const OrderStatusCompletedButUnpaid = 7;
+const OrderStatusCompletedAndPaid = 8;
+const OrderStatusArchived = 9;
+
+const ORDER_STATUS_MAP = {
+  [OrderStatusNew]: "New",
+  [OrderStatusDeclined]: "Declined",
+  [OrderStatusPending]: "Pending",
+  [OrderStatusCancelled]: "Cancelled",
+  [OrderStatusOngoing]: "Ongoing",
+  [OrderStatusInProgress]: "In Progress",
+  [OrderStatusCompletedButUnpaid]: "Completed but Unpaid",
+  [OrderStatusCompletedAndPaid]: "Completed and Paid",
+  [OrderStatusArchived]: "Archived",
+};
+
 const ACTIVITY_SHEET_STATUS_MAP = {
   1: "Archived",
   2: "Error",
@@ -247,6 +269,12 @@ function AdminOrderDetailActivitySheetListPage() {
           <h1 style={{ margin: 0 }}>🔧 Order</h1>
           <h4 style={{ margin: "5px 0 0 0", color: theme.colors.secondary }}>
             ℹ️ Detail
+            {activitySheets && activitySheets.order && (
+              <span style={{ fontWeight: "normal", marginLeft: "10px" }}>
+                (Status:{" "}
+                {ORDER_STATUS_MAP[activitySheets.order.status] || "Unknown"})
+              </span>
+            )}
           </h4>
         </div>
       </div>

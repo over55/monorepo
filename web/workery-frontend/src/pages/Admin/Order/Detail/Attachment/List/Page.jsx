@@ -417,9 +417,7 @@ function AdminOrderDetailAttachmentListPage() {
       <Card
         title="📄 Attachments"
         actions={
-          order &&
-          order.status !== 2 &&
-          order.status !== 6 && (
+          canAddAttachments && (
             <Link to={`/admin/order/${oid}/attachments/add`}>
               <Button variant="success">➕ New</Button>
             </Link>
@@ -608,7 +606,7 @@ function AdminOrderDetailAttachmentListPage() {
                     <h3 style={{ marginBottom: "8px" }}>No Attachments</h3>
                     <p style={{ color: "#666", marginBottom: "20px" }}>
                       No attachments found for this order.{" "}
-                      {order.status !== 2 && order.status !== 6 && (
+                      {canAddAttachments && (
                         <>
                           <Link
                             to={`/admin/order/${oid}/attachments/add`}
@@ -636,7 +634,7 @@ function AdminOrderDetailAttachmentListPage() {
                   <Link to="/admin/orders">
                     <Button variant="secondary">← Back to Orders</Button>
                   </Link>
-                  {order.status !== 2 && order.status !== 6 && (
+                  {canAddAttachments && (
                     <Link to={`/admin/order/${oid}/attachments/add`}>
                       <Button variant="success">➕ New</Button>
                     </Link>

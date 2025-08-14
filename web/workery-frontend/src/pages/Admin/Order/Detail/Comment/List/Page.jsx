@@ -5,6 +5,16 @@ import { Link, useNavigate, useParams } from "react-router";
 import { useOrderManager } from "../../../../../../services/Services";
 
 function AdminOrderDetailCommentListPage() {
+  const OrderStatusNew = 1;
+  const OrderStatusDeclined = 2;
+  const OrderStatusPending = 3;
+  const OrderStatusCancelled = 4;
+  const OrderStatusOngoing = 5;
+  const OrderStatusInProgress = 6;
+  const OrderStatusCompletedButUnpaid = 7;
+  const OrderStatusCompletedAndPaid = 8;
+  const OrderStatusArchived = 9;
+
   ////
   //// URL Parameters.
   ////
@@ -177,7 +187,7 @@ function AdminOrderDetailCommentListPage() {
         </nav>
 
         {/* Page banner for archived orders */}
-        {order && order.status === 2 && (
+        {order && order.status === OrderStatusArchived && (
           <div
             style={{
               padding: "15px",
@@ -549,17 +559,24 @@ function AdminOrderDetailCommentListPage() {
                     <div>
                       <button
                         onClick={onSubmitClick}
-                        disabled={order.status === 2 || isFetching}
+                        disabled={
+                          order.status === OrderStatusArchived || isFetching
+                        }
                         style={{
                           padding: "10px 20px",
                           backgroundColor:
-                            order.status === 2 ? "#ccc" : "#28a745",
+                            order.status === OrderStatusArchived
+                              ? "#ccc"
+                              : "#28a745",
                           color: "white",
                           border: "none",
                           borderRadius: "4px",
                           cursor:
-                            order.status === 2 ? "not-allowed" : "pointer",
-                          opacity: order.status === 2 ? 0.6 : 1,
+                            order.status === OrderStatusArchived
+                              ? "not-allowed"
+                              : "pointer",
+                          opacity:
+                            order.status === OrderStatusArchived ? 0.6 : 1,
                         }}
                       >
                         ✓ Save Comment

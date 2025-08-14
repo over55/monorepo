@@ -12,6 +12,16 @@ import {
   Breadcrumb,
 } from "../../../../../../components/UI";
 
+const OrderStatusNew = 1;
+const OrderStatusDeclined = 2;
+const OrderStatusPending = 3;
+const OrderStatusCancelled = 4;
+const OrderStatusOngoing = 5;
+const OrderStatusInProgress = 6;
+const OrderStatusCompletedButUnpaid = 7;
+const OrderStatusCompletedAndPaid = 8;
+const OrderStatusArchived = 9;
+
 function AdminOrderDetailMoreTaskListPage() {
   // Get order ID from URL parameters
   const { oid } = useParams();
@@ -23,6 +33,7 @@ function AdminOrderDetailMoreTaskListPage() {
   // Component state
   const [isLoading, setIsLoading] = useState(false);
   const [tasks, setTasks] = useState([]);
+  const [order, setOrder] = useState(null);
   const [errors, setErrors] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -76,6 +87,9 @@ function AdminOrderDetailMoreTaskListPage() {
 
       if (response) {
         setTasks(response.results || []);
+        if (response.order) {
+          setOrder(response.order);
+        }
         setTotalCount(response.count || 0);
 
         // Calculate total pages
@@ -153,6 +167,16 @@ function AdminOrderDetailMoreTaskListPage() {
       </div>
     );
   }
+
+  const isOrderActionable =
+    order &&
+    ![
+      OrderStatusDeclined,
+      OrderStatusCancelled,
+      OrderStatusCompletedButUnpaid,
+      OrderStatusCompletedAndPaid,
+      OrderStatusArchived,
+    ].includes(order.status);
 
   return (
     <div style={globalStyles.container}>
@@ -450,43 +474,49 @@ function AdminOrderDetailMoreTaskListPage() {
                         flexWrap: "wrap",
                       }}
                     >
-                      {task.status === 1 && task.type === 1 && (
-                        <Link
-                          to={`/admin/task/${task.id}/assign-associate/step-1`}
-                          style={{
-                            color: theme.colors.primary,
-                            textDecoration: "none",
-                            fontWeight: "500",
-                          }}
-                        >
-                          Assign
-                        </Link>
-                      )}
-                      {task.status === 1 && task.type === 3 && (
-                        <Link
-                          to={`/admin/task/${task.id}/order-completion/step-1`}
-                          style={{
-                            color: theme.colors.primary,
-                            textDecoration: "none",
-                            fontWeight: "500",
-                          }}
-                        >
-                          Complete
-                        </Link>
-                      )}
-                      {task.status === 1 && task.type === 4 && (
-                        <Link
-                          to={`/admin/task/${task.id}/survey/step-1`}
-                          style={{
-                            color: theme.colors.primary,
-                            textDecoration: "none",
-                            fontWeight: "500",
-                          }}
-                        >
-                          Survey
-                        </Link>
-                      )}
-                      {task.status === 1 && (
+                      {isOrderActionable &&
+                        task.status === 1 &&
+                        task.type === 1 && (
+                          <Link
+                            to={`/admin/task/${task.id}/assign-associate/step-1`}
+                            style={{
+                              color: theme.colors.primary,
+                              textDecoration: "none",
+                              fontWeight: "500",
+                            }}
+                          >
+                            Assign
+                          </Link>
+                        )}
+                      {isOrderActionable &&
+                        task.status === 1 &&
+                        task.type === 3 && (
+                          <Link
+                            to={`/admin/task/${task.id}/order-completion/step-1`}
+                            style={{
+                              color: theme.colors.primary,
+                              textDecoration: "none",
+                              fontWeight: "500",
+                            }}
+                          >
+                            Complete
+                          </Link>
+                        )}
+                      {isOrderActionable &&
+                        task.status === 1 &&
+                        task.type === 4 && (
+                          <Link
+                            to={`/admin/task/${task.id}/survey/step-1`}
+                            style={{
+                              color: theme.colors.primary,
+                              textDecoration: "none",
+                              fontWeight: "500",
+                            }}
+                          >
+                            Survey
+                          </Link>
+                        )}
+                      {isOrderActionable && task.status === 1 && (
                         <>
                           <span style={{ color: theme.colors.light }}>|</span>
                           <Link
