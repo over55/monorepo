@@ -75,12 +75,15 @@ function AdminTaskItemListPage() {
   const [listViewType, setListViewType] = useState(LIST_VIEW_TYPE_TABULAR);
   const [showAllFilters, setShowAllFilters] = useState(false);
 
-  // Cursor-based pagination state (FIXED)
+  // Cursor-based pagination state
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [currentCursor, setCurrentCursor] = useState("");
   const [previousCursors, setPreviousCursors] = useState([]);
   const [nextCursor, setNextCursor] = useState("");
   const [hasNextPage, setHasNextPage] = useState(false);
+
+  // Track filter/sort changes to reset pagination
+  const [filterKey, setFilterKey] = useState(0);
 
   // Modal state
   const [selectedTaskForDeletion, setSelectedTaskForDeletion] = useState(null);
@@ -117,52 +120,52 @@ function AdminTaskItemListPage() {
     }
   }, []);
 
-  // Fetch tasks list (FIXED)
+  // Fetch tasks list
   const fetchTasks = async (cursor = "") => {
+    console.log("fetchTasks called with cursor:", cursor || "(empty)");
     setIsLoading(true);
     setErrors({});
 
     try {
       // Build params for cursor-based pagination
       const [sortField, sortOrder] = sortByValue.split(",");
+
+      // IMPORTANT: Use exact parameter names the backend expects
       const params = {
         page_size: pageSize.toString(),
         sort_field: sortField,
         sort_order: sortOrder,
+        cursor: cursor || undefined, // Don't send empty string
+        is_closed: isClosed.toString(),
       };
 
-      // Add cursor if provided (for pagination)
-      if (cursor) {
-        params.cursor = cursor;
-      }
-
-      // Add filters
+      // Add optional filters
       if (searchKeyword && searchKeyword.trim()) {
         params.search = searchKeyword.trim();
       }
       if (type !== 0) {
         params.type = type.toString();
       }
-      // Always set is_closed filter (2 = false = show only open tasks)
-      params.is_closed = isClosed.toString();
 
-      console.log("Fetching tasks with params:", params);
+      console.log("Calling taskManager.getTasks with params:", params);
 
-      // Make API call through task manager
-      const response = await taskManager.getTasks(params, onUnauthorized, true); // Force refresh
+      // CRITICAL: Force refresh to bypass ALL caching
+      const response = await taskManager.getTasks(params, onUnauthorized, true);
 
-      console.log("Tasks response:", response);
+      console.log("Got response from taskManager:", {
+        hasResults: !!response?.results,
+        resultCount: response?.results?.length || 0,
+        totalCount: response?.count,
+        hasNextPage: response?.hasNextPage,
+        nextCursor: response?.nextCursor,
+      });
 
       if (response) {
         setTasks(response);
 
-        // Update pagination state
-        if (response.hasNextPage !== undefined) {
-          setHasNextPage(response.hasNextPage);
-        }
-        if (response.nextCursor !== undefined) {
-          setNextCursor(response.nextCursor);
-        }
+        // Update pagination state from response
+        setHasNextPage(response.hasNextPage === true);
+        setNextCursor(response.nextCursor || "");
 
         // Set task count if available
         if (response.count !== undefined) {
@@ -204,9 +207,19 @@ function AdminTaskItemListPage() {
     }
   };
 
-  // Effect to fetch tasks when filters change or pagination changes
+  // Effect to fetch tasks - simplified dependencies
   useEffect(() => {
     if (currentUser) {
+      console.log("=== useEffect triggered ===");
+      console.log("Current cursor:", currentCursor || "(empty)");
+      console.log("Dependencies:", {
+        pageSize,
+        sortByValue,
+        type,
+        isClosed,
+        currentUser: currentUser?.id,
+      });
+
       fetchTasks(currentCursor);
     }
   }, [currentCursor, pageSize, sortByValue, type, isClosed, currentUser]);
@@ -233,14 +246,17 @@ function AdminTaskItemListPage() {
 
   // Event handlers
   const handleSearch = () => {
+    console.log("Search clicked - resetting pagination");
     // Reset pagination when searching
     setCurrentCursor("");
     setPreviousCursors([]);
     setNextCursor("");
-    fetchTasks("");
+    setHasNextPage(false);
+    setFilterKey((prev) => prev + 1); // Force re-fetch
   };
 
   const handleClearFilters = () => {
+    console.log("Clear filters clicked - resetting everything");
     setType(0);
     setIsClosed(2); // Reset to show only open tasks
     setSortByValue(DEFAULT_SORT_BY_VALUE);
@@ -250,39 +266,91 @@ function AdminTaskItemListPage() {
     setCurrentCursor("");
     setPreviousCursors([]);
     setNextCursor("");
+    setHasNextPage(false);
+    setFilterKey((prev) => prev + 1); // Force re-fetch
   };
 
-  // Pagination handlers (FIXED)
+  // Pagination handlers
   const handleNextPage = () => {
+    console.log("=== Next page clicked ===");
+    console.log("Current state:", {
+      currentCursor: currentCursor || "(empty)",
+      nextCursor: nextCursor || "(empty)",
+      hasNextPage,
+      previousCursorsCount: previousCursors.length,
+    });
+
     if (hasNextPage && nextCursor) {
       // Save current cursor to previous stack
-      const newPreviousCursors = [...previousCursors];
-      if (currentCursor) {
-        newPreviousCursors.push(currentCursor);
-      }
-      setPreviousCursors(newPreviousCursors);
+      setPreviousCursors((prev) => {
+        const newStack = [...prev];
+        if (currentCursor !== "") {
+          newStack.push(currentCursor);
+        }
+        console.log("Updated previous cursors stack:", newStack);
+        return newStack;
+      });
 
-      // Move to next page
+      // Move to next page by updating current cursor
+      console.log("Setting current cursor to:", nextCursor);
       setCurrentCursor(nextCursor);
+    } else {
+      console.log("Cannot go to next page:", { hasNextPage, nextCursor });
     }
   };
 
   const handlePreviousPage = () => {
+    console.log("=== Previous page clicked ===");
+    console.log("Previous cursors stack:", previousCursors);
+
     if (previousCursors.length > 0) {
       const newPreviousCursors = [...previousCursors];
       const prevCursor = newPreviousCursors.pop();
 
+      console.log("Going back to cursor:", prevCursor || "(empty)");
       setPreviousCursors(newPreviousCursors);
       setCurrentCursor(prevCursor || "");
     }
   };
 
   const handlePageSizeChange = (newPageSize) => {
+    console.log("Page size changed to:", newPageSize);
     setPageSize(newPageSize);
     // Reset pagination when page size changes
     setCurrentCursor("");
     setPreviousCursors([]);
     setNextCursor("");
+    setHasNextPage(false);
+  };
+
+  const handleSortChange = (newSortValue) => {
+    console.log("Sort changed to:", newSortValue);
+    setSortByValue(newSortValue);
+    // Reset pagination when sort changes
+    setCurrentCursor("");
+    setPreviousCursors([]);
+    setNextCursor("");
+    setHasNextPage(false);
+  };
+
+  const handleTypeChange = (newType) => {
+    console.log("Type filter changed to:", newType);
+    setType(newType);
+    // Reset pagination when filter changes
+    setCurrentCursor("");
+    setPreviousCursors([]);
+    setNextCursor("");
+    setHasNextPage(false);
+  };
+
+  const handleIsClosedChange = (newIsClosed) => {
+    console.log("Is closed filter changed to:", newIsClosed);
+    setIsClosed(newIsClosed);
+    // Reset pagination when filter changes
+    setCurrentCursor("");
+    setPreviousCursors([]);
+    setNextCursor("");
+    setHasNextPage(false);
   };
 
   const handleDeleteClick = (task) => {
@@ -296,7 +364,7 @@ function AdminTaskItemListPage() {
     try {
       await taskManager.deleteTask(selectedTaskForDeletion.id, onUnauthorized);
 
-      // Refresh list
+      // Refresh current page
       fetchTasks(currentCursor);
       fetchTaskCount();
 
@@ -330,8 +398,12 @@ function AdminTaskItemListPage() {
   // Format date for display
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString();
+    } catch (e) {
+      return dateString;
+    }
   };
 
   // Render grid view
@@ -339,7 +411,7 @@ function AdminTaskItemListPage() {
     if (!tasks || !tasks.results || tasks.results.length === 0) {
       return (
         <div style={{ textAlign: "center", padding: "40px" }}>
-          <p>No open tasks found.</p>
+          <p>No tasks found.</p>
         </div>
       );
     }
@@ -410,7 +482,7 @@ function AdminTaskItemListPage() {
     if (!tasks || !tasks.results || tasks.results.length === 0) {
       return (
         <div style={{ textAlign: "center", padding: "40px" }}>
-          <p>No open tasks found.</p>
+          <p>No tasks found.</p>
         </div>
       );
     }
@@ -457,6 +529,41 @@ function AdminTaskItemListPage() {
     ];
 
     return <Table columns={columns} data={tasks.results} />;
+  };
+
+  // Debug info (remove in production)
+  const renderDebugInfo = () => {
+    if (process.env.NODE_ENV !== "development") return null;
+
+    return (
+      <div
+        style={{
+          padding: "10px",
+          backgroundColor: "#f0f0f0",
+          marginBottom: "20px",
+          fontSize: "12px",
+          fontFamily: "monospace",
+        }}
+      >
+        <strong>Debug Info:</strong>
+        <br />
+        Current Cursor: {currentCursor || "(empty)"}
+        <br />
+        Next Cursor: {nextCursor || "(none)"}
+        <br />
+        Has Next Page: {hasNextPage ? "YES" : "NO"}
+        <br />
+        Previous Cursors Count: {previousCursors.length}
+        <br />
+        Page Size: {pageSize}
+        <br />
+        Is Closed Filter: {isClosed} (0=all, 1=closed, 2=open)
+        <br />
+        Type Filter: {type}
+        <br />
+        Total Count: {taskCount}
+      </div>
+    );
   };
 
   // Render main content
@@ -509,6 +616,9 @@ function AdminTaskItemListPage() {
           </Button>,
         ]}
       >
+        {/* Debug info for development */}
+        {renderDebugInfo()}
+
         {/* Filter Panel */}
         <div
           style={{
@@ -529,13 +639,7 @@ function AdminTaskItemListPage() {
             <Select
               label="Sort by"
               value={sortByValue}
-              onChange={(e) => {
-                setSortByValue(e.target.value);
-                // Reset pagination when sort changes
-                setCurrentCursor("");
-                setPreviousCursors([]);
-                setNextCursor("");
-              }}
+              onChange={(e) => handleSortChange(e.target.value)}
               options={TASK_ITEM_SORT_OPTIONS}
             />
 
@@ -601,13 +705,7 @@ function AdminTaskItemListPage() {
                 <Select
                   label="Type"
                   value={type}
-                  onChange={(e) => {
-                    setType(parseInt(e.target.value));
-                    // Reset pagination when filter changes
-                    setCurrentCursor("");
-                    setPreviousCursors([]);
-                    setNextCursor("");
-                  }}
+                  onChange={(e) => handleTypeChange(parseInt(e.target.value))}
                   options={TASK_ITEM_TYPE_FILTER_OPTIONS}
                 />
 
@@ -620,13 +718,9 @@ function AdminTaskItemListPage() {
                         name="isClosed"
                         value={0}
                         checked={isClosed === 0}
-                        onChange={(e) => {
-                          setIsClosed(parseInt(e.target.value));
-                          // Reset pagination when filter changes
-                          setCurrentCursor("");
-                          setPreviousCursors([]);
-                          setNextCursor("");
-                        }}
+                        onChange={(e) =>
+                          handleIsClosedChange(parseInt(e.target.value))
+                        }
                       />{" "}
                       All
                     </label>
@@ -636,13 +730,9 @@ function AdminTaskItemListPage() {
                         name="isClosed"
                         value={1}
                         checked={isClosed === 1}
-                        onChange={(e) => {
-                          setIsClosed(parseInt(e.target.value));
-                          // Reset pagination when filter changes
-                          setCurrentCursor("");
-                          setPreviousCursors([]);
-                          setNextCursor("");
-                        }}
+                        onChange={(e) =>
+                          handleIsClosedChange(parseInt(e.target.value))
+                        }
                       />{" "}
                       Yes
                     </label>
@@ -652,13 +742,9 @@ function AdminTaskItemListPage() {
                         name="isClosed"
                         value={2}
                         checked={isClosed === 2}
-                        onChange={(e) => {
-                          setIsClosed(parseInt(e.target.value));
-                          // Reset pagination when filter changes
-                          setCurrentCursor("");
-                          setPreviousCursors([]);
-                          setNextCursor("");
-                        }}
+                        onChange={(e) =>
+                          handleIsClosedChange(parseInt(e.target.value))
+                        }
                       />{" "}
                       No
                     </label>
@@ -695,7 +781,7 @@ function AdminTaskItemListPage() {
               </p>
             )}
 
-            {/* Pagination Controls (FIXED) */}
+            {/* Pagination Controls */}
             <div
               style={{
                 display: "flex",
@@ -724,13 +810,12 @@ function AdminTaskItemListPage() {
                 </Button>
 
                 <span style={{ fontSize: "14px", color: "#666" }}>
-                  {previousCursors.length > 0 &&
-                    `Page ${previousCursors.length + 1}`}
+                  Page {previousCursors.length + 1}
                 </span>
 
                 <Button
                   onClick={handleNextPage}
-                  disabled={!hasNextPage}
+                  disabled={!hasNextPage || !nextCursor}
                   variant="outline"
                 >
                   Next
