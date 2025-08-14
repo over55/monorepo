@@ -64,8 +64,10 @@ export class AttachmentAPI {
       // Add file type filter
       if (params.fileType) queryParams.append("file_type", params.fileType);
 
-      // ADD THIS: Special handling for order_wjid
-      if (params.orderWjid) queryParams.append("order_wjid", params.orderWjid);
+      // IMPORTANT: Handle order_wjid with underscore for backend
+      if (params.orderWjid) {
+        queryParams.append("order_wjid", params.orderWjid); // Backend expects underscore
+      }
 
       // Add any additional filters
       Object.keys(params).forEach((key) => {
@@ -79,7 +81,7 @@ export class AttachmentAPI {
             "entityType",
             "entityId",
             "fileType",
-            "orderWjid", // ADD THIS to exclusion list
+            "orderWjid", // Exclude from generic handling
           ].includes(key)
         ) {
           if (
@@ -96,6 +98,8 @@ export class AttachmentAPI {
       const url = queryString
         ? `${this.endpoints.ATTACHMENTS}?${queryString}`
         : this.endpoints.ATTACHMENTS;
+
+      console.log("AttachmentAPI: Fetching attachments with URL:", url); // Debug log
 
       // Make the API call
       const response = await authenticatedAxios.get(url);
@@ -168,8 +172,10 @@ export class AttachmentAPI {
       if (metadata.description)
         formData.append("description", metadata.description);
 
-      // ADD THIS: Handle order_wjid
-      if (metadata.orderWjid) formData.append("order_wjid", metadata.orderWjid);
+      // IMPORTANT: Handle order_wjid with underscore for backend
+      if (metadata.orderWjid) {
+        formData.append("order_wjid", metadata.orderWjid); // Backend expects underscore
+      }
 
       // Configure upload with progress tracking
       const config = {

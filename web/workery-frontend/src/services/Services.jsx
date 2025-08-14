@@ -747,6 +747,14 @@ export function ServiceProvider({ children }) {
 function useServices() {
   const services = useContext(ServicesContext);
   if (!services) {
+    // Check if we're in a hot reload scenario
+    if (import.meta.hot) {
+      console.warn(
+        "ServiceProvider context lost during hot reload. Please refresh the page.",
+      );
+      // Try to recreate the container
+      return getContainer();
+    }
     throw new Error("useServices must be used within a ServiceProvider");
   }
   return services;
