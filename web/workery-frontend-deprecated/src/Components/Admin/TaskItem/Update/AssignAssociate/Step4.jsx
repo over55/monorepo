@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/TaskItem/Update/AssignAssociate/Step4.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -105,9 +106,13 @@ function AdminTaskItemAssignAssociateStep4() {
   );
   const [status] = useState(addTaskItemAssignAssociate.status);
   const [comment] = useState(addTaskItemAssignAssociate.comment);
-  const [howWasJobAccepted] = useState(addTaskItemAssignAssociate.howWasJobAccepted);
+  const [howWasJobAccepted] = useState(
+    addTaskItemAssignAssociate.howWasJobAccepted,
+  );
   const [whyJobDeclined] = useState(addTaskItemAssignAssociate.whyJobDeclined);
-  const [predefinedComment] = useState(addTaskItemAssignAssociate.predefinedComment);
+  const [predefinedComment] = useState(
+    addTaskItemAssignAssociate.predefinedComment,
+  );
 
   ////
   //// Event handling.
@@ -186,7 +191,7 @@ function AdminTaskItemAssignAssociateStep4() {
     setAddTaskItemAssignAssociate(ADD_TASK_ITEM_ASSIGN_ASSOCIATE_STATE_DEFAULT);
 
     // Redirect the user to a new page.
-    setForceURL("/admin/order/"+task.orderWjid);
+    setForceURL("/admin/order/" + task.orderWjid);
   }
 
   function onOperationError(apiErr) {

@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/TaskItem/Update/AssignAssociate/Step3.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate, useParams } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -85,10 +86,16 @@ function AdminTaskItemAssignAssociateStep3() {
     addTaskItemAssignAssociate.associateName,
   );
   const [status, setStatus] = useState(addTaskItemAssignAssociate.status);
-  const [predefinedComment, setPredefinedComment] = useState(addTaskItemAssignAssociate.predefinedComment);
+  const [predefinedComment, setPredefinedComment] = useState(
+    addTaskItemAssignAssociate.predefinedComment,
+  );
   const [comment, setComment] = useState(addTaskItemAssignAssociate.comment);
-  const [howWasJobAccepted, setHowWasJobAccepted] = useState(addTaskItemAssignAssociate.howWasJobAccepted);
-  const [whyJobDeclined, setWhyJobDeclined] = useState(addTaskItemAssignAssociate.whyJobDeclined);
+  const [howWasJobAccepted, setHowWasJobAccepted] = useState(
+    addTaskItemAssignAssociate.howWasJobAccepted,
+  );
+  const [whyJobDeclined, setWhyJobDeclined] = useState(
+    addTaskItemAssignAssociate.whyJobDeclined,
+  );
 
   ////
   //// Event handling.
@@ -107,20 +114,32 @@ function AdminTaskItemAssignAssociateStep3() {
     ) {
       newErrors["status"] = "missing value";
       hasErrors = true;
-  } else {
-      if (status === 3) { // Accepted
-        if (howWasJobAccepted === undefined || howWasJobAccepted === null || howWasJobAccepted === "" || howWasJobAccepted === 0) {
-            newErrors["howWasJobAccepted"] = "missing value";
-            hasErrors = true;
+    } else {
+      if (status === 3) {
+        // Accepted
+        if (
+          howWasJobAccepted === undefined ||
+          howWasJobAccepted === null ||
+          howWasJobAccepted === "" ||
+          howWasJobAccepted === 0
+        ) {
+          newErrors["howWasJobAccepted"] = "missing value";
+          hasErrors = true;
         }
       }
-      if (status === 4) { // Rejected
-          if (whyJobDeclined === undefined || whyJobDeclined === null || whyJobDeclined === "" || whyJobDeclined === 0) {
-              newErrors["whyJobDeclined"] = "missing value";
-              hasErrors = true;
-          }
+      if (status === 4) {
+        // Rejected
+        if (
+          whyJobDeclined === undefined ||
+          whyJobDeclined === null ||
+          whyJobDeclined === "" ||
+          whyJobDeclined === 0
+        ) {
+          newErrors["whyJobDeclined"] = "missing value";
+          hasErrors = true;
+        }
       }
-  }
+    }
 
     // if (comment === undefined || comment === null || comment === "") {
     //   newErrors["comment"] = "missing value";
@@ -305,102 +324,124 @@ function AdminTaskItemAssignAssociateStep3() {
                       errorText={errors && errors.status}
                     />
 
-                    {status === 3 && <FormRadioField
-                      label="How was this job accepted?"
-                      name="howWasJobAccepted"
-                      value={howWasJobAccepted}
-                      hasOptPerLine={true}
-                      errorText={errors && errors.howWasJobAccepted}
-                      opt1Value={1}
-                      opt1Label="Phone"
-                      opt2Value={2}
-                      opt2Label="Text"
-                      opt3Value={3}
-                      opt3Label="Email"
-                      opt4Value={4}
-                      opt4Label="In-person confirmation"
-                      onChange={(e) => {
-                          setHowWasJobAccepted(parseInt(e.target.value))
+                    {status === 3 && (
+                      <FormRadioField
+                        label="How was this job accepted?"
+                        name="howWasJobAccepted"
+                        value={howWasJobAccepted}
+                        hasOptPerLine={true}
+                        errorText={errors && errors.howWasJobAccepted}
+                        opt1Value={1}
+                        opt1Label="Phone"
+                        opt2Value={2}
+                        opt2Label="Text"
+                        opt3Value={3}
+                        opt3Label="Email"
+                        opt4Value={4}
+                        opt4Label="In-person confirmation"
+                        onChange={(e) => {
+                          setHowWasJobAccepted(parseInt(e.target.value));
 
                           var todayDate = new Date().toISOString().slice(0, 10);
                           var choice = "";
                           switch (parseInt(e.target.value)) {
-                              case 1:
-                                  choice="phone";
-                                  break;
-                              case 2:
-                                  choice="text";
-                                  break;
-                              case 3:
-                                  choice="email";
-                                  break;
-                              case 4:
-                                  choice="in-person confirmation";
-                                  break;
-                              default:
+                            case 1:
+                              choice = "phone";
+                              break;
+                            case 2:
+                              choice = "text";
+                              break;
+                            case 3:
+                              choice = "email";
+                              break;
+                            case 4:
+                              choice = "in-person confirmation";
+                              break;
+                            default:
                           }
-                          setPredefinedComment("Job accepted by "+associateName+" on "+todayDate+" via " + choice + ".");
+                          setPredefinedComment(
+                            "Job accepted by " +
+                              associateName +
+                              " on " +
+                              todayDate +
+                              " via " +
+                              choice +
+                              ".",
+                          );
+                        }}
+                        errorText={errors && errors.howWasJobAccepted}
+                      />
+                    )}
 
-                      }}
-                      errorText={errors && errors.howWasJobAccepted}
-                    />}
-
-                    {status === 4 && <FormRadioField
-                      label="Why was this job declined?"
-                      name="whyJobDeclined"
-                      hasOptPerLine={true}
-                      value={whyJobDeclined}
-                      errorText={errors && errors.whyJobDeclined}
-                      opt1Value={1}
-                      opt1Label="Associate was busy"
-                      opt2Value={2}
-                      opt2Label="Associate does not have the skills"
-                      opt3Value={3}
-                      opt3Label="Associate does not wish to travel to the customer's location"
-                      opt4Value={4}
-                      opt4Label="Associate does not wish to work with this client"
-                      errorText={errors && errors.whyJobDeclined}
-                      onChange={(e) => {
-                          setWhyJobDeclined(parseInt(e.target.value))
+                    {status === 4 && (
+                      <FormRadioField
+                        label="Why was this job declined?"
+                        name="whyJobDeclined"
+                        hasOptPerLine={true}
+                        value={whyJobDeclined}
+                        errorText={errors && errors.whyJobDeclined}
+                        opt1Value={1}
+                        opt1Label="Associate was busy"
+                        opt2Value={2}
+                        opt2Label="Associate does not have the skills"
+                        opt3Value={3}
+                        opt3Label="Associate does not wish to travel to the customer's location"
+                        opt4Value={4}
+                        opt4Label="Associate does not wish to work with this client"
+                        errorText={errors && errors.whyJobDeclined}
+                        onChange={(e) => {
+                          setWhyJobDeclined(parseInt(e.target.value));
 
                           var todayDate = new Date().toISOString().slice(0, 10);
                           var choice = "";
                           switch (parseInt(e.target.value)) {
-                              case 1:
-                                  choice="associate was busy";
-                                  break;
-                              case 2:
-                                  choice="associate does not have the skills";
-                                  break;
-                              case 3:
-                                  choice="associate does not wish to travel to the customer\'s location";
-                                  break;
-                              case 4:
-                                  choice="associate does not wish to work with this client";
-                                  break;
-                              default:
+                            case 1:
+                              choice = "associate was busy";
+                              break;
+                            case 2:
+                              choice = "associate does not have the skills";
+                              break;
+                            case 3:
+                              choice =
+                                "associate does not wish to travel to the customer\'s location";
+                              break;
+                            case 4:
+                              choice =
+                                "associate does not wish to work with this client";
+                              break;
+                            default:
                           }
-                          setPredefinedComment("Job declined by "+associateName+" on "+todayDate+" because " + choice + ".");
+                          setPredefinedComment(
+                            "Job declined by " +
+                              associateName +
+                              " on " +
+                              todayDate +
+                              " because " +
+                              choice +
+                              ".",
+                          );
+                        }}
+                      />
+                    )}
 
-                      }}
-                    />}
-
-                    {status !== 0 && <FormTextareaField
-                      label="Predefined Comment"
-                      name="predefinedComment"
-                      placeholder="The predefined comment to autopopulated based on your choice."
-                      value={predefinedComment}
-                      errorText={errors && errors.predefinedComment}
-                      helpText=""
-                      onChange={null}
-                      isRequired={true}
-                      maxWidth="280px"
-                      helpText={
-                        "This is the predefined comment is autopopulated based on your choices above and attached to the order."
-                      }
-                      rows={3}
-                      disabled={true}
-                    />}
+                    {status !== 0 && (
+                      <FormTextareaField
+                        label="Predefined Comment"
+                        name="predefinedComment"
+                        placeholder="The predefined comment to autopopulated based on your choice."
+                        value={predefinedComment}
+                        errorText={errors && errors.predefinedComment}
+                        helpText=""
+                        onChange={null}
+                        isRequired={true}
+                        maxWidth="280px"
+                        helpText={
+                          "This is the predefined comment is autopopulated based on your choices above and attached to the order."
+                        }
+                        rows={3}
+                        disabled={true}
+                      />
+                    )}
 
                     <FormTextareaField
                       label="Comment (Optional)"
