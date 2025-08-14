@@ -1,523 +1,420 @@
 // File Path: web/workery-frontend/src/pages/Admin/Order/Detail/Task/List/Page.jsx
 
 import React, { useState, useEffect } from "react";
-import { Link, useParams, useNavigate } from "react-router";
-import {
-  useTaskManager,
-  useAuthManager,
-} from "../../../../../../services/Services";
-import { Loading, Alert } from "../../../../../../components/UI";
-import { DateTime } from "luxon";
+import { Link, useParams, useNavigate } from "react-router"; // Using react-router to match AppRouter.jsx
+import { useTaskManager } from "../../../../../../services/Services";
 
-function AdminOrderDetailTaskListPage() {
-  // URL Parameters
+function AdminOrderDetailMoreTaskListPage() {
+  // Get order ID from URL parameters
   const { oid } = useParams();
+  const navigate = useNavigate();
 
   // Services
   const taskManager = useTaskManager();
-  const authManager = useAuthManager();
-  const navigate = useNavigate();
 
   // Component state
-  const [onPageLoaded, setOnPageLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [tasks, setTasks] = useState([]);
   const [errors, setErrors] = useState({});
-  const [listData, setListData] = useState("");
-  const [isFetching, setFetching] = useState(false);
-  const [pageSize, setPageSize] = useState(50);
-  const [previousCursors, setPreviousCursors] = useState([]);
-  const [nextCursor, setNextCursor] = useState("");
-  const [currentCursor, setCurrentCursor] = useState("");
-  const [sortByValue, setSortByValue] = useState("created_at,DESC");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [pageSize] = useState(25);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
-  // Constants from old code
-  const TASK_ITEM_CLOSE_REASON_OTHER = 5;
-  const TASK_ITEM_CLOSE_REASON_MAP = {
-    1: "Completed",
-    2: "Cancelled - Client",
-    3: "Cancelled - Associate",
-    4: "Cancelled - Office",
-    5: "Other",
-  };
-
-  // Check authorization
-  const onUnauthorized = () => {
-    navigate("/login?unauthorized=true");
-  };
-
-  // Success callback for task list
-  function onTaskListSuccess(response) {
-    console.log("onTaskListSuccess: Starting...", response);
-    if (response.results !== null) {
-      setListData(response);
-      if (response.hasNextPage) {
-        setNextCursor(response.nextCursor);
-      }
+  useEffect(() => {
+    // Validate order ID
+    if (!oid) {
+      setErrors({ general: "Order ID is required" });
+      return;
     }
-  }
 
-  // Error callback for task list
-  function onTaskListError(apiErr) {
-    console.log("onTaskListError: Starting...", apiErr);
-    setErrors(apiErr);
-    window.scrollTo(0, 0);
-  }
+    // Clear the task cache when order ID changes or on mount
+    if (isInitialLoad) {
+      taskManager.clearTasksCache();
+      setIsInitialLoad(false);
+    }
 
-  // Done callback for task list
-  function onTaskListDone() {
-    console.log("onTaskListDone: Starting...");
-    setFetching(false);
-  }
+    fetchTasks();
+  }, [oid, currentPage]);
 
-  // Fetch task list
-  const fetchList = async (cur, limit, keywords, so, orderId) => {
-    setFetching(true);
+  const fetchTasks = async () => {
+    setIsLoading(true);
     setErrors({});
 
-    console.log(
-      "fetchList | cur=" +
-        cur +
-        ", limit=" +
-        limit +
-        ", keywords=" +
-        keywords +
-        ", so=" +
-        so +
-        ", oid=" +
-        orderId,
-    );
-
-    // Parse sort parameters
-    const sortArray = so.split(",");
-
-    // Build parameters object matching TaskAPI's expected format
-    const paramsObj = {
-      limit: limit, // TaskAPI expects 'limit' not 'page_size'
-      sortBy: sortArray[0], // TaskAPI expects 'sortBy' not 'sort_field'
-      sortOrder: sortArray[1], // TaskAPI expects 'sortOrder' not 'sort_order'
-      order_wjid: orderId, // This will be passed through as additional filter
-    };
-
-    if (cur !== "") {
-      paramsObj.cursor = cur;
-    }
-
-    if (keywords !== undefined && keywords !== null && keywords !== "") {
-      paramsObj.search = keywords;
-    }
-
-    console.log("Calling TaskManager with params:", paramsObj);
-
     try {
-      // IMPORTANT: Force refresh to avoid cached data for different orders
+      // Create parameters with order_wjid filter - THIS IS THE KEY FIX
+      const params = {
+        page: currentPage,
+        limit: pageSize,
+        order_wjid: oid, // IMPORTANT: This filters tasks by order ID
+        sortBy: "created_at",
+        sortOrder: "DESC",
+      };
+
+      // Fetch tasks for this specific order
+      // Force refresh on initial load to ensure we get the latest data
       const response = await taskManager.getTasks(
-        paramsObj,
-        onUnauthorized,
-        true, // forceRefresh = true to bypass cache
+        params,
+        () => {
+          // Unauthorized callback
+          console.log("Unauthorized access, redirecting to login");
+          navigate("/login");
+        },
+        true, // Force refresh to bypass cache and get latest data
       );
 
-      onTaskListSuccess(response);
+      if (response) {
+        setTasks(response.results || []);
+        setTotalCount(response.count || 0);
+
+        // Calculate total pages
+        const pages = Math.ceil((response.count || 0) / pageSize);
+        setTotalPages(pages);
+      }
     } catch (error) {
-      onTaskListError(error);
+      console.error("Error fetching tasks:", error);
+      setErrors(error || { general: "Failed to load tasks" });
     } finally {
-      onTaskListDone();
+      setIsLoading(false);
     }
   };
 
-  // Handle pagination
-  const onNextClicked = (e) => {
-    let arr = [...previousCursors];
-    arr.push(currentCursor);
-    setPreviousCursors(arr);
-    setCurrentCursor(nextCursor);
-  };
-
-  const onPreviousClicked = (e) => {
-    let arr = [...previousCursors];
-    const previousCursor = arr.pop();
-    setPreviousCursors(arr);
-    setCurrentCursor(previousCursor);
-  };
-
-  // Format date/time helper - handles both ISO strings and already formatted dates
-  const formatDateTime = (value) => {
-    if (!value) return "-";
-
-    try {
-      // If it's already a formatted string from the API, return it
-      if (typeof value === "string" && value.includes(",")) {
-        return value;
-      }
-
-      // Otherwise try to parse and format it
-      const dt = DateTime.fromISO(value);
-      if (dt.isValid) {
-        return dt.toLocaleString(DateTime.DATETIME_MED);
-      }
-
-      // If ISO parsing fails, try JavaScript date parsing
-      const jsDate = new Date(value);
-      if (!isNaN(jsDate)) {
-        return DateTime.fromJSDate(jsDate).toLocaleString(
-          DateTime.DATETIME_MED,
-        );
-      }
-
-      return value; // Return as-is if all parsing fails
-    } catch (error) {
-      console.error("Date formatting error:", error, "Value:", value);
-      return value || "-";
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
     }
   };
 
-  // Format date helper - handles both ISO strings and already formatted dates
-  const formatDate = (value) => {
-    if (!value) return "-";
-
-    try {
-      // Check if it's the zero date (Go's time.Time{})
-      const zeroDate = new Date(value);
-      if (zeroDate.getFullYear() === 1 || zeroDate.getFullYear() < 1900) {
-        return "-";
-      }
-
-      // If it's already a formatted string from the API, return it
-      if (typeof value === "string" && value.includes(",")) {
-        return value;
-      }
-
-      // Otherwise try to parse and format it
-      const dt = DateTime.fromISO(value);
-      if (dt.isValid) {
-        return dt.toLocaleString(DateTime.DATE_MED);
-      }
-
-      // If ISO parsing fails, try JavaScript date parsing
-      const jsDate = new Date(value);
-      if (!isNaN(jsDate)) {
-        return DateTime.fromJSDate(jsDate).toLocaleString(DateTime.DATE_MED);
-      }
-
-      return value; // Return as-is if all parsing fails
-    } catch (error) {
-      console.error("Date formatting error:", error, "Value:", value);
-      return "-";
-    }
+  const handleRefresh = () => {
+    // Clear cache and reload
+    taskManager.clearTasksCache();
+    fetchTasks();
   };
 
-  // Format checkbox helper
-  const formatCheckbox = (value) => {
-    return value ? "✓ Yes" : "✗ No";
-  };
-
-  // Task URL formatter based on task type
-  const getTaskUpdateURL = (taskId, taskType) => {
-    // Map task types to their appropriate paths based on backend constants
-    switch (taskType) {
-      case 1: // TaskItemTypeAssignedAssociate
-        return `/admin/task/${taskId}/assign-associate/step-1`;
-      case 2: // TaskItemTypeFollowUpDidAssociateAndCustomerAgreedToMeet
-        return `/admin/task/${taskId}/follow-up`;
-      case 3: // TaskItemTypeFollowUpCustomerSurvey (DEPRECATED)
-        return `/admin/task/${taskId}/survey/step-1`;
-      case 4: // TaskItemTypeFollowUpDidAssociateAcceptJob
-        return `/admin/task/${taskId}/follow-up`;
-      case 5: // TaskItemTypeUpdateOngoingJob
-        return `/admin/task/${taskId}/order-completion/step-1`;
-      case 6: // TaskItemTypeFollowUpDidAssociateCompleteJob
-        return `/admin/task/${taskId}/order-completion/step-1`;
-      case 7: // TaskItemTypeFollowUpDidCustomerReviewAssociateAfterJob
-        return `/admin/task/${taskId}/survey/step-1`;
-      default:
-        return `/admin/task/${taskId}`;
-    }
-  };
-
-  // Effect for initial load and pagination
-  useEffect(() => {
-    let mounted = true;
-
-    if (mounted) {
-      // Clear any existing task cache to ensure fresh data
-      taskManager.clearTasksCache();
-
-      fetchList(currentCursor, pageSize, "", sortByValue, oid);
-
-      // If you loaded the page for the very first time
-      if (onPageLoaded === false) {
-        window.scrollTo(0, 0);
-        setOnPageLoaded(true);
-      }
-    }
-
-    return () => {
-      mounted = false;
+  const getTaskTypeLabel = (type) => {
+    const types = {
+      1: "Assign Associate",
+      2: "Follow Up",
+      3: "Complete Job",
+      4: "Survey",
+      5: "Review",
     };
-  }, [currentCursor, pageSize, sortByValue, oid]);
+    return types[type] || `Type ${type}`;
+  };
 
-  // Render component
-  return (
-    <div style={{ padding: "20px" }}>
-      {/* Breadcrumbs */}
-      <nav style={{ marginBottom: "20px" }}>
-        <div>
-          <Link to="/admin/dashboard">Dashboard</Link> &gt;{" "}
-          <Link to="/admin/orders">Orders</Link> &gt;{" "}
-          <span>Order #{oid} (Tasks)</span>
-        </div>
-      </nav>
+  const getTaskStatusLabel = (status) => {
+    const statuses = {
+      1: "Pending",
+      2: "In Progress",
+      3: "Completed",
+      4: "Cancelled",
+    };
+    return statuses[status] || `Status ${status}`;
+  };
 
-      {/* Page Title */}
-      <h1>Order</h1>
-      <h4>Detail</h4>
-      <hr />
+  const getStatusBadgeClass = (status) => {
+    switch (status) {
+      case 1:
+        return "bg-yellow-100 text-yellow-800";
+      case 2:
+        return "bg-blue-100 text-blue-800";
+      case 3:
+        return "bg-green-100 text-green-800";
+      case 4:
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
 
-      {/* Main Content Box */}
-      <div
-        style={{
-          border: "1px solid #ddd",
-          padding: "20px",
-          borderRadius: "8px",
-        }}
-      >
-        {/* Title */}
-        <div style={{ marginBottom: "20px" }}>
-          <h3>Tasks</h3>
-        </div>
-
-        {/* Tab Navigation */}
-        <div style={{ marginBottom: "20px", borderBottom: "1px solid #ddd" }}>
-          <div style={{ display: "flex", gap: "20px" }}>
-            <Link to={`/admin/order/${oid}`}>Summary</Link>
-            <Link to={`/admin/order/${oid}/full`}>Detail</Link>
-            <Link to={`/admin/order/${oid}/activity-sheets`}>
-              Activity Sheets
-            </Link>
-            <strong
-              style={{ borderBottom: "2px solid #000", paddingBottom: "10px" }}
-            >
-              Tasks
-            </strong>
-            <Link to={`/admin/order/${oid}/comments`}>Comments</Link>
-            <Link to={`/admin/order/${oid}/attachments`}>Attachments</Link>
-            <Link to={`/admin/order/${oid}/more`}>More</Link>
+  if (isLoading && tasks.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-center items-center h-64">
+            <div className="text-gray-500">Loading tasks...</div>
           </div>
         </div>
+      </div>
+    );
+  }
 
-        {/* Table Contents */}
-        {isFetching ? (
-          <Loading message="Loading..." />
-        ) : (
-          <>
-            {/* Error Display */}
-            {errors && Object.keys(errors).length > 0 && (
-              <Alert type="error">
-                {Object.entries(errors).map(([key, value]) => (
-                  <div key={key}>
-                    {key}: {value}
-                  </div>
-                ))}
-              </Alert>
-            )}
-
-            {/* Task List */}
-            {listData &&
-            listData.results &&
-            (listData.results.length > 0 || previousCursors.length > 0) ? (
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="py-6">
+            <div className="flex items-center justify-between">
               <div>
-                {listData.results.map(function (datum, i) {
-                  // Check if due date exists and is valid
-                  const hasDueDate =
-                    datum.dueDate &&
-                    new Date(datum.dueDate).getFullYear() > 1900;
-
-                  return (
-                    <table
-                      key={`task-${datum.id || i}`}
-                      style={{
-                        width: "100%",
-                        marginBottom: "20px",
-                        border: "1px solid #ddd",
-                      }}
-                    >
-                      <thead>
-                        <tr style={{ backgroundColor: "#000" }}>
-                          <th
-                            colSpan="2"
-                            style={{ color: "#fff", padding: "10px" }}
-                          >
-                            <div
-                              style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                alignItems: "center",
-                              }}
-                            >
-                              <span>
-                                Task at {formatDateTime(datum.createdAt)}
-                              </span>
-                              <Link
-                                target="_blank"
-                                rel="noreferrer"
-                                to={getTaskUpdateURL(datum.id, datum.type)}
-                                style={{
-                                  padding: "5px 10px",
-                                  backgroundColor: "#fff",
-                                  color: "#000",
-                                  textDecoration: "none",
-                                  borderRadius: "4px",
-                                }}
-                              >
-                                View →
-                              </Link>
-                            </div>
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <tr>
-                          <th
-                            style={{
-                              width: "30%",
-                              backgroundColor: "#f5f5f5",
-                              padding: "10px",
-                            }}
-                          >
-                            Staff
-                          </th>
-                          <td style={{ padding: "10px" }}>
-                            {datum.modifiedByUserName || "-"}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th
-                            style={{
-                              backgroundColor: "#f5f5f5",
-                              padding: "10px",
-                            }}
-                          >
-                            Title
-                          </th>
-                          <td style={{ padding: "10px" }}>
-                            {datum.title || "-"}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th
-                            style={{
-                              backgroundColor: "#f5f5f5",
-                              padding: "10px",
-                            }}
-                          >
-                            Description
-                          </th>
-                          <td style={{ padding: "10px" }}>
-                            {datum.description || "-"}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th
-                            style={{
-                              backgroundColor: "#f5f5f5",
-                              padding: "10px",
-                            }}
-                          >
-                            Due date
-                          </th>
-                          <td style={{ padding: "10px" }}>
-                            {formatDate(datum.dueDate)}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th
-                            style={{
-                              backgroundColor: "#f5f5f5",
-                              padding: "10px",
-                            }}
-                          >
-                            Is closed?
-                          </th>
-                          <td style={{ padding: "10px" }}>
-                            {formatCheckbox(datum.isClosed)}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th
-                            style={{
-                              backgroundColor: "#f5f5f5",
-                              padding: "10px",
-                            }}
-                          >
-                            Was postponed?
-                          </th>
-                          <td style={{ padding: "10px" }}>
-                            {formatCheckbox(datum.wasPostponed)}
-                          </td>
-                        </tr>
-                        <tr>
-                          <th
-                            style={{
-                              backgroundColor: "#f5f5f5",
-                              padding: "10px",
-                            }}
-                          >
-                            Closed reason
-                          </th>
-                          <td style={{ padding: "10px" }}>
-                            {datum.closingReason ===
-                            TASK_ITEM_CLOSE_REASON_OTHER
-                              ? datum.closingReasonOther || "-"
-                              : datum.closingReason
-                                ? TASK_ITEM_CLOSE_REASON_MAP[
-                                    datum.closingReason
-                                  ]
-                                : "-"}
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  );
-                })}
-
-                {/* Pagination */}
-                <div
-                  style={{ marginTop: "20px", display: "flex", gap: "10px" }}
+                <nav className="flex" aria-label="Breadcrumb">
+                  <ol className="flex items-center space-x-4">
+                    <li>
+                      <Link
+                        to="/admin/dashboard"
+                        className="text-gray-500 hover:text-gray-700"
+                      >
+                        Dashboard
+                      </Link>
+                    </li>
+                    <li>
+                      <span className="mx-2 text-gray-400">/</span>
+                      <Link
+                        to="/admin/orders"
+                        className="text-gray-500 hover:text-gray-700"
+                      >
+                        Orders
+                      </Link>
+                    </li>
+                    <li>
+                      <span className="mx-2 text-gray-400">/</span>
+                      <Link
+                        to={`/admin/order/${oid}`}
+                        className="text-gray-500 hover:text-gray-700"
+                      >
+                        Order #{oid}
+                      </Link>
+                    </li>
+                    <li>
+                      <span className="mx-2 text-gray-400">/</span>
+                      <span className="text-gray-900">Tasks</span>
+                    </li>
+                  </ol>
+                </nav>
+                <h1 className="mt-2 text-2xl font-bold text-gray-900">
+                  Order Tasks
+                </h1>
+                <p className="mt-1 text-sm text-gray-600">
+                  Manage tasks associated with Order #{oid}
+                </p>
+              </div>
+              <div className="flex space-x-3">
+                <button
+                  onClick={handleRefresh}
+                  disabled={isLoading}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50"
                 >
-                  {previousCursors.length > 0 && (
-                    <button onClick={onPreviousClicked}>← Previous</button>
-                  )}
-                  {listData.hasNextPage && (
-                    <button onClick={onNextClicked}>Next →</button>
-                  )}
-                </div>
+                  Refresh
+                </button>
+                <Link
+                  to={`/admin/order/${oid}`}
+                  className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+                >
+                  Back to Order
+                </Link>
               </div>
-            ) : (
-              <div
-                style={{
-                  padding: "40px",
-                  textAlign: "center",
-                  backgroundColor: "#f8f8f8",
-                }}
-              >
-                <h3>No Tasks</h3>
-                <p>No tasks yet.</p>
-              </div>
-            )}
-          </>
-        )}
+            </div>
+          </div>
+        </div>
+      </div>
 
-        {/* Bottom Navigation */}
-        <div
-          style={{
-            marginTop: "30px",
-            display: "flex",
-            justifyContent: "space-between",
-          }}
-        >
-          <Link to="/admin/orders">← Back to Orders</Link>
+      {/* Error Display */}
+      {errors.general && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            {errors.general}
+          </div>
+        </div>
+      )}
+
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-white shadow rounded-lg">
+          {/* Results Summary */}
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-gray-700">
+                Showing {tasks.length} of {totalCount} tasks for Order #{oid}
+              </p>
+            </div>
+          </div>
+
+          {/* Tasks Table */}
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Task ID
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Type
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Title
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Due Date
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Created
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {tasks.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan="7"
+                      className="px-6 py-12 text-center text-gray-500"
+                    >
+                      No tasks found for this order
+                    </td>
+                  </tr>
+                ) : (
+                  tasks.map((task) => (
+                    <tr key={task.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                        #{task.wjid || task.id}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {getTaskTypeLabel(task.type)}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-900">
+                        <div className="max-w-xs truncate">
+                          {task.title || task.description || "No title"}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusBadgeClass(task.status)}`}
+                        >
+                          {getTaskStatusLabel(task.status)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {task.dueDate || "-"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        {task.createdAt}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <div className="flex justify-end space-x-2">
+                          {task.status === 1 && task.type === 1 && (
+                            <Link
+                              to={`/admin/task/${task.id}/assign-associate/step-1`}
+                              className="text-indigo-600 hover:text-indigo-900"
+                            >
+                              Assign
+                            </Link>
+                          )}
+                          {task.status === 1 && task.type === 3 && (
+                            <Link
+                              to={`/admin/task/${task.id}/order-completion/step-1`}
+                              className="text-indigo-600 hover:text-indigo-900"
+                            >
+                              Complete
+                            </Link>
+                          )}
+                          {task.status === 1 && task.type === 4 && (
+                            <Link
+                              to={`/admin/task/${task.id}/survey/step-1`}
+                              className="text-indigo-600 hover:text-indigo-900"
+                            >
+                              Survey
+                            </Link>
+                          )}
+                          {task.status === 1 && (
+                            <>
+                              <Link
+                                to={`/admin/task/${task.id}/postpone`}
+                                className="text-yellow-600 hover:text-yellow-900"
+                              >
+                                Postpone
+                              </Link>
+                              <Link
+                                to={`/admin/task/${task.id}/close`}
+                                className="text-red-600 hover:text-red-900"
+                              >
+                                Close
+                              </Link>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="px-6 py-4 border-t border-gray-200">
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className={`px-3 py-2 text-sm font-medium rounded-md ${
+                    currentPage === 1
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
+                  }`}
+                >
+                  Previous
+                </button>
+
+                <div className="flex space-x-1">
+                  {[...Array(totalPages)].map((_, index) => {
+                    const page = index + 1;
+                    if (
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= currentPage - 1 && page <= currentPage + 1)
+                    ) {
+                      return (
+                        <button
+                          key={page}
+                          onClick={() => handlePageChange(page)}
+                          className={`px-3 py-2 text-sm font-medium rounded-md ${
+                            page === currentPage
+                              ? "bg-indigo-600 text-white"
+                              : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      );
+                    } else if (
+                      page === currentPage - 2 ||
+                      page === currentPage + 2
+                    ) {
+                      return (
+                        <span key={page} className="px-2 py-2 text-gray-500">
+                          ...
+                        </span>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
+
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className={`px-3 py-2 text-sm font-medium rounded-md ${
+                    currentPage === totalPages
+                      ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                      : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-300"
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-export default AdminOrderDetailTaskListPage;
+export default AdminOrderDetailMoreTaskListPage;

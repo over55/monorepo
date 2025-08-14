@@ -972,6 +972,37 @@ export class TaskManager {
       validatedParams.type = params.type;
     }
 
+    // FIX: Add order_wjid parameter validation
+    if (
+      params.order_wjid !== undefined &&
+      params.order_wjid !== null &&
+      params.order_wjid !== ""
+    ) {
+      validatedParams.order_wjid = String(params.order_wjid);
+    }
+
+    // FIX: Also allow any other custom filters that might be needed
+    // This ensures we don't accidentally filter out important parameters
+    const allowedCustomParams = [
+      "order_wjid",
+      "order_id",
+      "customer_id",
+      "associate_id",
+      "assigned_associate_id",
+      "is_closed",
+      "is_archived",
+    ];
+
+    allowedCustomParams.forEach((paramKey) => {
+      if (
+        params[paramKey] !== undefined &&
+        params[paramKey] !== null &&
+        params[paramKey] !== ""
+      ) {
+        validatedParams[paramKey] = String(params[paramKey]);
+      }
+    });
+
     return validatedParams;
   }
 
