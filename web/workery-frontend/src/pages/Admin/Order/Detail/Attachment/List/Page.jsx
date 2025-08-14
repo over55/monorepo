@@ -57,21 +57,28 @@ function AdminOrderDetailAttachmentListPage() {
   //// Event handling.
   ////
 
-  const fetchAttachmentList = async (cur, limit, orderId) => {
+  const fetchAttachmentList = async (
+    cur,
+    limit,
+    orderId,
+    forceRefresh = false,
+  ) => {
     setFetching(true);
     setErrors({});
 
     try {
-      // Use order_wjid for filtering instead of entityId
+      // Use order_wjid for filtering
       const params = {
-        orderWjid: orderId, // Use the specific order_wjid parameter
+        orderWjid: orderId,
         limit: limit,
         cursor: cur || undefined,
       };
 
+      // IMPORTANT: Pass forceRefresh parameter to bypass cache
       const response = await attachmentManager.getAttachments(
         params,
         onUnauthorized,
+        forceRefresh, // Force refresh to bypass cache
       );
 
       setAttachments(response);
@@ -142,8 +149,8 @@ function AdminOrderDetailAttachmentListPage() {
         setAlertType("");
       }, 3000);
 
-      // Refresh the list
-      fetchAttachmentList(currentCursor, pageSize, oid);
+      // Refresh the list with force refresh
+      fetchAttachmentList(currentCursor, pageSize, oid, true);
     } catch (error) {
       console.error("Failed to delete attachment:", error);
       setErrors(error);
@@ -171,9 +178,18 @@ function AdminOrderDetailAttachmentListPage() {
 
     if (oid) {
       fetchOrderDetail(oid);
-      fetchAttachmentList(currentCursor, pageSize, oid);
+      // IMPORTANT: Force refresh on initial load to bypass stale cache
+      fetchAttachmentList(currentCursor, pageSize, oid, true);
     }
-  }, [currentCursor, pageSize, oid]);
+  }, [oid]); // Only depend on oid, not currentCursor or pageSize
+
+  // Separate effect for pagination changes
+  useEffect(() => {
+    if (oid && currentCursor !== "") {
+      // Don't force refresh for pagination, use cache if available
+      fetchAttachmentList(currentCursor, pageSize, oid, false);
+    }
+  }, [currentCursor, pageSize]);
 
   ////
   //// Render helpers.
