@@ -46,7 +46,7 @@ function AdminOrderAddStep1PartBPage() {
   // Filter states
   const [status, setStatus] = useState("");
   const [typeOf, setTypeOf] = useState(0);
-  const [sortByValue, setSortByValue] = useState("last_name,ASC");
+  const [sortByValue, setSortByValue] = useState("lexical_name,ASC");
 
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");

@@ -17,7 +17,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	f := &c_s.CustomerPaginationListFilter{
 		Cursor:    "",
 		PageSize:  25,
-		SortField: "last_name",
+		SortField: "lexical_name",
 		SortOrder: c_s.OrderAscending,
 	}
 
@@ -78,7 +78,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	if firstName != "" {
 		f.FirstName = firstName
 	}
-	lastName := query.Get("last_name")
+	lastName := query.Get("lexical_name")
 	if lastName != "" {
 		f.LastName = lastName
 	}
