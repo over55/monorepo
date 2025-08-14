@@ -516,10 +516,17 @@ export class OrderManager {
   /**
    * Unassigns an associate from an order
    * @param {string|number} orderId - The ID of the order
+   * @param {number} reason - The reason code for unassignment
+   * @param {string} reasonOther - Other reason text if reason is 1
    * @param {Function} onUnauthorizedCallback - Called when authentication fails
    * @returns {Promise<Object>} - Unassignment response
    */
-  async unassignAssociateFromOrder(orderId, onUnauthorizedCallback = null) {
+  async unassignAssociateFromOrder(
+    orderId,
+    reason,
+    reasonOther,
+    onUnauthorizedCallback = null,
+  ) {
     try {
       // Validate order ID
       const validationError = this._validateOrderId(orderId);
@@ -527,12 +534,31 @@ export class OrderManager {
         throw validationError;
       }
 
-      console.log(`OrderManager: Unassigning associate from order ${orderId}`);
+      // Validate reason
+      if (!reason || typeof reason !== "number") {
+        throw {
+          reason: "Reason is required",
+        };
+      }
+
+      // Validate reasonOther if reason is 1
+      if (reason === 1 && (!reasonOther || !reasonOther.trim())) {
+        throw {
+          reasonOther:
+            "Reason description is required when 'Other' is selected",
+        };
+      }
+
+      console.log(
+        `OrderManager: Unassigning associate from order ${orderId} with reason ${reason}`,
+      );
 
       // Call API to unassign associate
       const unassignmentResponse =
         await this.orderAPI.unassignAssociateFromOrder(
           orderId,
+          reason,
+          reasonOther,
           onUnauthorizedCallback,
         );
 
