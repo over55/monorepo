@@ -32,3 +32,26 @@ export const ORDER_POSTPONE_REASON_OPTIONS_WITH_EMPTY_OPTION = [
   { value: 0, label: "Please select" },
   ...ORDER_POSTPONE_REASON_OPTIONS,
 ];
+
+/**
+ * Order/Task Close Reason Options
+ */
+export const TASK_ITEM_CLOSE_REASON_OPTIONS = [
+  { value: 1, label: "Other (please specify)" },
+  { value: 2, label: "Customer cancelled" },
+  { value: 3, label: "Associate cancelled" },
+  { value: 4, label: "Job not completed satisfactorily" },
+  { value: 5, label: "Job completed by someone else" },
+  { value: 6, label: "Work no longer needed" },
+  { value: 7, label: "Customer did not return call" },
+  { value: 8, label: "Associate did not have necessary equipment" },
+  { value: 9, label: "Associate did not have necessary skills" },
+  { value: 10, label: "Associate refused to do job" },
+  { value: 11, label: "Unable to agree on a price" },
+  { value: 12, label: "Associate was terminated" },
+];
+
+export const TASK_ITEM_CLOSE_REASON_OPTIONS_WITH_EMPTY_OPTION = [
+  { value: 0, label: "Please select" },
+  ...TASK_ITEM_CLOSE_REASON_OPTIONS,
+];
