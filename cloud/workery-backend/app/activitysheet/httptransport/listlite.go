@@ -16,8 +16,8 @@ func (h *Handler) LiteList(w http.ResponseWriter, r *http.Request) {
 	f := &as_s.ActivitySheetPaginationListFilter{
 		Cursor:    "",
 		PageSize:  25,
-		SortField: "_id",
-		SortOrder: as_s.SortOrderAscending,
+		SortField: "created_at",
+		SortOrder: as_s.SortOrderDescending, // Descending to show newest first
 	}
 
 	// Here is where you extract url parameters.

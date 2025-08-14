@@ -158,11 +158,17 @@ func (impl ActivitySheetStorerImpl) newPaginationOptions(f *ActivitySheetPaginat
 	// We want to be able to return a list without sorting so we will need to
 	// run the following code.
 	if f.SortField != "" {
-		options = options.
-			SetSort(bson.D{
-				{f.SortField, f.SortOrder},
-				{"_id", f.SortOrder}, // Include _id in sorting for consistency
-			})
+		if f.SortField == "_id" {
+			// If sorting by _id, don't add it twice
+			options = options.SetSort(bson.D{{f.SortField, f.SortOrder}})
+		} else {
+			// For other fields, include _id for consistency
+			options = options.
+				SetSort(bson.D{
+					{f.SortField, f.SortOrder},
+					{"_id", f.SortOrder}, // Include _id in sorting for consistency
+				})
+		}
 	}
 
 	return options, nil

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 
 	o_s "github.com/over55/monorepo/cloud/workery-backend/app/order/datastore"
 	"github.com/over55/monorepo/cloud/workery-backend/utils/httperror"
@@ -49,16 +50,33 @@ func (h *Handler) LiteList(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// Handle sort_by parameter which comes as "field,order" (e.g., "created_at,DESC")
+	sortBy := query.Get("sort_by")
+	if sortBy != "" {
+		parts := strings.Split(sortBy, ",")
+		if len(parts) == 2 {
+			f.SortField = strings.TrimSpace(parts[0])
+			orderStr := strings.ToUpper(strings.TrimSpace(parts[1]))
+			if orderStr == "ASC" {
+				f.SortOrder = o_s.SortOrderAscending
+			} else if orderStr == "DESC" {
+				f.SortOrder = o_s.SortOrderDescending
+			}
+		}
+	}
+
+	// Legacy sort parameters (for backward compatibility)
 	sortField := query.Get("sort_field")
-	if sortField != "" {
+	if sortField != "" && sortBy == "" { // Only use if sort_by wasn't provided
 		f.SortField = sortField
 	}
 	sortOrder := query.Get("sort_order")
-	if sortOrder == "ASC" {
-		f.SortOrder = 1
-	}
-	if sortOrder == "DESC" {
-		f.SortOrder = -1
+	if sortOrder != "" && sortBy == "" { // Only use if sort_by wasn't provided
+		if sortOrder == "ASC" {
+			f.SortOrder = o_s.SortOrderAscending
+		} else if sortOrder == "DESC" {
+			f.SortOrder = o_s.SortOrderDescending
+		}
 	}
 
 	typeOfStr := query.Get("type")

@@ -1,9 +1,9 @@
 // File Path: web/workery-frontend/src/pages/Admin/Order/Detail/ActivitySheet/List/Page.jsx
 
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import {
-  // useDashboardManager,
+  useActivitySheetManager,
   useAuthManager,
 } from "../../../../../../services/Services";
 import { theme, globalStyles } from "../../../../../../constants/Theme";
@@ -13,73 +13,472 @@ import {
   Alert,
   Loading,
   Breadcrumb,
-  Modal,
-  Input,
-  TextArea,
+  Table,
   Select,
 } from "../../../../../../components/UI";
 
+// Constants
+const ACTIVITY_SHEET_STATUS_MAP = {
+  1: "Pending",
+  2: "Active",
+  3: "Completed",
+  4: "Archived",
+};
+
+const PAGE_SIZE_OPTIONS = [
+  { value: 10, label: "10" },
+  { value: 25, label: "25" },
+  { value: 50, label: "50" },
+  { value: 100, label: "100" },
+];
+
+const DEFAULT_ACTIVITY_SHEET_LIST_SORT_BY_VALUE = "created_at,DESC";
+
 function AdminOrderDetailActivitySheetListPage() {
-  // const dashboardManager = useDashboardManager();
+  // URL Parameters
+  const { oid } = useParams();
+
+  // Services
+  const activitySheetManager = useActivitySheetManager();
   const authManager = useAuthManager();
   const navigate = useNavigate();
 
+  // Component states
+  const [onPageLoaded, setOnPageLoaded] = useState(false);
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
-  // const [dashboard, setDashboard] = useState({});
+  const [activitySheets, setActivitySheets] = useState(null);
+  const [pageSize, setPageSize] = useState(50);
+  const [previousCursors, setPreviousCursors] = useState([]);
+  const [nextCursor, setNextCursor] = useState("");
+  const [currentCursor, setCurrentCursor] = useState("");
+  const [sortByValue, setSortByValue] = useState(
+    DEFAULT_ACTIVITY_SHEET_LIST_SORT_BY_VALUE,
+  );
 
-  // Modal states
-  // const [showBulletinModal, setShowBulletinModal] = useState(false);
+  // Handle unauthorized access
+  const onUnauthorized = () => {
+    navigate("/login?unauthorized=true");
+  };
 
-  // const onUnauthorized = () => {
-  //   navigate("/login?unauthorized=true");
-  // };
+  // Fetch activity sheets list
+  const fetchList = async (cursor, limit, keywords, sortBy, orderId) => {
+    setFetching(true);
+    setErrors({});
 
-  // const fetchDashboard = async () => {
-  //   setFetching(true);
-  //   setErrors({});
+    try {
+      console.log(
+        "fetchList | cursor=" +
+          cursor +
+          ", limit=" +
+          limit +
+          ", keywords=" +
+          keywords +
+          ", sortBy=" +
+          sortBy +
+          ", orderId=" +
+          orderId,
+      );
 
-  //   try {
-  //     const dashboardData = await dashboardManager.getDashboard(onUnauthorized);
-  //     setDashboard(dashboardData);
-  //     console.log("AdminDashboard: Dashboard data loaded successfully");
-  //   } catch (error) {
-  //     console.error("AdminDashboard: Failed to fetch dashboard:", error);
-  //     setErrors({ fetch: error.message || "Failed to load dashboard data" });
-  //     window.scrollTo(0, 0);
-  //   } finally {
-  //     setFetching(false);
-  //   }
-  // };
+      // Build parameters object
+      const params = {
+        limit: limit,
+        search: keywords || "",
+      };
 
+      // Add cursor if present
+      if (cursor && cursor !== "") {
+        params.cursor = cursor;
+      }
+
+      // Parse and add sorting
+      if (sortBy) {
+        const sortArray = sortBy.split(",");
+        if (sortArray.length === 2) {
+          params.sort_field = sortArray[0];
+          params.sort_order = sortArray[1];
+        }
+      }
+
+      // Add order filter
+      if (orderId) {
+        params.order_wjid = orderId;
+      }
+
+      // Fetch data using the manager
+      const response = await activitySheetManager.getActivitySheets(
+        params,
+        onUnauthorized,
+        true, // Force refresh
+      );
+
+      console.log("Activity sheets response:", response);
+
+      // Update state with response
+      if (response) {
+        setActivitySheets(response);
+
+        // Handle pagination
+        if (response.hasNextPage) {
+          setNextCursor(response.nextCursor);
+        } else {
+          setNextCursor("");
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch activity sheets:", error);
+      setErrors(error);
+
+      // Scroll to top to show error
+      window.scrollTo(0, 0);
+    } finally {
+      setFetching(false);
+    }
+  };
+
+  // Pagination handlers
+  const onNextClicked = () => {
+    let arr = [...previousCursors];
+    arr.push(currentCursor);
+    setPreviousCursors(arr);
+    setCurrentCursor(nextCursor);
+  };
+
+  const onPreviousClicked = () => {
+    let arr = [...previousCursors];
+    const previousCursor = arr.pop();
+    setPreviousCursors(arr);
+    setCurrentCursor(previousCursor || "");
+  };
+
+  // Initial load and refresh when dependencies change
   useEffect(() => {
     let mounted = true;
 
     if (mounted) {
-      window.scrollTo(0, 0);
-
       if (!authManager.isAuthenticated()) {
         navigate("/login?unauthorized=true");
         return;
       }
 
-      // fetchDashboard();
+      fetchList(currentCursor, pageSize, "", sortByValue, oid);
+
+      // Scroll to top on first load
+      if (onPageLoaded === false) {
+        window.scrollTo(0, 0);
+        setOnPageLoaded(true);
+      }
     }
 
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [currentCursor, pageSize, sortByValue, oid]);
 
-  if (isFetching) {
-    return <Loading message="Loading ..." />;
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return "-";
+    // The date is already formatted by the API/Manager
+    return dateString;
+  };
+
+  // Breadcrumb items
+  const breadcrumbItems = [
+    { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
+    { label: "Orders", path: "/admin/orders", icon: "🔧" },
+    { label: `Order #${oid}`, path: `/admin/order/${oid}`, icon: "📋" },
+    { label: "Activity Sheets", icon: "📄" },
+  ];
+
+  // Render loading state
+  if (isFetching && !activitySheets) {
+    return (
+      <div style={globalStyles.container}>
+        <Loading message="Loading activity sheets..." />
+      </div>
+    );
   }
 
-  const styles = {};
-
+  // Main render
   return (
     <div style={globalStyles.container}>
-      <h1>Welcome to AdminOrderDetailActivitySheetListPage</h1>
+      {/* Breadcrumb */}
+      <Breadcrumb items={breadcrumbItems} />
+
+      {/* Page Title */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "20px",
+        }}
+      >
+        <div>
+          <h1 style={{ margin: 0 }}>🔧 Order</h1>
+          <h4 style={{ margin: "5px 0 0 0", color: theme.colors.secondary }}>
+            ℹ️ Detail
+          </h4>
+        </div>
+      </div>
+
+      <hr />
+
+      {/* Main Content Card */}
+      <Card>
+        {/* Title */}
+        <div style={{ marginBottom: "20px" }}>
+          <h3 style={{ margin: 0 }}>📄 Activity Sheets</h3>
+        </div>
+
+        {/* Tab Navigation */}
+        <div
+          style={{
+            borderBottom: "2px solid #e0e0e0",
+            marginBottom: "30px",
+            display: "flex",
+            gap: "20px",
+            flexWrap: "wrap",
+          }}
+        >
+          <Link
+            to={`/admin/order/${oid}`}
+            style={{
+              padding: "10px 0",
+              textDecoration: "none",
+              color: theme.colors.secondary,
+            }}
+          >
+            Summary
+          </Link>
+          <Link
+            to={`/admin/order/${oid}/full`}
+            style={{
+              padding: "10px 0",
+              textDecoration: "none",
+              color: theme.colors.secondary,
+            }}
+          >
+            Detail
+          </Link>
+          <div
+            style={{
+              padding: "10px 0",
+              borderBottom: "3px solid " + theme.colors.primary,
+              fontWeight: "bold",
+            }}
+          >
+            Activity Sheets
+          </div>
+          <Link
+            to={`/admin/order/${oid}/tasks`}
+            style={{
+              padding: "10px 0",
+              textDecoration: "none",
+              color: theme.colors.secondary,
+            }}
+          >
+            Tasks
+          </Link>
+          <Link
+            to={`/admin/order/${oid}/comments`}
+            style={{
+              padding: "10px 0",
+              textDecoration: "none",
+              color: theme.colors.secondary,
+            }}
+          >
+            Comments
+          </Link>
+          <Link
+            to={`/admin/order/${oid}/attachments`}
+            style={{
+              padding: "10px 0",
+              textDecoration: "none",
+              color: theme.colors.secondary,
+            }}
+          >
+            Attachments
+          </Link>
+          <Link
+            to={`/admin/order/${oid}/more`}
+            style={{
+              padding: "10px 0",
+              textDecoration: "none",
+              color: theme.colors.secondary,
+            }}
+          >
+            More ⋯
+          </Link>
+        </div>
+
+        {/* Error Display */}
+        {errors && Object.keys(errors).length > 0 && (
+          <Alert type="error" onClose={() => setErrors({})}>
+            {typeof errors === "string"
+              ? errors
+              : "Failed to load activity sheets"}
+          </Alert>
+        )}
+
+        {/* Content */}
+        {isFetching ? (
+          <Loading message="Loading..." />
+        ) : (
+          <>
+            {activitySheets &&
+            activitySheets.results &&
+            (activitySheets.results.length > 0 ||
+              previousCursors.length > 0) ? (
+              <div>
+                {/* Desktop Table View */}
+                <div style={{ display: "block" }}>
+                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                    <thead>
+                      <tr style={{ backgroundColor: "#f8f9fa" }}>
+                        <th
+                          style={{
+                            padding: "12px",
+                            textAlign: "left",
+                            borderBottom: "2px solid #dee2e6",
+                            fontWeight: "600",
+                          }}
+                        >
+                          Associate
+                        </th>
+                        <th
+                          style={{
+                            padding: "12px",
+                            textAlign: "left",
+                            borderBottom: "2px solid #dee2e6",
+                            fontWeight: "600",
+                          }}
+                        >
+                          Created At
+                        </th>
+                        <th
+                          style={{
+                            padding: "12px",
+                            textAlign: "left",
+                            borderBottom: "2px solid #dee2e6",
+                            fontWeight: "600",
+                          }}
+                        >
+                          Status
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {activitySheets.results.map((datum, index) => (
+                        <tr key={datum.id || index}>
+                          <td
+                            style={{
+                              padding: "12px",
+                              borderBottom: "1px solid #dee2e6",
+                            }}
+                          >
+                            {datum.associateName ? (
+                              <Link
+                                to={`/admin/associate/${datum.associateId}`}
+                                style={{
+                                  color: theme.colors.primary,
+                                  textDecoration: "none",
+                                }}
+                              >
+                                {datum.associateName} 🔗
+                              </Link>
+                            ) : (
+                              "-"
+                            )}
+                          </td>
+                          <td
+                            style={{
+                              padding: "12px",
+                              borderBottom: "1px solid #dee2e6",
+                            }}
+                          >
+                            {formatDate(datum.createdAt)}
+                          </td>
+                          <td
+                            style={{
+                              padding: "12px",
+                              borderBottom: "1px solid #dee2e6",
+                            }}
+                          >
+                            {ACTIVITY_SHEET_STATUS_MAP[datum.status] ||
+                              "Unknown"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+
+                  {/* Pagination Controls */}
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginTop: "20px",
+                    }}
+                  >
+                    <div>
+                      <Select
+                        value={pageSize}
+                        onChange={(e) => setPageSize(parseInt(e.target.value))}
+                        options={PAGE_SIZE_OPTIONS}
+                      />
+                    </div>
+                    <div style={{ display: "flex", gap: "10px" }}>
+                      {previousCursors.length > 0 && (
+                        <Button onClick={onPreviousClicked} variant="info">
+                          Previous
+                        </Button>
+                      )}
+                      {activitySheets.hasNextPage && (
+                        <Button onClick={onNextClicked} variant="info">
+                          Next
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div
+                style={{
+                  padding: "60px 20px",
+                  textAlign: "center",
+                  backgroundColor: "#f8f9fa",
+                  borderRadius: "8px",
+                }}
+              >
+                <div style={{ fontSize: "48px", marginBottom: "20px" }}>📄</div>
+                <h3>No Activity Sheets</h3>
+                <p style={{ color: theme.colors.secondary }}>
+                  No activity sheets yet for this order.
+                </p>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Footer Actions */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginTop: "30px",
+            paddingTop: "20px",
+            borderTop: "1px solid #e0e0e0",
+          }}
+        >
+          <Link to="/admin/orders">
+            <Button variant="outline">← Back to Orders</Button>
+          </Link>
+        </div>
+      </Card>
     </div>
   );
 }

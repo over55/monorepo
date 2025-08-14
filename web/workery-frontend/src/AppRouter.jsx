@@ -1636,7 +1636,7 @@ function AppRouter() {
               path="/admin/order/:oid/activity-sheets"
               element={
                 <Layout>
-                  <PlaceholderPage title="Order Activity Sheets" />
+                  <AdminOrderDetailActivitySheetListPage />
                 </Layout>
               }
             />
