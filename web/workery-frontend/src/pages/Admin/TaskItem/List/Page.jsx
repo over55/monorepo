@@ -32,8 +32,10 @@ const TASK_ITEM_SORT_OPTIONS = [
   { value: "due_date,ASC", label: "Due Date (Oldest → Newest)" },
   { value: "created_at,DESC", label: "Created (Newest → Oldest)" },
   { value: "created_at,ASC", label: "Created (Oldest → Newest)" },
-  { value: "title,ASC", label: "Title (A → Z)" },
-  { value: "title,DESC", label: "Title (Z → A)" },
+  { value: "customer_lexical_name,ASC", label: "Customer Name (A → Z)" },
+  { value: "customer_lexical_name,DESC", label: "Customer Name (Z → A)" },
+  { value: "associate_lexical_name,ASC", label: "Associate Name (A → Z)" },
+  { value: "associate_lexical_name,DESC", label: "Associate Name (Z → A)" },
 ];
 
 const TASK_ITEM_TYPE_FILTER_OPTIONS = [
@@ -67,16 +69,18 @@ function AdminTaskItemListPage() {
 
   // Filter and sort state
   const [type, setType] = useState(0);
-  const [isClosed, setIsClosed] = useState(2); // 0=all, 1=true, 2=false
+  const [isClosed, setIsClosed] = useState(2); // 0=all, 1=true, 2=false (default to show only open tasks)
   const [sortByValue, setSortByValue] = useState(DEFAULT_SORT_BY_VALUE);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [listViewType, setListViewType] = useState(LIST_VIEW_TYPE_TABULAR);
   const [showAllFilters, setShowAllFilters] = useState(false);
 
-  // Pagination state
+  // Cursor-based pagination state (FIXED)
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [currentCursor, setCurrentCursor] = useState("");
+  const [previousCursors, setPreviousCursors] = useState([]);
+  const [nextCursor, setNextCursor] = useState("");
+  const [hasNextPage, setHasNextPage] = useState(false);
 
   // Modal state
   const [selectedTaskForDeletion, setSelectedTaskForDeletion] = useState(null);
@@ -84,6 +88,9 @@ function AdminTaskItemListPage() {
 
   // Background refresh interval
   const refreshIntervalRef = useRef(null);
+
+  // Track if initial load is complete
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   // Authorization callback
   const onUnauthorized = () => {
@@ -110,41 +117,56 @@ function AdminTaskItemListPage() {
     }
   }, []);
 
-  // Fetch tasks list
-  const fetchTasks = async () => {
+  // Fetch tasks list (FIXED)
+  const fetchTasks = async (cursor = "") => {
     setIsLoading(true);
     setErrors({});
 
     try {
-      // Build params
+      // Build params for cursor-based pagination
       const [sortField, sortOrder] = sortByValue.split(",");
       const params = {
-        page: currentPage,
-        limit: pageSize,
-        sortBy: sortField,
-        sortOrder: sortOrder,
+        page_size: pageSize.toString(),
+        sort_field: sortField,
+        sort_order: sortOrder,
       };
+
+      // Add cursor if provided (for pagination)
+      if (cursor) {
+        params.cursor = cursor;
+      }
 
       // Add filters
       if (searchKeyword && searchKeyword.trim()) {
         params.search = searchKeyword.trim();
       }
       if (type !== 0) {
-        params.type = type;
+        params.type = type.toString();
       }
-      if (isClosed !== 0) {
-        params.is_closed = isClosed === 1 ? "true" : "false";
-      }
+      // Always set is_closed filter (2 = false = show only open tasks)
+      params.is_closed = isClosed.toString();
 
-      // Fetch tasks
-      const response = await taskManager.getTasks(params, onUnauthorized);
+      console.log("Fetching tasks with params:", params);
+
+      // Make API call through task manager
+      const response = await taskManager.getTasks(params, onUnauthorized, true); // Force refresh
+
+      console.log("Tasks response:", response);
 
       if (response) {
         setTasks(response);
 
-        // Calculate total pages
-        if (response.count && pageSize > 0) {
-          setTotalPages(Math.ceil(response.count / pageSize));
+        // Update pagination state
+        if (response.hasNextPage !== undefined) {
+          setHasNextPage(response.hasNextPage);
+        }
+        if (response.nextCursor !== undefined) {
+          setNextCursor(response.nextCursor);
+        }
+
+        // Set task count if available
+        if (response.count !== undefined) {
+          setTaskCount(response.count);
         }
       }
     } catch (error) {
@@ -152,23 +174,27 @@ function AdminTaskItemListPage() {
       setErrors(error);
     } finally {
       setIsLoading(false);
+      setInitialLoadComplete(true);
     }
   };
 
-  // Fetch task count
+  // Fetch task count (separate API call for better performance)
   const fetchTaskCount = async () => {
     try {
       const params = {};
 
       // Add same filters as task list for accurate count
       if (type !== 0) {
-        params.type = type;
+        params.type = type.toString();
       }
-      if (isClosed !== 0) {
-        params.is_closed = isClosed === 1 ? "true" : "false";
-      }
+      // Always filter by is_closed status
+      params.is_closed = isClosed.toString();
 
-      const response = await taskManager.getTaskCount(params, onUnauthorized);
+      const response = await taskManager.getTaskCount(
+        params,
+        onUnauthorized,
+        true,
+      );
 
       if (response && response.count !== undefined) {
         setTaskCount(response.count);
@@ -178,12 +204,12 @@ function AdminTaskItemListPage() {
     }
   };
 
-  // Effect to fetch tasks when filters change
+  // Effect to fetch tasks when filters change or pagination changes
   useEffect(() => {
     if (currentUser) {
-      fetchTasks();
+      fetchTasks(currentCursor);
     }
-  }, [currentPage, pageSize, sortByValue, type, isClosed, currentUser]);
+  }, [currentCursor, pageSize, sortByValue, type, isClosed, currentUser]);
 
   // Effect for background refresh of task count
   useEffect(() => {
@@ -207,23 +233,56 @@ function AdminTaskItemListPage() {
 
   // Event handlers
   const handleSearch = () => {
-    setCurrentPage(1); // Reset to first page
-    fetchTasks();
+    // Reset pagination when searching
+    setCurrentCursor("");
+    setPreviousCursors([]);
+    setNextCursor("");
+    fetchTasks("");
   };
 
   const handleClearFilters = () => {
     setType(0);
-    setIsClosed(2);
+    setIsClosed(2); // Reset to show only open tasks
     setSortByValue(DEFAULT_SORT_BY_VALUE);
     setSearchKeyword("");
     setShowAllFilters(false);
-    setCurrentPage(1);
+    // Reset pagination
+    setCurrentCursor("");
+    setPreviousCursors([]);
+    setNextCursor("");
   };
 
-  const handlePageChange = (newPage) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-      setCurrentPage(newPage);
+  // Pagination handlers (FIXED)
+  const handleNextPage = () => {
+    if (hasNextPage && nextCursor) {
+      // Save current cursor to previous stack
+      const newPreviousCursors = [...previousCursors];
+      if (currentCursor) {
+        newPreviousCursors.push(currentCursor);
+      }
+      setPreviousCursors(newPreviousCursors);
+
+      // Move to next page
+      setCurrentCursor(nextCursor);
     }
+  };
+
+  const handlePreviousPage = () => {
+    if (previousCursors.length > 0) {
+      const newPreviousCursors = [...previousCursors];
+      const prevCursor = newPreviousCursors.pop();
+
+      setPreviousCursors(newPreviousCursors);
+      setCurrentCursor(prevCursor || "");
+    }
+  };
+
+  const handlePageSizeChange = (newPageSize) => {
+    setPageSize(newPageSize);
+    // Reset pagination when page size changes
+    setCurrentCursor("");
+    setPreviousCursors([]);
+    setNextCursor("");
   };
 
   const handleDeleteClick = (task) => {
@@ -238,7 +297,7 @@ function AdminTaskItemListPage() {
       await taskManager.deleteTask(selectedTaskForDeletion.id, onUnauthorized);
 
       // Refresh list
-      fetchTasks();
+      fetchTasks(currentCursor);
       fetchTaskCount();
 
       // Close modal
@@ -278,7 +337,11 @@ function AdminTaskItemListPage() {
   // Render grid view
   const renderGridView = () => {
     if (!tasks || !tasks.results || tasks.results.length === 0) {
-      return <p>No tasks found.</p>;
+      return (
+        <div style={{ textAlign: "center", padding: "40px" }}>
+          <p>No open tasks found.</p>
+        </div>
+      );
     }
 
     return (
@@ -345,7 +408,11 @@ function AdminTaskItemListPage() {
   // Render tabular view
   const renderTabularView = () => {
     if (!tasks || !tasks.results || tasks.results.length === 0) {
-      return <p>No tasks found.</p>;
+      return (
+        <div style={{ textAlign: "center", padding: "40px" }}>
+          <p>No open tasks found.</p>
+        </div>
+      );
     }
 
     const columns = [
@@ -406,7 +473,15 @@ function AdminTaskItemListPage() {
         ]}
       />
 
-      <h1>Tasks {taskCount > 0 && `(${taskCount})`}</h1>
+      <h1>
+        Tasks{" "}
+        {taskCount > 0 && (
+          <span style={{ fontSize: "0.8em", color: "#666" }}>
+            ({taskCount}{" "}
+            {isClosed === 2 ? "open" : isClosed === 1 ? "closed" : "total"})
+          </span>
+        )}
+      </h1>
 
       {errors && errors.message && (
         <Alert type="error" onClose={() => setErrors({})}>
@@ -454,7 +529,13 @@ function AdminTaskItemListPage() {
             <Select
               label="Sort by"
               value={sortByValue}
-              onChange={(e) => setSortByValue(e.target.value)}
+              onChange={(e) => {
+                setSortByValue(e.target.value);
+                // Reset pagination when sort changes
+                setCurrentCursor("");
+                setPreviousCursors([]);
+                setNextCursor("");
+              }}
               options={TASK_ITEM_SORT_OPTIONS}
             />
 
@@ -520,7 +601,13 @@ function AdminTaskItemListPage() {
                 <Select
                   label="Type"
                   value={type}
-                  onChange={(e) => setType(parseInt(e.target.value))}
+                  onChange={(e) => {
+                    setType(parseInt(e.target.value));
+                    // Reset pagination when filter changes
+                    setCurrentCursor("");
+                    setPreviousCursors([]);
+                    setNextCursor("");
+                  }}
                   options={TASK_ITEM_TYPE_FILTER_OPTIONS}
                 />
 
@@ -533,7 +620,13 @@ function AdminTaskItemListPage() {
                         name="isClosed"
                         value={0}
                         checked={isClosed === 0}
-                        onChange={(e) => setIsClosed(parseInt(e.target.value))}
+                        onChange={(e) => {
+                          setIsClosed(parseInt(e.target.value));
+                          // Reset pagination when filter changes
+                          setCurrentCursor("");
+                          setPreviousCursors([]);
+                          setNextCursor("");
+                        }}
                       />{" "}
                       All
                     </label>
@@ -543,7 +636,13 @@ function AdminTaskItemListPage() {
                         name="isClosed"
                         value={1}
                         checked={isClosed === 1}
-                        onChange={(e) => setIsClosed(parseInt(e.target.value))}
+                        onChange={(e) => {
+                          setIsClosed(parseInt(e.target.value));
+                          // Reset pagination when filter changes
+                          setCurrentCursor("");
+                          setPreviousCursors([]);
+                          setNextCursor("");
+                        }}
                       />{" "}
                       Yes
                     </label>
@@ -553,7 +652,13 @@ function AdminTaskItemListPage() {
                         name="isClosed"
                         value={2}
                         checked={isClosed === 2}
-                        onChange={(e) => setIsClosed(parseInt(e.target.value))}
+                        onChange={(e) => {
+                          setIsClosed(parseInt(e.target.value));
+                          // Reset pagination when filter changes
+                          setCurrentCursor("");
+                          setPreviousCursors([]);
+                          setNextCursor("");
+                        }}
                       />{" "}
                       No
                     </label>
@@ -565,7 +670,7 @@ function AdminTaskItemListPage() {
         </div>
 
         {/* List Content */}
-        {isLoading ? (
+        {isLoading && !initialLoadComplete ? (
           <Loading message="Loading tasks..." />
         ) : (
           <>
@@ -584,53 +689,54 @@ function AdminTaskItemListPage() {
                 }}
               >
                 Total Results: {tasks.count}
+                {tasks.results && tasks.results.length > 0 && (
+                  <span> (Showing {tasks.results.length} items)</span>
+                )}
               </p>
             )}
 
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
+            {/* Pagination Controls (FIXED) */}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginTop: "20px",
+                paddingTop: "20px",
+                borderTop: "1px solid #e0e0e0",
+              }}
+            >
+              <Select
+                value={pageSize}
+                onChange={(e) => handlePageSizeChange(parseInt(e.target.value))}
+                options={PAGE_SIZE_OPTIONS}
+              />
+
               <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  marginTop: "20px",
-                }}
+                style={{ display: "flex", gap: "10px", alignItems: "center" }}
               >
-                <Select
-                  value={pageSize}
-                  onChange={(e) => {
-                    setPageSize(parseInt(e.target.value));
-                    setCurrentPage(1); // Reset to first page
-                  }}
-                  options={PAGE_SIZE_OPTIONS}
-                />
-
-                <div
-                  style={{ display: "flex", gap: "10px", alignItems: "center" }}
+                <Button
+                  onClick={handlePreviousPage}
+                  disabled={previousCursors.length === 0}
+                  variant="outline"
                 >
-                  <Button
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    variant="outline"
-                  >
-                    Previous
-                  </Button>
+                  Previous
+                </Button>
 
-                  <span>
-                    Page {currentPage} of {totalPages}
-                  </span>
+                <span style={{ fontSize: "14px", color: "#666" }}>
+                  {previousCursors.length > 0 &&
+                    `Page ${previousCursors.length + 1}`}
+                </span>
 
-                  <Button
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    variant="outline"
-                  >
-                    Next
-                  </Button>
-                </div>
+                <Button
+                  onClick={handleNextPage}
+                  disabled={!hasNextPage}
+                  variant="outline"
+                >
+                  Next
+                </Button>
               </div>
-            )}
+            </div>
           </>
         )}
       </Card>
