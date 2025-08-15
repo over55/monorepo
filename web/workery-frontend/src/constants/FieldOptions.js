@@ -294,3 +294,6 @@ export const ORDER_INVOICE_QUOTE_VALIDITY_OPTIONS = [
   { value: 90, label: "90 days" },
   { value: 120, label: "120 days" },
 ];
+
+export const DEFAULT_STAFF_LIST_SORT_BY_VALUE = "lexical_name,ASC";
+export const DEFAULT_STAFF_STATUS_FILTER_OPTION = 1; // 1=Active

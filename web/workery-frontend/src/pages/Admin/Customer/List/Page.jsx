@@ -1,4 +1,4 @@
-// File Path: web/workery-frontend/src/pages/Admin/Customer/List/Page.jsx
+// File Path: monorepo/web/workery-frontend/src/pages/Admin/Customer/List/Page.jsx
 
 import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
