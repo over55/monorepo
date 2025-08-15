@@ -20,3 +20,28 @@ export const ORDER_STATUS_ARCHIVED = 9;
 export const ORDER_INCIDENT_INIATOR_CLIENT = 1;
 export const ORDER_INCIDENT_INIATOR_ASSOCIATE = 2;
 export const ORDER_INCIDENT_INIATOR_STAFF = 3;
+//----------------------------------------------------------------------------//
+//                             Task Items                                     //
+//----------------------------------------------------------------------------//
+// Value copied from the following URL:
+// https://github.com/over55/monorepo/blob/master/app/taskitem/datastore/datastore.go
+
+export const TASK_ITEM_CLOSE_REASON_OTHER = 1;
+export const DEFAULT_TASK_ITEM_LIST_SORT_BY_VALUE = "due_date,DESC";
+export const TASK_ITEM_TYPE_ASSIGN_ASSOCIATE = 1;
+export const TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_AND_CUSTOMER_AGREED_TO_MEET = 2;
+export const TASK_ITEM_TYPE_FOLLOW_UP_CUSTOMER_SURVEY = 3; // DEPRECATED
+export const TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_ACCEPT_JOB = 4;
+export const TASK_ITEM_TYPE_UPDATE_ONGOING_JOB = 5;
+export const TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_COMPLETE_JOB = 6;
+export const TASK_ITEM_TYPE_FOLLOW_UP_DID_CUSTOMER_REVIEW_ASSOCIATE_AFTER_JOB = 7;
+
+// TaskItemStatusActive                                    = 1
+// TaskItemStatusArchived                                  = 2
+// TaskItemTypeAssignedAssociate                           = 1
+// TaskItemTypeFollowUpDidAssociateAndCustomerAgreedToMeet = 2
+// TaskItemTypeFollowUpCustomerSurvey                      = 3 // DEPRECATED
+// TaskItemTypeFollowUpDidAssociateAcceptJob               = 4
+// TaskItemTypeUpdateOngoingJob                            = 5
+// TaskItemTypeFollowUpDidAssociateCompleteJob             = 6
+// TaskItemTypeFollowUpDidCustomerReviewAssociateAfterJob  = 7

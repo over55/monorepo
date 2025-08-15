@@ -20,6 +20,15 @@ import {
   FormGroup,
 } from "../../../../components/UI";
 import { globalStyles } from "../../../../constants/Theme";
+import {
+  TASK_ITEM_TYPE_ASSIGN_ASSOCIATE,
+  TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_AND_CUSTOMER_AGREED_TO_MEET,
+  TASK_ITEM_TYPE_FOLLOW_UP_CUSTOMER_SURVEY,
+  TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_ACCEPT_JOB,
+  TASK_ITEM_TYPE_UPDATE_ONGOING_JOB,
+  TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_COMPLETE_JOB,
+  TASK_ITEM_TYPE_FOLLOW_UP_DID_CUSTOMER_REVIEW_ASSOCIATE_AFTER_JOB,
+} from "../../../../Constants/App";
 
 // Constants
 const DEFAULT_PAGE_SIZE = 50;
@@ -380,18 +389,24 @@ function AdminTaskItemListPage() {
 
   // Helper function to get task update URL based on type
   const getTaskUpdateURL = (taskId, taskType) => {
+    console.log("getTaskUpdateURL:", taskId, taskType);
     switch (taskType) {
-      case 1: // Assign Associate
+      // Assign Associate
+      case TASK_ITEM_TYPE_ASSIGN_ASSOCIATE:
         return `/admin/task/${taskId}/assign-associate/step-1`;
-      case 2: // Follow Up
-      case 3: // 48 Hour Follow Up
-        return `/admin/task/${taskId}/postpone`;
-      case 4: // Completion Survey
-        return `/admin/task/${taskId}/survey/step-1`;
-      case 5: // Order Completion
-        return `/admin/task/${taskId}/order-completion/step-1`;
+      // Follow Up
+      case TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_COMPLETE_JOB:
+      case TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_AND_CUSTOMER_AGREED_TO_MEET:
+      case TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_ACCEPT_JOB:
+      case TASK_ITEM_TYPE_UPDATE_ONGOING_JOB:
+        return "/admin/task/" + taskId + "/order-completion/step-1";
+      // Survey
+      case TASK_ITEM_TYPE_FOLLOW_UP_DID_CUSTOMER_REVIEW_ASSOCIATE_AFTER_JOB:
+      case TASK_ITEM_TYPE_FOLLOW_UP_CUSTOMER_SURVEY:
+        return "/admin/task/" + taskId + "/survey/step-1";
+      // Default case for unknown types
       default:
-        return `/admin/task/${taskId}/close`;
+        return "/404";
     }
   };
 

@@ -215,9 +215,9 @@ import AdminTaskItemOrderCompletionStep2Page from "./pages/Admin/TaskItem/Update
 import AdminTaskItemOrderCompletionStep3Page from "./pages/Admin/TaskItem/Update/OrderCompletion/Step3Page";
 import AdminTaskItemOrderCompletionStep4Page from "./pages/Admin/TaskItem/Update/OrderCompletion/Step4Page";
 import AdminTaskItemOrderCompletionStep5Page from "./pages/Admin/TaskItem/Update/OrderCompletion/Step5Page";
-import AdminTaskItemSurveyStep1Page from "./pages/Admin/TaskItem/Update/OrderCompletion/Step1Page";
-import AdminTaskItemSurveyStep2Page from "./pages/Admin/TaskItem/Update/OrderCompletion/Step2Page";
-import AdminTaskItemSurveyStep3Page from "./pages/Admin/TaskItem/Update/OrderCompletion/Step3Page";
+import AdminTaskItemSurveyStep1Page from "./pages/Admin/TaskItem/Update/Survey/Step1Page";
+import AdminTaskItemSurveyStep2Page from "./pages/Admin/TaskItem/Update/Survey/Step2Page";
+import AdminTaskItemSurveyStep3Page from "./pages/Admin/TaskItem/Update/Survey/Step3Page";
 
 // Admin staff pages.
 import AdminStaffListPage from "./pages/Admin/Staff/List/Page";
