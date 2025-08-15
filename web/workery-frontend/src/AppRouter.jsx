@@ -223,6 +223,8 @@ import AdminTaskItemSurveyStep3Page from "./pages/Admin/TaskItem/Update/Survey/S
 import AdminFinancialListPage from "./pages/Admin/Financial/List/Page";
 import AdminFinancialDetailPage from "./pages/Admin/Financial/Detail/Page";
 import AdminFinancialUpdatePage from "./pages/Admin/Financial/Update/Page";
+import AdminFinancialDetailMorePage from "./pages/Admin/Financial/Detail/More/Page";
+import AdminFinancialDetailMoreClonePage from "./pages/Admin/Financial/Detail/More/Clone/Page";
 
 // Admin staff pages.
 import AdminStaffListPage from "./pages/Admin/Staff/List/Page";
@@ -2101,7 +2103,7 @@ function AppRouter() {
               path="/admin/financial/:oid/more"
               element={
                 <Layout>
-                  <PlaceholderPage title="Financial More Actions" />
+                  <AdminFinancialDetailMorePage />
                 </Layout>
               }
             />
@@ -2109,7 +2111,7 @@ function AppRouter() {
               path="/admin/financial/:oid/more/clone"
               element={
                 <Layout>
-                  <PlaceholderPage title="Clone Financial" />
+                  <AdminFinancialDetailMoreClonePage />
                 </Layout>
               }
             />
