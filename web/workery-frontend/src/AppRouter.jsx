@@ -240,8 +240,8 @@ import AdminStaffAddStep3Page from "./pages/Admin/Staff/Add/Step3Page";
 import AdminStaffAddStep4Page from "./pages/Admin/Staff/Add/Step4Page";
 import AdminStaffAddStep5Page from "./pages/Admin/Staff/Add/Step5Page";
 import AdminStaffAddStep6Page from "./pages/Admin/Staff/Add/Step6Page";
-import AdminStaffSearchCriteriaPagePage from "./pages/Admin/Staff/Search/CriteriaPage";
-import AdminStaffSearchResultPagePage from "./pages/Admin/Staff/Search/ResultPage";
+import AdminStaffSearchCriteriaPage from "./pages/Admin/Staff/Search/CriteriaPage";
+import AdminStaffSearchResultPage from "./pages/Admin/Staff/Search/ResultPage";
 import AdminStaffUpdatePage from "./pages/Admin/Staff/Update/Page";
 import AdminStaffDetailLitePage from "./pages/Admin/Staff/Detail/LitePage";
 import AdminStaffDetailFullPage from "./pages/Admin/Staff/Detail/FullPage";
@@ -888,7 +888,7 @@ function AppRouter() {
               path="/admin/staff/search"
               element={
                 <Layout>
-                  <PlaceholderPage title="Staff Search" />
+                  <AdminStaffSearchCriteriaPage />
                 </Layout>
               }
             />
@@ -896,7 +896,7 @@ function AppRouter() {
               path="/admin/staff/search-result"
               element={
                 <Layout>
-                  <PlaceholderPage title="Staff Search Result" />
+                  <AdminStaffSearchResultPage />
                 </Layout>
               }
             />
