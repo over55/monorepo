@@ -1,6 +1,6 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Financial/List/Page.jsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 import { useOrderManager } from "../../../../services/Services";
 import {
@@ -9,53 +9,30 @@ import {
   Button,
   Alert,
   Loading,
-  Table,
   Select,
-  Input,
 } from "../../../../components/UI";
 import { DateTime } from "luxon";
-
-// Constants
-const DEFAULT_ORDER_LIST_SORT_BY_VALUE = "start_date,DESC";
-const PAGE_SIZE_OPTIONS = [
-  { value: 10, label: "10" },
-  { value: 25, label: "25" },
-  { value: 50, label: "50" },
-  { value: 100, label: "100" },
-];
-
-const ORDER_SORT_OPTIONS = [
-  { value: "created_at,DESC", label: "Newest → Oldest" },
-  { value: "created_at,ASC", label: "Oldest → Newest" },
-  { value: "customer_lexical_name,ASC", label: "Customer (A → Z)" },
-  { value: "customer_lexical_name,DESC", label: "Customer (Z → A)" },
-  { value: "associate_lexical_name,ASC", label: "Associate (A → Z)" },
-  { value: "associate_lexical_name,DESC", label: "Associate (Z → A)" },
-  { value: "assignment_date,DESC", label: "Assigned Date (Newest → Oldest)" },
-  { value: "assignment_date,ASC", label: "Assigned Date (Oldest → Newest)" },
-  { value: "start_date,DESC", label: "Start Date (Newest → Oldest)" },
-  { value: "start_date,ASC", label: "Start Date (Oldest → Newest)" },
-];
-
-const ORDER_STATUS_FILTER_OPTIONS = [
-  { value: 0, label: "All" },
-  { value: 1, label: "New" },
-  { value: 2, label: "Declined" },
-  { value: 3, label: "Pending" },
-  { value: 4, label: "Cancelled" },
-  { value: 5, label: "Ongoing" },
-  { value: 6, label: "In Progress" },
-  { value: 7, label: "Completed but Unpaid" },
-  { value: 8, label: "Completed and Paid" },
-  { value: 9, label: "Archived" },
-];
-
-const ORDER_TYPE_FILTER_OPTIONS = [
-  { value: 0, label: "All" },
-  { value: 1, label: "Residential" },
-  { value: 2, label: "Commercial" },
-  { value: 3, label: "Unassigned" },
-];
+import {
+  ORDER_STATUS_NEW,
+  ORDER_STATUS_DECLINED,
+  ORDER_STATUS_PENDING,
+  ORDER_STATUS_CANCELLED,
+  ORDER_STATUS_ONGOING,
+  ORDER_STATUS_IN_PROGRESS,
+  ORDER_STATUS_COMPLETED_BUT_UNPAID,
+  ORDER_STATUS_COMPLETED_AND_PAID,
+  ORDER_STATUS_ARCHIVED,
+  ORDER_TYPE_UNASSIGNED,
+  ORDER_TYPE_RESIDENTIAL,
+  ORDER_TYPE_COMMERCIAL,
+} from "../../../../constants/Order";
+import {
+  PAGE_SIZE_OPTIONS,
+  ORDER_SORT_OPTIONS,
+  ORDER_STATUS_FILTER_OPTIONS,
+  ORDER_TYPE_FILTER_OPTIONS,
+  DEFAULT_ORDER_LIST_SORT_BY_VALUE,
+} from "../../../../constants/FieldOptions";
 
 function AdminFinancialListPage() {
   const navigate = useNavigate();
@@ -65,135 +42,194 @@ function AdminFinancialListPage() {
   const [orders, setOrders] = useState(null);
   const [errors, setErrors] = useState({});
   const [isFetching, setIsFetching] = useState(false);
-  const [forceURL, setForceURL] = useState("");
   const [selectedOrderForDeletion, setSelectedOrderForDeletion] =
     useState(null);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [topAlertMessage, setTopAlertMessage] = useState("");
   const [topAlertStatus, setTopAlertStatus] = useState("");
+  const [totalCount, setTotalCount] = useState(0);
 
-  // Filtering and Pagination
+  // Filtering and Pagination state
   const [status, setStatus] = useState(0);
   const [type, setType] = useState(0);
   const [sortByValue, setSortByValue] = useState(
     DEFAULT_ORDER_LIST_SORT_BY_VALUE,
   );
   const [pageSize, setPageSize] = useState(50);
-  const [previousCursors, setPreviousCursors] = useState([]);
-  const [nextCursor, setNextCursor] = useState("");
+
+  // Cursor-based pagination state (matching working Order List)
   const [currentCursor, setCurrentCursor] = useState("");
+  const [nextCursor, setNextCursor] = useState("");
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [cursorHistory, setCursorHistory] = useState([]);
 
   // Unauthorized callback
   const onUnauthorized = () => {
-    setForceURL("/login?unauthorized=true");
+    navigate("/login?unauthorized=true");
   };
 
-  // Fetch list function
-  const fetchList = (cur, limit, keywords, so, s, t) => {
-    setIsFetching(true);
-    setErrors({});
+  // Fetch list function (matching pattern from working Order List)
+  const fetchList = useCallback(
+    async (cursor = "", isNavigatingBack = false) => {
+      console.log(
+        "fetchList called with cursor:",
+        cursor,
+        "pageSize:",
+        pageSize,
+      );
 
-    console.log(
-      "fetchList | cur=" +
-        cur +
-        ", limit=" +
-        limit +
-        ", keywords=" +
-        keywords +
-        ", so=" +
-        so +
-        ", s=" +
-        s +
-        ", t=" +
-        t,
-    );
+      setIsFetching(true);
+      setErrors({});
 
-    // Build filters map
-    let filtersMap = new Map();
-    filtersMap.set("page_size", limit);
+      try {
+        // Build filters map (matching working implementation)
+        const filtersMap = new Map();
 
-    if (cur !== "") {
-      filtersMap.set("cursor", cur);
-    }
+        // Add cursor if provided
+        if (cursor) {
+          filtersMap.set("cursor", cursor);
+        }
 
-    // Sort field and order
-    const sortArray = so.split(",");
-    filtersMap.set("sort_field", sortArray[0]);
-    filtersMap.set("sort_order", sortArray[1]);
+        // Add page size
+        filtersMap.set("page_size", pageSize.toString());
 
-    // Filtering
-    if (keywords !== undefined && keywords !== null && keywords !== "") {
-      filtersMap.set("search", keywords);
-    }
-    if (s !== undefined && s !== null && s !== "" && s !== 0) {
-      filtersMap.set("status", s);
-    }
-    if (t !== undefined && t !== null && t !== "" && t !== 0) {
-      filtersMap.set("type", t);
-    }
+        // Sort field and order
+        if (sortByValue) {
+          const [sortField, sortOrder] = sortByValue.split(",");
+          filtersMap.set("sort_field", sortField);
+          filtersMap.set("sort_order", sortOrder === "DESC" ? "-1" : "1");
+        }
 
-    // Use the OrderManager to fetch orders
-    orderManager.getOrdersWithFiltersMapWithCallbacks(
-      filtersMap,
-      onOrderListSuccess,
-      onOrderListError,
-      onOrderListDone,
-      onUnauthorized,
-      false, // Don't force refresh, use cache if available
-    );
-  };
+        // Add filters only if not 0 (All)
+        if (status !== 0) {
+          filtersMap.set("status", status.toString());
+        }
+        if (type !== 0) {
+          filtersMap.set("type", type.toString());
+        }
 
-  const onOrderListSuccess = (response) => {
-    console.log("onOrderListSuccess: Starting...");
-    if (response.results !== null) {
-      setOrders(response);
-      if (response.hasNextPage) {
-        setNextCursor(response.nextCursor);
+        console.log(
+          "Making API call with filters:",
+          Array.from(filtersMap.entries()),
+        );
+
+        // Use the OrderManager to fetch orders
+        const response = await orderManager.getOrdersWithFiltersMap(
+          filtersMap,
+          onUnauthorized,
+          true, // force refresh
+        );
+
+        console.log("API response received:", {
+          resultsCount: response.results?.length,
+          nextCursor: response.nextCursor,
+          hasNextPage: response.hasNextPage,
+          totalCount: response.count,
+        });
+
+        setOrders(response);
+        setTotalCount(response.count || 0);
+
+        // Handle pagination response (matching working implementation)
+        if (
+          response.nextCursor !== undefined &&
+          response.nextCursor !== null &&
+          response.nextCursor !== ""
+        ) {
+          setNextCursor(response.nextCursor);
+          setHasNextPage(true);
+        } else {
+          setNextCursor("");
+          setHasNextPage(false);
+        }
+
+        // Alternative: Check if hasNextPage is explicitly set
+        if (response.hasNextPage !== undefined) {
+          setHasNextPage(response.hasNextPage);
+        }
+
+        // Update current cursor if not navigating back
+        if (!isNavigatingBack) {
+          setCurrentCursor(cursor);
+        }
+      } catch (err) {
+        console.error("Failed to fetch orders:", err);
+        setErrors({ general: "Failed to load orders. Please try again." });
+        window.scrollTo(0, 0);
+      } finally {
+        setIsFetching(false);
       }
+    },
+    [pageSize, sortByValue, status, type, orderManager],
+  );
+
+  // Handle filter changes
+  const handleFilterChange = useCallback(() => {
+    console.log("Filter changed - resetting pagination");
+    // Reset pagination when filters change
+    setCursorHistory([]);
+    setCurrentCursor("");
+    setNextCursor("");
+    setHasNextPage(false);
+    fetchList("");
+  }, [fetchList]);
+
+  // Pagination handlers (matching working implementation)
+  const handleNextPage = () => {
+    console.log(
+      "handleNextPage clicked, nextCursor:",
+      nextCursor,
+      "hasNextPage:",
+      hasNextPage,
+    );
+
+    if (hasNextPage && nextCursor) {
+      console.log("Going to next page with cursor:", nextCursor);
+
+      // Push current cursor to history for "Previous" functionality
+      setCursorHistory((prev) => [...prev, currentCursor]);
+
+      // Fetch next page
+      fetchList(nextCursor);
+    } else {
+      console.log("No next page available");
     }
   };
 
-  const onOrderListError = (apiErr) => {
-    console.log("onOrderListError: Starting...");
-    setErrors(apiErr);
-    window.scrollTo(0, 0);
+  const handlePreviousPage = () => {
+    console.log("handlePreviousPage clicked");
+
+    if (cursorHistory.length > 0) {
+      // Pop the last cursor from history
+      const newHistory = [...cursorHistory];
+      const previousCursor = newHistory.pop();
+
+      console.log(
+        "Going to previous page with cursor:",
+        previousCursor || "start",
+      );
+
+      // Update history
+      setCursorHistory(newHistory);
+
+      // Fetch previous page
+      fetchList(previousCursor || "", true);
+    } else {
+      console.log("Already on first page");
+    }
   };
 
-  const onOrderListDone = () => {
-    console.log("onOrderListDone: Starting...");
-    setIsFetching(false);
-  };
+  // Handle page size change
+  const handlePageSizeChange = (e) => {
+    const newPageSize = parseInt(e.target.value);
+    console.log("Page size changing from", pageSize, "to", newPageSize);
+    setPageSize(newPageSize);
 
-  const onOrderDeleteSuccess = (response) => {
-    console.log("onOrderDeleteSuccess: Starting...");
-
-    // Update notification
-    setTopAlertStatus("success");
-    setTopAlertMessage("Order deleted");
-    setTimeout(() => {
-      setTopAlertMessage("");
-    }, 2000);
-
-    // Fetch again an updated list
-    fetchList(currentCursor, pageSize, "", sortByValue, status, type);
-  };
-
-  const onOrderDeleteError = (apiErr) => {
-    console.log("onOrderDeleteError: Starting...");
-    setErrors(apiErr);
-
-    setTopAlertStatus("danger");
-    setTopAlertMessage("Failed deleting");
-    setTimeout(() => {
-      setTopAlertMessage("");
-    }, 2000);
-
-    window.scrollTo(0, 0);
-  };
-
-  const onOrderDeleteDone = () => {
-    console.log("onOrderDeleteDone: Starting...");
-    setIsFetching(false);
+    // Reset pagination when page size changes
+    setCursorHistory([]);
+    setCurrentCursor("");
+    setNextCursor("");
+    setHasNextPage(false);
   };
 
   // Event handlers
@@ -202,22 +238,15 @@ function AdminFinancialListPage() {
     setType(0);
     setStatus(0);
     setSortByValue(DEFAULT_ORDER_LIST_SORT_BY_VALUE);
-  };
 
-  const onNextClicked = (e) => {
-    e.preventDefault();
-    let arr = [...previousCursors];
-    arr.push(currentCursor);
-    setPreviousCursors(arr);
-    setCurrentCursor(nextCursor);
-  };
+    // Reset pagination
+    setCursorHistory([]);
+    setCurrentCursor("");
+    setNextCursor("");
+    setHasNextPage(false);
 
-  const onPreviousClicked = (e) => {
-    e.preventDefault();
-    let arr = [...previousCursors];
-    const previousCursor = arr.pop();
-    setPreviousCursors(arr);
-    setCurrentCursor(previousCursor);
+    // Fetch with cleared filters
+    fetchList("");
   };
 
   const onSelectOrderForDeletion = (e, order) => {
@@ -234,20 +263,39 @@ function AdminFinancialListPage() {
     setShowDeleteConfirmation(false);
   };
 
-  const onDeleteConfirmButtonClick = (e) => {
+  const onDeleteConfirmButtonClick = async (e) => {
     e.preventDefault();
     console.log("onDeleteConfirmButtonClick");
 
     if (selectedOrderForDeletion) {
-      orderManager.deleteOrderWithCallbacks(
-        selectedOrderForDeletion.id,
-        onOrderDeleteSuccess,
-        onOrderDeleteError,
-        onOrderDeleteDone,
-        onUnauthorized,
-      );
-      setSelectedOrderForDeletion(null);
-      setShowDeleteConfirmation(false);
+      try {
+        setIsFetching(true);
+        await orderManager.archiveOrder(
+          selectedOrderForDeletion.id,
+          onUnauthorized,
+        );
+
+        // Update notification
+        setTopAlertStatus("success");
+        setTopAlertMessage("Order archived successfully");
+        setTimeout(() => {
+          setTopAlertMessage("");
+        }, 2000);
+
+        // Refresh current page
+        fetchList(currentCursor);
+      } catch (err) {
+        console.error("Failed to archive order:", err);
+        setTopAlertStatus("danger");
+        setTopAlertMessage("Failed to archive order");
+        setTimeout(() => {
+          setTopAlertMessage("");
+        }, 2000);
+      } finally {
+        setIsFetching(false);
+        setSelectedOrderForDeletion(null);
+        setShowDeleteConfirmation(false);
+      }
     }
   };
 
@@ -261,33 +309,94 @@ function AdminFinancialListPage() {
     }
   };
 
-  // Format status helper
-  const formatStatus = (status) => {
-    const statusOption = ORDER_STATUS_FILTER_OPTIONS.find(
-      (opt) => opt.value === status,
-    );
-    return statusOption ? statusOption.label : `Status ${status}`;
+  // Format status helper using constants
+  const formatStatus = (statusValue) => {
+    switch (statusValue) {
+      case ORDER_STATUS_NEW:
+        return "New";
+      case ORDER_STATUS_DECLINED:
+        return "Declined";
+      case ORDER_STATUS_PENDING:
+        return "Pending";
+      case ORDER_STATUS_CANCELLED:
+        return "Cancelled";
+      case ORDER_STATUS_ONGOING:
+        return "Ongoing";
+      case ORDER_STATUS_IN_PROGRESS:
+        return "In Progress";
+      case ORDER_STATUS_COMPLETED_BUT_UNPAID:
+        return "Completed but Unpaid";
+      case ORDER_STATUS_COMPLETED_AND_PAID:
+        return "Completed and Paid";
+      case ORDER_STATUS_ARCHIVED:
+        return "Archived";
+      default:
+        return `Unknown (${statusValue})`;
+    }
   };
 
-  // Format type helper
-  const formatType = (type) => {
-    const typeOption = ORDER_TYPE_FILTER_OPTIONS.find(
-      (opt) => opt.value === type,
-    );
-    return typeOption ? typeOption.label : `Type ${type}`;
+  // Format type helper using constants
+  const formatType = (typeValue) => {
+    switch (typeValue) {
+      case ORDER_TYPE_UNASSIGNED:
+        return "Unassigned";
+      case ORDER_TYPE_RESIDENTIAL:
+        return "Residential";
+      case ORDER_TYPE_COMMERCIAL:
+        return "Commercial";
+      default:
+        return `Unknown (${typeValue})`;
+    }
   };
 
-  // Effect
+  // Format type icon
+  const getTypeIcon = (typeValue) => {
+    switch (typeValue) {
+      case ORDER_TYPE_RESIDENTIAL:
+        return "🏠";
+      case ORDER_TYPE_COMMERCIAL:
+        return "🏢";
+      case ORDER_TYPE_UNASSIGNED:
+        return "❓";
+      default:
+        return "📋";
+    }
+  };
+
+  // Effect for page size changes
   useEffect(() => {
-    fetchList(currentCursor, pageSize, "", sortByValue, status, type);
-    window.scrollTo(0, 0);
-  }, [currentCursor, pageSize, sortByValue, status, type]);
+    if (pageSize) {
+      console.log("Page size changed to:", pageSize, "- fetching data");
+      fetchList("");
+    }
+  }, [pageSize]);
 
-  // Redirect if needed
-  if (forceURL !== "") {
-    navigate(forceURL);
-    return null;
-  }
+  // Effect for sort changes
+  useEffect(() => {
+    console.log("Sort changed to:", sortByValue, "- fetching data");
+    // Reset pagination when sort changes
+    setCursorHistory([]);
+    setCurrentCursor("");
+    setNextCursor("");
+    setHasNextPage(false);
+    fetchList("");
+  }, [sortByValue]);
+
+  // Effect for filter changes
+  useEffect(() => {
+    console.log("Filters changed - status:", status, "type:", type);
+    handleFilterChange();
+  }, [status, type]);
+
+  // Initial load - only on mount
+  useEffect(() => {
+    console.log("Initial mount - loading first page");
+    fetchList("");
+  }, []); // Empty dependency array for initial load only
+
+  // Calculate pagination info
+  const hasPreviousPage = cursorHistory.length > 0;
+  const currentPageNumber = cursorHistory.length + 1;
 
   // Render
   return (
@@ -392,8 +501,14 @@ function AdminFinancialListPage() {
           <>
             {orders &&
             orders.results &&
-            (orders.results.length > 0 || previousCursors.length > 0) ? (
+            (orders.results.length > 0 || cursorHistory.length > 0) ? (
               <>
+                {/* Results info */}
+                <div style={{ marginBottom: "10px" }}>
+                  Showing <strong>{orders.results.length}</strong> orders
+                  {totalCount > 0 && ` (Total: ${totalCount})`}
+                </div>
+
                 {/* Simple Table */}
                 <div style={{ overflowX: "auto" }}>
                   <table style={{ width: "100%", borderCollapse: "collapse" }}>
@@ -482,7 +597,9 @@ function AdminFinancialListPage() {
                               border: "1px solid #ddd",
                             }}
                           >
-                            {formatType(order.type)}
+                            <span title={formatType(order.type)}>
+                              {getTypeIcon(order.type)}
+                            </span>
                           </td>
                           <td
                             style={{
@@ -570,7 +687,7 @@ function AdminFinancialListPage() {
                                   onSelectOrderForDeletion(e, order)
                                 }
                               >
-                                Delete
+                                Archive
                               </Button>
                             </div>
                           </td>
@@ -580,11 +697,6 @@ function AdminFinancialListPage() {
                   </table>
                 </div>
 
-                {/* Results Count */}
-                <p style={{ textAlign: "right", marginTop: "10px" }}>
-                  <strong>Total Results: {orders.count}</strong>
-                </p>
-
                 {/* Pagination Controls */}
                 <div
                   style={{
@@ -592,31 +704,57 @@ function AdminFinancialListPage() {
                     justifyContent: "space-between",
                     alignItems: "center",
                     marginTop: "20px",
+                    flexWrap: "wrap",
+                    gap: "10px",
                   }}
                 >
-                  <div>
-                    <label>
-                      Results per page:&nbsp;
-                      <select
-                        value={pageSize}
-                        onChange={(e) => setPageSize(parseInt(e.target.value))}
-                        style={{ padding: "5px" }}
-                      >
-                        {PAGE_SIZE_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "10px",
+                    }}
+                  >
+                    <span>Show:</span>
+                    <select
+                      value={pageSize}
+                      onChange={handlePageSizeChange}
+                      style={{ padding: "5px" }}
+                    >
+                      {PAGE_SIZE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    {previousCursors.length > 0 && (
-                      <Button onClick={onPreviousClicked}>Previous</Button>
-                    )}
-                    {orders.hasNextPage && (
-                      <Button onClick={onNextClicked}>Next</Button>
-                    )}
+
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "10px",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Button
+                      variant="secondary"
+                      disabled={!hasPreviousPage}
+                      onClick={handlePreviousPage}
+                    >
+                      ← Previous
+                    </Button>
+
+                    <span style={{ padding: "0 15px", fontSize: "14px" }}>
+                      Page {currentPageNumber}
+                    </span>
+
+                    <Button
+                      variant="secondary"
+                      disabled={!hasNextPage}
+                      onClick={handleNextPage}
+                    >
+                      Next →
+                    </Button>
                   </div>
                 </div>
               </>
@@ -662,10 +800,12 @@ function AdminFinancialListPage() {
           >
             <h3>Are you sure?</h3>
             <p>
-              You are about to <strong>archive</strong> this order; it will no
-              longer appear on your dashboard. This action can be undone but
-              you'll need to contact the system administrator. Are you sure you
-              would like to continue?
+              You are about to <strong>archive</strong> order{" "}
+              {selectedOrderForDeletion.wjid ||
+                `#${selectedOrderForDeletion.id}`}
+              . It will no longer appear on your dashboard. This action can be
+              undone but you'll need to contact the system administrator. Are
+              you sure you would like to continue?
             </p>
             <div
               style={{

@@ -181,3 +181,60 @@ export const ORDER_INVOICE_PAYMENT_METHODS_OPTIONS = [
   { value: 8, label: "Cryptocurrency" },
   { value: 1, label: "Other" },
 ];
+
+/**
+ * Order Status Filter Options
+ */
+export const ORDER_STATUS_FILTER_OPTIONS = [
+  { value: 0, label: "All" },
+  { value: 1, label: "New" },
+  { value: 2, label: "Declined" },
+  { value: 3, label: "Pending" },
+  { value: 4, label: "Cancelled" },
+  { value: 5, label: "Ongoing" },
+  { value: 6, label: "In Progress" },
+  { value: 7, label: "Completed but Unpaid" },
+  { value: 8, label: "Completed and Paid" },
+  { value: 9, label: "Archived" },
+];
+
+/**
+ * Order Type Filter Options
+ */
+export const ORDER_TYPE_FILTER_OPTIONS = [
+  { value: 0, label: "All" },
+  { value: 1, label: "Unassigned" },
+  { value: 2, label: "Residential" },
+  { value: 3, label: "Commercial" },
+];
+
+/**
+ * Order Sort Options
+ */
+export const ORDER_SORT_OPTIONS = [
+  { value: "created_at,DESC", label: "Created (Newest → Oldest)" },
+  { value: "created_at,ASC", label: "Created (Oldest → Newest)" },
+  { value: "customer_lexical_name,ASC", label: "Customer (A → Z)" },
+  { value: "customer_lexical_name,DESC", label: "Customer (Z → A)" },
+  { value: "associate_lexical_name,ASC", label: "Associate (A → Z)" },
+  { value: "associate_lexical_name,DESC", label: "Associate (Z → A)" },
+  { value: "assignment_date,DESC", label: "Assigned Date (Newest → Oldest)" },
+  { value: "assignment_date,ASC", label: "Assigned Date (Oldest → Newest)" },
+  { value: "start_date,DESC", label: "Start Date (Newest → Oldest)" },
+  { value: "start_date,ASC", label: "Start Date (Oldest → Newest)" },
+];
+
+/**
+ * Page Size Options
+ */
+export const PAGE_SIZE_OPTIONS = [
+  { value: 10, label: "10" },
+  { value: 25, label: "25" },
+  { value: 50, label: "50" },
+  { value: 100, label: "100" },
+];
+
+/**
+ * Default Order List Sort By Value
+ */
+export const DEFAULT_ORDER_LIST_SORT_BY_VALUE = "start_date,DESC";
