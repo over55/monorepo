@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/Financial/Detail/Invoice/Generate/Step4.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -73,7 +74,7 @@ import {
   CLIENT_ORGANIZATION_TYPE_OPTIONS,
   CLIENT_PHONE_TYPE_OF_MAP,
   ORDER_INVOICE_QUOTE_VALIDITY_OPTIONS,
-  ORDER_INVOICE_PAYMENT_METHODS_OPTIONS
+  ORDER_INVOICE_PAYMENT_METHODS_OPTIONS,
 } from "../../../../../../Constants/FieldOptions";
 
 function AdminFinancialGenerateInvoiceStep3() {
@@ -229,7 +230,7 @@ function AdminFinancialGenerateInvoiceStep3() {
     generateOrderInvoice.associateSignature,
   );
   const [paymentMethods, setPaymentMethods] = useState(
-      generateOrderInvoice.paymentMethods,
+    generateOrderInvoice.paymentMethods,
   );
 
   ////
@@ -370,7 +371,9 @@ function AdminFinancialGenerateInvoiceStep3() {
       total_labour: parseFloat(invoiceLabourAmount),
       total_materials: parseFloat(invoiceMaterialAmount),
       other_costs: parseFloat(invoiceOtherCostsAmount),
-      sub_total: parseFloat(invoiceLabourAmount + invoiceMaterialAmount + invoiceOtherCostsAmount),
+      sub_total: parseFloat(
+        invoiceLabourAmount + invoiceMaterialAmount + invoiceOtherCostsAmount,
+      ),
       tax: parseFloat(invoiceTaxAmount),
       total: parseFloat(invoiceTotalAmount),
       deposit: parseFloat(invoiceDepositAmount),
@@ -702,10 +705,28 @@ function AdminFinancialGenerateInvoiceStep3() {
                     />
                     <DataDisplayRowText
                       label="Sub-Total"
-                      value={(invoiceLabourAmount + invoiceMaterialAmount + invoiceOtherCostsAmount)}
+                      value={
+                        invoiceLabourAmount +
+                        invoiceMaterialAmount +
+                        invoiceOtherCostsAmount
+                      }
                     />
                     <DataDisplayRowText
-                      label={<>Tax {order.invoiceIsCustomTaxAmount && <>&nbsp;(<FontAwesomeIcon className="fas" icon={faCircleInfo} />&nbsp;Note: Custom value was set)</>}</>}
+                      label={
+                        <>
+                          Tax{" "}
+                          {order.invoiceIsCustomTaxAmount && (
+                            <>
+                              &nbsp;(
+                              <FontAwesomeIcon
+                                className="fas"
+                                icon={faCircleInfo}
+                              />
+                              &nbsp;Note: Custom value was set)
+                            </>
+                          )}
+                        </>
+                      }
                       value={invoiceTaxAmount}
                     />
                     <DataDisplayRowText

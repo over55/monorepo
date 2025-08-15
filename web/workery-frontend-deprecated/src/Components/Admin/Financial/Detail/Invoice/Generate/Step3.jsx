@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/Financial/Detail/Invoice/Generate/Step3.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -68,7 +69,7 @@ import {
   CLIENT_ORGANIZATION_TYPE_OPTIONS,
   CLIENT_PHONE_TYPE_OF_MAP,
   ORDER_INVOICE_QUOTE_VALIDITY_OPTIONS,
-  ORDER_INVOICE_PAYMENT_METHODS_OPTIONS
+  ORDER_INVOICE_PAYMENT_METHODS_OPTIONS,
 } from "../../../../../../Constants/FieldOptions";
 
 function AdminFinancialGenerateInvoiceStep3() {
@@ -153,7 +154,7 @@ function AdminFinancialGenerateInvoiceStep3() {
     generateOrderInvoice.associateSignature,
   );
   const [paymentMethods, setPaymentMethods] = useState(
-      generateOrderInvoice.paymentMethods,
+    generateOrderInvoice.paymentMethods,
   );
 
   ////
@@ -523,7 +524,21 @@ function AdminFinancialGenerateInvoiceStep3() {
                     />
 
                     <FormInputField
-                      label={<>Tax {order.invoiceIsCustomTaxAmount && <>&nbsp;(<FontAwesomeIcon className="fas" icon={faCircleInfo} />&nbsp;Note: Custom value was set)</>}</>}
+                      label={
+                        <>
+                          Tax{" "}
+                          {order.invoiceIsCustomTaxAmount && (
+                            <>
+                              &nbsp;(
+                              <FontAwesomeIcon
+                                className="fas"
+                                icon={faCircleInfo}
+                              />
+                              &nbsp;Note: Custom value was set)
+                            </>
+                          )}
+                        </>
+                      }
                       name="invoiceTaxAmount"
                       placeholder=""
                       value={invoiceTaxAmount}

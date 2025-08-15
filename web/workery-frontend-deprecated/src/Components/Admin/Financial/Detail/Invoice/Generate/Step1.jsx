@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/Financial/Detail/Invoice/Generate/Step1.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -134,15 +135,15 @@ function AdminFinancialGenerateInvoiceStep1() {
     console.log("onSuccess: Starting...");
     setOrder(response);
     if (response) {
-        invoiceId = oid;
-        invoiceDate = response.invoiceDate;
-        associateName = response.associateName;
-        associatePhone = response.associatePhone;
-        associateTaxId = response.associateTaxId;
-        customerName = response.customerName;
-        customerAddress = response.customerFullAddressWithoutPostalCode;
-        customerPhone = response.customerPhone;
-        customerEmail = response.customerEmail;
+      invoiceId = oid;
+      invoiceDate = response.invoiceDate;
+      associateName = response.associateName;
+      associatePhone = response.associatePhone;
+      associateTaxId = response.associateTaxId;
+      customerName = response.customerName;
+      customerAddress = response.customerFullAddressWithoutPostalCode;
+      customerPhone = response.customerPhone;
+      customerEmail = response.customerEmail;
     }
   }
 

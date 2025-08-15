@@ -286,3 +286,11 @@ export const FINANCIAL_SORT_OPTIONS = [
  * Default Financial List Sort By Value
  */
 export const DEFAULT_FINANCIAL_LIST_SORT_BY_VALUE = "transaction_date,DESC";
+
+export const ORDER_INVOICE_QUOTE_VALIDITY_OPTIONS = [
+  { value: 30, label: "30 days" },
+  { value: 45, label: "45 days" },
+  { value: 60, label: "60 days" },
+  { value: 90, label: "90 days" },
+  { value: 120, label: "120 days" },
+];

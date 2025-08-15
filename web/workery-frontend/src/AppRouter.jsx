@@ -226,6 +226,10 @@ import AdminFinancialUpdatePage from "./pages/Admin/Financial/Update/Page";
 import AdminFinancialDetailMorePage from "./pages/Admin/Financial/Detail/More/Page";
 import AdminFinancialDetailMoreClonePage from "./pages/Admin/Financial/Detail/More/Clone/Page";
 import AdminFinancialInvoiceDetailPage from "./pages/Admin/Financial/Detail/Invoice/Page";
+import AdminFinancialGenerateInvoiceStep1Page from "./pages/Admin/Financial/Detail/Invoice/Generate/Step1Page";
+import AdminFinancialGenerateInvoiceStep2Page from "./pages/Admin/Financial/Detail/Invoice/Generate/Step2Page";
+import AdminFinancialGenerateInvoiceStep3Page from "./pages/Admin/Financial/Detail/Invoice/Generate/Step3Page";
+import AdminFinancialGenerateInvoiceStep4Page from "./pages/Admin/Financial/Detail/Invoice/Generate/Step4Page";
 
 // Admin staff pages.
 import AdminStaffListPage from "./pages/Admin/Staff/List/Page";
@@ -2072,7 +2076,7 @@ function AppRouter() {
               path="/admin/financial/:oid/invoice/generate/step-1"
               element={
                 <Layout>
-                  <PlaceholderPage title="Generate Invoice - Step 1" />
+                  <AdminFinancialGenerateInvoiceStep1Page />
                 </Layout>
               }
             />
@@ -2080,7 +2084,7 @@ function AppRouter() {
               path="/admin/financial/:oid/invoice/generate/step-2"
               element={
                 <Layout>
-                  <PlaceholderPage title="Generate Invoice - Step 2" />
+                  <AdminFinancialGenerateInvoiceStep2Page />
                 </Layout>
               }
             />
@@ -2088,7 +2092,7 @@ function AppRouter() {
               path="/admin/financial/:oid/invoice/generate/step-3"
               element={
                 <Layout>
-                  <PlaceholderPage title="Generate Invoice - Step 3" />
+                  <AdminFinancialGenerateInvoiceStep3Page />
                 </Layout>
               }
             />
@@ -2096,7 +2100,7 @@ function AppRouter() {
               path="/admin/financial/:oid/invoice/generate/step-4"
               element={
                 <Layout>
-                  <PlaceholderPage title="Generate Invoice - Step 4" />
+                  <AdminFinancialGenerateInvoiceStep4Page />
                 </Layout>
               }
             />

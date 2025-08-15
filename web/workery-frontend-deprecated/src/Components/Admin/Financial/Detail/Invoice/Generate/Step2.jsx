@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/Financial/Detail/Invoice/Generate/Step2.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -287,19 +288,38 @@ function AdminFinancialGenerateInvoiceStep2() {
     let newErrors = {};
     let hasErrors = false;
 
-    if (line01Quantity === undefined || line01Quantity === null || line01Quantity === "" || line01Quantity === 0) {
+    if (
+      line01Quantity === undefined ||
+      line01Quantity === null ||
+      line01Quantity === "" ||
+      line01Quantity === 0
+    ) {
       newErrors["line01Quantity"] = "missing value";
       hasErrors = true;
     }
-    if (line01Description === undefined || line01Description === "" || line01Description === null) {
+    if (
+      line01Description === undefined ||
+      line01Description === "" ||
+      line01Description === null
+    ) {
       newErrors["line01Description"] = "missing value";
       hasErrors = true;
     }
-    if (line01UnitPrice === undefined || line01UnitPrice === null || line01UnitPrice === "" || line01UnitPrice === 0) {
+    if (
+      line01UnitPrice === undefined ||
+      line01UnitPrice === null ||
+      line01UnitPrice === "" ||
+      line01UnitPrice === 0
+    ) {
       newErrors["line01UnitPrice"] = "missing value";
       hasErrors = true;
     }
-    if (line01Amount === undefined || line01Amount === null || line01Amount === "" || line01Amount === 0) {
+    if (
+      line01Amount === undefined ||
+      line01Amount === null ||
+      line01Amount === "" ||
+      line01Amount === 0
+    ) {
       newErrors["line01Amount"] = "missing value";
       hasErrors = true;
     }
@@ -571,15 +591,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                       errorText={errors && errors.line01Quantity}
                       helpText=""
                       onChange={(e) => {
-                          setLine01Quantity(e.target.value);
-                          try {
-                              const totalAmount = parseFloat(e.target.value) * line01UnitPrice;
-                              if (!isNaN(totalAmount)) {
-                                  setLine01Amount(totalAmount);
-                              }
-                          } catch (e) {
-                              setLine01Amount(0);
+                        setLine01Quantity(e.target.value);
+                        try {
+                          const totalAmount =
+                            parseFloat(e.target.value) * line01UnitPrice;
+                          if (!isNaN(totalAmount)) {
+                            setLine01Amount(totalAmount);
                           }
+                        } catch (e) {
+                          setLine01Amount(0);
+                        }
                       }}
                       isRequired={true}
                       maxWidth="150px"
@@ -605,15 +626,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                       errorText={errors && errors.line01UnitPrice}
                       helpText=""
                       onChange={(e) => {
-                          setLine01UnitPrice(e.target.value);
-                          try {
-                              const totalAmount = parseFloat(e.target.value) * line01Quantity;
-                              if (!isNaN(totalAmount)) {
-                                  setLine01Amount(totalAmount);
-                              }
-                          } catch (e) {
-                              setLine01Amount(0);
+                        setLine01UnitPrice(e.target.value);
+                        try {
+                          const totalAmount =
+                            parseFloat(e.target.value) * line01Quantity;
+                          if (!isNaN(totalAmount)) {
+                            setLine01Amount(totalAmount);
                           }
+                        } catch (e) {
+                          setLine01Amount(0);
+                        }
                       }}
                       isRequired={true}
                       maxWidth="150px"
@@ -627,7 +649,13 @@ function AdminFinancialGenerateInvoiceStep2() {
                       onChange={(e) => setLine01Amount(e.target.value)}
                       isRequired={true}
                       maxWidth="150px"
-                      helpText={<>This field is autopopulated when you answer the <strong>Line 01 Quantity</strong> and <strong>Line 01 Unit Price</strong> fields above.</>}
+                      helpText={
+                        <>
+                          This field is autopopulated when you answer the{" "}
+                          <strong>Line 01 Quantity</strong> and{" "}
+                          <strong>Line 01 Unit Price</strong> fields above.
+                        </>
+                      }
                       disabled={true}
                     />
                     {line01Quantity !== undefined &&
@@ -646,15 +674,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                             errorText={errors && errors.line02Quantity}
                             helpText=""
                             onChange={(e) => {
-                                setLine02Quantity(e.target.value);
-                                try {
-                                    const totalAmount = parseFloat(e.target.value) * line02UnitPrice;
-                                    if (!isNaN(totalAmount)) {
-                                        setLine02Amount(totalAmount);
-                                    }
-                                } catch (e) {
-                                    setLine02Amount(0);
+                              setLine02Quantity(e.target.value);
+                              try {
+                                const totalAmount =
+                                  parseFloat(e.target.value) * line02UnitPrice;
+                                if (!isNaN(totalAmount)) {
+                                  setLine02Amount(totalAmount);
                                 }
+                              } catch (e) {
+                                setLine02Amount(0);
+                              }
                             }}
                             isRequired={true}
                             maxWidth="150px"
@@ -684,15 +713,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                             errorText={errors && errors.line02UnitPrice}
                             helpText=""
                             onChange={(e) => {
-                                setLine02UnitPrice(e.target.value);
-                                try {
-                                    const totalAmount = parseFloat(e.target.value) * line02Quantity;
-                                    if (!isNaN(totalAmount)) {
-                                        setLine02Amount(totalAmount);
-                                    }
-                                } catch (e) {
-                                    setLine02Amount(0);
+                              setLine02UnitPrice(e.target.value);
+                              try {
+                                const totalAmount =
+                                  parseFloat(e.target.value) * line02Quantity;
+                                if (!isNaN(totalAmount)) {
+                                  setLine02Amount(totalAmount);
                                 }
+                              } catch (e) {
+                                setLine02Amount(0);
+                              }
                             }}
                             isRequired={true}
                             maxWidth="150px"
@@ -728,15 +758,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                             errorText={errors && errors.line03Quantity}
                             helpText=""
                             onChange={(e) => {
-                                setLine03Quantity(e.target.value);
-                                try {
-                                    const totalAmount = parseFloat(e.target.value) * line03UnitPrice;
-                                    if (!isNaN(totalAmount)) {
-                                        setLine03Amount(totalAmount);
-                                    }
-                                } catch (e) {
-                                    setLine03Amount(0);
+                              setLine03Quantity(e.target.value);
+                              try {
+                                const totalAmount =
+                                  parseFloat(e.target.value) * line03UnitPrice;
+                                if (!isNaN(totalAmount)) {
+                                  setLine03Amount(totalAmount);
                                 }
+                              } catch (e) {
+                                setLine03Amount(0);
+                              }
                             }}
                             isRequired={true}
                             maxWidth="150px"
@@ -766,15 +797,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                             errorText={errors && errors.line03UnitPrice}
                             helpText=""
                             onChange={(e) => {
-                                setLine03UnitPrice(e.target.value);
-                                try {
-                                    const totalAmount = parseFloat(e.target.value) * line03Quantity;
-                                    if (!isNaN(totalAmount)) {
-                                        setLine03Amount(totalAmount);
-                                    }
-                                } catch (e) {
-                                    setLine03Amount(0);
+                              setLine03UnitPrice(e.target.value);
+                              try {
+                                const totalAmount =
+                                  parseFloat(e.target.value) * line03Quantity;
+                                if (!isNaN(totalAmount)) {
+                                  setLine03Amount(totalAmount);
                                 }
+                              } catch (e) {
+                                setLine03Amount(0);
+                              }
                             }}
                             isRequired={true}
                             maxWidth="150px"
@@ -810,15 +842,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                             errorText={errors && errors.line04Quantity}
                             helpText=""
                             onChange={(e) => {
-                                setLine04Quantity(e.target.value);
-                                try {
-                                    const totalAmount = parseFloat(e.target.value) * line04UnitPrice;
-                                    if (!isNaN(totalAmount)) {
-                                        setLine03Amount(totalAmount);
-                                    }
-                                } catch (e) {
-                                    setLine04Amount(0);
+                              setLine04Quantity(e.target.value);
+                              try {
+                                const totalAmount =
+                                  parseFloat(e.target.value) * line04UnitPrice;
+                                if (!isNaN(totalAmount)) {
+                                  setLine03Amount(totalAmount);
                                 }
+                              } catch (e) {
+                                setLine04Amount(0);
+                              }
                             }}
                             isRequired={true}
                             maxWidth="150px"
@@ -848,15 +881,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                             errorText={errors && errors.line04UnitPrice}
                             helpText=""
                             onChange={(e) => {
-                                setLine04UnitPrice(e.target.value);
-                                try {
-                                    const totalAmount = parseFloat(e.target.value) * line04Quantity;
-                                    if (!isNaN(totalAmount)) {
-                                        setLine04Amount(totalAmount);
-                                    }
-                                } catch (e) {
-                                    setLine04Amount(0);
+                              setLine04UnitPrice(e.target.value);
+                              try {
+                                const totalAmount =
+                                  parseFloat(e.target.value) * line04Quantity;
+                                if (!isNaN(totalAmount)) {
+                                  setLine04Amount(totalAmount);
                                 }
+                              } catch (e) {
+                                setLine04Amount(0);
+                              }
                             }}
                             isRequired={true}
                             maxWidth="150px"
@@ -892,15 +926,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                             errorText={errors && errors.line05Quantity}
                             helpText=""
                             onChange={(e) => {
-                                setLine05Quantity(e.target.value);
-                                try {
-                                    const totalAmount = parseFloat(e.target.value) * line05UnitPrice;
-                                    if (!isNaN(totalAmount)) {
-                                        setLine05Amount(totalAmount);
-                                    }
-                                } catch (e) {
-                                    setLine05Amount(0);
+                              setLine05Quantity(e.target.value);
+                              try {
+                                const totalAmount =
+                                  parseFloat(e.target.value) * line05UnitPrice;
+                                if (!isNaN(totalAmount)) {
+                                  setLine05Amount(totalAmount);
                                 }
+                              } catch (e) {
+                                setLine05Amount(0);
+                              }
                             }}
                             isRequired={true}
                             maxWidth="150px"
@@ -930,15 +965,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                             errorText={errors && errors.line05UnitPrice}
                             helpText=""
                             onChange={(e) => {
-                                setLine05UnitPrice(e.target.value);
-                                try {
-                                    const totalAmount = parseFloat(e.target.value) * line05Quantity;
-                                    if (!isNaN(totalAmount)) {
-                                        setLine05Amount(totalAmount);
-                                    }
-                                } catch (e) {
-                                    setLine05Amount(0);
+                              setLine05UnitPrice(e.target.value);
+                              try {
+                                const totalAmount =
+                                  parseFloat(e.target.value) * line05Quantity;
+                                if (!isNaN(totalAmount)) {
+                                  setLine05Amount(totalAmount);
                                 }
+                              } catch (e) {
+                                setLine05Amount(0);
+                              }
                             }}
                             isRequired={true}
                             maxWidth="150px"
@@ -974,15 +1010,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                             errorText={errors && errors.line06Quantity}
                             helpText=""
                             onChange={(e) => {
-                                setLine06Quantity(e.target.value);
-                                try {
-                                    const totalAmount = parseFloat(e.target.value) * line06UnitPrice;
-                                    if (!isNaN(totalAmount)) {
-                                        setLine06Amount(totalAmount);
-                                    }
-                                } catch (e) {
-                                    setLine06Amount(0);
+                              setLine06Quantity(e.target.value);
+                              try {
+                                const totalAmount =
+                                  parseFloat(e.target.value) * line06UnitPrice;
+                                if (!isNaN(totalAmount)) {
+                                  setLine06Amount(totalAmount);
                                 }
+                              } catch (e) {
+                                setLine06Amount(0);
+                              }
                             }}
                             isRequired={true}
                             maxWidth="150px"
@@ -1012,15 +1049,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                             errorText={errors && errors.line06UnitPrice}
                             helpText=""
                             onChange={(e) => {
-                                setLine06UnitPrice(e.target.value);
-                                try {
-                                    const totalAmount = parseFloat(e.target.value) * line06Quantity;
-                                    if (!isNaN(totalAmount)) {
-                                        setLine06Amount(totalAmount);
-                                    }
-                                } catch (e) {
-                                    setLine06Amount(0);
+                              setLine06UnitPrice(e.target.value);
+                              try {
+                                const totalAmount =
+                                  parseFloat(e.target.value) * line06Quantity;
+                                if (!isNaN(totalAmount)) {
+                                  setLine06Amount(totalAmount);
                                 }
+                              } catch (e) {
+                                setLine06Amount(0);
+                              }
                             }}
                             isRequired={true}
                             maxWidth="150px"
@@ -1056,15 +1094,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                             errorText={errors && errors.line07Quantity}
                             helpText=""
                             onChange={(e) => {
-                                setLine07Quantity(e.target.value);
-                                try {
-                                    const totalAmount = parseFloat(e.target.value) * line07UnitPrice;
-                                    if (!isNaN(totalAmount)) {
-                                        setLine07Amount(totalAmount);
-                                    }
-                                } catch (e) {
-                                    setLine07Amount(0);
+                              setLine07Quantity(e.target.value);
+                              try {
+                                const totalAmount =
+                                  parseFloat(e.target.value) * line07UnitPrice;
+                                if (!isNaN(totalAmount)) {
+                                  setLine07Amount(totalAmount);
                                 }
+                              } catch (e) {
+                                setLine07Amount(0);
+                              }
                             }}
                             isRequired={true}
                             maxWidth="150px"
@@ -1094,15 +1133,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                             errorText={errors && errors.line07UnitPrice}
                             helpText=""
                             onChange={(e) => {
-                                setLine07UnitPrice(e.target.value);
-                                try {
-                                    const totalAmount = parseFloat(e.target.value) * line07Quantity;
-                                    if (!isNaN(totalAmount)) {
-                                        setLine07Amount(totalAmount);
-                                    }
-                                } catch (e) {
-                                    setLine07Amount(0);
+                              setLine07UnitPrice(e.target.value);
+                              try {
+                                const totalAmount =
+                                  parseFloat(e.target.value) * line07Quantity;
+                                if (!isNaN(totalAmount)) {
+                                  setLine07Amount(totalAmount);
                                 }
+                              } catch (e) {
+                                setLine07Amount(0);
+                              }
                             }}
                             isRequired={true}
                             maxWidth="150px"
@@ -1138,15 +1178,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                             errorText={errors && errors.line08Quantity}
                             helpText=""
                             onChange={(e) => {
-                                setLine08Quantity(e.target.value);
-                                try {
-                                    const totalAmount = parseFloat(e.target.value) * line08UnitPrice;
-                                    if (!isNaN(totalAmount)) {
-                                        setLine08Amount(totalAmount);
-                                    }
-                                } catch (e) {
-                                    setLine08Amount(0);
+                              setLine08Quantity(e.target.value);
+                              try {
+                                const totalAmount =
+                                  parseFloat(e.target.value) * line08UnitPrice;
+                                if (!isNaN(totalAmount)) {
+                                  setLine08Amount(totalAmount);
                                 }
+                              } catch (e) {
+                                setLine08Amount(0);
+                              }
                             }}
                             isRequired={true}
                             maxWidth="150px"
@@ -1176,15 +1217,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                             errorText={errors && errors.line08UnitPrice}
                             helpText=""
                             onChange={(e) => {
-                                setLine08UnitPrice(e.target.value);
-                                try {
-                                    const totalAmount = parseFloat(e.target.value) * line08Quantity;
-                                    if (!isNaN(totalAmount)) {
-                                        setLine08Amount(totalAmount);
-                                    }
-                                } catch (e) {
-                                    setLine08Amount(0);
+                              setLine08UnitPrice(e.target.value);
+                              try {
+                                const totalAmount =
+                                  parseFloat(e.target.value) * line08Quantity;
+                                if (!isNaN(totalAmount)) {
+                                  setLine08Amount(totalAmount);
                                 }
+                              } catch (e) {
+                                setLine08Amount(0);
+                              }
                             }}
                             isRequired={true}
                             maxWidth="150px"
@@ -1220,15 +1262,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                             errorText={errors && errors.line09Quantity}
                             helpText=""
                             onChange={(e) => {
-                                setLine09Quantity(e.target.value);
-                                try {
-                                    const totalAmount = parseFloat(e.target.value) * line09UnitPrice;
-                                    if (!isNaN(totalAmount)) {
-                                        setLine09Amount(totalAmount);
-                                    }
-                                } catch (e) {
-                                    setLine09Amount(0);
+                              setLine09Quantity(e.target.value);
+                              try {
+                                const totalAmount =
+                                  parseFloat(e.target.value) * line09UnitPrice;
+                                if (!isNaN(totalAmount)) {
+                                  setLine09Amount(totalAmount);
                                 }
+                              } catch (e) {
+                                setLine09Amount(0);
+                              }
                             }}
                             isRequired={true}
                             maxWidth="150px"
@@ -1258,15 +1301,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                             errorText={errors && errors.line09UnitPrice}
                             helpText=""
                             onChange={(e) => {
-                                setLine09UnitPrice(e.target.value);
-                                try {
-                                    const totalAmount = parseFloat(e.target.value) * line09Quantity;
-                                    if (!isNaN(totalAmount)) {
-                                        setLine09Amount(totalAmount);
-                                    }
-                                } catch (e) {
-                                    setLine09Amount(0);
+                              setLine09UnitPrice(e.target.value);
+                              try {
+                                const totalAmount =
+                                  parseFloat(e.target.value) * line09Quantity;
+                                if (!isNaN(totalAmount)) {
+                                  setLine09Amount(totalAmount);
                                 }
+                              } catch (e) {
+                                setLine09Amount(0);
+                              }
                             }}
                             isRequired={true}
                             maxWidth="150px"
@@ -1302,15 +1346,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                             errorText={errors && errors.line10Quantity}
                             helpText=""
                             onChange={(e) => {
-                                setLine10Quantity(e.target.value);
-                                try {
-                                    const totalAmount = parseFloat(e.target.value) * line10UnitPrice;
-                                    if (!isNaN(totalAmount)) {
-                                        setLine10Amount(totalAmount);
-                                    }
-                                } catch (e) {
-                                    setLine10Amount(0);
+                              setLine10Quantity(e.target.value);
+                              try {
+                                const totalAmount =
+                                  parseFloat(e.target.value) * line10UnitPrice;
+                                if (!isNaN(totalAmount)) {
+                                  setLine10Amount(totalAmount);
                                 }
+                              } catch (e) {
+                                setLine10Amount(0);
+                              }
                             }}
                             isRequired={true}
                             maxWidth="150px"
@@ -1340,15 +1385,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                             errorText={errors && errors.line10UnitPrice}
                             helpText=""
                             onChange={(e) => {
-                                setLine10UnitPrice(e.target.value);
-                                try {
-                                    const totalAmount = parseFloat(e.target.value) * line10Quantity;
-                                    if (!isNaN(totalAmount)) {
-                                        setLine10Amount(totalAmount);
-                                    }
-                                } catch (e) {
-                                    setLine10Amount(0);
+                              setLine10UnitPrice(e.target.value);
+                              try {
+                                const totalAmount =
+                                  parseFloat(e.target.value) * line10Quantity;
+                                if (!isNaN(totalAmount)) {
+                                  setLine10Amount(totalAmount);
                                 }
+                              } catch (e) {
+                                setLine10Amount(0);
+                              }
                             }}
                             isRequired={true}
                             maxWidth="150px"
@@ -1384,15 +1430,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                             errorText={errors && errors.line11Quantity}
                             helpText=""
                             onChange={(e) => {
-                                setLine11Quantity(e.target.value);
-                                try {
-                                    const totalAmount = parseFloat(e.target.value) * line11UnitPrice;
-                                    if (!isNaN(totalAmount)) {
-                                        setLine11Amount(totalAmount);
-                                    }
-                                } catch (e) {
-                                    setLine11Amount(0);
+                              setLine11Quantity(e.target.value);
+                              try {
+                                const totalAmount =
+                                  parseFloat(e.target.value) * line11UnitPrice;
+                                if (!isNaN(totalAmount)) {
+                                  setLine11Amount(totalAmount);
                                 }
+                              } catch (e) {
+                                setLine11Amount(0);
+                              }
                             }}
                             isRequired={true}
                             maxWidth="150px"
@@ -1422,15 +1469,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                             errorText={errors && errors.line11UnitPrice}
                             helpText=""
                             onChange={(e) => {
-                                setLine11UnitPrice(e.target.value);
-                                try {
-                                    const totalAmount = parseFloat(e.target.value) * line11Quantity;
-                                    if (!isNaN(totalAmount)) {
-                                        setLine11Amount(totalAmount);
-                                    }
-                                } catch (e) {
-                                    setLine11Amount(0);
+                              setLine11UnitPrice(e.target.value);
+                              try {
+                                const totalAmount =
+                                  parseFloat(e.target.value) * line11Quantity;
+                                if (!isNaN(totalAmount)) {
+                                  setLine11Amount(totalAmount);
                                 }
+                              } catch (e) {
+                                setLine11Amount(0);
+                              }
                             }}
                             isRequired={true}
                             maxWidth="150px"
@@ -1466,15 +1514,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                             errorText={errors && errors.line12Quantity}
                             helpText=""
                             onChange={(e) => {
-                                setLine12Quantity(e.target.value);
-                                try {
-                                    const totalAmount = parseFloat(e.target.value) * line12UnitPrice;
-                                    if (!isNaN(totalAmount)) {
-                                        setLine12Amount(totalAmount);
-                                    }
-                                } catch (e) {
-                                    setLine12Amount(0);
+                              setLine12Quantity(e.target.value);
+                              try {
+                                const totalAmount =
+                                  parseFloat(e.target.value) * line12UnitPrice;
+                                if (!isNaN(totalAmount)) {
+                                  setLine12Amount(totalAmount);
                                 }
+                              } catch (e) {
+                                setLine12Amount(0);
+                              }
                             }}
                             isRequired={true}
                             maxWidth="150px"
@@ -1504,15 +1553,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                             errorText={errors && errors.line12UnitPrice}
                             helpText=""
                             onChange={(e) => {
-                                setLine12UnitPrice(e.target.value);
-                                try {
-                                    const totalAmount = parseFloat(e.target.value) * line12Quantity;
-                                    if (!isNaN(totalAmount)) {
-                                        setLine12Amount(totalAmount);
-                                    }
-                                } catch (e) {
-                                    setLine12Amount(0);
+                              setLine12UnitPrice(e.target.value);
+                              try {
+                                const totalAmount =
+                                  parseFloat(e.target.value) * line12Quantity;
+                                if (!isNaN(totalAmount)) {
+                                  setLine12Amount(totalAmount);
                                 }
+                              } catch (e) {
+                                setLine12Amount(0);
+                              }
                             }}
                             isRequired={true}
                             maxWidth="150px"
@@ -1548,15 +1598,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                             errorText={errors && errors.line13Quantity}
                             helpText=""
                             onChange={(e) => {
-                                setLine13Quantity(e.target.value);
-                                try {
-                                    const totalAmount = parseFloat(e.target.value) * line13UnitPrice;
-                                    if (!isNaN(totalAmount)) {
-                                        setLine13Amount(totalAmount);
-                                    }
-                                } catch (e) {
-                                    setLine13Amount(0);
+                              setLine13Quantity(e.target.value);
+                              try {
+                                const totalAmount =
+                                  parseFloat(e.target.value) * line13UnitPrice;
+                                if (!isNaN(totalAmount)) {
+                                  setLine13Amount(totalAmount);
                                 }
+                              } catch (e) {
+                                setLine13Amount(0);
+                              }
                             }}
                             isRequired={true}
                             maxWidth="150px"
@@ -1586,15 +1637,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                             errorText={errors && errors.line13UnitPrice}
                             helpText=""
                             onChange={(e) => {
-                                setLine13UnitPrice(e.target.value);
-                                try {
-                                    const totalAmount = parseFloat(e.target.value) * line13Quantity;
-                                    if (!isNaN(totalAmount)) {
-                                        setLine13Amount(totalAmount);
-                                    }
-                                } catch (e) {
-                                    setLine13Amount(0);
+                              setLine13UnitPrice(e.target.value);
+                              try {
+                                const totalAmount =
+                                  parseFloat(e.target.value) * line13Quantity;
+                                if (!isNaN(totalAmount)) {
+                                  setLine13Amount(totalAmount);
                                 }
+                              } catch (e) {
+                                setLine13Amount(0);
+                              }
                             }}
                             isRequired={true}
                             maxWidth="150px"
@@ -1630,15 +1682,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                             errorText={errors && errors.line14Quantity}
                             helpText=""
                             onChange={(e) => {
-                                setLine14Quantity(e.target.value);
-                                try {
-                                    const totalAmount = parseFloat(e.target.value) * line14UnitPrice;
-                                    if (!isNaN(totalAmount)) {
-                                        setLine14Amount(totalAmount);
-                                    }
-                                } catch (e) {
-                                    setLine14Amount(0);
+                              setLine14Quantity(e.target.value);
+                              try {
+                                const totalAmount =
+                                  parseFloat(e.target.value) * line14UnitPrice;
+                                if (!isNaN(totalAmount)) {
+                                  setLine14Amount(totalAmount);
                                 }
+                              } catch (e) {
+                                setLine14Amount(0);
+                              }
                             }}
                             isRequired={true}
                             maxWidth="150px"
@@ -1668,15 +1721,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                             errorText={errors && errors.line14UnitPrice}
                             helpText=""
                             onChange={(e) => {
-                                setLine14UnitPrice(e.target.value);
-                                try {
-                                    const totalAmount = parseFloat(e.target.value) * line14Quantity;
-                                    if (!isNaN(totalAmount)) {
-                                        setLine14Amount(totalAmount);
-                                    }
-                                } catch (e) {
-                                    setLine14Amount(0);
+                              setLine14UnitPrice(e.target.value);
+                              try {
+                                const totalAmount =
+                                  parseFloat(e.target.value) * line14Quantity;
+                                if (!isNaN(totalAmount)) {
+                                  setLine14Amount(totalAmount);
                                 }
+                              } catch (e) {
+                                setLine14Amount(0);
+                              }
                             }}
                             isRequired={true}
                             maxWidth="150px"
@@ -1712,15 +1766,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                             errorText={errors && errors.line15Quantity}
                             helpText=""
                             onChange={(e) => {
-                                setLine15Quantity(e.target.value);
-                                try {
-                                    const totalAmount = parseFloat(e.target.value) * line15UnitPrice;
-                                    if (!isNaN(totalAmount)) {
-                                        setLine15Amount(totalAmount);
-                                    }
-                                } catch (e) {
-                                    setLine15Amount(0);
+                              setLine15Quantity(e.target.value);
+                              try {
+                                const totalAmount =
+                                  parseFloat(e.target.value) * line15UnitPrice;
+                                if (!isNaN(totalAmount)) {
+                                  setLine15Amount(totalAmount);
                                 }
+                              } catch (e) {
+                                setLine15Amount(0);
+                              }
                             }}
                             isRequired={true}
                             maxWidth="150px"
@@ -1750,15 +1805,16 @@ function AdminFinancialGenerateInvoiceStep2() {
                             errorText={errors && errors.line15UnitPrice}
                             helpText=""
                             onChange={(e) => {
-                                setLine15UnitPrice(e.target.value);
-                                try {
-                                    const totalAmount = parseFloat(e.target.value) * line15Quantity;
-                                    if (!isNaN(totalAmount)) {
-                                        setLine15Amount(totalAmount);
-                                    }
-                                } catch (e) {
-                                    setLine15Amount(0);
+                              setLine15UnitPrice(e.target.value);
+                              try {
+                                const totalAmount =
+                                  parseFloat(e.target.value) * line15Quantity;
+                                if (!isNaN(totalAmount)) {
+                                  setLine15Amount(totalAmount);
                                 }
+                              } catch (e) {
+                                setLine15Amount(0);
+                              }
                             }}
                             isRequired={true}
                             maxWidth="150px"
