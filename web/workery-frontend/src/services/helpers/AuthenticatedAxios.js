@@ -1,8 +1,13 @@
-// File Path: monorepo/web/workery-frontend/src/services/Helpers/AuthenticatedAxios.js
+// File Path: web/workery-frontend/src/services/Helpers/AuthenticatedAxios.js
 
 import axios from "axios";
 import { camelizeKeys } from "humps";
 import { API_ENDPOINTS } from "../Config/APIConfig";
+import {
+  AUTH_TOKEN_TYPE,
+  HTTP_HEADERS,
+  HTTP_STATUS,
+} from "../../constants/Authentication";
 
 /**
  * Creates an authenticated Axios instance with automatic token refresh
@@ -20,9 +25,9 @@ export function createAuthenticatedAxios(
   const authenticatedAxios = axios.create({
     baseURL: baseURL,
     headers: {
-      Authorization: "JWT " + accessToken,
-      "Content-Type": "application/json;",
-      Accept: "application/json",
+      Authorization: `${AUTH_TOKEN_TYPE.JWT} ${accessToken}`,
+      "Content-Type": HTTP_HEADERS.CONTENT_TYPE_JSON,
+      Accept: HTTP_HEADERS.ACCEPT_JSON,
     },
   });
 
@@ -35,7 +40,7 @@ export function createAuthenticatedAxios(
       const originalConfig = error.config;
 
       // Handle 401 unauthorized errors
-      if (error.response?.status === 401) {
+      if (error.response?.status === HTTP_STATUS.UNAUTHORIZED) {
         const refreshToken = tokenStorage.getRefreshToken();
 
         if (refreshToken) {
@@ -46,7 +51,7 @@ export function createAuthenticatedAxios(
               refreshToken,
             );
 
-            if (refreshResponse && refreshResponse.status === 200) {
+            if (refreshResponse && refreshResponse.status === HTTP_STATUS.OK) {
               // Extract new tokens
               const newAccessToken = refreshResponse.data.access_token;
               const newRefreshToken = refreshResponse.data.refresh_token;
@@ -60,7 +65,7 @@ export function createAuthenticatedAxios(
                 ...originalConfig,
                 headers: {
                   ...originalConfig.headers,
-                  Authorization: `JWT ${newAccessToken}`,
+                  Authorization: `${AUTH_TOKEN_TYPE.JWT} ${newAccessToken}`,
                 },
               };
 
@@ -72,7 +77,7 @@ export function createAuthenticatedAxios(
 
             // If refresh fails with 401, call unauthorized callback
             if (
-              refreshError.response?.status === 401 &&
+              refreshError.response?.status === HTTP_STATUS.UNAUTHORIZED &&
               onUnauthorizedCallback
             ) {
               onUnauthorizedCallback();
@@ -100,9 +105,9 @@ async function handleTokenRefresh(baseURL, refreshToken) {
   const refreshAxios = axios.create({
     baseURL: baseURL,
     headers: {
-      "Content-Type": "application/json",
-      Accept: "application/json",
-      Authorization: `Bearer ${refreshToken}`,
+      "Content-Type": HTTP_HEADERS.CONTENT_TYPE_JSON,
+      Accept: HTTP_HEADERS.ACCEPT_JSON,
+      Authorization: `${AUTH_TOKEN_TYPE.BEARER} ${refreshToken}`,
     },
   });
 

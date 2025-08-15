@@ -11,6 +11,14 @@ import {
   FormGroup,
   TextArea,
 } from "../../../../../components/UI";
+import { STORAGE_KEYS } from "../../../../../constants/Storage";
+import {
+  TASK_ASSIGN_ASSOCIATE_STATUS,
+  TASK_HOW_JOB_ACCEPTED,
+  TASK_WHY_JOB_DECLINED,
+  TASK_WIZARD_STEPS,
+  TASK_PROGRESS_PERCENTAGE,
+} from "../../../../../constants/Task";
 
 function AdminTaskItemAssignAssociateStep3Page() {
   // URL Parameters
@@ -28,7 +36,9 @@ function AdminTaskItemAssignAssociateStep3Page() {
 
   // Load associate data from session storage
   useEffect(() => {
-    const storedData = sessionStorage.getItem("WORKERY_ASSIGN_ASSOCIATE_DATA");
+    const storedData = sessionStorage.getItem(
+      STORAGE_KEYS.WORKERY_ASSIGN_ASSOCIATE_DATA,
+    );
     if (!storedData) {
       setForceURL(`/admin/task/${tid}/assign-associate/step-2`);
       return;
@@ -48,12 +58,18 @@ function AdminTaskItemAssignAssociateStep3Page() {
       newErrors["status"] = "Please select whether the job was accepted";
       hasErrors = true;
     } else {
-      if (status === 3 && (!howWasJobAccepted || howWasJobAccepted === 0)) {
+      if (
+        status === TASK_ASSIGN_ASSOCIATE_STATUS.ACCEPTED &&
+        (!howWasJobAccepted || howWasJobAccepted === 0)
+      ) {
         newErrors["howWasJobAccepted"] =
           "Please select how the job was accepted";
         hasErrors = true;
       }
-      if (status === 4 && (!whyJobDeclined || whyJobDeclined === 0)) {
+      if (
+        status === TASK_ASSIGN_ASSOCIATE_STATUS.DECLINED &&
+        (!whyJobDeclined || whyJobDeclined === 0)
+      ) {
         newErrors["whyJobDeclined"] = "Please select why the job was declined";
         hasErrors = true;
       }
@@ -76,7 +92,7 @@ function AdminTaskItemAssignAssociateStep3Page() {
       predefinedComment: predefinedComment,
     };
     sessionStorage.setItem(
-      "WORKERY_ASSIGN_ASSOCIATE_DATA",
+      STORAGE_KEYS.WORKERY_ASSIGN_ASSOCIATE_DATA,
       JSON.stringify(updatedData),
     );
 
@@ -97,16 +113,16 @@ function AdminTaskItemAssignAssociateStep3Page() {
     const todayDate = new Date().toISOString().slice(0, 10);
     let method = "";
     switch (value) {
-      case 1:
+      case TASK_HOW_JOB_ACCEPTED.PHONE:
         method = "phone";
         break;
-      case 2:
+      case TASK_HOW_JOB_ACCEPTED.TEXT:
         method = "text";
         break;
-      case 3:
+      case TASK_HOW_JOB_ACCEPTED.EMAIL:
         method = "email";
         break;
-      case 4:
+      case TASK_HOW_JOB_ACCEPTED.IN_PERSON:
         method = "in-person confirmation";
         break;
       default:
@@ -125,16 +141,16 @@ function AdminTaskItemAssignAssociateStep3Page() {
     const todayDate = new Date().toISOString().slice(0, 10);
     let reason = "";
     switch (value) {
-      case 1:
+      case TASK_WHY_JOB_DECLINED.ASSOCIATE_BUSY:
         reason = "associate was busy";
         break;
-      case 2:
+      case TASK_WHY_JOB_DECLINED.NO_SKILLS:
         reason = "associate does not have the skills";
         break;
-      case 3:
+      case TASK_WHY_JOB_DECLINED.NO_TRAVEL:
         reason = "associate does not wish to travel to the customer's location";
         break;
-      case 4:
+      case TASK_WHY_JOB_DECLINED.NO_WORK_WITH_CLIENT:
         reason = "associate does not wish to work with this client";
         break;
       default:
@@ -169,9 +185,12 @@ function AdminTaskItemAssignAssociateStep3Page() {
 
       {/* Progress Wizard */}
       <Card>
-        <p>Step 3 of 4</p>
-        <progress value="75" max="100">
-          75%
+        <p>
+          Step {TASK_WIZARD_STEPS.ASSIGN_ASSOCIATE.CONFIRM} of{" "}
+          {TASK_WIZARD_STEPS.ASSIGN_ASSOCIATE.TOTAL}
+        </p>
+        <progress value={TASK_PROGRESS_PERCENTAGE.STEP_3_OF_4} max="100">
+          {TASK_PROGRESS_PERCENTAGE.STEP_3_OF_4}%
         </progress>
       </Card>
 
@@ -205,9 +224,11 @@ function AdminTaskItemAssignAssociateStep3Page() {
                   <input
                     type="radio"
                     name="status"
-                    value={3}
-                    checked={status === 3}
-                    onChange={(e) => handleStatusChange(3)}
+                    value={TASK_ASSIGN_ASSOCIATE_STATUS.ACCEPTED}
+                    checked={status === TASK_ASSIGN_ASSOCIATE_STATUS.ACCEPTED}
+                    onChange={(e) =>
+                      handleStatusChange(TASK_ASSIGN_ASSOCIATE_STATUS.ACCEPTED)
+                    }
                   />{" "}
                   Yes
                 </label>
@@ -216,9 +237,11 @@ function AdminTaskItemAssignAssociateStep3Page() {
                   <input
                     type="radio"
                     name="status"
-                    value={4}
-                    checked={status === 4}
-                    onChange={(e) => handleStatusChange(4)}
+                    value={TASK_ASSIGN_ASSOCIATE_STATUS.DECLINED}
+                    checked={status === TASK_ASSIGN_ASSOCIATE_STATUS.DECLINED}
+                    onChange={(e) =>
+                      handleStatusChange(TASK_ASSIGN_ASSOCIATE_STATUS.DECLINED)
+                    }
                   />{" "}
                   No
                 </label>
@@ -231,7 +254,7 @@ function AdminTaskItemAssignAssociateStep3Page() {
             </FormGroup>
 
             {/* How was job accepted */}
-            {status === 3 && (
+            {status === TASK_ASSIGN_ASSOCIATE_STATUS.ACCEPTED && (
               <FormGroup>
                 <label>How was this job accepted? *</label>
                 <div>
@@ -239,9 +262,13 @@ function AdminTaskItemAssignAssociateStep3Page() {
                     <input
                       type="radio"
                       name="howWasJobAccepted"
-                      value={1}
-                      checked={howWasJobAccepted === 1}
-                      onChange={(e) => handleHowAcceptedChange(1)}
+                      value={TASK_HOW_JOB_ACCEPTED.PHONE}
+                      checked={
+                        howWasJobAccepted === TASK_HOW_JOB_ACCEPTED.PHONE
+                      }
+                      onChange={(e) =>
+                        handleHowAcceptedChange(TASK_HOW_JOB_ACCEPTED.PHONE)
+                      }
                     />{" "}
                     Phone
                   </label>
@@ -250,9 +277,11 @@ function AdminTaskItemAssignAssociateStep3Page() {
                     <input
                       type="radio"
                       name="howWasJobAccepted"
-                      value={2}
-                      checked={howWasJobAccepted === 2}
-                      onChange={(e) => handleHowAcceptedChange(2)}
+                      value={TASK_HOW_JOB_ACCEPTED.TEXT}
+                      checked={howWasJobAccepted === TASK_HOW_JOB_ACCEPTED.TEXT}
+                      onChange={(e) =>
+                        handleHowAcceptedChange(TASK_HOW_JOB_ACCEPTED.TEXT)
+                      }
                     />{" "}
                     Text
                   </label>
@@ -261,9 +290,13 @@ function AdminTaskItemAssignAssociateStep3Page() {
                     <input
                       type="radio"
                       name="howWasJobAccepted"
-                      value={3}
-                      checked={howWasJobAccepted === 3}
-                      onChange={(e) => handleHowAcceptedChange(3)}
+                      value={TASK_HOW_JOB_ACCEPTED.EMAIL}
+                      checked={
+                        howWasJobAccepted === TASK_HOW_JOB_ACCEPTED.EMAIL
+                      }
+                      onChange={(e) =>
+                        handleHowAcceptedChange(TASK_HOW_JOB_ACCEPTED.EMAIL)
+                      }
                     />{" "}
                     Email
                   </label>
@@ -272,9 +305,13 @@ function AdminTaskItemAssignAssociateStep3Page() {
                     <input
                       type="radio"
                       name="howWasJobAccepted"
-                      value={4}
-                      checked={howWasJobAccepted === 4}
-                      onChange={(e) => handleHowAcceptedChange(4)}
+                      value={TASK_HOW_JOB_ACCEPTED.IN_PERSON}
+                      checked={
+                        howWasJobAccepted === TASK_HOW_JOB_ACCEPTED.IN_PERSON
+                      }
+                      onChange={(e) =>
+                        handleHowAcceptedChange(TASK_HOW_JOB_ACCEPTED.IN_PERSON)
+                      }
                     />{" "}
                     In-person confirmation
                   </label>
@@ -288,7 +325,7 @@ function AdminTaskItemAssignAssociateStep3Page() {
             )}
 
             {/* Why was job declined */}
-            {status === 4 && (
+            {status === TASK_ASSIGN_ASSOCIATE_STATUS.DECLINED && (
               <FormGroup>
                 <label>Why was this job declined? *</label>
                 <div>
@@ -296,9 +333,15 @@ function AdminTaskItemAssignAssociateStep3Page() {
                     <input
                       type="radio"
                       name="whyJobDeclined"
-                      value={1}
-                      checked={whyJobDeclined === 1}
-                      onChange={(e) => handleWhyDeclinedChange(1)}
+                      value={TASK_WHY_JOB_DECLINED.ASSOCIATE_BUSY}
+                      checked={
+                        whyJobDeclined === TASK_WHY_JOB_DECLINED.ASSOCIATE_BUSY
+                      }
+                      onChange={(e) =>
+                        handleWhyDeclinedChange(
+                          TASK_WHY_JOB_DECLINED.ASSOCIATE_BUSY,
+                        )
+                      }
                     />{" "}
                     Associate was busy
                   </label>
@@ -307,9 +350,13 @@ function AdminTaskItemAssignAssociateStep3Page() {
                     <input
                       type="radio"
                       name="whyJobDeclined"
-                      value={2}
-                      checked={whyJobDeclined === 2}
-                      onChange={(e) => handleWhyDeclinedChange(2)}
+                      value={TASK_WHY_JOB_DECLINED.NO_SKILLS}
+                      checked={
+                        whyJobDeclined === TASK_WHY_JOB_DECLINED.NO_SKILLS
+                      }
+                      onChange={(e) =>
+                        handleWhyDeclinedChange(TASK_WHY_JOB_DECLINED.NO_SKILLS)
+                      }
                     />{" "}
                     Associate does not have the skills
                   </label>
@@ -318,9 +365,13 @@ function AdminTaskItemAssignAssociateStep3Page() {
                     <input
                       type="radio"
                       name="whyJobDeclined"
-                      value={3}
-                      checked={whyJobDeclined === 3}
-                      onChange={(e) => handleWhyDeclinedChange(3)}
+                      value={TASK_WHY_JOB_DECLINED.NO_TRAVEL}
+                      checked={
+                        whyJobDeclined === TASK_WHY_JOB_DECLINED.NO_TRAVEL
+                      }
+                      onChange={(e) =>
+                        handleWhyDeclinedChange(TASK_WHY_JOB_DECLINED.NO_TRAVEL)
+                      }
                     />{" "}
                     Associate does not wish to travel to the customer's location
                   </label>
@@ -329,9 +380,16 @@ function AdminTaskItemAssignAssociateStep3Page() {
                     <input
                       type="radio"
                       name="whyJobDeclined"
-                      value={4}
-                      checked={whyJobDeclined === 4}
-                      onChange={(e) => handleWhyDeclinedChange(4)}
+                      value={TASK_WHY_JOB_DECLINED.NO_WORK_WITH_CLIENT}
+                      checked={
+                        whyJobDeclined ===
+                        TASK_WHY_JOB_DECLINED.NO_WORK_WITH_CLIENT
+                      }
+                      onChange={(e) =>
+                        handleWhyDeclinedChange(
+                          TASK_WHY_JOB_DECLINED.NO_WORK_WITH_CLIENT,
+                        )
+                      }
                     />{" "}
                     Associate does not wish to work with this client
                   </label>

@@ -28,40 +28,18 @@ import {
   TASK_ITEM_TYPE_UPDATE_ONGOING_JOB,
   TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_COMPLETE_JOB,
   TASK_ITEM_TYPE_FOLLOW_UP_DID_CUSTOMER_REVIEW_ASSOCIATE_AFTER_JOB,
-} from "../../../../Constants/App";
-
-// Constants
-const DEFAULT_PAGE_SIZE = 50;
-const DEFAULT_SORT_BY_VALUE = "due_date,DESC";
-const LIST_VIEW_TYPE_TABULAR = "tabular";
-const LIST_VIEW_TYPE_GRID = "grid";
-
-const TASK_ITEM_SORT_OPTIONS = [
-  { value: "due_date,DESC", label: "Due Date (Newest → Oldest)" },
-  { value: "due_date,ASC", label: "Due Date (Oldest → Newest)" },
-  { value: "created_at,DESC", label: "Created (Newest → Oldest)" },
-  { value: "created_at,ASC", label: "Created (Oldest → Newest)" },
-  { value: "customer_lexical_name,ASC", label: "Customer Name (A → Z)" },
-  { value: "customer_lexical_name,DESC", label: "Customer Name (Z → A)" },
-  { value: "associate_lexical_name,ASC", label: "Associate Name (A → Z)" },
-  { value: "associate_lexical_name,DESC", label: "Associate Name (Z → A)" },
-];
-
-const TASK_ITEM_TYPE_FILTER_OPTIONS = [
-  { value: 0, label: "All" },
-  { value: 1, label: "Assign Associate" },
-  { value: 2, label: "Follow Up" },
-  { value: 3, label: "48 Hour Follow Up" },
-  { value: 4, label: "Completion Survey" },
-  { value: 5, label: "Order Completion" },
-];
-
-const PAGE_SIZE_OPTIONS = [
-  { value: 10, label: "10" },
-  { value: 25, label: "25" },
-  { value: 50, label: "50" },
-  { value: 100, label: "100" },
-];
+} from "../../../../constants/App";
+import {
+  TASK_LIST_VIEW_TYPE,
+  TASK_PAGINATION,
+  TASK_SORT_OPTIONS,
+  DEFAULT_TASK_SORT_BY,
+  TASK_TYPE_FILTER_OPTIONS,
+  TASK_IS_CLOSED_FILTER,
+  TASK_STATUS,
+} from "../../../../constants/Task";
+import { CACHE_DURATIONS } from "../../../../constants/Storage";
+import { AUTH_ROUTES } from "../../../../constants/Authentication";
 
 function AdminTaskItemListPage() {
   const navigate = useNavigate();
@@ -78,14 +56,14 @@ function AdminTaskItemListPage() {
 
   // Filter and sort state
   const [type, setType] = useState(0);
-  const [isClosed, setIsClosed] = useState(2); // 0=all, 1=true, 2=false (default to show only open tasks)
-  const [sortByValue, setSortByValue] = useState(DEFAULT_SORT_BY_VALUE);
+  const [isClosed, setIsClosed] = useState(TASK_IS_CLOSED_FILTER.OPEN); // default to show only open tasks
+  const [sortByValue, setSortByValue] = useState(DEFAULT_TASK_SORT_BY);
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [listViewType, setListViewType] = useState(LIST_VIEW_TYPE_TABULAR);
+  const [listViewType, setListViewType] = useState(TASK_LIST_VIEW_TYPE.TABULAR);
   const [showAllFilters, setShowAllFilters] = useState(false);
 
   // Cursor-based pagination state
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [pageSize, setPageSize] = useState(TASK_PAGINATION.DEFAULT_PAGE_SIZE);
   const [currentCursor, setCurrentCursor] = useState("");
   const [previousCursors, setPreviousCursors] = useState([]);
   const [nextCursor, setNextCursor] = useState("");
@@ -107,7 +85,7 @@ function AdminTaskItemListPage() {
   // Authorization callback
   const onUnauthorized = () => {
     authManager.logout();
-    navigate("/login?unauthorized=true");
+    navigate(AUTH_ROUTES.UNAUTHORIZED);
   };
 
   // Fetch current user
@@ -118,14 +96,14 @@ function AdminTaskItemListPage() {
         setCurrentUser(profile);
       } catch (error) {
         console.error("Failed to fetch current user:", error);
-        navigate("/login");
+        navigate(AUTH_ROUTES.LOGIN);
       }
     };
 
     if (authManager.isAuthenticated()) {
       fetchCurrentUser();
     } else {
-      navigate("/login");
+      navigate(AUTH_ROUTES.LOGIN);
     }
   }, []);
 
@@ -239,10 +217,10 @@ function AdminTaskItemListPage() {
       // Initial fetch
       fetchTaskCount();
 
-      // Set up interval for background refresh (every 30 seconds)
+      // Set up interval for background refresh
       refreshIntervalRef.current = setInterval(() => {
         fetchTaskCount();
-      }, 30 * 1000);
+      }, CACHE_DURATIONS.BACKGROUND_REFRESH);
 
       // Cleanup on unmount
       return () => {
@@ -267,8 +245,8 @@ function AdminTaskItemListPage() {
   const handleClearFilters = () => {
     console.log("Clear filters clicked - resetting everything");
     setType(0);
-    setIsClosed(2); // Reset to show only open tasks
-    setSortByValue(DEFAULT_SORT_BY_VALUE);
+    setIsClosed(TASK_IS_CLOSED_FILTER.OPEN); // Reset to show only open tasks
+    setSortByValue(DEFAULT_TASK_SORT_BY);
     setSearchKeyword("");
     setShowAllFilters(false);
     // Reset pagination
@@ -399,11 +377,11 @@ function AdminTaskItemListPage() {
       case TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_AND_CUSTOMER_AGREED_TO_MEET:
       case TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_ACCEPT_JOB:
       case TASK_ITEM_TYPE_UPDATE_ONGOING_JOB:
-        return "/admin/task/" + taskId + "/order-completion/step-1";
+        return `/admin/task/${taskId}/order-completion/step-1`;
       // Survey
       case TASK_ITEM_TYPE_FOLLOW_UP_DID_CUSTOMER_REVIEW_ASSOCIATE_AFTER_JOB:
       case TASK_ITEM_TYPE_FOLLOW_UP_CUSTOMER_SURVEY:
-        return "/admin/task/" + taskId + "/survey/step-1";
+        return `/admin/task/${taskId}/survey/step-1`;
       // Default case for unknown types
       default:
         return "/404";
@@ -600,7 +578,12 @@ function AdminTaskItemListPage() {
         {taskCount > 0 && (
           <span style={{ fontSize: "0.8em", color: "#666" }}>
             ({taskCount}{" "}
-            {isClosed === 2 ? "open" : isClosed === 1 ? "closed" : "total"})
+            {isClosed === TASK_IS_CLOSED_FILTER.OPEN
+              ? "open"
+              : isClosed === TASK_IS_CLOSED_FILTER.CLOSED
+                ? "closed"
+                : "total"}
+            )
           </span>
         )}
       </h1>
@@ -618,14 +601,14 @@ function AdminTaskItemListPage() {
             key="toggle-view"
             onClick={() =>
               setListViewType(
-                listViewType === LIST_VIEW_TYPE_TABULAR
-                  ? LIST_VIEW_TYPE_GRID
-                  : LIST_VIEW_TYPE_TABULAR,
+                listViewType === TASK_LIST_VIEW_TYPE.TABULAR
+                  ? TASK_LIST_VIEW_TYPE.GRID
+                  : TASK_LIST_VIEW_TYPE.TABULAR,
               )
             }
             variant="outline"
           >
-            {listViewType === LIST_VIEW_TYPE_TABULAR
+            {listViewType === TASK_LIST_VIEW_TYPE.TABULAR
               ? "Grid View"
               : "Table View"}
           </Button>,
@@ -655,7 +638,7 @@ function AdminTaskItemListPage() {
               label="Sort by"
               value={sortByValue}
               onChange={(e) => handleSortChange(e.target.value)}
-              options={TASK_ITEM_SORT_OPTIONS}
+              options={TASK_SORT_OPTIONS}
             />
 
             <div style={{ flex: 1 }}>
@@ -721,7 +704,7 @@ function AdminTaskItemListPage() {
                   label="Type"
                   value={type}
                   onChange={(e) => handleTypeChange(parseInt(e.target.value))}
-                  options={TASK_ITEM_TYPE_FILTER_OPTIONS}
+                  options={TASK_TYPE_FILTER_OPTIONS}
                 />
 
                 <FormGroup>
@@ -731,8 +714,8 @@ function AdminTaskItemListPage() {
                       <input
                         type="radio"
                         name="isClosed"
-                        value={0}
-                        checked={isClosed === 0}
+                        value={TASK_IS_CLOSED_FILTER.ALL}
+                        checked={isClosed === TASK_IS_CLOSED_FILTER.ALL}
                         onChange={(e) =>
                           handleIsClosedChange(parseInt(e.target.value))
                         }
@@ -743,8 +726,8 @@ function AdminTaskItemListPage() {
                       <input
                         type="radio"
                         name="isClosed"
-                        value={1}
-                        checked={isClosed === 1}
+                        value={TASK_IS_CLOSED_FILTER.CLOSED}
+                        checked={isClosed === TASK_IS_CLOSED_FILTER.CLOSED}
                         onChange={(e) =>
                           handleIsClosedChange(parseInt(e.target.value))
                         }
@@ -755,8 +738,8 @@ function AdminTaskItemListPage() {
                       <input
                         type="radio"
                         name="isClosed"
-                        value={2}
-                        checked={isClosed === 2}
+                        value={TASK_IS_CLOSED_FILTER.OPEN}
+                        checked={isClosed === TASK_IS_CLOSED_FILTER.OPEN}
                         onChange={(e) =>
                           handleIsClosedChange(parseInt(e.target.value))
                         }
@@ -775,7 +758,7 @@ function AdminTaskItemListPage() {
           <Loading message="Loading tasks..." />
         ) : (
           <>
-            {listViewType === LIST_VIEW_TYPE_GRID
+            {listViewType === TASK_LIST_VIEW_TYPE.GRID
               ? renderGridView()
               : renderTabularView()}
 
@@ -810,7 +793,7 @@ function AdminTaskItemListPage() {
               <Select
                 value={pageSize}
                 onChange={(e) => handlePageSizeChange(parseInt(e.target.value))}
-                options={PAGE_SIZE_OPTIONS}
+                options={TASK_PAGINATION.PAGE_SIZE_OPTIONS}
               />
 
               <div

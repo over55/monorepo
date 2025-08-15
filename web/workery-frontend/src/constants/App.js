@@ -35,13 +35,3 @@ export const TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_ACCEPT_JOB = 4;
 export const TASK_ITEM_TYPE_UPDATE_ONGOING_JOB = 5;
 export const TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_COMPLETE_JOB = 6;
 export const TASK_ITEM_TYPE_FOLLOW_UP_DID_CUSTOMER_REVIEW_ASSOCIATE_AFTER_JOB = 7;
-
-// TaskItemStatusActive                                    = 1
-// TaskItemStatusArchived                                  = 2
-// TaskItemTypeAssignedAssociate                           = 1
-// TaskItemTypeFollowUpDidAssociateAndCustomerAgreedToMeet = 2
-// TaskItemTypeFollowUpCustomerSurvey                      = 3 // DEPRECATED
-// TaskItemTypeFollowUpDidAssociateAcceptJob               = 4
-// TaskItemTypeUpdateOngoingJob                            = 5
-// TaskItemTypeFollowUpDidAssociateCompleteJob             = 6
-// TaskItemTypeFollowUpDidCustomerReviewAssociateAfterJob  = 7

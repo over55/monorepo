@@ -1,4 +1,6 @@
-// File Path: monorepo/web/workery-frontend/src/services/Storage/TaskStorage.js
+// File Path: web/workery-frontend/src/services/Storage/TaskStorage.js
+
+import { STORAGE_KEYS, CACHE_DURATIONS } from "../../constants/Storage";
 
 /**
  * TaskStorage handles all task-related data storage operations
@@ -6,17 +8,20 @@
  */
 export class TaskStorage {
   constructor() {
-    this.TASKS_CACHE_KEY = "WORKERY_TASKS_CACHE";
-    this.TASKS_TIMESTAMP_KEY = "WORKERY_TASKS_TIMESTAMP";
-    this.TASK_COUNT_CACHE_KEY = "WORKERY_TASK_COUNT_CACHE";
-    this.TASK_COUNT_TIMESTAMP_KEY = "WORKERY_TASK_COUNT_TIMESTAMP";
+    // Use constants from Storage.js
+    this.TASKS_CACHE_KEY = STORAGE_KEYS.TASKS_CACHE;
+    this.TASKS_TIMESTAMP_KEY = STORAGE_KEYS.TASKS_TIMESTAMP;
+    this.TASK_COUNT_CACHE_KEY = STORAGE_KEYS.TASK_COUNT_CACHE;
+    this.TASK_COUNT_TIMESTAMP_KEY = STORAGE_KEYS.TASK_COUNT_TIMESTAMP;
     this.TASK_ASSIGNABLE_ASSOCIATES_CACHE_KEY =
-      "WORKERY_TASK_ASSIGNABLE_ASSOCIATES_CACHE";
+      STORAGE_KEYS.TASK_ASSIGNABLE_ASSOCIATES_CACHE;
     this.TASK_ASSIGNABLE_ASSOCIATES_TIMESTAMP_KEY =
-      "WORKERY_TASK_ASSIGNABLE_ASSOCIATES_TIMESTAMP";
-    this.DEFAULT_CACHE_DURATION = 10 * 60 * 1000; // 10 minutes in milliseconds
-    this.COUNT_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes for counts
-    this.ASSOCIATES_CACHE_DURATION = 15 * 60 * 1000; // 15 minutes for assignable associates
+      STORAGE_KEYS.TASK_ASSIGNABLE_ASSOCIATES_TIMESTAMP;
+
+    // Use cache durations from constants
+    this.DEFAULT_CACHE_DURATION = CACHE_DURATIONS.DEFAULT_TASKS;
+    this.COUNT_CACHE_DURATION = CACHE_DURATIONS.TASK_COUNT;
+    this.ASSOCIATES_CACHE_DURATION = CACHE_DURATIONS.ASSIGNABLE_ASSOCIATES;
 
     // In-memory cache for current session
     this.memoryCache = {
@@ -560,7 +565,7 @@ export class TaskStorage {
   saveTaskPreferences(preferences) {
     try {
       localStorage.setItem(
-        "WORKERY_TASK_PREFERENCES",
+        STORAGE_KEYS.TASK_PREFERENCES,
         JSON.stringify({
           preferences: preferences,
           timestamp: Date.now(),
@@ -577,9 +582,9 @@ export class TaskStorage {
    * @param {number} maxAge - Maximum age in milliseconds (default: 24 hours)
    * @returns {Object|null} - Task preferences or null if not found/expired
    */
-  getTaskPreferences(maxAge = 24 * 60 * 60 * 1000) {
+  getTaskPreferences(maxAge = CACHE_DURATIONS.PREFERENCES) {
     try {
-      const stored = localStorage.getItem("WORKERY_TASK_PREFERENCES");
+      const stored = localStorage.getItem(STORAGE_KEYS.TASK_PREFERENCES);
 
       if (stored) {
         const parsed = JSON.parse(stored);
@@ -589,7 +594,7 @@ export class TaskStorage {
           return parsed.preferences;
         } else {
           // Clean up expired preferences
-          localStorage.removeItem("WORKERY_TASK_PREFERENCES");
+          localStorage.removeItem(STORAGE_KEYS.TASK_PREFERENCES);
         }
       }
     } catch (error) {
@@ -603,7 +608,7 @@ export class TaskStorage {
    * Clears task preferences
    */
   clearTaskPreferences() {
-    localStorage.removeItem("WORKERY_TASK_PREFERENCES");
+    localStorage.removeItem(STORAGE_KEYS.TASK_PREFERENCES);
     console.log("TaskStorage: Task preferences cleared");
   }
 

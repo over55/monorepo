@@ -1,5 +1,8 @@
 // File Path: monorepo/web/workery-frontend/src/services/Manager/TaskManager.js
 
+import { CACHE_DURATIONS, STORAGE_LIMITS } from "../../constants/Storage";
+import { VALID_TASK_TYPES, VALID_TASK_STATUSES } from "../../constants/Task";
+
 /**
  * TaskManager handles all task-related business logic
  * Combines TaskAPI with TaskStorage for complete task management
@@ -991,27 +994,31 @@ export class TaskManager {
     // Validate title (required for create, optional for update)
     if (isCreate && (!taskData.title || !taskData.title.trim())) {
       errors.title = "Task title is required";
-    } else if (taskData.title && taskData.title.length > 100) {
-      errors.title = "Task title must be less than 100 characters";
+    } else if (
+      taskData.title &&
+      taskData.title.length > STORAGE_LIMITS.MAX_TITLE_LENGTH
+    ) {
+      errors.title = `Task title must be less than ${STORAGE_LIMITS.MAX_TITLE_LENGTH} characters`;
     }
 
     // Validate description (optional)
-    if (taskData.description && taskData.description.length > 1000) {
-      errors.description = "Description must be less than 1000 characters";
+    if (
+      taskData.description &&
+      taskData.description.length > STORAGE_LIMITS.MAX_DESCRIPTION_LENGTH
+    ) {
+      errors.description = `Description must be less than ${STORAGE_LIMITS.MAX_DESCRIPTION_LENGTH} characters`;
     }
 
     // Validate type (optional)
     if (taskData.type !== undefined) {
-      const validTypes = [1, 2, 3, 4, 5]; // Update with actual valid types
-      if (!validTypes.includes(taskData.type)) {
+      if (!VALID_TASK_TYPES.includes(taskData.type)) {
         errors.type = "Invalid task type";
       }
     }
 
     // Validate status (optional)
     if (taskData.status !== undefined) {
-      const validStatuses = [1, 2, 3, 4]; // Update with actual valid statuses
-      if (!validStatuses.includes(taskData.status)) {
+      if (!VALID_TASK_STATUSES.includes(taskData.status)) {
         errors.status = "Invalid task status";
       }
     }
@@ -1134,13 +1141,13 @@ export class TaskManager {
             reject(new Error("Tasks request failed"));
           }
         }
-      }, 100);
+      }, CACHE_DURATIONS.POLLING_INTERVAL);
 
-      // Timeout after 30 seconds
+      // Timeout after configured time
       setTimeout(() => {
         clearInterval(checkInterval);
         reject(new Error("Tasks request timeout"));
-      }, 30000);
+      }, CACHE_DURATIONS.REQUEST_TIMEOUT);
     });
   }
 
@@ -1163,13 +1170,13 @@ export class TaskManager {
             reject(new Error("Task count request failed"));
           }
         }
-      }, 100);
+      }, CACHE_DURATIONS.POLLING_INTERVAL);
 
-      // Timeout after 30 seconds
+      // Timeout after configured time
       setTimeout(() => {
         clearInterval(checkInterval);
         reject(new Error("Task count request timeout"));
-      }, 30000);
+      }, CACHE_DURATIONS.REQUEST_TIMEOUT);
     });
   }
 
@@ -1194,13 +1201,13 @@ export class TaskManager {
             reject(new Error("Assignable associates request failed"));
           }
         }
-      }, 100);
+      }, CACHE_DURATIONS.POLLING_INTERVAL);
 
-      // Timeout after 30 seconds
+      // Timeout after configured time
       setTimeout(() => {
         clearInterval(checkInterval);
         reject(new Error("Assignable associates request timeout"));
-      }, 30000);
+      }, CACHE_DURATIONS.REQUEST_TIMEOUT);
     });
   }
 }

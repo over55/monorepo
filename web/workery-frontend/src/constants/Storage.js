@@ -1,0 +1,47 @@
+// File Path: web/workery-frontend/src/constants/Storage.js
+
+/**
+ * Storage Keys Constants
+ */
+export const STORAGE_KEYS = {
+  // Task Storage Keys
+  TASKS_CACHE: "WORKERY_TASKS_CACHE",
+  TASKS_TIMESTAMP: "WORKERY_TASKS_TIMESTAMP",
+  TASK_COUNT_CACHE: "WORKERY_TASK_COUNT_CACHE",
+  TASK_COUNT_TIMESTAMP: "WORKERY_TASK_COUNT_TIMESTAMP",
+  TASK_ASSIGNABLE_ASSOCIATES_CACHE: "WORKERY_TASK_ASSIGNABLE_ASSOCIATES_CACHE",
+  TASK_ASSIGNABLE_ASSOCIATES_TIMESTAMP:
+    "WORKERY_TASK_ASSIGNABLE_ASSOCIATES_TIMESTAMP",
+  TASK_PREFERENCES: "WORKERY_TASK_PREFERENCES",
+
+  // Wizard Storage Keys
+  WORKERY_ASSIGN_ASSOCIATE_DATA: "WORKERY_ASSIGN_ASSOCIATE_DATA",
+
+  // Account Storage Keys
+  ACCOUNT_DETAIL: "WORKERY_ACCOUNT_DETAIL",
+};
+
+/**
+ * Cache Duration Constants (in milliseconds)
+ */
+export const CACHE_DURATIONS = {
+  // Task Cache Durations
+  DEFAULT_TASKS: 10 * 60 * 1000, // 10 minutes
+  TASK_COUNT: 5 * 60 * 1000, // 5 minutes
+  ASSIGNABLE_ASSOCIATES: 15 * 60 * 1000, // 15 minutes
+  PREFERENCES: 24 * 60 * 60 * 1000, // 24 hours
+
+  // Other Cache Durations
+  BACKGROUND_REFRESH: 30 * 1000, // 30 seconds
+  REQUEST_TIMEOUT: 30 * 1000, // 30 seconds
+  POLLING_INTERVAL: 100, // 100ms for polling checks
+};
+
+/**
+ * Storage Size Limits
+ */
+export const STORAGE_LIMITS = {
+  MAX_TITLE_LENGTH: 100,
+  MAX_DESCRIPTION_LENGTH: 1000,
+  MAX_COMMENT_LENGTH: 5000,
+};
