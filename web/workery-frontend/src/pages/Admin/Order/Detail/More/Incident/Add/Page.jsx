@@ -23,7 +23,7 @@ import {
   ORDER_INCIDENT_INIATOR_CLIENT,
   ORDER_INCIDENT_INIATOR_ASSOCIATE,
   ORDER_INCIDENT_INIATOR_STAFF,
-} from "../../../../../../../constants/App";
+} from "../../../../../../../constants/OrderIncident";
 
 function AdminOrderDetailMoreIncidentAddPage() {
   const { oid } = useParams();

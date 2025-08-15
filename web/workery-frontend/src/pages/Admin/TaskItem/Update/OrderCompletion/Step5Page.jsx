@@ -22,7 +22,7 @@ import {
 import {
   ORDER_STATUS_COMPLETED_AND_PAID,
   ORDER_STATUS_COMPLETED_BUT_UNPAID,
-} from "../../../../../constants/App";
+} from "../../../../../constants/Order";
 
 function AdminTaskItemOrderCompletionStep5Page() {
   const { tid } = useParams();

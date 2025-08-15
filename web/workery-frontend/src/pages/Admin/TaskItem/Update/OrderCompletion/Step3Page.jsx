@@ -22,7 +22,7 @@ import {
 import {
   ORDER_STATUS_COMPLETED_AND_PAID,
   ORDER_STATUS_COMPLETED_BUT_UNPAID,
-} from "../../../../../constants/App";
+} from "../../../../../constants/Order";
 import { ORDER_INVOICE_PAYMENT_METHODS_OPTIONS } from "../../../../../constants/FieldOptions";
 
 function AdminTaskItemOrderCompletionStep3Page() {

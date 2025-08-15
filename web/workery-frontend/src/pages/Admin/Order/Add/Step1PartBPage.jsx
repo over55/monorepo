@@ -20,7 +20,7 @@ import {
 import {
   RESIDENTIAL_CUSTOMER_TYPE_OF_ID,
   COMMERCIAL_CUSTOMER_TYPE_OF_ID,
-} from "../../../../constants/App";
+} from "../../../../constants/Customer";
 
 function AdminOrderAddStep1PartBPage() {
   const authManager = useAuthManager();
