@@ -880,10 +880,7 @@ function AppRouter() {
               path="/admin/staff"
               element={
                 <Layout>
-                  <PlaceholderPage
-                    title="Staff"
-                    description="Staff management system"
-                  />
+                  <AdminStaffListPage />
                 </Layout>
               }
             />
@@ -971,7 +968,7 @@ function AppRouter() {
               path="/admin/staff/:aid"
               element={
                 <Layout>
-                  <PlaceholderPage title="Staff Detail" />
+                  <AdminStaffDetailLitePage />
                 </Layout>
               }
             />
@@ -979,7 +976,7 @@ function AppRouter() {
               path="/admin/staff/:aid/detail"
               element={
                 <Layout>
-                  <PlaceholderPage title="Staff Detail (Full)" />
+                  <AdminStaffDetailFullPage />
                 </Layout>
               }
             />
