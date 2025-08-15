@@ -1032,7 +1032,7 @@ function AppRouter() {
               path="/admin/staff/:aid/more"
               element={
                 <Layout>
-                  <PlaceholderPage title="Staff More Actions" />
+                  <AdminStaffDetailMorePage />
                 </Layout>
               }
             />
@@ -1088,7 +1088,7 @@ function AppRouter() {
               path="/admin/staff/:sid/2fa"
               element={
                 <Layout>
-                  <PlaceholderPage title="Toggle Staff 2FA" />
+                  <AdminStaffDetailMore2FAPage />
                 </Layout>
               }
             />
