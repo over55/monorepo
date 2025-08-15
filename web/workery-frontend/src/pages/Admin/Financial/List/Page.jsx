@@ -11,7 +11,6 @@ import {
   Loading,
   Select,
 } from "../../../../components/UI";
-import { DateTime } from "luxon";
 import {
   ORDER_STATUS_NEW,
   ORDER_STATUS_DECLINED,
@@ -299,14 +298,11 @@ function AdminFinancialListPage() {
     }
   };
 
-  // Format date helper
+  // Format date helper - Just return the date string as is since it's already formatted by the API
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
-    try {
-      return DateTime.fromISO(dateString).toLocaleString(DateTime.DATE_MED);
-    } catch {
-      return dateString;
-    }
+    // The date is already formatted by the API layer, just return it
+    return dateString;
   };
 
   // Format status helper using constants
@@ -349,9 +345,21 @@ function AdminFinancialListPage() {
     }
   };
 
-  // Format type icon
+  // Format type icon - Fixed to properly handle type values
   const getTypeIcon = (typeValue) => {
-    switch (typeValue) {
+    // Log for debugging
+    console.log(
+      "getTypeIcon - typeValue:",
+      typeValue,
+      "type:",
+      typeof typeValue,
+    );
+
+    // Convert to number if it's a string
+    const typeNum =
+      typeof typeValue === "string" ? parseInt(typeValue, 10) : typeValue;
+
+    switch (typeNum) {
       case ORDER_TYPE_RESIDENTIAL:
         return "🏠";
       case ORDER_TYPE_COMMERCIAL:
@@ -359,6 +367,7 @@ function AdminFinancialListPage() {
       case ORDER_TYPE_UNASSIGNED:
         return "❓";
       default:
+        console.log("getTypeIcon - defaulting for value:", typeNum);
         return "📋";
     }
   };
@@ -595,9 +604,13 @@ function AdminFinancialListPage() {
                             style={{
                               padding: "10px",
                               border: "1px solid #ddd",
+                              textAlign: "center",
                             }}
                           >
-                            <span title={formatType(order.type)}>
+                            <span
+                              title={formatType(order.type)}
+                              style={{ fontSize: "1.2em" }}
+                            >
                               {getTypeIcon(order.type)}
                             </span>
                           </td>
