@@ -1,12 +1,13 @@
 // File Path: web/workery-frontend/src/components/Layout/TopNavbar.jsx
+// Modernized TopNavbar Component with Tailwind v4
 
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { useAuthManager, useAccountManager } from "../../services/Services";
-import { theme } from "../../constants/Theme";
 import { getRoleRedirectPath } from "../../constants/Roles";
+import { Bars3Icon } from "@heroicons/react/24/outline";
 
-function TopNavbar({ onMenuToggle, isMenuOpen, isMobile }) {
+function TopNavbar({ onMenuToggle, isMobile }) {
   const authManager = useAuthManager();
   const accountManager = useAccountManager();
   const navigate = useNavigate();
@@ -76,90 +77,48 @@ function TopNavbar({ onMenuToggle, isMenuOpen, isMobile }) {
     return null;
   }
 
-  const styles = {
-    navbar: {
-      position: "fixed",
-      top: 0,
-      left: 0,
-      right: 0,
-      height: "60px",
-      backgroundColor: theme.colors.dark,
-      color: "white",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "space-between",
-      padding: "0 20px",
-      zIndex: 900,
-      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-    },
-    leftSection: {
-      display: "flex",
-      alignItems: "center",
-      gap: "15px",
-    },
-    logo: {
-      display: "flex",
-      alignItems: "center",
-    },
-    logoImage: {
-      height: "30px",
-      width: "auto",
-    },
-    hamburger: {
-      background: "none",
-      border: "none",
-      color: "white",
-      fontSize: "20px",
-      cursor: "pointer",
-      padding: "8px",
-      borderRadius: "4px",
-      transition: `background-color ${theme.transitions.fast}`,
-    },
-    rightSection: {
-      display: "flex",
-      alignItems: "center",
-      gap: "15px",
-    },
-    userInfo: {
-      fontSize: "14px",
-      color: "#ccc",
-    },
-  };
-
   const getDashboardPath = () => {
     return getRoleRedirectPath(currentUser.roleId) || "/dashboard";
   };
 
   return (
-    <nav style={styles.navbar}>
-      <div style={styles.leftSection}>
-        <button
-          onClick={onMenuToggle}
-          style={styles.hamburger}
-          title="Toggle Menu"
-          onMouseEnter={(e) => {
-            e.target.style.backgroundColor = "rgba(255,255,255,0.1)";
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.backgroundColor = "transparent";
-          }}
-        >
-          {isMenuOpen ? "✕" : "☰"}
-        </button>
+    <nav
+      className="fixed top-0 left-0 right-0 h-[60px] bg-gray-900 text-white
+                    flex items-center justify-between z-[900] shadow-md"
+    >
+      {/* Left Section */}
+      <div className="flex items-center flex-1">
+        {/* Mobile hamburger to open sidebar */}
+        {isMobile && (
+          <button
+            onClick={onMenuToggle}
+            className="p-2 rounded hover:bg-white/10 transition-colors duration-200 ml-2"
+            title="Open menu"
+          >
+            <Bars3Icon className="h-6 w-6" />
+          </button>
+        )}
 
-        <div style={styles.logo}>
-          <Link to={getDashboardPath()}>
+        {/* Logo */}
+        <div
+          className={`${isMobile ? "flex-1 flex justify-center" : "ml-[275px]"}`}
+        >
+          <Link to={getDashboardPath()} className="inline-block py-2">
             <img
               src="/img/compressed-logo.png"
               alt="Workery Logo"
-              style={styles.logoImage}
+              className="h-10 w-auto"
             />
           </Link>
         </div>
+
+        {/* Spacer for mobile to balance hamburger */}
+        {isMobile && <div className="w-10 mr-2" />}
       </div>
 
-      <div style={styles.rightSection}>
-        <div style={styles.userInfo}>
+      {/* Right Section */}
+      <div className="flex items-center gap-4 px-5">
+        <div className="text-sm text-gray-300">
           {isMobile ? (
             <span>{currentUser.firstName || "User"}</span>
           ) : (

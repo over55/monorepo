@@ -1,9 +1,9 @@
 // File Path: web/workery-frontend/src/components/Layout/Sidebar.jsx
+// Modernized Sidebar Component with Tailwind v4 and Collapse Feature
 
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { useAuthManager, useAccountManager } from "../../services/Services";
-import { theme } from "../../constants/Theme";
 import { Modal, Button } from "../UI";
 import {
   EXECUTIVE_ROLE_ID,
@@ -13,6 +13,30 @@ import {
   CUSTOMER_ROLE_ID,
   ASSOCIATE_JOB_SEEKER_ROLE_ID,
 } from "../../constants/Roles";
+import {
+  HomeIcon,
+  ClipboardDocumentListIcon,
+  UserGroupIcon,
+  UserIcon,
+  WrenchScrewdriverIcon,
+  AcademicCapIcon,
+  FireIcon,
+  ChartBarIcon,
+  ChatBubbleLeftRightIcon,
+  CreditCardIcon,
+  DocumentChartBarIcon,
+  UsersIcon,
+  Cog6ToothIcon,
+  QuestionMarkCircleIcon,
+  UserCircleIcon,
+  ArrowRightOnRectangleIcon,
+  MagnifyingGlassIcon,
+  DocumentTextIcon,
+  BriefcaseIcon,
+  StarIcon,
+  Bars3Icon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 
 function Sidebar({ isOpen, onClose, isMobile }) {
   const authManager = useAuthManager();
@@ -23,7 +47,8 @@ function Sidebar({ isOpen, onClose, isMobile }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [showLogoutWarning, setShowLogoutWarning] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [taskItemActiveCount, setTaskItemActiveCount] = useState(0); // TODO: Connect to actual task count
+  const [taskItemActiveCount, setTaskItemActiveCount] = useState(833); // TODO: Connect to actual task count
+  const [isCollapsed, setIsCollapsed] = useState(false); // Desktop collapse state
 
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
@@ -44,6 +69,27 @@ function Sidebar({ isOpen, onClose, isMobile }) {
       navigate("/login");
     }
   };
+
+  const toggleCollapse = () => {
+    if (!isMobile) {
+      const newCollapsedState = !isCollapsed;
+      setIsCollapsed(newCollapsedState);
+      // Store preference in localStorage
+      localStorage.setItem("sidebarCollapsed", newCollapsedState.toString());
+      // Dispatch custom event for same-tab updates
+      window.dispatchEvent(new Event("sidebarCollapsedChanged"));
+    } else {
+      onClose();
+    }
+  };
+
+  // Load collapsed state from localStorage on mount
+  useEffect(() => {
+    const savedState = localStorage.getItem("sidebarCollapsed");
+    if (savedState === "true" && !isMobile) {
+      setIsCollapsed(true);
+    }
+  }, [isMobile]);
 
   useEffect(() => {
     let mounted = true;
@@ -113,104 +159,39 @@ function Sidebar({ isOpen, onClose, isMobile }) {
     return null;
   }
 
-  const styles = {
-    sidebar: {
-      position: "fixed",
-      top: 0,
-      left: 0,
-      width: "250px",
-      height: "100vh",
-      backgroundColor: theme.colors.dark,
-      color: "#e0e0e0",
-      transform: isOpen ? "translateX(0)" : "translateX(-100%)",
-      transition: `transform ${theme.transitions.normal}`,
-      zIndex: 1000,
-      overflowY: "auto",
-      paddingTop: "80px",
-      paddingBottom: "20px",
-    },
-    overlay: {
-      position: "fixed",
-      top: 0,
-      left: 0,
-      width: "100vw",
-      height: "100vh",
-      backgroundColor: "rgba(0, 0, 0, 0.5)",
-      zIndex: 999,
-      display: isOpen ? "block" : "none",
-    },
-    logoSection: {
-      textAlign: "center",
-      padding: "20px",
-      borderBottom: "1px solid #333",
-      marginBottom: "20px",
-    },
-    logoImage: {
-      maxWidth: "150px",
-      height: "auto",
-    },
-    menuSection: {
-      marginBottom: "30px",
-      padding: "0 20px",
-    },
-    menuLabel: {
-      fontSize: "12px",
-      fontWeight: "bold",
-      color: "#888",
-      textTransform: "uppercase",
-      marginBottom: "10px",
-      letterSpacing: "1px",
-    },
-    menuList: {
-      listStyle: "none",
-      padding: 0,
-      margin: 0,
-    },
-    menuItem: {
-      marginBottom: "5px",
-    },
-    menuLink: {
-      display: "block",
-      padding: "10px 15px",
-      color: "#e0e0e0",
-      textDecoration: "none",
-      borderRadius: "4px",
-      transition: `background-color ${theme.transitions.fast}`,
-    },
-    menuLinkActive: {
-      backgroundColor: theme.colors.primary,
-      color: "white",
-    },
-    logoutButton: {
-      display: "block",
-      width: "100%",
-      textAlign: "left",
-      padding: "10px 15px",
-      color: "#e0e0e0",
-      background: "none",
-      border: "none",
-      borderRadius: "4px",
-      cursor: "pointer",
-      transition: `background-color ${theme.transitions.fast}`,
-    },
-    taskCount: {
-      backgroundColor: "#28a745",
-      color: "white",
-      borderRadius: "10px",
-      padding: "2px 6px",
-      fontSize: "11px",
-      marginLeft: "5px",
-    },
-  };
-
   const isActivePath = (path) => {
     return location.pathname.includes(path);
   };
 
-  const getLinkStyle = (path) => ({
-    ...styles.menuLink,
-    ...(isActivePath(path) ? styles.menuLinkActive : {}),
-  });
+  // Icon mapping for menu items
+  const iconMap = {
+    Dashboard: HomeIcon,
+    Tasks: ClipboardDocumentListIcon,
+    Customers: UserGroupIcon,
+    Clients: UserGroupIcon,
+    Associates: UserIcon,
+    "Work Orders": WrenchScrewdriverIcon,
+    "My Service Requests": WrenchScrewdriverIcon,
+    "My Work Orders": WrenchScrewdriverIcon,
+    "Skill Sets": AcademicCapIcon,
+    Incidents: FireIcon,
+    "Job History": ChartBarIcon,
+    Comments: ChatBubbleLeftRightIcon,
+    Financials: CreditCardIcon,
+    "My Financials": CreditCardIcon,
+    Reports: DocumentChartBarIcon,
+    Staff: UsersIcon,
+    Settings: Cog6ToothIcon,
+    "My Associates": UserIcon,
+    "My Clients": UserGroupIcon,
+    "Find Work": MagnifyingGlassIcon,
+    "My Documents": DocumentTextIcon,
+    "My Advisor": UsersIcon,
+    "Learning & Goals": StarIcon,
+    Help: QuestionMarkCircleIcon,
+    "My Profile": UserCircleIcon,
+    "Sign Off": ArrowRightOnRectangleIcon,
+  };
 
   // Get menu items based on user role
   const getMenuSections = () => {
@@ -226,7 +207,6 @@ function Sidebar({ isOpen, onClose, isMobile }) {
     );
 
     // Staff menu for executive, management, and frontline roles
-    // Check both role and roleId properties for compatibility
     const userRole = currentUser.role || currentUser.roleId;
     if (
       [EXECUTIVE_ROLE_ID, MANAGEMENT_ROLE_ID, FRONTLINE_ROLE_ID].includes(
@@ -236,30 +216,29 @@ function Sidebar({ isOpen, onClose, isMobile }) {
       sections.push({
         label: "Staff",
         items: [
-          { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
+          { path: "/admin/dashboard", label: "Dashboard" },
           {
             path: "/admin/tasks",
             label: "Tasks",
-            icon: "📋",
             badge: taskItemActiveCount > 0 ? taskItemActiveCount : null,
           },
-          { path: "/admin/customers", label: "Customers", icon: "👤" },
-          { path: "/admin/associates", label: "Associates", icon: "👷" },
-          { path: "/admin/orders", label: "Work Orders", icon: "🔧" },
-          { path: "/admin/skill-sets", label: "Skill Sets", icon: "🎓" },
-          { path: "/admin/incidents", label: "Incidents", icon: "🔥" },
-          { path: "/admin/job-history", label: "Job History", icon: "📊" },
-          { path: "/admin/all-comments", label: "Comments", icon: "💬" },
+          { path: "/admin/customers", label: "Clients" },
+          { path: "/admin/associates", label: "Associates" },
+          { path: "/admin/orders", label: "Work Orders" },
+          { path: "/admin/skill-sets", label: "Skill Sets" },
+          { path: "/admin/incidents", label: "Incidents" },
+          { path: "/admin/job-history", label: "Job History" },
+          { path: "/admin/all-comments", label: "Comments" },
         ],
       });
 
       sections.push({
         label: "Administration",
         items: [
-          { path: "/admin/financials", label: "Financials", icon: "💳" },
-          { path: "/admin/reports", label: "Reports", icon: "📈" },
-          { path: "/admin/staff", label: "Staff", icon: "👔" },
-          { path: "/admin/settings", label: "Settings", icon: "⚙️" },
+          { path: "/admin/financials", label: "Financials" },
+          { path: "/admin/reports", label: "Reports" },
+          { path: "/admin/staff", label: "Staff" },
+          { path: "/admin/settings", label: "Settings" },
         ],
       });
     }
@@ -269,10 +248,10 @@ function Sidebar({ isOpen, onClose, isMobile }) {
       sections.push({
         label: "Member",
         items: [
-          { path: "/c/dashboard", label: "Dashboard", icon: "📊" },
-          { path: "/c/orders", label: "My Service Requests", icon: "🔧" },
-          { path: "/c/financials", label: "My Financials", icon: "💳" },
-          { path: "/c/associates", label: "My Associates", icon: "👷" },
+          { path: "/c/dashboard", label: "Dashboard" },
+          { path: "/c/orders", label: "My Service Requests" },
+          { path: "/c/financials", label: "My Financials" },
+          { path: "/c/associates", label: "My Associates" },
         ],
       });
     }
@@ -282,10 +261,10 @@ function Sidebar({ isOpen, onClose, isMobile }) {
       sections.push({
         label: "Associate",
         items: [
-          { path: "/a/dashboard", label: "Dashboard", icon: "📊" },
-          { path: "/a/orders", label: "My Work Orders", icon: "🔧" },
-          { path: "/a/financials", label: "My Financials", icon: "💳" },
-          { path: "/a/clients", label: "My Clients", icon: "👤" },
+          { path: "/a/dashboard", label: "Dashboard" },
+          { path: "/a/orders", label: "My Work Orders" },
+          { path: "/a/financials", label: "My Financials" },
+          { path: "/a/clients", label: "My Clients" },
         ],
       });
     }
@@ -295,11 +274,11 @@ function Sidebar({ isOpen, onClose, isMobile }) {
       sections.push({
         label: "Job Seeker",
         items: [
-          { path: "/js/dashboard", label: "Dashboard", icon: "📊" },
-          { path: "/js/find-work", label: "Find Work", icon: "🔍" },
-          { path: "/js/documents", label: "My Documents", icon: "💼" },
-          { path: "/js/advisor", label: "My Advisor", icon: "👔" },
-          { path: "/js/learning", label: "Learning & Goals", icon: "⭐" },
+          { path: "/js/dashboard", label: "Dashboard" },
+          { path: "/js/find-work", label: "Find Work" },
+          { path: "/js/documents", label: "My Documents" },
+          { path: "/js/advisor", label: "My Advisor" },
+          { path: "/js/learning", label: "Learning & Goals" },
         ],
       });
     }
@@ -328,114 +307,203 @@ function Sidebar({ isOpen, onClose, isMobile }) {
     return "/admin/dashboard";
   };
 
+  // Determine sidebar width based on state
+  const sidebarWidth = isMobile ? "w-64" : isCollapsed ? "w-16" : "w-64";
+
   return (
     <>
-      {/* Overlay */}
-      <div style={styles.overlay} onClick={onClose} />
+      {/* Overlay for mobile */}
+      {isOpen && isMobile && (
+        <div
+          className="fixed top-[60px] left-0 right-0 bottom-0 bg-black bg-opacity-50 z-[999]"
+          onClick={onClose}
+        />
+      )}
 
       {/* Sidebar */}
-      <div style={styles.sidebar}>
-        {/* Logo Section */}
-        <div style={styles.logoSection}>
-          <Link to={getDashboardPath()} onClick={handleLinkClick}>
-            <img
-              src="/img/compressed-logo.png"
-              alt="Workery Logo"
-              style={styles.logoImage}
-            />
-          </Link>
+      <style jsx>{`
+        /* Custom scrollbar styles */
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 3px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.2);
+          border-radius: 3px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Firefox scrollbar */
+        .custom-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(255, 255, 255, 0.2) rgba(255, 255, 255, 0.05);
+        }
+      `}</style>
+
+      <div
+        className={`
+        fixed top-[60px] left-0 ${sidebarWidth} h-[calc(100vh-60px)] bg-gray-900 text-gray-200
+        transform transition-all duration-300 ease-in-out z-[1000]
+        overflow-y-auto overflow-x-hidden custom-scrollbar
+        ${
+          isMobile
+            ? isOpen
+              ? "translate-x-0"
+              : "-translate-x-full"
+            : "translate-x-0"
+        }
+      `}
+      >
+        {/* Hamburger Section - Minimal padding */}
+        <div className="sticky top-0 bg-gray-900 z-10 p-1 border-b border-gray-700 mb-3">
+          <button
+            onClick={toggleCollapse}
+            className="p-1.5 rounded hover:bg-gray-800 transition-colors w-full flex justify-center"
+            title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          >
+            {isMobile ? (
+              <XMarkIcon className="h-5 w-5 text-white" />
+            ) : (
+              <Bars3Icon className="h-5 w-5 text-white" />
+            )}
+          </button>
         </div>
 
-        {/* Menu Sections */}
-        {menuSections.map((section, index) => (
-          <div key={index} style={styles.menuSection}>
-            <div style={styles.menuLabel}>{section.label}</div>
-            <ul style={styles.menuList}>
-              {section.items.map((item, idx) => (
-                <li key={idx} style={styles.menuItem}>
-                  <Link
-                    to={item.path}
-                    style={getLinkStyle(item.path)}
-                    onClick={handleLinkClick}
-                    onMouseEnter={(e) => {
-                      if (!isActivePath(item.path)) {
-                        e.target.style.backgroundColor = "#333";
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isActivePath(item.path)) {
-                        e.target.style.backgroundColor = "transparent";
-                      }
-                    }}
-                  >
-                    {item.icon} {item.label}
-                    {item.badge && (
-                      <span style={styles.taskCount}>({item.badge})</span>
-                    )}
-                  </Link>
-                </li>
-              ))}
+        {/* Menu Content */}
+        <div className={`px-3 py-2 ${isCollapsed && !isMobile ? "px-2" : ""}`}>
+          {/* Menu Sections */}
+          {menuSections.map((section, index) => (
+            <div key={index} className="mb-5">
+              {/* Section label - hide when collapsed */}
+              {(!isCollapsed || isMobile) && (
+                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 px-3">
+                  {section.label}
+                </div>
+              )}
+              <ul className="space-y-0.5">
+                {section.items.map((item, idx) => {
+                  const Icon = iconMap[item.label] || HomeIcon;
+                  const isActive = isActivePath(item.path);
+
+                  return (
+                    <li key={idx}>
+                      <Link
+                        to={item.path}
+                        onClick={handleLinkClick}
+                        title={isCollapsed && !isMobile ? item.label : ""}
+                        className={`
+                          relative flex items-center ${!isCollapsed || isMobile ? "justify-between" : "justify-center"}
+                          ${!isCollapsed || isMobile ? "px-3" : "px-2"} py-1.5 rounded-md text-sm
+                          transition-colors duration-200
+                          ${
+                            isActive
+                              ? "bg-blue-600 text-white"
+                              : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                          }
+                        `}
+                      >
+                        <div
+                          className={`flex items-center ${!isCollapsed || isMobile ? "" : "justify-center w-full"}`}
+                        >
+                          <Icon
+                            className={`h-5 w-5 ${!isCollapsed || isMobile ? "mr-3" : ""} flex-shrink-0`}
+                          />
+                          {(!isCollapsed || isMobile) && (
+                            <span>{item.label}</span>
+                          )}
+                        </div>
+                        {item.badge && (!isCollapsed || isMobile) && (
+                          <span className="bg-green-600 text-white text-xs rounded-full px-2 py-0.5 ml-2">
+                            ({item.badge})
+                          </span>
+                        )}
+                        {/* Show badge as dot when collapsed */}
+                        {item.badge && isCollapsed && !isMobile && (
+                          <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-green-600" />
+                        )}
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+
+          {/* Account Menu */}
+          <div className="mb-5">
+            {(!isCollapsed || isMobile) && (
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5 px-3">
+                Account
+              </div>
+            )}
+            <ul className="space-y-0.5">
+              <li>
+                <Link
+                  to="/help"
+                  onClick={handleLinkClick}
+                  title={isCollapsed && !isMobile ? "Help" : ""}
+                  className={`
+                    flex items-center ${!isCollapsed || isMobile ? "px-3" : "px-2 justify-center"} py-1.5 rounded-md text-sm
+                    transition-colors duration-200
+                    ${
+                      isActivePath("/help")
+                        ? "bg-blue-600 text-white"
+                        : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                    }
+                  `}
+                >
+                  <QuestionMarkCircleIcon
+                    className={`h-5 w-5 ${!isCollapsed || isMobile ? "mr-3" : ""} flex-shrink-0`}
+                  />
+                  {(!isCollapsed || isMobile) && <span>Help</span>}
+                </Link>
+              </li>
+              <li>
+                <Link
+                  to="/account"
+                  onClick={handleLinkClick}
+                  title={isCollapsed && !isMobile ? "My Profile" : ""}
+                  className={`
+                    flex items-center ${!isCollapsed || isMobile ? "px-3" : "px-2 justify-center"} py-1.5 rounded-md text-sm
+                    transition-colors duration-200
+                    ${
+                      isActivePath("/account")
+                        ? "bg-blue-600 text-white"
+                        : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                    }
+                  `}
+                >
+                  <UserCircleIcon
+                    className={`h-5 w-5 ${!isCollapsed || isMobile ? "mr-3" : ""} flex-shrink-0`}
+                  />
+                  {(!isCollapsed || isMobile) && <span>My Profile</span>}
+                </Link>
+              </li>
+              <li>
+                <button
+                  onClick={() => setShowLogoutWarning(true)}
+                  title={isCollapsed && !isMobile ? "Sign Off" : ""}
+                  className={`
+                    flex items-center w-full text-left ${!isCollapsed || isMobile ? "px-3" : "px-2 justify-center"} py-1.5 rounded-md text-sm
+                    text-gray-300 hover:bg-gray-800 hover:text-white
+                    transition-colors duration-200`}
+                >
+                  <ArrowRightOnRectangleIcon
+                    className={`h-5 w-5 ${!isCollapsed || isMobile ? "mr-3" : ""} flex-shrink-0`}
+                  />
+                  {(!isCollapsed || isMobile) && <span>Sign Off</span>}
+                </button>
+              </li>
             </ul>
           </div>
-        ))}
-
-        {/* Account Menu */}
-        <div style={styles.menuSection}>
-          <div style={styles.menuLabel}>Account</div>
-          <ul style={styles.menuList}>
-            <li style={styles.menuItem}>
-              <Link
-                to="/help"
-                style={getLinkStyle("help")}
-                onClick={handleLinkClick}
-                onMouseEnter={(e) => {
-                  if (!isActivePath("help")) {
-                    e.target.style.backgroundColor = "#333";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActivePath("help")) {
-                    e.target.style.backgroundColor = "transparent";
-                  }
-                }}
-              >
-                ❓ Help
-              </Link>
-            </li>
-            <li style={styles.menuItem}>
-              <Link
-                to="/account"
-                style={getLinkStyle("account")}
-                onClick={handleLinkClick}
-                onMouseEnter={(e) => {
-                  if (!isActivePath("account")) {
-                    e.target.style.backgroundColor = "#333";
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActivePath("account")) {
-                    e.target.style.backgroundColor = "transparent";
-                  }
-                }}
-              >
-                👤 My Profile
-              </Link>
-            </li>
-            <li style={styles.menuItem}>
-              <button
-                onClick={() => setShowLogoutWarning(true)}
-                style={styles.logoutButton}
-                onMouseEnter={(e) => {
-                  e.target.style.backgroundColor = "#333";
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.backgroundColor = "transparent";
-                }}
-              >
-                🚪 Sign Off
-              </button>
-            </li>
-          </ul>
         </div>
       </div>
 

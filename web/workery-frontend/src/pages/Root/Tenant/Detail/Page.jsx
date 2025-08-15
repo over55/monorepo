@@ -1,4 +1,5 @@
 // File Path: web/workery-frontend/src/pages/Root/Tenant/Detail/Page.jsx
+// Modernized Tenant Detail Page with Tailwind and Heroicons
 
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router";
@@ -6,14 +7,31 @@ import {
   useTenantManager,
   useAuthManager,
 } from "../../../../services/Services";
-import { theme, globalStyles } from "../../../../constants/Theme";
 import {
   Card,
   Button,
   Alert,
   Loading,
   Breadcrumb,
+  Badge,
 } from "../../../../components/UI";
+import {
+  BuildingOfficeIcon,
+  HomeIcon,
+  InformationCircleIcon,
+  IdentificationIcon,
+  PhoneIcon,
+  MapPinIcon,
+  EnvelopeIcon,
+  PencilSquareIcon,
+  ArrowLeftIcon,
+  ChartBarIcon,
+  BuildingOffice2Icon,
+  GlobeAltIcon,
+  MapIcon,
+  HomeModernIcon,
+  HashtagIcon,
+} from "@heroicons/react/24/outline";
 
 function RootTenantDetailPage() {
   const { tid } = useParams();
@@ -82,203 +100,252 @@ function RootTenantDetailPage() {
   }, [tid]);
 
   if (isLoading) {
-    return <Loading message="Loading Tenant Details..." />;
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <Loading size="lg" text="Loading Tenant Details..." />
+      </div>
+    );
   }
 
-  const styles = {
-    detailSection: {
-      marginBottom: "30px",
+  const breadcrumbItems = [
+    {
+      label: "Root Dashboard",
+      href: "/root/dashboard",
+      icon: ChartBarIcon,
     },
-    sectionTitle: {
-      fontSize: "18px",
-      marginBottom: "15px",
-      color: theme.colors.secondary,
-      display: "flex",
-      alignItems: "center",
-      gap: "8px",
+    {
+      label: "Tenants",
+      href: "/root/tenants",
+      icon: BuildingOffice2Icon,
     },
-    detailGrid: {
-      display: "grid",
-      gap: "15px",
-      gridTemplateColumns: "1fr",
-      maxWidth: "600px",
+    {
+      label: "Detail",
+      icon: InformationCircleIcon,
     },
-    detailItem: {
-      display: "flex",
-      flexDirection: "column",
-    },
-    detailLabel: {
-      fontWeight: "bold",
-      marginBottom: "5px",
-      fontSize: "14px",
-      color: "#333",
-    },
-    detailValue: {
-      padding: "10px",
-      backgroundColor: "#f8f9fa",
-      borderRadius: "4px",
-      fontSize: "14px",
-      color: "#666",
-    },
-    actionButtons: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginTop: "40px",
-      flexWrap: "wrap",
-      gap: "10px",
-    },
-  };
+  ];
+
+  // Helper component for detail items
+  const DetailItem = ({ label, value, icon: Icon }) => (
+    <div className="bg-white rounded-lg border border-gray-200 p-4">
+      <div className="flex items-start space-x-3">
+        {Icon && (
+          <Icon className="h-5 w-5 text-gray-400 mt-0.5 flex-shrink-0" />
+        )}
+        <div className="flex-1 min-w-0">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            {label}
+          </label>
+          <div className="text-sm text-gray-900 break-words">
+            {value || (
+              <span className="text-gray-400 italic">Not provided</span>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
-    <div style={globalStyles.container}>
-      <Breadcrumb
-        items={[
-          { label: "Root Dashboard", path: "/root/dashboard", icon: "📊" },
-          { label: "Tenants", path: "/root/tenants", icon: "🏢" },
-          { label: "Detail", icon: "ℹ️" },
-        ]}
-      />
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center space-x-4">
+              <BuildingOffice2Icon className="h-8 w-8 text-blue-600" />
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900">
+                  Tenant Details
+                </h1>
+                {tenant && (
+                  <p className="text-sm text-gray-600 mt-1">{tenant.name}</p>
+                )}
+              </div>
+            </div>
+            {tenant && (
+              <Link to={`/root/tenant/${tid}/edit`}>
+                <Button variant="primary" icon={PencilSquareIcon}>
+                  Edit Tenant
+                </Button>
+              </Link>
+            )}
+          </div>
+        </div>
+      </header>
 
-      {errors.fetch && <Alert type="error">{errors.fetch}</Alert>}
-      {errors.tenantId && <Alert type="error">{errors.tenantId}</Alert>}
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb */}
+        <div className="mb-6">
+          <Breadcrumb items={breadcrumbItems} />
+        </div>
 
-      {tenant && (
-        <Card
-          title="🏢 Tenant Details"
-          actions={
-            <Link to={`/root/tenant/${tid}/edit`}>
-              <Button variant="warning">✏️ Edit</Button>
-            </Link>
-          }
-        >
-          {/* Identification Section */}
-          <div style={styles.detailSection}>
-            <h2 style={styles.sectionTitle}>🆔 Identification</h2>
-            <hr style={{ marginBottom: "15px" }} />
+        {/* Error Alerts */}
+        {errors.fetch && (
+          <Alert type="error" dismissible onDismiss={() => setErrors({})}>
+            {errors.fetch}
+          </Alert>
+        )}
+        {errors.tenantId && (
+          <Alert type="error" dismissible onDismiss={() => setErrors({})}>
+            {errors.tenantId}
+          </Alert>
+        )}
 
-            <div style={styles.detailGrid}>
-              <div style={styles.detailItem}>
-                <label style={styles.detailLabel}>Schema Name:</label>
-                <div style={styles.detailValue}>
-                  {tenant.schemaName || "N/A"}
+        {tenant && (
+          <div className="space-y-6">
+            {/* Identification Section */}
+            <Card>
+              <div className="px-6 py-4 border-b border-gray-200">
+                <div className="flex items-center space-x-2">
+                  <IdentificationIcon className="h-5 w-5 text-gray-600" />
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Identification
+                  </h2>
                 </div>
               </div>
-
-              <div style={styles.detailItem}>
-                <label style={styles.detailLabel}>Name:</label>
-                <div style={styles.detailValue}>{tenant.name || "N/A"}</div>
-              </div>
-
-              <div style={styles.detailItem}>
-                <label style={styles.detailLabel}>Alternate Name:</label>
-                <div style={styles.detailValue}>
-                  {tenant.alternateName || "N/A"}
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <DetailItem
+                    label="Schema Name"
+                    value={tenant.schemaName}
+                    icon={HashtagIcon}
+                  />
+                  <DetailItem
+                    label="Name"
+                    value={tenant.name}
+                    icon={BuildingOfficeIcon}
+                  />
+                  <DetailItem
+                    label="Alternate Name"
+                    value={tenant.alternateName}
+                    icon={BuildingOfficeIcon}
+                  />
+                  <div className="md:col-span-2">
+                    <DetailItem
+                      label="Description"
+                      value={tenant.description}
+                      icon={InformationCircleIcon}
+                    />
+                  </div>
                 </div>
               </div>
+            </Card>
 
-              <div style={styles.detailItem}>
-                <label style={styles.detailLabel}>Description:</label>
-                <div style={styles.detailValue}>
-                  {tenant.description || "N/A"}
+            {/* Contact Section */}
+            <Card>
+              <div className="px-6 py-4 border-b border-gray-200">
+                <div className="flex items-center space-x-2">
+                  <PhoneIcon className="h-5 w-5 text-gray-600" />
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Contact Information
+                  </h2>
                 </div>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <DetailItem
+                    label="Email"
+                    value={tenant.email}
+                    icon={EnvelopeIcon}
+                  />
+                  <DetailItem
+                    label="Telephone"
+                    value={tenant.telephone}
+                    icon={PhoneIcon}
+                  />
+                </div>
+              </div>
+            </Card>
+
+            {/* Address Section */}
+            <Card>
+              <div className="px-6 py-4 border-b border-gray-200">
+                <div className="flex items-center space-x-2">
+                  <MapPinIcon className="h-5 w-5 text-gray-600" />
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Address
+                  </h2>
+                </div>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <DetailItem
+                    label="Country"
+                    value={tenant.addressCountry}
+                    icon={GlobeAltIcon}
+                  />
+                  <DetailItem
+                    label="State/Province"
+                    value={tenant.addressRegion}
+                    icon={MapIcon}
+                  />
+                  <DetailItem
+                    label="City"
+                    value={tenant.addressLocality}
+                    icon={BuildingOfficeIcon}
+                  />
+                  <DetailItem
+                    label="Postal Code"
+                    value={tenant.postalCode}
+                    icon={HashtagIcon}
+                  />
+                  <DetailItem
+                    label="Street Address"
+                    value={tenant.streetAddress}
+                    icon={HomeModernIcon}
+                  />
+                  <DetailItem
+                    label="Address (Extra line)"
+                    value={tenant.streetAddressExtra}
+                    icon={HomeModernIcon}
+                  />
+                </div>
+              </div>
+            </Card>
+
+            {/* Action Buttons */}
+            <div className="flex justify-between items-center pt-6">
+              <Link to="/root/tenants">
+                <Button variant="secondary" icon={ArrowLeftIcon}>
+                  Back to List
+                </Button>
+              </Link>
+
+              <div className="flex gap-3">
+                <Link to={`/root/tenant/${tid}/start`}>
+                  <Button variant="success">Start Tenant</Button>
+                </Link>
+                <Link to={`/root/tenant/${tid}/edit`}>
+                  <Button variant="primary" icon={PencilSquareIcon}>
+                    Edit Details
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>
+        )}
 
-          {/* Contact Section */}
-          <div style={styles.detailSection}>
-            <h2 style={styles.sectionTitle}>📞 Contact</h2>
-            <hr style={{ marginBottom: "15px" }} />
-
-            <div style={styles.detailGrid}>
-              <div style={styles.detailItem}>
-                <label style={styles.detailLabel}>Email:</label>
-                <div style={styles.detailValue}>{tenant.email || "N/A"}</div>
-              </div>
-
-              <div style={styles.detailItem}>
-                <label style={styles.detailLabel}>Telephone:</label>
-                <div style={styles.detailValue}>
-                  {tenant.telephone || "N/A"}
-                </div>
-              </div>
+        {/* Not Found State */}
+        {!tenant && !isLoading && (
+          <Card>
+            <div className="text-center py-12">
+              <BuildingOfficeIcon className="mx-auto h-12 w-12 text-gray-400" />
+              <h2 className="mt-4 text-lg font-medium text-gray-900">
+                Tenant Not Found
+              </h2>
+              <p className="mt-2 text-sm text-gray-500">
+                The requested tenant could not be found.
+              </p>
+              <Link to="/root/tenants" className="inline-block mt-6">
+                <Button variant="primary" icon={ArrowLeftIcon}>
+                  Back to Tenants List
+                </Button>
+              </Link>
             </div>
-          </div>
-
-          {/* Address Section */}
-          <div style={styles.detailSection}>
-            <h2 style={styles.sectionTitle}>📍 Address</h2>
-            <hr style={{ marginBottom: "15px" }} />
-
-            <div style={styles.detailGrid}>
-              <div style={styles.detailItem}>
-                <label style={styles.detailLabel}>Country:</label>
-                <div style={styles.detailValue}>
-                  {tenant.addressCountry || "N/A"}
-                </div>
-              </div>
-
-              <div style={styles.detailItem}>
-                <label style={styles.detailLabel}>State/Province:</label>
-                <div style={styles.detailValue}>
-                  {tenant.addressRegion || "N/A"}
-                </div>
-              </div>
-
-              <div style={styles.detailItem}>
-                <label style={styles.detailLabel}>City:</label>
-                <div style={styles.detailValue}>
-                  {tenant.addressLocality || "N/A"}
-                </div>
-              </div>
-
-              <div style={styles.detailItem}>
-                <label style={styles.detailLabel}>Postal Code:</label>
-                <div style={styles.detailValue}>
-                  {tenant.postalCode || "N/A"}
-                </div>
-              </div>
-
-              <div style={styles.detailItem}>
-                <label style={styles.detailLabel}>Street Address:</label>
-                <div style={styles.detailValue}>
-                  {tenant.streetAddress || "N/A"}
-                </div>
-              </div>
-
-              <div style={styles.detailItem}>
-                <label style={styles.detailLabel}>Address (Extra line):</label>
-                <div style={styles.detailValue}>
-                  {tenant.streetAddressExtra || "N/A"}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Navigation Buttons */}
-          <div style={styles.actionButtons}>
-            <Link to="/root/tenants">
-              <Button variant="secondary">← Back</Button>
-            </Link>
-            <Link to={`/root/tenant/${tid}/edit`}>
-              <Button variant="primary">✏️ Edit</Button>
-            </Link>
-          </div>
-        </Card>
-      )}
-
-      {!tenant && !isLoading && (
-        <Card>
-          <div style={{ textAlign: "center", padding: "40px" }}>
-            <h2>Tenant Not Found</h2>
-            <p>The requested tenant could not be found.</p>
-            <Link to="/root/tenants">
-              <Button variant="primary">← Back to Tenants List</Button>
-            </Link>
-          </div>
-        </Card>
-      )}
+          </Card>
+        )}
+      </main>
     </div>
   );
 }

@@ -9,7 +9,7 @@ tasks:
   start:
     desc: Start the backend in developer mode with a mongodb cluster
     cmds:
-      - docker-compose -p workery_backend -f dev.cluster.docker-compose.yml up
+      - docker compose -p workery_backend -f dev.cluster.docker-compose.yml up
 
   end:
     desc: Stop the backend in developer mode
