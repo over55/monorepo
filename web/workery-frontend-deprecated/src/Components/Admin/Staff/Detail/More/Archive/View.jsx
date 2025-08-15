@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/Staff/Detail/More/Archive/View.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -29,7 +30,10 @@ import {
 import { useRecoilState } from "recoil";
 import { useParams } from "react-router-dom";
 
-import { getStaffDetailAPI, postArchiveStaffAPI } from "../../../../../../API/Staff";
+import {
+  getStaffDetailAPI,
+  postArchiveStaffAPI,
+} from "../../../../../../API/Staff";
 import FormErrorBox from "../../../../../Reusable/FormErrorBox";
 import PageLoadingContent from "../../../../../Reusable/PageLoadingContent";
 import {

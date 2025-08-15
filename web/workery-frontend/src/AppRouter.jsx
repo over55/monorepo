@@ -1040,7 +1040,7 @@ function AppRouter() {
               path="/admin/staff/:aid/avatar"
               element={
                 <Layout>
-                  <PlaceholderPage title="Staff Avatar" />
+                  <AdminStaffDetailMoreAvatarPage />
                 </Layout>
               }
             />
@@ -1048,7 +1048,7 @@ function AppRouter() {
               path="/admin/staff/:aid/archive"
               element={
                 <Layout>
-                  <PlaceholderPage title="Archive Staff" />
+                  <AdminStaffDetailMoreArchivePage />
                 </Layout>
               }
             />
@@ -1056,7 +1056,7 @@ function AppRouter() {
               path="/admin/staff/:aid/unarchive"
               element={
                 <Layout>
-                  <PlaceholderPage title="Unarchive Staff" />
+                  <AdminStaffDetailMoreUnarchivePage />
                 </Layout>
               }
             />
@@ -1064,7 +1064,7 @@ function AppRouter() {
               path="/admin/staff/:aid/permadelete"
               element={
                 <Layout>
-                  <PlaceholderPage title="Delete Staff" />
+                  <AdminStaffDetailMoreDeletePage />
                 </Layout>
               }
             />
@@ -1072,7 +1072,7 @@ function AppRouter() {
               path="/admin/staff/:aid/upgrade"
               element={
                 <Layout>
-                  <PlaceholderPage title="Upgrade Staff" />
+                  <AdminStaffDetailMoreUpgradePage />
                 </Layout>
               }
             />
@@ -1080,7 +1080,7 @@ function AppRouter() {
               path="/admin/staff/:aid/downgrade"
               element={
                 <Layout>
-                  <PlaceholderPage title="Downgrade Staff" />
+                  <AdminStaffDetailMoreDowngradePage />
                 </Layout>
               }
             />
@@ -1096,7 +1096,7 @@ function AppRouter() {
               path="/admin/staff/:aid/change-password"
               element={
                 <Layout>
-                  <PlaceholderPage title="Change Staff Password" />
+                  <AdminStaffDetailMoreChangePasswordPage />
                 </Layout>
               }
             />

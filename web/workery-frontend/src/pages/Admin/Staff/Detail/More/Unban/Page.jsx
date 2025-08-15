@@ -1,30 +1,41 @@
 // File Path: web/workery-frontend/src/pages/Admin/Staff/Detail/More/Unban/Page.jsx
 
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router";
-import {
-  useDashboardManager,
-  useAuthManager,
-} from "../../../../../../services/Services";
-import { theme, globalStyles } from "../../../../../../constants/Theme";
+import React from "react";
+import { Link, useParams } from "react-router";
 import {
   Card,
   Button,
   Alert,
-  Loading,
   Breadcrumb,
-  Modal,
-  Input,
-  TextArea,
-  Select,
 } from "../../../../../../components/UI";
 
 function AdminStaffDetailMoreUnbanPage() {
+  const { aid } = useParams();
+
+  const breadcrumbItems = [
+    { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
+    { label: "Staff", path: "/admin/staff", icon: "👔" },
+    { label: "Detail (More)", path: `/admin/staff/${aid}/more`, icon: "ℹ️" },
+    { label: "Unban", icon: "✅" },
+  ];
+
   return (
-    <>
-      <h1>Welcome to AdminStaffDetailMoreUnbanPage</h1>
-      {/* TODO: Implement */}
-    </>
+    <div style={{ padding: "20px" }}>
+      <Breadcrumb items={breadcrumbItems} />
+
+      <Card>
+        <Alert type="info">
+          Unban functionality is not yet implemented. This feature would restore
+          login access for the staff member.
+        </Alert>
+
+        <div style={{ marginTop: "20px" }}>
+          <Link to={`/admin/staff/${aid}/more`}>
+            <Button variant="secondary">← Back to Detail (More)</Button>
+          </Link>
+        </div>
+      </Card>
+    </div>
   );
 }
 
