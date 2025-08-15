@@ -1000,7 +1000,7 @@ function AppRouter() {
               path="/admin/staff/:aid/attachments"
               element={
                 <Layout>
-                  <PlaceholderPage title="Staff Attachments" />
+                  <AdminStaffDetailAttachmentListPage />
                 </Layout>
               }
             />
@@ -1008,7 +1008,7 @@ function AppRouter() {
               path="/admin/staff/:aid/attachments/add"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Staff Attachment" />
+                  <AdminStaffDetailAttachmentAddPage />
                 </Layout>
               }
             />
@@ -1016,7 +1016,7 @@ function AppRouter() {
               path="/admin/staff/:aid/attachment/:atid"
               element={
                 <Layout>
-                  <PlaceholderPage title="Staff Attachment Detail" />
+                  <AdminStaffDetailAttachmentDetailPage />
                 </Layout>
               }
             />
@@ -1024,7 +1024,7 @@ function AppRouter() {
               path="/admin/staff/:aid/attachment/:atid/edit"
               element={
                 <Layout>
-                  <PlaceholderPage title="Edit Staff Attachment" />
+                  <AdminStaffDetailAttachmentUpdatePage />
                 </Layout>
               }
             />
