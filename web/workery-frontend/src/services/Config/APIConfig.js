@@ -97,14 +97,14 @@ export const API_ENDPOINTS = {
   CUSTOMER_UNBAN_OPERATION: "/customers/operations/unban",
 
   // Staff endpoints
-  STAFF: "/staff",
+  STAFF: "/staffs", // <-- Changed to plural
   STAFF_DETAIL: "/staff/{id}",
   STAFF_ARCHIVE_OPERATION: "/staff/operation/archive",
   STAFF_CREATE_COMMENT_OPERATION: "/staff/operation/create-comment",
   STAFF_UPGRADE_OPERATION: "/staff/operation/upgrade",
   STAFF_DOWNGRADE_OPERATION: "/staff/operation/downgrade",
   STAFF_AVATAR_OPERATION: "/staff/operation/avatar",
-  STAFF_SELECT_OPTIONS: "/staff/select-options",
+  STAFF_SELECT_OPTIONS: "/staffs/select-options",
   STAFF_CHANGE_PASSWORD_OPERATION: "/staff/operations/change-password",
   STAFF_CHANGE_2FA_OPERATION: "/staff/operations/change-2fa",
   STAFF_PERMANENTLY_DELETE_OPERATION: "/staff/operations/permanently-delete",
