@@ -992,7 +992,7 @@ function AppRouter() {
               path="/admin/staff/:aid/comments"
               element={
                 <Layout>
-                  <PlaceholderPage title="Staff Comments" />
+                  <AdminStaffDetailCommentListPage />
                 </Layout>
               }
             />
