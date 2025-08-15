@@ -6,6 +6,8 @@ import {
   useOrderManager,
   useTenantManager,
   useServiceFeeManager,
+  useFinancialManager,
+  useAccountManager,
 } from "../../../../services/Services";
 import {
   Card,
@@ -35,13 +37,17 @@ function AdminFinancialUpdatePage() {
   const orderManager = useOrderManager();
   const tenantManager = useTenantManager();
   const serviceFeeManager = useServiceFeeManager();
+  const financialManager = useFinancialManager();
+  const accountManager = useAccountManager();
 
   // Component states
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
   const [order, setOrder] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
   const [taxRate, setTaxRate] = useState(0.0);
   const [successMessage, setSuccessMessage] = useState("");
+  const [onPageLoaded, setOnPageLoaded] = useState(false);
 
   // Form states
   const [invoicePaidTo, setInvoicePaidTo] = useState(1);
@@ -93,6 +99,7 @@ function AdminFinancialUpdatePage() {
   // Constants
   const INVOICE_PAID_TO_ASSOCIATE = 1;
   const INVOICE_PAID_TO_ORGANIZATION = 2;
+  const EMPTY_OBJECT_ID = "000000000000000000000000";
 
   // Handle unauthorized access
   const onUnauthorized = () => {
@@ -154,6 +161,18 @@ function AdminFinancialUpdatePage() {
     setInvoiceAmountDue(roundToTwo(amountDue));
   };
 
+  // Fetch current user
+  const fetchCurrentUser = async () => {
+    try {
+      const userData = await accountManager.getAccountDetail(onUnauthorized);
+      setCurrentUser(userData);
+      return userData;
+    } catch (error) {
+      console.error("Failed to fetch current user:", error);
+      return null;
+    }
+  };
+
   // Fetch tenant details for tax rate
   const fetchTenantDetails = async (tenantId) => {
     try {
@@ -170,7 +189,7 @@ function AdminFinancialUpdatePage() {
 
   // Fetch service fee details
   const fetchServiceFeeDetails = async (serviceFeeId) => {
-    if (!serviceFeeId) return;
+    if (!serviceFeeId || serviceFeeId === "") return;
 
     try {
       const serviceFeeData = await serviceFeeManager.getServiceFeeDetail(
@@ -186,121 +205,129 @@ function AdminFinancialUpdatePage() {
     }
   };
 
-  // Fetch order details
+  // Initial data fetch
   useEffect(() => {
     let mounted = true;
 
-    const fetchOrderDetails = async () => {
+    const initializePage = async () => {
       if (!oid) {
         setErrors({ general: "Order ID is required" });
         return;
       }
 
-      setFetching(true);
-      setErrors({});
+      // First time page load
+      if (!onPageLoaded) {
+        window.scrollTo(0, 0);
+        setOnPageLoaded(true);
 
-      try {
-        // Fetch order details
-        const orderData = await orderManager.getOrderDetail(
-          oid,
-          onUnauthorized,
-        );
-
-        if (mounted) {
-          setOrder(orderData);
-
-          // Set form fields from order data
-          setInvoicePaidTo(
-            orderData.invoicePaidTo || INVOICE_PAID_TO_ASSOCIATE,
-          );
-          setPaymentStatus(
-            orderData.status || ORDER_STATUS_COMPLETED_BUT_UNPAID,
-          );
-          setCompletionDate(orderData.completionDate);
-          setInvoiceDate(orderData.invoiceDate);
-          setInvoiceIds(orderData.invoiceIds || "");
-
-          // Quote fields
-          setInvoiceQuotedLabourAmount(
-            orderData.invoiceQuotedLabourAmount || 0,
-          );
-          setInvoiceQuotedMaterialAmount(
-            orderData.invoiceQuotedMaterialAmount || 0,
-          );
-          setInvoiceQuotedOtherCostsAmount(
-            orderData.invoiceQuotedOtherCostsAmount || 0,
-          );
-          setInvoiceTotalQuoteAmount(orderData.invoiceTotalQuoteAmount || 0);
-
-          // Actual fields
-          setInvoiceLabourAmount(orderData.invoiceLabourAmount || 0);
-          setInvoiceMaterialAmount(orderData.invoiceMaterialAmount || 0);
-          setInvoiceOtherCostsAmount(orderData.invoiceOtherCostsAmount || 0);
-          setAssociateTaxId(orderData.associateTaxId || "");
-          setInvoiceTaxAmount(orderData.invoiceTaxAmount || 0);
-          setInvoiceIsCustomTaxAmount(
-            orderData.invoiceIsCustomTaxAmount || false,
-          );
-          setInvoiceTotalAmount(orderData.invoiceTotalAmount || 0);
-          setInvoiceDepositAmount(orderData.invoiceDepositAmount || 0);
-          setInvoiceAmountDue(orderData.invoiceAmountDue || 0);
-
-          // Service fee fields
-          setInvoiceServiceFeeId(orderData.invoiceServiceFeeId || "");
-          setInvoiceServiceFeePercentage(
-            orderData.invoiceServiceFeePercentage || 0,
-          );
-          setIsInvoiceServiceFeeOther(
-            orderData.isInvoiceServiceFeeOther || false,
-          );
-          setInvoiceServiceFeeOther(orderData.invoiceServiceFeeOther || "");
-          setInvoiceServiceFeeAmount(orderData.invoiceServiceFeeAmount || 0);
-          setInvoiceServiceFeePaymentDate(
-            orderData.invoiceServiceFeePaymentDate,
-          );
-          setPaymentMethods(orderData.paymentMethods || []);
-          setInvoiceActualServiceFeeAmountPaid(
-            orderData.invoiceActualServiceFeeAmountPaid || 0,
-          );
-          setInvoiceBalanceOwingAmount(
-            orderData.invoiceBalanceOwingAmount || 0,
-          );
-
-          // Fetch tenant for tax rate
-          if (orderData.tenantId) {
-            await fetchTenantDetails(orderData.tenantId);
-          }
-
-          // Fetch service fee details if ID exists
-          if (orderData.invoiceServiceFeeId) {
-            await fetchServiceFeeDetails(orderData.invoiceServiceFeeId);
-          }
+        // Fetch current user and tenant tax rate
+        const userData = await fetchCurrentUser();
+        if (userData && userData.tenantId && mounted) {
+          await fetchTenantDetails(userData.tenantId);
         }
-      } catch (error) {
-        console.error("Failed to fetch order details:", error);
-        if (mounted) {
-          if (typeof error === "object" && error !== null) {
-            setErrors(error);
-          } else {
-            setErrors({
-              general: "Failed to load order details. Please try again.",
-            });
+      }
+
+      // Fetch order details if not already loaded
+      if (!order || Object.keys(order).length === 0) {
+        setFetching(true);
+        setErrors({});
+
+        try {
+          const orderData = await orderManager.getOrderDetail(
+            oid,
+            onUnauthorized,
+          );
+
+          if (mounted) {
+            setOrder(orderData);
+
+            // Set form fields from order data
+            setInvoicePaidTo(
+              orderData.invoicePaidTo || INVOICE_PAID_TO_ASSOCIATE,
+            );
+            setPaymentStatus(
+              orderData.status || ORDER_STATUS_COMPLETED_BUT_UNPAID,
+            );
+            setCompletionDate(orderData.completionDate);
+            setInvoiceDate(orderData.invoiceDate);
+            setInvoiceIds(orderData.invoiceIds || "");
+
+            // Quote fields
+            setInvoiceQuotedLabourAmount(
+              orderData.invoiceQuotedLabourAmount || 0,
+            );
+            setInvoiceQuotedMaterialAmount(
+              orderData.invoiceQuotedMaterialAmount || 0,
+            );
+            setInvoiceQuotedOtherCostsAmount(
+              orderData.invoiceQuotedOtherCostsAmount || 0,
+            );
+            setInvoiceTotalQuoteAmount(orderData.invoiceTotalQuoteAmount || 0);
+
+            // Actual fields
+            setInvoiceLabourAmount(orderData.invoiceLabourAmount || 0);
+            setInvoiceMaterialAmount(orderData.invoiceMaterialAmount || 0);
+            setInvoiceOtherCostsAmount(orderData.invoiceOtherCostsAmount || 0);
+            setAssociateTaxId(orderData.associateTaxId || "");
+            setInvoiceTaxAmount(orderData.invoiceTaxAmount || 0);
+            setInvoiceIsCustomTaxAmount(
+              orderData.invoiceIsCustomTaxAmount || false,
+            );
+            setInvoiceTotalAmount(orderData.invoiceTotalAmount || 0);
+            setInvoiceDepositAmount(orderData.invoiceDepositAmount || 0);
+            setInvoiceAmountDue(orderData.invoiceAmountDue || 0);
+
+            // Service fee fields
+            setInvoiceServiceFeeId(orderData.invoiceServiceFeeId || "");
+            setInvoiceServiceFeePercentage(
+              orderData.invoiceServiceFeePercentage || 0,
+            );
+            setIsInvoiceServiceFeeOther(
+              orderData.isInvoiceServiceFeeOther || false,
+            );
+            setInvoiceServiceFeeOther(orderData.invoiceServiceFeeOther || "");
+            setInvoiceServiceFeeAmount(orderData.invoiceServiceFeeAmount || 0);
+            setInvoiceServiceFeePaymentDate(
+              orderData.invoiceServiceFeePaymentDate,
+            );
+            setPaymentMethods(orderData.paymentMethods || []);
+            setInvoiceActualServiceFeeAmountPaid(
+              orderData.invoiceActualServiceFeeAmountPaid || 0,
+            );
+            setInvoiceBalanceOwingAmount(
+              orderData.invoiceBalanceOwingAmount || 0,
+            );
+
+            // Fetch service fee details if ID exists
+            if (orderData.invoiceServiceFeeId) {
+              await fetchServiceFeeDetails(orderData.invoiceServiceFeeId);
+            }
           }
-        }
-      } finally {
-        if (mounted) {
-          setFetching(false);
+        } catch (error) {
+          console.error("Failed to fetch order details:", error);
+          if (mounted) {
+            if (typeof error === "object" && error !== null) {
+              setErrors(error);
+            } else {
+              setErrors({
+                general: "Failed to load order details. Please try again.",
+              });
+            }
+          }
+        } finally {
+          if (mounted) {
+            setFetching(false);
+          }
         }
       }
     };
 
-    fetchOrderDetails();
-    window.scrollTo(0, 0);
+    initializePage();
 
     return () => {
       mounted = false;
     };
-  }, [oid]);
+  }, [oid, onPageLoaded]);
 
   // Recalculate when relevant fields change
   useEffect(() => {
@@ -330,10 +357,9 @@ function AdminFinancialUpdatePage() {
     setSuccessMessage("");
 
     const updateData = {
-      id: order.id,
       wjid: order.wjid,
       invoicePaidTo: parseInt(invoicePaidTo),
-      status: parseInt(paymentStatus),
+      paymentStatus: parseInt(paymentStatus),
       completionDate: completionDate,
       invoiceDate: invoiceDate,
       invoiceIds: invoiceIds.toString(),
@@ -345,7 +371,7 @@ function AdminFinancialUpdatePage() {
       invoiceMaterialAmount: parseFloat(invoiceMaterialAmount),
       invoiceOtherCostsAmount: parseFloat(invoiceOtherCostsAmount),
       invoiceTaxAmount: parseFloat(invoiceTaxAmount),
-      invoiceIsCustomTaxAmount: invoiceIsCustomTaxAmount,
+      invoiceIsCustomTaxAmount: invoiceIsCustomTaxAmount === true,
       invoiceTotalAmount: parseFloat(invoiceTotalAmount),
       invoiceDepositAmount: parseFloat(invoiceDepositAmount),
       invoiceAmountDue: parseFloat(invoiceAmountDue),
@@ -366,10 +392,16 @@ function AdminFinancialUpdatePage() {
     try {
       setFetching(true);
 
-      // Use the OrderManager to update financial data
-      await orderManager.updateOrder(oid, updateData, onUnauthorized);
+      // Use the FinancialManager to update financial data
+      // If FinancialManager doesn't have an update method, fall back to OrderManager
+      if (financialManager && financialManager.updateFinancial) {
+        await financialManager.updateFinancial(oid, updateData, onUnauthorized);
+      } else {
+        // Fall back to order manager update
+        await orderManager.updateOrder(oid, updateData, onUnauthorized);
+      }
 
-      setSuccessMessage("Financial information updated successfully");
+      setSuccessMessage("Order financials updated");
 
       // Redirect after 2 seconds
       setTimeout(() => {
@@ -553,6 +585,7 @@ function AdminFinancialUpdatePage() {
               value={invoiceIds}
               onChange={(e) => setInvoiceIds(e.target.value)}
               error={errors.invoiceIds}
+              placeholder="Please note, the system automatically generates an ID"
               required
             />
 
@@ -567,6 +600,7 @@ function AdminFinancialUpdatePage() {
               value={invoiceQuotedLabourAmount}
               onChange={(e) => setInvoiceQuotedLabourAmount(e.target.value)}
               error={errors.invoiceQuotedLabourAmount}
+              placeholder="If no quoted labour costs, enter 0"
               required
             />
 
@@ -577,6 +611,7 @@ function AdminFinancialUpdatePage() {
               value={invoiceQuotedMaterialAmount}
               onChange={(e) => setInvoiceQuotedMaterialAmount(e.target.value)}
               error={errors.invoiceQuotedMaterialAmount}
+              placeholder="If no quoted material costs, enter 0"
               required
             />
 
@@ -587,6 +622,7 @@ function AdminFinancialUpdatePage() {
               value={invoiceQuotedOtherCostsAmount}
               onChange={(e) => setInvoiceQuotedOtherCostsAmount(e.target.value)}
               error={errors.invoiceQuotedOtherCostsAmount}
+              placeholder="If no quoted other costs, enter 0"
               required
             />
 
@@ -610,6 +646,7 @@ function AdminFinancialUpdatePage() {
               value={invoiceLabourAmount}
               onChange={(e) => setInvoiceLabourAmount(e.target.value)}
               error={errors.invoiceLabourAmount}
+              placeholder="If no actual labour costs, enter 0"
               required
             />
 
@@ -620,6 +657,7 @@ function AdminFinancialUpdatePage() {
               value={invoiceMaterialAmount}
               onChange={(e) => setInvoiceMaterialAmount(e.target.value)}
               error={errors.invoiceMaterialAmount}
+              placeholder="If no material costs were incurred, enter 0"
               required
             />
 
@@ -630,17 +668,19 @@ function AdminFinancialUpdatePage() {
               value={invoiceOtherCostsAmount}
               onChange={(e) => setInvoiceOtherCostsAmount(e.target.value)}
               error={errors.invoiceOtherCostsAmount}
+              placeholder="If no other costs were incurred, enter 0"
               required
             />
 
             <Input
-              label={`Actual Tax (Tax rate: ${taxRate}%)`}
+              label={`Actual Tax (Tax rate: ${taxRate}%${associateTaxId ? ", HST#: " + associateTaxId : ""})`}
               type="number"
               step="0.01"
               value={invoiceTaxAmount}
               onChange={(e) => setInvoiceTaxAmount(e.target.value)}
               error={errors.invoiceTaxAmount}
               disabled={!invoiceIsCustomTaxAmount}
+              placeholder={`Tax is automatically calculated at ${taxRate}%`}
               required
             />
 
@@ -653,7 +693,8 @@ function AdminFinancialUpdatePage() {
                     setInvoiceIsCustomTaxAmount(e.target.checked)
                   }
                 />
-                Custom Actual Tax? (Override automatic calculation)
+                Custom Actual Tax? (Override automatic calculation with custom
+                value)
               </label>
             </FormGroup>
 
@@ -673,6 +714,7 @@ function AdminFinancialUpdatePage() {
               value={invoiceDepositAmount}
               onChange={(e) => setInvoiceDepositAmount(e.target.value)}
               error={errors.invoiceDepositAmount}
+              placeholder="If no deposit, enter 0"
               required
             />
 
@@ -682,6 +724,7 @@ function AdminFinancialUpdatePage() {
               step="0.01"
               value={invoiceAmountDue}
               disabled
+              placeholder="Total amount minus deposit"
               required
             />
 
@@ -732,7 +775,19 @@ function AdminFinancialUpdatePage() {
                 }
               }}
               error={errors.invoiceServiceFeeId}
+              placeholder="Select service fee"
             />
+
+            {isInvoiceServiceFeeOther && (
+              <Input
+                label="Service Fee Other"
+                type="text"
+                value={invoiceServiceFeeOther}
+                onChange={(e) => setInvoiceServiceFeeOther(e.target.value)}
+                error={errors.invoiceServiceFeeOther}
+                placeholder="Enter custom service fee description"
+              />
+            )}
 
             <Input
               label="Service Fee Percentage"
@@ -741,6 +796,7 @@ function AdminFinancialUpdatePage() {
               value={invoiceServiceFeePercentage}
               onChange={(e) => setInvoiceServiceFeePercentage(e.target.value)}
               error={errors.invoiceServiceFeePercentage}
+              placeholder="Percentage of labour amount"
             />
 
             <Input
@@ -749,6 +805,7 @@ function AdminFinancialUpdatePage() {
               step="0.01"
               value={invoiceServiceFeeAmount}
               disabled
+              placeholder="Service fee owed by associate"
               required
             />
 
@@ -769,6 +826,7 @@ function AdminFinancialUpdatePage() {
                 setInvoiceActualServiceFeeAmountPaid(e.target.value)
               }
               error={errors.invoiceActualServiceFeeAmountPaid}
+              placeholder="Amount paid by associate and received by organization"
               required
             />
 
@@ -778,6 +836,7 @@ function AdminFinancialUpdatePage() {
               step="0.01"
               value={invoiceBalanceOwingAmount}
               disabled
+              placeholder="Remaining balance to be paid by associate"
               required
             />
 
