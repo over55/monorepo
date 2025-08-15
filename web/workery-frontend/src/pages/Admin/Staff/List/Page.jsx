@@ -1,6 +1,6 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Staff/List/Page.jsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 import { useStaffManager } from "../../../../services/Services";
 import {
@@ -38,6 +38,8 @@ const STAFF_STATUS_FILTER_OPTIONS = [
 const STAFF_SORT_OPTIONS = [
   { value: "lexical_name,DESC", label: "Name (Z → A)" },
   { value: "lexical_name,ASC", label: "Name (A → Z)" },
+  { value: "join_date,DESC", label: "Join Date (Newest → Oldest)" },
+  { value: "join_date,ASC", label: "Join Date (Oldest → Newest)" },
   { value: "created_at,DESC", label: "Created (Newest → Oldest)" },
   { value: "created_at,ASC", label: "Created (Oldest → Newest)" },
   { value: "email,ASC", label: "Email (A → Z)" },
@@ -79,56 +81,79 @@ function AdminStaffListPage() {
     useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+  // Force refresh counter to bypass cache
+  const [refreshCounter, setRefreshCounter] = useState(0);
+
   // Breadcrumb items
   const breadcrumbItems = [
     { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
     { label: "Staff", icon: "👔" },
   ];
 
-  // Fetch staff list
-  const fetchStaffList = () => {
-    setIsLoading(true);
-    setErrors({});
+  // Fetch staff list with useCallback to prevent infinite loops
+  const fetchStaffList = useCallback(
+    (forceRefresh = false) => {
+      console.log("fetchStaffList called with:", {
+        forceRefresh,
+        currentCursor,
+        pageSize,
+        sortBy,
+        status,
+        type,
+        searchQuery,
+      });
 
-    // Build filters map for the API
-    const filtersMap = new Map();
-    filtersMap.set("pageSize", pageSize);
+      setIsLoading(true);
+      setErrors({});
 
-    // Add cursor for pagination
-    if (currentCursor) {
-      filtersMap.set("cursor", currentCursor);
-    }
+      // Build filters map for the API
+      const filtersMap = new Map();
+      filtersMap.set("pageSize", pageSize);
 
-    // Add sorting
-    const [sortField, sortOrder] = sortBy.split(",");
-    filtersMap.set("sortField", sortField);
-    filtersMap.set("sortOrder", sortOrder);
+      // Add cursor for pagination
+      if (currentCursor) {
+        filtersMap.set("cursor", currentCursor);
+      }
 
-    // Add filters
-    if (status > 0) {
-      filtersMap.set("status", status);
-    }
+      // Add sorting
+      const [sortField, sortOrder] = sortBy.split(",");
+      filtersMap.set("sortField", sortField);
+      filtersMap.set("sortOrder", sortOrder);
 
-    if (type > 0) {
-      filtersMap.set("type", type);
-    }
+      // Add filters
+      if (status > 0) {
+        filtersMap.set("status", status);
+      }
 
-    if (searchQuery) {
-      filtersMap.set("search", searchQuery);
-    }
+      if (type > 0) {
+        filtersMap.set("type", type);
+      }
 
-    // Use the manager to fetch staff
-    staffManager.getStaffWithFiltersMapWithCallbacks(
-      filtersMap,
-      onFetchSuccess,
-      onFetchError,
-      onFetchDone,
-      onUnauthorized,
-    );
-  };
+      if (searchQuery && searchQuery.trim()) {
+        filtersMap.set("search", searchQuery.trim());
+      }
+
+      console.log("API call with filters:", Array.from(filtersMap.entries()));
+
+      // Use the manager to fetch staff with force refresh flag
+      staffManager.getStaffWithFiltersMapWithCallbacks(
+        filtersMap,
+        onFetchSuccess,
+        onFetchError,
+        onFetchDone,
+        onUnauthorized,
+        forceRefresh, // Pass the force refresh flag
+      );
+    },
+    [currentCursor, pageSize, sortBy, status, type, searchQuery],
+  );
 
   const onFetchSuccess = (response) => {
-    console.log("Staff list fetched successfully:", response);
+    console.log("Staff list fetched successfully:", {
+      resultCount: response.results?.length || 0,
+      totalCount: response.count,
+      hasNextPage: response.hasNextPage,
+    });
     setStaffList(response);
 
     // Update pagination state
@@ -155,6 +180,7 @@ function AdminStaffListPage() {
   // Pagination handlers
   const handleNextPage = () => {
     if (nextCursor) {
+      console.log("Going to next page with cursor:", nextCursor);
       const newPreviousCursors = [...previousCursors];
       newPreviousCursors.push(currentCursor);
       setPreviousCursors(newPreviousCursors);
@@ -164,6 +190,7 @@ function AdminStaffListPage() {
 
   const handlePreviousPage = () => {
     if (previousCursors.length > 0) {
+      console.log("Going to previous page");
       const newPreviousCursors = [...previousCursors];
       const previousCursor = newPreviousCursors.pop();
       setPreviousCursors(newPreviousCursors);
@@ -173,9 +200,14 @@ function AdminStaffListPage() {
 
   // Search handler
   const handleSearch = () => {
+    console.log("Search triggered with query:", tempSearchQuery);
     setSearchQuery(tempSearchQuery);
+    // Reset pagination when search changes
     setPreviousCursors([]);
     setCurrentCursor("");
+    setNextCursor("");
+    // Force refresh
+    setRefreshCounter((prev) => prev + 1);
   };
 
   const handleSearchKeyPress = (e) => {
@@ -184,8 +216,58 @@ function AdminStaffListPage() {
     }
   };
 
+  // Filter change handlers
+  const handleSortByChange = (e) => {
+    const newSortBy = e.target.value;
+    console.log("Sort by changed from", sortBy, "to:", newSortBy);
+    setSortBy(newSortBy);
+    // Reset pagination when sort changes
+    setPreviousCursors([]);
+    setCurrentCursor("");
+    setNextCursor("");
+    // Force refresh
+    setRefreshCounter((prev) => prev + 1);
+  };
+
+  const handleStatusChange = (e) => {
+    const newStatus = parseInt(e.target.value);
+    console.log("Status changed from", status, "to:", newStatus);
+    setStatus(newStatus);
+    // Reset pagination when status changes
+    setPreviousCursors([]);
+    setCurrentCursor("");
+    setNextCursor("");
+    // Force refresh
+    setRefreshCounter((prev) => prev + 1);
+  };
+
+  const handleTypeChange = (e) => {
+    const newType = parseInt(e.target.value);
+    console.log("Type changed from", type, "to:", newType);
+    setType(newType);
+    // Reset pagination when type changes
+    setPreviousCursors([]);
+    setCurrentCursor("");
+    setNextCursor("");
+    // Force refresh
+    setRefreshCounter((prev) => prev + 1);
+  };
+
+  const handlePageSizeChange = (e) => {
+    const newPageSize = parseInt(e.target.value);
+    console.log("Page size changed from", pageSize, "to:", newPageSize);
+    setPageSize(newPageSize);
+    // Reset pagination when page size changes
+    setPreviousCursors([]);
+    setCurrentCursor("");
+    setNextCursor("");
+    // Force refresh
+    setRefreshCounter((prev) => prev + 1);
+  };
+
   // Clear filters
   const handleClearFilters = () => {
+    console.log("Clearing all filters");
     setSortBy("lexical_name,ASC");
     setStatus(1);
     setType(0);
@@ -193,6 +275,9 @@ function AdminStaffListPage() {
     setTempSearchQuery("");
     setPreviousCursors([]);
     setCurrentCursor("");
+    setNextCursor("");
+    // Force refresh
+    setRefreshCounter((prev) => prev + 1);
   };
 
   // Delete handlers
@@ -220,8 +305,8 @@ function AdminStaffListPage() {
     setShowDeleteModal(false);
     setSelectedStaffForDeletion(null);
 
-    // Refresh the list
-    fetchStaffList();
+    // Force refresh the list
+    setRefreshCounter((prev) => prev + 1);
   };
 
   const onDeleteError = (error) => {
@@ -244,7 +329,7 @@ function AdminStaffListPage() {
           to={`/admin/staff/${row.id}`}
           style={{ color: "#007bff", textDecoration: "none" }}
         >
-          {row.firstName} {row.lastName}
+          {row.name || `${row.firstName} ${row.lastName}`}
         </Link>
       ),
     },
@@ -304,10 +389,38 @@ function AdminStaffListPage() {
     },
   ];
 
-  // Fetch data on component mount and when filters change
+  // Initial load effect
   useEffect(() => {
-    fetchStaffList();
-  }, [currentCursor, pageSize, sortBy, status, type, searchQuery]);
+    console.log("Initial load effect triggered");
+    fetchStaffList(true); // Force refresh on initial load
+  }, []); // Empty dependency array for initial load only
+
+  // Effect for filter changes and pagination
+  useEffect(() => {
+    console.log("Filter/pagination effect triggered", {
+      currentCursor,
+      pageSize,
+      sortBy,
+      status,
+      type,
+      searchQuery,
+      refreshCounter,
+    });
+
+    // Only fetch if we have initialized (not on initial mount)
+    if (refreshCounter > 0 || currentCursor) {
+      fetchStaffList(true); // Always force refresh to bypass cache
+    }
+  }, [
+    currentCursor,
+    pageSize,
+    sortBy,
+    status,
+    type,
+    searchQuery,
+    refreshCounter,
+    fetchStaffList,
+  ]);
 
   // Render
   if (isLoading && !staffList) {
@@ -355,21 +468,21 @@ function AdminStaffListPage() {
             <Select
               label="Sort By"
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
+              onChange={handleSortByChange}
               options={STAFF_SORT_OPTIONS}
             />
 
             <Select
               label="Status"
               value={status}
-              onChange={(e) => setStatus(parseInt(e.target.value))}
+              onChange={handleStatusChange}
               options={STAFF_STATUS_FILTER_OPTIONS}
             />
 
             <Select
               label="Type"
               value={type}
-              onChange={(e) => setType(parseInt(e.target.value))}
+              onChange={handleTypeChange}
               options={STAFF_TYPE_FILTER_OPTIONS}
             />
 
@@ -413,7 +526,9 @@ function AdminStaffListPage() {
       )}
 
       {/* Staff list table */}
-      <Card title="Staff List">
+      <Card
+        title={`Staff List ${staffList && staffList.count ? `(${staffList.count} total)` : ""}`}
+      >
         {staffList && staffList.results && staffList.results.length > 0 ? (
           <>
             <Table columns={tableColumns} data={staffList.results} />
@@ -433,14 +548,12 @@ function AdminStaffListPage() {
                 <span>Show:</span>
                 <Select
                   value={pageSize}
-                  onChange={(e) => {
-                    setPageSize(parseInt(e.target.value));
-                    setPreviousCursors([]);
-                    setCurrentCursor("");
-                  }}
+                  onChange={handlePageSizeChange}
                   options={PAGE_SIZE_OPTIONS}
                 />
-                <span>Total: {staffList.count || 0}</span>
+                <span>
+                  Showing {staffList.results.length} of {staffList.count || 0}
+                </span>
               </div>
 
               <div style={{ display: "flex", gap: "10px" }}>
@@ -464,6 +577,11 @@ function AdminStaffListPage() {
         ) : (
           <div style={{ textAlign: "center", padding: "40px" }}>
             <p>No staff members found.</p>
+            {(status !== 1 || type !== 0 || searchQuery) && (
+              <p style={{ marginTop: "10px" }}>
+                Try adjusting your filters or clearing them to see more results.
+              </p>
+            )}
             <Link to="/admin/staff/add/step-1-search">
               <Button variant="primary" style={{ marginTop: "20px" }}>
                 Add First Staff Member
