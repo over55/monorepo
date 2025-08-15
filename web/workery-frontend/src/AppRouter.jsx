@@ -225,6 +225,7 @@ import AdminFinancialDetailPage from "./pages/Admin/Financial/Detail/Page";
 import AdminFinancialUpdatePage from "./pages/Admin/Financial/Update/Page";
 import AdminFinancialDetailMorePage from "./pages/Admin/Financial/Detail/More/Page";
 import AdminFinancialDetailMoreClonePage from "./pages/Admin/Financial/Detail/More/Clone/Page";
+import AdminFinancialInvoiceDetailPage from "./pages/Admin/Financial/Detail/Invoice/Page";
 
 // Admin staff pages.
 import AdminStaffListPage from "./pages/Admin/Staff/List/Page";
@@ -2063,7 +2064,7 @@ function AppRouter() {
               path="/admin/financial/:oid/invoice"
               element={
                 <Layout>
-                  <PlaceholderPage title="Financial Invoice" />
+                  <AdminFinancialInvoiceDetailPage />
                 </Layout>
               }
             />
