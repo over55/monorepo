@@ -27,86 +27,142 @@ export class TaskAPI {
   }
 
   /**
-   * Gets list of tasks with caching, filtering, and pagination
+   * Gets list of tasks with filtering and pagination
    * @param {Object} params - Query parameters
    * @param {Function} onUnauthorizedCallback - Called when authentication fails
-   * @param {boolean} forceRefresh - Whether to bypass cache and force fresh data
    * @returns {Promise<Object>} - Tasks list with pagination data
    */
-  async getTasks(
-    params = {},
-    onUnauthorizedCallback = null,
-    forceRefresh = false,
-  ) {
+  async getTasks(params = {}, onUnauthorizedCallback = null) {
     try {
-      // IMPORTANT: Skip all caching when forceRefresh is true
-      if (forceRefresh) {
-        console.log(
-          "TaskManager: Force refresh enabled, bypassing all cache checks",
-        );
+      // Create authenticated axios instance
+      const authenticatedAxios = createAuthenticatedAxios(
+        this.baseURL,
+        this.tokenStorage,
+        onUnauthorizedCallback,
+      );
 
-        // Clear any loading states to prevent blocking
-        this.taskStorage.setTasksCacheLoading(false);
+      // Build query parameters
+      const queryParams = new URLSearchParams();
 
-        // Fetch fresh data from API
-        const tasksData = await this.taskAPI.getTasks(
-          params,
-          onUnauthorizedCallback,
-        );
+      // Add pagination parameters
+      if (params.page_size) {
+        queryParams.append("page_size", params.page_size);
+      }
+      if (params.cursor) {
+        queryParams.append("cursor", params.cursor);
+      }
+      if (params.sort_field) {
+        queryParams.append("sort_field", params.sort_field);
+      }
+      if (params.sort_order) {
+        queryParams.append("sort_order", params.sort_order);
+      }
 
-        // Optionally save to cache (but don't use it)
-        this.taskStorage.saveTasksToCache(tasksData);
+      // Add filter parameters
+      if (
+        params.type !== undefined &&
+        params.type !== null &&
+        params.type !== ""
+      ) {
+        queryParams.append("type", params.type);
+      }
+      if (
+        params.status !== undefined &&
+        params.status !== null &&
+        params.status !== ""
+      ) {
+        queryParams.append("status", params.status);
+      }
+      if (
+        params.is_closed !== undefined &&
+        params.is_closed !== null &&
+        params.is_closed !== ""
+      ) {
+        queryParams.append("is_closed", params.is_closed);
+      }
+      if (
+        params.is_archived !== undefined &&
+        params.is_archived !== null &&
+        params.is_archived !== ""
+      ) {
+        queryParams.append("is_archived", params.is_archived);
+      }
+      if (params.search) {
+        queryParams.append("search", params.search);
+      }
 
-        console.log("TaskManager: Tasks data fetched successfully:", {
-          count: tasksData.results ? tasksData.results.length : 0,
-          totalCount: tasksData.count,
-          hasNextPage: tasksData.hasNextPage,
-          nextCursor: tasksData.nextCursor,
+      // Add any other custom parameters
+      const allowedCustomParams = [
+        "order_wjid",
+        "order_id",
+        "customer_id",
+        "associate_id",
+        "assigned_associate_id",
+      ];
+
+      allowedCustomParams.forEach((paramKey) => {
+        if (
+          params[paramKey] !== undefined &&
+          params[paramKey] !== null &&
+          params[paramKey] !== ""
+        ) {
+          queryParams.append(paramKey, params[paramKey]);
+        }
+      });
+
+      const queryString = queryParams.toString();
+      const url = queryString
+        ? `${this.endpoints.TASKS}?${queryString}`
+        : this.endpoints.TASKS;
+
+      // Debug log
+      if (process.env.NODE_ENV === "development") {
+        console.log("TaskAPI: Fetching tasks with URL:", url);
+      }
+
+      // Make the API call
+      const response = await authenticatedAxios.get(url);
+
+      // Convert response from snake_case to camelCase
+      const data = camelizeKeys(response.data);
+
+      // Process date formatting for results
+      if (
+        data.results &&
+        Array.isArray(data.results) &&
+        data.results.length > 0
+      ) {
+        data.results.forEach((item) => {
+          // Format dates if needed
+          if (item.createdAt) {
+            try {
+              const dt = DateTime.fromISO(item.createdAt);
+              if (dt.isValid) {
+                item.createdAtFormatted = dt.toLocaleString(
+                  DateTime.DATETIME_MED,
+                );
+              }
+            } catch (e) {
+              // Keep original value if formatting fails
+            }
+          }
+          if (item.dueDate) {
+            try {
+              const dt = DateTime.fromISO(item.dueDate);
+              if (dt.isValid) {
+                item.dueDateFormatted = dt.toLocaleString(DateTime.DATE_MED);
+              }
+            } catch (e) {
+              // Keep original value if formatting fails
+            }
+          }
         });
-
-        return tasksData;
       }
 
-      // Check storage cache first (only if not force refresh)
-      const cachedTasks = this.taskStorage.getTasksFromCache();
-      if (cachedTasks) {
-        console.log("TaskManager: Using cached tasks data");
-        return cachedTasks;
-      }
-
-      // Prevent multiple simultaneous requests
-      if (this.taskStorage.isTasksCacheLoading()) {
-        console.log("TaskManager: Tasks request already in progress");
-        return this._waitForCurrentTasksRequest();
-      }
-
-      this.taskStorage.setTasksCacheLoading(true);
-
-      console.log("TaskManager: Fetching fresh tasks data", params);
-
-      try {
-        // Fetch fresh data from API
-        const tasksData = await this.taskAPI.getTasks(
-          params,
-          onUnauthorizedCallback,
-        );
-
-        // Save to storage cache
-        this.taskStorage.saveTasksToCache(tasksData);
-
-        console.log("TaskManager: Tasks data fetched successfully:", {
-          count: tasksData.results ? tasksData.results.length : 0,
-          totalCount: tasksData.count,
-        });
-
-        return tasksData;
-      } finally {
-        this.taskStorage.setTasksCacheLoading(false);
-      }
+      return data;
     } catch (error) {
-      this.taskStorage.setTasksCacheLoading(false);
-      console.error("TaskManager: Failed to get tasks", error);
-      throw error;
+      console.error("TaskAPI: Error fetching tasks:", error);
+      throw this._formatError(error);
     }
   }
 

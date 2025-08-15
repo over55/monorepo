@@ -12,7 +12,7 @@ export class TaskManager {
 
   /**
    * Gets list of tasks with caching, filtering, and pagination
-   * @param {Object} params - Query parameters { page, limit, search, sortBy, sortOrder }
+   * @param {Object} params - Query parameters
    * @param {Function} onUnauthorizedCallback - Called when authentication fails
    * @param {boolean} forceRefresh - Whether to bypass cache and force fresh data
    * @returns {Promise<Object>} - Tasks list with pagination data
@@ -23,12 +23,48 @@ export class TaskManager {
     forceRefresh = false,
   ) {
     try {
-      // Check storage cache first (unless force refresh is requested)
-      if (!forceRefresh) {
-        const cachedTasks = this.taskStorage.getTasksFromCache();
-        if (cachedTasks) {
-          return cachedTasks;
-        }
+      console.log("TaskManager.getTasks called with:", {
+        params,
+        forceRefresh,
+        cursor: params.cursor || "(empty)",
+      });
+
+      // IMPORTANT: Skip all caching when forceRefresh is true
+      if (forceRefresh) {
+        console.log(
+          "TaskManager: Force refresh enabled, bypassing all cache checks",
+        );
+
+        // Clear any loading states to prevent blocking
+        this.taskStorage.setTasksCacheLoading(false);
+
+        // Fetch fresh data from API
+        const tasksData = await this.taskAPI.getTasks(
+          params,
+          onUnauthorizedCallback,
+        );
+
+        // Save to cache for future use (but we're not using it now)
+        this.taskStorage.saveTasksToCache(tasksData);
+
+        console.log(
+          "TaskManager: Tasks data fetched successfully (force refresh):",
+          {
+            count: tasksData.results ? tasksData.results.length : 0,
+            totalCount: tasksData.count,
+            hasNextPage: tasksData.hasNextPage,
+            nextCursor: tasksData.nextCursor,
+          },
+        );
+
+        return tasksData;
+      }
+
+      // Check storage cache first (only if not force refresh)
+      const cachedTasks = this.taskStorage.getTasksFromCache();
+      if (cachedTasks) {
+        console.log("TaskManager: Using cached tasks data");
+        return cachedTasks;
       }
 
       // Prevent multiple simultaneous requests
@@ -39,15 +75,15 @@ export class TaskManager {
 
       this.taskStorage.setTasksCacheLoading(true);
 
-      console.log("TaskManager: Fetching fresh tasks data", params);
+      console.log(
+        "TaskManager: Fetching fresh tasks data (no cache available)",
+        params,
+      );
 
       try {
-        // Validate and clean parameters
-        const validatedParams = this._validateTasksParams(params);
-
         // Fetch fresh data from API
         const tasksData = await this.taskAPI.getTasks(
-          validatedParams,
+          params,
           onUnauthorizedCallback,
         );
 
@@ -57,6 +93,8 @@ export class TaskManager {
         console.log("TaskManager: Tasks data fetched successfully:", {
           count: tasksData.results ? tasksData.results.length : 0,
           totalCount: tasksData.count,
+          hasNextPage: tasksData.hasNextPage,
+          nextCursor: tasksData.nextCursor,
         });
 
         return tasksData;
@@ -83,12 +121,42 @@ export class TaskManager {
     forceRefresh = false,
   ) {
     try {
+      console.log("TaskManager.getTaskCount called with:", {
+        params,
+        forceRefresh,
+      });
+
+      // Skip cache if force refresh is requested
+      if (forceRefresh) {
+        console.log("TaskManager: Force refresh enabled for task count");
+
+        // Clear any loading states
+        this.taskStorage.setTaskCountCacheLoading(false);
+
+        // Fetch fresh data from API
+        const taskCountData = await this.taskAPI.getTaskCount(
+          params,
+          onUnauthorizedCallback,
+        );
+
+        // Save to cache for future use
+        this.taskStorage.saveTaskCountToCache(taskCountData);
+
+        console.log(
+          "TaskManager: Task count data fetched successfully (force refresh):",
+          {
+            count: taskCountData.count || taskCountData.total,
+          },
+        );
+
+        return taskCountData;
+      }
+
       // Check storage cache first (unless force refresh is requested)
-      if (!forceRefresh) {
-        const cachedTaskCount = this.taskStorage.getTaskCountFromCache();
-        if (cachedTaskCount) {
-          return cachedTaskCount;
-        }
+      const cachedTaskCount = this.taskStorage.getTaskCountFromCache();
+      if (cachedTaskCount) {
+        console.log("TaskManager: Using cached task count");
+        return cachedTaskCount;
       }
 
       // Prevent multiple simultaneous requests
@@ -102,12 +170,9 @@ export class TaskManager {
       console.log("TaskManager: Fetching fresh task count data", params);
 
       try {
-        // Validate and clean parameters
-        const validatedParams = this._validateTaskCountParams(params);
-
         // Fetch fresh data from API
         const taskCountData = await this.taskAPI.getTaskCount(
-          validatedParams,
+          params,
           onUnauthorizedCallback,
         );
 
@@ -913,120 +978,6 @@ export class TaskManager {
       return { taskId: "Valid task ID is required" };
     }
     return null;
-  }
-
-  _validateTasksParams(params) {
-    const validatedParams = {};
-
-    // Validate pagination
-    if (params.page && typeof params.page === "number" && params.page > 0) {
-      validatedParams.page = params.page;
-    }
-
-    if (
-      params.limit &&
-      typeof params.limit === "number" &&
-      params.limit > 0 &&
-      params.limit <= 1000
-    ) {
-      validatedParams.limit = params.limit;
-    }
-
-    // Validate search
-    if (
-      params.search &&
-      typeof params.search === "string" &&
-      params.search.trim()
-    ) {
-      validatedParams.search = params.search.trim();
-    }
-
-    // Validate sorting
-    if (params.sortBy && typeof params.sortBy === "string") {
-      const allowedSortFields = [
-        "title",
-        "description",
-        "created_at",
-        "updated_at",
-        "status",
-        "type",
-        "due_date",
-      ];
-      if (allowedSortFields.includes(params.sortBy)) {
-        validatedParams.sortBy = params.sortBy;
-
-        if (params.sortOrder && ["ASC", "DESC"].includes(params.sortOrder)) {
-          validatedParams.sortOrder = params.sortOrder;
-        } else {
-          validatedParams.sortOrder = "ASC";
-        }
-      }
-    }
-
-    // Validate filters
-    if (params.status && typeof params.status === "string") {
-      validatedParams.status = params.status;
-    }
-
-    if (params.type && typeof params.type === "string") {
-      validatedParams.type = params.type;
-    }
-
-    // FIX: Add order_wjid parameter validation
-    if (
-      params.order_wjid !== undefined &&
-      params.order_wjid !== null &&
-      params.order_wjid !== ""
-    ) {
-      validatedParams.order_wjid = String(params.order_wjid);
-    }
-
-    // FIX: Also allow any other custom filters that might be needed
-    // This ensures we don't accidentally filter out important parameters
-    const allowedCustomParams = [
-      "order_wjid",
-      "order_id",
-      "customer_id",
-      "associate_id",
-      "assigned_associate_id",
-      "is_closed",
-      "is_archived",
-    ];
-
-    allowedCustomParams.forEach((paramKey) => {
-      if (
-        params[paramKey] !== undefined &&
-        params[paramKey] !== null &&
-        params[paramKey] !== ""
-      ) {
-        validatedParams[paramKey] = String(params[paramKey]);
-      }
-    });
-
-    return validatedParams;
-  }
-
-  _validateTaskCountParams(params) {
-    const validatedParams = {};
-
-    // Only include filtering parameters for count
-    if (params.status && typeof params.status === "string") {
-      validatedParams.status = params.status;
-    }
-
-    if (params.type && typeof params.type === "string") {
-      validatedParams.type = params.type;
-    }
-
-    if (
-      params.search &&
-      typeof params.search === "string" &&
-      params.search.trim()
-    ) {
-      validatedParams.search = params.search.trim();
-    }
-
-    return validatedParams;
   }
 
   _validateTaskData(taskData, isCreate = false) {
