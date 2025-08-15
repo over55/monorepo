@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/Financial/Detail/Full.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -59,7 +60,7 @@ import {
   CLIENT_TYPE_OF_FILTER_OPTIONS,
   CLIENT_ORGANIZATION_TYPE_OPTIONS,
   CLIENT_PHONE_TYPE_OF_MAP,
-  ORDER_INVOICE_PAYMENT_METHODS_OPTIONS
+  ORDER_INVOICE_PAYMENT_METHODS_OPTIONS,
 } from "../../../../Constants/FieldOptions";
 
 function AdminFinancialDetailFull() {
@@ -314,7 +315,11 @@ function AdminFinancialDetailFull() {
                             Order Start date
                           </th>
                           <td>
-                            {order.startDate ? <DateTextFormatter value={order.startDate} /> : <>-</>}
+                            {order.startDate ? (
+                              <DateTextFormatter value={order.startDate} />
+                            ) : (
+                              <>-</>
+                            )}
                           </td>
                         </tr>
                         <tr>
@@ -325,7 +330,11 @@ function AdminFinancialDetailFull() {
                             Order Completion date
                           </th>
                           <td>
-                            {order.completionDate ? <DateTextFormatter value={order.completionDate} /> : <>-</>}
+                            {order.completionDate ? (
+                              <DateTextFormatter value={order.completionDate} />
+                            ) : (
+                              <>-</>
+                            )}
                           </td>
                         </tr>
                         {order.customerId !== undefined &&
@@ -426,17 +435,31 @@ function AdminFinancialDetailFull() {
                           >
                             Invoice Tax
                           </th>
-                          <td>${order.invoiceTaxAmount}{order.invoiceIsCustomTaxAmount && <>&nbsp;(<FontAwesomeIcon className="fas" icon={faCircleInfo} />&nbsp;Note: Custom value was set)</>}</td>
+                          <td>
+                            ${order.invoiceTaxAmount}
+                            {order.invoiceIsCustomTaxAmount && (
+                              <>
+                                &nbsp;(
+                                <FontAwesomeIcon
+                                  className="fas"
+                                  icon={faCircleInfo}
+                                />
+                                &nbsp;Note: Custom value was set)
+                              </>
+                            )}
+                          </td>
                         </tr>
-                        {order.associateTaxId && <tr>
-                          <th
-                            className="has-background-light"
-                            style={{ width: "30%" }}
-                          >
-                            Invoice HST #
-                          </th>
-                          <td>{order.associateTaxId}</td>
-                        </tr>}
+                        {order.associateTaxId && (
+                          <tr>
+                            <th
+                              className="has-background-light"
+                              style={{ width: "30%" }}
+                            >
+                              Invoice HST #
+                            </th>
+                            <td>{order.associateTaxId}</td>
+                          </tr>
+                        )}
                         <tr>
                           <th
                             className="has-background-light"
@@ -476,10 +499,10 @@ function AdminFinancialDetailFull() {
                             Payment Method(s)
                           </th>
                           <td>
-                          <MultiSelectTextFormatter
-                            selectedValues={order.paymentMethods}
-                            options={ORDER_INVOICE_PAYMENT_METHODS_OPTIONS}
-                          />
+                            <MultiSelectTextFormatter
+                              selectedValues={order.paymentMethods}
+                              options={ORDER_INVOICE_PAYMENT_METHODS_OPTIONS}
+                            />
                           </td>
                         </tr>
                         <tr>

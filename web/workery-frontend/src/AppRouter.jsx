@@ -219,6 +219,9 @@ import AdminTaskItemSurveyStep1Page from "./pages/Admin/TaskItem/Update/Survey/S
 import AdminTaskItemSurveyStep2Page from "./pages/Admin/TaskItem/Update/Survey/Step2Page";
 import AdminTaskItemSurveyStep3Page from "./pages/Admin/TaskItem/Update/Survey/Step3Page";
 
+// Admin financial pages.
+import AdminFinancialListPage from "./pages/Admin/Financial/List/Page";
+
 // Admin staff pages.
 import AdminStaffListPage from "./pages/Admin/Staff/List/Page";
 import AdminStaffAddStep1PartAPage from "./pages/Admin/Staff/Add/Step1PartAPage";
@@ -2032,10 +2035,7 @@ function AppRouter() {
               path="/admin/financials"
               element={
                 <Layout>
-                  <PlaceholderPage
-                    title="Financials"
-                    description="Financial management system"
-                  />
+                  <AdminFinancialListPage />
                 </Layout>
               }
             />
