@@ -221,6 +221,7 @@ import AdminTaskItemSurveyStep3Page from "./pages/Admin/TaskItem/Update/Survey/S
 
 // Admin financial pages.
 import AdminFinancialListPage from "./pages/Admin/Financial/List/Page";
+import AdminFinancialDetailPage from "./pages/Admin/Financial/Detail/Page";
 
 // Admin staff pages.
 import AdminStaffListPage from "./pages/Admin/Staff/List/Page";
@@ -2043,7 +2044,7 @@ function AppRouter() {
               path="/admin/financial/:oid"
               element={
                 <Layout>
-                  <PlaceholderPage title="Financial Detail" />
+                  <AdminFinancialDetailPage />
                 </Layout>
               }
             />
