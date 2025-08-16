@@ -13,8 +13,13 @@ import {
   Input,
   Select,
   TextArea,
-  FormGroup,
 } from "../../../../components/UI";
+import {
+  SkillSetsMultiSelect,
+  InsuranceRequirementsMultiSelect,
+  VehicleTypesMultiSelect,
+  ServiceFeeSelect,
+} from "../../../../components/Form";
 
 function AdminAssociateAddStep5Page() {
   const authManager = useAuthManager();
@@ -40,6 +45,8 @@ function AdminAssociateAddStep5Page() {
   const [driversLicenseClass, setDriversLicenseClass] = useState("");
   const [vehicleTypes, setVehicleTypes] = useState([]);
   const [serviceFeeId, setServiceFeeId] = useState("");
+  const [isServiceFeeOther, setIsServiceFeeOther] = useState(false);
+  const [serviceFeeOther, setServiceFeeOther] = useState("");
   const [emergencyContactName, setEmergencyContactName] = useState("");
   const [emergencyContactRelationship, setEmergencyContactRelationship] =
     useState("");
@@ -90,6 +97,8 @@ function AdminAssociateAddStep5Page() {
         setDriversLicenseClass(associateState.driversLicenseClass || "");
         setVehicleTypes(associateState.vehicleTypes || []);
         setServiceFeeId(associateState.serviceFeeId || "");
+        setIsServiceFeeOther(associateState.isServiceFeeOther || false);
+        setServiceFeeOther(associateState.serviceFeeOther || "");
         setEmergencyContactName(associateState.emergencyContactName || "");
         setEmergencyContactRelationship(
           associateState.emergencyContactRelationship || "",
@@ -114,6 +123,10 @@ function AdminAssociateAddStep5Page() {
     }
   };
 
+  const onUnauthorized = () => {
+    navigate("/login?unauthorized=true");
+  };
+
   const onSubmitClick = (e) => {
     e.preventDefault();
     setErrors({});
@@ -122,11 +135,11 @@ function AdminAssociateAddStep5Page() {
     let hasErrors = false;
 
     // Basic validation
-    if (skillSets.length === 0) {
+    if (!skillSets || skillSets.length === 0) {
       newErrors.skillSets = "At least one skill set is required";
       hasErrors = true;
     }
-    if (insuranceRequirements.length === 0) {
+    if (!insuranceRequirements || insuranceRequirements.length === 0) {
       newErrors.insuranceRequirements =
         "At least one insurance requirement is required";
       hasErrors = true;
@@ -139,8 +152,12 @@ function AdminAssociateAddStep5Page() {
       newErrors.policeCheck = "Police check date is required";
       hasErrors = true;
     }
-    if (!serviceFeeId.trim()) {
+    if (!serviceFeeId) {
       newErrors.serviceFeeId = "Service fee is required";
+      hasErrors = true;
+    }
+    if (isServiceFeeOther && !serviceFeeOther.trim()) {
+      newErrors.serviceFeeOther = "Please specify the custom service fee";
       hasErrors = true;
     }
     if (!emergencyContactName.trim()) {
@@ -161,7 +178,7 @@ function AdminAssociateAddStep5Page() {
       newErrors.preferredLanguage = "Preferred language is required";
       hasErrors = true;
     }
-    if (password !== passwordRepeated) {
+    if (password && password !== passwordRepeated) {
       newErrors.password = "Passwords do not match";
       newErrors.passwordRepeated = "Passwords do not match";
       hasErrors = true;
@@ -169,6 +186,8 @@ function AdminAssociateAddStep5Page() {
 
     if (hasErrors) {
       setErrors(newErrors);
+      // Scroll to top to show errors
+      window.scrollTo(0, 0);
       return;
     }
 
@@ -189,6 +208,8 @@ function AdminAssociateAddStep5Page() {
       driversLicenseClass,
       vehicleTypes,
       serviceFeeId,
+      isServiceFeeOther,
+      serviceFeeOther,
       emergencyContactName,
       emergencyContactRelationship,
       emergencyContactTelephone,
@@ -222,37 +243,25 @@ function AdminAssociateAddStep5Page() {
     }
   };
 
+  const handleServiceFeeChange = (value) => {
+    setServiceFeeId(value);
+    // Clear error when user selects a value
+    if (errors.serviceFeeId) {
+      setErrors({ ...errors, serviceFeeId: null });
+    }
+  };
+
+  const handleServiceFeeOtherDetected = (isOther) => {
+    setIsServiceFeeOther(isOther);
+    if (!isOther) {
+      setServiceFeeOther(""); // Clear other field if not "Other"
+    }
+  };
+
   const breadcrumbItems = [
     { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
     { path: "/admin/associates", label: "Associates", icon: "👷" },
     { label: "New", icon: "➕" },
-  ];
-
-  const skillSetOptions = [
-    { value: "1", label: "Carpentry" },
-    { value: "2", label: "Plumbing" },
-    { value: "3", label: "Electrical" },
-    { value: "4", label: "Painting" },
-    { value: "5", label: "General Labor" },
-  ];
-
-  const insuranceOptions = [
-    { value: "1", label: "General Liability" },
-    { value: "2", label: "WSIB Coverage" },
-    { value: "3", label: "Commercial Auto" },
-  ];
-
-  const vehicleTypeOptions = [
-    { value: "1", label: "Car" },
-    { value: "2", label: "Truck" },
-    { value: "3", label: "Van" },
-  ];
-
-  const serviceFeeOptions = [
-    { value: "", label: "Please select" },
-    { value: "1", label: "Standard Rate" },
-    { value: "2", label: "Premium Rate" },
-    { value: "3", label: "Custom Rate" },
   ];
 
   const languageOptions = [
@@ -325,101 +334,34 @@ function AdminAssociateAddStep5Page() {
 
             <form onSubmit={onSubmitClick}>
               <div style={{ display: "grid", gap: "2rem", maxWidth: "800px" }}>
-                {/* Skill Sets Section */}
+                {/* Skill Sets Section - Using Reusable Component */}
                 <div>
                   <h3 style={{ fontSize: "1.2rem", marginBottom: "1rem" }}>
                     🎓 Skill Sets
                   </h3>
-                  <div style={{ display: "grid", gap: "0.5rem" }}>
-                    {skillSetOptions.map((option) => (
-                      <label
-                        key={option.value}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.5rem",
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          value={option.value}
-                          checked={skillSets.includes(option.value)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setSkillSets([...skillSets, option.value]);
-                            } else {
-                              setSkillSets(
-                                skillSets.filter((id) => id !== option.value),
-                              );
-                            }
-                          }}
-                        />
-                        {option.label}
-                      </label>
-                    ))}
-                  </div>
-                  {errors.skillSets && (
-                    <div
-                      style={{
-                        color: theme.colors.error,
-                        fontSize: "0.875rem",
-                        marginTop: "0.25rem",
-                      }}
-                    >
-                      {errors.skillSets}
-                    </div>
-                  )}
+                  <SkillSetsMultiSelect
+                    value={skillSets}
+                    onChange={setSkillSets}
+                    error={errors.skillSets}
+                    required={true}
+                    helperText="Select all skill sets that apply to this associate"
+                    onUnauthorized={onUnauthorized}
+                  />
                 </div>
 
-                {/* Insurance Requirements Section */}
+                {/* Insurance Requirements Section - Using Reusable Component */}
                 <div>
                   <h3 style={{ fontSize: "1.2rem", marginBottom: "1rem" }}>
                     ⚖️ Insurance Requirements
                   </h3>
-                  <div style={{ display: "grid", gap: "0.5rem" }}>
-                    {insuranceOptions.map((option) => (
-                      <label
-                        key={option.value}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.5rem",
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          value={option.value}
-                          checked={insuranceRequirements.includes(option.value)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setInsuranceRequirements([
-                                ...insuranceRequirements,
-                                option.value,
-                              ]);
-                            } else {
-                              setInsuranceRequirements(
-                                insuranceRequirements.filter(
-                                  (id) => id !== option.value,
-                                ),
-                              );
-                            }
-                          }}
-                        />
-                        {option.label}
-                      </label>
-                    ))}
-                  </div>
-                  {errors.insuranceRequirements && (
-                    <div
-                      style={{
-                        color: theme.colors.error,
-                        fontSize: "0.875rem",
-                        marginTop: "0.25rem",
-                      }}
-                    >
-                      {errors.insuranceRequirements}
-                    </div>
-                  )}
+                  <InsuranceRequirementsMultiSelect
+                    value={insuranceRequirements}
+                    onChange={setInsuranceRequirements}
+                    error={errors.insuranceRequirements}
+                    required={true}
+                    helperText="Select all insurance requirements for this associate"
+                    onUnauthorized={onUnauthorized}
+                  />
                 </div>
 
                 {/* Financial Information */}
@@ -520,52 +462,44 @@ function AdminAssociateAddStep5Page() {
                   error={errors.driversLicenseClass}
                 />
 
-                {/* Vehicle Types */}
+                {/* Vehicle Types - Using Reusable Component */}
                 <div>
                   <h4 style={{ fontSize: "1rem", marginBottom: "0.5rem" }}>
                     Vehicle Types (Optional)
                   </h4>
-                  <div style={{ display: "grid", gap: "0.5rem" }}>
-                    {vehicleTypeOptions.map((option) => (
-                      <label
-                        key={option.value}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.5rem",
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          value={option.value}
-                          checked={vehicleTypes.includes(option.value)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setVehicleTypes([...vehicleTypes, option.value]);
-                            } else {
-                              setVehicleTypes(
-                                vehicleTypes.filter(
-                                  (id) => id !== option.value,
-                                ),
-                              );
-                            }
-                          }}
-                        />
-                        {option.label}
-                      </label>
-                    ))}
-                  </div>
+                  <VehicleTypesMultiSelect
+                    value={vehicleTypes}
+                    onChange={setVehicleTypes}
+                    error={errors.vehicleTypes}
+                    required={false}
+                    helperText="Select all vehicle types the associate has access to"
+                    onUnauthorized={onUnauthorized}
+                  />
                 </div>
 
-                <Select
-                  label="Service Fee"
-                  name="serviceFeeId"
+                {/* Service Fee - Using Reusable Component */}
+                <ServiceFeeSelect
                   value={serviceFeeId}
-                  onChange={(e) => setServiceFeeId(e.target.value)}
-                  options={serviceFeeOptions}
+                  onChange={handleServiceFeeChange}
+                  onOtherDetected={handleServiceFeeOtherDetected}
                   error={errors.serviceFeeId}
-                  required
+                  required={true}
+                  label="Service Fee"
+                  helperText="Select the applicable service fee for this associate"
+                  onUnauthorized={onUnauthorized}
                 />
+
+                {/* Show additional input field if "Other" is selected */}
+                {isServiceFeeOther && (
+                  <Input
+                    label="Please specify other service fee"
+                    value={serviceFeeOther}
+                    onChange={(e) => setServiceFeeOther(e.target.value)}
+                    error={errors.serviceFeeOther}
+                    required={true}
+                    placeholder="Enter custom service fee details"
+                  />
+                )}
 
                 <Select
                   label="Preferred Language"
@@ -644,6 +578,7 @@ function AdminAssociateAddStep5Page() {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       error={errors.password}
+                      helperText="Leave blank to auto-generate a password"
                     />
 
                     <Input
@@ -666,12 +601,13 @@ function AdminAssociateAddStep5Page() {
                   <TextArea
                     label="Description (Optional)"
                     name="description"
-                    placeholder="Enter description"
+                    placeholder="Enter any additional notes or description about this associate"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     error={errors.description}
                     rows={4}
                     maxLength={638}
+                    helperText="Any internal notes about this associate (not visible to the associate)"
                   />
                 </div>
               </div>
