@@ -73,13 +73,32 @@ function AdminCustomerAddStep6Page() {
       // Create a payload with the customer data
       const payload = { ...customerData };
 
+      // Clean up tags - remove any empty strings or invalid values
+      if (payload.tags && Array.isArray(payload.tags)) {
+        payload.tags = payload.tags.filter(
+          (tag) =>
+            tag !== null &&
+            tag !== undefined &&
+            tag !== "" &&
+            tag !== "0" &&
+            tag !== 0,
+        );
+
+        // If no valid tags remain, set to empty array
+        if (payload.tags.length === 0) {
+          payload.tags = [];
+        }
+      } else {
+        payload.tags = [];
+      }
+
       // Format join date for API
       if (payload.joinDate) {
         const joinDateObject = new Date(payload.joinDate);
         payload.joinDate = joinDateObject.toISOString();
       }
 
-      console.log("onSubmitClick: payload:", payload);
+      console.log("onSubmitClick: cleaned payload:", payload);
       setLoading(true);
       setError(null);
       setSuccess(null);
