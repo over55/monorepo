@@ -1,4 +1,4 @@
-// File Path: web/workery-frontend/src/pages/Admin/Customer/Add/Step5Page.jsx
+// File: web/workery-frontend/src/pages/Admin/Customer/Add/Step5Page.jsx
 
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
@@ -9,7 +9,10 @@ import {
   Loading,
   Breadcrumb,
   FormGroup,
+  Input,
+  Textarea,
 } from "../../../../components/UI";
+import HowHearAboutUsSelect from "../../../../components/Form/HowHearAboutUsSelect";
 import { theme, globalStyles } from "../../../../constants/Theme";
 
 // Gender options
@@ -18,16 +21,6 @@ const GENDER_OPTIONS = [
   { value: 1, label: "Other" },
   { value: 2, label: "Male" },
   { value: 3, label: "Female" },
-];
-
-// How hear about us options (simplified)
-const HOW_HEAR_OPTIONS = [
-  { value: "", label: "Please select" },
-  { value: "1", label: "Google" },
-  { value: "2", label: "Facebook" },
-  { value: "3", label: "Word of mouth" },
-  { value: "4", label: "Newspaper" },
-  { value: "5", label: "Other" },
 ];
 
 function AdminCustomerAddStep5Page() {
@@ -72,19 +65,7 @@ function AdminCustomerAddStep5Page() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    // In a real scenario, you might set isFetching to true here
-    // before an async call and false on completion/error.
-    // For this step, it's kept false.
   }, []);
-
-  // Handle how hear about us change
-  const handleHowHearChange = (value) => {
-    setHowDidYouHearAboutUsID(value);
-    setIsHowDidYouHearAboutUsOther(value === "5"); // "Other" option
-    if (errors.howDidYouHearAboutUsID) {
-      setErrors((prev) => ({ ...prev, howDidYouHearAboutUsID: null }));
-    }
-  };
 
   const validateForm = () => {
     const newErrors = {};
@@ -92,7 +73,7 @@ function AdminCustomerAddStep5Page() {
     if (!howDidYouHearAboutUsID) {
       newErrors.howDidYouHearAboutUsID = "This field is required";
     } else if (
-      howDidYouHearAboutUsID === "5" &&
+      isHowDidYouHearAboutUsOther &&
       !howDidYouHearAboutUsOther.trim()
     ) {
       newErrors.howDidYouHearAboutUsOther =
@@ -143,6 +124,7 @@ function AdminCustomerAddStep5Page() {
       tags,
       howDidYouHearAboutUsID,
       howDidYouHearAboutUsOther,
+      isHowDidYouHearAboutUsOther,
       gender,
       genderOther,
       birthDate,
@@ -239,34 +221,25 @@ function AdminCustomerAddStep5Page() {
                 </div>
               </FormGroup>
 
-              <FormGroup>
-                <label style={globalStyles.label}>
-                  How did you hear about us?{" "}
-                  <span style={{ color: "red" }}>*</span>
-                </label>
-                <select
-                  value={howDidYouHearAboutUsID}
-                  onChange={(e) => handleHowHearChange(e.target.value)}
-                  style={{
-                    ...globalStyles.input,
-                    borderColor: errors.howDidYouHearAboutUsID
-                      ? theme.colors.error
-                      : "#ddd",
-                  }}
-                  disabled={isFetching}
-                >
-                  {HOW_HEAR_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                {errors.howDidYouHearAboutUsID && (
-                  <div style={globalStyles.errorMessage}>
-                    {errors.howDidYouHearAboutUsID}
-                  </div>
-                )}
-              </FormGroup>
+              {/* Use the new HowHearAboutUsSelect component */}
+              <HowHearAboutUsSelect
+                value={howDidYouHearAboutUsID}
+                onChange={(value) => {
+                  setHowDidYouHearAboutUsID(value);
+                  // Clear error when value changes
+                  if (errors.howDidYouHearAboutUsID) {
+                    setErrors((prev) => ({
+                      ...prev,
+                      howDidYouHearAboutUsID: null,
+                    }));
+                  }
+                }}
+                onOtherDetected={setIsHowDidYouHearAboutUsOther}
+                error={errors.howDidYouHearAboutUsID}
+                required={true}
+                disabled={isFetching}
+                onUnauthorized={() => navigate("/login?unauthorized=true")}
+              />
 
               {isHowDidYouHearAboutUsOther && (
                 <FormGroup>
@@ -275,11 +248,51 @@ function AdminCustomerAddStep5Page() {
                   </label>
                   <input
                     type="text"
-                    placeholder="Please specify"
+                    placeholder="Please specify how you heard about us"
                     value={howDidYouHearAboutUsOther}
-                    onChange={(e) =>
-                      setHowDidYouHearAboutUsOther(e.target.value)
-                    }
+                    onChange={(e) => {
+                      setHowDidYouHearAboutUsOther(e.target.value);
+                      if (errors.howDidYouHearAboutUsOther) {
+                        setErrors((prev) => ({
+                          ...prev,
+                          howDidYouHearAboutUsOther: null,
+                        }));
+                      }
+                    }}
+                    style={{
+                      ...globalStyles.input,
+                      borderColor: errors.howDidYouHearAboutUsOther
+                        ? theme.colors.error
+                        : "#ddd",
+                    }}
+                    disabled={isFetching}
+                  />
+                  {errors.howDidYouHearAboutUsOther && (
+                    <div style={globalStyles.errorMessage}>
+                      {errors.howDidYouHearAboutUsOther}
+                    </div>
+                  )}
+                </FormGroup>
+              )}
+
+              {isHowDidYouHearAboutUsOther && (
+                <FormGroup>
+                  <label style={globalStyles.label}>
+                    Please specify <span style={{ color: "red" }}>*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Please specify how you heard about us"
+                    value={howDidYouHearAboutUsOther}
+                    onChange={(e) => {
+                      setHowDidYouHearAboutUsOther(e.target.value);
+                      if (errors.howDidYouHearAboutUsOther) {
+                        setErrors((prev) => ({
+                          ...prev,
+                          howDidYouHearAboutUsOther: null,
+                        }));
+                      }
+                    }}
                     style={{
                       ...globalStyles.input,
                       borderColor: errors.howDidYouHearAboutUsOther
@@ -390,6 +403,7 @@ function AdminCustomerAddStep5Page() {
                   rows={4}
                   style={globalStyles.input}
                   disabled={isFetching}
+                  maxLength={638}
                 />
               </FormGroup>
 
