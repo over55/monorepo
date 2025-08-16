@@ -35,6 +35,14 @@ function TagsMultiSelect({
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
 
+  // Clean the value to ensure no empty strings
+  const cleanValue = (val) => {
+    if (!val || !Array.isArray(val)) return [];
+    return val.filter(
+      (v) => v !== null && v !== undefined && v !== "" && v !== "0" && v !== 0,
+    );
+  };
+
   useEffect(() => {
     let mounted = true;
 
@@ -48,7 +56,11 @@ function TagsMultiSelect({
 
         if (mounted) {
           // Format options - tagOptions should already be in {value, label} format
-          setOptions(tagOptions || []);
+          // Filter out any invalid options
+          const validOptions = (tagOptions || []).filter(
+            (opt) => opt && opt.value && opt.label,
+          );
+          setOptions(validOptions);
         }
       } catch (error) {
         console.error("Error fetching tag options:", error);
@@ -70,6 +82,12 @@ function TagsMultiSelect({
       mounted = false;
     };
   }, [onUnauthorized]);
+
+  const handleChange = (newValue) => {
+    // Clean the new value before passing it to onChange
+    const cleanedValue = cleanValue(newValue);
+    onChange(cleanedValue);
+  };
 
   if (isLoading) {
     return (
@@ -98,12 +116,15 @@ function TagsMultiSelect({
     );
   }
 
+  // Use cleaned value for the MultiSelect
+  const currentValue = cleanValue(value);
+
   return (
     <MultiSelect
       label={label}
       options={options}
-      value={value}
-      onChange={onChange}
+      value={currentValue}
+      onChange={handleChange}
       placeholder={placeholder}
       error={error || fetchError}
       disabled={disabled}
