@@ -2,3 +2,4 @@
 
 export { default as HowHearAboutUsDisplay } from "./HowHearAboutUsDisplay";
 export { default as TagsDisplay } from "./TagsDisplay";
+export { default as ServiceFeeDisplay } from "./ServiceFeeDisplay";
