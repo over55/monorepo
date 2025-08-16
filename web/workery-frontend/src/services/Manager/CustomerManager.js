@@ -1240,6 +1240,18 @@ export class CustomerManager {
       }
     }
 
+    // Clean tags array
+    if (customerData.tags && Array.isArray(customerData.tags)) {
+      customerData.tags = customerData.tags.filter(
+        (tag) =>
+          tag !== null &&
+          tag !== undefined &&
+          tag !== "" &&
+          tag !== "0" &&
+          tag !== 0,
+      );
+    }
+
     return errors;
   }
 
