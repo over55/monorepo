@@ -15,9 +15,45 @@ import {
   TextArea,
   FormGroup,
 } from "../../../../components/UI";
-
-const ASSOCIATE_IS_JOB_SEEKER_YES = 1;
-const ASSOCIATE_IS_JOB_SEEKER_NO = 2;
+import {
+  TagsMultiSelect,
+  HowHearAboutUsSelect,
+} from "../../../../components/Form";
+import {
+  ASSOCIATE_IS_JOB_SEEKER_YES,
+  ASSOCIATE_IS_JOB_SEEKER_NO,
+  ASSOCIATE_GENDER_OTHER,
+  ASSOCIATE_GENDER_MALE,
+  ASSOCIATE_GENDER_FEMALE,
+  ASSOCIATE_GENDER_PREFER_NOT_TO_SAY,
+  ASSOCIATE_IDENTIFY_AS_OTHER,
+  ASSOCIATE_IDENTIFY_AS_PREFER_NOT_TO_SAY,
+  ASSOCIATE_IDENTIFY_AS_WOMEN,
+  ASSOCIATE_IDENTIFY_AS_NEWCOMER,
+  ASSOCIATE_IDENTIFY_AS_RACIALIZED_PERSON,
+  ASSOCIATE_IDENTIFY_AS_VETERAN,
+  ASSOCIATE_IDENTIFY_AS_FRANCOPHONE,
+  ASSOCIATE_IDENTIFY_AS_PERSON_WITH_DISABILITY,
+  ASSOCIATE_IDENTIFY_AS_INUIT,
+  ASSOCIATE_IDENTIFY_AS_FIRST_NATIONS,
+  ASSOCIATE_IDENTIFY_AS_METIS,
+  ASSOCIATE_STATUS_IN_COUNTRY_CANADIAN_CITIZEN,
+  ASSOCIATE_STATUS_IN_COUNTRY_PERMANENT_RESIDENT,
+  ASSOCIATE_STATUS_IN_COUNTRY_NATURALIZED_CITIZEN,
+  ASSOCIATE_STATUS_IN_COUNTRY_PROTECTED_PERSON,
+  ASSOCIATE_STATUS_IN_COUNTRY_OTHER,
+  ASSOCIATE_MARITAL_STATUS_SINGLE,
+  ASSOCIATE_MARITAL_STATUS_MARRIED,
+  ASSOCIATE_MARITAL_STATUS_DIVORCED,
+  ASSOCIATE_MARITAL_STATUS_WIDOWED,
+  ASSOCIATE_MARITAL_STATUS_OTHER,
+  ASSOCIATE_EDUCATION_ELEMENTARY,
+  ASSOCIATE_EDUCATION_HIGH_SCHOOL,
+  ASSOCIATE_EDUCATION_COLLEGE,
+  ASSOCIATE_EDUCATION_UNIVERSITY,
+  ASSOCIATE_EDUCATION_POST_GRADUATE,
+  ASSOCIATE_EDUCATION_OTHER,
+} from "../../../../constants/Associate";
 
 function AdminAssociateAddStep6Page() {
   const authManager = useAuthManager();
@@ -110,6 +146,10 @@ function AdminAssociateAddStep6Page() {
     }
   };
 
+  const onUnauthorized = () => {
+    navigate("/login?unauthorized=true");
+  };
+
   const onSubmitClick = (e) => {
     e.preventDefault();
     setErrors({});
@@ -133,7 +173,7 @@ function AdminAssociateAddStep6Page() {
     if (gender === 0) {
       newErrors.gender = "Gender is required";
       hasErrors = true;
-    } else if (gender === 1 && !genderOther.trim()) {
+    } else if (gender === ASSOCIATE_GENDER_OTHER && !genderOther.trim()) {
       newErrors.genderOther = "Please specify other gender";
       hasErrors = true;
     }
@@ -153,15 +193,18 @@ function AdminAssociateAddStep6Page() {
       if (!statusInCountry) {
         newErrors.statusInCountry = "Status in country is required";
         hasErrors = true;
-      } else if (statusInCountry === "other" && !statusInCountryOther.trim()) {
+      } else if (
+        statusInCountry === ASSOCIATE_STATUS_IN_COUNTRY_OTHER &&
+        !statusInCountryOther.trim()
+      ) {
         newErrors.statusInCountryOther = "Please specify other status";
         hasErrors = true;
       }
 
       if (
-        statusInCountry === "permanent_resident" ||
-        statusInCountry === "naturalized_citizen" ||
-        statusInCountry === "protected_person"
+        statusInCountry === ASSOCIATE_STATUS_IN_COUNTRY_PERMANENT_RESIDENT ||
+        statusInCountry === ASSOCIATE_STATUS_IN_COUNTRY_NATURALIZED_CITIZEN ||
+        statusInCountry === ASSOCIATE_STATUS_IN_COUNTRY_PROTECTED_PERSON
       ) {
         if (!countryOfOrigin) {
           newErrors.countryOfOrigin = "Country of origin is required";
@@ -177,7 +220,10 @@ function AdminAssociateAddStep6Page() {
       if (!maritalStatus) {
         newErrors.maritalStatus = "Marital status is required";
         hasErrors = true;
-      } else if (maritalStatus === "other" && !maritalStatusOther.trim()) {
+      } else if (
+        maritalStatus === ASSOCIATE_MARITAL_STATUS_OTHER &&
+        !maritalStatusOther.trim()
+      ) {
         newErrors.maritalStatusOther = "Please specify other marital status";
         hasErrors = true;
       }
@@ -186,7 +232,7 @@ function AdminAssociateAddStep6Page() {
         newErrors.accomplishedEducation = "Education level is required";
         hasErrors = true;
       } else if (
-        accomplishedEducation === "other" &&
+        accomplishedEducation === ASSOCIATE_EDUCATION_OTHER &&
         !accomplishedEducationOther.trim()
       ) {
         newErrors.accomplishedEducationOther =
@@ -197,6 +243,8 @@ function AdminAssociateAddStep6Page() {
 
     if (hasErrors) {
       setErrors(newErrors);
+      // Scroll to top to show errors
+      window.scrollTo(0, 0);
       return;
     }
 
@@ -247,67 +295,96 @@ function AdminAssociateAddStep6Page() {
     }
   };
 
+  const handleHowHearChange = (value) => {
+    setHowDidYouHearAboutUsID(value);
+    // Clear error when user selects a value
+    if (errors.howDidYouHearAboutUsID) {
+      setErrors({ ...errors, howDidYouHearAboutUsID: null });
+    }
+  };
+
+  const handleHowHearOtherDetected = (isOther) => {
+    setIsHowDidYouHearAboutUsOther(isOther);
+    if (!isOther) {
+      setHowDidYouHearAboutUsOther(""); // Clear other field if not "Other"
+    }
+  };
+
   const breadcrumbItems = [
     { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
     { path: "/admin/associates", label: "Associates", icon: "👷" },
     { label: "New", icon: "➕" },
   ];
 
-  const howDidYouHearOptions = [
-    { value: "", label: "Please select" },
-    { value: "1", label: "Google" },
-    { value: "2", label: "Facebook" },
-    { value: "3", label: "Word of Mouth" },
-    { value: "4", label: "Advertisement" },
-    { value: "other", label: "Other" },
-  ];
-
   const genderOptions = [
     { value: 0, label: "Please select" },
-    { value: 2, label: "Male" },
-    { value: 3, label: "Female" },
-    { value: 1, label: "Other" },
+    { value: ASSOCIATE_GENDER_MALE, label: "Male" },
+    { value: ASSOCIATE_GENDER_FEMALE, label: "Female" },
+    { value: ASSOCIATE_GENDER_OTHER, label: "Other" },
+    { value: ASSOCIATE_GENDER_PREFER_NOT_TO_SAY, label: "Prefer not to say" },
   ];
 
   const identifyAsOptions = [
-    { value: "1", label: "Aboriginal" },
-    { value: "2", label: "Visible Minority" },
-    { value: "3", label: "Person with Disability" },
+    { value: ASSOCIATE_IDENTIFY_AS_WOMEN, label: "Women" },
+    { value: ASSOCIATE_IDENTIFY_AS_NEWCOMER, label: "Newcomer" },
+    {
+      value: ASSOCIATE_IDENTIFY_AS_RACIALIZED_PERSON,
+      label: "Racialized Person",
+    },
+    { value: ASSOCIATE_IDENTIFY_AS_VETERAN, label: "Veteran" },
+    { value: ASSOCIATE_IDENTIFY_AS_FRANCOPHONE, label: "Francophone" },
+    {
+      value: ASSOCIATE_IDENTIFY_AS_PERSON_WITH_DISABILITY,
+      label: "Person with Disability",
+    },
+    { value: ASSOCIATE_IDENTIFY_AS_INUIT, label: "Inuit" },
+    { value: ASSOCIATE_IDENTIFY_AS_FIRST_NATIONS, label: "First Nations" },
+    { value: ASSOCIATE_IDENTIFY_AS_METIS, label: "Métis" },
+    { value: ASSOCIATE_IDENTIFY_AS_OTHER, label: "Other" },
+    {
+      value: ASSOCIATE_IDENTIFY_AS_PREFER_NOT_TO_SAY,
+      label: "Prefer not to say",
+    },
   ];
 
   const statusInCountryOptions = [
     { value: "", label: "Please select" },
-    { value: "canadian_citizen", label: "Canadian Citizen" },
-    { value: "permanent_resident", label: "Permanent Resident" },
-    { value: "naturalized_citizen", label: "Naturalized Canadian Citizen" },
-    { value: "protected_person", label: "Protected Person" },
-    { value: "other", label: "Other" },
+    {
+      value: ASSOCIATE_STATUS_IN_COUNTRY_CANADIAN_CITIZEN,
+      label: "Canadian Citizen",
+    },
+    {
+      value: ASSOCIATE_STATUS_IN_COUNTRY_PERMANENT_RESIDENT,
+      label: "Permanent Resident",
+    },
+    {
+      value: ASSOCIATE_STATUS_IN_COUNTRY_NATURALIZED_CITIZEN,
+      label: "Naturalized Canadian Citizen",
+    },
+    {
+      value: ASSOCIATE_STATUS_IN_COUNTRY_PROTECTED_PERSON,
+      label: "Protected Person",
+    },
+    { value: ASSOCIATE_STATUS_IN_COUNTRY_OTHER, label: "Other" },
   ];
 
   const maritalStatusOptions = [
     { value: "", label: "Please select" },
-    { value: "single", label: "Single" },
-    { value: "married", label: "Married" },
-    { value: "divorced", label: "Divorced" },
-    { value: "widowed", label: "Widowed" },
-    { value: "other", label: "Other" },
+    { value: ASSOCIATE_MARITAL_STATUS_SINGLE, label: "Single" },
+    { value: ASSOCIATE_MARITAL_STATUS_MARRIED, label: "Married" },
+    { value: ASSOCIATE_MARITAL_STATUS_DIVORCED, label: "Divorced" },
+    { value: ASSOCIATE_MARITAL_STATUS_WIDOWED, label: "Widowed" },
+    { value: ASSOCIATE_MARITAL_STATUS_OTHER, label: "Other" },
   ];
 
   const educationOptions = [
     { value: "", label: "Please select" },
-    { value: "elementary", label: "Elementary School" },
-    { value: "high_school", label: "High School" },
-    { value: "college", label: "College" },
-    { value: "university", label: "University" },
-    { value: "post_graduate", label: "Post Graduate" },
-    { value: "other", label: "Other" },
-  ];
-
-  const tagOptions = [
-    { value: "1", label: "New" },
-    { value: "2", label: "Experienced" },
-    { value: "3", label: "Reliable" },
-    { value: "4", label: "Fast Worker" },
+    { value: ASSOCIATE_EDUCATION_ELEMENTARY, label: "Elementary School" },
+    { value: ASSOCIATE_EDUCATION_HIGH_SCHOOL, label: "High School" },
+    { value: ASSOCIATE_EDUCATION_COLLEGE, label: "College" },
+    { value: ASSOCIATE_EDUCATION_UNIVERSITY, label: "University" },
+    { value: ASSOCIATE_EDUCATION_POST_GRADUATE, label: "Post Graduate" },
+    { value: ASSOCIATE_EDUCATION_OTHER, label: "Other" },
   ];
 
   const countryOptions = [
@@ -315,6 +392,10 @@ function AdminAssociateAddStep6Page() {
     { value: "Canada", label: "Canada" },
     { value: "United States", label: "United States" },
     { value: "Mexico", label: "Mexico" },
+    { value: "United Kingdom", label: "United Kingdom" },
+    { value: "India", label: "India" },
+    { value: "China", label: "China" },
+    { value: "Philippines", label: "Philippines" },
     { value: "Other", label: "Other" },
   ];
 
@@ -432,7 +513,7 @@ function AdminAssociateAddStep6Page() {
               required
             />
 
-            {statusInCountry === "other" && (
+            {statusInCountry === ASSOCIATE_STATUS_IN_COUNTRY_OTHER && (
               <Input
                 label="Status in Country (Other)"
                 name="statusInCountryOther"
@@ -444,9 +525,12 @@ function AdminAssociateAddStep6Page() {
               />
             )}
 
-            {(statusInCountry === "permanent_resident" ||
-              statusInCountry === "naturalized_citizen" ||
-              statusInCountry === "protected_person") && (
+            {(statusInCountry ===
+              ASSOCIATE_STATUS_IN_COUNTRY_PERMANENT_RESIDENT ||
+              statusInCountry ===
+                ASSOCIATE_STATUS_IN_COUNTRY_NATURALIZED_CITIZEN ||
+              statusInCountry ===
+                ASSOCIATE_STATUS_IN_COUNTRY_PROTECTED_PERSON) && (
               <>
                 <Select
                   label="Country of Origin"
@@ -480,7 +564,7 @@ function AdminAssociateAddStep6Page() {
               required
             />
 
-            {maritalStatus === "other" && (
+            {maritalStatus === ASSOCIATE_MARITAL_STATUS_OTHER && (
               <Input
                 label="Marital Status (Other)"
                 name="maritalStatusOther"
@@ -502,7 +586,7 @@ function AdminAssociateAddStep6Page() {
               required
             />
 
-            {accomplishedEducation === "other" && (
+            {accomplishedEducation === ASSOCIATE_EDUCATION_OTHER && (
               <Input
                 label="Education Level (Other)"
                 name="accomplishedEducationOther"
@@ -537,45 +621,18 @@ function AdminAssociateAddStep6Page() {
             )}
 
             <form onSubmit={onSubmitClick}>
-              <div style={{ display: "grid", gap: "1rem", maxWidth: "600px" }}>
-                {/* Tags */}
+              <div style={{ display: "grid", gap: "1rem", maxWidth: "800px" }}>
+                {/* Tags - Using Reusable Component */}
                 <div>
-                  <label
-                    style={{
-                      fontWeight: "600",
-                      fontSize: "0.875rem",
-                      marginBottom: "0.5rem",
-                      display: "block",
-                    }}
-                  >
-                    Tags (Optional)
-                  </label>
-                  <div style={{ display: "grid", gap: "0.5rem" }}>
-                    {tagOptions.map((option) => (
-                      <label
-                        key={option.value}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.5rem",
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          value={option.value}
-                          checked={tags.includes(option.value)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setTags([...tags, option.value]);
-                            } else {
-                              setTags(tags.filter((id) => id !== option.value));
-                            }
-                          }}
-                        />
-                        {option.label}
-                      </label>
-                    ))}
-                  </div>
+                  <TagsMultiSelect
+                    value={tags}
+                    onChange={setTags}
+                    error={errors.tags}
+                    required={false}
+                    label="Tags (Optional)"
+                    helperText="Select tags to categorize this associate"
+                    onUnauthorized={onUnauthorized}
+                  />
                 </div>
 
                 {/* Identity */}
@@ -607,10 +664,15 @@ function AdminAssociateAddStep6Page() {
                           checked={identifyAs.includes(option.value)}
                           onChange={(e) => {
                             if (e.target.checked) {
-                              setIdentifyAs([...identifyAs, option.value]);
+                              setIdentifyAs([
+                                ...identifyAs,
+                                parseInt(e.target.value),
+                              ]);
                             } else {
                               setIdentifyAs(
-                                identifyAs.filter((id) => id !== option.value),
+                                identifyAs.filter(
+                                  (id) => id !== parseInt(e.target.value),
+                                ),
                               );
                             }
                           }}
@@ -621,20 +683,18 @@ function AdminAssociateAddStep6Page() {
                   </div>
                 </div>
 
-                <Select
-                  label="How did you hear about us?"
-                  name="howDidYouHearAboutUsID"
+                {/* How did you hear about us - Using Reusable Component */}
+                <HowHearAboutUsSelect
                   value={howDidYouHearAboutUsID}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setHowDidYouHearAboutUsID(value);
-                    setIsHowDidYouHearAboutUsOther(value === "other");
-                  }}
-                  options={howDidYouHearOptions}
+                  onChange={handleHowHearChange}
+                  onOtherDetected={handleHowHearOtherDetected}
                   error={errors.howDidYouHearAboutUsID}
-                  required
+                  required={true}
+                  helperText="Tell us how you discovered our organization"
+                  onUnauthorized={onUnauthorized}
                 />
 
+                {/* Show additional input field if "Other" is selected */}
                 {isHowDidYouHearAboutUsOther && (
                   <Input
                     label="How did you hear about us? (Other)"
@@ -659,7 +719,7 @@ function AdminAssociateAddStep6Page() {
                   required
                 />
 
-                {gender === 1 && (
+                {gender === ASSOCIATE_GENDER_OTHER && (
                   <Input
                     label="Gender (Other)"
                     name="genderOther"
@@ -681,15 +741,26 @@ function AdminAssociateAddStep6Page() {
                   required
                 />
 
+                <Input
+                  label="Join Date"
+                  name="joinDate"
+                  type="date"
+                  value={joinDate}
+                  onChange={(e) => setJoinDate(e.target.value)}
+                  error={errors.joinDate}
+                  helperText="The date this associate joined the organization"
+                />
+
                 <TextArea
                   label="Additional Comment (Optional)"
                   name="additionalComment"
-                  placeholder="Enter any additional comments"
+                  placeholder="Enter any additional comments or notes about this associate"
                   value={additionalComment}
                   onChange={(e) => setAdditionalComment(e.target.value)}
                   error={errors.additionalComment}
                   rows={4}
                   maxLength={638}
+                  helperText="Any additional information that might be relevant"
                 />
               </div>
 
