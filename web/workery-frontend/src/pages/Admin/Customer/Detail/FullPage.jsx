@@ -14,6 +14,10 @@ import {
   Loading,
   Breadcrumb,
 } from "../../../../components/UI";
+import {
+  HowHearAboutUsDisplay,
+  TagsDisplay,
+} from "../../../../components/Display";
 
 // Constants
 const COMMERCIAL_CUSTOMER_TYPE_OF_ID = 3;
@@ -122,28 +126,6 @@ function AdminCustomerDetailFullPage() {
     );
   };
 
-  const formatTags = (tags) => {
-    if (!tags || tags.length === 0) return "-";
-    return (
-      <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
-        {tags.map((tag, index) => (
-          <span
-            key={index}
-            style={{
-              backgroundColor: theme.colors.primary,
-              color: "white",
-              padding: "2px 8px",
-              borderRadius: "12px",
-              fontSize: "12px",
-            }}
-          >
-            {tag.text}
-          </span>
-        ))}
-      </div>
-    );
-  };
-
   const formatAddress = (customer) => {
     if (!customer) return "-";
     const address =
@@ -163,6 +145,28 @@ function AdminCustomerDetailFullPage() {
       );
     }
     return address;
+  };
+
+  // Extract tag IDs from tag objects if necessary
+  const getTagIds = (tags) => {
+    if (!tags || tags.length === 0) return [];
+
+    // If tags are already IDs (numbers or strings of numbers)
+    if (typeof tags[0] === "number" || typeof tags[0] === "string") {
+      return tags;
+    }
+
+    // If tags are objects with id property
+    if (tags[0].id !== undefined) {
+      return tags.map((tag) => tag.id);
+    }
+
+    // If tags are objects with value property
+    if (tags[0].value !== undefined) {
+      return tags.map((tag) => tag.value);
+    }
+
+    return [];
   };
 
   // Table component
@@ -393,7 +397,16 @@ function AdminCustomerDetailFullPage() {
                 label="Description"
                 value={customer.description || "-"}
               />
-              <DetailRow label="Tags" value={formatTags(customer.tags)} />
+              <DetailRow
+                label="Tags"
+                value={
+                  <TagsDisplay
+                    values={getTagIds(customer.tags)}
+                    onUnauthorized={onUnauthorized}
+                    variant="primary"
+                  />
+                }
+              />
             </DetailTable>
 
             {/* Company Information Table (for Commercial customers) */}
@@ -467,9 +480,26 @@ function AdminCustomerDetailFullPage() {
               <DetailRow
                 label="How did they discover us?"
                 value={
-                  customer.isHowDidYouHearAboutUsOther
-                    ? customer.howDidYouHearAboutUsOther
-                    : customer.howDidYouHearAboutUsText || "-"
+                  customer.isHowDidYouHearAboutUsOther ? (
+                    <div>
+                      <HowHearAboutUsDisplay
+                        value={customer.howDidYouHearAboutUsID}
+                        label=""
+                        onUnauthorized={onUnauthorized}
+                      />
+                      {customer.howDidYouHearAboutUsOther && (
+                        <div style={{ marginTop: "5px", fontStyle: "italic" }}>
+                          Other: {customer.howDidYouHearAboutUsOther}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <HowHearAboutUsDisplay
+                      value={customer.howDidYouHearAboutUsID}
+                      label=""
+                      onUnauthorized={onUnauthorized}
+                    />
+                  )
                 }
               />
               <DetailRow

@@ -14,6 +14,7 @@ import {
   Loading,
   Breadcrumb,
 } from "../../../../components/UI";
+import { TagsDisplay } from "../../../../components/Display";
 
 // Constants
 const COMMERCIAL_CUSTOMER_TYPE_OF_ID = 3;
@@ -85,10 +86,26 @@ function AdminCustomerDetailLitePage() {
     );
   };
 
-  // Format tags for display
-  const formatTags = (tags) => {
-    if (!tags || tags.length === 0) return "-";
-    return tags.map((tag) => tag.text).join(", ");
+  // Extract tag IDs from tag objects if necessary
+  const getTagIds = (tags) => {
+    if (!tags || tags.length === 0) return [];
+
+    // If tags are already IDs (numbers or strings of numbers)
+    if (typeof tags[0] === "number" || typeof tags[0] === "string") {
+      return tags;
+    }
+
+    // If tags are objects with id property
+    if (tags[0].id !== undefined) {
+      return tags.map((tag) => tag.id);
+    }
+
+    // If tags are objects with value property
+    if (tags[0].value !== undefined) {
+      return tags.map((tag) => tag.value);
+    }
+
+    return [];
   };
 
   // Format address for display
@@ -310,13 +327,23 @@ function AdminCustomerDetailLitePage() {
                 </div>
 
                 <div
-                  style={{ display: "flex", alignItems: "center", gap: "10px" }}
+                  style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: "10px",
+                  }}
                 >
-                  <span style={{ fontSize: "16px" }}>🏷️</span>
+                  <span style={{ fontSize: "16px", marginTop: "2px" }}>🏷️</span>
                   <span style={{ fontWeight: "600", minWidth: "80px" }}>
                     Tags:
                   </span>
-                  <span>{formatTags(customer.tags)}</span>
+                  <div style={{ flex: 1 }}>
+                    <TagsDisplay
+                      values={getTagIds(customer.tags)}
+                      onUnauthorized={onUnauthorized}
+                      variant="primary"
+                    />
+                  </div>
                 </div>
 
                 <div
