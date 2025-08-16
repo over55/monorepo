@@ -11,6 +11,8 @@ import {
   Loading,
   Breadcrumb,
 } from "../../../../components/UI";
+import HowHearAboutUsDisplay from "../../../../components/Display/HowHearAboutUsDisplay";
+import TagsDisplay from "../../../../components/Display/TagsDisplay";
 
 // Customer type constants
 const COMMERCIAL_CUSTOMER_TYPE_OF_ID = 3;
@@ -143,6 +145,20 @@ function AdminCustomerAddStep6Page() {
     marginBottom: "40px",
   };
 
+  const fieldStyle = {
+    marginBottom: "15px",
+  };
+
+  const labelStyle = {
+    fontWeight: "600",
+    marginRight: "10px",
+    color: "#333",
+  };
+
+  const valueStyle = {
+    color: "#555",
+  };
+
   return (
     <div style={globalStyles.container}>
       <Breadcrumb items={breadcrumbItems} />
@@ -161,13 +177,13 @@ function AdminCustomerAddStep6Page() {
       </div>
 
       {success && (
-        <Alert type="success" onClose={() => setSuccess(null)}>
+        <Alert type="success" dismissible onDismiss={() => setSuccess(null)}>
           {success}
         </Alert>
       )}
 
       {error && (
-        <Alert type="error" onClose={() => setError(null)}>
+        <Alert type="error" dismissible onDismiss={() => setError(null)}>
           {error}
         </Alert>
       )}
@@ -176,10 +192,14 @@ function AdminCustomerAddStep6Page() {
       <div style={{ marginBottom: "20px" }}>
         <p style={{ fontWeight: "bold" }}>Step 6 of 6</p>
         <progress
-          className="progress is-success"
           value="100"
           max="100"
-          style={{ width: "100%" }}
+          style={{
+            width: "100%",
+            height: "20px",
+            backgroundColor: "#e0e0e0",
+            borderRadius: "10px",
+          }}
         >
           100%
         </progress>
@@ -217,78 +237,121 @@ function AdminCustomerAddStep6Page() {
                       ✏️ Edit
                     </Link>
                   </h3>
-                  <p>
-                    <strong>Type:</strong>{" "}
-                    {getOptionLabel(CLIENT_TYPE_OPTIONS, customerData.type)}
-                  </p>
+
+                  <div style={fieldStyle}>
+                    <span style={labelStyle}>Type:</span>
+                    <span style={valueStyle}>
+                      {getOptionLabel(CLIENT_TYPE_OPTIONS, customerData.type)}
+                    </span>
+                  </div>
+
                   {customerData.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID && (
                     <>
-                      <p>
-                        <strong>Organization Name:</strong>{" "}
-                        {customerData.organizationName}
-                      </p>
-                      <p>
-                        <strong>Organization Type:</strong>{" "}
-                        {getOptionLabel(
-                          CLIENT_ORGANIZATION_TYPE_OPTIONS,
-                          customerData.organizationType,
-                        )}
-                      </p>
+                      <div style={fieldStyle}>
+                        <span style={labelStyle}>Organization Name:</span>
+                        <span style={valueStyle}>
+                          {customerData.organizationName}
+                        </span>
+                      </div>
+                      <div style={fieldStyle}>
+                        <span style={labelStyle}>Organization Type:</span>
+                        <span style={valueStyle}>
+                          {getOptionLabel(
+                            CLIENT_ORGANIZATION_TYPE_OPTIONS,
+                            customerData.organizationType,
+                          )}
+                        </span>
+                      </div>
                     </>
                   )}
-                  <p>
-                    <strong>First Name:</strong> {customerData.firstName}
-                  </p>
-                  <p>
-                    <strong>Last Name:</strong> {customerData.lastName}
-                  </p>
-                  <p>
-                    <strong>Email:</strong>{" "}
-                    {customerData.email || "Not provided"}
-                  </p>
-                  <p>
-                    <strong>I agree to receive electronic email:</strong>{" "}
-                    {customerData.isOkToEmail ? "Yes" : "No"}
-                  </p>
-                  <p>
-                    <strong>Phone:</strong> {customerData.phone}
-                  </p>
-                  <p>
-                    <strong>Phone Type:</strong>{" "}
-                    {getOptionLabel(
-                      CLIENT_PHONE_TYPE_OPTIONS,
-                      customerData.phoneType,
-                    )}
-                  </p>
+
+                  <div style={fieldStyle}>
+                    <span style={labelStyle}>First Name:</span>
+                    <span style={valueStyle}>{customerData.firstName}</span>
+                  </div>
+
+                  <div style={fieldStyle}>
+                    <span style={labelStyle}>Last Name:</span>
+                    <span style={valueStyle}>{customerData.lastName}</span>
+                  </div>
+
+                  <div style={fieldStyle}>
+                    <span style={labelStyle}>Email:</span>
+                    <span style={valueStyle}>
+                      {customerData.email || "Not provided"}
+                    </span>
+                  </div>
+
+                  <div style={fieldStyle}>
+                    <span style={labelStyle}>
+                      I agree to receive electronic email:
+                    </span>
+                    <span style={valueStyle}>
+                      {customerData.isOkToEmail ? "✅ Yes" : "❌ No"}
+                    </span>
+                  </div>
+
+                  <div style={fieldStyle}>
+                    <span style={labelStyle}>Phone:</span>
+                    <span style={valueStyle}>{customerData.phone}</span>
+                  </div>
+
+                  <div style={fieldStyle}>
+                    <span style={labelStyle}>Phone Type:</span>
+                    <span style={valueStyle}>
+                      {getOptionLabel(
+                        CLIENT_PHONE_TYPE_OPTIONS,
+                        customerData.phoneType,
+                      )}
+                    </span>
+                  </div>
+
                   {customerData.phoneType === CLIENT_PHONE_TYPE_WORK &&
                     customerData.phoneExtension && (
-                      <p>
-                        <strong>Phone Extension:</strong>{" "}
-                        {customerData.phoneExtension}
-                      </p>
+                      <div style={fieldStyle}>
+                        <span style={labelStyle}>Phone Extension:</span>
+                        <span style={valueStyle}>
+                          {customerData.phoneExtension}
+                        </span>
+                      </div>
                     )}
-                  <p>
-                    <strong>I agree to receive texts to my phone:</strong>{" "}
-                    {customerData.isOkToText ? "Yes" : "No"}
-                  </p>
+
+                  <div style={fieldStyle}>
+                    <span style={labelStyle}>
+                      I agree to receive texts to my phone:
+                    </span>
+                    <span style={valueStyle}>
+                      {customerData.isOkToText ? "✅ Yes" : "❌ No"}
+                    </span>
+                  </div>
+
                   {customerData.otherPhone && (
                     <>
-                      <p>
-                        <strong>Other Phone:</strong> {customerData.otherPhone}
-                      </p>
-                      <p>
-                        <strong>Other Phone Type:</strong>{" "}
-                        {getOptionLabel(
-                          CLIENT_PHONE_TYPE_OPTIONS,
-                          customerData.otherPhoneType,
-                        )}
-                      </p>
+                      <div style={fieldStyle}>
+                        <span style={labelStyle}>Other Phone:</span>
+                        <span style={valueStyle}>
+                          {customerData.otherPhone}
+                        </span>
+                      </div>
+                      <div style={fieldStyle}>
+                        <span style={labelStyle}>Other Phone Type:</span>
+                        <span style={valueStyle}>
+                          {getOptionLabel(
+                            CLIENT_PHONE_TYPE_OPTIONS,
+                            customerData.otherPhoneType,
+                          )}
+                        </span>
+                      </div>
                       {customerData.otherPhoneType === CLIENT_PHONE_TYPE_WORK &&
                         customerData.otherPhoneExtension && (
-                          <p>
-                            <strong>Other Phone Extension:</strong>{" "}
-                            {customerData.otherPhoneExtension}
-                          </p>
+                          <div style={fieldStyle}>
+                            <span style={labelStyle}>
+                              Other Phone Extension:
+                            </span>
+                            <span style={valueStyle}>
+                              {customerData.otherPhoneExtension}
+                            </span>
+                          </div>
                         )}
                     </>
                   )}
@@ -305,12 +368,16 @@ function AdminCustomerAddStep6Page() {
                       ✏️ Edit
                     </Link>
                   </h3>
-                  <p>
-                    <strong>
+
+                  <div style={fieldStyle}>
+                    <span style={labelStyle}>
                       Has shipping address different than billing address:
-                    </strong>{" "}
-                    {customerData.hasShippingAddress ? "Yes" : "No"}
-                  </p>
+                    </span>
+                    <span style={valueStyle}>
+                      {customerData.hasShippingAddress ? "✅ Yes" : "❌ No"}
+                    </span>
+                  </div>
+
                   <div
                     style={{
                       display: "flex",
@@ -327,29 +394,38 @@ function AdminCustomerAddStep6Page() {
                           Billing Address
                         </h4>
                       )}
-                      <p>
-                        <strong>Country:</strong> {customerData.country}
-                      </p>
-                      <p>
-                        <strong>Province/Territory:</strong>{" "}
-                        {customerData.region}
-                      </p>
-                      <p>
-                        <strong>City:</strong> {customerData.city}
-                      </p>
-                      <p>
-                        <strong>Address Line 1:</strong>{" "}
-                        {customerData.addressLine1}
-                      </p>
+                      <div style={fieldStyle}>
+                        <span style={labelStyle}>Country:</span>
+                        <span style={valueStyle}>{customerData.country}</span>
+                      </div>
+                      <div style={fieldStyle}>
+                        <span style={labelStyle}>Province/Territory:</span>
+                        <span style={valueStyle}>{customerData.region}</span>
+                      </div>
+                      <div style={fieldStyle}>
+                        <span style={labelStyle}>City:</span>
+                        <span style={valueStyle}>{customerData.city}</span>
+                      </div>
+                      <div style={fieldStyle}>
+                        <span style={labelStyle}>Address Line 1:</span>
+                        <span style={valueStyle}>
+                          {customerData.addressLine1}
+                        </span>
+                      </div>
                       {customerData.addressLine2 && (
-                        <p>
-                          <strong>Address Line 2:</strong>{" "}
-                          {customerData.addressLine2}
-                        </p>
+                        <div style={fieldStyle}>
+                          <span style={labelStyle}>Address Line 2:</span>
+                          <span style={valueStyle}>
+                            {customerData.addressLine2}
+                          </span>
+                        </div>
                       )}
-                      <p>
-                        <strong>Postal Code:</strong> {customerData.postalCode}
-                      </p>
+                      <div style={fieldStyle}>
+                        <span style={labelStyle}>Postal Code:</span>
+                        <span style={valueStyle}>
+                          {customerData.postalCode}
+                        </span>
+                      </div>
                     </div>
 
                     {customerData.hasShippingAddress && (
@@ -359,37 +435,56 @@ function AdminCustomerAddStep6Page() {
                         >
                           Shipping Address
                         </h4>
-                        <p>
-                          <strong>Name:</strong> {customerData.shippingName}
-                        </p>
-                        <p>
-                          <strong>Phone:</strong> {customerData.shippingPhone}
-                        </p>
-                        <p>
-                          <strong>Country:</strong>{" "}
-                          {customerData.shippingCountry}
-                        </p>
-                        <p>
-                          <strong>Province/Territory:</strong>{" "}
-                          {customerData.shippingRegion}
-                        </p>
-                        <p>
-                          <strong>City:</strong> {customerData.shippingCity}
-                        </p>
-                        <p>
-                          <strong>Address Line 1:</strong>{" "}
-                          {customerData.shippingAddressLine1}
-                        </p>
+                        <div style={fieldStyle}>
+                          <span style={labelStyle}>Name:</span>
+                          <span style={valueStyle}>
+                            {customerData.shippingName}
+                          </span>
+                        </div>
+                        <div style={fieldStyle}>
+                          <span style={labelStyle}>Phone:</span>
+                          <span style={valueStyle}>
+                            {customerData.shippingPhone}
+                          </span>
+                        </div>
+                        <div style={fieldStyle}>
+                          <span style={labelStyle}>Country:</span>
+                          <span style={valueStyle}>
+                            {customerData.shippingCountry}
+                          </span>
+                        </div>
+                        <div style={fieldStyle}>
+                          <span style={labelStyle}>Province/Territory:</span>
+                          <span style={valueStyle}>
+                            {customerData.shippingRegion}
+                          </span>
+                        </div>
+                        <div style={fieldStyle}>
+                          <span style={labelStyle}>City:</span>
+                          <span style={valueStyle}>
+                            {customerData.shippingCity}
+                          </span>
+                        </div>
+                        <div style={fieldStyle}>
+                          <span style={labelStyle}>Address Line 1:</span>
+                          <span style={valueStyle}>
+                            {customerData.shippingAddressLine1}
+                          </span>
+                        </div>
                         {customerData.shippingAddressLine2 && (
-                          <p>
-                            <strong>Address Line 2:</strong>{" "}
-                            {customerData.shippingAddressLine2}
-                          </p>
+                          <div style={fieldStyle}>
+                            <span style={labelStyle}>Address Line 2:</span>
+                            <span style={valueStyle}>
+                              {customerData.shippingAddressLine2}
+                            </span>
+                          </div>
                         )}
-                        <p>
-                          <strong>Postal Code:</strong>{" "}
-                          {customerData.shippingPostalCode}
-                        </p>
+                        <div style={fieldStyle}>
+                          <span style={labelStyle}>Postal Code:</span>
+                          <span style={valueStyle}>
+                            {customerData.shippingPostalCode}
+                          </span>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -406,51 +501,86 @@ function AdminCustomerAddStep6Page() {
                       ✏️ Edit
                     </Link>
                   </h3>
-                  {customerData.tags && customerData.tags.length > 0 && (
-                    <p>
-                      <strong>Tags:</strong> {customerData.tags.join(", ")}
-                    </p>
-                  )}
-                  <p>
-                    <strong>How did you hear about us:</strong>{" "}
-                    {customerData.howDidYouHearAboutUsID}
-                  </p>
+
+                  {/* Use the new TagsDisplay component */}
+                  <div style={{ marginBottom: "20px" }}>
+                    <TagsDisplay
+                      values={
+                        customerData.tags && customerData.tags.length > 0
+                          ? customerData.tags
+                          : []
+                      }
+                      label="Tags"
+                      onUnauthorized={onUnauthorized}
+                      variant="success"
+                    />
+                  </div>
+
+                  {/* Use the new HowHearAboutUsDisplay component */}
+                  <div style={{ marginBottom: "20px" }}>
+                    <HowHearAboutUsDisplay
+                      value={customerData.howDidYouHearAboutUsID}
+                      label="How did you hear about us?"
+                      onUnauthorized={onUnauthorized}
+                    />
+                  </div>
+
+                  {/* Show "Other" field if it exists */}
                   {customerData.howDidYouHearAboutUsOther && (
-                    <p>
-                      <strong>How did you hear about us (Other):</strong>{" "}
-                      {customerData.howDidYouHearAboutUsOther}
-                    </p>
+                    <div style={fieldStyle}>
+                      <span style={labelStyle}>
+                        How did you hear about us? (Other):
+                      </span>
+                      <span style={valueStyle}>
+                        {customerData.howDidYouHearAboutUsOther}
+                      </span>
+                    </div>
                   )}
-                  <p>
-                    <strong>Gender:</strong>{" "}
-                    {getOptionLabel(GENDER_OPTIONS, customerData.gender)}
-                  </p>
+
+                  <div style={fieldStyle}>
+                    <span style={labelStyle}>Gender:</span>
+                    <span style={valueStyle}>
+                      {getOptionLabel(GENDER_OPTIONS, customerData.gender)}
+                    </span>
+                  </div>
+
                   {customerData.gender === 1 && customerData.genderOther && (
-                    <p>
-                      <strong>Gender (Other):</strong>{" "}
-                      {customerData.genderOther}
-                    </p>
+                    <div style={fieldStyle}>
+                      <span style={labelStyle}>Gender (Other):</span>
+                      <span style={valueStyle}>{customerData.genderOther}</span>
+                    </div>
                   )}
+
                   {customerData.birthDate && (
-                    <p>
-                      <strong>Birth Date:</strong> {customerData.birthDate}
-                    </p>
+                    <div style={fieldStyle}>
+                      <span style={labelStyle}>Birth Date:</span>
+                      <span style={valueStyle}>{customerData.birthDate}</span>
+                    </div>
                   )}
-                  <p>
-                    <strong>Join Date:</strong> {customerData.joinDate}
-                  </p>
+
+                  <div style={fieldStyle}>
+                    <span style={labelStyle}>Join Date:</span>
+                    <span style={valueStyle}>{customerData.joinDate}</span>
+                  </div>
+
                   {customerData.additionalComment && (
-                    <p>
-                      <strong>Additional Comment:</strong>{" "}
-                      {customerData.additionalComment}
-                    </p>
+                    <div style={fieldStyle}>
+                      <span style={labelStyle}>Additional Comment:</span>
+                      <span style={valueStyle}>
+                        {customerData.additionalComment}
+                      </span>
+                    </div>
                   )}
-                  <p>
-                    <strong>Preferred Language:</strong>{" "}
-                    {customerData.preferredLanguage}
-                  </p>
+
+                  <div style={fieldStyle}>
+                    <span style={labelStyle}>Preferred Language:</span>
+                    <span style={valueStyle}>
+                      {customerData.preferredLanguage}
+                    </span>
+                  </div>
                 </div>
 
+                {/* Navigation Buttons */}
                 <div
                   style={{
                     display: "flex",
@@ -472,7 +602,7 @@ function AdminCustomerAddStep6Page() {
                   <Button
                     type="button"
                     onClick={onSubmitClick}
-                    variant="primary"
+                    variant="success"
                     disabled={loading}
                   >
                     {loading ? "Submitting..." : "✅ Submit"}
