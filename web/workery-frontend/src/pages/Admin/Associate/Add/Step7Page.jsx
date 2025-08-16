@@ -14,6 +14,14 @@ import {
   Loading,
   Breadcrumb,
 } from "../../../../components/UI";
+import {
+  HowHearAboutUsDisplay,
+  InsuranceRequirementsDisplay,
+  ServiceFeeDisplay,
+  SkillSetsDisplay,
+  TagsDisplay,
+  VehicleTypesDisplay,
+} from "../../../../components/Display";
 
 const COMMERCIAL_ASSOCIATE_TYPE_OF_ID = 3;
 const ASSOCIATE_PHONE_TYPE_WORK = 2;
@@ -148,20 +156,34 @@ function AdminAssociateAddStep7Page() {
 
     // Convert string arrays to proper arrays
     if (typeof processed.skillSets === "string") {
-      processed.skillSets = processed.skillSets.split(",");
+      processed.skillSets = processed.skillSets
+        .split(",")
+        .map((id) => id.trim())
+        .filter(Boolean);
     }
     if (typeof processed.insuranceRequirements === "string") {
-      processed.insuranceRequirements =
-        processed.insuranceRequirements.split(",");
+      processed.insuranceRequirements = processed.insuranceRequirements
+        .split(",")
+        .map((id) => id.trim())
+        .filter(Boolean);
     }
     if (typeof processed.vehicleTypes === "string") {
-      processed.vehicleTypes = processed.vehicleTypes.split(",");
+      processed.vehicleTypes = processed.vehicleTypes
+        .split(",")
+        .map((id) => id.trim())
+        .filter(Boolean);
     }
     if (typeof processed.tags === "string") {
-      processed.tags = processed.tags.split(",");
+      processed.tags = processed.tags
+        .split(",")
+        .map((id) => id.trim())
+        .filter(Boolean);
     }
     if (typeof processed.identifyAs === "string") {
-      processed.identifyAs = processed.identifyAs.split(",");
+      processed.identifyAs = processed.identifyAs
+        .split(",")
+        .map((id) => id.trim())
+        .filter(Boolean);
     }
 
     // Convert numeric fields
@@ -207,6 +229,19 @@ function AdminAssociateAddStep7Page() {
       default:
         return "Unknown";
     }
+  };
+
+  // Helper function to parse array values
+  const parseArrayValue = (value) => {
+    if (!value) return [];
+    if (Array.isArray(value)) return value;
+    if (typeof value === "string") {
+      return value
+        .split(",")
+        .map((id) => id.trim())
+        .filter(Boolean);
+    }
+    return [];
   };
 
   const breadcrumbItems = [
@@ -507,18 +542,43 @@ function AdminAssociateAddStep7Page() {
                     gap: "0.5rem",
                   }}
                 >
-                  <div>
-                    <strong>Skill Sets:</strong>{" "}
-                    {Array.isArray(associateData.skillSets)
-                      ? associateData.skillSets.join(", ")
-                      : associateData.skillSets}
-                  </div>
-                  <div>
-                    <strong>Insurance Requirements:</strong>{" "}
-                    {Array.isArray(associateData.insuranceRequirements)
-                      ? associateData.insuranceRequirements.join(", ")
-                      : associateData.insuranceRequirements}
-                  </div>
+                  {/* Skill Sets Display */}
+                  {associateData.skillSets && (
+                    <SkillSetsDisplay
+                      values={parseArrayValue(associateData.skillSets)}
+                      label="Skill Sets"
+                      variant="primary"
+                    />
+                  )}
+
+                  {/* Insurance Requirements Display */}
+                  {associateData.insuranceRequirements && (
+                    <InsuranceRequirementsDisplay
+                      values={parseArrayValue(
+                        associateData.insuranceRequirements,
+                      )}
+                      label="Insurance Requirements"
+                      variant="info"
+                    />
+                  )}
+
+                  {/* Vehicle Types Display */}
+                  {associateData.vehicleTypes && (
+                    <VehicleTypesDisplay
+                      values={parseArrayValue(associateData.vehicleTypes)}
+                      label="Vehicle Types"
+                      variant="warning"
+                    />
+                  )}
+
+                  {/* Service Fee Display */}
+                  {associateData.serviceFeeId && (
+                    <ServiceFeeDisplay
+                      value={associateData.serviceFeeId}
+                      label="Service Fee"
+                      showAmount={true}
+                    />
+                  )}
 
                   {associateData.hourlySalaryDesired && (
                     <div>
@@ -640,20 +700,21 @@ function AdminAssociateAddStep7Page() {
                     <strong>Birth Date:</strong> {associateData.birthDate}
                   </div>
 
+                  {/* How Heard About Us Display */}
                   {associateData.howDidYouHearAboutUsID && (
-                    <div>
-                      <strong>How Heard About Us:</strong>{" "}
-                      {associateData.howDidYouHearAboutUsID}
-                    </div>
+                    <HowHearAboutUsDisplay
+                      value={associateData.howDidYouHearAboutUsID}
+                      label="How did you hear about us?"
+                    />
                   )}
 
-                  {associateData.tags && associateData.tags.length > 0 && (
-                    <div>
-                      <strong>Tags:</strong>{" "}
-                      {Array.isArray(associateData.tags)
-                        ? associateData.tags.join(", ")
-                        : associateData.tags}
-                    </div>
+                  {/* Tags Display */}
+                  {associateData.tags && (
+                    <TagsDisplay
+                      values={parseArrayValue(associateData.tags)}
+                      label="Tags"
+                      variant="success"
+                    />
                   )}
                 </div>
               </div>
