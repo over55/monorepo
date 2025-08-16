@@ -924,3 +924,5 @@ export const FormSection = ({
     </div>
   );
 };
+
+export { MultiSelect } from "./MultiSelect";

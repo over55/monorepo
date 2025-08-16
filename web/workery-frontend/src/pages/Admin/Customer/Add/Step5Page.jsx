@@ -13,6 +13,7 @@ import {
   Textarea,
 } from "../../../../components/UI";
 import HowHearAboutUsSelect from "../../../../components/Form/HowHearAboutUsSelect";
+import TagsMultiSelect from "../../../../components/Form/TagsMultiSelect";
 import { theme, globalStyles } from "../../../../constants/Theme";
 
 // Gender options
@@ -204,22 +205,23 @@ function AdminCustomerAddStep5Page() {
                 gap: "20px",
               }}
             >
-              <FormGroup>
-                <label style={globalStyles.label}>Tags (Optional)</label>
-                <input
-                  type="text"
-                  placeholder="Enter tags separated by commas"
-                  value={tags.join(", ")}
-                  onChange={(e) =>
-                    setTags(e.target.value.split(",").map((tag) => tag.trim()))
+              <TagsMultiSelect
+                value={tags}
+                onChange={(selectedTagIds) => {
+                  setTags(selectedTagIds);
+                  // Clear error when value changes
+                  if (errors.tags) {
+                    setErrors((prev) => ({ ...prev, tags: null }));
                   }
-                  style={globalStyles.input}
-                  disabled={isFetching}
-                />
-                <div style={globalStyles.helpText}>
-                  Pick the tags you would like to associate with this client.
-                </div>
-              </FormGroup>
+                }}
+                error={errors.tags}
+                required={false}
+                disabled={isFetching}
+                label="Tags (Optional)"
+                placeholder="Select tags..."
+                helperText="Pick the tags you would like to associate with this client."
+                onUnauthorized={() => navigate("/login?unauthorized=true")}
+              />
 
               {/* Use the new HowHearAboutUsSelect component */}
               <HowHearAboutUsSelect
