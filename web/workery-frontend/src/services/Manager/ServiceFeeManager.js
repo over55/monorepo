@@ -643,8 +643,9 @@ export class ServiceFeeManager {
       }
     }
 
-    // Validate status (optional)
-    if (serviceFeeData.status !== undefined) {
+    // Note: Status validation removed for create operations
+    // Backend doesn't accept status in create request and sets its own default
+    if (!isCreate && serviceFeeData.status !== undefined) {
       const validStatuses = [1, 2]; // Active, Archived
       if (!validStatuses.includes(serviceFeeData.status)) {
         errors.status = "Invalid service fee status";

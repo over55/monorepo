@@ -1,4 +1,4 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Admin/Setting/Create/Page.jsx
+// File Path: monorepo/web/workery-frontend/src/pages/Admin/Setting/ServiceFee/Create/Page.jsx
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { useServiceFeeManager } from "../../../../../services/Services";
@@ -27,12 +27,12 @@ function SettingServiceFeeCreatePage() {
   const serviceFeeManager = useServiceFeeManager();
   const navigate = useNavigate();
 
-  // Form state - including status field set to 1 (active)
+  // Form state
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     percentage: "",
-    status: 1, // Set status to 1 (active) by default
+    // Note: Status is not included as backend doesn't accept it in create request
   });
 
   // Component state
@@ -93,12 +93,13 @@ function SettingServiceFeeCreatePage() {
     setGeneralError(null);
 
     try {
-      // Prepare data for submission - including status field
+      // Prepare data for submission
       const submitData = {
         name: formData.name.trim(),
         description: formData.description.trim(),
         percentage: parseFloat(formData.percentage),
-        status: 1, // Explicitly set status to 1 (active)
+        // Note: Backend doesn't accept status in create request
+        // Service fees are created with a default status set by the backend
       };
 
       const response = await serviceFeeManager.createServiceFee(

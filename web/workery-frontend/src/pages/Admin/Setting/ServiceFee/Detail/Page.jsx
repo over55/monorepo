@@ -1,3 +1,5 @@
+// File Path: monorepo/web/workery-frontend/src/pages/Admin/ServiceFee/Details/Page.jsx
+
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams, useLocation } from "react-router";
 import { useServiceFeeManager } from "../../../../../services/Services";
@@ -18,9 +20,7 @@ import {
   UserIcon,
   GlobeAltIcon,
   DocumentTextIcon,
-  TagIcon,
   CalendarIcon,
-  CurrencyDollarIcon,
   PercentBadgeIcon,
   BanknotesIcon,
 } from "@heroicons/react/24/outline";
@@ -112,19 +112,13 @@ function SettingServiceFeeDetailPage() {
     }
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(amount);
-  };
-
   const formatDate = (dateString) => {
     if (!dateString) return "Not available";
     return new Date(dateString).toLocaleString();
   };
 
   const getStatusBadge = (status) => {
+    // Backend: StatusActive = 1, StatusArchived = 2
     const isActive = status === 1;
     return (
       <span
@@ -132,46 +126,9 @@ function SettingServiceFeeDetailPage() {
           isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
         }`}
       >
-        {isActive ? "Active" : "Inactive"}
+        {isActive ? "Active" : "Archived"}
       </span>
     );
-  };
-
-  const getTypeDisplay = (type) => {
-    switch (type) {
-      case 1:
-        return "Standard Service Fee";
-      case 2:
-        return "Premium Service Fee";
-      case 3:
-        return "Special Service Fee";
-      default:
-        return "Unknown Type";
-    }
-  };
-
-  const getRateDisplay = () => {
-    if (serviceFee?.percentage && serviceFee.percentage > 0) {
-      return (
-        <div className="flex items-center">
-          <PercentBadgeIcon className="w-5 h-5 mr-2 text-blue-600" />
-          <span className="text-lg font-semibold text-blue-700">
-            {serviceFee.percentage}% (Percentage-based)
-          </span>
-        </div>
-      );
-    }
-    if (serviceFee?.amount && serviceFee.amount > 0) {
-      return (
-        <div className="flex items-center">
-          <CurrencyDollarIcon className="w-5 h-5 mr-2 text-green-600" />
-          <span className="text-lg font-semibold text-green-700">
-            {formatCurrency(serviceFee.amount)} (Fixed amount)
-          </span>
-        </div>
-      );
-    }
-    return <span className="text-gray-500">No rate set</span>;
   };
 
   // Loading state
@@ -336,9 +293,7 @@ function SettingServiceFeeDetailPage() {
                 Edit
               </button>
               <button
-                onClick={() =>
-                  navigate(`/admin/settings/service-fee/${id}/delete`)
-                }
+                onClick={() => setShowDeleteModal(true)}
                 className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
               >
                 <TrashIcon className="w-4 h-4 mr-1" />
@@ -384,28 +339,12 @@ function SettingServiceFeeDetailPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-1">
-                        Status
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                        {getStatusBadge(serviceFee.status)}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-500 mb-1">
-                        Type
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                        <div className="flex items-center">
-                          <TagIcon className="w-4 h-4 mr-2 text-purple-600" />
-                          <span className="text-sm font-medium">
-                            {getTypeDisplay(serviceFee.type)}
-                          </span>
-                        </div>
-                      </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500 mb-1">
+                      Status
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                      {getStatusBadge(serviceFee.status)}
                     </div>
                   </div>
 
@@ -433,32 +372,28 @@ function SettingServiceFeeDetailPage() {
                   {/* Rate Information */}
                   <div className="bg-green-50 rounded-lg p-4">
                     <h4 className="text-sm font-medium text-green-900 mb-3 flex items-center">
-                      <CurrencyDollarIcon className="w-4 h-4 mr-2" />
+                      <PercentBadgeIcon className="w-4 h-4 mr-2" />
                       Rate Configuration
                     </h4>
                     <div className="space-y-3">
                       <div>
                         <span className="text-sm font-medium text-gray-600">
-                          Current Rate:
+                          Service Fee Percentage:
                         </span>
-                        <div className="mt-1">{getRateDisplay()}</div>
+                        <div className="mt-1 flex items-center">
+                          <PercentBadgeIcon className="w-5 h-5 mr-2 text-blue-600" />
+                          <span className="text-lg font-semibold text-blue-700">
+                            {serviceFee.percentage}%
+                          </span>
+                        </div>
                       </div>
 
-                      {serviceFee.percentage && serviceFee.percentage > 0 && (
+                      {serviceFee.percentage > 0 && (
                         <div className="pt-2 border-t border-green-200">
                           <p className="text-sm text-gray-600">
                             <span className="font-medium">Example:</span> On a
                             $100 transaction, this fee would charge $
                             {((100 * serviceFee.percentage) / 100).toFixed(2)}
-                          </p>
-                        </div>
-                      )}
-
-                      {serviceFee.amount && serviceFee.amount > 0 && (
-                        <div className="pt-2 border-t border-green-200">
-                          <p className="text-sm text-gray-600">
-                            <span className="font-medium">Note:</span> Fixed
-                            amount charged per transaction
                           </p>
                         </div>
                       )}
@@ -571,7 +506,7 @@ function SettingServiceFeeDetailPage() {
                 Rate Impact Examples
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                {serviceFee.percentage && serviceFee.percentage > 0 ? (
+                {serviceFee.percentage > 0 ? (
                   <>
                     <div className="bg-white p-3 rounded-lg">
                       <p className="font-medium text-gray-600">
@@ -598,19 +533,9 @@ function SettingServiceFeeDetailPage() {
                       </p>
                     </div>
                   </>
-                ) : serviceFee.amount && serviceFee.amount > 0 ? (
-                  <div className="bg-white p-3 rounded-lg col-span-3">
-                    <p className="font-medium text-gray-600">
-                      Fixed fee per transaction:
-                    </p>
-                    <p className="text-lg font-semibold text-purple-700">
-                      {formatCurrency(serviceFee.amount)} regardless of
-                      transaction amount
-                    </p>
-                  </div>
                 ) : (
                   <div className="col-span-3 text-gray-500 italic">
-                    No rate configured
+                    No percentage configured
                   </div>
                 )}
               </div>
@@ -660,12 +585,7 @@ function SettingServiceFeeDetailPage() {
                   )}
                   <div className="mt-3 pt-3 border-t border-red-200">
                     <p className="text-sm font-medium text-gray-700">
-                      Current Rate:{" "}
-                      {serviceFee.percentage && serviceFee.percentage > 0
-                        ? `${serviceFee.percentage}%`
-                        : serviceFee.amount && serviceFee.amount > 0
-                          ? formatCurrency(serviceFee.amount)
-                          : "Not set"}
+                      Current Rate: {serviceFee.percentage}%
                     </p>
                   </div>
                 </div>
