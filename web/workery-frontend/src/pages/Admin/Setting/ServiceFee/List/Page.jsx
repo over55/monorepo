@@ -218,19 +218,6 @@ function SettingServiceFeeListPage() {
     );
   };
 
-  const getTypeDisplay = (type) => {
-    switch (type) {
-      case 1:
-        return "Standard";
-      case 2:
-        return "Premium";
-      case 3:
-        return "Special";
-      default:
-        return "Unknown";
-    }
-  };
-
   // Pagination calculations
   const totalPages = Math.ceil(totalCount / pageSize);
   const startRecord = (currentPage - 1) * pageSize + 1;
@@ -486,9 +473,6 @@ function SettingServiceFeeListPage() {
                           Name
                         </th>
                         <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Type
-                        </th>
-                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Rate
                         </th>
                         <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -525,12 +509,6 @@ function SettingServiceFeeListPage() {
                                 {item.description}
                               </div>
                             )}
-                          </td>
-                          <td className="px-3 py-4 text-sm">
-                            <div className="flex items-center">
-                              <TagIcon className="w-4 h-4 mr-1 text-purple-500" />
-                              <span>{getTypeDisplay(item.type)}</span>
-                            </div>
                           </td>
                           <td className="px-3 py-4 text-sm">
                             {getRateDisplay(item)}
@@ -685,18 +663,6 @@ function SettingServiceFeeListPage() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Type:
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg flex items-center">
-                        <TagIcon className="w-4 h-4 mr-2 text-purple-500" />
-                        <span className="text-sm font-medium">
-                          {getTypeDisplay(selectedItem.type)}
-                        </span>
-                      </div>
-                    </div>
-
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         Status:
