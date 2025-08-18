@@ -19,34 +19,12 @@ import {
   Modal,
 } from "../../../../components/UI";
 
-// Constants for filtering and sorting
-const CUSTOMER_STATUS_OPTIONS = [
-  { value: "", label: "All Statuses" },
-  { value: "1", label: "Active" },
-  { value: "2", label: "Inactive" },
-];
-
-const CUSTOMER_TYPE_OPTIONS = [
-  { value: "", label: "All Types" },
-  { value: "1", label: "Unassigned" },
-  { value: "2", label: "Residential" },
-  { value: "3", label: "Commercial" },
-];
-
-const CUSTOMER_SORT_OPTIONS = [
-  { value: "lexical_name,ASC", label: "Name (A-Z)" },
-  { value: "lexical_name,DESC", label: "Name (Z-A)" },
-  { value: "created_at,DESC", label: "Newest First" },
-  { value: "created_at,ASC", label: "Oldest First" },
-  { value: "email,ASC", label: "Email (A-Z)" },
-  { value: "email,DESC", label: "Email (Z-A)" },
-];
-
-const PAGE_SIZE_OPTIONS = [
-  { value: 25, label: "25 per page" },
-  { value: 50, label: "50 per page" },
-  { value: 100, label: "100 per page" },
-];
+import {
+  CUSTOMER_STATUS_OPTIONS,
+  CUSTOMER_TYPE_OPTIONS,
+  CUSTOMER_SORT_OPTIONS,
+  PAGE_SIZE_OPTIONS,
+} from "../../../../constants/Customer";
 
 const VIEW_TYPE_TABULAR = "tabular";
 const VIEW_TYPE_GRID = "grid";
