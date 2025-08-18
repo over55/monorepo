@@ -166,8 +166,8 @@ export class ServiceFeeManager {
 
       console.log("ServiceFeeManager: Service fee created successfully:", {
         id: createdServiceFeeData.id,
-        title: createdServiceFeeData.title,
-        amount: createdServiceFeeData.amount,
+        name: createdServiceFeeData.name,
+        percentage: createdServiceFeeData.percentage,
       });
 
       return createdServiceFeeData;
@@ -205,8 +205,8 @@ export class ServiceFeeManager {
         "ServiceFeeManager: Service fee detail fetched successfully:",
         {
           id: serviceFeeData.id,
-          title: serviceFeeData.title,
-          amount: serviceFeeData.amount,
+          name: serviceFeeData.name,
+          percentage: serviceFeeData.percentage,
         },
       );
 
@@ -578,8 +578,7 @@ export class ServiceFeeManager {
     // Validate sorting
     if (params.sortBy && typeof params.sortBy === "string") {
       const allowedSortFields = [
-        "title",
-        "amount",
+        "name",
         "percentage",
         "created_at",
         "updated_at",
@@ -601,10 +600,6 @@ export class ServiceFeeManager {
       validatedParams.status = params.status;
     }
 
-    if (params.type && typeof params.type === "string") {
-      validatedParams.type = params.type;
-    }
-
     return validatedParams;
   }
 
@@ -616,39 +611,33 @@ export class ServiceFeeManager {
       return errors;
     }
 
-    // Validate title (required)
-    if (!serviceFeeData.title || !serviceFeeData.title.trim()) {
-      errors.title = "Service fee title is required";
-    } else if (serviceFeeData.title.length > 127) {
-      errors.title = "Title must be less than 127 characters";
+    // Validate name (required) - Backend expects 'name' not 'title'
+    if (!serviceFeeData.name || !serviceFeeData.name.trim()) {
+      errors.name = "Service fee name is required";
+    } else if (serviceFeeData.name.length > 127) {
+      errors.name = "Name must be less than 127 characters";
     }
 
-    // Validate description (optional)
-    if (serviceFeeData.description && serviceFeeData.description.length > 500) {
+    // Validate description (optional but backend validation requires it)
+    if (!serviceFeeData.description || !serviceFeeData.description.trim()) {
+      errors.description = "Description is required";
+    } else if (serviceFeeData.description.length > 500) {
       errors.description = "Description must be less than 500 characters";
     }
 
-    // Validate amount (required)
-    if (serviceFeeData.amount === undefined || serviceFeeData.amount === null) {
-      errors.amount = "Service fee amount is required";
-    } else if (
-      typeof serviceFeeData.amount !== "number" ||
-      serviceFeeData.amount < 0
-    ) {
-      errors.amount = "Amount must be a non-negative number";
-    } else if (serviceFeeData.amount > 999999.99) {
-      errors.amount = "Amount must be less than $1,000,000";
-    }
-
-    // Validate percentage (optional, but if provided must be valid)
+    // Validate percentage (backend only supports percentage, not amount)
     if (
-      serviceFeeData.percentage !== undefined &&
-      serviceFeeData.percentage !== null
+      serviceFeeData.percentage === undefined ||
+      serviceFeeData.percentage === null ||
+      serviceFeeData.percentage === ""
     ) {
+      errors.percentage = "Service fee percentage is required";
+    } else {
+      const percentageValue = parseFloat(serviceFeeData.percentage);
       if (
-        typeof serviceFeeData.percentage !== "number" ||
-        serviceFeeData.percentage < 0 ||
-        serviceFeeData.percentage > 100
+        isNaN(percentageValue) ||
+        percentageValue < 0 ||
+        percentageValue > 100
       ) {
         errors.percentage = "Percentage must be a number between 0 and 100";
       }
@@ -656,38 +645,10 @@ export class ServiceFeeManager {
 
     // Validate status (optional)
     if (serviceFeeData.status !== undefined) {
-      const validStatuses = [1, 2]; // Active, Inactive
+      const validStatuses = [1, 2]; // Active, Archived
       if (!validStatuses.includes(serviceFeeData.status)) {
         errors.status = "Invalid service fee status";
       }
-    }
-
-    // Validate type (optional)
-    if (serviceFeeData.type !== undefined) {
-      const validTypes = [1, 2, 3]; // Fixed, Percentage, Hourly, etc.
-      if (!validTypes.includes(serviceFeeData.type)) {
-        errors.type = "Invalid service fee type";
-      }
-    }
-
-    // Business rule: cannot have both amount and percentage set to significant values
-    if (
-      serviceFeeData.amount &&
-      serviceFeeData.percentage &&
-      serviceFeeData.amount > 0 &&
-      serviceFeeData.percentage > 0
-    ) {
-      errors.general =
-        "Service fee cannot have both a fixed amount and percentage. Please choose one.";
-    }
-
-    // Business rule: must have either amount or percentage
-    if (
-      (!serviceFeeData.amount || serviceFeeData.amount <= 0) &&
-      (!serviceFeeData.percentage || serviceFeeData.percentage <= 0)
-    ) {
-      errors.general =
-        "Service fee must have either a fixed amount or percentage";
     }
 
     return errors;
