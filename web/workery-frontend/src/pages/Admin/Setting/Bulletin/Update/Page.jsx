@@ -1,20 +1,25 @@
-// File Path: web/workery-frontend/src/pages/Admin/Setting/Bulletin/Update/Page.jsx
-
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { useBulletinManager } from "../../../../../services/Services";
-import { theme, globalStyles } from "../../../../../constants/Theme";
 import {
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Breadcrumb,
-  Input,
-  TextArea,
-  Select,
-  FormGroup,
-} from "../../../../../components/UI";
+  NewspaperIcon,
+  ChevronRightIcon,
+  XMarkIcon,
+  PencilSquareIcon,
+  ExclamationTriangleIcon,
+  ArrowPathIcon,
+  CheckCircleIcon,
+  Cog6ToothIcon,
+  ChartBarIcon,
+  ClipboardDocumentIcon,
+  InformationCircleIcon,
+  ArrowLeftIcon,
+  DocumentTextIcon,
+  LightBulbIcon,
+  SparklesIcon,
+  ClockIcon,
+  UsersIcon,
+} from "@heroicons/react/24/outline";
 
 function SettingBulletinUpdatePage() {
   const { id } = useParams();
@@ -24,8 +29,7 @@ function SettingBulletinUpdatePage() {
   // Form state
   const [formData, setFormData] = useState({
     text: "",
-    howDidYouHearAboutUsID: "",
-    status: 1,
+    status: 1, // Always active - hidden from UI
   });
 
   // Component state
@@ -61,7 +65,6 @@ function SettingBulletinUpdatePage() {
       setOriginalBulletin(bulletinData);
       setFormData({
         text: bulletinData.text || "",
-        howDidYouHearAboutUsID: bulletinData.howDidYouHearAboutUsID || "",
         status: bulletinData.status || 1,
       });
     } catch (err) {
@@ -82,8 +85,6 @@ function SettingBulletinUpdatePage() {
     if (originalBulletin) {
       const hasFormChanges =
         formData.text !== (originalBulletin.text || "") ||
-        formData.howDidYouHearAboutUsID !==
-          (originalBulletin.howDidYouHearAboutUsID || "") ||
         formData.status !== (originalBulletin.status || 1);
 
       setHasChanges(hasFormChanges);
@@ -126,27 +127,12 @@ function SettingBulletinUpdatePage() {
       newErrors.text = "Bulletin text must be less than 1000 characters";
     }
 
-    // Validate status
-    if (!formData.status) {
-      newErrors.status = "Status is required";
-    }
-
-    // Validate howDidYouHearAboutUsID (optional, but if provided must be valid)
-    if (
-      formData.howDidYouHearAboutUsID &&
-      isNaN(formData.howDidYouHearAboutUsID)
-    ) {
-      newErrors.howDidYouHearAboutUsID = "Invalid source selection";
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   // Handle form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const handleSubmit = async () => {
     if (!validateForm()) {
       setError("Please correct the errors below");
       return;
@@ -167,13 +153,6 @@ function SettingBulletinUpdatePage() {
         text: formData.text.trim(),
         status: parseInt(formData.status),
       };
-
-      // Add optional fields if provided
-      if (formData.howDidYouHearAboutUsID) {
-        submissionData.howDidYouHearAboutUsID = parseInt(
-          formData.howDidYouHearAboutUsID,
-        );
-      }
 
       // Update bulletin
       const updatedBulletin = await bulletinManager.updateBulletin(
@@ -225,7 +204,6 @@ function SettingBulletinUpdatePage() {
     if (originalBulletin) {
       setFormData({
         text: originalBulletin.text || "",
-        howDidYouHearAboutUsID: originalBulletin.howDidYouHearAboutUsID || "",
         status: originalBulletin.status || 1,
       });
       setErrors({});
@@ -233,27 +211,14 @@ function SettingBulletinUpdatePage() {
     }
   };
 
-  // Status options
-  const statusOptions = [
-    { value: 1, label: "Active" },
-    { value: 2, label: "Archived" },
-  ];
-
-  // How did you hear about us options (example data)
-  const howHearOptions = [
-    { value: "", label: "Select source (optional)" },
-    { value: 1, label: "Search Engine" },
-    { value: 2, label: "Social Media" },
-    { value: 3, label: "Word of Mouth" },
-    { value: 4, label: "Advertisement" },
-    { value: 5, label: "Other" },
-  ];
-
   // Loading state
   if (isLoading) {
     return (
-      <div style={globalStyles.container}>
-        <Loading message="Loading bulletin details..." />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading bulletin details...</p>
+        </div>
       </div>
     );
   }
@@ -261,239 +226,356 @@ function SettingBulletinUpdatePage() {
   // Error state
   if (error && !originalBulletin) {
     return (
-      <div style={globalStyles.container}>
-        <Alert type="error">{error}</Alert>
-        <div style={{ marginTop: "20px" }}>
-          <Link to="/admin/settings/bulletins">← Back to Bulletins</Link>
+      <div className="min-h-screen bg-gray-50 p-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-4">
+            {error}
+          </div>
+          <Link
+            to="/admin/settings/bulletins"
+            className="inline-flex items-center text-blue-600 hover:text-blue-800"
+          >
+            <ArrowLeftIcon className="w-4 h-4 mr-2" />
+            Back to Bulletins
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={globalStyles.container}>
-      <Breadcrumb
-        items={[
-          { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
-          { path: "/admin/settings", label: "Settings", icon: "⚙️" },
-          { path: "/admin/settings/bulletins", label: "Bulletins", icon: "📰" },
-          {
-            path: `/admin/settings/bulletin/${id}/detail`,
-            label: "Detail",
-            icon: "📋",
-          },
-          { label: "Edit", icon: "✏️" },
-        ]}
-      />
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Breadcrumb */}
+        <nav className="flex mb-4" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+            <li className="inline-flex items-center">
+              <Link
+                to="/admin/dashboard"
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <ChartBarIcon className="w-4 h-4 mr-2" />
+                Dashboard
+              </Link>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to="/admin/settings"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                >
+                  <span className="inline-flex items-center">
+                    <Cog6ToothIcon className="w-4 h-4 mr-2" />
+                    Settings
+                  </span>
+                </Link>
+              </div>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to="/admin/settings/bulletins"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                >
+                  <span className="inline-flex items-center">
+                    <NewspaperIcon className="w-4 h-4 mr-2" />
+                    Bulletins
+                  </span>
+                </Link>
+              </div>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to={`/admin/settings/bulletin/${id}/detail`}
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                >
+                  <span className="inline-flex items-center">
+                    <ClipboardDocumentIcon className="w-4 h-4 mr-2" />
+                    Detail
+                  </span>
+                </Link>
+              </div>
+            </li>
+            <li aria-current="page">
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
+                  <PencilSquareIcon className="w-4 h-4 mr-2" />
+                  Edit
+                </span>
+              </div>
+            </li>
+          </ol>
+        </nav>
 
-      <Card
-        title="✏️ Edit Bulletin"
-        actions={
-          hasChanges && (
-            <div
-              style={{
-                fontSize: "12px",
-                color: theme.colors.warning,
-                fontWeight: "bold",
-              }}
-            >
-              ⚠️ Unsaved changes
+        {/* Page Title */}
+        <div className="mb-4 flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center">
+            <PencilSquareIcon className="w-7 h-7 mr-3" />
+            Edit Bulletin
+          </h1>
+          {hasChanges && (
+            <div className="flex items-center text-amber-600 text-sm font-medium">
+              <ExclamationTriangleIcon className="w-4 h-4 mr-1" />
+              Unsaved changes
             </div>
-          )
-        }
-      >
+          )}
+        </div>
+
         {/* Success/Error Messages */}
         {successMessage && (
-          <Alert type="success" onClose={() => setSuccessMessage("")}>
-            {successMessage}
-          </Alert>
-        )}
-        {error && (
-          <Alert type="error" onClose={() => setError(null)}>
-            {error}
-          </Alert>
-        )}
-
-        {/* Loading Overlay */}
-        {isSaving && <Loading message="Updating bulletin..." />}
-
-        {/* Form */}
-        <form onSubmit={handleSubmit}>
-          <div style={{ opacity: isSaving ? 0.6 : 1 }}>
-            {/* Bulletin Text */}
-            <TextArea
-              label="Bulletin Text"
-              name="text"
-              value={formData.text}
-              onChange={handleInputChange}
-              error={errors.text}
-              required
-              rows={6}
-              maxLength={1000}
-              placeholder="Enter the bulletin text..."
-              disabled={isSaving}
-            />
-
-            {/* Optional Fields */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-                gap: "20px",
-                marginBottom: "20px",
-              }}
+          <div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center">
+              <CheckCircleIcon className="w-5 h-5 mr-2" />
+              {successMessage}
+            </span>
+            <button
+              onClick={() => setSuccessMessage("")}
+              className="text-green-600 hover:text-green-800"
             >
-              <Select
-                label="Status"
-                name="status"
-                value={formData.status}
-                onChange={handleInputChange}
-                options={statusOptions}
-                error={errors.status}
-                required
-                disabled={isSaving}
-              />
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+        )}
 
-              <Select
-                label="How did you hear about us?"
-                name="howDidYouHearAboutUsID"
-                value={formData.howDidYouHearAboutUsID}
-                onChange={handleInputChange}
-                options={howHearOptions}
-                error={errors.howDidYouHearAboutUsID}
-                disabled={isSaving}
-              />
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span>{error}</span>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-600 hover:text-red-800"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
+        {/* Two Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column - Edit Widget */}
+          <div className="bg-white shadow-sm rounded-lg">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                <PencilSquareIcon className="w-5 h-5 mr-2" />
+                Update Bulletin
+              </h2>
             </div>
 
-            {/* Original vs Current Comparison */}
-            {hasChanges && originalBulletin && (
-              <Card title="📋 Change Summary" style={{ marginBottom: "20px" }}>
-                <div style={{ fontSize: "14px" }}>
-                  <div style={{ marginBottom: "15px" }}>
-                    <strong>Original Text:</strong>
-                    <div
-                      style={{
-                        padding: "10px",
-                        backgroundColor: "#ffe6e6",
-                        borderRadius: "4px",
-                        marginTop: "5px",
-                        fontStyle: "italic",
-                      }}
+            <div className="p-5">
+              <div className={isSaving ? "opacity-60" : ""}>
+                {/* Bulletin Text */}
+                <div className="mb-3">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Bulletin Message <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    name="text"
+                    value={formData.text}
+                    onChange={handleInputChange}
+                    rows={4}
+                    maxLength={1000}
+                    placeholder="Type your bulletin message here..."
+                    disabled={isSaving}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none ${
+                      errors.text ? "border-red-500" : "border-gray-300"
+                    }`}
+                  />
+                  {errors.text && (
+                    <p className="mt-1 text-sm text-red-600">{errors.text}</p>
+                  )}
+                  <div className="mt-2 flex items-center justify-between">
+                    <p className="text-sm text-gray-500">
+                      Keep it short and clear
+                    </p>
+                    <p
+                      className={`text-sm ${
+                        formData.text.length > 280
+                          ? "text-amber-600"
+                          : "text-gray-500"
+                      }`}
                     >
-                      {originalBulletin.text}
-                    </div>
-                  </div>
-                  <div>
-                    <strong>New Text:</strong>
-                    <div
-                      style={{
-                        padding: "10px",
-                        backgroundColor: "#e6ffe6",
-                        borderRadius: "4px",
-                        marginTop: "5px",
-                      }}
-                    >
-                      {formData.text}
-                    </div>
+                      {formData.text.length}/1000
+                    </p>
                   </div>
                 </div>
-              </Card>
-            )}
 
-            {/* Form Actions */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: "15px",
-                paddingTop: "20px",
-                borderTop: "1px solid #eee",
-              }}
-            >
-              <Link
-                to={`/admin/settings/bulletin/${id}/detail`}
-                style={{
-                  textDecoration: "none",
-                  color: theme.colors.secondary,
-                  fontSize: "14px",
-                }}
-              >
-                ← Back to Bulletin Detail
-              </Link>
-
-              <div style={{ display: "flex", gap: "10px" }}>
-                {hasChanges && (
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={handleReset}
-                    disabled={isSaving}
-                    size="sm"
-                  >
-                    🔄 Reset
-                  </Button>
+                {/* Change Summary */}
+                {hasChanges && originalBulletin && (
+                  <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                    <h3 className="text-xs font-medium text-gray-900 mb-2 flex items-center">
+                      <DocumentTextIcon className="w-3 h-3 mr-1" />
+                      Change Summary
+                    </h3>
+                    <div className="space-y-2">
+                      <div>
+                        <p className="text-xs font-medium text-gray-600 mb-1">
+                          Original:
+                        </p>
+                        <div className="p-2 bg-red-50 rounded border border-red-200 text-xs italic text-gray-700">
+                          {originalBulletin.text}
+                        </div>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-gray-600 mb-1">
+                          New:
+                        </p>
+                        <div className="p-2 bg-green-50 rounded border border-green-200 text-xs text-gray-900">
+                          {formData.text}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 )}
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={handleCancel}
-                  disabled={isSaving}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  variant="success"
-                  disabled={isSaving || !formData.text.trim() || !hasChanges}
-                >
-                  {isSaving ? "Updating..." : "✅ Update Bulletin"}
-                </Button>
+
+                {/* Info Note */}
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-xs text-blue-800 flex items-start">
+                    <InformationCircleIcon className="w-4 h-4 mr-1.5 flex-shrink-0 mt-0.5" />
+                    <span>
+                      Changes will be visible to all users immediately after
+                      updating.
+                    </span>
+                  </p>
+                </div>
+
+                {/* Form Actions */}
+                <div className="flex items-center justify-between">
+                  {hasChanges ? (
+                    <button
+                      onClick={handleReset}
+                      disabled={isSaving}
+                      className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <ArrowPathIcon className="w-4 h-4 mr-1" />
+                      Reset
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleCancel}
+                      disabled={isSaving}
+                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                  <button
+                    onClick={handleSubmit}
+                    disabled={isSaving || !formData.text.trim() || !hasChanges}
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <CheckCircleIcon className="w-4 h-4 mr-2" />
+                    {isSaving ? "Updating..." : "Update Bulletin"}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-        </form>
-      </Card>
 
-      {/* Metadata Information */}
-      {originalBulletin && (
-        <Card title="📊 Bulletin Metadata" style={{ marginTop: "30px" }}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-              gap: "15px",
-              fontSize: "14px",
-            }}
+          {/* Right Column - Tips & Metadata */}
+          <div className="space-y-6">
+            {/* Writing Tips */}
+            <div className="bg-white shadow-sm rounded-lg">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <LightBulbIcon className="w-5 h-5 mr-2 text-amber-500" />
+                  Writing Tips
+                </h2>
+              </div>
+              <div className="p-5">
+                <ul className="space-y-2.5 text-sm text-gray-600">
+                  <li className="flex items-start">
+                    <SparklesIcon className="w-4 h-4 mr-2 text-blue-500 flex-shrink-0 mt-0.5" />
+                    <span>Keep under 280 characters for best impact</span>
+                  </li>
+                  <li className="flex items-start">
+                    <DocumentTextIcon className="w-4 h-4 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span>Use clear, simple language</span>
+                  </li>
+                  <li className="flex items-start">
+                    <ClockIcon className="w-4 h-4 mr-2 text-purple-500 flex-shrink-0 mt-0.5" />
+                    <span>Include dates and deadlines</span>
+                  </li>
+                  <li className="flex items-start">
+                    <UsersIcon className="w-4 h-4 mr-2 text-orange-500 flex-shrink-0 mt-0.5" />
+                    <span>Make it relevant to all users</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircleIcon className="w-4 h-4 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span>Proofread before publishing</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Metadata Information */}
+            {originalBulletin && (
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                  <InformationCircleIcon className="w-4 h-4 mr-2" />
+                  Bulletin Information
+                </h3>
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Created:</span>
+                    <span className="text-gray-900">
+                      {originalBulletin.createdAt
+                        ? new Date(originalBulletin.createdAt).toLocaleString()
+                        : "N/A"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Created By:</span>
+                    <span className="text-gray-900">
+                      {originalBulletin.createdByUserName || "System"}
+                    </span>
+                  </div>
+                  {originalBulletin.modifiedAt && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Last Modified:</span>
+                      <span className="text-gray-900">
+                        {new Date(originalBulletin.modifiedAt).toLocaleString()}
+                      </span>
+                    </div>
+                  )}
+                  {originalBulletin.modifiedByUserName && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Modified By:</span>
+                      <span className="text-gray-900">
+                        {originalBulletin.modifiedByUserName}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Back Link */}
+        <div className="mt-6">
+          <Link
+            to={`/admin/settings/bulletin/${id}/detail`}
+            className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
           >
-            <div>
-              <strong>Created:</strong>
-              <br />
-              {originalBulletin.createdAt
-                ? new Date(originalBulletin.createdAt).toLocaleString()
-                : "N/A"}
-            </div>
-            <div>
-              <strong>Created By:</strong>
-              <br />
-              {originalBulletin.createdByUserName || "System"}
-            </div>
-            <div>
-              <strong>Last Modified:</strong>
-              <br />
-              {originalBulletin.modifiedAt
-                ? new Date(originalBulletin.modifiedAt).toLocaleString()
-                : "N/A"}
-            </div>
-            <div>
-              <strong>Modified By:</strong>
-              <br />
-              {originalBulletin.modifiedByUserName || "N/A"}
+            <ArrowLeftIcon className="w-4 h-4 mr-1" />
+            Back to Bulletin Detail
+          </Link>
+        </div>
+
+        {/* Loading Overlay */}
+        {isSaving && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 flex items-center space-x-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span className="text-gray-700">Updating bulletin...</span>
             </div>
           </div>
-        </Card>
-      )}
+        )}
+      </div>
     </div>
   );
 }

@@ -1,18 +1,24 @@
-// File Path: web/workery-frontend/src/pages/Admin/Setting/Bulletin/Delete/Page.jsx
-
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { useBulletinManager } from "../../../../../services/Services";
-import { theme, globalStyles } from "../../../../../constants/Theme";
 import {
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Breadcrumb,
-} from "../../../../../components/UI";
+  NewspaperIcon,
+  ChevronRightIcon,
+  XMarkIcon,
+  TrashIcon,
+  PencilSquareIcon,
+  ExclamationTriangleIcon,
+  Cog6ToothIcon,
+  ChartBarIcon,
+  ClipboardDocumentIcon,
+  InformationCircleIcon,
+  ArrowLeftIcon,
+  ArchiveBoxIcon,
+  CheckCircleIcon,
+  ClockIcon,
+} from "@heroicons/react/24/outline";
 
-function SettingBulletinDeletePage() {
+function SettingBulletinDetailPage() {
   const { id } = useParams();
   const bulletinManager = useBulletinManager();
   const navigate = useNavigate();
@@ -20,9 +26,9 @@ function SettingBulletinDeletePage() {
   // Component state
   const [bulletin, setBulletin] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState(null);
-  const [confirmText, setConfirmText] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
@@ -59,43 +65,61 @@ function SettingBulletinDeletePage() {
     loadBulletin();
   }, [id]);
 
-  // Handle delete confirmation
-  const handleDeleteConfirm = async () => {
+  // Clear success message after 3 seconds
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(""), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
+
+  // Event handlers
+  const handleDelete = async () => {
     if (!bulletin) return;
 
-    // Require confirmation text
-    if (confirmText.toLowerCase() !== "delete") {
-      setError('Please type "delete" to confirm');
-      return;
-    }
-
     try {
-      setIsDeleting(true);
-      setError(null);
-
+      setIsLoading(true);
       await bulletinManager.deleteBulletin(bulletin.id, onUnauthorized);
+      setSuccessMessage("Bulletin deleted successfully");
+      setShowDeleteModal(false);
 
-      // Show success message and redirect
-      alert("Bulletin deleted successfully!");
-      navigate("/admin/settings/bulletins");
+      // Redirect to list after deletion
+      setTimeout(() => {
+        navigate("/admin/settings/bulletins");
+      }, 1000);
     } catch (err) {
       console.error("Failed to delete bulletin:", err);
       setError(err.message || "Failed to delete bulletin");
+      setShowDeleteModal(false);
     } finally {
-      setIsDeleting(false);
+      setIsLoading(false);
     }
   };
 
-  // Handle cancel
-  const handleCancel = () => {
-    navigate(`/admin/settings/bulletin/${id}/detail`);
+  const handleArchive = async () => {
+    if (!bulletin) return;
+
+    try {
+      setIsLoading(true);
+      await bulletinManager.archiveBulletin(bulletin.id, onUnauthorized);
+      setSuccessMessage("Bulletin archived successfully");
+      loadBulletin(); // Reload to show updated status
+    } catch (err) {
+      console.error("Failed to archive bulletin:", err);
+      setError(err.message || "Failed to archive bulletin");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Loading state
-  if (isLoading) {
+  if (isLoading && !bulletin) {
     return (
-      <div style={globalStyles.container}>
-        <Loading message="Loading bulletin details..." />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading bulletin details...</p>
+        </div>
       </div>
     );
   }
@@ -103,332 +127,340 @@ function SettingBulletinDeletePage() {
   // Error state
   if (error && !bulletin) {
     return (
-      <div style={globalStyles.container}>
-        <Alert type="error">{error}</Alert>
-        <div style={{ marginTop: "20px" }}>
-          <Link to="/admin/settings/bulletins">← Back to Bulletins</Link>
+      <div className="min-h-screen bg-gray-50 p-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-4">
+            {error}
+          </div>
+          <Link
+            to="/admin/settings/bulletins"
+            className="inline-flex items-center text-blue-600 hover:text-blue-800"
+          >
+            <ArrowLeftIcon className="w-4 h-4 mr-2" />
+            Back to Bulletins
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={globalStyles.container}>
-      <Breadcrumb
-        items={[
-          { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
-          { path: "/admin/settings", label: "Settings", icon: "⚙️" },
-          { path: "/admin/settings/bulletins", label: "Bulletins", icon: "📰" },
-          {
-            path: `/admin/settings/bulletin/${id}/detail`,
-            label: "Detail",
-            icon: "📋",
-          },
-          { label: "Delete", icon: "🗑️" },
-        ]}
-      />
-
-      {bulletin && (
-        <>
-          {/* Warning Header */}
-          <Alert type="error">
-            <strong>⚠️ WARNING: This action cannot be undone!</strong>
-            <br />
-            You are about to permanently delete this bulletin from the system.
-          </Alert>
-
-          {/* Deletion Confirmation Card */}
-          <Card title="🗑️ Delete Bulletin">
-            {/* Error Messages */}
-            {error && (
-              <Alert type="error" onClose={() => setError(null)}>
-                {error}
-              </Alert>
-            )}
-
-            {/* Bulletin Details */}
-            <div style={{ marginBottom: "30px" }}>
-              <h3 style={{ color: theme.colors.danger, marginBottom: "15px" }}>
-                Bulletin to be deleted:
-              </h3>
-
-              <div
-                style={{
-                  padding: "20px",
-                  backgroundColor: "#fff5f5",
-                  borderRadius: "8px",
-                  border: `2px solid ${theme.colors.danger}`,
-                  marginBottom: "20px",
-                }}
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb */}
+        <nav className="flex mb-8" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+            <li className="inline-flex items-center">
+              <Link
+                to="/admin/dashboard"
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
               >
-                <div style={{ marginBottom: "15px" }}>
-                  <strong>Text:</strong>
-                  <p
-                    style={{
-                      marginTop: "8px",
-                      padding: "10px",
-                      backgroundColor: "#ffffff",
-                      borderRadius: "4px",
-                      border: "1px solid #e2e8f0",
-                    }}
+                <ChartBarIcon className="w-4 h-4 mr-2" />
+                Dashboard
+              </Link>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to="/admin/settings"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                >
+                  <span className="inline-flex items-center">
+                    <Cog6ToothIcon className="w-4 h-4 mr-2" />
+                    Settings
+                  </span>
+                </Link>
+              </div>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to="/admin/settings/bulletins"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                >
+                  <span className="inline-flex items-center">
+                    <NewspaperIcon className="w-4 h-4 mr-2" />
+                    Bulletins
+                  </span>
+                </Link>
+              </div>
+            </li>
+            <li aria-current="page">
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
+                  <ClipboardDocumentIcon className="w-4 h-4 mr-2" />
+                  Detail
+                </span>
+              </div>
+            </li>
+          </ol>
+        </nav>
+
+        {/* Success/Error Messages */}
+        {successMessage && (
+          <div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center">
+              <CheckCircleIcon className="w-5 h-5 mr-2" />
+              {successMessage}
+            </span>
+            <button
+              onClick={() => setSuccessMessage("")}
+              className="text-green-600 hover:text-green-800"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span>{error}</span>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-600 hover:text-red-800"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
+        {bulletin && (
+          <>
+            {/* Main Details Card */}
+            <div className="bg-white shadow-sm rounded-lg">
+              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h1 className="text-xl font-semibold text-gray-900 flex items-center">
+                  <NewspaperIcon className="w-6 h-6 mr-2" />
+                  Bulletin Details
+                </h1>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() =>
+                      navigate(`/admin/settings/bulletin/${bulletin.id}/update`)
+                    }
+                    disabled={isLoading}
+                    className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {bulletin.text}
-                  </p>
+                    <PencilSquareIcon className="w-4 h-4 mr-1" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={handleArchive}
+                    disabled={isLoading}
+                    className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <ArchiveBoxIcon className="w-4 h-4 mr-1" />
+                    Archive
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteModal(true)}
+                    disabled={isLoading}
+                    className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <TrashIcon className="w-4 h-4 mr-1" />
+                    Delete
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6">
+                {/* Bulletin Content */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-3">
+                    Bulletin Text
+                  </h3>
+                  <div className="p-4 bg-gray-50 rounded-lg border-l-4 border-blue-500">
+                    <p className="text-gray-800 whitespace-pre-wrap">
+                      {bulletin.text}
+                    </p>
+                  </div>
                 </div>
 
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                    gap: "10px",
-                    fontSize: "14px",
-                    color: "#666",
-                  }}
-                >
-                  <div>
-                    <strong>ID:</strong> {bulletin.id}
+                {/* Metadata Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Creation Information */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                      <ClockIcon className="w-4 h-4 mr-2" />
+                      Creation Information
+                    </h4>
+                    <div className="space-y-2 text-sm">
+                      <div>
+                        <span className="font-medium text-gray-500">
+                          Created At:
+                        </span>
+                        <p className="text-gray-900 mt-0.5">
+                          {bulletin.createdAt
+                            ? new Date(bulletin.createdAt).toLocaleString()
+                            : "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-500">
+                          Created By:
+                        </span>
+                        <p className="text-gray-900 mt-0.5">
+                          {bulletin.createdByUserName || "System"}
+                        </p>
+                      </div>
+                      {bulletin.createdFromIpAddress && (
+                        <div>
+                          <span className="font-medium text-gray-500">
+                            Created From IP:
+                          </span>
+                          <p className="text-gray-900 mt-0.5">
+                            {bulletin.createdFromIpAddress}
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <strong>Created:</strong>{" "}
-                    {bulletin.createdAt
-                      ? new Date(bulletin.createdAt).toLocaleDateString()
-                      : "N/A"}
+
+                  {/* Modification Information */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                      <PencilSquareIcon className="w-4 h-4 mr-2" />
+                      Modification Information
+                    </h4>
+                    <div className="space-y-2 text-sm">
+                      <div>
+                        <span className="font-medium text-gray-500">
+                          Modified At:
+                        </span>
+                        <p className="text-gray-900 mt-0.5">
+                          {bulletin.modifiedAt
+                            ? new Date(bulletin.modifiedAt).toLocaleString()
+                            : "N/A"}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-500">
+                          Modified By:
+                        </span>
+                        <p className="text-gray-900 mt-0.5">
+                          {bulletin.modifiedByUserName || "N/A"}
+                        </p>
+                      </div>
+                      {bulletin.modifiedFromIpAddress && (
+                        <div>
+                          <span className="font-medium text-gray-500">
+                            Modified From IP:
+                          </span>
+                          <p className="text-gray-900 mt-0.5">
+                            {bulletin.modifiedFromIpAddress}
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div>
-                    <strong>Status:</strong>{" "}
-                    <span
-                      style={{
-                        padding: "2px 6px",
-                        borderRadius: "3px",
-                        fontSize: "12px",
-                        backgroundColor:
-                          bulletin.status === 1
-                            ? theme.colors.successBg
-                            : theme.colors.warningBg,
-                        color:
-                          bulletin.status === 1
-                            ? theme.colors.success
-                            : "#856404",
-                      }}
-                    >
-                      {bulletin.status === 1 ? "Active" : "Archived"}
-                    </span>
+
+                  {/* System Information */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                      <InformationCircleIcon className="w-4 h-4 mr-2" />
+                      System Information
+                    </h4>
+                    <div className="space-y-2 text-sm">
+                      <div>
+                        <span className="font-medium text-gray-500">
+                          Bulletin ID:
+                        </span>
+                        <p className="text-gray-900 mt-0.5">{bulletin.id}</p>
+                      </div>
+                      <div>
+                        <span className="font-medium text-gray-500">
+                          Status:
+                        </span>
+                        <p className="mt-1">
+                          <span
+                            className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+                              bulletin.status === 1
+                                ? "bg-green-100 text-green-800"
+                                : "bg-amber-100 text-amber-800"
+                            }`}
+                          >
+                            {bulletin.status === 1 ? "Active" : "Archived"}
+                          </span>
+                        </p>
+                      </div>
+                      {bulletin.howDidYouHearAboutUsText && (
+                        <div>
+                          <span className="font-medium text-gray-500">
+                            Source:
+                          </span>
+                          <p className="text-gray-900 mt-0.5">
+                            {bulletin.howDidYouHearAboutUsText}
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Confirmation Section */}
-            <div
-              style={{
-                padding: "20px",
-                backgroundColor: "#fef2f2",
-                borderRadius: "8px",
-                border: "1px solid #fecaca",
-                marginBottom: "30px",
-              }}
-            >
-              <h4 style={{ color: theme.colors.danger, marginBottom: "15px" }}>
-                🔒 Confirmation Required
-              </h4>
-
-              <p style={{ marginBottom: "15px", fontSize: "14px" }}>
-                This action will permanently remove the bulletin from the
-                system. All associated data will be lost and cannot be
-                recovered.
-              </p>
-
-              <p
-                style={{
-                  marginBottom: "10px",
-                  fontSize: "14px",
-                  fontWeight: "bold",
-                }}
-              >
-                To confirm deletion, please type{" "}
-                <code
-                  style={{
-                    backgroundColor: "#e2e8f0",
-                    padding: "2px 4px",
-                    borderRadius: "3px",
-                  }}
-                >
-                  delete
-                </code>{" "}
-                in the box below:
-              </p>
-
-              <input
-                type="text"
-                value={confirmText}
-                onChange={(e) => setConfirmText(e.target.value)}
-                placeholder="Type 'delete' to confirm"
-                style={{
-                  ...globalStyles.input,
-                  borderColor:
-                    confirmText.toLowerCase() === "delete"
-                      ? theme.colors.success
-                      : theme.colors.danger,
-                  backgroundColor:
-                    confirmText.toLowerCase() === "delete"
-                      ? "#f0fff4"
-                      : "#fff5f5",
-                }}
-                disabled={isDeleting}
-                autoFocus
-              />
-            </div>
-
-            {/* Additional Warning */}
-            <div
-              style={{
-                padding: "15px",
-                backgroundColor: theme.colors.warningBg,
-                borderRadius: "8px",
-                marginBottom: "30px",
-                fontSize: "14px",
-                color: "#856404",
-              }}
-            >
-              <strong>⚠️ Consider These Alternatives:</strong>
-              <ul style={{ marginTop: "8px", marginLeft: "20px" }}>
-                <li>Archive the bulletin instead of deleting it</li>
-                <li>Edit the bulletin to update its content</li>
-                <li>Export or backup the bulletin content before deletion</li>
-              </ul>
-            </div>
-
-            {/* Action Buttons */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: "15px",
-                paddingTop: "20px",
-                borderTop: "1px solid #e2e8f0",
-              }}
-            >
+            {/* Navigation */}
+            <div className="mt-8">
               <Link
-                to={`/admin/settings/bulletin/${id}/detail`}
-                style={{
-                  textDecoration: "none",
-                  color: theme.colors.secondary,
-                  fontSize: "14px",
-                }}
+                to="/admin/settings/bulletins"
+                className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
               >
-                ← Back to Bulletin Detail
+                <ArrowLeftIcon className="w-4 h-4 mr-1" />
+                Back to Bulletins List
               </Link>
+            </div>
+          </>
+        )}
 
-              <div style={{ display: "flex", gap: "10px" }}>
-                <Button
-                  variant="secondary"
-                  onClick={handleCancel}
-                  disabled={isDeleting}
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-md w-full">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <TrashIcon className="w-5 h-5 mr-2 text-red-600" />
+                  Delete Bulletin
+                </h3>
+              </div>
+
+              <div className="px-6 py-4">
+                <p className="text-sm text-gray-600 mb-4">
+                  Are you sure you want to delete this bulletin? This action
+                  cannot be undone.
+                </p>
+                {bulletin && (
+                  <div className="p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
+                    <p className="text-sm font-medium text-gray-700 mb-1">
+                      Bulletin to be deleted:
+                    </p>
+                    <p className="text-sm text-gray-900">{bulletin.text}</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
                   Cancel
-                </Button>
-
-                <Button
-                  variant="warning"
-                  onClick={() =>
-                    navigate(`/admin/settings/bulletin/${id}/update`)
-                  }
-                  disabled={isDeleting}
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700"
                 >
-                  ✏️ Edit Instead
-                </Button>
-
-                <Button
-                  variant="danger"
-                  onClick={handleDeleteConfirm}
-                  disabled={
-                    isDeleting || confirmText.toLowerCase() !== "delete"
-                  }
-                >
-                  {isDeleting ? "Deleting..." : "🗑️ Delete Permanently"}
-                </Button>
+                  Delete Bulletin
+                </button>
               </div>
             </div>
-          </Card>
-
-          {/* System Information */}
-          <Card title="📊 System Information" style={{ marginTop: "30px" }}>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-                gap: "15px",
-                fontSize: "14px",
-              }}
-            >
-              <div>
-                <strong>Created At:</strong>
-                <br />
-                {bulletin.createdAt
-                  ? new Date(bulletin.createdAt).toLocaleString()
-                  : "N/A"}
-              </div>
-              <div>
-                <strong>Created By:</strong>
-                <br />
-                {bulletin.createdByUserName || "System"}
-              </div>
-              <div>
-                <strong>Last Modified:</strong>
-                <br />
-                {bulletin.modifiedAt
-                  ? new Date(bulletin.modifiedAt).toLocaleString()
-                  : "N/A"}
-              </div>
-              <div>
-                <strong>Modified By:</strong>
-                <br />
-                {bulletin.modifiedByUserName || "N/A"}
-              </div>
-              {bulletin.createdFromIpAddress && (
-                <div>
-                  <strong>Created From IP:</strong>
-                  <br />
-                  {bulletin.createdFromIpAddress}
-                </div>
-              )}
-              {bulletin.modifiedFromIpAddress && (
-                <div>
-                  <strong>Modified From IP:</strong>
-                  <br />
-                  {bulletin.modifiedFromIpAddress}
-                </div>
-              )}
-            </div>
-          </Card>
-        </>
-      )}
-
-      {/* Loading Overlay */}
-      {isDeleting && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0,0,0,0.5)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 9999,
-          }}
-        >
-          <div style={{ textAlign: "center", color: "white" }}>
-            <Loading message="Deleting bulletin..." />
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
 
-export default SettingBulletinDeletePage;
+export default SettingBulletinDetailPage;
