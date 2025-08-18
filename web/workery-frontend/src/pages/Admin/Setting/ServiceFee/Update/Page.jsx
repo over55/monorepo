@@ -22,9 +22,7 @@ import {
   DocumentCheckIcon,
   CurrencyDollarIcon,
   CalculatorIcon,
-  BanknotesIcon,
   PercentBadgeIcon,
-  TagIcon,
 } from "@heroicons/react/24/outline";
 
 function SettingServiceFeeUpdatePage() {
@@ -41,10 +39,6 @@ function SettingServiceFeeUpdatePage() {
     name: "",
     description: "",
     percentage: "",
-    amount: "",
-    status: 1,
-    type: 1,
-    rateType: "percentage", // Track which type is selected
   });
 
   // Component state
@@ -77,20 +71,10 @@ function SettingServiceFeeUpdatePage() {
       setServiceFee(response);
       setOriginalData(response);
 
-      // Determine rate type based on existing data
-      const rateType =
-        response.percentage && response.percentage > 0
-          ? "percentage"
-          : "amount";
-
       setFormData({
         name: response.name || "",
         description: response.description || "",
         percentage: response.percentage || "",
-        amount: response.amount || "",
-        status: response.status || 1,
-        type: response.type || 1,
-        rateType: rateType,
       });
     } catch (err) {
       console.error("Failed to fetch service fee detail:", err);
@@ -111,21 +95,10 @@ function SettingServiceFeeUpdatePage() {
       return;
     }
 
-    const originalRateType =
-      originalData.percentage && originalData.percentage > 0
-        ? "percentage"
-        : "amount";
-
     const changed =
       formData.name !== (originalData.name || "") ||
       formData.description !== (originalData.description || "") ||
-      formData.rateType !== originalRateType ||
-      (formData.rateType === "percentage" &&
-        formData.percentage !== (originalData.percentage || "")) ||
-      (formData.rateType === "amount" &&
-        formData.amount !== (originalData.amount || "")) ||
-      parseInt(formData.status) !== (originalData.status || 1) ||
-      parseInt(formData.type) !== (originalData.type || 1);
+      String(formData.percentage) !== String(originalData.percentage || "");
 
     setHasChanges(changed);
   }, [formData, originalData]);
@@ -145,30 +118,17 @@ function SettingServiceFeeUpdatePage() {
       newErrors.description = "Description must be less than 500 characters";
     }
 
-    // Rate validation based on selected type
-    if (formData.rateType === "percentage") {
-      if (!formData.percentage || formData.percentage === "") {
-        newErrors.general = "Please enter a percentage rate";
-      } else {
-        const percentageValue = parseFloat(formData.percentage);
-        if (
-          isNaN(percentageValue) ||
-          percentageValue <= 0 ||
-          percentageValue > 100
-        ) {
-          newErrors.percentage = "Percentage must be between 0 and 100";
-        }
-      }
-    } else if (formData.rateType === "amount") {
-      if (!formData.amount || formData.amount === "") {
-        newErrors.general = "Please enter a fixed amount";
-      } else {
-        const amountValue = parseFloat(formData.amount);
-        if (isNaN(amountValue) || amountValue <= 0) {
-          newErrors.amount = "Amount must be a positive number";
-        } else if (amountValue > 999999.99) {
-          newErrors.amount = "Amount must be less than $1,000,000";
-        }
+    // Percentage validation
+    if (String(formData.percentage).trim() === "") {
+      newErrors.percentage = "Percentage is required.";
+    } else {
+      const percentageValue = parseFloat(formData.percentage);
+      if (
+        isNaN(percentageValue) ||
+        percentageValue < 0 ||
+        percentageValue > 100
+      ) {
+        newErrors.percentage = "Percentage must be a number between 0 and 100.";
       }
     }
 
@@ -198,18 +158,8 @@ function SettingServiceFeeUpdatePage() {
       const submitData = {
         name: formData.name.trim(),
         description: formData.description.trim() || null,
-        status: parseInt(formData.status),
-        type: parseInt(formData.type),
+        percentage: parseFloat(formData.percentage),
       };
-
-      // Add rate based on selected type
-      if (formData.rateType === "percentage") {
-        submitData.percentage = parseFloat(formData.percentage);
-        submitData.amount = null;
-      } else if (formData.rateType === "amount") {
-        submitData.amount = parseFloat(formData.amount);
-        submitData.percentage = null;
-      }
 
       const response = await serviceFeeManager.updateServiceFee(
         id,
@@ -243,27 +193,15 @@ function SettingServiceFeeUpdatePage() {
   };
 
   const handleInputChange = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
 
     // Clear related errors when user starts typing
     if (errors[field]) {
       setErrors((prev) => {
         const newErrors = { ...prev };
         delete newErrors[field];
-        delete newErrors.general;
         return newErrors;
       });
-    }
-
-    // Clear general error when changing rate fields
-    if (
-      (field === "percentage" || field === "amount" || field === "rateType") &&
-      generalError
-    ) {
-      setGeneralError(null);
     }
   };
 
@@ -282,35 +220,15 @@ function SettingServiceFeeUpdatePage() {
 
   const handleReset = () => {
     if (originalData) {
-      const rateType =
-        originalData.percentage && originalData.percentage > 0
-          ? "percentage"
-          : "amount";
-
       setFormData({
         name: originalData.name || "",
         description: originalData.description || "",
         percentage: originalData.percentage || "",
-        amount: originalData.amount || "",
-        status: originalData.status || 1,
-        type: originalData.type || 1,
-        rateType: rateType,
       });
       setErrors({});
       setGeneralError(null);
     }
   };
-
-  const statusOptions = [
-    { value: "1", label: "Active" },
-    { value: "2", label: "Inactive" },
-  ];
-
-  const typeOptions = [
-    { value: "1", label: "Standard Service Fee" },
-    { value: "2", label: "Premium Service Fee" },
-    { value: "3", label: "Special Service Fee" },
-  ];
 
   // Clear success message after 3 seconds
   useEffect(() => {
@@ -566,63 +484,6 @@ function SettingServiceFeeUpdatePage() {
                       </span>
                     </div>
                   </div>
-
-                  {/* Status and Type Fields */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label
-                        htmlFor="status"
-                        className="block text-sm font-medium text-gray-700 mb-2"
-                      >
-                        Status <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        id="status"
-                        name="status"
-                        value={formData.status.toString()}
-                        onChange={(e) =>
-                          handleInputChange("status", e.target.value)
-                        }
-                        disabled={isSubmitting}
-                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 border-gray-300 ${
-                          isSubmitting ? "bg-gray-50 cursor-not-allowed" : ""
-                        }`}
-                      >
-                        {statusOptions.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label
-                        htmlFor="type"
-                        className="block text-sm font-medium text-gray-700 mb-2"
-                      >
-                        Type <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        id="type"
-                        name="type"
-                        value={formData.type.toString()}
-                        onChange={(e) =>
-                          handleInputChange("type", e.target.value)
-                        }
-                        disabled={isSubmitting}
-                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 border-gray-300 ${
-                          isSubmitting ? "bg-gray-50 cursor-not-allowed" : ""
-                        }`}
-                      >
-                        {typeOptions.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -642,150 +503,61 @@ function SettingServiceFeeUpdatePage() {
                   <p className="text-sm text-blue-800 flex items-start">
                     <InformationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
                     <span>
-                      <strong>Rate Update:</strong> You can change between
-                      percentage and fixed amount rates. Select the fee type and
-                      enter the new rate value.
+                      <strong>Rate Configuration:</strong> Set the service fee
+                      as a percentage of the transaction amount.
                     </span>
                   </p>
                 </div>
 
-                {/* Rate validation error */}
-                {errors.general && (
-                  <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-start">
-                    <ExclamationTriangleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
-                    <span className="text-sm">{errors.general}</span>
-                  </div>
-                )}
-
                 <div className="space-y-6">
-                  {/* Rate Type Selector */}
+                  {/* Percentage Input Field */}
                   <div>
                     <label
-                      htmlFor="rateType"
+                      htmlFor="percentage"
                       className="block text-sm font-medium text-gray-700 mb-2"
                     >
-                      Service Fee Type <span className="text-red-500">*</span>
+                      <span className="flex items-center">
+                        <PercentBadgeIcon className="w-4 h-4 mr-2" />
+                        Percentage Rate (%)
+                      </span>
                     </label>
-                    <select
-                      id="rateType"
-                      name="rateType"
-                      value={formData.rateType}
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      pattern="[0-9]*\.?[0-9]*"
+                      id="percentage"
+                      name="percentage"
+                      value={formData.percentage}
                       onChange={(e) => {
-                        handleInputChange("rateType", e.target.value);
-                        // Clear the values when switching types
-                        if (e.target.value === "percentage") {
-                          handleInputChange("amount", "");
-                        } else {
-                          handleInputChange("percentage", "");
+                        const value = e.target.value;
+                        if (value === "" || /^\d*\.?\d*$/.test(value)) {
+                          handleInputChange("percentage", value);
                         }
                       }}
+                      placeholder="Enter percentage (e.g., 2.5)"
                       disabled={isSubmitting}
-                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 border-gray-300 ${
-                        isSubmitting ? "bg-gray-50 cursor-not-allowed" : ""
-                      }`}
-                    >
-                      <option value="percentage">Percentage %</option>
-                      <option value="amount">Fixed Amount $</option>
-                    </select>
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        errors.percentage ? "border-red-500" : "border-gray-300"
+                      } ${isSubmitting ? "bg-gray-50 cursor-not-allowed" : ""}`}
+                    />
+                    {errors.percentage && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors.percentage}
+                      </p>
+                    )}
+                    <p className="mt-1 text-xs text-gray-500">
+                      Enter a value between 0 and 100. Example: 2.5 for 2.5%
+                    </p>
                   </div>
 
-                  {/* Dynamic Input Field based on Rate Type */}
-                  {formData.rateType === "percentage" ? (
-                    <div>
-                      <label
-                        htmlFor="percentage"
-                        className="block text-sm font-medium text-gray-700 mb-2"
-                      >
-                        <span className="flex items-center">
-                          <PercentBadgeIcon className="w-4 h-4 mr-2" />
-                          Percentage Rate (%)
-                          <span className="text-red-500 ml-1">*</span>
-                        </span>
-                      </label>
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        pattern="[0-9]*\.?[0-9]*"
-                        id="percentage"
-                        name="percentage"
-                        value={formData.percentage}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          if (value === "" || /^\d*\.?\d*$/.test(value)) {
-                            handleInputChange("percentage", value);
-                          }
-                        }}
-                        placeholder="Enter percentage (e.g., 2.5)"
-                        disabled={isSubmitting}
-                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                          errors.percentage
-                            ? "border-red-500"
-                            : "border-gray-300"
-                        } ${isSubmitting ? "bg-gray-50 cursor-not-allowed" : ""}`}
-                      />
-                      {errors.percentage && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {errors.percentage}
-                        </p>
-                      )}
-                      <p className="mt-1 text-xs text-gray-500">
-                        Enter a value between 0 and 100. Example: 2.5 for 2.5%
-                      </p>
-                    </div>
-                  ) : (
-                    <div>
-                      <label
-                        htmlFor="amount"
-                        className="block text-sm font-medium text-gray-700 mb-2"
-                      >
-                        <span className="flex items-center">
-                          <BanknotesIcon className="w-4 h-4 mr-2" />
-                          Fixed Amount ($)
-                          <span className="text-red-500 ml-1">*</span>
-                        </span>
-                      </label>
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        pattern="[0-9]*\.?[0-9]*"
-                        id="amount"
-                        name="amount"
-                        value={formData.amount}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          if (value === "" || /^\d*\.?\d*$/.test(value)) {
-                            handleInputChange("amount", value);
-                          }
-                        }}
-                        placeholder="Enter amount (e.g., 25.00)"
-                        disabled={isSubmitting}
-                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                          errors.amount ? "border-red-500" : "border-gray-300"
-                        } ${isSubmitting ? "bg-gray-50 cursor-not-allowed" : ""}`}
-                      />
-                      {errors.amount && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {errors.amount}
-                        </p>
-                      )}
-                      <p className="mt-1 text-xs text-gray-500">
-                        Enter the fixed dollar amount to charge per transaction
-                      </p>
-                    </div>
-                  )}
-
                   {/* Rate Preview */}
-                  {((formData.rateType === "percentage" &&
-                    formData.percentage) ||
-                    (formData.rateType === "amount" && formData.amount)) && (
-                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                      <h3 className="text-sm font-semibold text-green-900 mb-2 flex items-center">
-                        <CalculatorIcon className="w-4 h-4 mr-2" />
-                        Updated Rate Preview
-                      </h3>
-                      {formData.rateType === "percentage" &&
-                      formData.percentage &&
-                      parseFloat(formData.percentage) > 0 ? (
+                  {formData.percentage !== "" &&
+                    !isNaN(parseFloat(formData.percentage)) && (
+                      <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <h3 className="text-sm font-semibold text-green-900 mb-2 flex items-center">
+                          <CalculatorIcon className="w-4 h-4 mr-2" />
+                          Updated Rate Preview
+                        </h3>
                         <div>
                           <p className="text-sm text-green-700">
                             This service fee will charge{" "}
@@ -800,19 +572,8 @@ function SettingServiceFeeUpdatePage() {
                             ).toFixed(2)}
                           </p>
                         </div>
-                      ) : formData.rateType === "amount" &&
-                        formData.amount &&
-                        parseFloat(formData.amount) > 0 ? (
-                        <p className="text-sm text-green-700">
-                          This service fee will charge a fixed amount of{" "}
-                          <strong>
-                            ${parseFloat(formData.amount).toFixed(2)}
-                          </strong>{" "}
-                          per transaction.
-                        </p>
-                      ) : null}
-                    </div>
-                  )}
+                      </div>
+                    )}
 
                   {/* Change Summary */}
                   {hasChanges && originalData && (
@@ -878,19 +639,11 @@ function SettingServiceFeeUpdatePage() {
                             </div>
                           </div>
                         )}
-                        {((originalData.percentage &&
-                          formData.rateType === "amount") ||
-                          (originalData.amount &&
-                            formData.rateType === "percentage") ||
-                          (formData.rateType === "percentage" &&
-                            formData.percentage !==
-                              (originalData.percentage || "")) ||
-                          (formData.rateType === "amount" &&
-                            formData.amount !==
-                              (originalData.amount || ""))) && (
+                        {String(formData.percentage) !==
+                          String(originalData.percentage || "") && (
                           <div>
                             <p className="font-medium text-gray-700 mb-1">
-                              Rate:
+                              Percentage:
                             </p>
                             <div className="grid grid-cols-2 gap-2">
                               <div className="p-2 bg-red-50 rounded border border-red-200">
@@ -898,13 +651,9 @@ function SettingServiceFeeUpdatePage() {
                                   Original:
                                 </span>
                                 <p className="text-gray-900">
-                                  {originalData.percentage &&
-                                  originalData.percentage > 0
+                                  {originalData.percentage != null
                                     ? `${originalData.percentage}%`
-                                    : originalData.amount &&
-                                        originalData.amount > 0
-                                      ? `$${parseFloat(originalData.amount).toFixed(2)}`
-                                      : "Not set"}
+                                    : "Not set"}
                                 </p>
                               </div>
                               <div className="p-2 bg-green-50 rounded border border-green-200">
@@ -912,42 +661,9 @@ function SettingServiceFeeUpdatePage() {
                                   New:
                                 </span>
                                 <p className="text-gray-900">
-                                  {formData.rateType === "percentage" &&
-                                  formData.percentage
+                                  {formData.percentage !== ""
                                     ? `${formData.percentage}%`
-                                    : formData.rateType === "amount" &&
-                                        formData.amount
-                                      ? `$${parseFloat(formData.amount).toFixed(2)}`
-                                      : "Not set"}
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                        {parseInt(formData.status) !== originalData.status && (
-                          <div>
-                            <p className="font-medium text-gray-700 mb-1">
-                              Status:
-                            </p>
-                            <div className="grid grid-cols-2 gap-2">
-                              <div className="p-2 bg-red-50 rounded border border-red-200">
-                                <span className="text-xs text-gray-600">
-                                  Original:
-                                </span>
-                                <p className="text-gray-900">
-                                  {originalData.status === 1
-                                    ? "Active"
-                                    : "Inactive"}
-                                </p>
-                              </div>
-                              <div className="p-2 bg-green-50 rounded border border-green-200">
-                                <span className="text-xs text-gray-600">
-                                  New:
-                                </span>
-                                <p className="text-gray-900">
-                                  {parseInt(formData.status) === 1
-                                    ? "Active"
-                                    : "Inactive"}
+                                    : "Not set"}
                                 </p>
                               </div>
                             </div>
@@ -1096,40 +812,6 @@ function SettingServiceFeeUpdatePage() {
               </div>
             )}
 
-            {/* Rate Types Guide */}
-            <div className="bg-white shadow-sm rounded-lg">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <TagIcon className="w-5 h-5 mr-2 text-purple-600" />
-                  Rate Types Explained
-                </h3>
-              </div>
-              <div className="p-6">
-                <div className="space-y-4 text-sm">
-                  <div className="p-3 bg-blue-50 rounded-lg">
-                    <p className="font-medium text-gray-900 flex items-center mb-1">
-                      <PercentBadgeIcon className="w-4 h-4 mr-2 text-blue-600" />
-                      Percentage Rate
-                    </p>
-                    <p className="text-gray-600">
-                      Scales with transaction size. Best for processing fees or
-                      commissions.
-                    </p>
-                  </div>
-                  <div className="p-3 bg-green-50 rounded-lg">
-                    <p className="font-medium text-gray-900 flex items-center mb-1">
-                      <CurrencyDollarIcon className="w-4 h-4 mr-2 text-green-600" />
-                      Fixed Amount
-                    </p>
-                    <p className="text-gray-600">
-                      Same fee regardless of transaction size. Best for
-                      administrative charges.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* Guidelines */}
             <div className="bg-white shadow-sm rounded-lg">
               <div className="px-6 py-4 border-b border-gray-200">
@@ -1222,25 +904,9 @@ function SettingServiceFeeUpdatePage() {
                         {formData.description !== originalData?.description && (
                           <li>Description changed</li>
                         )}
-                        {((originalData?.percentage &&
-                          formData.rateType === "amount") ||
-                          (originalData?.amount &&
-                            formData.rateType === "percentage")) && (
-                          <li>Rate type changed</li>
-                        )}
-                        {formData.rateType === "percentage" &&
-                          formData.percentage !== originalData?.percentage && (
-                            <li>Percentage rate changed</li>
-                          )}
-                        {formData.rateType === "amount" &&
-                          formData.amount !== originalData?.amount && (
-                            <li>Fixed amount changed</li>
-                          )}
-                        {parseInt(formData.status) !== originalData?.status && (
-                          <li>Status changed</li>
-                        )}
-                        {parseInt(formData.type) !== originalData?.type && (
-                          <li>Type changed</li>
+                        {String(formData.percentage) !==
+                          String(originalData?.percentage || "") && (
+                          <li>Percentage changed</li>
                         )}
                       </ul>
                     </div>
