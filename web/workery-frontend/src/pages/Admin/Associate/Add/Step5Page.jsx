@@ -152,6 +152,12 @@ function AdminAssociateAddStep5Page() {
       newErrors.policeCheck = "Police check date is required";
       hasErrors = true;
     }
+    // ADD THIS: Commercial insurance expiry date is actually required
+    if (!commercialInsuranceExpiryDate.trim()) {
+      newErrors.commercialInsuranceExpiryDate =
+        "Commercial insurance expiry date is required";
+      hasErrors = true;
+    }
     if (!serviceFeeId) {
       newErrors.serviceFeeId = "Service fee is required";
       hasErrors = true;
@@ -181,22 +187,22 @@ function AdminAssociateAddStep5Page() {
     if (password && password !== passwordRepeated) {
       newErrors.password = "Passwords do not match";
       newErrors.passwordRepeated = "Passwords do not match";
-      hasErrors = true;
     }
 
     if (hasErrors) {
       setErrors(newErrors);
-      // Scroll to top to show errors
       window.scrollTo(0, 0);
       return;
     }
 
-    // Save to session storage
+    // Save to session storage with proper data types
     const associateState = {
       ...getExistingState(),
       skillSets,
       insuranceRequirements,
-      hourlySalaryDesired,
+      hourlySalaryDesired: hourlySalaryDesired
+        ? parseInt(hourlySalaryDesired)
+        : 0,
       limitSpecial,
       duesDate,
       commercialInsuranceExpiryDate,
@@ -407,7 +413,7 @@ function AdminAssociateAddStep5Page() {
                 />
 
                 <Input
-                  label="Commercial Insurance Expiry Date (Optional)"
+                  label="Commercial Insurance Expiry Date"
                   name="commercialInsuranceExpiryDate"
                   type="date"
                   value={commercialInsuranceExpiryDate}
@@ -415,6 +421,7 @@ function AdminAssociateAddStep5Page() {
                     setCommercialInsuranceExpiryDate(e.target.value)
                   }
                   error={errors.commercialInsuranceExpiryDate}
+                  required // Add required prop
                 />
 
                 <Input
