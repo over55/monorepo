@@ -1,6 +1,6 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Associate/List/Page.jsx
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router";
 import {
   useAssociateManager,
@@ -89,6 +89,9 @@ function AdminAssociateListPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [associateToDelete, setAssociateToDelete] = useState(null);
 
+  // Track if component has mounted
+  const isMounted = useRef(false);
+
   // Handle unauthorized access
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
@@ -102,6 +105,8 @@ function AdminAssociateListPage() {
         cursor,
         "pageSize:",
         pageSize,
+        "sortBy:",
+        sortBy,
       );
 
       setLoading(true);
@@ -116,15 +121,15 @@ function AdminAssociateListPage() {
           filtersMap.set("cursor", cursor);
         }
 
-        // FIXED: Use the correct parameter name for page size
+        // Use the correct parameter name for page size
         filtersMap.set("page_size", pageSize.toString());
 
-        // FIXED: Use correct sort_order format (ASC/DESC instead of 1/-1)
+        // Parse and set sort parameters correctly
         if (sortBy) {
           const [sortField, sortOrder] = sortBy.split(",");
           filtersMap.set("sort_field", sortField);
-          // Backend expects ASC or DESC strings
-          filtersMap.set("sort_order", sortOrder); // Already "ASC" or "DESC" from ASSOCIATE_SORT_OPTIONS
+          // Backend expects ASC or DESC strings (will be converted to 1/-1 on backend)
+          filtersMap.set("sort_order", sortOrder);
         }
 
         // Add search
@@ -227,38 +232,38 @@ function AdminAssociateListPage() {
     fetchAssociates("");
   };
 
-  // FIXED: Handle filter changes properly with useEffect
+  // Initial data load
   useEffect(() => {
-    console.log("🔄 Filters changed - resetting pagination and fetching");
+    console.log("🚀 Initial mount - loading first page");
+    fetchAssociates("");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty dependency array for initial load only
+
+  // Handle filter/sort/pagination changes AFTER initial mount
+  useEffect(() => {
+    if (!isMounted.current) {
+      // Skip the first run (component mount)
+      isMounted.current = true;
+      return;
+    }
+
+    console.log("🔄 Filters/Sort/PageSize changed - resetting and fetching");
     // Reset pagination when filters change
     setCursorHistory([]);
     setCurrentCursor("");
     setNextCursor("");
     setHasNextPage(false);
     fetchAssociates("");
-  }, [statusFilter, typeFilter, joinDateGte, isJobSeeker, hasTaxId]);
-
-  // FIXED: Handle sort change with useEffect
-  useEffect(() => {
-    console.log("🔄 Sort changed - resetting pagination and fetching");
-    // Reset pagination when sort changes
-    setCursorHistory([]);
-    setCurrentCursor("");
-    setNextCursor("");
-    setHasNextPage(false);
-    fetchAssociates("");
-  }, [sortBy]);
-
-  // FIXED: Handle page size change with useEffect
-  useEffect(() => {
-    console.log("📏 Page size changed to:", pageSize, "- fetching data");
-    // Reset pagination when page size changes
-    setCursorHistory([]);
-    setCurrentCursor("");
-    setNextCursor("");
-    setHasNextPage(false);
-    fetchAssociates("");
-  }, [pageSize]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    statusFilter,
+    typeFilter,
+    joinDateGte,
+    isJobSeeker,
+    hasTaxId,
+    sortBy,
+    pageSize,
+  ]);
 
   // Pagination handlers
   const handleNextPage = () => {
@@ -314,6 +319,7 @@ function AdminAssociateListPage() {
 
   // Handle sort change
   const handleSortChange = (e) => {
+    console.log("🔀 Sort changing to:", e.target.value);
     setSortBy(e.target.value);
   };
 
@@ -354,12 +360,6 @@ function AdminAssociateListPage() {
     setHasTaxId(false);
     setShowFilters(false);
   };
-
-  // Initial data load - only on mount (empty dependency array)
-  useEffect(() => {
-    console.log("🚀 Initial mount - loading first page");
-    fetchAssociates("");
-  }, []); // Empty dependency array for initial load only
 
   // Format associate type for display
   const getAssociateTypeDisplay = (type) => {
