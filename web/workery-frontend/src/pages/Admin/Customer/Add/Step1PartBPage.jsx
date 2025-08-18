@@ -52,22 +52,52 @@ function AdminCustomerAddStep1PartBPage() {
     try {
       // Build filters map for the search
       const filtersMap = new Map();
-      filtersMap.set("pageSize", pageSize);
-      filtersMap.set("sortField", "lastName");
-      filtersMap.set("sortOrder", "ASC");
+      filtersMap.set("page_size", pageSize);
 
-      if (firstName) filtersMap.set("firstName", firstName);
-      if (lastName) filtersMap.set("lastName", lastName);
-      if (email) filtersMap.set("email", email);
-      if (phone) filtersMap.set("phone", phone);
-      if (status) filtersMap.set("status", status);
-      if (typeOf) filtersMap.set("type", typeOf);
-      if (currentCursor) filtersMap.set("cursor", currentCursor);
+      // Only set sort if we have search criteria
+      // Use lexical_name for sorting to maintain alphabetical order
+      filtersMap.set("sort_field", "lexical_name");
+      filtersMap.set("sort_order", "ASC");
+
+      // Add search filters - using snake_case as the backend expects
+      if (firstName) {
+        filtersMap.set("first_name", firstName);
+      }
+      if (lastName) {
+        filtersMap.set("last_name", lastName);
+      }
+      if (email) {
+        filtersMap.set("email", email);
+      }
+      if (phone) {
+        filtersMap.set("phone", phone);
+      }
+
+      // Add status and type filters
+      if (status) {
+        filtersMap.set("status", status);
+      }
+      if (typeOf && typeOf !== "0") {
+        filtersMap.set("type", typeOf);
+      }
+
+      // Add cursor for pagination
+      if (currentCursor) {
+        filtersMap.set("cursor", currentCursor);
+      }
+
+      console.log(
+        "Fetching customers with filters:",
+        Array.from(filtersMap.entries()),
+      );
 
       const customersData = await customerManager.getCustomersWithFiltersMap(
         filtersMap,
         onUnauthorized,
+        true, // Force refresh to bypass cache
       );
+
+      console.log("Customers data received:", customersData);
 
       setCustomers(customersData);
       setNextCursor(customersData.hasNextPage ? customersData.nextCursor : "");
@@ -152,11 +182,21 @@ function AdminCustomerAddStep1PartBPage() {
   };
 
   const customerCardStyle = {
-    border: `1px solid ${theme.colors.lightGrey}`,
+    border: `1px solid ${theme.colors.lightGrey || "#e0e0e0"}`,
     borderRadius: "8px",
-    backgroundColor: theme.colors.infoBg,
+    backgroundColor: theme.colors.infoBg || "#f8f9fa",
     margin: "10px 0",
     overflow: "hidden",
+  };
+
+  // Build search description
+  const getSearchDescription = () => {
+    const parts = [];
+    if (firstName) parts.push(`First Name: "${firstName}"`);
+    if (lastName) parts.push(`Last Name: "${lastName}"`);
+    if (email) parts.push(`Email: "${email}"`);
+    if (phone) parts.push(`Phone: "${phone}"`);
+    return parts.length > 0 ? parts.join(", ") : "All Customers";
   };
 
   return (
@@ -229,11 +269,24 @@ function AdminCustomerAddStep1PartBPage() {
       </Card>
 
       <Card title="📊 Search results:">
+        {/* Display search criteria */}
+        <div
+          style={{
+            padding: "10px",
+            backgroundColor: "#e7f3ff",
+            borderRadius: "4px",
+            marginBottom: "20px",
+            fontSize: "14px",
+          }}
+        >
+          <strong>🔍 Searching for:</strong> {getSearchDescription()}
+        </div>
+
         {isFetching && <Loading message="Searching..." />}
 
         <div style={{ opacity: isFetching ? 0.6 : 1 }}>
           {error && (
-            <Alert type="error" onClose={() => setError(null)}>
+            <Alert type="error" dismissible onDismiss={() => setError(null)}>
               {error}
             </Alert>
           )}
@@ -242,7 +295,7 @@ function AdminCustomerAddStep1PartBPage() {
           <div
             style={{
               padding: "15px",
-              backgroundColor: theme.colors.light,
+              backgroundColor: theme.colors.light || "#f8f9fa",
               borderRadius: "8px",
               marginBottom: "20px",
             }}
@@ -252,11 +305,11 @@ function AdminCustomerAddStep1PartBPage() {
                 fontSize: "16px",
                 fontWeight: "600",
                 marginBottom: "15px",
-                borderBottom: `1px solid ${theme.colors.lightGrey}`,
+                borderBottom: `1px solid ${theme.colors.lightGrey || "#e0e0e0"}`,
                 paddingBottom: "10px",
               }}
             >
-              🔽 Filtering & Sorting
+              🔽 Additional Filters
             </p>
             <div
               style={{
@@ -266,7 +319,13 @@ function AdminCustomerAddStep1PartBPage() {
               }}
             >
               <div>
-                <label style={{ fontWeight: "600", marginBottom: "5px" }}>
+                <label
+                  style={{
+                    fontWeight: "600",
+                    marginBottom: "5px",
+                    display: "block",
+                  }}
+                >
                   Status
                 </label>
                 <select
@@ -276,13 +335,19 @@ function AdminCustomerAddStep1PartBPage() {
                     handleFilterChange(setStatus, e.target.value)
                   }
                 >
-                  <option value="">Pick status</option>
+                  <option value="">All Statuses</option>
                   <option value="1">Active</option>
                   <option value="2">Archived</option>
                 </select>
               </div>
               <div>
-                <label style={{ fontWeight: "600", marginBottom: "5px" }}>
+                <label
+                  style={{
+                    fontWeight: "600",
+                    marginBottom: "5px",
+                    display: "block",
+                  }}
+                >
                   Type
                 </label>
                 <select
@@ -292,7 +357,7 @@ function AdminCustomerAddStep1PartBPage() {
                     handleFilterChange(setTypeOf, e.target.value)
                   }
                 >
-                  <option value="0">Pick client type</option>
+                  <option value="0">All Types</option>
                   <option value={RESIDENTIAL_CUSTOMER_TYPE_OF_ID}>
                     Residential
                   </option>
@@ -306,6 +371,12 @@ function AdminCustomerAddStep1PartBPage() {
 
           {customers && customers.results && customers.results.length > 0 ? (
             <>
+              <p style={{ marginBottom: "15px", color: "#6c757d" }}>
+                Found{" "}
+                <strong>{customers.count || customers.results.length}</strong>{" "}
+                customer(s) matching your criteria
+              </p>
+
               <div
                 style={{
                   display: "grid",
@@ -319,7 +390,7 @@ function AdminCustomerAddStep1PartBPage() {
                     <header
                       style={{
                         padding: "12px 15px",
-                        borderBottom: `1px solid ${theme.colors.lightGrey}`,
+                        borderBottom: `1px solid ${theme.colors.lightGrey || "#e0e0e0"}`,
                         fontWeight: "bold",
                         backgroundColor: "rgba(0,0,0,0.03)",
                       }}
@@ -329,33 +400,45 @@ function AdminCustomerAddStep1PartBPage() {
                         style={{ textDecoration: "none", color: "inherit" }}
                       >
                         {customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID
-                          ? `🏢 ${customer.organizationName}`
+                          ? `🏢 ${customer.organizationName || `${customer.firstName} ${customer.lastName}`}`
                           : `🏠 ${customer.firstName} ${customer.lastName}`}
                       </Link>
                     </header>
                     <div style={{ padding: "15px", fontSize: "14px" }}>
-                      {customer.addressLine1}
-                      <br />
-                      {customer.city}, {customer.region}
-                      <br />
+                      {customer.addressLine1 && (
+                        <>
+                          {customer.addressLine1}
+                          <br />
+                        </>
+                      )}
+                      {(customer.city || customer.region) && (
+                        <>
+                          {customer.city && customer.region
+                            ? `${customer.city}, ${customer.region}`
+                            : customer.city || customer.region}
+                          <br />
+                        </>
+                      )}
                       {customer.phone ? (
-                        <a href={`tel:${customer.phone}`}>{customer.phone}</a>
-                      ) : (
-                        "—"
-                      )}
-                      <br />
+                        <>
+                          📞{" "}
+                          <a href={`tel:${customer.phone}`}>{customer.phone}</a>
+                          <br />
+                        </>
+                      ) : null}
                       {customer.email ? (
-                        <a href={`mailto:${customer.email}`}>
-                          {customer.email}
-                        </a>
-                      ) : (
-                        "—"
-                      )}
+                        <>
+                          ✉️{" "}
+                          <a href={`mailto:${customer.email}`}>
+                            {customer.email}
+                          </a>
+                        </>
+                      ) : null}
                     </div>
                     <footer
                       style={{
                         padding: "12px 15px",
-                        borderTop: `1px solid ${theme.colors.lightGrey}`,
+                        borderTop: `1px solid ${theme.colors.lightGrey || "#e0e0e0"}`,
                         textAlign: "right",
                       }}
                     >
@@ -421,13 +504,19 @@ function AdminCustomerAddStep1PartBPage() {
                 <p style={{ fontSize: "24px", fontWeight: "600" }}>
                   📊 No Customers Found
                 </p>
-                <p style={{ fontSize: "16px", color: "#6c757d" }}>
-                  Your search did not return any results.
+                <p
+                  style={{
+                    fontSize: "16px",
+                    color: "#6c757d",
+                    marginBottom: "20px",
+                  }}
+                >
+                  No customers match your search criteria:
                   <br />
-                  <Link to="/admin/customers/add/step-1-search">
-                    Click here to search again
-                  </Link>
-                  .
+                  <strong>{getSearchDescription()}</strong>
+                </p>
+                <p style={{ fontSize: "14px", color: "#6c757d" }}>
+                  You can try a different search or add a new customer.
                 </p>
               </div>
             )
