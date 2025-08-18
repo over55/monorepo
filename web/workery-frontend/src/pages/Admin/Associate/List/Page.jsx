@@ -117,15 +117,14 @@ function AdminAssociateListPage() {
         }
 
         // FIXED: Use the correct parameter name for page size
-        // The backend expects 'page_size' (snake_case)
         filtersMap.set("page_size", pageSize.toString());
 
-        // Add sorting - FIXED: Use correct parameter names
+        // FIXED: Use correct sort_order format (ASC/DESC instead of 1/-1)
         if (sortBy) {
           const [sortField, sortOrder] = sortBy.split(",");
           filtersMap.set("sort_field", sortField);
-          // Backend expects 1 for ASC, -1 for DESC
-          filtersMap.set("sort_order", sortOrder === "DESC" ? "-1" : "1");
+          // Backend expects ASC or DESC strings
+          filtersMap.set("sort_order", sortOrder); // Already "ASC" or "DESC" from ASSOCIATE_SORT_OPTIONS
         }
 
         // Add search
@@ -168,14 +167,12 @@ function AdminAssociateListPage() {
           nextCursor: response.nextCursor,
           hasNextPage: response.hasNextPage,
           totalCount: response.count,
-          response: response, // Log full response for debugging
         });
 
         setAssociates(response.results || []);
         setTotalCount(response.count || 0);
 
-        // FIXED: Properly handle pagination response
-        // The backend might return these fields in different formats
+        // Handle pagination response
         if (
           response.nextCursor !== undefined &&
           response.nextCursor !== null &&
@@ -230,16 +227,38 @@ function AdminAssociateListPage() {
     fetchAssociates("");
   };
 
-  // Handle filter changes
-  const handleFilterChange = useCallback(() => {
-    console.log("🔄 Filter changed - resetting pagination");
+  // FIXED: Handle filter changes properly with useEffect
+  useEffect(() => {
+    console.log("🔄 Filters changed - resetting pagination and fetching");
     // Reset pagination when filters change
     setCursorHistory([]);
     setCurrentCursor("");
     setNextCursor("");
     setHasNextPage(false);
     fetchAssociates("");
-  }, [fetchAssociates]);
+  }, [statusFilter, typeFilter, joinDateGte, isJobSeeker, hasTaxId]);
+
+  // FIXED: Handle sort change with useEffect
+  useEffect(() => {
+    console.log("🔄 Sort changed - resetting pagination and fetching");
+    // Reset pagination when sort changes
+    setCursorHistory([]);
+    setCurrentCursor("");
+    setNextCursor("");
+    setHasNextPage(false);
+    fetchAssociates("");
+  }, [sortBy]);
+
+  // FIXED: Handle page size change with useEffect
+  useEffect(() => {
+    console.log("📏 Page size changed to:", pageSize, "- fetching data");
+    // Reset pagination when page size changes
+    setCursorHistory([]);
+    setCurrentCursor("");
+    setNextCursor("");
+    setHasNextPage(false);
+    fetchAssociates("");
+  }, [pageSize]);
 
   // Pagination handlers
   const handleNextPage = () => {
@@ -286,38 +305,16 @@ function AdminAssociateListPage() {
     }
   };
 
-  // Handle page size change - FIXED
+  // Handle page size change
   const handlePageSizeChange = (e) => {
     const newPageSize = parseInt(e.target.value);
     console.log("📏 Page size changing from", pageSize, "to", newPageSize);
     setPageSize(newPageSize);
-
-    // Reset pagination when page size changes
-    setCursorHistory([]);
-    setCurrentCursor("");
-    setNextCursor("");
-    setHasNextPage(false);
   };
-
-  // Effect to refetch when pageSize changes
-  useEffect(() => {
-    if (pageSize) {
-      console.log("📏 Page size changed to:", pageSize, "- fetching data");
-      fetchAssociates("");
-    }
-  }, [pageSize]); // Re-fetch when pageSize changes
 
   // Handle sort change
   const handleSortChange = (e) => {
     setSortBy(e.target.value);
-
-    // Reset pagination when sort changes
-    setCursorHistory([]);
-    setCurrentCursor("");
-    setNextCursor("");
-    setHasNextPage(false);
-
-    setTimeout(() => fetchAssociates(""), 0);
   };
 
   // Handle delete associate
@@ -346,7 +343,7 @@ function AdminAssociateListPage() {
   };
 
   // Clear filters
-  const clearFilters = useCallback(() => {
+  const clearFilters = () => {
     console.log("🧹 clearFilters called");
     setSearchQuery("");
     setStatusFilter("1");
@@ -355,15 +352,10 @@ function AdminAssociateListPage() {
     setJoinDateGte("");
     setIsJobSeeker(false);
     setHasTaxId(false);
-    setCursorHistory([]);
-    setCurrentCursor("");
-    setNextCursor("");
-    setHasNextPage(false);
     setShowFilters(false);
-    fetchAssociates("");
-  }, [fetchAssociates]);
+  };
 
-  // Initial data load - only on mount
+  // Initial data load - only on mount (empty dependency array)
   useEffect(() => {
     console.log("🚀 Initial mount - loading first page");
     fetchAssociates("");
@@ -452,30 +444,6 @@ function AdminAssociateListPage() {
   // Calculate pagination info
   const hasPreviousPage = cursorHistory.length > 0;
   const currentPageNumber = cursorHistory.length + 1;
-
-  // Debug info for development
-  useEffect(() => {
-    if (process.env.NODE_ENV === "development") {
-      console.log("📊 Pagination state:", {
-        currentCursor,
-        nextCursor,
-        hasNextPage,
-        hasPreviousPage,
-        cursorHistoryLength: cursorHistory.length,
-        pageSize,
-        totalCount,
-        associatesCount: associates.length,
-      });
-    }
-  }, [
-    currentCursor,
-    nextCursor,
-    hasNextPage,
-    cursorHistory,
-    pageSize,
-    totalCount,
-    associates,
-  ]);
 
   return (
     <div style={globalStyles.container}>
@@ -585,20 +553,14 @@ function AdminAssociateListPage() {
                 <Select
                   label="Status"
                   value={statusFilter}
-                  onChange={(e) => {
-                    setStatusFilter(e.target.value);
-                    setTimeout(() => handleFilterChange(), 0);
-                  }}
+                  onChange={(e) => setStatusFilter(e.target.value)}
                   options={ASSOCIATE_STATUS_OPTIONS}
                 />
 
                 <Select
                   label="Type"
                   value={typeFilter}
-                  onChange={(e) => {
-                    setTypeFilter(e.target.value);
-                    setTimeout(() => handleFilterChange(), 0);
-                  }}
+                  onChange={(e) => setTypeFilter(e.target.value)}
                   options={ASSOCIATE_TYPE_OPTIONS}
                 />
 
@@ -606,10 +568,7 @@ function AdminAssociateListPage() {
                   label="Join Date (From)"
                   type="date"
                   value={joinDateGte}
-                  onChange={(e) => {
-                    setJoinDateGte(e.target.value);
-                    setTimeout(() => handleFilterChange(), 0);
-                  }}
+                  onChange={(e) => setJoinDateGte(e.target.value)}
                 />
 
                 <div>
@@ -625,10 +584,7 @@ function AdminAssociateListPage() {
                       <input
                         type="checkbox"
                         checked={isJobSeeker}
-                        onChange={(e) => {
-                          setIsJobSeeker(e.target.checked);
-                          setTimeout(() => handleFilterChange(), 0);
-                        }}
+                        onChange={(e) => setIsJobSeeker(e.target.checked)}
                         style={{ marginRight: "8px" }}
                       />
                       Filter by Job Seekers
@@ -637,10 +593,7 @@ function AdminAssociateListPage() {
                       <input
                         type="checkbox"
                         checked={hasTaxId}
-                        onChange={(e) => {
-                          setHasTaxId(e.target.checked);
-                          setTimeout(() => handleFilterChange(), 0);
-                        }}
+                        onChange={(e) => setHasTaxId(e.target.checked)}
                         style={{ marginRight: "8px" }}
                       />
                       Filter by Charges Tax
@@ -678,24 +631,6 @@ function AdminAssociateListPage() {
                 {totalCount > 0 && ` (Total: ${totalCount})`}
                 {searchQuery && ` (filtered by "${searchQuery}")`}
               </div>
-
-              {/* Debug info in development */}
-              {process.env.NODE_ENV === "development" && (
-                <div
-                  style={{ fontSize: "12px", marginTop: "5px", color: "#666" }}
-                >
-                  <strong>Pagination Debug:</strong>
-                  <br />
-                  Page: {currentPageNumber} | Results: {associates.length} |
-                  Page Size: {pageSize} | Has next: {hasNextPage ? "Yes" : "No"}{" "}
-                  | Has previous: {hasPreviousPage ? "Yes" : "No"}
-                  <br />
-                  Current cursor: {currentCursor || "start"} | Next cursor:{" "}
-                  {nextCursor || "none"}
-                  <br />
-                  History stack size: {cursorHistory.length}
-                </div>
-              )}
             </div>
 
             {/* Associate List */}
