@@ -108,7 +108,7 @@ function AdminAssociateAddStep7Page() {
     // Convert dates to proper ISO format and handle data transformation
     const processed = { ...data };
 
-    // Handle date conversions
+    // Handle date conversions - only convert if not already in ISO format
     if (processed.duesDate && !processed.duesDate.includes("T")) {
       processed.duesDate = new Date(processed.duesDate).toISOString();
     }
@@ -182,8 +182,13 @@ function AdminAssociateAddStep7Page() {
     if (typeof processed.identifyAs === "string") {
       processed.identifyAs = processed.identifyAs
         .split(",")
-        .map((id) => id.trim())
+        .map((id) => parseInt(id.trim()))
         .filter(Boolean);
+    } else if (Array.isArray(processed.identifyAs)) {
+      // Ensure identifyAs array contains integers
+      processed.identifyAs = processed.identifyAs.map((id) =>
+        typeof id === "string" ? parseInt(id) : id,
+      );
     }
 
     // Convert numeric fields - IMPORTANT: Convert string values to integers
@@ -191,45 +196,62 @@ function AdminAssociateAddStep7Page() {
       processed.hourlySalaryDesired = parseInt(processed.hourlySalaryDesired);
     }
 
-    // Convert all int8 fields from strings to numbers
+    // Convert all int8 fields from strings/numbers to ensure they are integers
     if (
       processed.statusInCountry !== undefined &&
-      processed.statusInCountry !== ""
+      processed.statusInCountry !== "" &&
+      processed.statusInCountry !== 0
     ) {
       processed.statusInCountry = parseInt(processed.statusInCountry);
     }
     if (
       processed.maritalStatus !== undefined &&
-      processed.maritalStatus !== ""
+      processed.maritalStatus !== "" &&
+      processed.maritalStatus !== 0
     ) {
       processed.maritalStatus = parseInt(processed.maritalStatus);
     }
     if (
       processed.accomplishedEducation !== undefined &&
-      processed.accomplishedEducation !== ""
+      processed.accomplishedEducation !== "" &&
+      processed.accomplishedEducation !== 0
     ) {
       processed.accomplishedEducation = parseInt(
         processed.accomplishedEducation,
       );
     }
-    if (processed.gender !== undefined) {
+    if (processed.gender !== undefined && processed.gender !== 0) {
       processed.gender = parseInt(processed.gender);
     }
     if (processed.type !== undefined) {
       processed.type = parseInt(processed.type);
     }
-    if (processed.organizationType !== undefined) {
+    if (
+      processed.organizationType !== undefined &&
+      processed.organizationType !== 0
+    ) {
       processed.organizationType = parseInt(processed.organizationType);
     }
     if (processed.phoneType !== undefined) {
       processed.phoneType = parseInt(processed.phoneType);
     }
-    if (processed.otherPhoneType !== undefined) {
+    if (
+      processed.otherPhoneType !== undefined &&
+      processed.otherPhoneType !== 0
+    ) {
       processed.otherPhoneType = parseInt(processed.otherPhoneType);
     }
     if (processed.isJobSeeker !== undefined) {
       processed.isJobSeeker = parseInt(processed.isJobSeeker);
     }
+
+    // Remove empty/zero values for optional numeric fields to avoid sending 0 when field should be null
+    if (processed.statusInCountry === 0) delete processed.statusInCountry;
+    if (processed.maritalStatus === 0) delete processed.maritalStatus;
+    if (processed.accomplishedEducation === 0)
+      delete processed.accomplishedEducation;
+    if (processed.otherPhoneType === 0) delete processed.otherPhoneType;
+    if (processed.organizationType === 0) delete processed.organizationType;
 
     return processed;
   };
