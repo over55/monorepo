@@ -115,6 +115,7 @@ func (impl *ServiceFeeControllerImpl) Create(ctx context.Context, requestData *S
 		// Add meta.
 		sf.TenantID = tid
 		sf.ID = primitive.NewObjectID()
+		sf.Status = servicefee_s.StatusActive
 		sf.CreatedAt = time.Now()
 		sf.CreatedByUserID = userID
 		sf.CreatedByUserName = userName
