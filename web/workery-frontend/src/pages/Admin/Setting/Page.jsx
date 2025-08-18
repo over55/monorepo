@@ -1,20 +1,31 @@
 // File Path: web/workery-frontend/src/pages/Admin/Setting/Page.jsx
 
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router-dom";
 import {
   useAccountManager,
   useTenantManager,
 } from "../../../services/Services";
-import { theme, globalStyles } from "../../../constants/Theme";
 import {
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Breadcrumb,
-  Modal,
-} from "../../../components/UI";
+  HomeIcon,
+  Cog6ToothIcon,
+  NewspaperIcon,
+  AcademicCapIcon,
+  TagIcon,
+  MegaphoneIcon,
+  ScaleIcon,
+  CreditCardIcon,
+  UserMinusIcon,
+  TruckIcon,
+  PhoneIcon,
+  BanknotesIcon,
+  BuildingOfficeIcon,
+  BuildingOffice2Icon,
+  ArrowRightIcon,
+  XMarkIcon,
+  CheckIcon,
+  ExclamationTriangleIcon,
+} from "@heroicons/react/24/outline";
 
 function SettingDashboardPage() {
   const accountManager = useAccountManager();
@@ -99,217 +110,209 @@ function SettingDashboardPage() {
   }, []);
 
   if (isLoading) {
-    return <Loading message="Loading Settings..." />;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading Settings...</p>
+        </div>
+      </div>
+    );
   }
-
-  const styles = {
-    settingsGrid: {
-      display: "grid",
-      gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-      gap: "20px",
-      marginTop: "20px",
-    },
-    settingCard: {
-      backgroundColor: "white",
-      borderRadius: "8px",
-      boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-      overflow: "hidden",
-      transition: "transform 0.2s, box-shadow 0.2s",
-    },
-    cardHeader: {
-      backgroundColor: theme.colors.info,
-      padding: "40px 20px",
-      textAlign: "center",
-      color: "white",
-    },
-    cardIcon: {
-      fontSize: "4rem",
-      marginBottom: "10px",
-      display: "block",
-    },
-    cardContent: {
-      padding: "20px",
-    },
-    cardTitle: {
-      fontSize: "18px",
-      fontWeight: "bold",
-      marginBottom: "10px",
-      color: "#333",
-    },
-    cardDescription: {
-      color: "#666",
-      fontSize: "14px",
-      lineHeight: "1.4",
-    },
-    cardFooter: {
-      padding: "0",
-      borderTop: "1px solid #eee",
-    },
-    cardButton: {
-      width: "100%",
-      padding: "15px",
-      backgroundColor: theme.colors.primary,
-      color: "white",
-      border: "none",
-      fontSize: "14px",
-      fontWeight: "500",
-      cursor: "pointer",
-      transition: "background-color 0.2s",
-      textDecoration: "none",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: "8px",
-    },
-  };
 
   const settingsItems = [
     {
       title: "Office News",
       description: "Modify office news items.",
-      icon: "📰",
+      icon: NewspaperIcon,
       path: "/admin/settings/bulletins",
     },
     {
       title: "Skill Sets",
       description: "Modify the skill sets.",
-      icon: "🎓",
+      icon: AcademicCapIcon,
       path: "/admin/settings/skill-sets",
     },
     {
       title: "Tags",
       description: "Manage system tags and labels.",
-      icon: "🏷️",
+      icon: TagIcon,
       path: "/admin/settings/tags",
     },
     {
       title: "Associate News",
       description: "Modify associate news items.",
-      icon: "📢",
+      icon: MegaphoneIcon,
       path: "/admin/settings/associate-away-logs",
     },
     {
       title: "Insurance Requirements",
       description: "Modify insurance settings.",
-      icon: "⚖️",
+      icon: ScaleIcon,
       path: "/admin/settings/insurance-requirements",
     },
     {
       title: "Service Fees",
       description: "Modify service fee settings.",
-      icon: "💳",
+      icon: CreditCardIcon,
       path: "/admin/settings/service-fees",
     },
     {
       title: "Deactivated Clients",
       description: "Modify inactive customers.",
-      icon: "😞",
+      icon: UserMinusIcon,
       path: "/admin/settings/inactive-clients",
     },
     {
       title: "Vehicle Types",
       description: "Modify vehicle types for associates.",
-      icon: "🚗",
+      icon: TruckIcon,
       path: "/admin/settings/vehicle-types",
     },
     {
       title: "How did you hear?",
       description: "List how users discovered us and referral sources.",
-      icon: "📞",
+      icon: PhoneIcon,
       path: "/admin/settings/how-hear-about-us-items",
     },
     {
       title: "Tax Settings",
       description: "Change how tax gets applied system wide.",
-      icon: "🏦",
+      icon: BanknotesIcon,
       action: () => setShowTaxSettingModal(true),
     },
     {
       title: "National Occupational Classification",
       description: "Search NOC's in the system.",
-      icon: "🏢",
+      icon: BuildingOfficeIcon,
       path: "/admin/settings/noc/search",
     },
     {
       title: "North America Industry Classification System",
       description: "Search NAICS's in the system.",
-      icon: "🏭",
+      icon: BuildingOffice2Icon,
       path: "/admin/settings/naics/search",
     },
   ];
 
   return (
-    <div style={globalStyles.container}>
-      <Breadcrumb
-        items={[
-          { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
-          { label: "Settings", icon: "⚙️" },
-        ]}
-      />
-
-      {errors.user && <Alert type="error">{errors.user}</Alert>}
-      {errors.tenant && <Alert type="error">{errors.tenant}</Alert>}
-
-      <Card title="⚙️ Settings">
-        <p style={{ marginBottom: "20px", color: "#666" }}>
-          Configure and manage your system settings. Click on any option below
-          to modify specific settings.
-        </p>
-
-        <div style={styles.settingsGrid}>
-          {settingsItems.map((item, index) => (
-            <div
-              key={index}
-              style={styles.settingCard}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = "translateY(-2px)";
-                e.currentTarget.style.boxShadow = "0 4px 8px rgba(0,0,0,0.15)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = "translateY(0)";
-                e.currentTarget.style.boxShadow = "0 2px 4px rgba(0,0,0,0.1)";
-              }}
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
+      {/* Breadcrumb */}
+      <nav className="flex mb-8" aria-label="Breadcrumb">
+        <ol className="inline-flex items-center space-x-1 md:space-x-3">
+          <li className="inline-flex items-center">
+            <Link
+              to="/admin/dashboard"
+              className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
             >
-              <div style={styles.cardHeader}>
-                <span style={styles.cardIcon}>{item.icon}</span>
-              </div>
-              <div style={styles.cardContent}>
-                <h3 style={styles.cardTitle}>{item.title}</h3>
-                <p style={styles.cardDescription}>{item.description}</p>
-              </div>
-              <div style={styles.cardFooter}>
-                {item.path ? (
-                  <Link
-                    to={item.path}
-                    style={styles.cardButton}
-                    onMouseEnter={(e) => {
-                      e.target.style.backgroundColor = "#0056b3";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.backgroundColor = theme.colors.primary;
-                    }}
-                  >
-                    View <span>➜</span>
-                  </Link>
-                ) : (
-                  <button
-                    onClick={item.action}
-                    style={styles.cardButton}
-                    onMouseEnter={(e) => {
-                      e.target.style.backgroundColor = "#0056b3";
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.backgroundColor = theme.colors.primary;
-                    }}
-                  >
-                    View <span>➜</span>
-                  </button>
-                )}
-              </div>
+              <HomeIcon className="w-4 h-4 mr-2" />
+              Dashboard
+            </Link>
+          </li>
+          <li aria-current="page">
+            <div className="flex items-center">
+              <svg
+                className="w-3 h-3 text-gray-400 mx-1"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 6 10"
+              >
+                <path
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="m1 9 4-4-4-4"
+                />
+              </svg>
+              <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">
+                Settings
+              </span>
             </div>
-          ))}
+          </li>
+        </ol>
+      </nav>
+
+      {/* Error Alerts */}
+      {errors.user && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start">
+          <ExclamationTriangleIcon className="w-5 h-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
+          <span className="text-red-800 text-sm">{errors.user}</span>
         </div>
-      </Card>
+      )}
+      {errors.tenant && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start">
+          <ExclamationTriangleIcon className="w-5 h-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
+          <span className="text-red-800 text-sm">{errors.tenant}</span>
+        </div>
+      )}
+
+      {/* Main Settings Card */}
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center">
+            <Cog6ToothIcon className="w-6 h-6 text-gray-700 mr-2" />
+            <h1 className="text-xl font-semibold text-gray-900">Settings</h1>
+          </div>
+        </div>
+
+        <div className="p-6">
+          <p className="text-gray-600 mb-6">
+            Configure and manage your system settings. Click on any option below
+            to modify specific settings.
+          </p>
+
+          {/* Settings Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {settingsItems.map((item, index) => {
+              const IconComponent = item.icon;
+              return (
+                <div
+                  key={index}
+                  className="group bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex flex-col"
+                >
+                  {/* Icon Header - Fixed height */}
+                  <div className="bg-gradient-to-br from-slate-600 to-slate-700 p-8 text-white flex justify-center">
+                    <IconComponent className="w-16 h-16" />
+                  </div>
+
+                  {/* Content - Flex grow to push button down */}
+                  <div className="p-4 flex-grow flex flex-col">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2 min-h-[56px] line-clamp-2">
+                      {item.title}
+                    </h3>
+                    <p className="text-sm text-gray-600 line-clamp-2 mb-4">
+                      {item.description}
+                    </p>
+                  </div>
+
+                  {/* Footer Button - Always at bottom */}
+                  <div className="border-t border-gray-200">
+                    {item.path ? (
+                      <Link
+                        to={item.path}
+                        className="w-full px-4 py-3 bg-blue-600 text-white flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors duration-200 font-medium text-sm"
+                      >
+                        View
+                        <ArrowRightIcon className="w-4 h-4" />
+                      </Link>
+                    ) : (
+                      <button
+                        onClick={item.action}
+                        className="w-full px-4 py-3 bg-blue-600 text-white flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors duration-200 font-medium text-sm"
+                      >
+                        View
+                        <ArrowRightIcon className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
 
       {/* Tax Settings Modal */}
       {tenant && (
@@ -382,56 +385,97 @@ function TaxSettingModal({
     }
   }, [showModal, tenant]);
 
-  return (
-    <Modal
-      isOpen={showModal}
-      onClose={handleClose}
-      title="🏦 Tax Settings"
-      footer={
-        <>
-          <Button
-            variant="secondary"
-            onClick={handleClose}
-            disabled={isLoading}
-          >
-            Cancel
-          </Button>
-          <Button variant="success" onClick={handleSave} disabled={isLoading}>
-            {isLoading ? "Saving..." : "Save"}
-          </Button>
-        </>
-      }
-    >
-      {errors.submit && <Alert type="error">{errors.submit}</Alert>}
+  if (!showModal) return null;
 
-      <div style={{ marginBottom: "20px" }}>
-        <label
-          style={{ display: "block", marginBottom: "5px", fontWeight: "600" }}
-        >
-          Tax Rate
-        </label>
-        <input
-          type="number"
-          step="0.01"
-          min="0"
-          max="100"
-          value={taxRate}
-          onChange={(e) => setTaxRate(e.target.value)}
-          placeholder="Enter tax rate"
-          disabled={isLoading}
-          style={{
-            width: "100%",
-            padding: "10px",
-            border: "1px solid #ddd",
-            borderRadius: "4px",
-            fontSize: "14px",
-          }}
-        />
-        <div style={{ fontSize: "12px", color: "#666", marginTop: "4px" }}>
-          Tax rate applied to every order if the user has a tax account
+  return (
+    <>
+      {/* Modal Backdrop */}
+      <div
+        className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity"
+        onClick={handleClose}
+      />
+
+      {/* Modal Content */}
+      <div className="fixed inset-0 z-50 overflow-y-auto">
+        <div className="flex min-h-full items-center justify-center p-4">
+          <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-5 border-b border-gray-200">
+              <div className="flex items-center">
+                <BanknotesIcon className="w-6 h-6 text-gray-700 mr-2" />
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Tax Settings
+                </h3>
+              </div>
+              <button
+                onClick={handleClose}
+                className="text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg p-1"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6">
+              {errors.submit && (
+                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start">
+                  <ExclamationTriangleIcon className="w-5 h-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
+                  <span className="text-red-800 text-sm">{errors.submit}</span>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tax Rate
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  max="100"
+                  value={taxRate}
+                  onChange={(e) => setTaxRate(e.target.value)}
+                  placeholder="Enter tax rate"
+                  disabled={isLoading}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed text-sm"
+                />
+                <p className="mt-1 text-xs text-gray-500">
+                  Tax rate applied to every order if the user has a tax account
+                </p>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex justify-end gap-3 px-6 py-4 border-t border-gray-200">
+              <button
+                onClick={handleClose}
+                disabled={isLoading}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={isLoading}
+                className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <CheckIcon className="w-4 h-4 mr-1" />
+                    Save
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-    </Modal>
+    </>
   );
 }
 
