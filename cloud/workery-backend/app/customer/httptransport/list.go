@@ -78,7 +78,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	if firstName != "" {
 		f.FirstName = firstName
 	}
-	lastName := query.Get("lexical_name")
+	lastName := query.Get("last_name")
 	if lastName != "" {
 		f.LastName = lastName
 	}
