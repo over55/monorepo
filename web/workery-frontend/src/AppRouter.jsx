@@ -81,6 +81,7 @@ import SettingServiceFeeCreatePage from "./pages/Admin/Setting/ServiceFee/Create
 import SettingServiceFeeListPage from "./pages/Admin/Setting/ServiceFee/List/Page";
 import SettingServiceFeeDetailPage from "./pages/Admin/Setting/ServiceFee/Detail/Page";
 import SettingServiceFeeUpdatePage from "./pages/Admin/Setting/ServiceFee/Update/Page";
+import SettingServiceFeeDeletePage from "./pages/Admin/Setting/ServiceFee/Delete/Page";
 import SettingNOCSearchPage from "./pages/Admin/Setting/NOC/Search/Page";
 import SettingNOCSearchResultPage from "./pages/Admin/Setting/NOC/SearchResult/Page";
 import SettingNAICSSearchPage from "./pages/Admin/Setting/NAICS/Search/Page";
@@ -2329,10 +2330,10 @@ function AppRouter() {
               }
             />
             <Route
-              path="/admin/settings/inactive-clients"
+              path="/admin/settings/service-fee/:id/delete"
               element={
                 <Layout>
-                  <SettingInactiveClientListPage />
+                  <SettingServiceFeeDeletePage />
                 </Layout>
               }
             />
