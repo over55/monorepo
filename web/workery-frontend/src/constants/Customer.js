@@ -21,8 +21,8 @@ export const CUSTOMER_TYPE_OPTIONS = [
 export const CUSTOMER_SORT_OPTIONS = [
   { value: "lexical_name,ASC", label: "Name (A-Z)" },
   { value: "lexical_name,DESC", label: "Name (Z-A)" },
-  { value: "join_date,DESC", label: "Newest First" },
-  { value: "join_date,ASC", label: "Oldest First" },
+  // { value: "join_date,DESC", label: "Newest First" }, // Deprecated
+  // { value: "join_date,ASC", label: "Oldest First" },  // Deprecated
 ];
 
 export const PAGE_SIZE_OPTIONS = [
