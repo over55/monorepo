@@ -14,7 +14,7 @@ import {
   Textarea,
   Select,
   Checkbox,
-  Radio,
+  FormGroup,
 } from "../../../../components/UI";
 import HowHearAboutUsSelect from "../../../../components/Form/HowHearAboutUsSelect";
 import TagsMultiSelect from "../../../../components/Form/TagsMultiSelect";
@@ -391,15 +391,37 @@ function AdminCustomerUpdatePage() {
               ⚙️ Settings
             </h4>
 
-            <Radio
-              label="Type"
-              name="customerType"
-              value={customerType}
-              onChange={(e) => setCustomerType(parseInt(e.target.value))}
-              options={CLIENT_TYPE_OPTIONS}
-              error={errors.type}
-              required={true}
-            />
+            <FormGroup label="Type" required={true}>
+              <div style={{ marginTop: "10px" }}>
+                {CLIENT_TYPE_OPTIONS.map((option) => (
+                  <label
+                    key={option.value}
+                    style={{
+                      marginRight: "20px",
+                      cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                    }}
+                  >
+                    <input
+                      type="radio"
+                      name="customerType"
+                      value={option.value}
+                      checked={customerType === option.value}
+                      onChange={(e) =>
+                        setCustomerType(parseInt(e.target.value))
+                      }
+                      disabled={isSubmitting}
+                      style={{ marginRight: "8px" }}
+                    />
+                    {option.label}
+                  </label>
+                ))}
+              </div>
+              {errors.type && (
+                <div style={globalStyles.errorMessage}>{errors.type}</div>
+              )}
+            </FormGroup>
           </div>
 
           {/* Contact Section */}
@@ -807,17 +829,55 @@ function AdminCustomerUpdatePage() {
               />
             </div>
 
-            <Radio
-              label="Preferred Language"
-              name="preferredLanguage"
-              value={preferredLanguage}
-              onChange={(e) => setPreferredLanguage(e.target.value)}
-              options={[
-                { value: "English", label: "English" },
-                { value: "French", label: "French" },
-              ]}
-              error={errors.preferredLanguage}
-            />
+            {/* Fixed Preferred Language Radio Group */}
+            <FormGroup label="Preferred Language">
+              <div style={{ marginTop: "10px" }}>
+                <label
+                  style={{
+                    marginRight: "20px",
+                    cursor: "pointer",
+                    fontWeight: "normal",
+                    display: "inline-flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="preferredLanguage"
+                    value="English"
+                    checked={preferredLanguage === "English"}
+                    onChange={(e) => setPreferredLanguage(e.target.value)}
+                    disabled={isSubmitting}
+                    style={{ marginRight: "8px" }}
+                  />
+                  English
+                </label>
+                <label
+                  style={{
+                    cursor: "pointer",
+                    fontWeight: "normal",
+                    display: "inline-flex",
+                    alignItems: "center",
+                  }}
+                >
+                  <input
+                    type="radio"
+                    name="preferredLanguage"
+                    value="French"
+                    checked={preferredLanguage === "French"}
+                    onChange={(e) => setPreferredLanguage(e.target.value)}
+                    disabled={isSubmitting}
+                    style={{ marginRight: "8px" }}
+                  />
+                  French
+                </label>
+              </div>
+              {errors.preferredLanguage && (
+                <div style={globalStyles.errorMessage}>
+                  {errors.preferredLanguage}
+                </div>
+              )}
+            </FormGroup>
           </div>
 
           {/* Form Actions */}
