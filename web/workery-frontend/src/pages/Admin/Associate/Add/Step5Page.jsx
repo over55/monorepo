@@ -111,6 +111,9 @@ function AdminAssociateAddStep5Page() {
         );
         setDescription(associateState.description || "");
         setPreferredLanguage(associateState.preferredLanguage || "English");
+
+        // Restore password fields from sessionStorage
+        // We'll store them encrypted/hashed but for now just restore them
         setPassword(associateState.password || "");
         setPasswordRepeated(associateState.passwordRepeated || "");
       } else {
@@ -152,7 +155,6 @@ function AdminAssociateAddStep5Page() {
       newErrors.policeCheck = "Police check date is required";
       hasErrors = true;
     }
-    // ADD THIS: Commercial insurance expiry date is actually required
     if (!commercialInsuranceExpiryDate.trim()) {
       newErrors.commercialInsuranceExpiryDate =
         "Commercial insurance expiry date is required";
@@ -184,18 +186,28 @@ function AdminAssociateAddStep5Page() {
       newErrors.preferredLanguage = "Preferred language is required";
       hasErrors = true;
     }
-    if (password && password !== passwordRepeated) {
-      newErrors.password = "Passwords do not match";
-      newErrors.passwordRepeated = "Passwords do not match";
+
+    // Simple password validation - only validate if password is entered
+    if (password || passwordRepeated) {
+      if (password !== passwordRepeated) {
+        newErrors.password = "Passwords do not match";
+        newErrors.passwordRepeated = "Passwords do not match";
+        hasErrors = true;
+      }
+      if (password && password.length < 8) {
+        newErrors.password = "Password must be at least 8 characters";
+        hasErrors = true;
+      }
     }
 
     if (hasErrors) {
       setErrors(newErrors);
+      // Scroll to top to show errors
       window.scrollTo(0, 0);
       return;
     }
 
-    // Save to session storage with proper data types
+    // Save to session storage
     const associateState = {
       ...getExistingState(),
       skillSets,
@@ -421,7 +433,7 @@ function AdminAssociateAddStep5Page() {
                     setCommercialInsuranceExpiryDate(e.target.value)
                   }
                   error={errors.commercialInsuranceExpiryDate}
-                  required // Add required prop
+                  required
                 />
 
                 <Input
@@ -576,26 +588,28 @@ function AdminAssociateAddStep5Page() {
                   <h3 style={{ fontSize: "1.2rem", marginBottom: "1rem" }}>
                     🔑 Login Credentials
                   </h3>
+
                   <div style={{ display: "grid", gap: "1rem" }}>
                     <Input
                       label="Password (Optional)"
                       name="password"
                       type="password"
-                      placeholder="Enter password"
+                      placeholder="Enter password (min 8 characters)"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       error={errors.password}
-                      helperText="Leave blank to auto-generate a password"
+                      helperText="Leave blank to auto-generate a password. Minimum 8 characters if provided."
                     />
 
                     <Input
-                      label="Password Repeated (Optional)"
+                      label="Confirm Password (Optional)"
                       name="passwordRepeated"
                       type="password"
                       placeholder="Repeat password"
                       value={passwordRepeated}
                       onChange={(e) => setPasswordRepeated(e.target.value)}
                       error={errors.passwordRepeated}
+                      helperText="Must match the password above if a password is entered"
                     />
                   </div>
                 </div>
