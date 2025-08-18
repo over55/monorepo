@@ -14,6 +14,14 @@ import {
   Loading,
   Breadcrumb,
 } from "../../../../components/UI";
+import {
+  TagsDisplay,
+  SkillSetsDisplay,
+  InsuranceRequirementsDisplay,
+  HowHearAboutUsDisplay,
+  ServiceFeeDisplay,
+  VehicleTypesDisplay,
+} from "../../../../components/Display";
 
 // Constants
 const COMMERCIAL_ASSOCIATE_TYPE_OF_ID = 3;
@@ -165,81 +173,9 @@ function AdminAssociateDetailFullPage() {
     );
   };
 
-  const formatTags = (tags) => {
-    if (!tags || tags.length === 0) return "-";
-    return (
-      <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
-        {tags.map((tag, index) => (
-          <span
-            key={index}
-            style={{
-              backgroundColor: theme.colors.primary,
-              color: "white",
-              padding: "2px 8px",
-              borderRadius: "12px",
-              fontSize: "12px",
-            }}
-          >
-            {tag.text}
-          </span>
-        ))}
-      </div>
-    );
-  };
-
-  const formatSkillSets = (skillSets) => {
-    if (!skillSets || skillSets.length === 0) return "-";
-    return (
-      <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
-        {skillSets.map((skill, index) => (
-          <span
-            key={index}
-            style={{
-              backgroundColor: theme.colors.success,
-              color: "white",
-              padding: "2px 8px",
-              borderRadius: "12px",
-              fontSize: "12px",
-            }}
-          >
-            {skill.subCategory}
-          </span>
-        ))}
-      </div>
-    );
-  };
-
-  const formatInsuranceRequirements = (insuranceRequirements) => {
-    if (!insuranceRequirements || insuranceRequirements.length === 0)
-      return "-";
-    return (
-      <div style={{ display: "flex", gap: "5px", flexWrap: "wrap" }}>
-        {insuranceRequirements.map((req, index) => (
-          <span
-            key={index}
-            style={{
-              backgroundColor: theme.colors.warning,
-              color: "black",
-              padding: "2px 8px",
-              borderRadius: "12px",
-              fontSize: "12px",
-            }}
-          >
-            {req.text}
-          </span>
-        ))}
-      </div>
-    );
-  };
-
   const formatDriversLicenseClasses = (driversLicenseClass) => {
     if (!driversLicenseClass || driversLicenseClass.length === 0) return "-";
     return driversLicenseClass.map((license) => license.text).join(", ");
-  };
-
-  const formatVehicleTypes = (vehicleTypes) => {
-    if (!vehicleTypes || vehicleTypes.length === 0) return "-";
-    return vehicleTypes.map((vehicle) => vehicle.text).join(", ");
   };
 
   const formatMultiSelect = (selectedValues, options) => {
@@ -268,6 +204,12 @@ function AdminAssociateDetailFullPage() {
       );
     }
     return address;
+  };
+
+  // Extract IDs from array of objects
+  const extractIds = (items) => {
+    if (!items || !Array.isArray(items)) return [];
+    return items.map((item) => item.id || item.value).filter(Boolean);
   };
 
   // Table component
@@ -491,10 +433,23 @@ function AdminAssociateDetailFullPage() {
                 label="Description"
                 value={associate.description || "-"}
               />
-              <DetailRow label="Tags" value={formatTags(associate.tags)} />
+              <DetailRow
+                label="Tags"
+                value={
+                  <TagsDisplay
+                    values={extractIds(associate.tags)}
+                    onUnauthorized={onUnauthorized}
+                  />
+                }
+              />
               <DetailRow
                 label="Skill Sets"
-                value={formatSkillSets(associate.skillSets)}
+                value={
+                  <SkillSetsDisplay
+                    values={extractIds(associate.skillSets)}
+                    onUnauthorized={onUnauthorized}
+                  />
+                }
               />
             </DetailTable>
 
@@ -568,10 +523,25 @@ function AdminAssociateDetailFullPage() {
             <DetailTable title="Account">
               <DetailRow
                 label="Insurance Requirement(s)"
-                value={formatInsuranceRequirements(
-                  associate.insuranceRequirements,
-                )}
+                value={
+                  <InsuranceRequirementsDisplay
+                    values={extractIds(associate.insuranceRequirements)}
+                    onUnauthorized={onUnauthorized}
+                  />
+                }
               />
+              {associate.serviceFeeId && (
+                <DetailRow
+                  label="Service Fee"
+                  value={
+                    <ServiceFeeDisplay
+                      value={associate.serviceFeeId}
+                      onUnauthorized={onUnauthorized}
+                      showAmount={true}
+                    />
+                  }
+                />
+              )}
               <DetailRow
                 label="Hourly salary desired (Optional)"
                 value={
@@ -614,7 +584,12 @@ function AdminAssociateDetailFullPage() {
               />
               <DetailRow
                 label="Vehicle(s)"
-                value={formatVehicleTypes(associate.vehicleTypes)}
+                value={
+                  <VehicleTypesDisplay
+                    values={extractIds(associate.vehicleTypes)}
+                    onUnauthorized={onUnauthorized}
+                  />
+                }
               />
               <DetailRow
                 label="Account Balance"
@@ -745,9 +720,17 @@ function AdminAssociateDetailFullPage() {
               <DetailRow
                 label="How did they discover us?"
                 value={
-                  associate.isHowDidYouHearAboutUsOther
-                    ? associate.howDidYouHearAboutUsOther
-                    : associate.howDidYouHearAboutUsText || "-"
+                  associate.isHowDidYouHearAboutUsOther ? (
+                    associate.howDidYouHearAboutUsOther
+                  ) : (
+                    <HowHearAboutUsDisplay
+                      value={
+                        associate.howDidYouHearAboutUsID ||
+                        associate.howDidYouHearAboutUsId
+                      }
+                      onUnauthorized={onUnauthorized}
+                    />
+                  )
                 }
               />
               <DetailRow
