@@ -38,19 +38,19 @@ function AdminCustomerAddStep1PartAPage() {
     setIsLoading(false);
   }, []);
 
-  // Handle form input changes
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
+  // Create specific handlers for each field
+  const handleFieldChange = (fieldName) => (e) => {
+    const value = e.target.value;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [fieldName]: value,
     }));
 
     // Clear field-specific error when user starts typing
-    if (errors[name]) {
+    if (errors[fieldName]) {
       setErrors((prev) => ({
         ...prev,
-        [name]: null,
+        [fieldName]: null,
       }));
     }
   };
@@ -175,7 +175,7 @@ function AdminCustomerAddStep1PartAPage() {
 
         {/* Error Messages */}
         {error && (
-          <Alert type="error" onClose={() => setError(null)}>
+          <Alert type="error" dismissible onDismiss={() => setError(null)}>
             {error}
           </Alert>
         )}
@@ -197,9 +197,8 @@ function AdminCustomerAddStep1PartAPage() {
             >
               <Input
                 label="First Name"
-                name="firstName"
                 value={formData.firstName}
-                onChange={handleInputChange}
+                onChange={handleFieldChange("firstName")}
                 error={errors.firstName}
                 placeholder="Enter first name"
                 disabled={isLoading}
@@ -207,9 +206,8 @@ function AdminCustomerAddStep1PartAPage() {
 
               <Input
                 label="Last Name"
-                name="lastName"
                 value={formData.lastName}
-                onChange={handleInputChange}
+                onChange={handleFieldChange("lastName")}
                 error={errors.lastName}
                 placeholder="Enter last name"
                 disabled={isLoading}
@@ -217,10 +215,9 @@ function AdminCustomerAddStep1PartAPage() {
 
               <Input
                 label="Email"
-                name="email"
                 type="email"
                 value={formData.email}
-                onChange={handleInputChange}
+                onChange={handleFieldChange("email")}
                 error={errors.email}
                 placeholder="Enter email address"
                 disabled={isLoading}
@@ -228,9 +225,8 @@ function AdminCustomerAddStep1PartAPage() {
 
               <Input
                 label="Phone"
-                name="phone"
                 value={formData.phone}
-                onChange={handleInputChange}
+                onChange={handleFieldChange("phone")}
                 error={errors.phone}
                 placeholder="Enter phone number"
                 disabled={isLoading}
@@ -316,6 +312,7 @@ function AdminCustomerAddStep1PartAPage() {
                   fontSize: "16px",
                   fontWeight: "600",
                   color: "#6c757d",
+                  position: "relative",
                 }}
               >
                 OR
