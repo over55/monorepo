@@ -14,6 +14,11 @@ import {
   Loading,
   Breadcrumb,
 } from "../../../../components/UI";
+import {
+  TagsDisplay,
+  SkillSetsDisplay,
+  InsuranceRequirementsDisplay,
+} from "../../../../components/Display";
 
 // Constants
 const COMMERCIAL_ASSOCIATE_TYPE_OF_ID = 3;
@@ -86,18 +91,6 @@ function AdminAssociateDetailLitePage() {
     );
   };
 
-  // Format tags for display
-  const formatTags = (tags) => {
-    if (!tags || tags.length === 0) return "-";
-    return tags.map((tag) => tag.text).join(", ");
-  };
-
-  // Format skill sets for display
-  const formatSkillSets = (skillSets) => {
-    if (!skillSets || skillSets.length === 0) return "-";
-    return skillSets.map((skill) => skill.subCategory).join(", ");
-  };
-
   // Format address for display
   const formatAddress = (associate) => {
     if (!associate) return "-";
@@ -131,6 +124,12 @@ function AdminAssociateDetailLitePage() {
     if (!score) return "-";
     const stars = "⭐".repeat(Math.floor(score));
     return `${stars} (${score}/5)`;
+  };
+
+  // Extract IDs from array of objects
+  const extractIds = (items) => {
+    if (!items || !Array.isArray(items)) return [];
+    return items.map((item) => item.id || item.value).filter(Boolean);
   };
 
   if (loading) {
@@ -409,32 +408,31 @@ function AdminAssociateDetailLitePage() {
                     </span>
                   </div>
 
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                    }}
-                  >
-                    <span style={{ fontSize: "16px" }}>🏷️</span>
-                    <span style={{ fontWeight: "600", minWidth: "80px" }}>
-                      Tags:
-                    </span>
-                    <span>{formatTags(associate.tags)}</span>
+                  {/* Tags Display Component */}
+                  <div style={{ marginTop: "10px" }}>
+                    <TagsDisplay
+                      values={extractIds(associate.tags)}
+                      label="Tags"
+                      onUnauthorized={onUnauthorized}
+                    />
                   </div>
 
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                    }}
-                  >
-                    <span style={{ fontSize: "16px" }}>🎓</span>
-                    <span style={{ fontWeight: "600", minWidth: "80px" }}>
-                      Skills:
-                    </span>
-                    <span>{formatSkillSets(associate.skillSets)}</span>
+                  {/* Skill Sets Display Component */}
+                  <div style={{ marginTop: "10px" }}>
+                    <SkillSetsDisplay
+                      values={extractIds(associate.skillSets)}
+                      label="Skill Sets"
+                      onUnauthorized={onUnauthorized}
+                    />
+                  </div>
+
+                  {/* Insurance Requirements Display Component */}
+                  <div style={{ marginTop: "10px" }}>
+                    <InsuranceRequirementsDisplay
+                      values={extractIds(associate.insuranceRequirements)}
+                      label="Insurance Requirements"
+                      onUnauthorized={onUnauthorized}
+                    />
                   </div>
 
                   <div
