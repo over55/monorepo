@@ -23,7 +23,7 @@ import {
 const CUSTOMER_STATUS_OPTIONS = [
   { value: "", label: "All Statuses" },
   { value: "1", label: "Active" },
-  { value: "0", label: "Inactive" },
+  { value: "2", label: "Inactive" },
 ];
 
 const CUSTOMER_TYPE_OPTIONS = [
