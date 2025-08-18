@@ -79,13 +79,13 @@ function AdminAssociateAddStep6Page() {
   const [genderOther, setGenderOther] = useState("");
   const [additionalComment, setAdditionalComment] = useState("");
   const [identifyAs, setIdentifyAs] = useState([]);
-  const [statusInCountry, setStatusInCountry] = useState("");
+  const [statusInCountry, setStatusInCountry] = useState(0);
   const [statusInCountryOther, setStatusInCountryOther] = useState("");
   const [countryOfOrigin, setCountryOfOrigin] = useState("");
   const [dateOfEntryIntoCountry, setDateOfEntryIntoCountry] = useState("");
-  const [maritalStatus, setMaritalStatus] = useState("");
+  const [maritalStatus, setMaritalStatus] = useState(0);
   const [maritalStatusOther, setMaritalStatusOther] = useState("");
-  const [accomplishedEducation, setAccomplishedEducation] = useState("");
+  const [accomplishedEducation, setAccomplishedEducation] = useState(0);
   const [accomplishedEducationOther, setAccomplishedEducationOther] =
     useState("");
 
@@ -126,13 +126,26 @@ function AdminAssociateAddStep6Page() {
         setGenderOther(associateState.genderOther || "");
         setAdditionalComment(associateState.additionalComment || "");
         setIdentifyAs(associateState.identifyAs || []);
-        setStatusInCountry(associateState.statusInCountry || "");
+        // Ensure numeric values are parsed as integers
+        setStatusInCountry(
+          associateState.statusInCountry
+            ? parseInt(associateState.statusInCountry)
+            : 0,
+        );
         setStatusInCountryOther(associateState.statusInCountryOther || "");
         setCountryOfOrigin(associateState.countryOfOrigin || "");
         setDateOfEntryIntoCountry(associateState.dateOfEntryIntoCountry || "");
-        setMaritalStatus(associateState.maritalStatus || "");
+        setMaritalStatus(
+          associateState.maritalStatus
+            ? parseInt(associateState.maritalStatus)
+            : 0,
+        );
         setMaritalStatusOther(associateState.maritalStatusOther || "");
-        setAccomplishedEducation(associateState.accomplishedEducation || "");
+        setAccomplishedEducation(
+          associateState.accomplishedEducation
+            ? parseInt(associateState.accomplishedEducation)
+            : 0,
+        );
         setAccomplishedEducationOther(
           associateState.accomplishedEducationOther || "",
         );
@@ -190,7 +203,7 @@ function AdminAssociateAddStep6Page() {
 
     // Job seeker specific validation
     if (isJobSeeker === ASSOCIATE_IS_JOB_SEEKER_YES) {
-      if (!statusInCountry) {
+      if (!statusInCountry || statusInCountry === 0) {
         newErrors.statusInCountry = "Status in country is required";
         hasErrors = true;
       } else if (
@@ -217,7 +230,7 @@ function AdminAssociateAddStep6Page() {
         }
       }
 
-      if (!maritalStatus) {
+      if (!maritalStatus || maritalStatus === 0) {
         newErrors.maritalStatus = "Marital status is required";
         hasErrors = true;
       } else if (
@@ -228,7 +241,7 @@ function AdminAssociateAddStep6Page() {
         hasErrors = true;
       }
 
-      if (!accomplishedEducation) {
+      if (!accomplishedEducation || accomplishedEducation === 0) {
         newErrors.accomplishedEducation = "Education level is required";
         hasErrors = true;
       } else if (
@@ -348,7 +361,7 @@ function AdminAssociateAddStep6Page() {
   ];
 
   const statusInCountryOptions = [
-    { value: "", label: "Please select" },
+    { value: 0, label: "Please select" },
     {
       value: ASSOCIATE_STATUS_IN_COUNTRY_CANADIAN_CITIZEN,
       label: "Canadian Citizen",
@@ -369,7 +382,7 @@ function AdminAssociateAddStep6Page() {
   ];
 
   const maritalStatusOptions = [
-    { value: "", label: "Please select" },
+    { value: 0, label: "Please select" },
     { value: ASSOCIATE_MARITAL_STATUS_SINGLE, label: "Single" },
     { value: ASSOCIATE_MARITAL_STATUS_MARRIED, label: "Married" },
     { value: ASSOCIATE_MARITAL_STATUS_DIVORCED, label: "Divorced" },
@@ -378,7 +391,7 @@ function AdminAssociateAddStep6Page() {
   ];
 
   const educationOptions = [
-    { value: "", label: "Please select" },
+    { value: 0, label: "Please select" },
     { value: ASSOCIATE_EDUCATION_ELEMENTARY, label: "Elementary School" },
     { value: ASSOCIATE_EDUCATION_HIGH_SCHOOL, label: "High School" },
     { value: ASSOCIATE_EDUCATION_COLLEGE, label: "College" },
@@ -507,7 +520,9 @@ function AdminAssociateAddStep6Page() {
               label="Status in Country"
               name="statusInCountry"
               value={statusInCountry}
-              onChange={(e) => setStatusInCountry(e.target.value)}
+              onChange={(e) =>
+                setStatusInCountry(parseInt(e.target.value) || 0)
+              }
               options={statusInCountryOptions}
               error={errors.statusInCountry}
               required
@@ -558,7 +573,7 @@ function AdminAssociateAddStep6Page() {
               label="Marital Status"
               name="maritalStatus"
               value={maritalStatus}
-              onChange={(e) => setMaritalStatus(e.target.value)}
+              onChange={(e) => setMaritalStatus(parseInt(e.target.value) || 0)}
               options={maritalStatusOptions}
               error={errors.maritalStatus}
               required
@@ -580,7 +595,9 @@ function AdminAssociateAddStep6Page() {
               label="Accomplished Level of Education"
               name="accomplishedEducation"
               value={accomplishedEducation}
-              onChange={(e) => setAccomplishedEducation(e.target.value)}
+              onChange={(e) =>
+                setAccomplishedEducation(parseInt(e.target.value) || 0)
+              }
               options={educationOptions}
               error={errors.accomplishedEducation}
               required

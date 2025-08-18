@@ -186,9 +186,49 @@ function AdminAssociateAddStep7Page() {
         .filter(Boolean);
     }
 
-    // Convert numeric fields
+    // Convert numeric fields - IMPORTANT: Convert string values to integers
     if (processed.hourlySalaryDesired) {
       processed.hourlySalaryDesired = parseInt(processed.hourlySalaryDesired);
+    }
+
+    // Convert all int8 fields from strings to numbers
+    if (
+      processed.statusInCountry !== undefined &&
+      processed.statusInCountry !== ""
+    ) {
+      processed.statusInCountry = parseInt(processed.statusInCountry);
+    }
+    if (
+      processed.maritalStatus !== undefined &&
+      processed.maritalStatus !== ""
+    ) {
+      processed.maritalStatus = parseInt(processed.maritalStatus);
+    }
+    if (
+      processed.accomplishedEducation !== undefined &&
+      processed.accomplishedEducation !== ""
+    ) {
+      processed.accomplishedEducation = parseInt(
+        processed.accomplishedEducation,
+      );
+    }
+    if (processed.gender !== undefined) {
+      processed.gender = parseInt(processed.gender);
+    }
+    if (processed.type !== undefined) {
+      processed.type = parseInt(processed.type);
+    }
+    if (processed.organizationType !== undefined) {
+      processed.organizationType = parseInt(processed.organizationType);
+    }
+    if (processed.phoneType !== undefined) {
+      processed.phoneType = parseInt(processed.phoneType);
+    }
+    if (processed.otherPhoneType !== undefined) {
+      processed.otherPhoneType = parseInt(processed.otherPhoneType);
+    }
+    if (processed.isJobSeeker !== undefined) {
+      processed.isJobSeeker = parseInt(processed.isJobSeeker);
     }
 
     return processed;
