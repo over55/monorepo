@@ -1,19 +1,26 @@
 // File Path: web/workery-frontend/src/pages/Admin/Setting/SkillSet/Create/Page.jsx
 
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router-dom";
 import { useSkillSetManager } from "../../../../../services/Services";
-import { theme, globalStyles } from "../../../../../constants/Theme";
 import {
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Breadcrumb,
-  Input,
-  TextArea,
-  Select,
-} from "../../../../../components/UI";
+  ChartBarIcon,
+  Cog6ToothIcon,
+  AcademicCapIcon,
+  ChevronRightIcon,
+  PlusIcon,
+  ExclamationTriangleIcon,
+  CheckCircleIcon,
+  XMarkIcon,
+  ArrowLeftIcon,
+  InformationCircleIcon,
+  LightBulbIcon,
+  DocumentTextIcon,
+  ShieldCheckIcon,
+  TagIcon,
+  ClipboardDocumentListIcon,
+  SparklesIcon,
+} from "@heroicons/react/24/outline";
 
 function SettingSkillSetCreatePage() {
   const skillSetManager = useSkillSetManager();
@@ -21,19 +28,29 @@ function SettingSkillSetCreatePage() {
 
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState("");
 
   // Form fields
   const [formData, setFormData] = useState({
     category: "",
     subCategory: "",
     description: "",
-    status: 1, // Active by default
+    status: 1, // Active by default - hidden from UI but sent to API
     insuranceRequirement: 1, // None by default
   });
 
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
   };
+
+  // Clear success message after 3 seconds
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(""), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
   const handleFieldChange = (field, value) => {
     setFormData((prev) => ({
@@ -69,21 +86,21 @@ function SettingSkillSetCreatePage() {
       newErrors.description = "Description must be less than 500 characters";
     }
 
-    return newErrors;
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const validationErrors = validateForm();
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
+    if (!validateForm()) {
+      setError("Please correct the errors below");
       window.scrollTo(0, 0);
       return;
     }
 
     setIsLoading(true);
-    setErrors({});
+    setError(null);
 
     try {
       const skillSetData = {
@@ -105,13 +122,44 @@ function SettingSkillSetCreatePage() {
       );
 
       console.log("SkillSetCreatePage: Skill set created successfully");
-      navigate(`/admin/settings/skill-set/${createdSkillSet.id}/detail`);
+      setSuccessMessage("Skill set created successfully!");
+
+      // Redirect to detail page after a short delay
+      setTimeout(() => {
+        navigate(`/admin/settings/skill-set/${createdSkillSet.id}/detail`);
+      }, 1500);
     } catch (error) {
       console.error("SkillSetCreatePage: Failed to create skill set:", error);
-      setErrors({ submit: error.message || "Failed to create skill set" });
+
+      // Handle validation errors from server
+      if (typeof error === "object" && error !== null) {
+        setErrors(error);
+        setError("Please correct the errors below");
+      } else {
+        setError(error.message || "Failed to create skill set");
+      }
       window.scrollTo(0, 0);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    const hasUnsavedChanges =
+      formData.category.trim() ||
+      formData.subCategory.trim() ||
+      formData.description.trim();
+
+    if (hasUnsavedChanges) {
+      if (
+        window.confirm(
+          "Are you sure you want to cancel? Any unsaved changes will be lost.",
+        )
+      ) {
+        navigate("/admin/settings/skill-sets");
+      }
+    } else {
+      navigate("/admin/settings/skill-sets");
     }
   };
 
@@ -127,188 +175,375 @@ function SettingSkillSetCreatePage() {
     };
   }, []);
 
-  if (isLoading) {
-    return <Loading message="Creating Skill Set..." />;
-  }
-
-  const styles = {
-    formSection: {
-      marginBottom: "30px",
-    },
-    sectionTitle: {
-      fontSize: "18px",
-      marginBottom: "15px",
-      color: theme.colors.secondary,
-      display: "flex",
-      alignItems: "center",
-      gap: "8px",
-    },
-    formGrid: {
-      display: "grid",
-      gap: "15px",
-      gridTemplateColumns: "1fr",
-      maxWidth: "600px",
-    },
-    actionButtons: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginTop: "40px",
-      flexWrap: "wrap",
-      gap: "10px",
-    },
-    helpText: {
-      fontSize: "12px",
-      color: "#666",
-      marginTop: "4px",
-    },
-  };
-
   return (
-    <div style={globalStyles.container}>
-      <Breadcrumb
-        items={[
-          { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
-          { label: "Settings", path: "/admin/settings", icon: "⚙️" },
-          {
-            label: "Skill Sets",
-            path: "/admin/settings/skill-sets",
-            icon: "🎓",
-          },
-          { label: "Create", icon: "➕" },
-        ]}
-      />
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Breadcrumb */}
+        <nav className="flex mb-4" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+            <li className="inline-flex items-center">
+              <Link
+                to="/admin/dashboard"
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <ChartBarIcon className="w-4 h-4 mr-2" />
+                Dashboard
+              </Link>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to="/admin/settings"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                >
+                  <span className="inline-flex items-center">
+                    <Cog6ToothIcon className="w-4 h-4 mr-2" />
+                    Settings
+                  </span>
+                </Link>
+              </div>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to="/admin/settings/skill-sets"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                >
+                  <span className="inline-flex items-center">
+                    <AcademicCapIcon className="w-4 h-4 mr-2" />
+                    Skill Sets
+                  </span>
+                </Link>
+              </div>
+            </li>
+            <li aria-current="page">
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
+                  <PlusIcon className="w-4 h-4 mr-2" />
+                  Create
+                </span>
+              </div>
+            </li>
+          </ol>
+        </nav>
 
-      <Card title="🎓 Create New Skill Set">
-        {errors.submit && <Alert type="error">{errors.submit}</Alert>}
+        {/* Page Title */}
+        <div className="mb-4">
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center">
+            <AcademicCapIcon className="w-7 h-7 mr-3" />
+            Create New Skill Set
+          </h1>
+        </div>
 
-        <form onSubmit={handleSubmit}>
-          {/* Basic Information Section */}
-          <div style={styles.formSection}>
-            <h2 style={styles.sectionTitle}>ℹ️ Basic Information</h2>
-            <hr style={{ marginBottom: "15px" }} />
-
-            <div style={styles.formGrid}>
-              <Input
-                label="Category"
-                value={formData.category}
-                onChange={(e) => handleFieldChange("category", e.target.value)}
-                placeholder="Enter skill set category"
-                error={errors.category}
-                required
-                disabled={isLoading}
-              />
-
-              <Input
-                label="Sub-Category"
-                value={formData.subCategory}
-                onChange={(e) =>
-                  handleFieldChange("subCategory", e.target.value)
-                }
-                placeholder="Enter skill set sub-category"
-                error={errors.subCategory}
-                required
-                disabled={isLoading}
-              />
-
-              <TextArea
-                label="Description"
-                value={formData.description}
-                onChange={(e) =>
-                  handleFieldChange("description", e.target.value)
-                }
-                placeholder="Enter description (optional)"
-                rows={4}
-                maxLength={500}
-                error={errors.description}
-                disabled={isLoading}
-              />
-
-              <Select
-                label="Status"
-                value={formData.status}
-                onChange={(e) =>
-                  handleFieldChange("status", parseInt(e.target.value))
-                }
-                options={[
-                  { value: 1, label: "Active" },
-                  { value: 2, label: "Inactive" },
-                ]}
-                error={errors.status}
-                disabled={isLoading}
-              />
-
-              <Select
-                label="Insurance Requirement"
-                value={formData.insuranceRequirement}
-                onChange={(e) =>
-                  handleFieldChange(
-                    "insuranceRequirement",
-                    parseInt(e.target.value),
-                  )
-                }
-                options={[
-                  { value: 1, label: "None" },
-                  { value: 2, label: "Commercial General Liability" },
-                  { value: 3, label: "WSIB" },
-                ]}
-                error={errors.insuranceRequirement}
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-
-          {/* Guidelines Section */}
-          <div style={styles.formSection}>
-            <h2 style={styles.sectionTitle}>📋 Guidelines</h2>
-            <hr style={{ marginBottom: "15px" }} />
-
-            <div
-              style={{
-                backgroundColor: "#f8f9fa",
-                padding: "15px",
-                borderRadius: "4px",
-              }}
+        {/* Success/Error Messages */}
+        {successMessage && (
+          <div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center">
+              <CheckCircleIcon className="w-5 h-5 mr-2" />
+              {successMessage}
+            </span>
+            <button
+              onClick={() => setSuccessMessage("")}
+              className="text-green-600 hover:text-green-800"
             >
-              <ul style={{ margin: 0, paddingLeft: "20px" }}>
-                <li>
-                  Choose a clear and descriptive category and sub-category
-                </li>
-                <li>
-                  Categories should represent broad skill areas (e.g.,
-                  "Electrical", "Plumbing")
-                </li>
-                <li>
-                  Sub-categories should be more specific (e.g., "Residential
-                  Wiring", "Commercial Installation")
-                </li>
-                <li>
-                  Use the description to provide additional context or
-                  requirements
-                </li>
-                <li>
-                  Select appropriate insurance requirements based on the skill
-                  set risk level
-                </li>
-                <li>
-                  Skill sets help categorize associate abilities and job
-                  requirements
-                </li>
-              </ul>
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center">
+              <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
+              {error}
+            </span>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-600 hover:text-red-800"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
+        {/* Two Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column - Create Form */}
+          <div className="bg-white shadow-sm rounded-lg">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                <PlusIcon className="w-5 h-5 mr-2" />
+                Skill Set Information
+              </h2>
             </div>
+
+            <form onSubmit={handleSubmit} className="p-5">
+              <div className={isLoading ? "opacity-60" : ""}>
+                {/* Category Field */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Category <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.category}
+                    onChange={(e) =>
+                      handleFieldChange("category", e.target.value)
+                    }
+                    placeholder="e.g., Electrical, Plumbing, Carpentry"
+                    disabled={isLoading}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      errors.category ? "border-red-500" : "border-gray-300"
+                    }`}
+                  />
+                  {errors.category && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.category}
+                    </p>
+                  )}
+                  <div className="mt-1 text-right">
+                    <span
+                      className={`text-xs ${formData.category.length > 100 ? "text-amber-600" : "text-gray-500"}`}
+                    >
+                      {formData.category.length}/127
+                    </span>
+                  </div>
+                </div>
+
+                {/* Sub-Category Field */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Sub-Category <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.subCategory}
+                    onChange={(e) =>
+                      handleFieldChange("subCategory", e.target.value)
+                    }
+                    placeholder="e.g., Residential Wiring, Commercial Installation"
+                    disabled={isLoading}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      errors.subCategory ? "border-red-500" : "border-gray-300"
+                    }`}
+                  />
+                  {errors.subCategory && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.subCategory}
+                    </p>
+                  )}
+                  <div className="mt-1 text-right">
+                    <span
+                      className={`text-xs ${formData.subCategory.length > 100 ? "text-amber-600" : "text-gray-500"}`}
+                    >
+                      {formData.subCategory.length}/127
+                    </span>
+                  </div>
+                </div>
+
+                {/* Description Field */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Description
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={formData.description}
+                    onChange={(e) =>
+                      handleFieldChange("description", e.target.value)
+                    }
+                    placeholder="Provide additional context or requirements (optional)"
+                    maxLength={500}
+                    disabled={isLoading}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none ${
+                      errors.description ? "border-red-500" : "border-gray-300"
+                    }`}
+                  />
+                  {errors.description && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.description}
+                    </p>
+                  )}
+                  <div className="mt-1 flex items-center justify-between">
+                    <p className="text-xs text-gray-500">
+                      Optional - Add any special requirements
+                    </p>
+                    <span
+                      className={`text-xs ${formData.description.length > 400 ? "text-amber-600" : "text-gray-500"}`}
+                    >
+                      {formData.description.length}/500
+                    </span>
+                  </div>
+                </div>
+
+                {/* Insurance Requirement Field */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Insurance Requirement
+                  </label>
+                  <select
+                    value={formData.insuranceRequirement}
+                    onChange={(e) =>
+                      handleFieldChange(
+                        "insuranceRequirement",
+                        parseInt(e.target.value),
+                      )
+                    }
+                    disabled={isLoading}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value={1}>None</option>
+                    <option value={2}>Commercial General Liability</option>
+                    <option value={3}>WSIB</option>
+                  </select>
+                </div>
+
+                {/* Info Note */}
+                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-xs text-blue-800 flex items-start">
+                    <InformationCircleIcon className="w-4 h-4 mr-1.5 flex-shrink-0 mt-0.5" />
+                    <span>
+                      Skill sets will be created as active and available for
+                      selection when assigning to associates and job
+                      requirements.
+                    </span>
+                  </p>
+                </div>
+
+                {/* Form Actions */}
+                <div className="flex items-center justify-between">
+                  <button
+                    type="button"
+                    onClick={handleCancel}
+                    disabled={isLoading}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={
+                      isLoading ||
+                      !formData.category.trim() ||
+                      !formData.subCategory.trim()
+                    }
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <CheckCircleIcon className="w-4 h-4 mr-2" />
+                    {isLoading ? "Creating..." : "Create Skill Set"}
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
 
-          {/* Navigation Buttons */}
-          <div style={styles.actionButtons}>
-            <Link to="/admin/settings/skill-sets">
-              <Button variant="secondary">← Back</Button>
-            </Link>
-            <Button type="submit" variant="success" disabled={isLoading}>
-              {isLoading ? "Creating..." : "✓ Create Skill Set"}
-            </Button>
+          {/* Right Column - Guidelines & Tips */}
+          <div className="space-y-6">
+            {/* Best Practices */}
+            <div className="bg-white shadow-sm rounded-lg">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <LightBulbIcon className="w-5 h-5 mr-2 text-amber-500" />
+                  Best Practices
+                </h2>
+              </div>
+              <div className="p-5">
+                <ul className="space-y-2.5 text-sm text-gray-600">
+                  <li className="flex items-start">
+                    <TagIcon className="w-4 h-4 mr-2 text-blue-500 flex-shrink-0 mt-0.5" />
+                    <span>Use clear, industry-standard category names</span>
+                  </li>
+                  <li className="flex items-start">
+                    <DocumentTextIcon className="w-4 h-4 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span>Keep sub-categories specific but not too narrow</span>
+                  </li>
+                  <li className="flex items-start">
+                    <ShieldCheckIcon className="w-4 h-4 mr-2 text-purple-500 flex-shrink-0 mt-0.5" />
+                    <span>
+                      Set appropriate insurance requirements for risk level
+                    </span>
+                  </li>
+                  <li className="flex items-start">
+                    <ClipboardDocumentListIcon className="w-4 h-4 mr-2 text-orange-500 flex-shrink-0 mt-0.5" />
+                    <span>
+                      Add descriptions for skills requiring certifications
+                    </span>
+                  </li>
+                  <li className="flex items-start">
+                    <SparklesIcon className="w-4 h-4 mr-2 text-pink-500 flex-shrink-0 mt-0.5" />
+                    <span>Review existing skill sets to avoid duplicates</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Guidelines */}
+            <div className="bg-white shadow-sm rounded-lg">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <ClipboardDocumentListIcon className="w-5 h-5 mr-2 text-gray-500" />
+                  Guidelines
+                </h2>
+              </div>
+              <div className="p-5">
+                <div className="space-y-3 text-sm text-gray-600">
+                  <div>
+                    <h3 className="font-medium text-gray-900 mb-1">
+                      Categories
+                    </h3>
+                    <p>
+                      Should represent broad skill areas like "Electrical",
+                      "Plumbing", or "Carpentry".
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900 mb-1">
+                      Sub-Categories
+                    </h3>
+                    <p>
+                      More specific skills like "Residential Wiring" or
+                      "Commercial Installation".
+                    </p>
+                  </div>
+                  <div>
+                    <h3 className="font-medium text-gray-900 mb-1">
+                      Insurance Requirements
+                    </h3>
+                    <p>
+                      Choose based on the risk level and legal requirements of
+                      the skill set.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </form>
-      </Card>
+        </div>
+
+        {/* Back Link */}
+        <div className="mt-6">
+          <Link
+            to="/admin/settings/skill-sets"
+            className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+          >
+            <ArrowLeftIcon className="w-4 h-4 mr-1" />
+            Back to Skill Sets List
+          </Link>
+        </div>
+
+        {/* Loading Overlay */}
+        {isLoading && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 flex items-center space-x-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+              <span className="text-gray-700">Creating skill set...</span>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
