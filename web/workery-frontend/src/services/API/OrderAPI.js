@@ -600,7 +600,7 @@ export class OrderAPI {
       );
 
       const data = {
-        order_id: orderId,
+        order_wjid: parseInt(orderId),
         content: content,
       };
 
