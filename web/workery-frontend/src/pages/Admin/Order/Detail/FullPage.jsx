@@ -11,6 +11,7 @@ import {
   Loading,
   Breadcrumb,
 } from "../../../../components/UI";
+import { SkillSetsDisplay, TagsDisplay } from "../../../../components/Display";
 
 // Constants
 const CLIENT_PHONE_TYPE_WORK = 1;
@@ -44,6 +45,20 @@ function AdminOrderDetailFullPage() {
   // Handle unauthorized access
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
+  };
+
+  // Extract IDs from array of objects
+  const extractIds = (items) => {
+    if (!items || !Array.isArray(items)) return [];
+    return items
+      .map((item) => {
+        // Handle different possible structures
+        if (typeof item === "number" || typeof item === "string") {
+          return item;
+        }
+        return item.id || item.value || item.skillSetId || item.tagId;
+      })
+      .filter(Boolean);
   };
 
   // Fetch order data
@@ -100,20 +115,6 @@ function AdminOrderDetailFullPage() {
     if (!phone) return "-";
     const formatted = phone.replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3");
     return extension ? `${formatted} ext. ${extension}` : formatted;
-  };
-
-  // Format tags for display
-  const formatTags = (tags) => {
-    if (!tags || tags.length === 0) return "-";
-    return tags.map((tag) => tag.text || tag.name || tag).join(", ");
-  };
-
-  // Format skill sets for display
-  const formatSkillSets = (skillSets) => {
-    if (!skillSets || skillSets.length === 0) return "-";
-    return skillSets
-      .map((skill) => skill.subCategory || skill.name || skill)
-      .join(", ");
   };
 
   // Format address for display
@@ -516,12 +517,15 @@ function AdminOrderDetailFullPage() {
                       width: "30%",
                       textAlign: "left",
                       fontWeight: "600",
+                      verticalAlign: "top",
                     }}
                   >
                     Description
                   </th>
                   <td style={{ padding: "12px" }}>
-                    {order.description || "-"}
+                    <div style={{ whiteSpace: "pre-wrap" }}>
+                      {order.description || "-"}
+                    </div>
                   </td>
                 </tr>
                 <tr>
@@ -532,12 +536,16 @@ function AdminOrderDetailFullPage() {
                       width: "30%",
                       textAlign: "left",
                       fontWeight: "600",
+                      verticalAlign: "top",
                     }}
                   >
                     Skill Sets
                   </th>
                   <td style={{ padding: "12px" }}>
-                    {formatSkillSets(order.skillSets)}
+                    <SkillSetsDisplay
+                      values={extractIds(order.skillSets)}
+                      onUnauthorized={onUnauthorized}
+                    />
                   </td>
                 </tr>
 
@@ -752,11 +760,17 @@ function AdminOrderDetailFullPage() {
                       width: "30%",
                       textAlign: "left",
                       fontWeight: "600",
+                      verticalAlign: "top",
                     }}
                   >
                     Tag(s):
                   </th>
-                  <td style={{ padding: "12px" }}>{formatTags(order.tags)}</td>
+                  <td style={{ padding: "12px" }}>
+                    <TagsDisplay
+                      values={extractIds(order.tags)}
+                      onUnauthorized={onUnauthorized}
+                    />
+                  </td>
                 </tr>
                 <tr>
                   <th
