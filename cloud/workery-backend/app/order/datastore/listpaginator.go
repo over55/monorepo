@@ -64,6 +64,12 @@ type OrderPaginationListFilter struct {
 	// the associate.
 	AllTagIDs []primitive.ObjectID
 
+	// Add StartDate filters (these were missing!)
+	StartDateGT  time.Time
+	StartDateGTE time.Time
+	StartDateLT  time.Time
+	StartDateLTE time.Time
+
 	AssignmentDateGT  time.Time
 	AssignmentDateGTE time.Time
 	AssignmentDateLT  time.Time
