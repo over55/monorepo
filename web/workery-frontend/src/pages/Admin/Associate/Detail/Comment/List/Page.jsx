@@ -1,6 +1,6 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Associate/Detail/Comment/List/Page.jsx
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import {
   useAssociateManager,
@@ -28,6 +28,11 @@ function AdminAssociateDetailCommentListPage() {
   const associateManager = useAssociateManager();
   const commentManager = useCommentManager();
 
+  // Use refs to prevent infinite loops
+  const isMountedRef = useRef(false);
+  const fetchInProgressRef = useRef(false);
+  const lastFetchParamsRef = useRef(null);
+
   // Component states
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
@@ -49,12 +54,12 @@ function AdminAssociateDetailCommentListPage() {
   const [topAlertMessage, setTopAlertMessage] = useState("");
   const [topAlertStatus, setTopAlertStatus] = useState("");
 
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
-  };
+  }, [navigate]);
 
-  // Fetch associate details
-  const fetchAssociateDetail = async () => {
+  // Fetch associate details - stable function
+  const fetchAssociateDetail = useCallback(async () => {
     try {
       const data = await associateManager.getAssociateDetail(
         aid,
@@ -65,12 +70,39 @@ function AdminAssociateDetailCommentListPage() {
       console.error("Failed to fetch associate detail:", error);
       setErrors(error);
     }
-  };
+  }, [aid, associateManager, onUnauthorized]);
 
-  // Fetch comment list with force refresh option
+  // Fetch comment list - stable function without circular dependencies
   const fetchCommentList = useCallback(
-    async (forceRefresh = false, cursor = "") => {
+    async (
+      forceRefresh = false,
+      cursor = "",
+      pageSizeParam = null,
+      sortByParam = null,
+    ) => {
+      // Use passed parameters or current state
+      const currentPageSize = pageSizeParam || pageSize;
+      const currentSortBy = sortByParam || sortByValue;
+
+      // Create a unique key for this fetch to prevent duplicates
+      const fetchKey = `${aid}-${cursor}-${currentPageSize}-${currentSortBy}`;
+
+      // Check if this exact fetch is already in progress or was just completed
+      if (fetchInProgressRef.current) {
+        console.log("Fetch already in progress, skipping...");
+        return;
+      }
+
+      // Check if we just fetched with these exact params
+      if (!forceRefresh && lastFetchParamsRef.current === fetchKey) {
+        console.log("Already fetched with these params, skipping...");
+        return;
+      }
+
       try {
+        fetchInProgressRef.current = true;
+        lastFetchParamsRef.current = fetchKey;
+
         if (forceRefresh) {
           setRefreshing(true);
           // Clear the cache to force fresh data
@@ -81,11 +113,11 @@ function AdminAssociateDetailCommentListPage() {
         setErrors({});
 
         // Handle sorting
-        const sortArray = sortByValue.split(",");
+        const sortArray = currentSortBy.split(",");
 
         // Build parameters object for the API
         const params = {
-          page_size: pageSize.toString(),
+          page_size: currentPageSize.toString(),
           associate_id: aid, // CRITICAL: Pass the associate ID to filter
           belongs_to: BELONGS_TO_ASSOCIATE.toString(), // Filter for associate comments
           sort_field: sortArray[0],
@@ -99,13 +131,7 @@ function AdminAssociateDetailCommentListPage() {
 
         console.log("Fetching comments with params:", params);
 
-        // Build URL with query parameters
-        const queryParams = new URLSearchParams(params);
-        const url = `/api/v1/comments?${queryParams.toString()}`;
-
-        console.log("Request URL:", url);
-
-        // Use the raw params approach to ensure proper URL encoding
+        // Build filters map
         const filtersMap = new Map();
         Object.entries(params).forEach(([key, value]) => {
           filtersMap.set(key, value);
@@ -131,10 +157,10 @@ function AdminAssociateDetailCommentListPage() {
             hasNextPage: data.hasNextPage || false,
           });
 
-          if (data.hasNextPage && data.nextCursor) {
-            setNextCursor(data.nextCursor);
-          } else {
-            setNextCursor("");
+          // Only update nextCursor if it actually changed
+          const newNextCursor = data.nextCursor || "";
+          if (newNextCursor !== nextCursor) {
+            setNextCursor(newNextCursor);
           }
         }
 
@@ -150,13 +176,17 @@ function AdminAssociateDetailCommentListPage() {
       } finally {
         setFetching(false);
         setRefreshing(false);
+        // Add a small delay before clearing the flag to prevent rapid re-fetches
+        setTimeout(() => {
+          fetchInProgressRef.current = false;
+        }, 100);
       }
     },
-    [aid, pageSize, sortByValue, commentManager, onUnauthorized],
+    [aid, commentManager, onUnauthorized, nextCursor, pageSize, sortByValue],
   );
 
   // Submit new comment
-  const onSubmitClick = async () => {
+  const onSubmitClick = useCallback(async () => {
     console.log("onSubmitClick: Beginning...");
 
     // Validate content
@@ -170,7 +200,7 @@ function AdminAssociateDetailCommentListPage() {
 
     try {
       // Call the manager to create comment
-      const response = await associateManager.createAssociateComment(
+      await associateManager.createAssociateComment(
         aid,
         content,
         onUnauthorized,
@@ -187,7 +217,8 @@ function AdminAssociateDetailCommentListPage() {
       setCurrentCursor("");
       setPreviousCursors([]);
       setNextCursor("");
-      fetchCommentList(true);
+      lastFetchParamsRef.current = null; // Clear the last fetch params
+      await fetchCommentList(true, "");
 
       // Clear message after 3 seconds
       setTimeout(() => {
@@ -206,38 +237,40 @@ function AdminAssociateDetailCommentListPage() {
     } finally {
       setSubmitting(false);
     }
-  };
+  }, [aid, content, associateManager, onUnauthorized, fetchCommentList]);
 
   // Refresh handler
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     // Reset pagination
     setCurrentCursor("");
     setPreviousCursors([]);
     setNextCursor("");
-    fetchCommentList(true);
-  };
+    lastFetchParamsRef.current = null; // Clear the last fetch params
+    fetchCommentList(true, "");
+  }, [fetchCommentList]);
 
   // Pagination handlers
-  const onNextClicked = () => {
+  const onNextClicked = useCallback(() => {
     console.log("Next Clicked, nextCursor:", nextCursor);
     if (nextCursor) {
-      let arr = [...previousCursors];
-      arr.push(currentCursor);
-      setPreviousCursors(arr);
+      setPreviousCursors((prev) => [...prev, currentCursor]);
       setCurrentCursor(nextCursor);
     }
-  };
+  }, [nextCursor, currentCursor]);
 
-  const onPreviousClicked = () => {
+  const onPreviousClicked = useCallback(() => {
     console.log("Previous Clicked");
-    let arr = [...previousCursors];
-    if (arr.length > 0) {
-      const previousCursor = arr.pop();
-      setPreviousCursors(arr);
-      setCurrentCursor(previousCursor);
-      setNextCursor(""); // Reset next cursor when going back
-    }
-  };
+    setPreviousCursors((prev) => {
+      const arr = [...prev];
+      if (arr.length > 0) {
+        const previousCursor = arr.pop();
+        setCurrentCursor(previousCursor);
+        setNextCursor(""); // Reset next cursor when going back
+        return arr;
+      }
+      return prev;
+    });
+  }, []);
 
   // Format date/time helper
   const formatDateTime = (dateString) => {
@@ -263,21 +296,36 @@ function AdminAssociateDetailCommentListPage() {
     }
   };
 
-  // Initial load - fetch associate details
+  // Initial load - fetch associate details ONCE
   useEffect(() => {
-    window.scrollTo(0, 0);
-    fetchAssociateDetail();
-    // Clear cache on mount to ensure fresh data
-    commentManager.clearCommentsCache();
-  }, [aid]);
+    if (!isMountedRef.current) {
+      isMountedRef.current = true;
+      window.scrollTo(0, 0);
+      fetchAssociateDetail();
+      // Clear cache on mount to ensure fresh data
+      commentManager.clearCommentsCache();
+    }
+  }, []); // Empty dependency array - only run once on mount
 
-  // Fetch comments when cursor or sort changes
+  // Fetch comments when cursor changes
   useEffect(() => {
-    if (aid) {
+    if (aid && isMountedRef.current && !fetchInProgressRef.current) {
       console.log("Fetching with currentCursor:", currentCursor);
       fetchCommentList(false, currentCursor);
     }
-  }, [currentCursor, pageSize, sortByValue, aid]);
+  }, [currentCursor, aid]); // Only depend on cursor and aid
+
+  // Handle sort or page size changes separately
+  useEffect(() => {
+    if (isMountedRef.current && aid && !fetchInProgressRef.current) {
+      // Reset pagination and fetch with new params
+      setCurrentCursor("");
+      setPreviousCursors([]);
+      setNextCursor("");
+      lastFetchParamsRef.current = null; // Clear the last fetch params
+      fetchCommentList(false, "", pageSize, sortByValue);
+    }
+  }, [pageSize, sortByValue, aid]); // Only depend on these specific values
 
   // Page size options
   const pageSizeOptions = [
@@ -392,7 +440,7 @@ function AdminAssociateDetailCommentListPage() {
             <Button
               onClick={handleRefresh}
               variant="outline"
-              disabled={isRefreshing}
+              disabled={isRefreshing || fetchInProgressRef.current}
             >
               {isRefreshing ? "Refreshing..." : "🔄 Refresh"}
             </Button>
@@ -497,9 +545,6 @@ function AdminAssociateDetailCommentListPage() {
                   value={sortByValue}
                   onChange={(e) => {
                     setSortByValue(e.target.value);
-                    setCurrentCursor(""); // Reset pagination
-                    setPreviousCursors([]);
-                    setNextCursor("");
                   }}
                   style={{
                     padding: "8px 12px",
@@ -693,9 +738,6 @@ function AdminAssociateDetailCommentListPage() {
                         onChange={(e) => {
                           const newSize = parseInt(e.target.value);
                           setPageSize(newSize);
-                          setCurrentCursor(""); // Reset pagination
-                          setPreviousCursors([]);
-                          setNextCursor("");
                         }}
                         style={{
                           padding: "8px 12px",

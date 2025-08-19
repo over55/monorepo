@@ -2,7 +2,6 @@
 
 import { camelizeKeys, decamelize } from "humps";
 import { createAuthenticatedAxios } from "../Helpers/AuthenticatedAxios";
-import { DateTime } from "luxon";
 
 /**
  * CommentAPI handles all comment-related API calls
@@ -76,20 +75,8 @@ export class CommentAPI {
       // Convert response from snake_case to camelCase
       const data = camelizeKeys(response.data);
 
-      // Process date formatting for results
-      if (
-        data.results &&
-        Array.isArray(data.results) &&
-        data.results.length > 0
-      ) {
-        data.results.forEach((item) => {
-          if (item.createdAt) {
-            item.createdAt = DateTime.fromISO(item.createdAt).toLocaleString(
-              DateTime.DATETIME_MED,
-            );
-          }
-        });
-      }
+      // DO NOT process date formatting here - let the component handle it
+      // This was causing the "Invalid DateTime" error
 
       return data;
     } catch (error) {
@@ -126,24 +113,22 @@ export class CommentAPI {
         }
       });
 
+      console.log("CommentAPI: Request URL:", aURL);
+
       // Make the API call
       const response = await authenticatedAxios.get(aURL);
 
       // Convert response from snake_case to camelCase
       const data = camelizeKeys(response.data);
 
-      // Process date formatting for results (matching old implementation)
-      if (
-        data.results !== undefined &&
-        data.results !== null &&
-        data.results.length > 0
-      ) {
-        data.results.forEach((item, index) => {
-          item.createdAt = DateTime.fromISO(item.createdAt).toLocaleString(
-            DateTime.DATETIME_MED,
-          );
-        });
-      }
+      // DO NOT process date formatting here - let the component handle it
+      // The component should receive raw ISO date strings
+
+      console.log("CommentAPI: Response data:", {
+        resultsCount: data.results?.length || 0,
+        hasNextPage: data.hasNextPage,
+        nextCursor: data.nextCursor,
+      });
 
       return data;
     } catch (error) {
