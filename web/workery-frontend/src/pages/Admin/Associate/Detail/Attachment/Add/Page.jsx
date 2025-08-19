@@ -3,19 +3,23 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import {
+  ChartBarIcon,
+  UserGroupIcon,
+  PaperClipIcon,
+  ChevronLeftIcon,
+  PlusCircleIcon,
+  ClipboardDocumentListIcon,
+  CheckCircleIcon,
+  ExclamationCircleIcon,
+  XMarkIcon,
+  DocumentArrowUpIcon,
+  InformationCircleIcon,
+  ArchiveBoxIcon,
+} from "@heroicons/react/24/outline";
+import {
   useAttachmentManager,
   useAssociateManager,
 } from "../../../../../../services/Services";
-import { theme, globalStyles } from "../../../../../../constants/Theme";
-import {
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Breadcrumb,
-  Input,
-  TextArea,
-} from "../../../../../../components/UI";
 
 function AdminAssociateDetailAttachmentAddPage() {
   const { aid } = useParams();
@@ -118,108 +122,290 @@ function AdminAssociateDetailAttachmentAddPage() {
     }
   };
 
-  // Breadcrumb items
-  const breadcrumbItems = [
-    { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
-    { path: "/admin/associates", label: "Associates", icon: "👷" },
-    {
-      path: `/admin/associate/${aid}/attachments`,
-      label: "Detail (Attachments)",
-      icon: "📎",
-    },
-    { label: "Add", icon: "➕" },
-  ];
-
   return (
-    <div style={globalStyles.container}>
-      <Breadcrumb items={breadcrumbItems} />
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Breadcrumb */}
+      <nav className="flex mb-6" aria-label="Breadcrumb">
+        <ol className="inline-flex items-center space-x-1 md:space-x-3">
+          <li className="inline-flex items-center">
+            <Link
+              to="/admin/dashboard"
+              className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+            >
+              <ChartBarIcon className="w-4 h-4 mr-2" />
+              Dashboard
+            </Link>
+          </li>
+          <li>
+            <div className="flex items-center">
+              <span className="mx-2 text-gray-400">/</span>
+              <Link
+                to="/admin/associates"
+                className="text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <span className="inline-flex items-center">
+                  <UserGroupIcon className="w-4 h-4 mr-2" />
+                  Associates
+                </span>
+              </Link>
+            </div>
+          </li>
+          <li>
+            <div className="flex items-center">
+              <span className="mx-2 text-gray-400">/</span>
+              <Link
+                to={`/admin/associate/${aid}/attachments`}
+                className="text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <span className="inline-flex items-center">
+                  <ClipboardDocumentListIcon className="w-4 h-4 mr-2" />
+                  Detail (Attachments)
+                </span>
+              </Link>
+            </div>
+          </li>
+          <li aria-current="page">
+            <div className="flex items-center">
+              <span className="mx-2 text-gray-400">/</span>
+              <span className="text-sm font-medium text-gray-500 inline-flex items-center">
+                <PlusCircleIcon className="w-4 h-4 mr-2" />
+                Add
+              </span>
+            </div>
+          </li>
+        </ol>
+      </nav>
 
-      {alertMessage && (
-        <Alert
-          type={alertStatus}
-          onClose={() => {
-            setAlertMessage("");
-            setAlertStatus("");
-          }}
-        >
-          {alertMessage}
-        </Alert>
+      {/* Page Title */}
+      <div className="mb-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center">
+              <UserGroupIcon className="w-8 h-8 mr-3 text-blue-600" />
+              Associate - Add Attachment
+            </h1>
+            <p className="mt-1 text-sm text-gray-600 flex items-center">
+              <InformationCircleIcon className="w-4 h-4 mr-1" />
+              Upload documents and files for this associate
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Status Alerts */}
+      {associate && associate.status === 2 && (
+        <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg flex items-center">
+          <ArchiveBoxIcon className="w-5 h-5 mr-2" />
+          This associate is archived
+        </div>
       )}
 
-      <h1>👷 Associate - Add Attachment</h1>
+      {/* Alert Messages */}
+      {alertMessage && (
+        <div
+          className={`mb-4 px-4 py-3 rounded-lg flex items-center justify-between ${
+            alertStatus === "success"
+              ? "bg-green-50 border border-green-200 text-green-700"
+              : "bg-red-50 border border-red-200 text-red-700"
+          }`}
+        >
+          <div className="flex items-center">
+            {alertStatus === "success" ? (
+              <CheckCircleIcon className="w-5 h-5 mr-2" />
+            ) : (
+              <ExclamationCircleIcon className="w-5 h-5 mr-2" />
+            )}
+            <span>{alertMessage}</span>
+          </div>
+          <button
+            onClick={() => {
+              setAlertMessage("");
+              setAlertStatus("");
+            }}
+            className="ml-4 hover:bg-white hover:bg-opacity-20 rounded p-1"
+          >
+            <XMarkIcon className="w-5 h-5" />
+          </button>
+        </div>
+      )}
 
-      <Card>
-        {isFetching ? (
-          <Loading message="Processing..." />
-        ) : (
-          <>
-            {errors.general && <Alert type="error">{errors.general}</Alert>}
+      {/* Main Content Card */}
+      <div className="bg-white shadow-sm rounded-lg">
+        <div className="px-6 py-5 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+            <DocumentArrowUpIcon className="w-6 h-6 mr-2 text-blue-600" />
+            New Attachment
+          </h2>
+        </div>
 
-            <Input
-              label="Title"
-              name="title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              error={errors.title}
-              required
-              placeholder="Enter attachment title"
-            />
-
-            <TextArea
-              label="Description"
-              name="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              error={errors.description}
-              placeholder="Enter attachment description (optional)"
-              rows={4}
-            />
-
-            <div style={{ marginBottom: "20px" }}>
-              <label style={globalStyles.label}>
-                File <span style={{ color: "red" }}>*</span>
-              </label>
-              {selectedFile ? (
-                <Alert type="success">
-                  ✅ File ready to upload: {selectedFile.name}
-                </Alert>
-              ) : (
-                <>
-                  <input
-                    name="file"
-                    type="file"
-                    onChange={onHandleFileChange}
-                    style={{ display: "block", marginTop: "5px" }}
-                  />
-                  {errors.file && (
-                    <div style={globalStyles.errorMessage}>{errors.file}</div>
-                  )}
-                </>
+        <div className="p-6">
+          {isFetching ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-4 text-gray-600">Processing...</p>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Error Display */}
+              {errors.general && (
+                <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                  <div className="flex items-center">
+                    <ExclamationCircleIcon className="w-5 h-5 mr-2" />
+                    <span>{errors.general}</span>
+                  </div>
+                </div>
               )}
-            </div>
 
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                gap: "10px",
-                marginTop: "30px",
-              }}
-            >
-              <Link to={`/admin/associate/${aid}/attachments`}>
-                <Button variant="secondary">← Back to Attachments</Button>
-              </Link>
-              <Button
-                variant="success"
-                onClick={onSubmitClick}
-                disabled={!title || !selectedFile}
-              >
-                ✓ Save
-              </Button>
-            </div>
-          </>
-        )}
-      </Card>
+              {/* Form */}
+              <div className="space-y-6">
+                {/* Title Input */}
+                <div>
+                  <label
+                    htmlFor="title"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Title <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="title"
+                    name="title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Enter attachment title"
+                    className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                      errors.title
+                        ? "border-red-300 text-red-900 placeholder-red-300"
+                        : "border-gray-300"
+                    }`}
+                  />
+                  {errors.title && (
+                    <p className="mt-2 text-sm text-red-600">{errors.title}</p>
+                  )}
+                </div>
+
+                {/* Description TextArea */}
+                <div>
+                  <label
+                    htmlFor="description"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Description
+                  </label>
+                  <textarea
+                    id="description"
+                    name="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Enter attachment description (optional)"
+                    rows={4}
+                    className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                      errors.description
+                        ? "border-red-300 text-red-900 placeholder-red-300"
+                        : "border-gray-300"
+                    }`}
+                  />
+                  {errors.description && (
+                    <p className="mt-2 text-sm text-red-600">
+                      {errors.description}
+                    </p>
+                  )}
+                </div>
+
+                {/* File Upload */}
+                <div>
+                  <label
+                    htmlFor="file"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    File <span className="text-red-500">*</span>
+                  </label>
+                  {selectedFile ? (
+                    <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <CheckCircleIcon className="w-5 h-5 mr-2" />
+                          <span>
+                            File ready to upload:{" "}
+                            <strong>{selectedFile.name}</strong>
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedFile(null)}
+                          className="ml-4 text-green-600 hover:text-green-800"
+                        >
+                          <XMarkIcon className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-gray-400 transition-colors">
+                        <div className="space-y-1 text-center">
+                          <DocumentArrowUpIcon className="mx-auto h-12 w-12 text-gray-400" />
+                          <div className="flex text-sm text-gray-600">
+                            <label
+                              htmlFor="file-upload"
+                              className="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+                            >
+                              <span>Upload a file</span>
+                              <input
+                                id="file-upload"
+                                name="file"
+                                type="file"
+                                onChange={onHandleFileChange}
+                                className="sr-only"
+                              />
+                            </label>
+                            <p className="pl-1">or drag and drop</p>
+                          </div>
+                          <p className="text-xs text-gray-500">
+                            Any file type up to 10MB
+                          </p>
+                        </div>
+                      </div>
+                      {errors.file && (
+                        <p className="mt-2 text-sm text-red-600">
+                          {errors.file}
+                        </p>
+                      )}
+                    </>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-between items-center pt-6 border-t border-gray-200">
+                  <Link to={`/admin/associate/${aid}/attachments`}>
+                    <button
+                      type="button"
+                      className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                    >
+                      <ChevronLeftIcon className="w-5 h-5 mr-2" />
+                      Back to Attachments
+                    </button>
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={onSubmitClick}
+                    disabled={!title || !selectedFile || isFetching}
+                    className={`inline-flex items-center px-5 py-2.5 border rounded-lg text-base font-medium transition-colors ${
+                      !title || !selectedFile || isFetching
+                        ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+                        : "border-transparent text-white bg-green-600 hover:bg-green-700"
+                    }`}
+                  >
+                    <CheckCircleIcon className="w-5 h-5 mr-2" />
+                    Save
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
