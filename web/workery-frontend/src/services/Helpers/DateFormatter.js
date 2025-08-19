@@ -103,6 +103,15 @@ export function formatDateTime(dateTimeString, format = "medium") {
 export function formatDateForDisplay(dateString) {
   if (!dateString) return "-";
 
+  // Check for zero/null date values (Go's zero time)
+  if (
+    dateString === "0001-01-01T00:00:00Z" ||
+    dateString === "0001-01-01T00:00:00" ||
+    dateString.startsWith("0001-01-01")
+  ) {
+    return "-";
+  }
+
   // If already formatted (contains month name), return as is
   if (/[A-Za-z]/.test(dateString) && !dateString.includes("T")) {
     return dateString;
