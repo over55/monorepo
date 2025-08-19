@@ -34,8 +34,8 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	pageSize := query.Get("page_size")
 	if pageSize != "" {
 		pageSizeInt, _ := strconv.ParseInt(pageSize, 10, 64)
-		if pageSizeInt == 0 || pageSizeInt > 250 {
-			pageSizeInt = 250
+		if pageSizeInt == 0 || pageSizeInt > 1000 {
+			pageSizeInt = 1000 // Default to 1000 if invalid or too large
 		}
 		f.PageSize = pageSizeInt
 	}

@@ -49,12 +49,12 @@ function AdminAssociateDetailCommentListPage() {
   const [topAlertMessage, setTopAlertMessage] = useState("");
   const [topAlertStatus, setTopAlertStatus] = useState("");
 
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
-  };
+  }, [navigate]);
 
   // Fetch associate details
-  const fetchAssociateDetail = async () => {
+  const fetchAssociateDetail = useCallback(async () => {
     try {
       const data = await associateManager.getAssociateDetail(
         aid,
@@ -65,86 +65,89 @@ function AdminAssociateDetailCommentListPage() {
       console.error("Failed to fetch associate detail:", error);
       setErrors(error);
     }
-  };
+  }, [aid, associateManager, onUnauthorized]);
 
-  // Core fetch function - NOT wrapped in useCallback to avoid dependency issues
-  const doFetchComments = async (cursor = "", forceRefresh = false) => {
-    try {
-      if (forceRefresh) {
-        setRefreshing(true);
-        commentManager.clearCommentsCache();
-      } else {
-        setFetching(true);
-      }
-      setErrors({});
+  // Core fetch function
+  const doFetchComments = useCallback(
+    async (cursor = "", forceRefresh = false) => {
+      try {
+        if (forceRefresh) {
+          setRefreshing(true);
+          commentManager.clearCommentsCache();
+        } else {
+          setFetching(true);
+        }
+        setErrors({});
 
-      // Handle sorting
-      const sortArray = sortByValue.split(",");
+        // Handle sorting
+        const sortArray = sortByValue.split(",");
 
-      // Build parameters object for the API
-      const params = {
-        page_size: pageSize.toString(),
-        associate_id: aid,
-        belongs_to: BELONGS_TO_ASSOCIATE.toString(),
-        sort_field: sortArray[0],
-        sort_order: sortArray[1],
-      };
+        // Build parameters object for the API
+        const params = {
+          page_size: pageSize.toString(),
+          associate_id: aid,
+          belongs_to: BELONGS_TO_ASSOCIATE.toString(),
+          sort_field: sortArray[0],
+          sort_order: sortArray[1],
+        };
 
-      // Add cursor if provided
-      if (cursor && cursor !== "") {
-        params.cursor = cursor;
-      }
+        // Add cursor if provided
+        if (cursor && cursor !== "") {
+          params.cursor = cursor;
+        }
 
-      console.log("Fetching comments with params:", params);
+        console.log("Fetching comments with params:", params);
 
-      // Build filters map
-      const filtersMap = new Map();
-      Object.entries(params).forEach(([key, value]) => {
-        filtersMap.set(key, value);
-      });
-
-      // Fetch comments
-      const data = await commentManager.getCommentsWithFiltersMap(
-        filtersMap,
-        onUnauthorized,
-        forceRefresh,
-      );
-
-      console.log("Received comment data:", {
-        resultsCount: data?.results?.length || 0,
-        hasNextPage: data?.hasNextPage,
-        nextCursor: data?.nextCursor,
-      });
-
-      if (data) {
-        setCommentList({
-          results: data.results || [],
-          nextCursor: data.nextCursor || "",
-          hasNextPage: data.hasNextPage || false,
+        // Build filters map
+        const filtersMap = new Map();
+        Object.entries(params).forEach(([key, value]) => {
+          filtersMap.set(key, value);
         });
 
-        // Update next cursor for pagination
-        if (data.hasNextPage && data.nextCursor) {
-          setNextCursor(data.nextCursor);
-        } else {
-          setNextCursor("");
-        }
-      }
+        // Fetch comments
+        const data = await commentManager.getCommentsWithFiltersMap(
+          filtersMap,
+          onUnauthorized,
+          forceRefresh,
+        );
 
-      setLastFetchTime(new Date());
-    } catch (error) {
-      console.error("Failed to fetch comment list:", error);
-      setErrors(error);
-      setCommentList({
-        results: [],
-        nextCursor: "",
-        hasNextPage: false,
-      });
-    } finally {
-      setFetching(false);
-      setRefreshing(false);
-    }
-  };
+        console.log("Received comment data:", {
+          resultsCount: data?.results?.length || 0,
+          hasNextPage: data?.hasNextPage,
+          nextCursor: data?.nextCursor,
+        });
+
+        if (data) {
+          setCommentList({
+            results: data.results || [],
+            nextCursor: data.nextCursor || "",
+            hasNextPage: data.hasNextPage || false,
+          });
+
+          // Update next cursor for pagination
+          if (data.hasNextPage && data.nextCursor) {
+            setNextCursor(data.nextCursor);
+          } else {
+            setNextCursor("");
+          }
+        }
+
+        setLastFetchTime(new Date());
+      } catch (error) {
+        console.error("Failed to fetch comment list:", error);
+        setErrors(error);
+        setCommentList({
+          results: [],
+          nextCursor: "",
+          hasNextPage: false,
+        });
+      } finally {
+        setFetching(false);
+        setRefreshing(false);
+      }
+    },
+    [aid, pageSize, sortByValue, commentManager, onUnauthorized],
+  );
 
   // Submit new comment
   const onSubmitClick = async () => {
@@ -239,7 +242,9 @@ function AdminAssociateDetailCommentListPage() {
     const diff = now.diff(fetchTime, ["minutes", "seconds"]);
 
     if (diff.minutes >= 1) {
-      return `Last updated ${Math.floor(diff.minutes)} minute${Math.floor(diff.minutes) !== 1 ? "s" : ""} ago`;
+      return `Last updated ${Math.floor(diff.minutes)} minute${
+        Math.floor(diff.minutes) !== 1 ? "s" : ""
+      } ago`;
     } else {
       return `Last updated ${Math.floor(diff.seconds)} seconds ago`;
     }
@@ -250,7 +255,7 @@ function AdminAssociateDetailCommentListPage() {
     window.scrollTo(0, 0);
     fetchAssociateDetail();
     commentManager.clearCommentsCache();
-  }, [aid]);
+  }, [fetchAssociateDetail, commentManager]);
 
   // Fetch comments when cursor changes - THIS IS THE KEY EFFECT FOR PAGINATION
   useEffect(() => {
@@ -258,7 +263,7 @@ function AdminAssociateDetailCommentListPage() {
       console.log("Cursor changed, fetching with:", currentCursor);
       doFetchComments(currentCursor, false);
     }
-  }, [currentCursor]); // Only depend on currentCursor!
+  }, [aid, currentCursor, doFetchComments]);
 
   // Reset when page size or sort changes
   useEffect(() => {
