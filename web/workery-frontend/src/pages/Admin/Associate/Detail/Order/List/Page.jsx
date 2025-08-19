@@ -15,6 +15,7 @@ import {
   Breadcrumb,
 } from "../../../../../../components/UI";
 import { DateTime } from "luxon";
+import { formatDateForDisplay } from "../../../../../../services/Helpers/DateFormatter";
 
 // Constants
 const COMMERCIAL_ASSOCIATE_TYPE_OF_ID = 3;
@@ -161,16 +162,6 @@ function AdminAssociateDetailOrderListPage() {
     const previousCursor = arr.pop();
     setPreviousCursors(arr);
     setCurrentCursor(previousCursor);
-  };
-
-  // Format date helper
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    try {
-      return DateTime.fromISO(dateString).toLocaleString(DateTime.DATE_MED);
-    } catch {
-      return dateString;
-    }
   };
 
   // Format status helper with color
@@ -680,7 +671,7 @@ function AdminAssociateDetailOrderListPage() {
                               borderBottom: "1px solid #dee2e6",
                             }}
                           >
-                            {formatDate(order.assignmentDate)}
+                            {formatDateForDisplay(order.assignmentDate)}
                           </td>
                           <td
                             style={{
@@ -688,7 +679,7 @@ function AdminAssociateDetailOrderListPage() {
                               borderBottom: "1px solid #dee2e6",
                             }}
                           >
-                            {formatDate(order.startDate)}
+                            {formatDateForDisplay(order.startDate)}
                           </td>
                           <td
                             style={{
@@ -696,7 +687,7 @@ function AdminAssociateDetailOrderListPage() {
                               borderBottom: "1px solid #dee2e6",
                             }}
                           >
-                            {formatDate(order.completionDate)}
+                            {formatDateForDisplay(order.completionDate)}
                           </td>
                           <td
                             style={{
@@ -785,14 +776,15 @@ function AdminAssociateDetailOrderListPage() {
                       </div>
                       <div style={{ marginBottom: "5px" }}>
                         <strong>Assigned:</strong>{" "}
-                        {formatDate(order.assignmentDate)}
+                        {formatDateForDisplay(order.assignmentDate)}
                       </div>
                       <div style={{ marginBottom: "5px" }}>
-                        <strong>Start:</strong> {formatDate(order.startDate)}
+                        <strong>Start:</strong>{" "}
+                        {formatDateForDisplay(order.startDate)}
                       </div>
                       <div style={{ marginBottom: "5px" }}>
                         <strong>Completion:</strong>{" "}
-                        {formatDate(order.completionDate)}
+                        {formatDateForDisplay(order.completionDate)}
                       </div>
                       <div style={{ marginBottom: "5px" }}>
                         <strong>Status:</strong> {formatStatus(order.status)}
