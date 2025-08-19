@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { useOrderManager } from "../../../../../../services/Services";
-import { formatDateForDisplay } from "../../../../../../services/Helpers/dateFormatter";
+import { formatDateForDisplay } from "../../../../../../services/Helpers/DateFormatter";
 import { ORDER_STATUS_ARCHIVED } from "../../../../../../constants/Order";
 
 function AdminOrderDetailCommentListPage() {

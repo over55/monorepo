@@ -32,7 +32,7 @@ import {
   STAFF_TYPE_MANAGEMENT,
   STAFF_TYPE_EXECUTIVE,
 } from "../../../../constants/Staff";
-import { formatDateForDisplay } from "../../../../services/Helpers/dateFormatter";
+import { formatDateForDisplay } from "../../../../services/Helpers/DateFormatter";
 
 function AdminOrderDetailFullPage() {
   const { oid } = useParams();

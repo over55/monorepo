@@ -11,7 +11,7 @@ import {
   Loading,
   Breadcrumb,
 } from "../../../../../../components/UI";
-import { formatDateForDisplay } from "../../../../../../services/Helpers/dateFormatter";
+import { formatDateForDisplay } from "../../../../../../services/Helpers/DateFormatter";
 import {
   ORDER_STATUS_DECLINED,
   ORDER_STATUS_CANCELLED,
