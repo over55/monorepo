@@ -1,19 +1,33 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Associate/Add/Step5Page.jsx
 
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuthManager } from "../../../../services/Services";
-import { theme, globalStyles } from "../../../../constants/Theme";
 import {
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Breadcrumb,
-  Input,
-  Select,
-  TextArea,
-} from "../../../../components/UI";
+  UserPlusIcon,
+  ChevronRightIcon,
+  XMarkIcon,
+  ArrowLeftIcon,
+  ChartBarIcon,
+  WrenchScrewdriverIcon,
+  ExclamationCircleIcon,
+  CheckIcon,
+  ArrowRightIcon,
+  AcademicCapIcon,
+  ShieldCheckIcon,
+  CurrencyDollarIcon,
+  CalendarDaysIcon,
+  DocumentCheckIcon,
+  TruckIcon,
+  LanguageIcon,
+  PhoneIcon,
+  UserGroupIcon,
+  LockClosedIcon,
+  ComputerDesktopIcon,
+  ClipboardDocumentIcon,
+  IdentificationIcon,
+  CreditCardIcon,
+} from "@heroicons/react/24/outline";
 import {
   SkillSetsMultiSelect,
   InsuranceRequirementsMultiSelect,
@@ -276,391 +290,690 @@ function AdminAssociateAddStep5Page() {
     }
   };
 
-  const breadcrumbItems = [
-    { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
-    { path: "/admin/associates", label: "Associates", icon: "👷" },
-    { label: "New", icon: "➕" },
-  ];
-
-  const languageOptions = [
-    { value: "English", label: "English" },
-    { value: "French", label: "French" },
-  ];
-
   return (
-    <div style={globalStyles.container}>
-      <Breadcrumb items={breadcrumbItems} />
-
-      {/* Page Title */}
-      <div style={globalStyles.section}>
-        <h1 style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>
-          👷 Associates
-        </h1>
-        <h2 style={{ fontSize: "1.5rem", color: "#666", marginBottom: "2rem" }}>
-          ➕ New Associate
-        </h2>
-        <hr style={{ marginBottom: "2rem" }} />
-      </div>
-
-      {/* Progress Wizard */}
-      <Card
-        style={{ backgroundColor: theme.colors.light, marginBottom: "2rem" }}
-      >
-        <h3 style={{ fontSize: "1.25rem", marginBottom: "1rem" }}>
-          Step 5 of 7
-        </h3>
-        <div
-          style={{
-            width: "100%",
-            height: "8px",
-            backgroundColor: "#e0e0e0",
-            borderRadius: "4px",
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              width: "71%",
-              height: "100%",
-              backgroundColor: theme.colors.success,
-              transition: "width 0.3s ease",
-            }}
-          ></div>
-        </div>
-        <small style={{ color: "#666", marginTop: "0.5rem", display: "block" }}>
-          71%
-        </small>
-      </Card>
-
-      {/* Main Content */}
-      <Card>
-        <h2 style={{ fontSize: "1.5rem", marginBottom: "1rem" }}>👷 Account</h2>
-
-        <p style={{ color: "#666", marginBottom: "2rem" }}>
-          Please fill out all the required fields before submitting this form.
-        </p>
-
-        {isLoading ? (
-          <Loading message="Submitting..." />
-        ) : (
-          <>
-            {errors.general && (
-              <Alert type="error" style={{ marginBottom: "1rem" }}>
-                {errors.general}
-              </Alert>
-            )}
-
-            <form onSubmit={onSubmitClick}>
-              <div style={{ display: "grid", gap: "2rem", maxWidth: "800px" }}>
-                {/* Skill Sets Section - Using Reusable Component */}
-                <div>
-                  <h3 style={{ fontSize: "1.2rem", marginBottom: "1rem" }}>
-                    🎓 Skill Sets
-                  </h3>
-                  <SkillSetsMultiSelect
-                    value={skillSets}
-                    onChange={setSkillSets}
-                    error={errors.skillSets}
-                    required={true}
-                    helperText="Select all skill sets that apply to this associate"
-                    onUnauthorized={onUnauthorized}
-                  />
-                </div>
-
-                {/* Insurance Requirements Section - Using Reusable Component */}
-                <div>
-                  <h3 style={{ fontSize: "1.2rem", marginBottom: "1rem" }}>
-                    ⚖️ Insurance Requirements
-                  </h3>
-                  <InsuranceRequirementsMultiSelect
-                    value={insuranceRequirements}
-                    onChange={setInsuranceRequirements}
-                    error={errors.insuranceRequirements}
-                    required={true}
-                    helperText="Select all insurance requirements for this associate"
-                    onUnauthorized={onUnauthorized}
-                  />
-                </div>
-
-                {/* Financial Information */}
-                <Input
-                  label="Hourly Rate (Optional)"
-                  name="hourlySalaryDesired"
-                  type="number"
-                  placeholder="$ / hr"
-                  value={hourlySalaryDesired}
-                  onChange={(e) => setHourlySalaryDesired(e.target.value)}
-                  error={errors.hourlySalaryDesired}
-                />
-
-                <TextArea
-                  label="Limitations or Special Considerations (Optional)"
-                  name="limitSpecial"
-                  placeholder="Enter any limitations or special considerations"
-                  value={limitSpecial}
-                  onChange={(e) => setLimitSpecial(e.target.value)}
-                  error={errors.limitSpecial}
-                  rows={3}
-                  maxLength={638}
-                />
-
-                <Input
-                  label="Member Dues Date"
-                  name="duesDate"
-                  type="date"
-                  value={duesDate}
-                  onChange={(e) => setDuesDate(e.target.value)}
-                  error={errors.duesDate}
-                  required
-                />
-
-                <Input
-                  label="Police Check Expiry"
-                  name="policeCheck"
-                  type="date"
-                  value={policeCheck}
-                  onChange={(e) => setPoliceCheck(e.target.value)}
-                  error={errors.policeCheck}
-                  required
-                />
-
-                <Input
-                  label="Commercial Insurance Expiry Date"
-                  name="commercialInsuranceExpiryDate"
-                  type="date"
-                  value={commercialInsuranceExpiryDate}
-                  onChange={(e) =>
-                    setCommercialInsuranceExpiryDate(e.target.value)
-                  }
-                  error={errors.commercialInsuranceExpiryDate}
-                  required
-                />
-
-                <Input
-                  label="Auto Insurance Expiry Date (Optional)"
-                  name="autoInsuranceExpiryDate"
-                  type="date"
-                  value={autoInsuranceExpiryDate}
-                  onChange={(e) => setAutoInsuranceExpiryDate(e.target.value)}
-                  error={errors.autoInsuranceExpiryDate}
-                />
-
-                <Input
-                  label="WSIB # (Optional)"
-                  name="wsibNumber"
-                  placeholder="Enter WSIB number"
-                  value={wsibNumber}
-                  onChange={(e) => setWsibNumber(e.target.value)}
-                  error={errors.wsibNumber}
-                />
-
-                <Input
-                  label="WSIB Insurance Date (Optional)"
-                  name="wsibInsuranceDate"
-                  type="date"
-                  value={wsibInsuranceDate}
-                  onChange={(e) => setWsibInsuranceDate(e.target.value)}
-                  error={errors.wsibInsuranceDate}
-                />
-
-                <Input
-                  label="HST # (Optional)"
-                  name="taxId"
-                  placeholder="Enter HST number"
-                  value={taxId}
-                  onChange={(e) => setTaxId(e.target.value)}
-                  error={errors.taxId}
-                />
-
-                <Input
-                  label="Driver's License Class (Optional)"
-                  name="driversLicenseClass"
-                  placeholder="Enter license class"
-                  value={driversLicenseClass}
-                  onChange={(e) => setDriversLicenseClass(e.target.value)}
-                  error={errors.driversLicenseClass}
-                />
-
-                {/* Vehicle Types - Using Reusable Component */}
-                <div>
-                  <h4 style={{ fontSize: "1rem", marginBottom: "0.5rem" }}>
-                    Vehicle Types (Optional)
-                  </h4>
-                  <VehicleTypesMultiSelect
-                    value={vehicleTypes}
-                    onChange={setVehicleTypes}
-                    error={errors.vehicleTypes}
-                    required={false}
-                    helperText="Select all vehicle types the associate has access to"
-                    onUnauthorized={onUnauthorized}
-                  />
-                </div>
-
-                {/* Service Fee - Using Reusable Component */}
-                <ServiceFeeSelect
-                  value={serviceFeeId}
-                  onChange={handleServiceFeeChange}
-                  onOtherDetected={handleServiceFeeOtherDetected}
-                  error={errors.serviceFeeId}
-                  required={true}
-                  label="Service Fee"
-                  helperText="Select the applicable service fee for this associate"
-                  onUnauthorized={onUnauthorized}
-                />
-
-                {/* Show additional input field if "Other" is selected */}
-                {isServiceFeeOther && (
-                  <Input
-                    label="Please specify other service fee"
-                    value={serviceFeeOther}
-                    onChange={(e) => setServiceFeeOther(e.target.value)}
-                    error={errors.serviceFeeOther}
-                    required={true}
-                    placeholder="Enter custom service fee details"
-                  />
-                )}
-
-                <Select
-                  label="Preferred Language"
-                  name="preferredLanguage"
-                  value={preferredLanguage}
-                  onChange={(e) => setPreferredLanguage(e.target.value)}
-                  options={languageOptions}
-                  error={errors.preferredLanguage}
-                  required
-                />
-
-                {/* Emergency Contact Section */}
-                <div>
-                  <h3 style={{ fontSize: "1.2rem", marginBottom: "1rem" }}>
-                    👥 Emergency Contact
-                  </h3>
-                  <div style={{ display: "grid", gap: "1rem" }}>
-                    <Input
-                      label="Contact Name"
-                      name="emergencyContactName"
-                      placeholder="Enter emergency contact name"
-                      value={emergencyContactName}
-                      onChange={(e) => setEmergencyContactName(e.target.value)}
-                      error={errors.emergencyContactName}
-                      required
-                    />
-
-                    <Input
-                      label="Contact Relationship"
-                      name="emergencyContactRelationship"
-                      placeholder="Enter relationship"
-                      value={emergencyContactRelationship}
-                      onChange={(e) =>
-                        setEmergencyContactRelationship(e.target.value)
-                      }
-                      error={errors.emergencyContactRelationship}
-                      required
-                    />
-
-                    <Input
-                      label="Contact Telephone"
-                      name="emergencyContactTelephone"
-                      placeholder="Enter phone number"
-                      value={emergencyContactTelephone}
-                      onChange={(e) =>
-                        setEmergencyContactTelephone(e.target.value)
-                      }
-                      error={errors.emergencyContactTelephone}
-                      required
-                    />
-
-                    <Input
-                      label="Contact Alternative Telephone (Optional)"
-                      name="emergencyContactAlternativeTelephone"
-                      placeholder="Enter alternative phone number"
-                      value={emergencyContactAlternativeTelephone}
-                      onChange={(e) =>
-                        setEmergencyContactAlternativeTelephone(e.target.value)
-                      }
-                      error={errors.emergencyContactAlternativeTelephone}
-                    />
-                  </div>
-                </div>
-
-                {/* Login Credentials Section */}
-                <div>
-                  <h3 style={{ fontSize: "1.2rem", marginBottom: "1rem" }}>
-                    🔑 Login Credentials
-                  </h3>
-
-                  <div style={{ display: "grid", gap: "1rem" }}>
-                    <Input
-                      label="Password (Optional)"
-                      name="password"
-                      type="password"
-                      placeholder="Enter password (min 8 characters)"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      error={errors.password}
-                      helperText="Leave blank to auto-generate a password. Minimum 8 characters if provided."
-                    />
-
-                    <Input
-                      label="Confirm Password (Optional)"
-                      name="passwordRepeated"
-                      type="password"
-                      placeholder="Repeat password"
-                      value={passwordRepeated}
-                      onChange={(e) => setPasswordRepeated(e.target.value)}
-                      error={errors.passwordRepeated}
-                      helperText="Must match the password above if a password is entered"
-                    />
-                  </div>
-                </div>
-
-                {/* System Section */}
-                <div>
-                  <h3 style={{ fontSize: "1.2rem", marginBottom: "1rem" }}>
-                    💻 System
-                  </h3>
-                  <TextArea
-                    label="Description (Optional)"
-                    name="description"
-                    placeholder="Enter any additional notes or description about this associate"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    error={errors.description}
-                    rows={4}
-                    maxLength={638}
-                    helperText="Any internal notes about this associate (not visible to the associate)"
-                  />
-                </div>
-              </div>
-
-              <div
-                style={{
-                  display: "flex",
-                  gap: "1rem",
-                  marginTop: "2rem",
-                  flexWrap: "wrap",
-                }}
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        {/* Breadcrumb */}
+        <nav className="flex mb-4" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+            <li className="inline-flex items-center">
+              <Link
+                to="/admin/dashboard"
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
               >
+                <ChartBarIcon className="w-4 h-4 mr-2" />
+                Dashboard
+              </Link>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
                 <Link
-                  to="/admin/associates/add/step-4"
-                  style={{ flex: "1", minWidth: "150px" }}
+                  to="/admin/associates"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
                 >
-                  <Button type="button" variant="secondary" fullWidth>
-                    ← Back
-                  </Button>
+                  <span className="inline-flex items-center">
+                    <WrenchScrewdriverIcon className="w-4 h-4 mr-2" />
+                    Associates
+                  </span>
                 </Link>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  style={{ flex: "1", minWidth: "150px" }}
-                >
-                  Next →
-                </Button>
               </div>
-            </form>
-          </>
+            </li>
+            <li aria-current="page">
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
+                  <UserPlusIcon className="w-4 h-4 mr-2" />
+                  Add
+                </span>
+              </div>
+            </li>
+          </ol>
+        </nav>
+
+        {/* Page Title */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center">
+            <UserPlusIcon className="w-7 h-7 mr-3 text-blue-600" />
+            Add New Associate
+          </h1>
+        </div>
+
+        {/* Wizard Steps */}
+        <div className="mb-6">
+          <div className="flex items-center justify-center overflow-x-auto">
+            <div className="flex items-center">
+              {/* Steps 1-4 Complete */}
+              {[1, 2, 3, 4].map((step, index) => (
+                <React.Fragment key={step}>
+                  <div className="flex items-center">
+                    <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
+                      <CheckIcon className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-gray-900">
+                        {step === 1 && "Search"}
+                        {step === 2 && "Type"}
+                        {step === 3 && "Contact"}
+                        {step === 4 && "Address"}
+                      </p>
+                      <p className="text-xs text-gray-500">Complete</p>
+                    </div>
+                  </div>
+                  {index < 6 && (
+                    <div className="mx-2 w-12 h-0.5 bg-green-600"></div>
+                  )}
+                </React.Fragment>
+              ))}
+
+              {/* Step 5 - Active */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
+                  <span className="text-white font-semibold">5</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">Account</p>
+                  <p className="text-xs text-gray-500">Settings</p>
+                </div>
+              </div>
+
+              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+
+              {/* Steps 6-7 Inactive */}
+              {[6, 7].map((step, index) => (
+                <React.Fragment key={step}>
+                  <div className="flex items-center">
+                    <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
+                      <span className="text-gray-600 font-semibold">
+                        {step}
+                      </span>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-gray-500">
+                        {step === 6 && "Metrics"}
+                        {step === 7 && "Comments"}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {step === 6 && "Performance"}
+                        {step === 7 && "Notes"}
+                      </p>
+                    </div>
+                  </div>
+                  {index === 0 && (
+                    <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Error Message */}
+        {errors.general && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center">
+              <ExclamationCircleIcon className="w-5 h-5 mr-2" />
+              {errors.general}
+            </span>
+            <button
+              onClick={() => setErrors({})}
+              className="text-red-600 hover:text-red-800"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
         )}
-      </Card>
+
+        {/* Main Content */}
+        <div className="bg-white shadow-sm rounded-lg">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+              <ClipboardDocumentIcon className="w-5 h-5 mr-2" />
+              Account Information
+            </h2>
+          </div>
+
+          <div className="p-6">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <span className="ml-3 text-gray-600">Submitting...</span>
+              </div>
+            ) : (
+              <form onSubmit={onSubmitClick} className="max-w-3xl mx-auto">
+                <div className="space-y-8">
+                  {/* Skill Sets Section */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                      <AcademicCapIcon className="w-5 h-5 mr-2 text-blue-600" />
+                      Skill Sets
+                    </h3>
+                    <SkillSetsMultiSelect
+                      value={skillSets}
+                      onChange={setSkillSets}
+                      error={errors.skillSets}
+                      required={true}
+                      helperText="Select all skill sets that apply to this associate"
+                      onUnauthorized={onUnauthorized}
+                    />
+                  </div>
+
+                  {/* Insurance Requirements Section */}
+                  <div className="pt-6 border-t">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                      <ShieldCheckIcon className="w-5 h-5 mr-2 text-green-600" />
+                      Insurance Requirements
+                    </h3>
+                    <InsuranceRequirementsMultiSelect
+                      value={insuranceRequirements}
+                      onChange={setInsuranceRequirements}
+                      error={errors.insuranceRequirements}
+                      required={true}
+                      helperText="Select all insurance requirements for this associate"
+                      onUnauthorized={onUnauthorized}
+                    />
+                  </div>
+
+                  {/* Financial Information */}
+                  <div className="pt-6 border-t">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                      <CurrencyDollarIcon className="w-5 h-5 mr-2 text-green-600" />
+                      Financial Information
+                    </h3>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Hourly Rate (Optional)
+                        </label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
+                          </div>
+                          <input
+                            type="number"
+                            value={hourlySalaryDesired}
+                            onChange={(e) =>
+                              setHourlySalaryDesired(e.target.value)
+                            }
+                            placeholder="$ / hr"
+                            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Limitations or Special Considerations (Optional)
+                        </label>
+                        <textarea
+                          value={limitSpecial}
+                          onChange={(e) => setLimitSpecial(e.target.value)}
+                          placeholder="Enter any limitations or special considerations"
+                          rows={3}
+                          maxLength={638}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+
+                      <ServiceFeeSelect
+                        value={serviceFeeId}
+                        onChange={handleServiceFeeChange}
+                        onOtherDetected={handleServiceFeeOtherDetected}
+                        error={errors.serviceFeeId}
+                        required={true}
+                        label="Service Fee"
+                        helperText="Select the applicable service fee for this associate"
+                        onUnauthorized={onUnauthorized}
+                      />
+
+                      {isServiceFeeOther && (
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Please specify other service fee{" "}
+                            <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={serviceFeeOther}
+                            onChange={(e) => setServiceFeeOther(e.target.value)}
+                            placeholder="Enter custom service fee details"
+                            className={`w-full px-3 py-2 border ${
+                              errors.serviceFeeOther
+                                ? "border-red-500"
+                                : "border-gray-300"
+                            } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                          />
+                          {errors.serviceFeeOther && (
+                            <p className="mt-1 text-sm text-red-600">
+                              {errors.serviceFeeOther}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Important Dates */}
+                  <div className="pt-6 border-t">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                      <CalendarDaysIcon className="w-5 h-5 mr-2 text-purple-600" />
+                      Important Dates
+                    </h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Member Dues Date{" "}
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="date"
+                          value={duesDate}
+                          onChange={(e) => setDuesDate(e.target.value)}
+                          className={`w-full px-3 py-2 border ${
+                            errors.duesDate
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                        />
+                        {errors.duesDate && (
+                          <p className="mt-1 text-sm text-red-600">
+                            {errors.duesDate}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Police Check Expiry{" "}
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="date"
+                          value={policeCheck}
+                          onChange={(e) => setPoliceCheck(e.target.value)}
+                          className={`w-full px-3 py-2 border ${
+                            errors.policeCheck
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                        />
+                        {errors.policeCheck && (
+                          <p className="mt-1 text-sm text-red-600">
+                            {errors.policeCheck}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Commercial Insurance Expiry{" "}
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="date"
+                          value={commercialInsuranceExpiryDate}
+                          onChange={(e) =>
+                            setCommercialInsuranceExpiryDate(e.target.value)
+                          }
+                          className={`w-full px-3 py-2 border ${
+                            errors.commercialInsuranceExpiryDate
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                        />
+                        {errors.commercialInsuranceExpiryDate && (
+                          <p className="mt-1 text-sm text-red-600">
+                            {errors.commercialInsuranceExpiryDate}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Auto Insurance Expiry (Optional)
+                        </label>
+                        <input
+                          type="date"
+                          value={autoInsuranceExpiryDate}
+                          onChange={(e) =>
+                            setAutoInsuranceExpiryDate(e.target.value)
+                          }
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          WSIB Insurance Date (Optional)
+                        </label>
+                        <input
+                          type="date"
+                          value={wsibInsuranceDate}
+                          onChange={(e) => setWsibInsuranceDate(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Licenses & Certifications */}
+                  <div className="pt-6 border-t">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                      <IdentificationIcon className="w-5 h-5 mr-2 text-orange-600" />
+                      Licenses & Certifications
+                    </h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          WSIB # (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={wsibNumber}
+                          onChange={(e) => setWsibNumber(e.target.value)}
+                          placeholder="Enter WSIB number"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          HST # (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={taxId}
+                          onChange={(e) => setTaxId(e.target.value)}
+                          placeholder="Enter HST number"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Driver's License Class (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={driversLicenseClass}
+                          onChange={(e) =>
+                            setDriversLicenseClass(e.target.value)
+                          }
+                          placeholder="Enter license class"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Vehicle Types (Optional)
+                      </label>
+                      <VehicleTypesMultiSelect
+                        value={vehicleTypes}
+                        onChange={setVehicleTypes}
+                        error={errors.vehicleTypes}
+                        required={false}
+                        helperText="Select all vehicle types the associate has access to"
+                        onUnauthorized={onUnauthorized}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Emergency Contact */}
+                  <div className="pt-6 border-t">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                      <UserGroupIcon className="w-5 h-5 mr-2 text-red-600" />
+                      Emergency Contact
+                    </h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Contact Name <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={emergencyContactName}
+                          onChange={(e) =>
+                            setEmergencyContactName(e.target.value)
+                          }
+                          placeholder="Enter emergency contact name"
+                          className={`w-full px-3 py-2 border ${
+                            errors.emergencyContactName
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                        />
+                        {errors.emergencyContactName && (
+                          <p className="mt-1 text-sm text-red-600">
+                            {errors.emergencyContactName}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Relationship <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={emergencyContactRelationship}
+                          onChange={(e) =>
+                            setEmergencyContactRelationship(e.target.value)
+                          }
+                          placeholder="Enter relationship"
+                          className={`w-full px-3 py-2 border ${
+                            errors.emergencyContactRelationship
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                        />
+                        {errors.emergencyContactRelationship && (
+                          <p className="mt-1 text-sm text-red-600">
+                            {errors.emergencyContactRelationship}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Phone Number <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <PhoneIcon className="h-5 w-5 text-gray-400" />
+                          </div>
+                          <input
+                            type="tel"
+                            value={emergencyContactTelephone}
+                            onChange={(e) =>
+                              setEmergencyContactTelephone(e.target.value)
+                            }
+                            placeholder="Enter phone number"
+                            className={`w-full pl-10 pr-3 py-2 border ${
+                              errors.emergencyContactTelephone
+                                ? "border-red-500"
+                                : "border-gray-300"
+                            } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                          />
+                        </div>
+                        {errors.emergencyContactTelephone && (
+                          <p className="mt-1 text-sm text-red-600">
+                            {errors.emergencyContactTelephone}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Alternative Phone (Optional)
+                        </label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <PhoneIcon className="h-5 w-5 text-gray-400" />
+                          </div>
+                          <input
+                            type="tel"
+                            value={emergencyContactAlternativeTelephone}
+                            onChange={(e) =>
+                              setEmergencyContactAlternativeTelephone(
+                                e.target.value,
+                              )
+                            }
+                            placeholder="Enter alternative phone number"
+                            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* System Settings */}
+                  <div className="pt-6 border-t">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                      <ComputerDesktopIcon className="w-5 h-5 mr-2 text-indigo-600" />
+                      System Settings
+                    </h3>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Preferred Language{" "}
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <LanguageIcon className="h-5 w-5 text-gray-400" />
+                          </div>
+                          <select
+                            value={preferredLanguage}
+                            onChange={(e) =>
+                              setPreferredLanguage(e.target.value)
+                            }
+                            className={`w-full pl-10 pr-3 py-2 border ${
+                              errors.preferredLanguage
+                                ? "border-red-500"
+                                : "border-gray-300"
+                            } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white`}
+                          >
+                            <option value="English">English</option>
+                            <option value="French">French</option>
+                          </select>
+                        </div>
+                        {errors.preferredLanguage && (
+                          <p className="mt-1 text-sm text-red-600">
+                            {errors.preferredLanguage}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Description (Optional)
+                        </label>
+                        <textarea
+                          value={description}
+                          onChange={(e) => setDescription(e.target.value)}
+                          placeholder="Enter any additional notes or description about this associate"
+                          rows={4}
+                          maxLength={638}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                        <p className="mt-1 text-xs text-gray-500">
+                          Any internal notes about this associate (not visible
+                          to the associate)
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Login Credentials */}
+                  <div className="pt-6 border-t">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                      <LockClosedIcon className="w-5 h-5 mr-2 text-gray-600" />
+                      Login Credentials
+                    </h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Password (Optional)
+                        </label>
+                        <input
+                          type="password"
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="Enter password (min 8 characters)"
+                          className={`w-full px-3 py-2 border ${
+                            errors.password
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                        />
+                        {errors.password && (
+                          <p className="mt-1 text-sm text-red-600">
+                            {errors.password}
+                          </p>
+                        )}
+                        <p className="mt-1 text-xs text-gray-500">
+                          Leave blank to auto-generate a password
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Confirm Password (Optional)
+                        </label>
+                        <input
+                          type="password"
+                          value={passwordRepeated}
+                          onChange={(e) => setPasswordRepeated(e.target.value)}
+                          placeholder="Repeat password"
+                          className={`w-full px-3 py-2 border ${
+                            errors.passwordRepeated
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                        />
+                        {errors.passwordRepeated && (
+                          <p className="mt-1 text-sm text-red-600">
+                            {errors.passwordRepeated}
+                          </p>
+                        )}
+                        <p className="mt-1 text-xs text-gray-500">
+                          Must match the password above if entered
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Form Actions */}
+                <div className="mt-8 flex gap-3">
+                  <Link
+                    to="/admin/associates/add/step-4"
+                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    <ArrowLeftIcon className="w-4 h-4 mr-2" />
+                    Back
+                  </Link>
+                  <button
+                    type="submit"
+                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    Next
+                    <ArrowRightIcon className="w-4 h-4 ml-2" />
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

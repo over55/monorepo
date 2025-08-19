@@ -1,21 +1,32 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Associate/Add/Step1PartBPage.jsx
 
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   useAuthManager,
   useAssociateManager,
 } from "../../../../services/Services";
-import { theme, globalStyles } from "../../../../constants/Theme";
 import {
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Breadcrumb,
-  Modal,
-  Select,
-} from "../../../../components/UI";
+  UserPlusIcon,
+  ChevronRightIcon,
+  XMarkIcon,
+  InformationCircleIcon,
+  ArrowLeftIcon,
+  ChartBarIcon,
+  UserIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  WrenchScrewdriverIcon,
+  ExclamationCircleIcon,
+  MagnifyingGlassIcon,
+  HomeIcon,
+  BuildingOffice2Icon,
+  MapPinIcon,
+  ArrowRightIcon,
+  FunnelIcon,
+  ClipboardDocumentListIcon,
+  ChevronLeftIcon,
+} from "@heroicons/react/24/outline";
 
 function AdminAssociateAddStep1PartBPage() {
   const authManager = useAuthManager();
@@ -196,357 +207,495 @@ function AdminAssociateAddStep1PartBPage() {
   const getAssociateTypeIcon = (type) => {
     switch (type) {
       case 2: // Residential
-        return "🏠";
+        return <HomeIcon className="w-5 h-5 inline text-green-600" />;
       case 3: // Commercial
-        return "🏢";
+        return <BuildingOffice2Icon className="w-5 h-5 inline text-blue-600" />;
       default:
-        return "👷";
+        return (
+          <WrenchScrewdriverIcon className="w-5 h-5 inline text-gray-600" />
+        );
     }
   };
 
-  const breadcrumbItems = [
-    { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
-    { path: "/admin/associates", label: "Associates", icon: "👷" },
-    { label: "New", icon: "➕" },
-  ];
-
-  const statusOptions = [
-    { value: "", label: "All Statuses" },
-    { value: "1", label: "Active" },
-    { value: "2", label: "Archived" },
-  ];
-
-  const typeOptions = [
-    { value: 0, label: "All Types" },
-    { value: 1, label: "Unassigned" },
-    { value: 2, label: "Residential" },
-    { value: 3, label: "Commercial" },
-  ];
-
-  const sortOptions = [
-    { value: "last_name,ASC", label: "Name (A-Z)" },
-    { value: "last_name,DESC", label: "Name (Z-A)" },
-    { value: "join_date,ASC", label: "Join Date (Oldest)" },
-    { value: "join_date,DESC", label: "Join Date (Newest)" },
-  ];
-
-  const pageSizeOptions = [
-    { value: 25, label: "25 per page" },
-    { value: 50, label: "50 per page" },
-    { value: 100, label: "100 per page" },
-  ];
-
   return (
-    <div style={globalStyles.container}>
-      <Breadcrumb items={breadcrumbItems} />
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        {/* Breadcrumb */}
+        <nav className="flex mb-4" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+            <li className="inline-flex items-center">
+              <Link
+                to="/admin/dashboard"
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <ChartBarIcon className="w-4 h-4 mr-2" />
+                Dashboard
+              </Link>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to="/admin/associates"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                >
+                  <span className="inline-flex items-center">
+                    <WrenchScrewdriverIcon className="w-4 h-4 mr-2" />
+                    Associates
+                  </span>
+                </Link>
+              </div>
+            </li>
+            <li aria-current="page">
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
+                  <UserPlusIcon className="w-4 h-4 mr-2" />
+                  Add - Search Results
+                </span>
+              </div>
+            </li>
+          </ol>
+        </nav>
 
-      {/* Page Title */}
-      <div style={globalStyles.section}>
-        <h1 style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>
-          👷 Associates
-        </h1>
-        <h2 style={{ fontSize: "1.5rem", color: "#666", marginBottom: "2rem" }}>
-          ➕ New Associate
-        </h2>
-        <hr style={{ marginBottom: "2rem" }} />
-      </div>
-
-      {/* Progress Wizard */}
-      <Card
-        style={{ backgroundColor: theme.colors.light, marginBottom: "2rem" }}
-      >
-        <h3 style={{ fontSize: "1.25rem", marginBottom: "1rem" }}>
-          Step 1 of 7
-        </h3>
-        <div
-          style={{
-            width: "100%",
-            height: "8px",
-            backgroundColor: "#e0e0e0",
-            borderRadius: "4px",
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              width: "14%",
-              height: "100%",
-              backgroundColor: theme.colors.success,
-              transition: "width 0.3s ease",
-            }}
-          ></div>
+        {/* Page Title */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center">
+            <UserPlusIcon className="w-7 h-7 mr-3 text-blue-600" />
+            Add New Associate - Search Results
+          </h1>
         </div>
-        <small style={{ color: "#666", marginTop: "0.5rem", display: "block" }}>
-          14%
-        </small>
-      </Card>
 
-      {/* Search Results */}
-      <Card style={{ borderRadius: "20px" }}>
-        <h2 style={{ fontSize: "1.5rem", marginBottom: "1rem" }}>
-          📋 Search results:
-        </h2>
+        {/* Wizard Steps */}
+        <div className="mb-6">
+          <div className="flex items-center justify-center overflow-x-auto">
+            <div className="flex items-center">
+              {/* Step 1 - Active */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
+                  <span className="text-white font-semibold">1</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">Search</p>
+                  <p className="text-xs text-gray-500">Check Existing</p>
+                </div>
+              </div>
 
-        {/* Filter Panel */}
-        <div
-          style={{
-            backgroundColor: theme.colors.light,
-            padding: "1rem",
-            borderRadius: "20px",
-            marginBottom: "1rem",
-          }}
-        >
-          <h3 style={{ fontSize: "1.1rem", marginBottom: "1rem" }}>
-            🔧 Filtering & Sorting
-          </h3>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-              gap: "1rem",
-            }}
-          >
-            <Select
-              label="Status"
-              value={status}
-              onChange={(e) => setStatus(parseInt(e.target.value) || "")}
-              options={statusOptions}
-            />
-            <Select
-              label="Type"
-              value={typeOf}
-              onChange={(e) => setTypeOf(parseInt(e.target.value))}
-              options={typeOptions}
-            />
-            <Select
-              label="Sort by"
-              value={sortByValue}
-              onChange={(e) => setSortByValue(e.target.value)}
-              options={sortOptions}
-            />
+              {/* Connector */}
+              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+
+              {/* Step 2 - Inactive */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
+                  <span className="text-gray-600 font-semibold">2</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-500">Type</p>
+                  <p className="text-xs text-gray-400">Select Type</p>
+                </div>
+              </div>
+
+              {/* Connector */}
+              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+
+              {/* Step 3 - Inactive */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
+                  <span className="text-gray-600 font-semibold">3</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-500">Contact</p>
+                  <p className="text-xs text-gray-400">Basic Info</p>
+                </div>
+              </div>
+
+              {/* Connector */}
+              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+
+              {/* Step 4 - Inactive */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
+                  <span className="text-gray-600 font-semibold">4</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-500">Address</p>
+                  <p className="text-xs text-gray-400">Location</p>
+                </div>
+              </div>
+
+              {/* Connector */}
+              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+
+              {/* Step 5 - Inactive */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
+                  <span className="text-gray-600 font-semibold">5</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-500">Account</p>
+                  <p className="text-xs text-gray-400">Settings</p>
+                </div>
+              </div>
+
+              {/* Connector */}
+              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+
+              {/* Step 6 - Inactive */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
+                  <span className="text-gray-600 font-semibold">6</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-500">Metrics</p>
+                  <p className="text-xs text-gray-400">Performance</p>
+                </div>
+              </div>
+
+              {/* Connector */}
+              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+
+              {/* Step 7 - Inactive */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
+                  <span className="text-gray-600 font-semibold">7</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-500">Comments</p>
+                  <p className="text-xs text-gray-400">Notes</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Results Content */}
-        {isLoading ? (
-          <Loading message="Loading associates..." />
-        ) : (
-          <>
-            {errors.message && (
-              <Alert type="error" style={{ marginBottom: "1rem" }}>
-                {errors.message}
-              </Alert>
-            )}
+        {/* Error Message */}
+        {errors.message && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center">
+              <ExclamationCircleIcon className="w-5 h-5 mr-2" />
+              {errors.message}
+            </span>
+            <button
+              onClick={() => setErrors({})}
+              className="text-red-600 hover:text-red-800"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+        )}
 
-            {associates && associates.length > 0 ? (
-              <>
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns:
-                      "repeat(auto-fill, minmax(300px, 1fr))",
-                    gap: "1rem",
-                    marginBottom: "2rem",
-                  }}
-                >
-                  {associates.map((associate) => (
-                    <Card
-                      key={associate.id}
-                      style={{
-                        backgroundColor: theme.colors.infoBg,
-                        border: `1px solid ${theme.colors.info}`,
-                        cursor: "pointer",
-                      }}
-                    >
-                      {/* Header */}
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          marginBottom: "1rem",
-                          paddingBottom: "1rem",
-                          borderBottom: "1px solid #ddd",
-                        }}
-                      >
-                        <Link
-                          to={`/admin/associate/${associate.id}`}
-                          style={{
-                            textDecoration: "none",
-                            color: "inherit",
-                            fontWeight: "bold",
-                          }}
-                        >
-                          {getAssociateTypeIcon(associate.type)}&nbsp;
-                          {associate.type === 3
-                            ? associate.organizationName ||
-                              `${associate.firstName} ${associate.lastName}`
-                            : `${associate.firstName} ${associate.lastName}`}
-                        </Link>
-                      </div>
+        {/* Main Content */}
+        <div>
+          <div>
+            <div className="bg-white shadow-sm rounded-lg">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <ClipboardDocumentListIcon className="w-5 h-5 mr-2" />
+                  Search Results
+                </h2>
+              </div>
 
-                      {/* Body */}
-                      <div style={{ marginBottom: "1rem" }}>
-                        <div>{associate.addressLine1}</div>
-                        <div>
-                          {associate.city}, {associate.region}
-                        </div>
-                        <div>
-                          {associate.phone ? (
-                            <a href={`tel:${associate.phone}`}>
-                              {associate.phone}
-                            </a>
-                          ) : (
-                            "-"
-                          )}
-                        </div>
-                        <div>
-                          {associate.email ? (
-                            <a href={`mailto:${associate.email}`}>
-                              {associate.email}
-                            </a>
-                          ) : (
-                            "-"
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Footer */}
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          paddingTop: "1rem",
-                          borderTop: "1px solid #ddd",
-                        }}
-                      >
-                        <Link
-                          to={`/admin/associate/${associate.id}`}
-                          style={{
-                            textDecoration: "none",
-                            color: theme.colors.primary,
-                            fontWeight: "bold",
-                          }}
-                        >
-                          Select →
-                        </Link>
-                      </div>
-                    </Card>
-                  ))}
+              {/* Filter Panel */}
+              <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+                <div className="flex items-center mb-3">
+                  <FunnelIcon className="w-5 h-5 mr-2 text-gray-600" />
+                  <h3 className="text-sm font-semibold text-gray-700">
+                    Filtering & Sorting
+                  </h3>
                 </div>
-
-                {/* Pagination Controls */}
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    paddingTop: "1rem",
-                    borderTop: "1px solid #ddd",
-                  }}
-                >
-                  <Select
-                    value={pageSize}
-                    onChange={(e) => setPageSize(parseInt(e.target.value))}
-                    options={pageSizeOptions}
-                  />
-                  <div style={{ display: "flex", gap: "0.5rem" }}>
-                    {previousCursors.length > 0 && (
-                      <Button onClick={onPreviousClicked} variant="secondary">
-                        Previous
-                      </Button>
-                    )}
-                    {nextCursor && (
-                      <Button onClick={onNextClicked} variant="secondary">
-                        Next
-                      </Button>
-                    )}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Status
+                    </label>
+                    <select
+                      value={status}
+                      onChange={(e) =>
+                        setStatus(parseInt(e.target.value) || "")
+                      }
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="">All Statuses</option>
+                      <option value="1">Active</option>
+                      <option value="2">Archived</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Type
+                    </label>
+                    <select
+                      value={typeOf}
+                      onChange={(e) => setTypeOf(parseInt(e.target.value))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value={0}>All Types</option>
+                      <option value={1}>Unassigned</option>
+                      <option value={2}>Residential</option>
+                      <option value={3}>Commercial</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Sort by
+                    </label>
+                    <select
+                      value={sortByValue}
+                      onChange={(e) => setSortByValue(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value="last_name,ASC">Name (A-Z)</option>
+                      <option value="last_name,DESC">Name (Z-A)</option>
+                      <option value="join_date,ASC">Join Date (Oldest)</option>
+                      <option value="join_date,DESC">Join Date (Newest)</option>
+                    </select>
                   </div>
                 </div>
-              </>
-            ) : (
-              <div
-                style={{
-                  textAlign: "center",
-                  padding: "3rem",
-                  backgroundColor: "#f8f9fa",
-                  borderRadius: "8px",
-                }}
-              >
-                <h3 style={{ fontSize: "1.5rem", marginBottom: "1rem" }}>
-                  📋 No Associates Found
-                </h3>
-                <p style={{ marginBottom: "1rem" }}>
-                  No associates found matching your search criteria.{" "}
-                  <Link
-                    to="/admin/associates/add/step-1-search"
-                    style={{ color: theme.colors.primary, fontWeight: "bold" }}
-                  >
-                    Click here →
-                  </Link>{" "}
-                  to search again.
-                </p>
               </div>
-            )}
 
-            <div
-              style={{
-                textAlign: "center",
-                margin: "2rem 0",
-                fontSize: "1.5rem",
-                fontWeight: "bold",
-                color: "#666",
-              }}
-            >
-              - OR -
-            </div>
+              {/* Results Content */}
+              {isLoading ? (
+                <div className="p-6">
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                    <span className="ml-3 text-gray-600">
+                      Loading associates...
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {associates && associates.length > 0 ? (
+                    <>
+                      <div className="p-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {associates.map((associate) => (
+                            <div
+                              key={associate.id}
+                              className="bg-blue-50 border border-blue-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                            >
+                              {/* Header */}
+                              <div className="flex items-start justify-between mb-3 pb-3 border-b border-blue-200">
+                                <Link
+                                  to={`/admin/associate/${associate.id}`}
+                                  className="font-semibold text-gray-900 hover:text-blue-600 flex items-center"
+                                >
+                                  {getAssociateTypeIcon(associate.type)}
+                                  <span className="ml-2">
+                                    {associate.type === 3
+                                      ? associate.organizationName ||
+                                        `${associate.firstName} ${associate.lastName}`
+                                      : `${associate.firstName} ${associate.lastName}`}
+                                  </span>
+                                </Link>
+                              </div>
 
-            <div
-              style={{
-                display: "flex",
-                gap: "1rem",
-                justifyContent: "center",
-                flexWrap: "wrap",
-              }}
-            >
-              <Link to="/admin/associates/add/step-1-search">
-                <Button variant="secondary">← Search Again</Button>
-              </Link>
-              <Button onClick={onAddAssociateClick} variant="success">
-                ➕ Add associate
-              </Button>
+                              {/* Body */}
+                              <div className="space-y-2 text-sm text-gray-600">
+                                <div className="flex items-start">
+                                  <MapPinIcon className="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" />
+                                  <div>
+                                    <div>{associate.addressLine1}</div>
+                                    <div>
+                                      {associate.city}, {associate.region}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center">
+                                  <PhoneIcon className="w-4 h-4 mr-2 flex-shrink-0" />
+                                  {associate.phone ? (
+                                    <a
+                                      href={`tel:${associate.phone}`}
+                                      className="text-blue-600 hover:text-blue-800"
+                                    >
+                                      {associate.phone}
+                                    </a>
+                                  ) : (
+                                    <span>-</span>
+                                  )}
+                                </div>
+                                <div className="flex items-center">
+                                  <EnvelopeIcon className="w-4 h-4 mr-2 flex-shrink-0" />
+                                  {associate.email ? (
+                                    <a
+                                      href={`mailto:${associate.email}`}
+                                      className="text-blue-600 hover:text-blue-800 truncate"
+                                    >
+                                      {associate.email}
+                                    </a>
+                                  ) : (
+                                    <span>-</span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Footer */}
+                              <div className="mt-4 pt-3 border-t border-blue-200">
+                                <Link
+                                  to={`/admin/associate/${associate.id}`}
+                                  className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800"
+                                >
+                                  Select
+                                  <ArrowRightIcon className="w-4 h-4 ml-1" />
+                                </Link>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Pagination Controls */}
+                        <div className="mt-6 pt-4 border-t border-gray-200 flex items-center justify-between">
+                          <div>
+                            <label className="text-sm text-gray-700 mr-2">
+                              Show
+                            </label>
+                            <select
+                              value={pageSize}
+                              onChange={(e) =>
+                                setPageSize(parseInt(e.target.value))
+                              }
+                              className="px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            >
+                              <option value={25}>25</option>
+                              <option value={50}>50</option>
+                              <option value={100}>100</option>
+                            </select>
+                            <span className="text-sm text-gray-700 ml-2">
+                              per page
+                            </span>
+                          </div>
+                          <div className="flex gap-2">
+                            {previousCursors.length > 0 && (
+                              <button
+                                onClick={onPreviousClicked}
+                                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                              >
+                                <ChevronLeftIcon className="w-4 h-4 mr-1" />
+                                Previous
+                              </button>
+                            )}
+                            {nextCursor && (
+                              <button
+                                onClick={onNextClicked}
+                                className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                              >
+                                Next
+                                <ChevronRightIcon className="w-4 h-4 ml-1" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="p-6">
+                      <div className="text-center py-8 bg-gray-50 rounded-lg">
+                        <ClipboardDocumentListIcon className="w-12 h-12 mx-auto text-gray-400 mb-3" />
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                          No Associates Found
+                        </h3>
+                        <p className="text-gray-600 mb-4">
+                          No associates found matching your search criteria.
+                        </p>
+                        <Link
+                          to="/admin/associates/add/step-1-search"
+                          className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium"
+                        >
+                          <ArrowLeftIcon className="w-4 h-4 mr-1" />
+                          Try a different search
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* OR Divider and Actions */}
+                  {!isLoading && (
+                    <>
+                      <div className="relative px-6 py-3">
+                        <div className="absolute inset-0 flex items-center px-6">
+                          <div className="w-full border-t border-gray-200"></div>
+                        </div>
+                        <div className="relative flex justify-center">
+                          <span className="px-4 bg-white text-sm font-medium text-gray-500">
+                            OR
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="px-6 pb-5">
+                        <div className="flex gap-3 justify-center">
+                          <Link to="/admin/associates/add/step-1-search">
+                            <button className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                              <MagnifyingGlassIcon className="w-4 h-4 mr-2" />
+                              Search Again
+                            </button>
+                          </Link>
+                          <button
+                            onClick={onAddAssociateClick}
+                            className="inline-flex items-center px-6 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700"
+                          >
+                            <UserPlusIcon className="w-4 h-4 mr-2" />
+                            Add New Associate
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
             </div>
-          </>
-        )}
-      </Card>
+          </div>
+        </div>
+
+        {/* Back Link */}
+        <div className="mt-6">
+          <Link
+            to="/admin/associates/add/step-1-search"
+            className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+          >
+            <ArrowLeftIcon className="w-4 h-4 mr-1" />
+            Back to Search
+          </Link>
+        </div>
+      </div>
 
       {/* Delete Confirmation Modal */}
-      <Modal
-        isOpen={!!selectedAssociateForDeletion}
-        onClose={onDeselectAssociateForDeletion}
-        title="Are you sure?"
-        footer={
-          <>
-            <Button
-              onClick={onDeselectAssociateForDeletion}
-              variant="secondary"
-            >
-              Cancel
-            </Button>
-            <Button onClick={onDeleteConfirmButtonClick} variant="success">
-              Confirm
-            </Button>
-          </>
-        }
-      >
-        <p>
-          You are about to <strong>archive</strong> this user; it will no longer
-          appear on your dashboard. This action can be undone but you'll need to
-          contact the system administrator. Are you sure you would like to
-          continue?
-        </p>
-      </Modal>
+      {selectedAssociateForDeletion && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                <ExclamationCircleIcon className="h-5 w-5 mr-2 text-amber-600" />
+                Are you sure?
+              </h3>
+            </div>
+
+            <div className="px-6 py-4">
+              <p className="text-sm text-gray-600">
+                You are about to <strong>archive</strong> this user; it will no
+                longer appear on your dashboard. This action can be undone but
+                you'll need to contact the system administrator. Are you sure
+                you would like to continue?
+              </p>
+            </div>
+
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+              <button
+                onClick={onDeselectAssociateForDeletion}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={onDeleteConfirmButtonClick}
+                className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700"
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

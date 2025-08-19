@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 import { useOrderManager, useAuthManager } from "../../../../services/Services";
 import { theme, globalStyles } from "../../../../constants/Theme";
-import { formatDateForDisplay } from "../../../../services/Helpers/dateFormatter";
+import { formatDateForDisplay } from "../../../../services/Helpers/DateFormatter";
 import {
   Card,
   Button,

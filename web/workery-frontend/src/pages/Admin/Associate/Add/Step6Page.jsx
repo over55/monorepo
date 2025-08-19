@@ -1,20 +1,31 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Associate/Add/Step6Page.jsx
 
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuthManager } from "../../../../services/Services";
-import { theme, globalStyles } from "../../../../constants/Theme";
 import {
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Breadcrumb,
-  Input,
-  Select,
-  TextArea,
-  FormGroup,
-} from "../../../../components/UI";
+  UserPlusIcon,
+  ChevronRightIcon,
+  XMarkIcon,
+  ArrowLeftIcon,
+  CheckIcon,
+  ChartBarIcon,
+  WrenchScrewdriverIcon,
+  ArrowRightIcon,
+  ExclamationTriangleIcon,
+  ExclamationCircleIcon,
+  TagIcon,
+  IdentificationIcon,
+  CalendarIcon,
+  ChatBubbleBottomCenterTextIcon,
+  UserIcon,
+  GlobeAltIcon,
+  AcademicCapIcon,
+  HeartIcon,
+  FlagIcon,
+  QuestionMarkCircleIcon,
+  BriefcaseIcon,
+} from "@heroicons/react/24/outline";
 import {
   TagsMultiSelect,
   HowHearAboutUsSelect,
@@ -62,6 +73,7 @@ function AdminAssociateAddStep6Page() {
   // Component states
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [showCancelWarning, setShowCancelWarning] = useState(false);
 
   // Job seeker and metrics form data
   const [isJobSeeker, setIsJobSeeker] = useState(ASSOCIATE_IS_JOB_SEEKER_NO);
@@ -161,6 +173,15 @@ function AdminAssociateAddStep6Page() {
 
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
+  };
+
+  const handleCancel = () => {
+    setShowCancelWarning(true);
+  };
+
+  const handleConfirmCancel = () => {
+    sessionStorage.removeItem("WORKERY_ASSOCIATE_CREATION_STATE");
+    navigate("/admin/associates");
   };
 
   const onSubmitClick = (e) => {
@@ -323,12 +344,6 @@ function AdminAssociateAddStep6Page() {
     }
   };
 
-  const breadcrumbItems = [
-    { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
-    { path: "/admin/associates", label: "Associates", icon: "👷" },
-    { label: "New", icon: "➕" },
-  ];
-
   const genderOptions = [
     { value: 0, label: "Please select" },
     { value: ASSOCIATE_GENDER_MALE, label: "Male" },
@@ -413,402 +428,738 @@ function AdminAssociateAddStep6Page() {
   ];
 
   return (
-    <div style={globalStyles.container}>
-      <Breadcrumb items={breadcrumbItems} />
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        {/* Breadcrumb */}
+        <nav className="flex mb-4" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+            <li className="inline-flex items-center">
+              <Link
+                to="/admin/dashboard"
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <ChartBarIcon className="w-4 h-4 mr-2" />
+                Dashboard
+              </Link>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to="/admin/associates"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                >
+                  <span className="inline-flex items-center">
+                    <WrenchScrewdriverIcon className="w-4 h-4 mr-2" />
+                    Associates
+                  </span>
+                </Link>
+              </div>
+            </li>
+            <li aria-current="page">
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
+                  <UserPlusIcon className="w-4 h-4 mr-2" />
+                  Add
+                </span>
+              </div>
+            </li>
+          </ol>
+        </nav>
 
-      {/* Page Title */}
-      <div style={globalStyles.section}>
-        <h1 style={{ fontSize: "2.5rem", marginBottom: "0.5rem" }}>
-          👷 Associates
-        </h1>
-        <h2 style={{ fontSize: "1.5rem", color: "#666", marginBottom: "2rem" }}>
-          ➕ New Associate
-        </h2>
-        <hr style={{ marginBottom: "2rem" }} />
-      </div>
-
-      {/* Progress Wizard */}
-      <Card
-        style={{ backgroundColor: theme.colors.light, marginBottom: "2rem" }}
-      >
-        <h3 style={{ fontSize: "1.25rem", marginBottom: "1rem" }}>
-          Step 6 of 7
-        </h3>
-        <div
-          style={{
-            width: "100%",
-            height: "8px",
-            backgroundColor: "#e0e0e0",
-            borderRadius: "4px",
-            overflow: "hidden",
-          }}
-        >
-          <div
-            style={{
-              width: "86%",
-              height: "100%",
-              backgroundColor: theme.colors.success,
-              transition: "width 0.3s ease",
-            }}
-          ></div>
+        {/* Page Title */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center">
+            <UserPlusIcon className="w-7 h-7 mr-3 text-blue-600" />
+            Add New Associate
+          </h1>
         </div>
-        <small style={{ color: "#666", marginTop: "0.5rem", display: "block" }}>
-          86%
-        </small>
-      </Card>
 
-      {/* Main Content */}
-      <Card>
-        <h2 style={{ fontSize: "1.5rem", marginBottom: "1rem" }}>
-          💼 Job Seeker
-        </h2>
+        {/* Wizard Steps */}
+        <div className="mb-6">
+          <div className="flex items-center justify-center overflow-x-auto">
+            <div className="flex items-center">
+              {/* Steps 1-5 Complete */}
+              {[1, 2, 3, 4, 5].map((step, index) => (
+                <React.Fragment key={step}>
+                  <div className="flex items-center">
+                    <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
+                      <CheckIcon className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-gray-900">
+                        {step === 1 && "Search"}
+                        {step === 2 && "Type"}
+                        {step === 3 && "Contact"}
+                        {step === 4 && "Address"}
+                        {step === 5 && "Account"}
+                      </p>
+                      <p className="text-xs text-gray-500">Complete</p>
+                    </div>
+                  </div>
+                  {index < 6 && (
+                    <div className="mx-2 w-12 h-0.5 bg-green-600"></div>
+                  )}
+                </React.Fragment>
+              ))}
 
-        <FormGroup>
-          <label
-            style={{
-              fontWeight: "600",
-              fontSize: "1rem",
-              marginBottom: "1rem",
-              display: "block",
-            }}
-          >
-            Is this Associate also a Job Seeker?
-          </label>
-          <div style={{ display: "flex", gap: "1rem" }}>
-            <label
-              style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
-            >
-              <input
-                type="radio"
-                name="isJobSeeker"
-                value={ASSOCIATE_IS_JOB_SEEKER_YES}
-                checked={isJobSeeker === ASSOCIATE_IS_JOB_SEEKER_YES}
-                onChange={(e) => setIsJobSeeker(parseInt(e.target.value))}
-              />
-              Yes
-            </label>
-            <label
-              style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
-            >
-              <input
-                type="radio"
-                name="isJobSeeker"
-                value={ASSOCIATE_IS_JOB_SEEKER_NO}
-                checked={isJobSeeker === ASSOCIATE_IS_JOB_SEEKER_NO}
-                onChange={(e) => setIsJobSeeker(parseInt(e.target.value))}
-              />
-              No
-            </label>
-          </div>
-          {errors.isJobSeeker && (
-            <div
-              style={{
-                color: theme.colors.error,
-                fontSize: "0.875rem",
-                marginTop: "0.25rem",
-              }}
-            >
-              {errors.isJobSeeker}
+              {/* Step 6 - Active */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
+                  <span className="text-white font-semibold">6</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">Metrics</p>
+                  <p className="text-xs text-gray-500">Performance</p>
+                </div>
+              </div>
+
+              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+
+              {/* Step 7 Inactive */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
+                  <span className="text-gray-600 font-semibold">7</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-500">Comments</p>
+                  <p className="text-xs text-gray-400">Notes</p>
+                </div>
+              </div>
             </div>
-          )}
-        </FormGroup>
+          </div>
+        </div>
 
-        {/* Job Seeker specific fields */}
-        {isJobSeeker === ASSOCIATE_IS_JOB_SEEKER_YES && (
-          <div style={{ display: "grid", gap: "1rem", marginTop: "2rem" }}>
-            <Select
-              label="Status in Country"
-              name="statusInCountry"
-              value={statusInCountry}
-              onChange={(e) =>
-                setStatusInCountry(parseInt(e.target.value) || 0)
-              }
-              options={statusInCountryOptions}
-              error={errors.statusInCountry}
-              required
-            />
-
-            {statusInCountry === ASSOCIATE_STATUS_IN_COUNTRY_OTHER && (
-              <Input
-                label="Status in Country (Other)"
-                name="statusInCountryOther"
-                placeholder="Please specify"
-                value={statusInCountryOther}
-                onChange={(e) => setStatusInCountryOther(e.target.value)}
-                error={errors.statusInCountryOther}
-                required
-              />
-            )}
-
-            {(statusInCountry ===
-              ASSOCIATE_STATUS_IN_COUNTRY_PERMANENT_RESIDENT ||
-              statusInCountry ===
-                ASSOCIATE_STATUS_IN_COUNTRY_NATURALIZED_CITIZEN ||
-              statusInCountry ===
-                ASSOCIATE_STATUS_IN_COUNTRY_PROTECTED_PERSON) && (
-              <>
-                <Select
-                  label="Country of Origin"
-                  name="countryOfOrigin"
-                  value={countryOfOrigin}
-                  onChange={(e) => setCountryOfOrigin(e.target.value)}
-                  options={countryOptions}
-                  error={errors.countryOfOrigin}
-                  required
-                />
-
-                <Input
-                  label="Date of Entry into Country"
-                  name="dateOfEntryIntoCountry"
-                  type="date"
-                  value={dateOfEntryIntoCountry}
-                  onChange={(e) => setDateOfEntryIntoCountry(e.target.value)}
-                  error={errors.dateOfEntryIntoCountry}
-                  required
-                />
-              </>
-            )}
-
-            <Select
-              label="Marital Status"
-              name="maritalStatus"
-              value={maritalStatus}
-              onChange={(e) => setMaritalStatus(parseInt(e.target.value) || 0)}
-              options={maritalStatusOptions}
-              error={errors.maritalStatus}
-              required
-            />
-
-            {maritalStatus === ASSOCIATE_MARITAL_STATUS_OTHER && (
-              <Input
-                label="Marital Status (Other)"
-                name="maritalStatusOther"
-                placeholder="Please specify"
-                value={maritalStatusOther}
-                onChange={(e) => setMaritalStatusOther(e.target.value)}
-                error={errors.maritalStatusOther}
-                required
-              />
-            )}
-
-            <Select
-              label="Accomplished Level of Education"
-              name="accomplishedEducation"
-              value={accomplishedEducation}
-              onChange={(e) =>
-                setAccomplishedEducation(parseInt(e.target.value) || 0)
-              }
-              options={educationOptions}
-              error={errors.accomplishedEducation}
-              required
-            />
-
-            {accomplishedEducation === ASSOCIATE_EDUCATION_OTHER && (
-              <Input
-                label="Education Level (Other)"
-                name="accomplishedEducationOther"
-                placeholder="Please specify"
-                value={accomplishedEducationOther}
-                onChange={(e) => setAccomplishedEducationOther(e.target.value)}
-                error={errors.accomplishedEducationOther}
-                required
-              />
-            )}
+        {/* Error Message */}
+        {errors.general && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center">
+              <ExclamationCircleIcon className="w-5 h-5 mr-2" />
+              {errors.general}
+            </span>
+            <button
+              onClick={() => setErrors({})}
+              className="text-red-600 hover:text-red-800"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
           </div>
         )}
 
-        <h2
-          style={{
-            fontSize: "1.5rem",
-            marginTop: "2rem",
-            marginBottom: "1rem",
-          }}
-        >
-          📊 Metrics
-        </h2>
+        {/* Main Content */}
+        <div className="bg-white shadow-sm rounded-lg">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+              <ChartBarIcon className="w-5 h-5 mr-2" />
+              Metrics Information
+            </h2>
+          </div>
 
-        {isLoading ? (
-          <Loading message="Submitting..." />
-        ) : (
-          <>
-            {errors.general && (
-              <Alert type="error" style={{ marginBottom: "1rem" }}>
-                {errors.general}
-              </Alert>
-            )}
+          <div className="p-6">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <span className="ml-3 text-gray-600">Submitting...</span>
+              </div>
+            ) : (
+              <form onSubmit={onSubmitClick} className="max-w-3xl mx-auto">
+                <div className="space-y-8">
+                  {/* Job Seeker Section */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                      <BriefcaseIcon className="w-5 h-5 mr-2 text-blue-600" />
+                      Job Seeker Information
+                    </h3>
 
-            <form onSubmit={onSubmitClick}>
-              <div style={{ display: "grid", gap: "1rem", maxWidth: "800px" }}>
-                {/* Tags - Using Reusable Component */}
-                <div>
-                  <TagsMultiSelect
-                    value={tags}
-                    onChange={setTags}
-                    error={errors.tags}
-                    required={false}
-                    label="Tags (Optional)"
-                    helperText="Select tags to categorize this associate"
-                    onUnauthorized={onUnauthorized}
-                  />
-                </div>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Is this Associate also a Job Seeker?{" "}
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <div className="flex gap-4">
+                          <label className="inline-flex items-center">
+                            <input
+                              type="radio"
+                              name="isJobSeeker"
+                              value={ASSOCIATE_IS_JOB_SEEKER_YES}
+                              checked={
+                                isJobSeeker === ASSOCIATE_IS_JOB_SEEKER_YES
+                              }
+                              onChange={(e) =>
+                                setIsJobSeeker(parseInt(e.target.value))
+                              }
+                              className="form-radio h-4 w-4 text-blue-600"
+                            />
+                            <span className="ml-2 text-sm text-gray-700">
+                              Yes
+                            </span>
+                          </label>
+                          <label className="inline-flex items-center">
+                            <input
+                              type="radio"
+                              name="isJobSeeker"
+                              value={ASSOCIATE_IS_JOB_SEEKER_NO}
+                              checked={
+                                isJobSeeker === ASSOCIATE_IS_JOB_SEEKER_NO
+                              }
+                              onChange={(e) =>
+                                setIsJobSeeker(parseInt(e.target.value))
+                              }
+                              className="form-radio h-4 w-4 text-blue-600"
+                            />
+                            <span className="ml-2 text-sm text-gray-700">
+                              No
+                            </span>
+                          </label>
+                        </div>
+                        {errors.isJobSeeker && (
+                          <p className="mt-1 text-sm text-red-600">
+                            {errors.isJobSeeker}
+                          </p>
+                        )}
+                      </div>
 
-                {/* Identity */}
-                <div>
-                  <label
-                    style={{
-                      fontWeight: "600",
-                      fontSize: "0.875rem",
-                      marginBottom: "0.5rem",
-                      display: "block",
-                    }}
-                  >
-                    Do you identify as belonging to any of the following groups?
-                    (Optional)
-                  </label>
-                  <div style={{ display: "grid", gap: "0.5rem" }}>
-                    {identifyAsOptions.map((option) => (
-                      <label
-                        key={option.value}
-                        style={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.5rem",
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          value={option.value}
-                          checked={identifyAs.includes(option.value)}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setIdentifyAs([
-                                ...identifyAs,
-                                parseInt(e.target.value),
-                              ]);
-                            } else {
-                              setIdentifyAs(
-                                identifyAs.filter(
-                                  (id) => id !== parseInt(e.target.value),
-                                ),
-                              );
-                            }
-                          }}
+                      {/* Conditional Job Seeker Fields */}
+                      {isJobSeeker === ASSOCIATE_IS_JOB_SEEKER_YES && (
+                        <div className="mt-4 p-4 bg-gray-50 rounded-lg space-y-4">
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              <FlagIcon className="w-4 h-4 inline mr-1" />
+                              Status in Country{" "}
+                              <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                              value={statusInCountry}
+                              onChange={(e) =>
+                                setStatusInCountry(
+                                  parseInt(e.target.value) || 0,
+                                )
+                              }
+                              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                                errors.statusInCountry
+                                  ? "border-red-500"
+                                  : "border-gray-300"
+                              }`}
+                            >
+                              {statusInCountryOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                            {errors.statusInCountry && (
+                              <p className="mt-1 text-sm text-red-600">
+                                {errors.statusInCountry}
+                              </p>
+                            )}
+                          </div>
+
+                          {statusInCountry ===
+                            ASSOCIATE_STATUS_IN_COUNTRY_OTHER && (
+                            <div>
+                              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                Status in Country (Other){" "}
+                                <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                value={statusInCountryOther}
+                                onChange={(e) =>
+                                  setStatusInCountryOther(e.target.value)
+                                }
+                                placeholder="Please specify"
+                                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                                  errors.statusInCountryOther
+                                    ? "border-red-500"
+                                    : "border-gray-300"
+                                }`}
+                              />
+                              {errors.statusInCountryOther && (
+                                <p className="mt-1 text-sm text-red-600">
+                                  {errors.statusInCountryOther}
+                                </p>
+                              )}
+                            </div>
+                          )}
+
+                          {(statusInCountry ===
+                            ASSOCIATE_STATUS_IN_COUNTRY_PERMANENT_RESIDENT ||
+                            statusInCountry ===
+                              ASSOCIATE_STATUS_IN_COUNTRY_NATURALIZED_CITIZEN ||
+                            statusInCountry ===
+                              ASSOCIATE_STATUS_IN_COUNTRY_PROTECTED_PERSON) && (
+                            <>
+                              <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                  <GlobeAltIcon className="w-4 h-4 inline mr-1" />
+                                  Country of Origin{" "}
+                                  <span className="text-red-500">*</span>
+                                </label>
+                                <select
+                                  value={countryOfOrigin}
+                                  onChange={(e) =>
+                                    setCountryOfOrigin(e.target.value)
+                                  }
+                                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                                    errors.countryOfOrigin
+                                      ? "border-red-500"
+                                      : "border-gray-300"
+                                  }`}
+                                >
+                                  {countryOptions.map((option) => (
+                                    <option
+                                      key={option.value}
+                                      value={option.value}
+                                    >
+                                      {option.label}
+                                    </option>
+                                  ))}
+                                </select>
+                                {errors.countryOfOrigin && (
+                                  <p className="mt-1 text-sm text-red-600">
+                                    {errors.countryOfOrigin}
+                                  </p>
+                                )}
+                              </div>
+
+                              <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                  <CalendarIcon className="w-4 h-4 inline mr-1" />
+                                  Date of Entry into Country{" "}
+                                  <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                  type="date"
+                                  value={dateOfEntryIntoCountry}
+                                  onChange={(e) =>
+                                    setDateOfEntryIntoCountry(e.target.value)
+                                  }
+                                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                                    errors.dateOfEntryIntoCountry
+                                      ? "border-red-500"
+                                      : "border-gray-300"
+                                  }`}
+                                />
+                                {errors.dateOfEntryIntoCountry && (
+                                  <p className="mt-1 text-sm text-red-600">
+                                    {errors.dateOfEntryIntoCountry}
+                                  </p>
+                                )}
+                              </div>
+                            </>
+                          )}
+
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              <HeartIcon className="w-4 h-4 inline mr-1" />
+                              Marital Status{" "}
+                              <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                              value={maritalStatus}
+                              onChange={(e) =>
+                                setMaritalStatus(parseInt(e.target.value) || 0)
+                              }
+                              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                                errors.maritalStatus
+                                  ? "border-red-500"
+                                  : "border-gray-300"
+                              }`}
+                            >
+                              {maritalStatusOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                            {errors.maritalStatus && (
+                              <p className="mt-1 text-sm text-red-600">
+                                {errors.maritalStatus}
+                              </p>
+                            )}
+                          </div>
+
+                          {maritalStatus === ASSOCIATE_MARITAL_STATUS_OTHER && (
+                            <div>
+                              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                Marital Status (Other){" "}
+                                <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                value={maritalStatusOther}
+                                onChange={(e) =>
+                                  setMaritalStatusOther(e.target.value)
+                                }
+                                placeholder="Please specify"
+                                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                                  errors.maritalStatusOther
+                                    ? "border-red-500"
+                                    : "border-gray-300"
+                                }`}
+                              />
+                              {errors.maritalStatusOther && (
+                                <p className="mt-1 text-sm text-red-600">
+                                  {errors.maritalStatusOther}
+                                </p>
+                              )}
+                            </div>
+                          )}
+
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              <AcademicCapIcon className="w-4 h-4 inline mr-1" />
+                              Accomplished Level of Education{" "}
+                              <span className="text-red-500">*</span>
+                            </label>
+                            <select
+                              value={accomplishedEducation}
+                              onChange={(e) =>
+                                setAccomplishedEducation(
+                                  parseInt(e.target.value) || 0,
+                                )
+                              }
+                              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                                errors.accomplishedEducation
+                                  ? "border-red-500"
+                                  : "border-gray-300"
+                              }`}
+                            >
+                              {educationOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                            {errors.accomplishedEducation && (
+                              <p className="mt-1 text-sm text-red-600">
+                                {errors.accomplishedEducation}
+                              </p>
+                            )}
+                          </div>
+
+                          {accomplishedEducation ===
+                            ASSOCIATE_EDUCATION_OTHER && (
+                            <div>
+                              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                Education Level (Other){" "}
+                                <span className="text-red-500">*</span>
+                              </label>
+                              <input
+                                type="text"
+                                value={accomplishedEducationOther}
+                                onChange={(e) =>
+                                  setAccomplishedEducationOther(e.target.value)
+                                }
+                                placeholder="Please specify"
+                                className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                                  errors.accomplishedEducationOther
+                                    ? "border-red-500"
+                                    : "border-gray-300"
+                                }`}
+                              />
+                              {errors.accomplishedEducationOther && (
+                                <p className="mt-1 text-sm text-red-600">
+                                  {errors.accomplishedEducationOther}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Personal Information Section */}
+                  <div className="pt-6 border-t">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                      <UserIcon className="w-5 h-5 mr-2 text-purple-600" />
+                      Personal Information
+                    </h3>
+
+                    <div className="space-y-4">
+                      {/* Tags */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          <TagIcon className="w-4 h-4 inline mr-1" />
+                          Tags (Optional)
+                        </label>
+                        <TagsMultiSelect
+                          value={tags}
+                          onChange={setTags}
+                          error={errors.tags}
+                          required={false}
+                          helperText="Select tags to categorize this associate"
+                          onUnauthorized={onUnauthorized}
                         />
-                        {option.label}
-                      </label>
-                    ))}
+                      </div>
+
+                      {/* Identity Groups */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          <IdentificationIcon className="w-4 h-4 inline mr-1" />
+                          Do you identify as belonging to any of the following
+                          groups? (Optional)
+                        </label>
+                        <div className="space-y-2 ml-6">
+                          {identifyAsOptions.map((option) => (
+                            <label
+                              key={option.value}
+                              className="flex items-center text-sm text-gray-700"
+                            >
+                              <input
+                                type="checkbox"
+                                value={option.value}
+                                checked={identifyAs.includes(option.value)}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setIdentifyAs([
+                                      ...identifyAs,
+                                      parseInt(e.target.value),
+                                    ]);
+                                  } else {
+                                    setIdentifyAs(
+                                      identifyAs.filter(
+                                        (id) => id !== parseInt(e.target.value),
+                                      ),
+                                    );
+                                  }
+                                }}
+                                className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                              />
+                              <span className="ml-2">{option.label}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* How did you hear about us */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          <QuestionMarkCircleIcon className="w-4 h-4 inline mr-1" />
+                          How did you hear about us?{" "}
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <HowHearAboutUsSelect
+                          value={howDidYouHearAboutUsID}
+                          onChange={handleHowHearChange}
+                          onOtherDetected={handleHowHearOtherDetected}
+                          error={errors.howDidYouHearAboutUsID}
+                          required={true}
+                          helperText="Tell us how you discovered our organization"
+                          onUnauthorized={onUnauthorized}
+                        />
+                      </div>
+
+                      {/* Show additional input field if "Other" is selected */}
+                      {isHowDidYouHearAboutUsOther && (
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            How did you hear about us? (Other){" "}
+                            <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={howDidYouHearAboutUsOther}
+                            onChange={(e) =>
+                              setHowDidYouHearAboutUsOther(e.target.value)
+                            }
+                            placeholder="Please specify"
+                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                              errors.howDidYouHearAboutUsOther
+                                ? "border-red-500"
+                                : "border-gray-300"
+                            }`}
+                          />
+                          {errors.howDidYouHearAboutUsOther && (
+                            <p className="mt-1 text-sm text-red-600">
+                              {errors.howDidYouHearAboutUsOther}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Gender */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          <UserIcon className="w-4 h-4 inline mr-1" />
+                          Gender <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          value={gender}
+                          onChange={(e) => setGender(parseInt(e.target.value))}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                            errors.gender ? "border-red-500" : "border-gray-300"
+                          }`}
+                        >
+                          {genderOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                        {errors.gender && (
+                          <p className="mt-1 text-sm text-red-600">
+                            {errors.gender}
+                          </p>
+                        )}
+                      </div>
+
+                      {gender === ASSOCIATE_GENDER_OTHER && (
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Gender (Other){" "}
+                            <span className="text-red-500">*</span>
+                          </label>
+                          <input
+                            type="text"
+                            value={genderOther}
+                            onChange={(e) => setGenderOther(e.target.value)}
+                            placeholder="Please specify"
+                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                              errors.genderOther
+                                ? "border-red-500"
+                                : "border-gray-300"
+                            }`}
+                          />
+                          {errors.genderOther && (
+                            <p className="mt-1 text-sm text-red-600">
+                              {errors.genderOther}
+                            </p>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Birth Date */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          <CalendarIcon className="w-4 h-4 inline mr-1" />
+                          Birth Date <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="date"
+                          value={birthDate}
+                          onChange={(e) => setBirthDate(e.target.value)}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                            errors.birthDate
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          }`}
+                        />
+                        {errors.birthDate && (
+                          <p className="mt-1 text-sm text-red-600">
+                            {errors.birthDate}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Join Date */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          <CalendarIcon className="w-4 h-4 inline mr-1" />
+                          Join Date
+                        </label>
+                        <input
+                          type="date"
+                          value={joinDate}
+                          onChange={(e) => setJoinDate(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                        <p className="mt-1 text-xs text-gray-500">
+                          The date this associate joined the organization
+                        </p>
+                      </div>
+
+                      {/* Additional Comments */}
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          <ChatBubbleBottomCenterTextIcon className="w-4 h-4 inline mr-1" />
+                          Additional Comment (Optional)
+                        </label>
+                        <textarea
+                          value={additionalComment}
+                          onChange={(e) => setAdditionalComment(e.target.value)}
+                          placeholder="Enter any additional comments or notes about this associate"
+                          rows={4}
+                          maxLength={638}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                        <p className="mt-1 text-xs text-gray-500">
+                          {additionalComment.length}/638 characters
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* How did you hear about us - Using Reusable Component */}
-                <HowHearAboutUsSelect
-                  value={howDidYouHearAboutUsID}
-                  onChange={handleHowHearChange}
-                  onOtherDetected={handleHowHearOtherDetected}
-                  error={errors.howDidYouHearAboutUsID}
-                  required={true}
-                  helperText="Tell us how you discovered our organization"
-                  onUnauthorized={onUnauthorized}
-                />
+                {/* Form Actions */}
+                <div className="mt-8 flex gap-3">
+                  <Link
+                    to="/admin/associates/add/step-5"
+                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    <ArrowLeftIcon className="w-4 h-4 mr-2" />
+                    Back
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={handleCancel}
+                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    <XMarkIcon className="w-4 h-4 mr-2" />
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    Next
+                    <ArrowRightIcon className="w-4 h-4 ml-2" />
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      </div>
 
-                {/* Show additional input field if "Other" is selected */}
-                {isHowDidYouHearAboutUsOther && (
-                  <Input
-                    label="How did you hear about us? (Other)"
-                    name="howDidYouHearAboutUsOther"
-                    placeholder="Please specify"
-                    value={howDidYouHearAboutUsOther}
-                    onChange={(e) =>
-                      setHowDidYouHearAboutUsOther(e.target.value)
-                    }
-                    error={errors.howDidYouHearAboutUsOther}
-                    required
-                  />
-                )}
+      {/* Cancel Confirmation Modal */}
+      {showCancelWarning && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                <ExclamationTriangleIcon className="h-5 w-5 mr-2 text-amber-600" />
+                Are you sure?
+              </h3>
+            </div>
 
-                <Select
-                  label="Gender"
-                  name="gender"
-                  value={gender}
-                  onChange={(e) => setGender(parseInt(e.target.value))}
-                  options={genderOptions}
-                  error={errors.gender}
-                  required
-                />
+            <div className="px-6 py-4">
+              <p className="text-sm text-gray-600">
+                Your Associate record will be cancelled and your work will be
+                lost. This cannot be undone. Do you want to continue?
+              </p>
+            </div>
 
-                {gender === ASSOCIATE_GENDER_OTHER && (
-                  <Input
-                    label="Gender (Other)"
-                    name="genderOther"
-                    placeholder="Please specify"
-                    value={genderOther}
-                    onChange={(e) => setGenderOther(e.target.value)}
-                    error={errors.genderOther}
-                    required
-                  />
-                )}
-
-                <Input
-                  label="Birth Date"
-                  name="birthDate"
-                  type="date"
-                  value={birthDate}
-                  onChange={(e) => setBirthDate(e.target.value)}
-                  error={errors.birthDate}
-                  required
-                />
-
-                <Input
-                  label="Join Date"
-                  name="joinDate"
-                  type="date"
-                  value={joinDate}
-                  onChange={(e) => setJoinDate(e.target.value)}
-                  error={errors.joinDate}
-                  helperText="The date this associate joined the organization"
-                />
-
-                <TextArea
-                  label="Additional Comment (Optional)"
-                  name="additionalComment"
-                  placeholder="Enter any additional comments or notes about this associate"
-                  value={additionalComment}
-                  onChange={(e) => setAdditionalComment(e.target.value)}
-                  error={errors.additionalComment}
-                  rows={4}
-                  maxLength={638}
-                  helperText="Any additional information that might be relevant"
-                />
-              </div>
-
-              <div
-                style={{
-                  display: "flex",
-                  gap: "1rem",
-                  marginTop: "2rem",
-                  flexWrap: "wrap",
-                }}
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+              <button
+                onClick={() => setShowCancelWarning(false)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
               >
-                <Link
-                  to="/admin/associates/add/step-5"
-                  style={{ flex: "1", minWidth: "150px" }}
-                >
-                  <Button type="button" variant="secondary" fullWidth>
-                    ← Back
-                  </Button>
-                </Link>
-                <Button
-                  type="submit"
-                  variant="primary"
-                  style={{ flex: "1", minWidth: "150px" }}
-                >
-                  Next →
-                </Button>
-              </div>
-            </form>
-          </>
-        )}
-      </Card>
+                No, Keep Working
+              </button>
+              <button
+                onClick={handleConfirmCancel}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700"
+              >
+                Yes, Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
