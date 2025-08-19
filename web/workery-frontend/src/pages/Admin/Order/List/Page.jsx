@@ -16,20 +16,18 @@ import {
   Table,
   Modal,
 } from "../../../../components/UI";
-
-// Constants for filtering and sorting
-const ORDER_STATUS_OPTIONS = [
-  { value: "", label: "All Statuses" },
-  { value: "1", label: "New" },
-  { value: "2", label: "Declined" },
-  { value: "3", label: "Pending" },
-  { value: "4", label: "Cancelled" },
-  { value: "5", label: "Ongoing" },
-  { value: "6", label: "In Progress" },
-  { value: "7", label: "Completed but unpaid" },
-  { value: "8", label: "Completed and paid" },
-  { value: "9", label: "Archived" },
-];
+import {
+  ORDER_STATUS_NEW,
+  ORDER_STATUS_DECLINED,
+  ORDER_STATUS_PENDING,
+  ORDER_STATUS_CANCELLED,
+  ORDER_STATUS_ONGOING,
+  ORDER_STATUS_IN_PROGRESS,
+  ORDER_STATUS_COMPLETED_BUT_UNPAID,
+  ORDER_STATUS_COMPLETED_AND_PAID,
+  ORDER_STATUS_ARCHIVED,
+  ORDER_STATUS_OPTIONS,
+} from "../../../../constants/Order";
 
 const ORDER_TYPE_OPTIONS = [
   { value: "", label: "All Types" },
@@ -59,17 +57,6 @@ const VIEW_TYPE_GRID = "grid";
 // Order type constants
 const RESIDENTIAL_ORDER_TYPE_ID = 1;
 const COMMERCIAL_ORDER_TYPE_ID = 2;
-
-// Status constants for display
-const ORDER_STATUS_NEW = 1;
-const ORDER_STATUS_DECLINED = 2;
-const ORDER_STATUS_PENDING = 3;
-const ORDER_STATUS_CANCELLED = 4;
-const ORDER_STATUS_ONGOING = 5;
-const ORDER_STATUS_IN_PROGRESS = 6;
-const ORDER_STATUS_COMPLETED_UNPAID = 7;
-const ORDER_STATUS_COMPLETED_PAID = 8;
-const ORDER_STATUS_ARCHIVED = 9;
 
 function AdminOrderListPage() {
   const orderManager = useOrderManager();
@@ -406,11 +393,11 @@ function AdminOrderListPage() {
         label: "In Progress",
         color: theme.colors.primary,
       },
-      [ORDER_STATUS_COMPLETED_UNPAID]: {
+      [ORDER_STATUS_COMPLETED_BUT_UNPAID]: {
         label: "Completed (Unpaid)",
         color: theme.colors.warning,
       },
-      [ORDER_STATUS_COMPLETED_PAID]: {
+      [ORDER_STATUS_COMPLETED_AND_PAID]: {
         label: "Completed (Paid)",
         color: theme.colors.success,
       },
