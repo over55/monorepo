@@ -140,7 +140,7 @@ function AdminOrderListPage() {
         if (sortBy) {
           const [sortField, sortOrder] = sortBy.split(",");
           filtersMap.set("sort_field", sortField);
-          filtersMap.set("sort_order", sortOrder === "DESC" ? "-1" : "1");
+          filtersMap.set("sort_order", sortOrder);
         }
 
         // Add search
