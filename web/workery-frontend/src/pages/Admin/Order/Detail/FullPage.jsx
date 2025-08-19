@@ -21,6 +21,7 @@ import {
   TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_COMPLETE_JOB,
   TASK_ITEM_TYPE_FOLLOW_UP_DID_CUSTOMER_REVIEW_ASSOCIATE_AFTER_JOB,
 } from "../../../../constants/Task";
+import { formatDateForDisplay } from "../../../../services/Helpers/dateFormatter";
 
 // Constants
 const CLIENT_PHONE_TYPE_WORK = 1;
@@ -176,55 +177,6 @@ function AdminOrderDetailFullPage() {
       );
     }
     return address || "-";
-  };
-
-  // Format date for display
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString();
-  };
-
-  // Format date and time for display
-  const formatDateTime = (dateString) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleString();
-  };
-
-  // Get order status text and color
-  const getOrderStatusText = (status) => {
-    const statusMap = {
-      [OrderStatusNew]: "New",
-      [OrderStatusDeclined]: "Declined",
-      [OrderStatusPending]: "Pending",
-      [OrderStatusCancelled]: "Cancelled",
-      [OrderStatusOngoing]: "Ongoing",
-      [OrderStatusInProgress]: "In Progress",
-      [OrderStatusCompletedButUnpaid]: "Completed (Unpaid)",
-      [OrderStatusCompletedAndPaid]: "Completed (Paid)",
-      [OrderStatusArchived]: "Archived",
-    };
-    return statusMap[status] || "Unknown";
-  };
-
-  const getOrderStatusColor = (status) => {
-    switch (status) {
-      case OrderStatusNew:
-      case OrderStatusOngoing:
-      case OrderStatusInProgress:
-        return theme.colors.success;
-      case OrderStatusPending:
-        return theme.colors.warning;
-      case OrderStatusDeclined:
-      case OrderStatusCancelled:
-        return theme.colors.danger;
-      case OrderStatusCompletedButUnpaid:
-      case OrderStatusCompletedAndPaid:
-        return theme.colors.info;
-      case OrderStatusArchived:
-        return theme.colors.secondary;
-      default:
-        return theme.colors.dark;
-    }
   };
 
   // Format checkbox value
@@ -672,7 +624,7 @@ function AdminOrderDetailFullPage() {
                           Assignment Date
                         </th>
                         <td style={{ padding: "12px" }}>
-                          {formatDate(order.assignmentDate)}
+                          {formatDateForDisplay(order.assignmentDate)}
                         </td>
                       </tr>
                     </>
@@ -749,7 +701,7 @@ function AdminOrderDetailFullPage() {
                     Start date
                   </th>
                   <td style={{ padding: "12px" }}>
-                    {formatDate(order.startDate)}
+                    {formatDateForDisplay(order.startDate)}
                   </td>
                 </tr>
                 <tr>
@@ -765,7 +717,7 @@ function AdminOrderDetailFullPage() {
                     Completion date
                   </th>
                   <td style={{ padding: "12px" }}>
-                    {formatDate(order.completionDate)}
+                    {formatDateForDisplay(order.completionDate)}
                   </td>
                 </tr>
                 <tr>
@@ -899,7 +851,7 @@ function AdminOrderDetailFullPage() {
                     Created at:
                   </th>
                   <td style={{ padding: "12px" }}>
-                    {formatDateTime(order.createdAt)}
+                    {formatDateForDisplay(order.createdAt)}
                   </td>
                 </tr>
                 <tr>
@@ -970,7 +922,7 @@ function AdminOrderDetailFullPage() {
                     Modified at:
                   </th>
                   <td style={{ padding: "12px" }}>
-                    {formatDateTime(order.modifiedAt)}
+                    {formatDateForDisplay(order.modifiedAt)}
                   </td>
                 </tr>
                 <tr>

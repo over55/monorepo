@@ -11,6 +11,7 @@ import {
   Loading,
   Breadcrumb,
 } from "../../../../../../components/UI";
+import { formatDateForDisplay } from "../../../../../../services/Helpers/dateFormatter";
 
 const OrderStatusNew = 1;
 const OrderStatusDeclined = 2;
@@ -458,12 +459,12 @@ function AdminOrderDetailMoreTaskListPage() {
                   <td
                     style={{ padding: "12px", color: theme.colors.secondary }}
                   >
-                    {task.dueDate || "-"}
+                    {formatDateForDisplay(task.dueDate)}
                   </td>
                   <td
                     style={{ padding: "12px", color: theme.colors.secondary }}
                   >
-                    {task.createdAt}
+                    {formatDateForDisplay(task.createdAt)}
                   </td>
                   <td style={{ padding: "12px", textAlign: "right" }}>
                     <div
