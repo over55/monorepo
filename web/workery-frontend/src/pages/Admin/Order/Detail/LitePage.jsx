@@ -21,13 +21,14 @@ import {
   TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_COMPLETE_JOB,
   TASK_ITEM_TYPE_FOLLOW_UP_DID_CUSTOMER_REVIEW_ASSOCIATE_AFTER_JOB,
 } from "../../../../constants/Task";
+import { CLIENT_PHONE_TYPE_WORK } from "../../../../constants/Customer";
+import { ASSOCIATE_PHONE_TYPE_WORK } from "../../../../constants/Associate";
+import {
+  STAFF_TYPE_MANAGEMENT,
+  STAFF_TYPE_EXECUTIVE,
+} from "../../../../constants/Staff";
 
 // Constants
-const CLIENT_PHONE_TYPE_WORK = 1;
-const ASSOCIATE_PHONE_TYPE_WORK = 1;
-const STAFF_TYPE_MANAGEMENT = 2;
-const STAFF_TYPE_EXECUTIVE = 1;
-
 const OrderStatusNew = 1;
 const OrderStatusDeclined = 2;
 const OrderStatusPending = 3;

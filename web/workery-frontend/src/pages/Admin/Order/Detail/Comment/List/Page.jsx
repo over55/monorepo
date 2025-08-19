@@ -3,18 +3,10 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { useOrderManager } from "../../../../../../services/Services";
+import { formatDateForDisplay } from "../../../../../../services/Helpers/dateFormatter";
+import { ORDER_STATUS_ARCHIVED } from "../../../../../../constants/Order";
 
 function AdminOrderDetailCommentListPage() {
-  const OrderStatusNew = 1;
-  const OrderStatusDeclined = 2;
-  const OrderStatusPending = 3;
-  const OrderStatusCancelled = 4;
-  const OrderStatusOngoing = 5;
-  const OrderStatusInProgress = 6;
-  const OrderStatusCompletedButUnpaid = 7;
-  const OrderStatusCompletedAndPaid = 8;
-  const OrderStatusArchived = 9;
-
   ////
   //// URL Parameters.
   ////
@@ -131,20 +123,6 @@ function AdminOrderDetailCommentListPage() {
   //// Component rendering.
   ////
 
-  // Format date/time
-  const formatDateTime = (isoString) => {
-    if (!isoString) return "";
-    const date = new Date(isoString);
-    return date.toLocaleString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
-
   return (
     <div style={{ padding: "20px", maxWidth: "1200px", margin: "0 auto" }}>
       <section>
@@ -187,7 +165,7 @@ function AdminOrderDetailCommentListPage() {
         </nav>
 
         {/* Page banner for archived orders */}
-        {order && order.status === OrderStatusArchived && (
+        {order && order.status === ORDER_STATUS_ARCHIVED && (
           <div
             style={{
               padding: "15px",
@@ -421,7 +399,8 @@ function AdminOrderDetailCommentListPage() {
                               ) : (
                                 <>Hidden User</>
                               )}{" "}
-                              at <b>{formatDateTime(comment.createdAt)}</b>
+                              at{" "}
+                              <b>{formatDateForDisplay(comment.createdAt)}</b>
                             </span>
                             <br style={{ clear: "both" }} />
                             <div
@@ -560,23 +539,23 @@ function AdminOrderDetailCommentListPage() {
                       <button
                         onClick={onSubmitClick}
                         disabled={
-                          order.status === OrderStatusArchived || isFetching
+                          order.status === ORDER_STATUS_ARCHIVED || isFetching
                         }
                         style={{
                           padding: "10px 20px",
                           backgroundColor:
-                            order.status === OrderStatusArchived
+                            order.status === ORDER_STATUS_ARCHIVED
                               ? "#ccc"
                               : "#28a745",
                           color: "white",
                           border: "none",
                           borderRadius: "4px",
                           cursor:
-                            order.status === OrderStatusArchived
+                            order.status === ORDER_STATUS_ARCHIVED
                               ? "not-allowed"
                               : "pointer",
                           opacity:
-                            order.status === OrderStatusArchived ? 0.6 : 1,
+                            order.status === ORDER_STATUS_ARCHIVED ? 0.6 : 1,
                         }}
                       >
                         ✓ Save Comment

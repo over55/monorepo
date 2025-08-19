@@ -21,24 +21,18 @@ import {
   TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_COMPLETE_JOB,
   TASK_ITEM_TYPE_FOLLOW_UP_DID_CUSTOMER_REVIEW_ASSOCIATE_AFTER_JOB,
 } from "../../../../constants/Task";
+import {
+  ORDER_STATUS_COMPLETED_BUT_UNPAID,
+  ORDER_STATUS_COMPLETED_AND_PAID,
+  ORDER_STATUS_ARCHIVED,
+} from "../../../../constants/Order";
+import { CLIENT_PHONE_TYPE_WORK } from "../../../../constants/Customer";
+import { ASSOCIATE_PHONE_TYPE_WORK } from "../../../../constants/Associate";
+import {
+  STAFF_TYPE_MANAGEMENT,
+  STAFF_TYPE_EXECUTIVE,
+} from "../../../../constants/Staff";
 import { formatDateForDisplay } from "../../../../services/Helpers/dateFormatter";
-
-// Constants
-const CLIENT_PHONE_TYPE_WORK = 1;
-const ASSOCIATE_PHONE_TYPE_WORK = 1;
-const OrderStatusNew = 1;
-const OrderStatusDeclined = 2;
-const OrderStatusPending = 3;
-const OrderStatusCancelled = 4;
-const OrderStatusOngoing = 5;
-const OrderStatusInProgress = 6;
-const OrderStatusCompletedButUnpaid = 7;
-const OrderStatusCompletedAndPaid = 8;
-const OrderStatusArchived = 9;
-const STAFF_TYPE_MANAGEMENT = 2;
-const STAFF_TYPE_EXECUTIVE = 1;
-const ORDER_STATUS_COMPLETED_BUT_UNPAID = 4;
-const ORDER_STATUS_COMPLETED_AND_PAID = 5;
 
 function AdminOrderDetailFullPage() {
   const { oid } = useParams();
@@ -228,7 +222,7 @@ function AdminOrderDetailFullPage() {
       </div>
 
       {/* Status Alerts */}
-      {order && order.status === OrderStatusArchived && (
+      {order && order.status === ORDER_STATUS_ARCHIVED && (
         <Alert type="info">📁 This order is archived</Alert>
       )}
 
@@ -259,7 +253,7 @@ function AdminOrderDetailFullPage() {
                 <Link to={`/admin/order/${oid}/more/unassign`}>
                   <Button
                     variant="secondary"
-                    disabled={order.status === OrderStatusArchived}
+                    disabled={order.status === ORDER_STATUS_ARCHIVED}
                   >
                     👤❌ Unassign
                   </Button>
@@ -268,7 +262,7 @@ function AdminOrderDetailFullPage() {
               <Link to={`/admin/order/${oid}/more/close`}>
                 <Button
                   variant="danger"
-                  disabled={order.status === OrderStatusArchived}
+                  disabled={order.status === ORDER_STATUS_ARCHIVED}
                 >
                   ❌ Close
                 </Button>
@@ -276,7 +270,7 @@ function AdminOrderDetailFullPage() {
               <Link to={`/admin/order/${oid}/edit`}>
                 <Button
                   variant="warning"
-                  disabled={order.status === OrderStatusArchived}
+                  disabled={order.status === ORDER_STATUS_ARCHIVED}
                 >
                   ✏️ Edit
                 </Button>
@@ -291,20 +285,20 @@ function AdminOrderDetailFullPage() {
                   >
                     <Button
                       variant="primary"
-                      disabled={order.status === OrderStatusArchived}
+                      disabled={order.status === ORDER_STATUS_ARCHIVED}
                     >
                       Go to Task →
                     </Button>
                   </Link>
                 )}
-              {(order.status === OrderStatusCompletedButUnpaid ||
-                order.status === OrderStatusCompletedAndPaid) &&
+              {(order.status === ORDER_STATUS_COMPLETED_BUT_UNPAID ||
+                order.status === ORDER_STATUS_COMPLETED_AND_PAID) &&
                 (currentUser?.role === STAFF_TYPE_MANAGEMENT ||
                   currentUser?.role === STAFF_TYPE_EXECUTIVE) && (
                   <Link to={`/admin/financial/${oid}`}>
                     <Button
                       variant="info"
-                      disabled={order.status === OrderStatusArchived}
+                      disabled={order.status === ORDER_STATUS_ARCHIVED}
                     >
                       Go to Financials →
                     </Button>
