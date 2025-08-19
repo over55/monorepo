@@ -3,15 +3,24 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { useAssociateAwayLogManager } from "../../../../../services/Services";
-import { theme, globalStyles } from "../../../../../constants/Theme";
 import {
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Breadcrumb,
-  Modal,
-} from "../../../../../components/UI";
+  CalendarDaysIcon,
+  ChevronRightIcon,
+  XMarkIcon,
+  TrashIcon,
+  PencilSquareIcon,
+  Cog6ToothIcon,
+  ChartBarIcon,
+  ClipboardDocumentIcon,
+  InformationCircleIcon,
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  UserIcon,
+  CalendarIcon,
+  ExclamationCircleIcon,
+  MapPinIcon,
+} from "@heroicons/react/24/outline";
 
 const REASON_MAP = {
   1: "Other",
@@ -93,6 +102,14 @@ function SettingAssociateAwayLogDetailPage() {
     }
   }, [id]);
 
+  // Clear success message after 3 seconds
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => setSuccess(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
+
   // Format date helper
   const formatDate = (dateString) => {
     if (!dateString) return "-";
@@ -113,316 +130,425 @@ function SettingAssociateAwayLogDetailPage() {
     }
   };
 
-  // Breadcrumb items
-  const breadcrumbItems = [
-    { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
-    { label: "Settings", path: "/admin/settings", icon: "⚙️" },
-    {
-      label: "Associate Away Logs",
-      path: "/admin/settings/associate-away-logs",
-      icon: "📅",
-    },
-    { label: "Details", icon: "👁️" },
-  ];
-
-  if (loading) {
+  // Loading state
+  if (loading && !associateAwayLog) {
     return (
-      <div style={globalStyles.container}>
-        <Breadcrumb items={breadcrumbItems} />
-        <Loading message="Loading associate away log details..." />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">
+            Loading associate away log details...
+          </p>
+        </div>
       </div>
     );
   }
 
+  // Error state
   if (error && !associateAwayLog) {
     return (
-      <div style={globalStyles.container}>
-        <Breadcrumb items={breadcrumbItems} />
-        <Alert type="error">{error}</Alert>
-        <div style={{ marginTop: "20px" }}>
-          <Button
-            onClick={() => navigate("/admin/settings/associate-away-logs")}
+      <div className="min-h-screen bg-gray-50 p-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-4">
+            {error}
+          </div>
+          <Link
+            to="/admin/settings/associate-away-logs"
+            className="inline-flex items-center text-blue-600 hover:text-blue-800"
           >
-            ← Back to Associate Away Logs
-          </Button>
+            <ArrowLeftIcon className="w-4 h-4 mr-2" />
+            Back to Associate Away Logs
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={globalStyles.container}>
-      <Breadcrumb items={breadcrumbItems} />
-
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "20px",
-        }}
-      >
-        <h1 style={{ fontSize: "28px", fontWeight: "bold", margin: 0 }}>
-          📅 Associate Away Log Details
-        </h1>
-        <div style={{ display: "flex", gap: "10px" }}>
-          <Button
-            onClick={() =>
-              navigate(`/admin/settings/associate-away-log/${id}/update`)
-            }
-            variant="warning"
-          >
-            ✏️ Edit
-          </Button>
-          <Button onClick={() => setShowDeleteModal(true)} variant="danger">
-            🗑️ Delete
-          </Button>
-        </div>
-      </div>
-
-      {success && (
-        <Alert type="success" onClose={() => setSuccess(null)}>
-          {success}
-        </Alert>
-      )}
-
-      {error && (
-        <Alert type="error" onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
-
-      {associateAwayLog && (
-        <>
-          <Card title="Away Log Information">
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-                gap: "20px",
-              }}
-            >
-              <div>
-                <h3
-                  style={{ marginBottom: "15px", color: theme.colors.primary }}
-                >
-                  Associate Details
-                </h3>
-                <div style={{ marginBottom: "10px" }}>
-                  <strong>Associate:</strong>
-                  <br />
-                  <Link
-                    to={`/admin/associate/${associateAwayLog.associateId}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      color: theme.colors.primary,
-                      textDecoration: "none",
-                    }}
-                  >
-                    {associateAwayLog.associateName ||
-                      `Associate #${associateAwayLog.associateId}`}{" "}
-                    🔗
-                  </Link>
-                </div>
-              </div>
-
-              <div>
-                <h3
-                  style={{ marginBottom: "15px", color: theme.colors.primary }}
-                >
-                  Away Details
-                </h3>
-                <div style={{ marginBottom: "10px" }}>
-                  <strong>Reason:</strong>
-                  <br />
-                  {associateAwayLog.reason === 1 ? (
-                    <span>
-                      {REASON_MAP[1]} -{" "}
-                      {associateAwayLog.reasonOther || "Not specified"}
-                    </span>
-                  ) : (
-                    <span>
-                      {REASON_MAP[associateAwayLog.reason] || "Unknown"}
-                    </span>
-                  )}
-                </div>
-
-                <div style={{ marginBottom: "10px" }}>
-                  <strong>Start Date:</strong>
-                  <br />
-                  {formatDate(associateAwayLog.startDate)}
-                </div>
-
-                <div style={{ marginBottom: "10px" }}>
-                  <strong>Until:</strong>
-                  <br />
-                  {associateAwayLog.untilFurtherNotice === 1 ? (
-                    <span
-                      style={{
-                        color: theme.colors.warning,
-                        fontWeight: "bold",
-                      }}
-                    >
-                      Further Notice
-                    </span>
-                  ) : (
-                    formatDate(associateAwayLog.untilDate)
-                  )}
-                </div>
-              </div>
-            </div>
-          </Card>
-
-          <Card title="System Information">
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-                gap: "20px",
-              }}
-            >
-              <div>
-                <h3
-                  style={{ marginBottom: "15px", color: theme.colors.primary }}
-                >
-                  Creation Info
-                </h3>
-                <div style={{ marginBottom: "10px" }}>
-                  <strong>Created At:</strong>
-                  <br />
-                  {formatDateTime(associateAwayLog.createdAt)}
-                </div>
-
-                {associateAwayLog.createdByUserName && (
-                  <div style={{ marginBottom: "10px" }}>
-                    <strong>Created By:</strong>
-                    <br />
-                    {associateAwayLog.createdByUserName}
-                  </div>
-                )}
-
-                {associateAwayLog.createdFromIpAddress && (
-                  <div style={{ marginBottom: "10px" }}>
-                    <strong>Created From:</strong>
-                    <br />
-                    {associateAwayLog.createdFromIpAddress}
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <h3
-                  style={{ marginBottom: "15px", color: theme.colors.primary }}
-                >
-                  Modification Info
-                </h3>
-                {associateAwayLog.modifiedAt && (
-                  <div style={{ marginBottom: "10px" }}>
-                    <strong>Modified At:</strong>
-                    <br />
-                    {formatDateTime(associateAwayLog.modifiedAt)}
-                  </div>
-                )}
-
-                {associateAwayLog.modifiedByUserName && (
-                  <div style={{ marginBottom: "10px" }}>
-                    <strong>Modified By:</strong>
-                    <br />
-                    {associateAwayLog.modifiedByUserName}
-                  </div>
-                )}
-
-                {associateAwayLog.modifiedFromIpAddress && (
-                  <div style={{ marginBottom: "10px" }}>
-                    <strong>Modified From:</strong>
-                    <br />
-                    {associateAwayLog.modifiedFromIpAddress}
-                  </div>
-                )}
-              </div>
-            </div>
-          </Card>
-
-          {/* Action Buttons */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginTop: "30px",
-            }}
-          >
-            <Button
-              onClick={() => navigate("/admin/settings/associate-away-logs")}
-              variant="outline"
-            >
-              ← Back to List
-            </Button>
-            <div style={{ display: "flex", gap: "10px" }}>
-              <Button
-                onClick={() =>
-                  navigate(`/admin/settings/associate-away-log/${id}/update`)
-                }
-                variant="warning"
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb */}
+        <nav className="flex mb-8" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+            <li className="inline-flex items-center">
+              <Link
+                to="/admin/dashboard"
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
               >
-                ✏️ Edit
-              </Button>
-              <Button onClick={() => setShowDeleteModal(true)} variant="danger">
-                🗑️ Delete
-              </Button>
-            </div>
-          </div>
-        </>
-      )}
+                <ChartBarIcon className="w-4 h-4 mr-2" />
+                Dashboard
+              </Link>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to="/admin/settings"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                >
+                  <span className="inline-flex items-center">
+                    <Cog6ToothIcon className="w-4 h-4 mr-2" />
+                    Settings
+                  </span>
+                </Link>
+              </div>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to="/admin/settings/associate-away-logs"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                >
+                  <span className="inline-flex items-center">
+                    <CalendarDaysIcon className="w-4 h-4 mr-2" />
+                    Associate Away Logs
+                  </span>
+                </Link>
+              </div>
+            </li>
+            <li aria-current="page">
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
+                  <ClipboardDocumentIcon className="w-4 h-4 mr-2" />
+                  Details
+                </span>
+              </div>
+            </li>
+          </ol>
+        </nav>
 
-      {/* Delete Confirmation Modal */}
-      <Modal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        title="Confirm Deletion"
-        footer={
-          <>
-            <Button
-              onClick={() => setShowDeleteModal(false)}
-              variant="outline"
-              disabled={deleting}
+        {/* Success/Error Messages */}
+        {success && (
+          <div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center">
+              <CheckCircleIcon className="w-5 h-5 mr-2" />
+              {success}
+            </span>
+            <button
+              onClick={() => setSuccess(null)}
+              className="text-green-600 hover:text-green-800"
             >
-              Cancel
-            </Button>
-            <Button onClick={handleDelete} variant="danger" disabled={deleting}>
-              {deleting ? "Deleting..." : "Delete"}
-            </Button>
-          </>
-        }
-      >
-        <p>
-          Are you sure you want to delete this associate away log? This action
-          cannot be undone.
-        </p>
-        {associateAwayLog && (
-          <div
-            style={{
-              marginTop: "15px",
-              padding: "10px",
-              backgroundColor: "#f8f9fa",
-              borderRadius: "4px",
-            }}
-          >
-            <strong>Associate:</strong>{" "}
-            {associateAwayLog.associateName ||
-              `Associate #${associateAwayLog.associateId}`}
-            <br />
-            <strong>Reason:</strong>{" "}
-            {associateAwayLog.reason === 1
-              ? associateAwayLog.reasonOther
-              : REASON_MAP[associateAwayLog.reason]}
-            <br />
-            <strong>Start Date:</strong>{" "}
-            {formatDate(associateAwayLog.startDate)}
+              <XMarkIcon className="w-5 h-5" />
+            </button>
           </div>
         )}
-      </Modal>
+
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center">
+              <ExclamationCircleIcon className="w-5 h-5 mr-2" />
+              {error}
+            </span>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-600 hover:text-red-800"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
+        {associateAwayLog && (
+          <>
+            {/* Main Details Card */}
+            <div className="bg-white shadow-sm rounded-lg">
+              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h1 className="text-xl font-semibold text-gray-900 flex items-center">
+                  <CalendarDaysIcon className="w-6 h-6 mr-2" />
+                  Associate Away Log Details
+                </h1>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() =>
+                      navigate(
+                        `/admin/settings/associate-away-log/${id}/update`,
+                      )
+                    }
+                    disabled={loading}
+                    className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <PencilSquareIcon className="w-4 h-4 mr-1" />
+                    Edit
+                  </button>
+                  <button
+                    onClick={() => setShowDeleteModal(true)}
+                    disabled={loading}
+                    className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <TrashIcon className="w-4 h-4 mr-1" />
+                    Delete
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-6">
+                {/* Away Log Information */}
+                <div className="mb-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    Away Log Information
+                  </h3>
+
+                  {/* Associate Info */}
+                  <div className="mb-4 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-500">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Associate
+                    </label>
+                    <Link
+                      to={`/admin/associate/${associateAwayLog.associateId}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800 font-medium flex items-center"
+                    >
+                      <UserIcon className="w-5 h-5 mr-2" />
+                      {associateAwayLog.associateName ||
+                        `Associate #${associateAwayLog.associateId}`}
+                    </Link>
+                  </div>
+
+                  {/* Reason */}
+                  <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Reason for Absence
+                    </label>
+                    <p className="text-gray-900">
+                      {associateAwayLog.reason === 1 ? (
+                        <>
+                          {REASON_MAP[1]}
+                          {associateAwayLog.reasonOther && (
+                            <span className="block mt-1 text-gray-600 italic">
+                              "{associateAwayLog.reasonOther}"
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        REASON_MAP[associateAwayLog.reason] || "Unknown"
+                      )}
+                    </p>
+                  </div>
+
+                  {/* Date Information */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                        <CalendarIcon className="w-4 h-4 mr-2" />
+                        Start Date
+                      </label>
+                      <p className="text-gray-900 font-medium">
+                        {formatDate(associateAwayLog.startDate)}
+                      </p>
+                    </div>
+
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center">
+                        <ClockIcon className="w-4 h-4 mr-2" />
+                        Until
+                      </label>
+                      <p className="text-gray-900 font-medium">
+                        {associateAwayLog.untilFurtherNotice === 1 ? (
+                          <span className="text-amber-600 font-semibold">
+                            Further Notice
+                          </span>
+                        ) : (
+                          formatDate(associateAwayLog.untilDate)
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Metadata Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                  {/* Creation Information */}
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                      <ClockIcon className="w-4 h-4 mr-2" />
+                      Creation Information
+                    </h4>
+                    <div className="space-y-2 text-sm">
+                      <div>
+                        <span className="font-medium text-gray-500">
+                          Created At:
+                        </span>
+                        <p className="text-gray-900 mt-0.5">
+                          {formatDateTime(associateAwayLog.createdAt)}
+                        </p>
+                      </div>
+                      {associateAwayLog.createdByUserName && (
+                        <div>
+                          <span className="font-medium text-gray-500">
+                            Created By:
+                          </span>
+                          <p className="text-gray-900 mt-0.5">
+                            {associateAwayLog.createdByUserName}
+                          </p>
+                        </div>
+                      )}
+                      {associateAwayLog.createdFromIpAddress && (
+                        <div>
+                          <span className="font-medium text-gray-500 flex items-center">
+                            <MapPinIcon className="w-3 h-3 mr-1" />
+                            Created From IP:
+                          </span>
+                          <p className="text-gray-900 mt-0.5">
+                            {associateAwayLog.createdFromIpAddress}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Modification Information */}
+                  {(associateAwayLog.modifiedAt ||
+                    associateAwayLog.modifiedByUserName ||
+                    associateAwayLog.modifiedFromIpAddress) && (
+                    <div className="bg-gray-50 rounded-lg p-4">
+                      <h4 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                        <PencilSquareIcon className="w-4 h-4 mr-2" />
+                        Modification Information
+                      </h4>
+                      <div className="space-y-2 text-sm">
+                        {associateAwayLog.modifiedAt && (
+                          <div>
+                            <span className="font-medium text-gray-500">
+                              Modified At:
+                            </span>
+                            <p className="text-gray-900 mt-0.5">
+                              {formatDateTime(associateAwayLog.modifiedAt)}
+                            </p>
+                          </div>
+                        )}
+                        {associateAwayLog.modifiedByUserName && (
+                          <div>
+                            <span className="font-medium text-gray-500">
+                              Modified By:
+                            </span>
+                            <p className="text-gray-900 mt-0.5">
+                              {associateAwayLog.modifiedByUserName}
+                            </p>
+                          </div>
+                        )}
+                        {associateAwayLog.modifiedFromIpAddress && (
+                          <div>
+                            <span className="font-medium text-gray-500 flex items-center">
+                              <MapPinIcon className="w-3 h-3 mr-1" />
+                              Modified From IP:
+                            </span>
+                            <p className="text-gray-900 mt-0.5">
+                              {associateAwayLog.modifiedFromIpAddress}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mt-8 flex items-center justify-between">
+              <Link
+                to="/admin/settings/associate-away-logs"
+                className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+              >
+                <ArrowLeftIcon className="w-4 h-4 mr-1" />
+                Back to Associate Away Logs
+              </Link>
+
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={() =>
+                    navigate(`/admin/settings/associate-away-log/${id}/update`)
+                  }
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600"
+                >
+                  <PencilSquareIcon className="w-4 h-4 mr-2" />
+                  Edit Away Log
+                </button>
+                <button
+                  onClick={() =>
+                    navigate(`/admin/settings/associate-away-log/${id}/delete`)
+                  }
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700"
+                >
+                  <TrashIcon className="w-4 h-4 mr-2" />
+                  Delete Away Log
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-md w-full">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <TrashIcon className="w-5 h-5 mr-2 text-red-600" />
+                  Delete Associate Away Log
+                </h3>
+              </div>
+
+              <div className="px-6 py-4">
+                <p className="text-sm text-gray-600 mb-4">
+                  Are you sure you want to delete this associate away log? This
+                  action cannot be undone.
+                </p>
+                {associateAwayLog && (
+                  <div className="p-3 bg-red-50 rounded-lg border-l-4 border-red-500">
+                    <p className="text-sm font-medium text-gray-700 mb-2">
+                      Away log to be deleted:
+                    </p>
+                    <div className="text-sm text-gray-900 space-y-1">
+                      <p>
+                        <strong>Associate:</strong>{" "}
+                        {associateAwayLog.associateName ||
+                          `Associate #${associateAwayLog.associateId}`}
+                      </p>
+                      <p>
+                        <strong>Reason:</strong>{" "}
+                        {associateAwayLog.reason === 1
+                          ? associateAwayLog.reasonOther
+                          : REASON_MAP[associateAwayLog.reason]}
+                      </p>
+                      <p>
+                        <strong>Start Date:</strong>{" "}
+                        {formatDate(associateAwayLog.startDate)}
+                      </p>
+                      <p>
+                        <strong>Until:</strong>{" "}
+                        {associateAwayLog.untilFurtherNotice === 1
+                          ? "Further Notice"
+                          : formatDate(associateAwayLog.untilDate)}
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  disabled={deleting}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {deleting ? "Deleting..." : "Delete Away Log"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

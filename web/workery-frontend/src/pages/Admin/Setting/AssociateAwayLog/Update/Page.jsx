@@ -6,17 +6,26 @@ import {
   useAssociateAwayLogManager,
   useAssociateManager,
 } from "../../../../../services/Services";
-import { theme, globalStyles } from "../../../../../constants/Theme";
 import {
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Breadcrumb,
-  Input,
-  Select,
-  FormGroup,
-} from "../../../../../components/UI";
+  CalendarDaysIcon,
+  ChevronRightIcon,
+  XMarkIcon,
+  PencilSquareIcon,
+  ExclamationTriangleIcon,
+  ArrowPathIcon,
+  CheckCircleIcon,
+  Cog6ToothIcon,
+  ChartBarIcon,
+  ClipboardDocumentIcon,
+  InformationCircleIcon,
+  ArrowLeftIcon,
+  DocumentTextIcon,
+  UserGroupIcon,
+  CalendarIcon,
+  ClockIcon,
+  BriefcaseIcon,
+  SparklesIcon,
+} from "@heroicons/react/24/outline";
 
 const REASON_OPTIONS = [
   { value: "", label: "Please select" },
@@ -45,6 +54,7 @@ function SettingAssociateAwayLogUpdatePage() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [formErrors, setFormErrors] = useState({});
+  const [hasChanges, setHasChanges] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -179,32 +189,33 @@ function SettingAssociateAwayLogUpdatePage() {
   };
 
   // Check if form has changes
-  const hasChanges = () => {
-    if (!originalData) return false;
+  useEffect(() => {
+    if (originalData) {
+      const changed =
+        formData.associateId !== originalData.associateId?.toString() ||
+        formData.reason !== originalData.reason?.toString() ||
+        formData.reasonOther !== (originalData.reasonOther || "") ||
+        formData.untilFurtherNotice !==
+          originalData.untilFurtherNotice?.toString() ||
+        formData.untilDate !==
+          (originalData.untilDate
+            ? formatDateForInput(originalData.untilDate)
+            : "") ||
+        formData.startDate !==
+          (originalData.startDate
+            ? formatDateForInput(originalData.startDate)
+            : "");
 
-    return (
-      formData.associateId !== originalData.associateId?.toString() ||
-      formData.reason !== originalData.reason?.toString() ||
-      formData.reasonOther !== (originalData.reasonOther || "") ||
-      formData.untilFurtherNotice !==
-        originalData.untilFurtherNotice?.toString() ||
-      formData.untilDate !==
-        (originalData.untilDate
-          ? formatDateForInput(originalData.untilDate)
-          : "") ||
-      formData.startDate !==
-        (originalData.startDate
-          ? formatDateForInput(originalData.startDate)
-          : "")
-    );
-  };
+      setHasChanges(changed);
+    }
+  }, [formData, originalData]);
 
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     // Check if there are changes
-    if (!hasChanges()) {
+    if (!hasChanges) {
       setError("No changes detected");
       return;
     }
@@ -258,6 +269,41 @@ function SettingAssociateAwayLogUpdatePage() {
     }
   };
 
+  // Handle reset form
+  const handleReset = () => {
+    if (originalData) {
+      setFormData({
+        associateId: originalData.associateId?.toString() || "",
+        reason: originalData.reason?.toString() || "",
+        reasonOther: originalData.reasonOther || "",
+        untilFurtherNotice: originalData.untilFurtherNotice?.toString() || "",
+        untilDate: originalData.untilDate
+          ? formatDateForInput(originalData.untilDate)
+          : "",
+        startDate: originalData.startDate
+          ? formatDateForInput(originalData.startDate)
+          : "",
+      });
+      setFormErrors({});
+      setError(null);
+    }
+  };
+
+  // Handle cancel
+  const handleCancel = () => {
+    if (hasChanges) {
+      if (
+        window.confirm(
+          "Are you sure you want to cancel? Any unsaved changes will be lost.",
+        )
+      ) {
+        navigate(`/admin/settings/associate-away-log/${id}/detail`);
+      }
+    } else {
+      navigate(`/admin/settings/associate-away-log/${id}/detail`);
+    }
+  };
+
   // Initial load
   useEffect(() => {
     if (id) {
@@ -267,6 +313,14 @@ function SettingAssociateAwayLogUpdatePage() {
       setInitialLoading(false);
     }
   }, [id]);
+
+  // Clear success message after 3 seconds
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => setSuccess(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
 
   // Format date for input (YYYY-MM-DD)
   const formatDateForInput = (dateString) => {
@@ -278,300 +332,510 @@ function SettingAssociateAwayLogUpdatePage() {
     }
   };
 
-  // Get today's date for min date validation
-  const today = new Date().toISOString().split("T")[0];
-
-  // Breadcrumb items
-  const breadcrumbItems = [
-    { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
-    { label: "Settings", path: "/admin/settings", icon: "⚙️" },
-    {
-      label: "Associate Away Logs",
-      path: "/admin/settings/associate-away-logs",
-      icon: "📅",
-    },
-    { label: "Edit", icon: "✏️" },
-  ];
-
+  // Loading state
   if (initialLoading || loadingAssociates) {
     return (
-      <div style={globalStyles.container}>
-        <Breadcrumb items={breadcrumbItems} />
-        <Loading message="Loading associate away log..." />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading associate away log...</p>
+        </div>
       </div>
     );
   }
 
+  // Error state
   if (error && !originalData) {
     return (
-      <div style={globalStyles.container}>
-        <Breadcrumb items={breadcrumbItems} />
-        <Alert type="error">{error}</Alert>
-        <div style={{ marginTop: "20px" }}>
-          <Button
-            onClick={() => navigate("/admin/settings/associate-away-logs")}
+      <div className="min-h-screen bg-gray-50 p-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-4">
+            {error}
+          </div>
+          <Link
+            to="/admin/settings/associate-away-logs"
+            className="inline-flex items-center text-blue-600 hover:text-blue-800"
           >
-            ← Back to Associate Away Logs
-          </Button>
+            <ArrowLeftIcon className="w-4 h-4 mr-2" />
+            Back to Associate Away Logs
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={globalStyles.container}>
-      <Breadcrumb items={breadcrumbItems} />
-
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "20px",
-        }}
-      >
-        <h1 style={{ fontSize: "28px", fontWeight: "bold", margin: 0 }}>
-          ✏️ Edit Associate Away Log
-        </h1>
-      </div>
-
-      {success && (
-        <Alert type="success" onClose={() => setSuccess(null)}>
-          {success}
-        </Alert>
-      )}
-
-      {error && (
-        <Alert type="error" onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
-
-      <Card>
-        <form onSubmit={handleSubmit}>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-              gap: "20px",
-            }}
-          >
-            {/* Associate Selection */}
-            <FormGroup>
-              <label style={globalStyles.label}>
-                Associate <span style={{ color: "red" }}>*</span>
-              </label>
-              <select
-                value={formData.associateId}
-                onChange={(e) =>
-                  handleInputChange("associateId", e.target.value)
-                }
-                style={{
-                  ...globalStyles.input,
-                  borderColor: formErrors.associateId
-                    ? theme.colors.error
-                    : "#ddd",
-                }}
-                disabled={loading}
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Breadcrumb */}
+        <nav className="flex mb-4" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+            <li className="inline-flex items-center">
+              <Link
+                to="/admin/dashboard"
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
               >
-                <option value="">Please select an associate</option>
-                {associates.map((associate) => (
-                  <option key={associate.id} value={associate.id}>
-                    {associate.firstName} {associate.lastName}{" "}
-                    {associate.email && `(${associate.email})`}
-                  </option>
-                ))}
-              </select>
-              {formErrors.associateId && (
-                <div style={globalStyles.errorMessage}>
-                  {formErrors.associateId}
-                </div>
-              )}
-            </FormGroup>
-
-            {/* Reason Selection */}
-            <FormGroup>
-              <label style={globalStyles.label}>
-                Reason <span style={{ color: "red" }}>*</span>
-              </label>
-              <select
-                value={formData.reason}
-                onChange={(e) => handleInputChange("reason", e.target.value)}
-                style={{
-                  ...globalStyles.input,
-                  borderColor: formErrors.reason ? theme.colors.error : "#ddd",
-                }}
-                disabled={loading}
-              >
-                {REASON_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              {formErrors.reason && (
-                <div style={globalStyles.errorMessage}>{formErrors.reason}</div>
-              )}
-            </FormGroup>
-
-            {/* Other Reason (if selected) */}
-            {formData.reason === "1" && (
-              <FormGroup>
-                <label style={globalStyles.label}>
-                  Specify Reason <span style={{ color: "red" }}>*</span>
-                </label>
-                <input
-                  type="text"
-                  value={formData.reasonOther}
-                  onChange={(e) =>
-                    handleInputChange("reasonOther", e.target.value)
-                  }
-                  placeholder="Please specify the reason"
-                  style={{
-                    ...globalStyles.input,
-                    borderColor: formErrors.reasonOther
-                      ? theme.colors.error
-                      : "#ddd",
-                  }}
-                  disabled={loading}
-                />
-                {formErrors.reasonOther && (
-                  <div style={globalStyles.errorMessage}>
-                    {formErrors.reasonOther}
-                  </div>
-                )}
-              </FormGroup>
-            )}
-
-            {/* Until Further Notice */}
-            <FormGroup>
-              <label style={globalStyles.label}>
-                Until Further Notice? <span style={{ color: "red" }}>*</span>
-              </label>
-              <select
-                value={formData.untilFurtherNotice}
-                onChange={(e) =>
-                  handleInputChange("untilFurtherNotice", e.target.value)
-                }
-                style={{
-                  ...globalStyles.input,
-                  borderColor: formErrors.untilFurtherNotice
-                    ? theme.colors.error
-                    : "#ddd",
-                }}
-                disabled={loading}
-              >
-                {UNTIL_FURTHER_NOTICE_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              {formErrors.untilFurtherNotice && (
-                <div style={globalStyles.errorMessage}>
-                  {formErrors.untilFurtherNotice}
-                </div>
-              )}
-            </FormGroup>
-
-            {/* Until Date (if not further notice) */}
-            {formData.untilFurtherNotice === "2" && (
-              <FormGroup>
-                <label style={globalStyles.label}>
-                  Until Date <span style={{ color: "red" }}>*</span>
-                </label>
-                <input
-                  type="date"
-                  value={formData.untilDate}
-                  onChange={(e) =>
-                    handleInputChange("untilDate", e.target.value)
-                  }
-                  style={{
-                    ...globalStyles.input,
-                    borderColor: formErrors.untilDate
-                      ? theme.colors.error
-                      : "#ddd",
-                  }}
-                  disabled={loading}
-                />
-                {formErrors.untilDate && (
-                  <div style={globalStyles.errorMessage}>
-                    {formErrors.untilDate}
-                  </div>
-                )}
-              </FormGroup>
-            )}
-
-            {/* Start Date */}
-            <FormGroup>
-              <label style={globalStyles.label}>
-                Start Date <span style={{ color: "red" }}>*</span>
-              </label>
-              <input
-                type="date"
-                value={formData.startDate}
-                onChange={(e) => handleInputChange("startDate", e.target.value)}
-                style={{
-                  ...globalStyles.input,
-                  borderColor: formErrors.startDate
-                    ? theme.colors.error
-                    : "#ddd",
-                }}
-                disabled={loading}
-              />
-              {formErrors.startDate && (
-                <div style={globalStyles.errorMessage}>
-                  {formErrors.startDate}
-                </div>
-              )}
-            </FormGroup>
-          </div>
-
-          {/* Action Buttons */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginTop: "30px",
-              paddingTop: "20px",
-              borderTop: "1px solid #eee",
-            }}
-          >
-            <Button
-              type="button"
-              onClick={() =>
-                navigate(`/admin/settings/associate-away-log/${id}/detail`)
-              }
-              variant="outline"
-              disabled={loading}
-            >
-              ← Cancel
-            </Button>
-            <div style={{ display: "flex", gap: "10px" }}>
-              {hasChanges() && (
-                <div
-                  style={{
-                    fontSize: "14px",
-                    color: theme.colors.warning,
-                    alignSelf: "center",
-                    marginRight: "10px",
-                  }}
+                <ChartBarIcon className="w-4 h-4 mr-2" />
+                Dashboard
+              </Link>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to="/admin/settings"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
                 >
-                  ⚠️ You have unsaved changes
+                  <span className="inline-flex items-center">
+                    <Cog6ToothIcon className="w-4 h-4 mr-2" />
+                    Settings
+                  </span>
+                </Link>
+              </div>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to="/admin/settings/associate-away-logs"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                >
+                  <span className="inline-flex items-center">
+                    <CalendarDaysIcon className="w-4 h-4 mr-2" />
+                    Associate Away Logs
+                  </span>
+                </Link>
+              </div>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to={`/admin/settings/associate-away-log/${id}/detail`}
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                >
+                  <span className="inline-flex items-center">
+                    <ClipboardDocumentIcon className="w-4 h-4 mr-2" />
+                    Detail
+                  </span>
+                </Link>
+              </div>
+            </li>
+            <li aria-current="page">
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
+                  <PencilSquareIcon className="w-4 h-4 mr-2" />
+                  Edit
+                </span>
+              </div>
+            </li>
+          </ol>
+        </nav>
+
+        {/* Page Title */}
+        <div className="mb-4 flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center">
+            <PencilSquareIcon className="w-7 h-7 mr-3" />
+            Edit Associate Away Log
+          </h1>
+          {hasChanges && (
+            <div className="flex items-center text-amber-600 text-sm font-medium">
+              <ExclamationTriangleIcon className="w-4 h-4 mr-1" />
+              Unsaved changes
+            </div>
+          )}
+        </div>
+
+        {/* Success/Error Messages */}
+        {success && (
+          <div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center">
+              <CheckCircleIcon className="w-5 h-5 mr-2" />
+              {success}
+            </span>
+            <button
+              onClick={() => setSuccess(null)}
+              className="text-green-600 hover:text-green-800"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center">
+              <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
+              {error}
+            </span>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-600 hover:text-red-800"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
+        {/* Two Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Form (2 columns wide) */}
+          <div className="lg:col-span-2 bg-white shadow-sm rounded-lg">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                <DocumentTextIcon className="w-5 h-5 mr-2" />
+                Update Away Log Details
+              </h2>
+            </div>
+
+            <div className="p-6">
+              <form onSubmit={handleSubmit}>
+                <div className="space-y-6">
+                  {/* Associate Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Associate <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={formData.associateId}
+                      onChange={(e) =>
+                        handleInputChange("associateId", e.target.value)
+                      }
+                      disabled={loading}
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        formErrors.associateId
+                          ? "border-red-500"
+                          : "border-gray-300"
+                      }`}
+                    >
+                      <option value="">Please select an associate</option>
+                      {associates.map((associate) => (
+                        <option key={associate.id} value={associate.id}>
+                          {associate.firstName} {associate.lastName}{" "}
+                          {associate.email && `(${associate.email})`}
+                        </option>
+                      ))}
+                    </select>
+                    {formErrors.associateId && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {formErrors.associateId}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Reason Selection */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Reason <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={formData.reason}
+                      onChange={(e) =>
+                        handleInputChange("reason", e.target.value)
+                      }
+                      disabled={loading}
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        formErrors.reason ? "border-red-500" : "border-gray-300"
+                      }`}
+                    >
+                      {REASON_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    {formErrors.reason && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {formErrors.reason}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Other Reason (conditional) */}
+                  {formData.reason === "1" && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Specify Reason <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.reasonOther}
+                        onChange={(e) =>
+                          handleInputChange("reasonOther", e.target.value)
+                        }
+                        placeholder="Please specify the reason"
+                        disabled={loading}
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                          formErrors.reasonOther
+                            ? "border-red-500"
+                            : "border-gray-300"
+                        }`}
+                      />
+                      {formErrors.reasonOther && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {formErrors.reasonOther}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Date Fields Row */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Start Date */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Start Date <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.startDate}
+                        onChange={(e) =>
+                          handleInputChange("startDate", e.target.value)
+                        }
+                        disabled={loading}
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                          formErrors.startDate
+                            ? "border-red-500"
+                            : "border-gray-300"
+                        }`}
+                      />
+                      {formErrors.startDate && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {formErrors.startDate}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Until Further Notice */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Until Further Notice?{" "}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={formData.untilFurtherNotice}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "untilFurtherNotice",
+                            e.target.value,
+                          )
+                        }
+                        disabled={loading}
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                          formErrors.untilFurtherNotice
+                            ? "border-red-500"
+                            : "border-gray-300"
+                        }`}
+                      >
+                        {UNTIL_FURTHER_NOTICE_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      {formErrors.untilFurtherNotice && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {formErrors.untilFurtherNotice}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Until Date (conditional) */}
+                  {formData.untilFurtherNotice === "2" && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Until Date <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="date"
+                        value={formData.untilDate}
+                        onChange={(e) =>
+                          handleInputChange("untilDate", e.target.value)
+                        }
+                        disabled={loading}
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                          formErrors.untilDate
+                            ? "border-red-500"
+                            : "border-gray-300"
+                        }`}
+                      />
+                      {formErrors.untilDate && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {formErrors.untilDate}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Info Note */}
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800 flex items-start">
+                      <InformationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+                      <span>
+                        Changes will take effect immediately and affect the
+                        associate's availability for new work orders.
+                      </span>
+                    </p>
+                  </div>
+
+                  {/* Form Actions */}
+                  <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+                    {hasChanges ? (
+                      <button
+                        type="button"
+                        onClick={handleReset}
+                        disabled={loading}
+                        className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <ArrowPathIcon className="w-4 h-4 mr-1" />
+                        Reset
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleCancel}
+                        disabled={loading}
+                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={loading || !hasChanges}
+                      className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <CheckCircleIcon className="w-4 h-4 mr-2" />
+                      {loading ? "Updating..." : "Update Away Log"}
+                    </button>
+                  </div>
                 </div>
-              )}
-              <Button
-                type="submit"
-                variant="primary"
-                disabled={loading || !hasChanges()}
-              >
-                {loading ? "Saving..." : "💾 Save Changes"}
-              </Button>
+              </form>
             </div>
           </div>
-        </form>
-      </Card>
+
+          {/* Right Column - Guidelines & Info */}
+          <div className="space-y-6">
+            {/* Important Notes */}
+            <div className="bg-white shadow-sm rounded-lg">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <ExclamationTriangleIcon className="w-5 h-5 mr-2 text-amber-500" />
+                  Important Notes
+                </h2>
+              </div>
+              <div className="p-5">
+                <ul className="space-y-3 text-sm text-gray-600">
+                  <li className="flex items-start">
+                    <CalendarIcon className="w-4 h-4 mr-2 text-blue-500 flex-shrink-0 mt-0.5" />
+                    <span>Changing dates affects assignment availability</span>
+                  </li>
+                  <li className="flex items-start">
+                    <ClockIcon className="w-4 h-4 mr-2 text-purple-500 flex-shrink-0 mt-0.5" />
+                    <span>Existing work orders remain unaffected</span>
+                  </li>
+                  <li className="flex items-start">
+                    <UserGroupIcon className="w-4 h-4 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span>Associates retain account access</span>
+                  </li>
+                  <li className="flex items-start">
+                    <BriefcaseIcon className="w-4 h-4 mr-2 text-orange-500 flex-shrink-0 mt-0.5" />
+                    <span>Update insurance info before marking available</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Original Data */}
+            {originalData && hasChanges && (
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                  <DocumentTextIcon className="w-4 h-4 mr-2" />
+                  Original Values
+                </h3>
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Associate:</span>
+                    <span className="text-gray-900">
+                      {originalData.associateName ||
+                        `#${originalData.associateId}`}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Start Date:</span>
+                    <span className="text-gray-900">
+                      {originalData.startDate
+                        ? new Date(originalData.startDate).toLocaleDateString()
+                        : "N/A"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Until:</span>
+                    <span className="text-gray-900">
+                      {originalData.untilFurtherNotice === 1
+                        ? "Further Notice"
+                        : originalData.untilDate
+                          ? new Date(
+                              originalData.untilDate,
+                            ).toLocaleDateString()
+                          : "N/A"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Quick Tips */}
+            <div className="bg-white shadow-sm rounded-lg">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <SparklesIcon className="w-5 h-5 mr-2 text-blue-500" />
+                  Quick Tips
+                </h2>
+              </div>
+              <div className="p-5">
+                <ul className="space-y-2.5 text-sm text-gray-600">
+                  <li className="flex items-start">
+                    <CheckCircleIcon className="w-4 h-4 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span>Review dates carefully before saving</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircleIcon className="w-4 h-4 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span>Notify teams of availability changes</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircleIcon className="w-4 h-4 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span>Update when circumstances change</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Back Link */}
+        <div className="mt-6">
+          <Link
+            to={`/admin/settings/associate-away-log/${id}/detail`}
+            className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+          >
+            <ArrowLeftIcon className="w-4 h-4 mr-1" />
+            Back to Away Log Detail
+          </Link>
+        </div>
+
+        {/* Loading Overlay */}
+        {loading && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 flex items-center space-x-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span className="text-gray-700">Updating away log...</span>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
