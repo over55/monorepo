@@ -1,10 +1,10 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Admin/Associate/Detail/Order/List/Page.jsx
+// File Path: monorepo/web/workery-frontend/src/pages/Admin/Associate/Detail/Comment/List/Page.jsx
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import {
   useAssociateManager,
-  useOrderManager,
+  useCommentManager,
 } from "../../../../../../services/Services";
 import { theme, globalStyles } from "../../../../../../constants/Theme";
 import {
@@ -16,57 +16,49 @@ import {
 } from "../../../../../../components/UI";
 import { DateTime } from "luxon";
 
-// Constants
-const COMMERCIAL_ASSOCIATE_TYPE_OF_ID = 3;
-const RESIDENTIAL_ASSOCIATE_TYPE_OF_ID = 2;
+// Constants for comment belonging types (from backend)
+const BELONGS_TO_CUSTOMER = 1;
+const BELONGS_TO_ASSOCIATE = 2;
+const BELONGS_TO_ORDER = 3;
+const BELONGS_TO_STAFF = 4;
 
-// Order status mappings (fixed to match backend)
-const ORDER_STATUS_OPTIONS = {
-  1: { label: "New", color: theme.colors.info },
-  2: { label: "Declined", color: theme.colors.danger },
-  3: { label: "Pending", color: theme.colors.warning },
-  4: { label: "Cancelled", color: theme.colors.secondary },
-  5: { label: "Ongoing", color: theme.colors.primary },
-  6: { label: "In Progress", color: theme.colors.primary },
-  7: { label: "Completed (Unpaid)", color: theme.colors.warning },
-  8: { label: "Completed (Paid)", color: theme.colors.success },
-  9: { label: "Archived", color: theme.colors.secondary },
-};
-
-// Order type mappings (fixed to match backend)
-const ORDER_TYPE_OPTIONS = {
-  0: { label: "-", icon: "➖" },
-  1: { label: "Residential", icon: "🏠" },
-  2: { label: "Commercial", icon: "🏢" },
-  3: { label: "Unassigned", icon: "❓" },
-};
-
-function AdminAssociateDetailOrderListPage() {
+function AdminAssociateDetailCommentListPage() {
   const { aid } = useParams();
   const navigate = useNavigate();
   const associateManager = useAssociateManager();
-  const orderManager = useOrderManager();
+  const commentManager = useCommentManager();
+
+  // Use refs to track if initial load has happened
+  const hasInitialLoad = useRef(false);
+  const lastFetchParams = useRef(null);
 
   // Component states
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
   const [isRefreshing, setRefreshing] = useState(false);
+  const [isSubmitting, setSubmitting] = useState(false);
   const [associate, setAssociate] = useState({});
-  const [orderList, setOrderList] = useState([]);
-  const [pageSize, setPageSize] = useState(50);
+  const [commentList, setCommentList] = useState({
+    results: [],
+    nextCursor: "",
+    hasNextPage: false,
+  });
+  const [pageSize, setPageSize] = useState(25);
   const [previousCursors, setPreviousCursors] = useState([]);
   const [nextCursor, setNextCursor] = useState("");
   const [currentCursor, setCurrentCursor] = useState("");
-  const [sortByValue, setSortByValue] = useState("assignment_date,DESC");
-  const [status, setStatus] = useState(0);
+  const [sortByValue, setSortByValue] = useState("created_at,DESC");
   const [lastFetchTime, setLastFetchTime] = useState(null);
+  const [content, setContent] = useState("");
+  const [topAlertMessage, setTopAlertMessage] = useState("");
+  const [topAlertStatus, setTopAlertStatus] = useState("");
 
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
-  };
+  }, [navigate]);
 
   // Fetch associate details
-  const fetchAssociateDetail = async () => {
+  const fetchAssociateDetail = useCallback(async () => {
     try {
       const data = await associateManager.getAssociateDetail(
         aid,
@@ -77,132 +69,225 @@ function AdminAssociateDetailOrderListPage() {
       console.error("Failed to fetch associate detail:", error);
       setErrors(error);
     }
-  };
+  }, [aid, associateManager, onUnauthorized]);
 
-  // Fetch order list with force refresh option
-  const fetchOrderList = useCallback(
-    async (forceRefresh = false) => {
+  // Core fetch function
+  const doFetchComments = useCallback(
+    async (cursor = "", forceRefresh = false) => {
+      // Create a unique key for this fetch to prevent duplicates
+      const fetchKey = `${cursor}-${pageSize}-${sortByValue}`;
+
+      // Check if we're already fetching with these exact params
+      if (lastFetchParams.current === fetchKey && !forceRefresh) {
+        console.log("Skipping duplicate fetch with same params:", fetchKey);
+        return;
+      }
+
       try {
         if (forceRefresh) {
           setRefreshing(true);
-          // Clear the cache to force fresh data
-          orderManager.clearOrdersCache();
+          // Clear only the specific cache for these parameters
+          const sortArray = sortByValue.split(",");
+          const filtersMap = new Map();
+          filtersMap.set("page_size", pageSize.toString());
+          filtersMap.set("associate_id", aid);
+          filtersMap.set("belongs_to", BELONGS_TO_ASSOCIATE.toString());
+          filtersMap.set("sort_field", sortArray[0]);
+          filtersMap.set("sort_order", sortArray[1]);
+          if (cursor) {
+            filtersMap.set("cursor", cursor);
+          }
+          commentManager.clearSpecificCache(filtersMap);
         } else {
           setFetching(true);
         }
         setErrors({});
 
-        // Build filters map (matching old implementation)
-        const filtersMap = new Map();
-        filtersMap.set("page_size", pageSize);
-        filtersMap.set("associate_id", aid);
-
-        if (currentCursor !== "") {
-          filtersMap.set("cursor", currentCursor);
-        }
-
         // Handle sorting
         const sortArray = sortByValue.split(",");
-        filtersMap.set("sort_field", sortArray[0]);
-        filtersMap.set("sort_order", sortArray[1]);
 
-        if (status !== 0) {
-          filtersMap.set("status", status);
+        // Build parameters object for the API
+        const params = {
+          page_size: pageSize.toString(),
+          associate_id: aid,
+          belongs_to: BELONGS_TO_ASSOCIATE.toString(),
+          sort_field: sortArray[0],
+          sort_order: sortArray[1],
+        };
+
+        // Add cursor if provided
+        if (cursor && cursor !== "") {
+          params.cursor = cursor;
         }
 
-        // Use the legacy method for compatibility with forceRefresh
-        const data = await orderManager.getOrdersWithFiltersMap(
+        console.log("Fetching comments with params:", params);
+
+        // Build filters map
+        const filtersMap = new Map();
+        Object.entries(params).forEach(([key, value]) => {
+          filtersMap.set(key, value);
+        });
+
+        // Update last fetch params
+        lastFetchParams.current = fetchKey;
+
+        // Fetch comments
+        const data = await commentManager.getCommentsWithFiltersMap(
           filtersMap,
           onUnauthorized,
+          forceRefresh,
         );
 
-        if (data.results !== null) {
-          setOrderList(data);
-          if (data.hasNextPage) {
+        console.log("Received comment data:", {
+          resultsCount: data?.results?.length || 0,
+          hasNextPage: data?.hasNextPage,
+          nextCursor: data?.nextCursor,
+        });
+
+        if (data) {
+          setCommentList({
+            results: data.results || [],
+            nextCursor: data.nextCursor || "",
+            hasNextPage: data.hasNextPage || false,
+          });
+
+          // Update next cursor for pagination
+          if (data.hasNextPage && data.nextCursor) {
             setNextCursor(data.nextCursor);
+          } else {
+            setNextCursor("");
           }
         }
+
         setLastFetchTime(new Date());
       } catch (error) {
-        console.error("Failed to fetch order list:", error);
+        console.error("Failed to fetch comment list:", error);
         setErrors(error);
+        setCommentList({
+          results: [],
+          nextCursor: "",
+          hasNextPage: false,
+        });
       } finally {
         setFetching(false);
         setRefreshing(false);
       }
     },
-    [
-      aid,
-      currentCursor,
-      pageSize,
-      sortByValue,
-      status,
-      orderManager,
-      onUnauthorized,
-    ],
+    [aid, pageSize, sortByValue, commentManager, onUnauthorized],
   );
+
+  // Submit new comment
+  const onSubmitClick = async () => {
+    console.log("onSubmitClick: Beginning...");
+
+    if (!content || !content.trim()) {
+      setErrors({ content: "Comment content is required" });
+      return;
+    }
+
+    setErrors({});
+    setSubmitting(true);
+
+    try {
+      await associateManager.createAssociateComment(
+        aid,
+        content,
+        onUnauthorized,
+      );
+
+      setContent("");
+      setTopAlertMessage("Comment created successfully");
+      setTopAlertStatus("success");
+
+      // Clear all cache and reset pagination
+      commentManager.clearCommentsCache();
+      lastFetchParams.current = null;
+
+      // Reset pagination state
+      setCurrentCursor("");
+      setPreviousCursors([]);
+      setNextCursor("");
+
+      // Force refresh
+      await doFetchComments("", true);
+
+      setTimeout(() => {
+        setTopAlertMessage("");
+        setTopAlertStatus("");
+      }, 3000);
+
+      window.scrollTo(0, 0);
+    } catch (error) {
+      console.error("Error creating comment:", error);
+      setErrors(error);
+      setTopAlertMessage("Failed to create comment");
+      setTopAlertStatus("error");
+      window.scrollTo(0, 0);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   // Refresh handler
   const handleRefresh = () => {
-    fetchOrderList(true);
+    lastFetchParams.current = null;
+    doFetchComments(currentCursor, true);
   };
 
   // Pagination handlers
   const onNextClicked = () => {
-    console.log("Next Clicked");
-    let arr = [...previousCursors];
-    arr.push(currentCursor);
-    setPreviousCursors(arr);
-    setCurrentCursor(nextCursor);
+    console.log("Next Clicked, nextCursor:", nextCursor);
+    if (nextCursor) {
+      setPreviousCursors((prev) => [...prev, currentCursor]);
+      setCurrentCursor(nextCursor);
+    }
   };
 
   const onPreviousClicked = () => {
-    let arr = [...previousCursors];
-    const previousCursor = arr.pop();
-    setPreviousCursors(arr);
-    setCurrentCursor(previousCursor);
+    console.log("Previous Clicked");
+    setPreviousCursors((prev) => {
+      const arr = [...prev];
+      if (arr.length > 0) {
+        const previousCursor = arr.pop();
+        setCurrentCursor(previousCursor);
+        return arr;
+      }
+      return prev;
+    });
   };
 
-  // Format date helper
-  const formatDate = (dateString) => {
+  // Handle page size change
+  const handlePageSizeChange = (newSize) => {
+    console.log("Page size changed to:", newSize);
+    setPageSize(newSize);
+    // Reset pagination when page size changes
+    setCurrentCursor("");
+    setPreviousCursors([]);
+    setNextCursor("");
+    lastFetchParams.current = null;
+  };
+
+  // Handle sort change
+  const handleSortChange = (newSort) => {
+    console.log("Sort changed to:", newSort);
+    setSortByValue(newSort);
+    // Reset pagination when sort changes
+    setCurrentCursor("");
+    setPreviousCursors([]);
+    setNextCursor("");
+    lastFetchParams.current = null;
+  };
+
+  // Format helpers
+  const formatDateTime = (dateString) => {
     if (!dateString) return "-";
     try {
-      return DateTime.fromISO(dateString).toLocaleString(DateTime.DATE_MED);
+      return DateTime.fromISO(dateString).toLocaleString(DateTime.DATETIME_MED);
     } catch {
       return dateString;
     }
   };
 
-  // Format status helper with color
-  const formatStatus = (statusValue) => {
-    const status = ORDER_STATUS_OPTIONS[statusValue];
-    if (!status) return <span>Unknown ({statusValue})</span>;
-
-    return (
-      <span
-        style={{
-          color: status.color,
-          fontWeight: "600",
-        }}
-      >
-        {status.label}
-      </span>
-    );
-  };
-
-  // Format type helper with icon
-  const formatType = (typeValue) => {
-    const type = ORDER_TYPE_OPTIONS[typeValue];
-    if (!type) return <span>Unknown ({typeValue})</span>;
-
-    return (
-      <span>
-        {type.icon} {type.label}
-      </span>
-    );
-  };
-
-  // Format time since last fetch
   const formatLastFetchTime = () => {
     if (!lastFetchTime) return null;
     const now = DateTime.now();
@@ -210,38 +295,32 @@ function AdminAssociateDetailOrderListPage() {
     const diff = now.diff(fetchTime, ["minutes", "seconds"]);
 
     if (diff.minutes >= 1) {
-      return `Last updated ${Math.floor(diff.minutes)} minute${Math.floor(diff.minutes) !== 1 ? "s" : ""} ago`;
+      return `Last updated ${Math.floor(diff.minutes)} minute${
+        Math.floor(diff.minutes) !== 1 ? "s" : ""
+      } ago`;
     } else {
       return `Last updated ${Math.floor(diff.seconds)} seconds ago`;
     }
   };
 
+  // Initial load - only clear cache once on mount
   useEffect(() => {
-    window.scrollTo(0, 0);
-    fetchAssociateDetail();
-    // Clear cache on mount to ensure fresh data
-    orderManager.clearOrdersCache();
-  }, [aid]);
-
-  useEffect(() => {
-    if (aid) {
-      fetchOrderList();
+    if (!hasInitialLoad.current) {
+      window.scrollTo(0, 0);
+      fetchAssociateDetail();
+      // Clear all comment cache on initial mount
+      commentManager.clearCommentsCache();
+      hasInitialLoad.current = true;
     }
-  }, [currentCursor, pageSize, sortByValue, status, aid]);
+  }, [fetchAssociateDetail, commentManager]);
 
-  // Optional: Auto-refresh every 5 minutes
+  // Fetch comments when parameters change
   useEffect(() => {
-    const interval = setInterval(
-      () => {
-        if (!isFetching && !isRefreshing) {
-          fetchOrderList(true);
-        }
-      },
-      5 * 60 * 1000,
-    ); // 5 minutes
-
-    return () => clearInterval(interval);
-  }, [fetchOrderList, isFetching, isRefreshing]);
+    if (aid && hasInitialLoad.current) {
+      console.log("Parameters changed, fetching with cursor:", currentCursor);
+      doFetchComments(currentCursor, false);
+    }
+  }, [aid, currentCursor, pageSize, sortByValue, doFetchComments]);
 
   // Page size options
   const pageSizeOptions = [
@@ -261,7 +340,7 @@ function AdminAssociateDetailOrderListPage() {
   if (isFetching && !associate.id) {
     return (
       <div style={globalStyles.container}>
-        <Loading message="Loading associate orders..." />
+        <Loading message="Loading associate comments..." />
       </div>
     );
   }
@@ -293,10 +372,24 @@ function AdminAssociateDetailOrderListPage() {
         <Alert type="info">📁 This associate is archived</Alert>
       )}
 
+      {/* Top Alert Message */}
+      {topAlertMessage && (
+        <Alert
+          type={topAlertStatus === "success" ? "success" : "error"}
+          onClose={() => {
+            setTopAlertMessage("");
+            setTopAlertStatus("");
+          }}
+        >
+          {topAlertMessage}
+        </Alert>
+      )}
+
       {/* Error Display */}
       {errors &&
         typeof errors === "object" &&
-        Object.keys(errors).length > 0 && (
+        Object.keys(errors).length > 0 &&
+        !topAlertMessage && (
           <Alert type="error" onClose={() => setErrors({})}>
             <strong>Error:</strong>
             <ul
@@ -330,7 +423,7 @@ function AdminAssociateDetailOrderListPage() {
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-              <h3 style={{ margin: 0 }}>🔧 Orders</h3>
+              <h3 style={{ margin: 0 }}>💬 Comments</h3>
               {lastFetchTime && (
                 <span
                   style={{ fontSize: "14px", color: theme.colors.secondary }}
@@ -381,6 +474,16 @@ function AdminAssociateDetailOrderListPage() {
               >
                 Detail
               </Link>
+              <Link
+                to={`/admin/associate/${aid}/orders`}
+                style={{
+                  padding: "10px 0",
+                  textDecoration: "none",
+                  color: theme.colors.secondary,
+                }}
+              >
+                Orders
+              </Link>
               <div
                 style={{
                   padding: "10px 0",
@@ -388,18 +491,8 @@ function AdminAssociateDetailOrderListPage() {
                   fontWeight: "bold",
                 }}
               >
-                Orders
-              </div>
-              <Link
-                to={`/admin/associate/${aid}/comments`}
-                style={{
-                  padding: "10px 0",
-                  textDecoration: "none",
-                  color: theme.colors.secondary,
-                }}
-              >
                 Comments
-              </Link>
+              </div>
               <Link
                 to={`/admin/associate/${aid}/attachments`}
                 style={{
@@ -422,7 +515,7 @@ function AdminAssociateDetailOrderListPage() {
               </Link>
             </div>
 
-            {/* Filters Section */}
+            {/* Sort Controls */}
             <div
               style={{
                 display: "flex",
@@ -441,53 +534,11 @@ function AdminAssociateDetailOrderListPage() {
                     fontWeight: "600",
                   }}
                 >
-                  Status Filter:
-                </label>
-                <select
-                  value={status}
-                  onChange={(e) => {
-                    setStatus(parseInt(e.target.value));
-                    setCurrentCursor(""); // Reset pagination
-                    setPreviousCursors([]);
-                  }}
-                  style={{
-                    padding: "8px 12px",
-                    border: "1px solid #ddd",
-                    borderRadius: "4px",
-                    backgroundColor: "white",
-                    fontSize: "14px",
-                    minWidth: "150px",
-                  }}
-                >
-                  <option value={0}>All Statuses</option>
-                  {Object.entries(ORDER_STATUS_OPTIONS).map(
-                    ([value, option]) => (
-                      <option key={value} value={value}>
-                        {option.label}
-                      </option>
-                    ),
-                  )}
-                </select>
-              </div>
-
-              <div>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "5px",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                  }}
-                >
                   Sort By:
                 </label>
                 <select
                   value={sortByValue}
-                  onChange={(e) => {
-                    setSortByValue(e.target.value);
-                    setCurrentCursor(""); // Reset pagination
-                    setPreviousCursors([]);
-                  }}
+                  onChange={(e) => handleSortChange(e.target.value)}
                   style={{
                     padding: "8px 12px",
                     border: "1px solid #ddd",
@@ -497,402 +548,244 @@ function AdminAssociateDetailOrderListPage() {
                     minWidth: "200px",
                   }}
                 >
-                  <option value="assignment_date,DESC">
-                    Assignment Date (Newest)
-                  </option>
-                  <option value="assignment_date,ASC">
-                    Assignment Date (Oldest)
-                  </option>
-                  <option value="start_date,DESC">Start Date (Newest)</option>
-                  <option value="start_date,ASC">Start Date (Oldest)</option>
                   <option value="created_at,DESC">Created Date (Newest)</option>
                   <option value="created_at,ASC">Created Date (Oldest)</option>
+                  <option value="modified_at,DESC">
+                    Modified Date (Newest)
+                  </option>
+                  <option value="modified_at,ASC">
+                    Modified Date (Oldest)
+                  </option>
                 </select>
               </div>
             </div>
 
+            {/* Add Comment Form */}
+            <div
+              style={{
+                backgroundColor: theme.colors.light,
+                padding: "20px",
+                borderRadius: "8px",
+                marginBottom: "30px",
+                border: "1px solid #e0e0e0",
+              }}
+            >
+              <label
+                style={{
+                  display: "block",
+                  marginBottom: "10px",
+                  fontWeight: "600",
+                  fontSize: "14px",
+                }}
+              >
+                Add New Comment <span style={{ color: "red" }}>*</span>
+              </label>
+              <textarea
+                name="content"
+                placeholder="Write your comment here..."
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                disabled={associate.status === 2 || isSubmitting}
+                style={{
+                  width: "100%",
+                  minHeight: "100px",
+                  padding: "12px",
+                  border:
+                    errors && errors.content
+                      ? "2px solid #dc3545"
+                      : "1px solid #ddd",
+                  borderRadius: "4px",
+                  fontSize: "14px",
+                  resize: "vertical",
+                  backgroundColor: associate.status === 2 ? "#f5f5f5" : "white",
+                  cursor: associate.status === 2 ? "not-allowed" : "text",
+                }}
+              />
+              {errors && errors.content && (
+                <div
+                  style={{
+                    color: "#dc3545",
+                    fontSize: "12px",
+                    marginTop: "5px",
+                  }}
+                >
+                  {errors.content}
+                </div>
+              )}
+              <Button
+                onClick={onSubmitClick}
+                disabled={
+                  associate.status === 2 || isSubmitting || !content.trim()
+                }
+                variant="primary"
+                style={{ marginTop: "10px" }}
+              >
+                {isSubmitting ? "Saving..." : "💾 Save Comment"}
+              </Button>
+            </div>
+
+            {/* Comments List */}
             {isFetching || isRefreshing ? (
               <div style={{ textAlign: "center", padding: "40px" }}>
                 <Loading
                   message={
-                    isRefreshing ? "Refreshing orders..." : "Loading orders..."
+                    isRefreshing
+                      ? "Refreshing comments..."
+                      : "Loading comments..."
                   }
                 />
               </div>
-            ) : orderList &&
-              orderList.results &&
-              (orderList.results.length > 0 || previousCursors.length > 0) ? (
+            ) : commentList.results && commentList.results.length > 0 ? (
               <>
-                {/* Orders Table - Desktop */}
-                <div
-                  style={{
-                    overflowX: "auto",
-                    display: window.innerWidth <= 768 ? "none" : "block",
-                  }}
-                >
-                  <table
-                    style={{
-                      width: "100%",
-                      borderCollapse: "collapse",
-                    }}
-                  >
-                    <thead>
-                      <tr style={{ backgroundColor: "#f8f9fa" }}>
-                        <th
-                          style={{
-                            padding: "12px",
-                            textAlign: "left",
-                            borderBottom: "2px solid #dee2e6",
-                            fontWeight: "600",
-                          }}
-                        >
-                          Type
-                        </th>
-                        <th
-                          style={{
-                            padding: "12px",
-                            textAlign: "left",
-                            borderBottom: "2px solid #dee2e6",
-                            fontWeight: "600",
-                          }}
-                        >
-                          Job #
-                        </th>
-                        <th
-                          style={{
-                            padding: "12px",
-                            textAlign: "left",
-                            borderBottom: "2px solid #dee2e6",
-                            fontWeight: "600",
-                          }}
-                        >
-                          Customer
-                        </th>
-                        <th
-                          style={{
-                            padding: "12px",
-                            textAlign: "left",
-                            borderBottom: "2px solid #dee2e6",
-                            fontWeight: "600",
-                          }}
-                        >
-                          Assigned ↓
-                        </th>
-                        <th
-                          style={{
-                            padding: "12px",
-                            textAlign: "left",
-                            borderBottom: "2px solid #dee2e6",
-                            fontWeight: "600",
-                          }}
-                        >
-                          Start
-                        </th>
-                        <th
-                          style={{
-                            padding: "12px",
-                            textAlign: "left",
-                            borderBottom: "2px solid #dee2e6",
-                            fontWeight: "600",
-                          }}
-                        >
-                          Completion
-                        </th>
-                        <th
-                          style={{
-                            padding: "12px",
-                            textAlign: "left",
-                            borderBottom: "2px solid #dee2e6",
-                            fontWeight: "600",
-                          }}
-                        >
-                          Status
-                        </th>
-                        <th
-                          style={{
-                            padding: "12px",
-                            textAlign: "left",
-                            borderBottom: "2px solid #dee2e6",
-                            fontWeight: "600",
-                          }}
-                        >
-                          Financial
-                        </th>
-                        <th
-                          style={{
-                            padding: "12px",
-                            textAlign: "left",
-                            borderBottom: "2px solid #dee2e6",
-                            fontWeight: "600",
-                          }}
-                        >
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {orderList.results.map((order, index) => (
-                        <tr
-                          key={order.wjid || index}
-                          style={{
-                            backgroundColor:
-                              index % 2 === 0 ? "white" : "#f8f9fa",
-                          }}
-                        >
-                          <td
-                            style={{
-                              padding: "12px",
-                              borderBottom: "1px solid #dee2e6",
-                            }}
-                          >
-                            {formatType(order.type)}
-                          </td>
-                          <td
-                            style={{
-                              padding: "12px",
-                              borderBottom: "1px solid #dee2e6",
-                              fontFamily: "monospace",
-                            }}
-                          >
-                            {order.wjid}
-                          </td>
-                          <td
-                            style={{
-                              padding: "12px",
-                              borderBottom: "1px solid #dee2e6",
-                            }}
-                          >
-                            <Link
-                              to={`/admin/customer/${order.customerId}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              style={{
-                                color: theme.colors.primary,
-                                textDecoration: "none",
-                              }}
-                            >
-                              {order.customerName} 🔗
-                            </Link>
-                          </td>
-                          <td
-                            style={{
-                              padding: "12px",
-                              borderBottom: "1px solid #dee2e6",
-                            }}
-                          >
-                            {formatDate(order.assignmentDate)}
-                          </td>
-                          <td
-                            style={{
-                              padding: "12px",
-                              borderBottom: "1px solid #dee2e6",
-                            }}
-                          >
-                            {formatDate(order.startDate)}
-                          </td>
-                          <td
-                            style={{
-                              padding: "12px",
-                              borderBottom: "1px solid #dee2e6",
-                            }}
-                          >
-                            {formatDate(order.completionDate)}
-                          </td>
-                          <td
-                            style={{
-                              padding: "12px",
-                              borderBottom: "1px solid #dee2e6",
-                            }}
-                          >
-                            {formatStatus(order.status)}
-                          </td>
-                          <td
-                            style={{
-                              padding: "12px",
-                              borderBottom: "1px solid #dee2e6",
-                            }}
-                          >
-                            <Link
-                              to={`/admin/financial/${order.wjid}`}
-                              target="_blank"
-                              rel="noreferrer"
-                              style={{
-                                color: theme.colors.primary,
-                                textDecoration: "none",
-                              }}
-                            >
-                              View 🔗
-                            </Link>
-                          </td>
-                          <td
-                            style={{
-                              padding: "12px",
-                              borderBottom: "1px solid #dee2e6",
-                            }}
-                          >
-                            <Link
-                              to={`/admin/order/${order.wjid}`}
-                              style={{
-                                color: theme.colors.primary,
-                                textDecoration: "none",
-                              }}
-                            >
-                              View →
-                            </Link>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Orders List - Mobile */}
-                <div
-                  style={{
-                    display: window.innerWidth > 768 ? "none" : "block",
-                  }}
-                >
-                  {orderList.results.map((order, index) => (
-                    <Card
-                      key={order.wjid || index}
+                {/* Comments Display */}
+                <div style={{ marginBottom: "30px" }}>
+                  <h4 style={{ marginBottom: "20px" }}>
+                    Comments for {associate.name || "Associate"} (
+                    {commentList.results.length}{" "}
+                    {commentList.hasNextPage ? "+" : ""})
+                  </h4>
+                  {commentList.results.map((comment, index) => (
+                    <div
+                      key={comment.id || `comment-${index}`}
                       style={{
-                        marginBottom: "15px",
-                        backgroundColor: theme.colors.light,
+                        marginBottom: "20px",
+                        padding: "15px",
+                        backgroundColor: "#f8f9fa",
+                        borderRadius: "8px",
+                        border: "1px solid #e0e0e0",
                       }}
                     >
-                      <div style={{ marginBottom: "10px" }}>
-                        <strong>{formatType(order.type)}</strong>
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                          marginBottom: "10px",
+                          flexWrap: "wrap",
+                          gap: "10px",
+                        }}
+                      >
+                        <div>
+                          <strong style={{ color: theme.colors.primary }}>
+                            {comment.createdByUserName || "System"}
+                          </strong>
+                          {comment.associateName &&
+                            comment.associateName !== associate.name && (
+                              <span
+                                style={{
+                                  color: "#666",
+                                  fontSize: "12px",
+                                  marginLeft: "10px",
+                                }}
+                              >
+                                (Re: {comment.associateName})
+                              </span>
+                            )}
+                        </div>
+                        <div style={{ color: "#666", fontSize: "14px" }}>
+                          {formatDateTime(comment.createdAt)}
+                        </div>
                       </div>
-                      <div style={{ marginBottom: "5px" }}>
-                        <strong>Job #:</strong>{" "}
-                        <span style={{ fontFamily: "monospace" }}>
-                          {order.wjid}
-                        </span>
+                      <div
+                        style={{
+                          padding: "10px",
+                          backgroundColor: "white",
+                          borderRadius: "4px",
+                          lineHeight: "1.6",
+                          whiteSpace: "pre-wrap",
+                          wordBreak: "break-word",
+                        }}
+                      >
+                        {comment.content}
                       </div>
-                      <div style={{ marginBottom: "5px" }}>
-                        <strong>Customer:</strong>{" "}
-                        <Link
-                          to={`/admin/customer/${order.customerId}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={{
-                            color: theme.colors.primary,
-                            textDecoration: "none",
-                          }}
-                        >
-                          {order.customerName} 🔗
-                        </Link>
-                      </div>
-                      <div style={{ marginBottom: "5px" }}>
-                        <strong>Assigned:</strong>{" "}
-                        {formatDate(order.assignmentDate)}
-                      </div>
-                      <div style={{ marginBottom: "5px" }}>
-                        <strong>Start:</strong> {formatDate(order.startDate)}
-                      </div>
-                      <div style={{ marginBottom: "5px" }}>
-                        <strong>Completion:</strong>{" "}
-                        {formatDate(order.completionDate)}
-                      </div>
-                      <div style={{ marginBottom: "5px" }}>
-                        <strong>Status:</strong> {formatStatus(order.status)}
-                      </div>
-                      <div style={{ marginBottom: "15px" }}>
-                        <strong>Financial:</strong>{" "}
-                        <Link
-                          to={`/admin/financial/${order.wjid}`}
-                          target="_blank"
-                          rel="noreferrer"
-                          style={{
-                            color: theme.colors.primary,
-                            textDecoration: "none",
-                          }}
-                        >
-                          View 🔗
-                        </Link>
-                      </div>
-                      <Link to={`/admin/order/${order.wjid}`}>
-                        <Button variant="primary" fullWidth>
-                          View Order →
-                        </Button>
-                      </Link>
-                    </Card>
+                    </div>
                   ))}
                 </div>
 
                 {/* Pagination Controls */}
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginTop: "30px",
-                    flexWrap: "wrap",
-                    gap: "10px",
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center" }}>
-                    <label
-                      style={{
-                        marginRight: "10px",
-                        fontSize: "14px",
-                        fontWeight: "600",
-                      }}
-                    >
-                      Items per page:
-                    </label>
-                    <select
-                      value={pageSize}
-                      onChange={(e) => setPageSize(parseInt(e.target.value))}
-                      style={{
-                        padding: "8px 12px",
-                        border: "1px solid #ddd",
-                        borderRadius: "4px",
-                        backgroundColor: "white",
-                        fontSize: "14px",
-                      }}
-                    >
-                      {pageSizeOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
+                {(previousCursors.length > 0 || commentList.hasNextPage) && (
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                      marginTop: "30px",
+                      borderTop: "1px solid #e0e0e0",
+                      paddingTop: "20px",
+                      flexWrap: "wrap",
+                      gap: "10px",
+                    }}
+                  >
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      <label
+                        style={{
+                          marginRight: "10px",
+                          fontSize: "14px",
+                          fontWeight: "600",
+                        }}
+                      >
+                        Items per page:
+                      </label>
+                      <select
+                        value={pageSize}
+                        onChange={(e) =>
+                          handlePageSizeChange(parseInt(e.target.value))
+                        }
+                        style={{
+                          padding: "8px 12px",
+                          border: "1px solid #ddd",
+                          borderRadius: "4px",
+                          backgroundColor: "white",
+                          fontSize: "14px",
+                        }}
+                      >
+                        {pageSizeOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div style={{ display: "flex", gap: "10px" }}>
+                      {previousCursors.length > 0 && (
+                        <Button onClick={onPreviousClicked} variant="secondary">
+                          ← Previous
+                        </Button>
+                      )}
+                      {commentList.hasNextPage && nextCursor && (
+                        <Button onClick={onNextClicked} variant="primary">
+                          Next →
+                        </Button>
+                      )}
+                    </div>
                   </div>
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    {previousCursors.length > 0 && (
-                      <Button onClick={onPreviousClicked} variant="secondary">
-                        ← Previous
-                      </Button>
-                    )}
-                    {orderList.hasNextPage && (
-                      <Button onClick={onNextClicked} variant="primary">
-                        Next →
-                      </Button>
-                    )}
-                  </div>
-                </div>
+                )}
               </>
             ) : (
-              <div
-                style={{
-                  textAlign: "center",
-                  padding: "60px 20px",
-                  backgroundColor: theme.colors.light,
-                  borderRadius: "8px",
-                }}
-              >
-                <div style={{ fontSize: "48px", marginBottom: "20px" }}>📋</div>
-                <h3>No Orders</h3>
-                <p
+              // No comments message
+              previousCursors.length === 0 && (
+                <div
                   style={{
-                    color: theme.colors.secondary,
-                    marginBottom: "0",
+                    textAlign: "center",
+                    padding: "60px 20px",
+                    backgroundColor: theme.colors.light,
+                    borderRadius: "8px",
                   }}
                 >
-                  This associate does not have any orders yet.
-                </p>
-              </div>
+                  <div style={{ fontSize: "48px", marginBottom: "20px" }}>
+                    💭
+                  </div>
+                  <h3>No Comments Yet</h3>
+                  <p
+                    style={{
+                      color: theme.colors.secondary,
+                      marginBottom: "0",
+                    }}
+                  >
+                    Be the first to add a comment about this associate.
+                  </p>
+                </div>
+              )
             )}
 
             {/* Action Buttons */}
@@ -931,4 +824,4 @@ function AdminAssociateDetailOrderListPage() {
   );
 }
 
-export default AdminAssociateDetailOrderListPage;
+export default AdminAssociateDetailCommentListPage;
