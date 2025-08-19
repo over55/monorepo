@@ -1,24 +1,31 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Associate/Detail/LitePage.jsx
 
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import {
+  ChartBarIcon,
+  UserGroupIcon,
+  InformationCircleIcon,
+  PencilSquareIcon,
+  ChevronLeftIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  StarIcon,
+  MapPinIcon,
+  BuildingOfficeIcon,
+  HomeIcon,
+  CheckCircleIcon,
+  ArchiveBoxIcon,
+  ArrowTopRightOnSquareIcon,
+  ClipboardDocumentListIcon,
+  EllipsisHorizontalIcon,
+} from "@heroicons/react/24/outline";
+import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
 import {
   useAssociateManager,
   useAuthManager,
 } from "../../../../services/Services";
-import { theme, globalStyles } from "../../../../constants/Theme";
-import {
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Breadcrumb,
-} from "../../../../components/UI";
-import {
-  TagsDisplay,
-  SkillSetsDisplay,
-  InsuranceRequirementsDisplay,
-} from "../../../../components/Display";
+import { TagsDisplay, SkillSetsDisplay } from "../../../../components/Display";
 
 // Constants
 const COMMERCIAL_ASSOCIATE_TYPE_OF_ID = 3;
@@ -68,27 +75,10 @@ function AdminAssociateDetailLitePage() {
     fetchAssociate();
   }, [aid]);
 
-  // Breadcrumb items
-  const breadcrumbItems = [
-    { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
-    { label: "Associates", path: "/admin/associates", icon: "👷" },
-    { label: "Detail", icon: "ℹ️" },
-  ];
-
   // Format phone number for display
   const formatPhone = (phone) => {
     if (!phone) return "-";
     return phone.replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3");
-  };
-
-  // Format email for display
-  const formatEmail = (email) => {
-    if (!email) return "-";
-    return (
-      <a href={`mailto:${email}`} style={{ color: theme.colors.primary }}>
-        {email}
-      </a>
-    );
   };
 
   // Format address for display
@@ -98,19 +88,7 @@ function AdminAssociateDetailLitePage() {
       associate.fullAddressWithPostalCode ||
       `${associate.addressLine1 || ""} ${associate.city || ""} ${associate.region || ""} ${associate.postalCode || ""}`.trim();
 
-    if (associate.fullAddressUrl) {
-      return (
-        <a
-          href={associate.fullAddressUrl}
-          target="_blank"
-          rel="noreferrer"
-          style={{ color: theme.colors.primary }}
-        >
-          {address} 🔗
-        </a>
-      );
-    }
-    return address;
+    return address || "-";
   };
 
   // Format date for display
@@ -121,9 +99,22 @@ function AdminAssociateDetailLitePage() {
 
   // Format score rating
   const formatScoreRating = (score) => {
-    if (!score) return "-";
-    const stars = "⭐".repeat(Math.floor(score));
-    return `${stars} (${score}/5)`;
+    if (!score) return <span className="text-gray-500 text-lg">No rating</span>;
+    return (
+      <div className="flex items-center gap-1">
+        {[...Array(5)].map((_, i) => (
+          <StarIconSolid
+            key={i}
+            className={`w-6 h-6 ${
+              i < Math.floor(score) ? "text-yellow-400" : "text-gray-300"
+            }`}
+          />
+        ))}
+        <span className="ml-2 text-lg text-gray-600 font-medium">
+          ({score}/5)
+        </span>
+      </div>
+    );
   };
 
   // Extract IDs from array of objects
@@ -134,157 +125,177 @@ function AdminAssociateDetailLitePage() {
 
   if (loading) {
     return (
-      <div style={globalStyles.container}>
-        <Loading message="Loading associate details..." />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading associate details...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={globalStyles.container}>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Breadcrumb */}
-      <Breadcrumb items={breadcrumbItems} />
+      <nav className="flex mb-6" aria-label="Breadcrumb">
+        <ol className="inline-flex items-center space-x-1 md:space-x-3">
+          <li className="inline-flex items-center">
+            <Link
+              to="/admin/dashboard"
+              className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+            >
+              <ChartBarIcon className="w-4 h-4 mr-2" />
+              Dashboard
+            </Link>
+          </li>
+          <li>
+            <div className="flex items-center">
+              <span className="mx-2 text-gray-400">/</span>
+              <Link
+                to="/admin/associates"
+                className="text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <span className="inline-flex items-center">
+                  <UserGroupIcon className="w-4 h-4 mr-2" />
+                  Associates
+                </span>
+              </Link>
+            </div>
+          </li>
+          <li aria-current="page">
+            <div className="flex items-center">
+              <span className="mx-2 text-gray-400">/</span>
+              <span className="text-sm font-medium text-gray-500 inline-flex items-center">
+                <InformationCircleIcon className="w-4 h-4 mr-2" />
+                Detail
+              </span>
+            </div>
+          </li>
+        </ol>
+      </nav>
 
       {/* Page Title */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "20px",
-        }}
-      >
-        <div>
-          <h1 style={{ margin: 0 }}>👷 Associate</h1>
-          <h4 style={{ margin: "5px 0 0 0", color: theme.colors.secondary }}>
-            ℹ️ Detail
-          </h4>
+      <div className="mb-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center">
+              <UserGroupIcon className="w-8 h-8 mr-3 text-blue-600" />
+              Associate
+            </h1>
+            <p className="mt-1 text-sm text-gray-600 flex items-center">
+              <InformationCircleIcon className="w-4 h-4 mr-1" />
+              View associate information
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Status Alerts */}
       {associate && associate.status === 2 && (
-        <Alert type="info">📁 This associate is archived</Alert>
+        <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg flex items-center">
+          <ArchiveBoxIcon className="w-5 h-5 mr-2" />
+          This associate is archived
+        </div>
       )}
 
       {/* Error Display */}
       {error && (
-        <Alert type="error" onClose={() => setError(null)}>
-          {error}
-        </Alert>
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className="flex justify-between items-center">
+            <span>{error}</span>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-700 hover:text-red-900"
+            >
+              ×
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Main Content */}
-      <Card>
-        {/* Header with Actions */}
-        {associate && (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "30px",
-              flexWrap: "wrap",
-              gap: "10px",
-            }}
-          >
-            <h3 style={{ margin: 0 }}>📋 Summary</h3>
-            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-              <Link to={`/admin/associate/${aid}/edit`}>
-                <Button variant="warning" disabled={associate.status === 2}>
-                  ✏️ Edit
-                </Button>
-              </Link>
-            </div>
-          </div>
-        )}
-
+      <div className="bg-white shadow-sm rounded-lg">
         {associate && (
           <>
-            {/* Tab Navigation */}
-            <div
-              style={{
-                borderBottom: "2px solid #e0e0e0",
-                marginBottom: "30px",
-                display: "flex",
-                gap: "20px",
-                flexWrap: "wrap",
-              }}
-            >
-              <div
-                style={{
-                  padding: "10px 0",
-                  borderBottom: "3px solid " + theme.colors.primary,
-                  fontWeight: "bold",
-                }}
-              >
-                Summary
+            {/* Header with Actions */}
+            <div className="px-6 py-5 border-b border-gray-200">
+              <div className="flex justify-between items-center flex-wrap gap-4">
+                <h2 className="text-2xl font-semibold text-gray-900 flex items-center">
+                  <ClipboardDocumentListIcon className="w-7 h-7 mr-2 text-blue-600" />
+                  Summary
+                </h2>
+                <div className="flex gap-3">
+                  <Link to="/admin/associates">
+                    <button className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                      <ChevronLeftIcon className="w-5 h-5 mr-2" />
+                      Back
+                    </button>
+                  </Link>
+                  <Link to={`/admin/associate/${aid}/edit`}>
+                    <button
+                      disabled={associate.status === 2}
+                      className={`inline-flex items-center px-5 py-2.5 border rounded-lg text-base font-medium transition-colors ${
+                        associate.status === 2
+                          ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+                          : "border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100"
+                      }`}
+                    >
+                      <PencilSquareIcon className="w-5 h-5 mr-2" />
+                      Edit
+                    </button>
+                  </Link>
+                </div>
               </div>
-              <Link
-                to={`/admin/associate/${associate.id}/detail`}
-                style={{
-                  padding: "10px 0",
-                  textDecoration: "none",
-                  color: theme.colors.secondary,
-                }}
-              >
-                Detail
-              </Link>
-              <Link
-                to={`/admin/associate/${associate.id}/orders`}
-                style={{
-                  padding: "10px 0",
-                  textDecoration: "none",
-                  color: theme.colors.secondary,
-                }}
-              >
-                Orders
-              </Link>
-              <Link
-                to={`/admin/associate/${associate.id}/comments`}
-                style={{
-                  padding: "10px 0",
-                  textDecoration: "none",
-                  color: theme.colors.secondary,
-                }}
-              >
-                Comments
-              </Link>
-              <Link
-                to={`/admin/associate/${associate.id}/attachments`}
-                style={{
-                  padding: "10px 0",
-                  textDecoration: "none",
-                  color: theme.colors.secondary,
-                }}
-              >
-                Attachments
-              </Link>
-              <Link
-                to={`/admin/associate/${associate.id}/more`}
-                style={{
-                  padding: "10px 0",
-                  textDecoration: "none",
-                  color: theme.colors.secondary,
-                }}
-              >
-                More ⋯
-              </Link>
+            </div>
+
+            {/* Tab Navigation */}
+            <div className="px-6 border-b border-gray-200">
+              <nav className="-mb-px flex space-x-8 justify-center lg:justify-start">
+                <div className="border-b-2 border-blue-600 py-4 px-1 text-base font-medium text-blue-600">
+                  Summary
+                </div>
+                <Link
+                  to={`/admin/associate/${associate.id}/detail`}
+                  className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                >
+                  Detail
+                </Link>
+                <Link
+                  to={`/admin/associate/${associate.id}/orders`}
+                  className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                >
+                  Orders
+                </Link>
+                <Link
+                  to={`/admin/associate/${associate.id}/comments`}
+                  className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                >
+                  Comments
+                </Link>
+                <Link
+                  to={`/admin/associate/${associate.id}/attachments`}
+                  className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                >
+                  Attachments
+                </Link>
+                <Link
+                  to={`/admin/associate/${associate.id}/more`}
+                  className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center"
+                >
+                  More
+                  <EllipsisHorizontalIcon className="w-5 h-5 ml-1" />
+                </Link>
+              </nav>
             </div>
 
             {/* Associate Summary Layout */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns:
-                  window.innerWidth <= 768 ? "1fr" : "256px 1fr",
-                gap: "20px",
-                marginBottom: "30px",
-              }}
-            >
-              {/* Avatar Column (Desktop only) */}
-              {window.innerWidth > 768 && (
-                <div style={{ textAlign: "center" }}>
+            <div className="py-10 px-8">
+              {/* Single Row Layout - Centered and Larger */}
+              <div className="flex flex-col lg:flex-row gap-8 lg:gap-12 items-center justify-center max-w-7xl mx-auto">
+                {/* Avatar */}
+                <div className="flex-shrink-0">
                   <img
                     src={
                       associate.avatarObjectUrl &&
@@ -297,119 +308,88 @@ function AdminAssociateDetailLitePage() {
                         ? "Profile Picture"
                         : "No Profile Picture"
                     }
-                    style={{
-                      width: "256px",
-                      height: "256px",
-                      borderRadius: "25px",
-                      objectFit: "cover",
-                    }}
+                    className="w-36 h-36 lg:w-44 lg:h-44 rounded-2xl object-cover border-2 border-gray-100 shadow-sm"
                   />
                 </div>
-              )}
 
-              {/* Associate Information */}
-              <Card style={{ backgroundColor: theme.colors.light }}>
-                <div style={{ marginBottom: "20px" }}>
-                  {/* Mobile Avatar */}
-                  {window.innerWidth <= 768 && (
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        marginBottom: "15px",
-                      }}
-                    >
-                      <img
-                        src={
-                          associate.avatarObjectUrl &&
-                          associate.avatarObjectUrl !== ""
-                            ? associate.avatarObjectUrl
-                            : "/img/placeholder.png"
-                        }
-                        alt={
-                          associate.avatarObjectUrl
-                            ? "Profile Picture"
-                            : "No Profile Picture"
-                        }
-                        style={{
-                          width: "48px",
-                          height: "48px",
-                          borderRadius: "10px",
-                          objectFit: "cover",
-                          marginRight: "15px",
-                        }}
-                      />
-                    </div>
-                  )}
-
-                  {/* Associate Name/Organization */}
-                  {associate.type === COMMERCIAL_ASSOCIATE_TYPE_OF_ID && (
-                    <h2 style={{ margin: "0 0 10px 0", fontSize: "28px" }}>
-                      🏢 {associate.organizationName}
-                    </h2>
-                  )}
-                  <h3 style={{ margin: "0 0 10px 0", fontSize: "24px" }}>
-                    {associate.type === RESIDENTIAL_ASSOCIATE_TYPE_OF_ID &&
-                      "🏠 "}
-                    {associate.name ||
-                      `${associate.firstName} ${associate.lastName}`}
-                  </h3>
-
-                  {/* Address */}
-                  <p
-                    style={{
-                      margin: "0 0 20px 0",
-                      color: theme.colors.secondary,
-                      fontSize: "16px",
-                    }}
-                  >
-                    📍 {formatAddress(associate)}
-                  </p>
-                </div>
-
-                {/* Contact Information */}
-                <div style={{ display: "grid", gap: "15px" }}>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                    }}
-                  >
-                    <span style={{ fontSize: "16px" }}>✉️</span>
-                    <span style={{ fontWeight: "600", minWidth: "80px" }}>
-                      Email:
-                    </span>
-                    <span>{formatEmail(associate.email)}</span>
+                {/* Basic Info Column - Larger */}
+                <div className="flex-shrink-0 lg:min-w-[420px] text-center lg:text-left">
+                  {/* Name/Organization */}
+                  <div className="mb-5">
+                    {associate.type === COMMERCIAL_ASSOCIATE_TYPE_OF_ID && (
+                      <h2 className="text-2xl lg:text-3xl font-bold text-gray-900 flex items-center justify-center lg:justify-start">
+                        <BuildingOfficeIcon className="w-8 h-8 mr-3 text-blue-600" />
+                        {associate.organizationName}
+                      </h2>
+                    )}
+                    <h3 className="text-xl lg:text-2xl font-semibold text-gray-800 flex items-center justify-center lg:justify-start mt-2">
+                      {associate.type === RESIDENTIAL_ASSOCIATE_TYPE_OF_ID && (
+                        <HomeIcon className="w-6 h-6 lg:w-7 lg:h-7 mr-2 text-blue-600" />
+                      )}
+                      {associate.name ||
+                        `${associate.firstName} ${associate.lastName}`}
+                    </h3>
                   </div>
 
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                    }}
-                  >
-                    <span style={{ fontSize: "16px" }}>📞</span>
-                    <span style={{ fontWeight: "600", minWidth: "80px" }}>
-                      Phone:
-                    </span>
-                    <span>
+                  {/* Address */}
+                  <div className="flex items-start text-lg text-gray-600 mb-5 justify-center lg:justify-start">
+                    <MapPinIcon className="w-6 h-6 mr-2 mt-0.5 flex-shrink-0 text-gray-400" />
+                    <div>
+                      <span>{formatAddress(associate)}</span>
+                      {associate.fullAddressUrl && (
+                        <a
+                          href={associate.fullAddressUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="ml-2 inline-flex items-center text-blue-600 hover:text-blue-700"
+                        >
+                          <ArrowTopRightOnSquareIcon className="w-4 h-4" />
+                        </a>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Email & Phone */}
+                  <div className="space-y-3">
+                    <div className="flex items-center text-lg justify-center lg:justify-start">
+                      <EnvelopeIcon className="w-6 h-6 mr-3 text-gray-400" />
+                      {associate.email ? (
+                        <a
+                          href={`mailto:${associate.email}`}
+                          className="text-blue-600 hover:text-blue-700 font-medium"
+                        >
+                          {associate.email}
+                        </a>
+                      ) : (
+                        <span className="text-gray-500">No email</span>
+                      )}
+                    </div>
+                    <div className="flex items-center text-lg justify-center lg:justify-start">
+                      <PhoneIcon className="w-6 h-6 mr-3 text-gray-400" />
                       {associate.phone ? (
                         <a
                           href={`tel:${associate.phone}`}
-                          style={{ color: theme.colors.primary }}
+                          className="text-blue-600 hover:text-blue-700 font-medium"
                         >
                           {formatPhone(associate.phone)}
                         </a>
                       ) : (
-                        "-"
+                        <span className="text-gray-500">No phone</span>
                       )}
-                    </span>
+                    </div>
                   </div>
 
-                  {/* Tags Display Component */}
-                  <div style={{ marginTop: "10px" }}>
+                  {/* Rating */}
+                  <div className="flex items-center text-lg mt-5 justify-center lg:justify-start">
+                    <StarIcon className="w-6 h-6 mr-3 text-gray-400" />
+                    <div>{formatScoreRating(associate.score)}</div>
+                  </div>
+                </div>
+
+                {/* Tags and Skills Column - Stacked */}
+                <div className="flex-1 lg:min-w-[400px] space-y-6 text-center lg:text-left">
+                  {/* Tags */}
+                  <div>
                     <TagsDisplay
                       values={extractIds(associate.tags)}
                       label="Tags"
@@ -417,165 +397,41 @@ function AdminAssociateDetailLitePage() {
                     />
                   </div>
 
-                  {/* Skill Sets Display Component */}
-                  <div style={{ marginTop: "10px" }}>
+                  {/* Skills - Below Tags */}
+                  <div>
                     <SkillSetsDisplay
                       values={extractIds(associate.skillSets)}
                       label="Skill Sets"
                       onUnauthorized={onUnauthorized}
                     />
                   </div>
-
-                  {/* Insurance Requirements Display Component */}
-                  <div style={{ marginTop: "10px" }}>
-                    <InsuranceRequirementsDisplay
-                      values={extractIds(associate.insuranceRequirements)}
-                      label="Insurance Requirements"
-                      onUnauthorized={onUnauthorized}
-                    />
-                  </div>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                    }}
-                  >
-                    <span style={{ fontSize: "16px" }}>⭐</span>
-                    <span style={{ fontWeight: "600", minWidth: "80px" }}>
-                      Rating:
-                    </span>
-                    <span>{formatScoreRating(associate.score)}</span>
-                  </div>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "flex-start",
-                      gap: "10px",
-                    }}
-                  >
-                    <span style={{ fontSize: "16px" }}>📝</span>
-                    <span style={{ fontWeight: "600", minWidth: "80px" }}>
-                      Notes:
-                    </span>
-                    <div>
-                      {associate.commercialInsuranceExpiryDate && (
-                        <div>
-                          • Commercial Insurance Expiry:{" "}
-                          {formatDate(associate.commercialInsuranceExpiryDate)}
-                        </div>
-                      )}
-                      {associate.wsibInsuranceDate && (
-                        <div>
-                          • WSIB Expiry:{" "}
-                          {formatDate(associate.wsibInsuranceDate)}
-                        </div>
-                      )}
-                      {associate.isJobSeeker ===
-                        ASSOCIATE_IS_JOB_SEEKER_YES && (
-                        <div>• Job seeker - looking for employment</div>
-                      )}
-                      {!associate.commercialInsuranceExpiryDate &&
-                        !associate.wsibInsuranceDate &&
-                        associate.isJobSeeker !==
-                          ASSOCIATE_IS_JOB_SEEKER_YES && <span>-</span>}
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                    }}
-                  >
-                    <span style={{ fontSize: "16px" }}>📊</span>
-                    <span style={{ fontWeight: "600", minWidth: "80px" }}>
-                      Status:
-                    </span>
-                    <span
-                      style={{
-                        color:
-                          associate.status === 1
-                            ? theme.colors.success
-                            : theme.colors.secondary,
-                        fontWeight: "600",
-                      }}
-                    >
-                      {associate.status === 1 ? "Active" : "Archived"}
-                    </span>
-                  </div>
-
-                  {associate.publicId && (
-                    <div
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                      }}
-                    >
-                      <span style={{ fontSize: "16px" }}>🆔</span>
-                      <span style={{ fontWeight: "600", minWidth: "80px" }}>
-                        ID:
-                      </span>
-                      <span
-                        style={{
-                          fontFamily: "monospace",
-                          backgroundColor: "#f0f0f0",
-                          padding: "2px 6px",
-                          borderRadius: "4px",
-                        }}
-                      >
-                        {associate.publicId}
-                      </span>
-                    </div>
-                  )}
                 </div>
-              </Card>
-            </div>
-
-            {/* Action Buttons */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginTop: "30px",
-                flexWrap: "wrap",
-                gap: "10px",
-              }}
-            >
-              <Link to="/admin/associates">
-                <Button variant="outline">← Back to Associates</Button>
-              </Link>
-
-              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                <Link to={`/admin/associate/${aid}/edit`}>
-                  <Button variant="warning" disabled={associate.status === 2}>
-                    ✏️ Edit
-                  </Button>
-                </Link>
               </div>
             </div>
           </>
         )}
 
         {!associate && !loading && (
-          <div style={{ textAlign: "center", padding: "60px 20px" }}>
-            <div style={{ fontSize: "48px", marginBottom: "20px" }}>❓</div>
-            <h3>Associate Not Found</h3>
-            <p style={{ color: theme.colors.secondary, marginBottom: "30px" }}>
+          <div className="px-6 py-16 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+              <UserGroupIcon className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Associate Not Found
+            </h3>
+            <p className="text-gray-500 mb-6">
               The associate you're looking for doesn't exist or you don't have
               permission to view it.
             </p>
             <Link to="/admin/associates">
-              <Button variant="primary">← Back to Associates</Button>
+              <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                <ChevronLeftIcon className="w-4 h-4 mr-2" />
+                Back to Associates
+              </button>
             </Link>
           </div>
         )}
-      </Card>
+      </div>
     </div>
   );
 }
