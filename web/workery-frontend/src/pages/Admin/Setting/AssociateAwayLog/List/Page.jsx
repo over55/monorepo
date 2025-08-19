@@ -1,39 +1,42 @@
 // File Path: web/workery-frontend/src/pages/Admin/Setting/AssociateAwayLog/List/Page.jsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router";
 import { useAssociateAwayLogManager } from "../../../../../services/Services";
-import { theme, globalStyles } from "../../../../../constants/Theme";
 import {
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Breadcrumb,
-  Input,
-  Select,
-  Table,
-} from "../../../../../components/UI";
+  CalendarDaysIcon,
+  PlusIcon,
+  MagnifyingGlassIcon,
+  FunnelIcon,
+  ChevronRightIcon,
+  XMarkIcon,
+  TrashIcon,
+  PencilSquareIcon,
+  EyeIcon,
+  ExclamationTriangleIcon,
+  Cog6ToothIcon,
+  ChartBarIcon,
+  ClipboardDocumentListIcon,
+  UserIcon,
+  CalendarIcon,
+  ClockIcon,
+  CheckCircleIcon,
+  ArrowPathIcon,
+} from "@heroicons/react/24/outline";
+import { ChevronDownIcon } from "@heroicons/react/20/solid";
 
-// Constants for the page
+// Constants
 const SORT_OPTIONS = [
-  { value: "created_at,ASC", label: "Created At ▲" },
-  { value: "created_at,DESC", label: "Created At ▼" },
-  { value: "start_date,ASC", label: "Start Date ▲" },
-  { value: "start_date,DESC", label: "Start Date ▼" },
+  { value: "created_at,DESC", label: "Created At (Newest)" },
+  { value: "created_at,ASC", label: "Created At (Oldest)" },
+  { value: "start_date,DESC", label: "Start Date (Newest)" },
+  { value: "start_date,ASC", label: "Start Date (Oldest)" },
 ];
 
 const STATUS_FILTER_OPTIONS = [
-  { value: "", label: "All" },
+  { value: "", label: "All Statuses" },
   { value: "1", label: "Active" },
   { value: "2", label: "Archived" },
-];
-
-const PAGE_SIZE_OPTIONS = [
-  { value: 10, label: "10 per page" },
-  { value: 25, label: "25 per page" },
-  { value: 50, label: "50 per page" },
-  { value: 100, label: "100 per page" },
 ];
 
 const REASON_MAP = {
@@ -47,6 +50,7 @@ const REASON_MAP = {
 function SettingAssociateAwayLogListPage() {
   const associateAwayLogManager = useAssociateAwayLogManager();
   const navigate = useNavigate();
+  const isLoadingRef = useRef(false);
 
   // State management
   const [associateAwayLogs, setAssociateAwayLogs] = useState([]);
@@ -57,11 +61,17 @@ function SettingAssociateAwayLogListPage() {
   // Filter and pagination state
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [sortBy, setSortBy] = useState("created_at,DESC");
+  const [sortBy, setSortBy] = useState("created_at");
+  const [sortOrder, setSortOrder] = useState("DESC");
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   const [totalCount, setTotalCount] = useState(0);
   const [hasNextPage, setHasNextPage] = useState(false);
+
+  // Modal state
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedAwayLog, setSelectedAwayLog] = useState(null);
 
   // Handle unauthorized access
   const onUnauthorized = () => {
@@ -69,24 +79,25 @@ function SettingAssociateAwayLogListPage() {
   };
 
   // Fetch associate away logs
-  const fetchAssociateAwayLogs = async (page = 1, forceRefresh = false) => {
+  const fetchAssociateAwayLogs = async (forceRefresh = false) => {
+    // Prevent double loading
+    if (isLoadingRef.current && !forceRefresh) {
+      return;
+    }
+
     try {
+      isLoadingRef.current = true;
       setLoading(true);
       setError(null);
 
       const params = {
-        page: page,
+        page: currentPage,
         limit: pageSize,
         search: searchText.trim() || undefined,
         status: statusFilter || undefined,
+        sortBy: sortBy,
+        sortOrder: sortOrder,
       };
-
-      // Add sorting
-      if (sortBy) {
-        const [field, order] = sortBy.split(",");
-        params.sortBy = field;
-        params.sortOrder = order;
-      }
 
       const response = await associateAwayLogManager.getAssociateAwayLogs(
         params,
@@ -97,72 +108,82 @@ function SettingAssociateAwayLogListPage() {
       setAssociateAwayLogs(response.results || []);
       setTotalCount(response.count || 0);
       setHasNextPage(response.hasNextPage || false);
-      setCurrentPage(page);
     } catch (err) {
       console.error("Failed to fetch associate away logs:", err);
       setError(err.message || "Failed to load associate away logs");
       setAssociateAwayLogs([]);
     } finally {
       setLoading(false);
+      isLoadingRef.current = false;
     }
   };
 
   // Handle search
   const handleSearch = () => {
     setCurrentPage(1);
-    fetchAssociateAwayLogs(1, true);
-  };
-
-  // Handle filter changes
-  const handleFilterChange = (newStatusFilter) => {
-    setStatusFilter(newStatusFilter);
-    setCurrentPage(1);
-  };
-
-  // Handle sort changes
-  const handleSortChange = (newSortBy) => {
-    setSortBy(newSortBy);
-    setCurrentPage(1);
-  };
-
-  // Handle page size changes
-  const handlePageSizeChange = (newPageSize) => {
-    setPageSize(newPageSize);
-    setCurrentPage(1);
-  };
-
-  // Handle pagination
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      fetchAssociateAwayLogs(currentPage - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (hasNextPage) {
-      fetchAssociateAwayLogs(currentPage + 1);
-    }
+    fetchAssociateAwayLogs(true);
   };
 
   // Clear filters
-  const clearFilters = () => {
+  const handleClearFilters = async () => {
     setSearchText("");
     setStatusFilter("");
-    setSortBy("created_at,DESC");
+    setSortBy("created_at");
+    setSortOrder("DESC");
     setCurrentPage(1);
+
+    // Force refresh with cleared values
+    setTimeout(() => {
+      fetchAssociateAwayLogs(true);
+    }, 0);
   };
 
-  // Handle row click
-  const handleRowClick = (associateAwayLog) => {
-    navigate(
-      `/admin/settings/associate-away-log/${associateAwayLog.id}/detail`,
-    );
+  // Handle view detail
+  const handleViewDetail = (awayLog) => {
+    setSelectedAwayLog(awayLog);
+    setShowDetailModal(true);
+  };
+
+  // Handle delete
+  const handleDelete = (awayLog) => {
+    setSelectedAwayLog(awayLog);
+    setShowDeleteModal(true);
+  };
+
+  // Handle delete confirmation
+  const handleDeleteConfirm = async () => {
+    if (!selectedAwayLog) return;
+
+    try {
+      setLoading(true);
+      await associateAwayLogManager.deleteAssociateAwayLog(
+        selectedAwayLog.id,
+        onUnauthorized,
+      );
+      setSuccess("Associate away log deleted successfully");
+      setShowDeleteModal(false);
+      setSelectedAwayLog(null);
+      fetchAssociateAwayLogs(true);
+    } catch (err) {
+      console.error("Failed to delete associate away log:", err);
+      setError(err.message || "Failed to delete associate away log");
+    } finally {
+      setLoading(false);
+    }
   };
 
   // Initial load
   useEffect(() => {
-    fetchAssociateAwayLogs(1);
-  }, [pageSize, statusFilter, sortBy]);
+    fetchAssociateAwayLogs();
+  }, [currentPage, pageSize, searchText, statusFilter, sortBy, sortOrder]);
+
+  // Clear success message after 3 seconds
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => setSuccess(null), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
 
   // Format date helper
   const formatDate = (dateString) => {
@@ -174,299 +195,596 @@ function SettingAssociateAwayLogListPage() {
     }
   };
 
-  // Table columns configuration
-  const columns = [
-    {
-      key: "associateName",
-      label: "Associate",
-      render: (value, row) => (
-        <Link
-          to={`/admin/associate/${row.associateId}`}
-          className="text-blue-600 hover:text-blue-800"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          {value || `Associate #${row.associateId}`}
-        </Link>
-      ),
-    },
-    {
-      key: "reason",
-      label: "Reason",
-      render: (value, row) => {
-        if (value === 1) {
-          return row.reasonOther || "Other";
-        }
-        return REASON_MAP[value] || "Unknown";
-      },
-    },
-    {
-      key: "startDate",
-      label: "Start Date",
-      render: (value) => formatDate(value),
-    },
-    {
-      key: "untilDate",
-      label: "Until",
-      render: (value, row) => {
-        if (row.untilFurtherNotice === 1) {
-          return "Further Notice";
-        }
-        return formatDate(value);
-      },
-    },
-    {
-      key: "createdAt",
-      label: "Created",
-      render: (value) => formatDate(value),
-    },
-  ];
+  // Format datetime helper
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "-";
+    try {
+      return new Date(dateString).toLocaleString();
+    } catch {
+      return dateString;
+    }
+  };
 
-  // Breadcrumb items
-  const breadcrumbItems = [
-    { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
-    { label: "Settings", path: "/admin/settings", icon: "⚙️" },
-    { label: "Associate Away Logs", icon: "📅" },
-  ];
+  // Pagination calculations
+  const totalPages = Math.ceil(totalCount / pageSize);
+  const startRecord = (currentPage - 1) * pageSize + 1;
+  const endRecord = Math.min(currentPage * pageSize, totalCount);
 
   return (
-    <div style={globalStyles.container}>
-      <Breadcrumb items={breadcrumbItems} />
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb */}
+        <nav className="flex mb-8" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+            <li className="inline-flex items-center">
+              <Link
+                to="/admin/dashboard"
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <ChartBarIcon className="w-4 h-4 mr-2" />
+                Dashboard
+              </Link>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to="/admin/settings"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                >
+                  <span className="inline-flex items-center">
+                    <Cog6ToothIcon className="w-4 h-4 mr-2" />
+                    Settings
+                  </span>
+                </Link>
+              </div>
+            </li>
+            <li aria-current="page">
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
+                  <CalendarDaysIcon className="w-4 h-4 mr-2" />
+                  Associate Away Logs
+                </span>
+              </div>
+            </li>
+          </ol>
+        </nav>
 
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "20px",
-        }}
-      >
-        <h1 style={{ fontSize: "28px", fontWeight: "bold", margin: 0 }}>
-          📅 Associate Away Logs
-        </h1>
-        <Button
-          onClick={() => navigate("/admin/settings/associate-away-log/create")}
-          variant="primary"
-        >
-          ➕ Add Away Log
-        </Button>
-      </div>
-
-      {success && (
-        <Alert type="success" onClose={() => setSuccess(null)}>
-          {success}
-        </Alert>
-      )}
-
-      {error && (
-        <Alert type="error" onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
-
-      <Card>
-        {/* Filters */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-            gap: "15px",
-            marginBottom: "20px",
-            padding: "20px",
-            backgroundColor: "#f8f9fa",
-            borderRadius: "8px",
-          }}
-        >
-          <div>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "5px",
-                fontWeight: "600",
-              }}
-            >
-              Search
-            </label>
-            <div style={{ display: "flex", gap: "10px" }}>
-              <input
-                type="text"
-                value={searchText}
-                onChange={(e) => setSearchText(e.target.value)}
-                placeholder="Search by associate name..."
-                style={{
-                  ...globalStyles.input,
-                  flex: 1,
-                }}
-                onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-              />
-              <Button onClick={handleSearch} size="sm">
-                🔍
-              </Button>
-            </div>
-          </div>
-
-          <div>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "5px",
-                fontWeight: "600",
-              }}
-            >
-              Status
-            </label>
-            <select
-              value={statusFilter}
-              onChange={(e) => handleFilterChange(e.target.value)}
-              style={globalStyles.input}
-            >
-              {STATUS_FILTER_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label
-              style={{
-                display: "block",
-                marginBottom: "5px",
-                fontWeight: "600",
-              }}
-            >
-              Sort By
-            </label>
-            <select
-              value={sortBy}
-              onChange={(e) => handleSortChange(e.target.value)}
-              style={globalStyles.input}
-            >
-              {SORT_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div style={{ display: "flex", alignItems: "end" }}>
-            <Button onClick={clearFilters} variant="outline" size="sm">
-              🗑️ Clear Filters
-            </Button>
-          </div>
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
+            <CalendarDaysIcon className="w-8 h-8 mr-3 text-gray-700" />
+            Associate Away Logs
+          </h1>
         </div>
 
-        {/* Results */}
-        {loading ? (
-          <Loading message="Loading associate away logs..." />
-        ) : (
-          <>
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginBottom: "15px",
-                fontSize: "14px",
-                color: "#666",
-              }}
+        {/* Success/Error Messages */}
+        {success && (
+          <div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center">
+              <CheckCircleIcon className="w-5 h-5 mr-2" />
+              {success}
+            </span>
+            <button
+              onClick={() => setSuccess(null)}
+              className="text-green-600 hover:text-green-800"
             >
-              <span>
-                Showing {associateAwayLogs.length} of {totalCount} away logs
-              </span>
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "10px" }}
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center">
+              <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
+              {error}
+            </span>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-600 hover:text-red-800"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
+        {/* Main Card */}
+        <div className="bg-white shadow-sm rounded-lg">
+          {/* Card Header */}
+          <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-800 flex items-center">
+              <ClipboardDocumentListIcon className="w-5 h-5 mr-2" />
+              List
+            </h2>
+            <button
+              onClick={() =>
+                navigate("/admin/settings/associate-away-log/create")
+              }
+              className="inline-flex items-center px-4 py-2 bg-emerald-500 text-white text-sm font-medium rounded-lg hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors"
+            >
+              <PlusIcon className="w-5 h-5 mr-1" />
+              New
+            </button>
+          </div>
+
+          {/* Filters Section */}
+          <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-medium text-gray-700 flex items-center">
+                <FunnelIcon className="w-4 h-4 mr-2" />
+                Filtering & Sorting
+              </h3>
+              <button
+                onClick={handleClearFilters}
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center"
               >
-                <label>Show:</label>
-                <select
-                  value={pageSize}
-                  onChange={(e) =>
-                    handlePageSizeChange(parseInt(e.target.value))
-                  }
-                  style={{
-                    ...globalStyles.input,
-                    width: "auto",
-                    padding: "5px",
-                  }}
-                >
-                  {PAGE_SIZE_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                <XMarkIcon className="w-4 h-4 mr-1" />
+                Clear Filter
+              </button>
             </div>
 
-            {associateAwayLogs.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Search */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Search:
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                    placeholder="Search by associate name..."
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                  />
+                  <button
+                    onClick={handleSearch}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                  >
+                    <MagnifyingGlassIcon className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Status */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
+                <div className="relative">
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => {
+                      setStatusFilter(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                  >
+                    {STATUS_FILTER_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Sort By */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Sort by
+                </label>
+                <div className="relative">
+                  <select
+                    value={`${sortBy},${sortOrder}`}
+                    onChange={(e) => {
+                      const [field, order] = e.target.value.split(",");
+                      setSortBy(field);
+                      setSortOrder(order);
+                      setCurrentPage(1);
+                    }}
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                  >
+                    {SORT_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Table Content */}
+          <div className="px-6 py-4">
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <span className="ml-3 text-gray-600">
+                  Loading associate away logs...
+                </span>
+              </div>
+            ) : associateAwayLogs.length > 0 ? (
               <>
-                <Table
-                  columns={columns}
-                  data={associateAwayLogs}
-                  onRowClick={handleRowClick}
-                />
+                {/* Results count */}
+                <div className="mb-4 text-sm text-gray-600">
+                  Showing {startRecord}-{endRecord} of {totalCount} away logs
+                </div>
+
+                {/* Table */}
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead>
+                      <tr>
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Associate
+                        </th>
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Reason
+                        </th>
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Start Date
+                        </th>
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Until
+                        </th>
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Created
+                        </th>
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {associateAwayLogs.map((awayLog) => (
+                        <tr
+                          key={awayLog.id}
+                          className="hover:bg-gray-50 cursor-pointer"
+                          onClick={() =>
+                            navigate(
+                              `/admin/settings/associate-away-log/${awayLog.id}/detail`,
+                            )
+                          }
+                        >
+                          <td className="px-3 py-4 text-sm">
+                            <Link
+                              to={`/admin/associate/${awayLog.associateId}`}
+                              className="text-blue-600 hover:text-blue-800 font-medium flex items-center"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <UserIcon className="w-4 h-4 mr-1" />
+                              {awayLog.associateName ||
+                                `Associate #${awayLog.associateId}`}
+                            </Link>
+                          </td>
+                          <td className="px-3 py-4 text-sm text-gray-900">
+                            {awayLog.reason === 1
+                              ? awayLog.reasonOther || "Other"
+                              : REASON_MAP[awayLog.reason] || "Unknown"}
+                          </td>
+                          <td className="px-3 py-4 text-sm text-gray-500">
+                            <span className="flex items-center">
+                              <CalendarIcon className="w-4 h-4 mr-1 text-gray-400" />
+                              {formatDate(awayLog.startDate)}
+                            </span>
+                          </td>
+                          <td className="px-3 py-4 text-sm">
+                            {awayLog.untilFurtherNotice === 1 ? (
+                              <span className="text-amber-600 font-medium flex items-center">
+                                <ClockIcon className="w-4 h-4 mr-1" />
+                                Further Notice
+                              </span>
+                            ) : (
+                              <span className="text-gray-500 flex items-center">
+                                <CalendarIcon className="w-4 h-4 mr-1 text-gray-400" />
+                                {formatDate(awayLog.untilDate)}
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-3 py-4 text-sm text-gray-500">
+                            {formatDate(awayLog.createdAt)}
+                          </td>
+                          <td className="px-3 py-4 text-sm text-right">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleViewDetail(awayLog);
+                              }}
+                              className="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center"
+                            >
+                              View
+                              <ChevronRightIcon className="w-4 h-4 ml-1" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
 
                 {/* Pagination */}
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginTop: "20px",
-                  }}
-                >
-                  <div style={{ fontSize: "14px", color: "#666" }}>
-                    Page {currentPage}
+                {totalPages > 1 && (
+                  <div className="mt-6 flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <label className="text-sm text-gray-700">
+                        Page size:
+                      </label>
+                      <select
+                        value={pageSize}
+                        onChange={(e) => {
+                          setPageSize(parseInt(e.target.value));
+                          setCurrentPage(1);
+                        }}
+                        className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                      </select>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => setCurrentPage(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        ← Previous
+                      </button>
+                      <span className="text-sm text-gray-700">
+                        Page {currentPage} of {totalPages}
+                      </span>
+                      <button
+                        onClick={() => setCurrentPage(currentPage + 1)}
+                        disabled={!hasNextPage}
+                        className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Next →
+                      </button>
+                    </div>
                   </div>
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    <Button
-                      onClick={handlePreviousPage}
-                      disabled={currentPage <= 1}
-                      variant="outline"
-                      size="sm"
-                    >
-                      ← Previous
-                    </Button>
-                    <Button
-                      onClick={handleNextPage}
-                      disabled={!hasNextPage}
-                      variant="outline"
-                      size="sm"
-                    >
-                      Next →
-                    </Button>
-                  </div>
-                </div>
+                )}
               </>
             ) : (
-              <div
-                style={{ textAlign: "center", padding: "40px", color: "#666" }}
-              >
-                <div style={{ fontSize: "48px", marginBottom: "10px" }}>📅</div>
-                <h3>No Associate Away Logs Found</h3>
-                <p>
+              <div className="text-center py-12">
+                <CalendarDaysIcon className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">
+                  No Associate Away Logs Found
+                </h3>
+                <p className="mt-1 text-sm text-gray-500">
                   {searchText || statusFilter
                     ? "No away logs match your current filters."
                     : "No associate away logs have been created yet."}
                 </p>
-                {!searchText && !statusFilter && (
-                  <Button
+                <div className="mt-6">
+                  <button
                     onClick={() =>
                       navigate("/admin/settings/associate-away-log/create")
                     }
-                    variant="primary"
-                    style={{ marginTop: "15px" }}
+                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
                   >
-                    ➕ Create First Away Log
-                  </Button>
-                )}
+                    <PlusIcon className="w-5 h-5 mr-2" />
+                    Create First Away Log
+                  </button>
+                </div>
               </div>
             )}
-          </>
+          </div>
+        </div>
+
+        {/* Detail Modal */}
+        {showDetailModal && selectedAwayLog && (
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <CalendarDaysIcon className="w-5 h-5 mr-2" />
+                  Away Log Details
+                </h3>
+                <button
+                  onClick={() => setShowDetailModal(false)}
+                  className="text-gray-400 hover:text-gray-500"
+                >
+                  <XMarkIcon className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="px-6 py-4 overflow-y-auto">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Associate:
+                    </label>
+                    <div className="p-3 bg-blue-50 rounded-lg">
+                      <Link
+                        to={`/admin/associate/${selectedAwayLog.associateId}`}
+                        className="text-blue-600 hover:text-blue-800 font-medium flex items-center"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <UserIcon className="w-5 h-5 mr-2" />
+                        {selectedAwayLog.associateName ||
+                          `Associate #${selectedAwayLog.associateId}`}
+                      </Link>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Reason:
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-900">
+                      {selectedAwayLog.reason === 1 ? (
+                        <>
+                          {REASON_MAP[1]}
+                          {selectedAwayLog.reasonOther && (
+                            <span className="block mt-1 italic">
+                              "{selectedAwayLog.reasonOther}"
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        REASON_MAP[selectedAwayLog.reason] || "Unknown"
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Start Date:
+                      </label>
+                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-900 flex items-center">
+                        <CalendarIcon className="w-4 h-4 mr-2 text-gray-500" />
+                        {formatDate(selectedAwayLog.startDate)}
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Until:
+                      </label>
+                      <div className="p-3 bg-gray-50 rounded-lg text-sm">
+                        {selectedAwayLog.untilFurtherNotice === 1 ? (
+                          <span className="text-amber-600 font-medium flex items-center">
+                            <ClockIcon className="w-4 h-4 mr-2" />
+                            Further Notice
+                          </span>
+                        ) : (
+                          <span className="text-gray-900 flex items-center">
+                            <CalendarIcon className="w-4 h-4 mr-2 text-gray-500" />
+                            {formatDate(selectedAwayLog.untilDate)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium text-gray-700">
+                        Created:
+                      </span>
+                      <p className="text-gray-900 mt-1">
+                        {formatDateTime(selectedAwayLog.createdAt)}
+                      </p>
+                    </div>
+                    {selectedAwayLog.createdByUserName && (
+                      <div>
+                        <span className="font-medium text-gray-700">
+                          Created By:
+                        </span>
+                        <p className="text-gray-900 mt-1">
+                          {selectedAwayLog.createdByUserName}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowDetailModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    navigate(
+                      `/admin/settings/associate-away-log/${selectedAwayLog.id}/update`,
+                    );
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600"
+                >
+                  <PencilSquareIcon className="w-4 h-4 inline mr-1" />
+                  Edit
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    handleDelete(selectedAwayLog);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700"
+                >
+                  <TrashIcon className="w-4 h-4 inline mr-1" />
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
         )}
-      </Card>
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && selectedAwayLog && (
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-md w-full">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <ExclamationTriangleIcon className="w-5 h-5 mr-2 text-red-600" />
+                  Delete Associate Away Log
+                </h3>
+              </div>
+
+              <div className="px-6 py-4">
+                <p className="text-sm text-gray-600 mb-4">
+                  Are you sure you want to delete this associate away log? This
+                  action cannot be undone.
+                </p>
+                <div className="p-3 bg-gray-50 rounded-lg text-sm">
+                  <div className="space-y-1">
+                    <p>
+                      <strong>Associate:</strong>{" "}
+                      {selectedAwayLog.associateName ||
+                        `Associate #${selectedAwayLog.associateId}`}
+                    </p>
+                    <p>
+                      <strong>Reason:</strong>{" "}
+                      {selectedAwayLog.reason === 1
+                        ? selectedAwayLog.reasonOther || "Other"
+                        : REASON_MAP[selectedAwayLog.reason]}
+                    </p>
+                    <p>
+                      <strong>Start Date:</strong>{" "}
+                      {formatDate(selectedAwayLog.startDate)}
+                    </p>
+                    <p>
+                      <strong>Until:</strong>{" "}
+                      {selectedAwayLog.untilFurtherNotice === 1
+                        ? "Further Notice"
+                        : formatDate(selectedAwayLog.untilDate)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteConfirm}
+                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

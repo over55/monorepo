@@ -1,39 +1,56 @@
 // File Path: web/workery-frontend/src/pages/Admin/Setting/VehicleType/Detail/Page.jsx
-
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useNavigate, useParams, useLocation } from "react-router";
 import { useVehicleTypeManager } from "../../../../../services/Services";
-import { theme, globalStyles } from "../../../../../constants/Theme";
 import {
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Breadcrumb,
-  Modal,
-} from "../../../../../components/UI";
+  TruckIcon,
+  ChevronRightIcon,
+  XMarkIcon,
+  TrashIcon,
+  PencilSquareIcon,
+  ExclamationTriangleIcon,
+  Cog6ToothIcon,
+  ChartBarIcon,
+  ClipboardDocumentIcon,
+  InformationCircleIcon,
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  UserIcon,
+  GlobeAltIcon,
+  DocumentTextIcon,
+  TagIcon,
+  CalendarIcon,
+} from "@heroicons/react/24/outline";
 
 function SettingVehicleTypeDetailPage() {
-  const { id } = useParams();
-  const vehicleTypeManager = useVehicleTypeManager();
   const navigate = useNavigate();
+  const { id } = useParams();
+  const location = useLocation();
+  const vehicleTypeManager = useVehicleTypeManager();
 
-  const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
+  // State management
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState("");
   const [vehicleType, setVehicleType] = useState(null);
+
+  // Delete confirmation modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
   };
 
-  const fetchVehicleTypeDetail = async (vehicleTypeId) => {
-    setIsLoading(true);
-    setErrors({});
-
+  // Fetch vehicle type details
+  const fetchVehicleTypeDetail = async () => {
     try {
+      setIsLoading(true);
+      setError(null);
+
       const vehicleTypeData = await vehicleTypeManager.getVehicleTypeDetail(
-        vehicleTypeId,
+        id,
         onUnauthorized,
       );
 
@@ -46,304 +63,527 @@ function SettingVehicleTypeDetailPage() {
           name: vehicleTypeData.name,
         },
       );
-    } catch (error) {
+    } catch (err) {
       console.error(
         "VehicleTypeDetailPage: Failed to fetch vehicle type detail:",
-        error,
+        err,
       );
-      setErrors({
-        fetch: error.message || "Failed to load vehicle type details",
-      });
-      window.scrollTo(0, 0);
+      setError(err.message || "Failed to load vehicle type details");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleDeleteConfirm = async () => {
-    setIsLoading(true);
-
+  // Handle delete
+  const handleDelete = async () => {
     try {
+      setIsDeleting(true);
       await vehicleTypeManager.deleteVehicleType(id, onUnauthorized);
+
       console.log("VehicleTypeDetailPage: Vehicle type deleted successfully");
-      navigate("/admin/settings/vehicle-types");
-    } catch (error) {
+
+      // Navigate back to list with success message
+      navigate("/admin/settings/vehicle-types", {
+        state: { successMessage: "Vehicle type deleted successfully" },
+      });
+    } catch (err) {
       console.error(
         "VehicleTypeDetailPage: Failed to delete vehicle type:",
-        error,
+        err,
       );
-      setErrors({ delete: error.message || "Failed to delete vehicle type" });
-      window.scrollTo(0, 0);
+      setError(err.message || "Failed to delete vehicle type");
+      setIsDeleting(false);
       setShowDeleteModal(false);
-    } finally {
+    }
+  };
+
+  // Load data on component mount
+  useEffect(() => {
+    if (id && typeof id === "string" && id.trim() !== "") {
+      fetchVehicleTypeDetail();
+    } else {
+      setError("Invalid vehicle type ID");
       setIsLoading(false);
     }
-  };
-
-  useEffect(() => {
-    let mounted = true;
-
-    if (mounted) {
-      window.scrollTo(0, 0);
-
-      if (!id || typeof id !== "string" || id.trim() === "") {
-        setErrors({ vehicleTypeId: "Invalid vehicle type ID" });
-        return;
-      }
-
-      fetchVehicleTypeDetail(id);
-    }
-
-    return () => {
-      mounted = false;
-    };
   }, [id]);
 
+  // Handle success message from navigation state
+  useEffect(() => {
+    if (location.state?.successMessage) {
+      setSuccessMessage(location.state.successMessage);
+      // Clear the state
+      window.history.replaceState({}, document.title);
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(""), 3000);
+    }
+  }, [location]);
+
+  // Handle URL state (success message from other pages)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const message = urlParams.get("success");
+    if (message) {
+      setSuccessMessage(message);
+      // Clear the URL parameter
+      window.history.replaceState({}, "", window.location.pathname);
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(""), 3000);
+    }
+  }, []);
+
+  // Loading state
   if (isLoading) {
-    return <Loading message="Loading Vehicle Type Details..." />;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading vehicle type details...</p>
+        </div>
+      </div>
+    );
   }
 
-  const styles = {
-    detailSection: {
-      marginBottom: "30px",
-    },
-    sectionTitle: {
-      fontSize: "18px",
-      marginBottom: "15px",
-      color: theme.colors.secondary,
-      display: "flex",
-      alignItems: "center",
-      gap: "8px",
-    },
-    detailGrid: {
-      display: "grid",
-      gap: "15px",
-      gridTemplateColumns: "1fr",
-      maxWidth: "600px",
-    },
-    detailItem: {
-      display: "flex",
-      flexDirection: "column",
-    },
-    detailLabel: {
-      fontWeight: "bold",
-      marginBottom: "5px",
-      fontSize: "14px",
-      color: "#333",
-    },
-    detailValue: {
-      padding: "10px",
-      backgroundColor: "#f8f9fa",
-      borderRadius: "4px",
-      fontSize: "14px",
-      color: "#666",
-      minHeight: "20px",
-    },
-    actionButtons: {
-      display: "flex",
-      justifyContent: "space-between",
-      alignItems: "center",
-      marginTop: "40px",
-      flexWrap: "wrap",
-      gap: "10px",
-    },
-    rightActions: {
-      display: "flex",
-      gap: "10px",
-      flexWrap: "wrap",
-    },
-  };
+  // Error state (no data)
+  if (error && !vehicleType) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-4">
+            <div className="flex items-center">
+              <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
+              {error}
+            </div>
+          </div>
+          <Link
+            to="/admin/settings/vehicle-types"
+            className="inline-flex items-center text-blue-600 hover:text-blue-800"
+          >
+            <ArrowLeftIcon className="w-4 h-4 mr-2" />
+            Back to Vehicle Types
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Not found state
+  if (!vehicleType) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-amber-50 border border-amber-200 text-amber-800 px-4 py-3 rounded-lg mb-4">
+            <div className="flex items-center">
+              <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
+              Vehicle type not found
+            </div>
+          </div>
+          <Link
+            to="/admin/settings/vehicle-types"
+            className="inline-flex items-center text-blue-600 hover:text-blue-800"
+          >
+            <ArrowLeftIcon className="w-4 h-4 mr-2" />
+            Back to Vehicle Types
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div style={globalStyles.container}>
-      <Breadcrumb
-        items={[
-          { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
-          { label: "Settings", path: "/admin/settings", icon: "⚙️" },
-          {
-            label: "Vehicle Types",
-            path: "/admin/settings/vehicle-types",
-            icon: "🚗",
-          },
-          { label: "Detail", icon: "ℹ️" },
-        ]}
-      />
-
-      {errors.fetch && <Alert type="error">{errors.fetch}</Alert>}
-      {errors.delete && <Alert type="error">{errors.delete}</Alert>}
-      {errors.vehicleTypeId && (
-        <Alert type="error">{errors.vehicleTypeId}</Alert>
-      )}
-
-      {vehicleType && (
-        <Card
-          title="🚗 Vehicle Type Details"
-          actions={
-            <div style={styles.rightActions}>
-              <Link to={`/admin/settings/vehicle-type/${id}/update`}>
-                <Button variant="warning">✏️ Edit</Button>
-              </Link>
-              <Button
-                variant="danger"
-                onClick={() => setShowDeleteModal(true)}
-                disabled={isLoading}
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb */}
+        <nav className="flex mb-8" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+            <li className="inline-flex items-center">
+              <Link
+                to="/admin/dashboard"
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
               >
-                🗑️ Delete
-              </Button>
-            </div>
-          }
-        >
-          {/* Vehicle Type Information */}
-          <div style={styles.detailSection}>
-            <h2 style={styles.sectionTitle}>🚗 Vehicle Type Information</h2>
-            <hr style={{ marginBottom: "15px" }} />
-
-            <div style={styles.detailGrid}>
-              <div style={styles.detailItem}>
-                <label style={styles.detailLabel}>Name:</label>
-                <div style={styles.detailValue}>
-                  {vehicleType.name || "N/A"}
-                </div>
-              </div>
-
-              <div style={styles.detailItem}>
-                <label style={styles.detailLabel}>Description:</label>
-                <div style={styles.detailValue}>
-                  {vehicleType.description || "N/A"}
-                </div>
-              </div>
-
-              <div style={styles.detailItem}>
-                <label style={styles.detailLabel}>Status:</label>
-                <div style={styles.detailValue}>
-                  {vehicleType.status === 1 ? "Active" : "Inactive"}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* System Information */}
-          <div style={styles.detailSection}>
-            <h2 style={styles.sectionTitle}>⚙️ System Information</h2>
-            <hr style={{ marginBottom: "15px" }} />
-
-            <div style={styles.detailGrid}>
-              <div style={styles.detailItem}>
-                <label style={styles.detailLabel}>Created At:</label>
-                <div style={styles.detailValue}>
-                  {vehicleType.createdAt
-                    ? new Date(vehicleType.createdAt).toLocaleString()
-                    : "N/A"}
-                </div>
-              </div>
-
-              <div style={styles.detailItem}>
-                <label style={styles.detailLabel}>Created By:</label>
-                <div style={styles.detailValue}>
-                  {vehicleType.createdByUserName || "N/A"}
-                </div>
-              </div>
-
-              <div style={styles.detailItem}>
-                <label style={styles.detailLabel}>Created From:</label>
-                <div style={styles.detailValue}>
-                  {vehicleType.createdFromIpAddress || "N/A"}
-                </div>
-              </div>
-
-              <div style={styles.detailItem}>
-                <label style={styles.detailLabel}>Modified At:</label>
-                <div style={styles.detailValue}>
-                  {vehicleType.modifiedAt
-                    ? new Date(vehicleType.modifiedAt).toLocaleString()
-                    : "N/A"}
-                </div>
-              </div>
-
-              <div style={styles.detailItem}>
-                <label style={styles.detailLabel}>Modified By:</label>
-                <div style={styles.detailValue}>
-                  {vehicleType.modifiedByUserName || "N/A"}
-                </div>
-              </div>
-
-              <div style={styles.detailItem}>
-                <label style={styles.detailLabel}>Modified From:</label>
-                <div style={styles.detailValue}>
-                  {vehicleType.modifiedFromIpAddress || "N/A"}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Navigation Buttons */}
-          <div style={styles.actionButtons}>
-            <Link to="/admin/settings/vehicle-types">
-              <Button variant="secondary">← Back to List</Button>
-            </Link>
-            <div style={styles.rightActions}>
-              <Link to={`/admin/settings/vehicle-type/${id}/update`}>
-                <Button variant="warning">✏️ Edit</Button>
+                <ChartBarIcon className="w-4 h-4 mr-2" />
+                Dashboard
               </Link>
-              <Button
-                variant="danger"
-                onClick={() => setShowDeleteModal(true)}
-                disabled={isLoading}
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to="/admin/settings"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                >
+                  <span className="inline-flex items-center">
+                    <Cog6ToothIcon className="w-4 h-4 mr-2" />
+                    Settings
+                  </span>
+                </Link>
+              </div>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to="/admin/settings/vehicle-types"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                >
+                  <span className="inline-flex items-center">
+                    <TruckIcon className="w-4 h-4 mr-2" />
+                    Vehicle Types
+                  </span>
+                </Link>
+              </div>
+            </li>
+            <li aria-current="page">
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
+                  <ClipboardDocumentIcon className="w-4 h-4 mr-2" />
+                  {vehicleType?.name || "Details"}
+                </span>
+              </div>
+            </li>
+          </ol>
+        </nav>
+
+        {/* Success/Error Messages */}
+        {successMessage && (
+          <div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center">
+              <CheckCircleIcon className="w-5 h-5 mr-2" />
+              {successMessage}
+            </span>
+            <button
+              onClick={() => setSuccessMessage("")}
+              className="text-green-600 hover:text-green-800"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center">
+              <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
+              {error}
+            </span>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-600 hover:text-red-800"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
+        {/* Main Details Card */}
+        <div className="bg-white shadow-sm rounded-lg mb-6">
+          <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h1 className="text-xl font-semibold text-gray-900 flex items-center">
+              <TruckIcon className="w-6 h-6 mr-2 text-blue-600" />
+              {vehicleType.name}
+            </h1>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() =>
+                  navigate(`/admin/settings/vehicle-type/${id}/update`)
+                }
+                className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500"
               >
-                🗑️ Delete
-              </Button>
+                <PencilSquareIcon className="w-4 h-4 mr-1" />
+                Edit
+              </button>
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+              >
+                <TrashIcon className="w-4 h-4 mr-1" />
+                Delete
+              </button>
             </div>
           </div>
-        </Card>
-      )}
 
-      {!vehicleType && !isLoading && (
-        <Card>
-          <div style={{ textAlign: "center", padding: "40px" }}>
-            <h2>Vehicle Type Not Found</h2>
-            <p>The requested vehicle type could not be found.</p>
-            <Link to="/admin/settings/vehicle-types">
-              <Button variant="primary">← Back to Vehicle Types List</Button>
-            </Link>
+          <div className="p-6">
+            {/* Basic Information Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Left Column - Basic Info */}
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                  <DocumentTextIcon className="w-5 h-5 mr-2" />
+                  Basic Information
+                </h3>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500 mb-1">
+                      Name
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <p className="text-base font-semibold text-gray-900">
+                        {vehicleType.name}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500 mb-1">
+                      Description
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 min-h-[80px]">
+                      <p className="text-gray-700 whitespace-pre-wrap">
+                        {vehicleType.description || (
+                          <span className="text-gray-400 italic">
+                            No description provided
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500 mb-1">
+                      Status
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <span
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                          vehicleType.status === 1
+                            ? "bg-green-100 text-green-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
+                        {vehicleType.status === 1 ? "Active" : "Inactive"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500 mb-1">
+                      Vehicle Type ID
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <p className="text-sm font-mono text-gray-600">
+                        {vehicleType.id}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column - System Info */}
+              <div>
+                <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
+                  <InformationCircleIcon className="w-5 h-5 mr-2" />
+                  System Information
+                </h3>
+
+                <div className="space-y-4">
+                  {/* Creation Info */}
+                  <div className="bg-blue-50 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-blue-900 mb-3 flex items-center">
+                      <ClockIcon className="w-4 h-4 mr-2" />
+                      Creation Details
+                    </h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-start">
+                        <CalendarIcon className="w-4 h-4 mr-2 text-blue-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-medium text-gray-600">
+                            Created:
+                          </span>
+                          <p className="text-gray-900">
+                            {vehicleType.createdAt
+                              ? new Date(vehicleType.createdAt).toLocaleString()
+                              : "Not available"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start">
+                        <UserIcon className="w-4 h-4 mr-2 text-blue-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-medium text-gray-600">
+                            Created By:
+                          </span>
+                          <p className="text-gray-900">
+                            {vehicleType.createdByUserName || "Not available"}
+                          </p>
+                        </div>
+                      </div>
+                      {vehicleType.createdFromIpAddress && (
+                        <div className="flex items-start">
+                          <GlobeAltIcon className="w-4 h-4 mr-2 text-blue-600 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <span className="font-medium text-gray-600">
+                              Created From IP:
+                            </span>
+                            <p className="text-gray-900">
+                              {vehicleType.createdFromIpAddress}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Modification Info */}
+                  <div className="bg-amber-50 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-amber-900 mb-3 flex items-center">
+                      <PencilSquareIcon className="w-4 h-4 mr-2" />
+                      Modification Details
+                    </h4>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-start">
+                        <CalendarIcon className="w-4 h-4 mr-2 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-medium text-gray-600">
+                            Modified:
+                          </span>
+                          <p className="text-gray-900">
+                            {vehicleType.modifiedAt
+                              ? new Date(
+                                  vehicleType.modifiedAt,
+                                ).toLocaleString()
+                              : "Never modified"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start">
+                        <UserIcon className="w-4 h-4 mr-2 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <span className="font-medium text-gray-600">
+                            Modified By:
+                          </span>
+                          <p className="text-gray-900">
+                            {vehicleType.modifiedByUserName || "Not available"}
+                          </p>
+                        </div>
+                      </div>
+                      {vehicleType.modifiedFromIpAddress && (
+                        <div className="flex items-start">
+                          <GlobeAltIcon className="w-4 h-4 mr-2 text-amber-600 flex-shrink-0 mt-0.5" />
+                          <div>
+                            <span className="font-medium text-gray-600">
+                              Modified From IP:
+                            </span>
+                            <p className="text-gray-900">
+                              {vehicleType.modifiedFromIpAddress}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-        </Card>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      <Modal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        title="Confirm Deletion"
-        footer={
-          <>
-            <Button
-              variant="secondary"
-              onClick={() => setShowDeleteModal(false)}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="danger"
-              onClick={handleDeleteConfirm}
-              disabled={isLoading}
-            >
-              {isLoading ? "Deleting..." : "Confirm and Delete"}
-            </Button>
-          </>
-        }
-      >
-        <div>
-          <p>
-            Are you sure you want to delete the vehicle type "
-            <strong>{vehicleType?.name}</strong>"?
-          </p>
-          <p style={{ color: "#dc3545", fontWeight: "500" }}>
-            This action cannot be undone and will permanently remove this
-            vehicle type from the system.
-          </p>
         </div>
-      </Modal>
+
+        {/* Back to List Link */}
+        <div className="mt-6">
+          <Link
+            to="/admin/settings/vehicle-types"
+            className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+          >
+            <ArrowLeftIcon className="w-4 h-4 mr-1" />
+            Back to Vehicle Types
+          </Link>
+        </div>
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-md w-full">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <TrashIcon className="w-5 h-5 mr-2 text-red-600" />
+                  Delete Vehicle Type
+                </h3>
+              </div>
+
+              <div className="px-6 py-4">
+                <p className="text-sm text-gray-600 mb-4">
+                  Are you sure you want to delete this vehicle type? This action
+                  cannot be undone.
+                </p>
+
+                <div className="p-4 bg-red-50 rounded-lg border-l-4 border-red-500">
+                  <p className="text-sm font-medium text-gray-700 mb-2">
+                    Vehicle type to be deleted:
+                  </p>
+                  <p className="text-base font-semibold text-gray-900 mb-1">
+                    {vehicleType.name}
+                  </p>
+                  {vehicleType.description && (
+                    <p className="text-sm text-gray-600 mt-2">
+                      {vehicleType.description}
+                    </p>
+                  )}
+                </div>
+
+                <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p className="text-xs text-amber-800 flex items-start">
+                    <ExclamationTriangleIcon className="w-4 h-4 mr-1 flex-shrink-0" />
+                    <span>
+                      <strong>Warning:</strong> This will affect any associates
+                      or vehicles that reference this vehicle type.
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    if (!isDeleting) {
+                      setShowDeleteModal(false);
+                    }
+                  }}
+                  disabled={isDeleting}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isDeleting ? (
+                    <>
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <TrashIcon className="w-4 h-4 mr-2" />
+                      Delete
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

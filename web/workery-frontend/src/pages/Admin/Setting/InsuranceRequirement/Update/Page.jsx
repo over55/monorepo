@@ -1,19 +1,28 @@
 // File Path: web/workery-frontend/src/pages/Admin/Setting/InsuranceRequirement/Update/Page.jsx
-
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import { useInsuranceRequirementManager } from "../../../../../services/Services";
-import { theme, globalStyles } from "../../../../../constants/Theme";
 import {
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Breadcrumb,
-  Input,
-  TextArea,
-  FormGroup,
-} from "../../../../../components/UI";
+  ShieldCheckIcon,
+  ChevronRightIcon,
+  XMarkIcon,
+  PencilSquareIcon,
+  ExclamationTriangleIcon,
+  ArrowPathIcon,
+  CheckCircleIcon,
+  Cog6ToothIcon,
+  ChartBarIcon,
+  ClipboardDocumentIcon,
+  InformationCircleIcon,
+  ArrowLeftIcon,
+  DocumentTextIcon,
+  CalendarIcon,
+  UserIcon,
+  ClockIcon,
+  BuildingOfficeIcon,
+  LightBulbIcon,
+  DocumentCheckIcon,
+} from "@heroicons/react/24/outline";
 
 function SettingInsuranceRequirementUpdatePage() {
   const navigate = useNavigate();
@@ -35,6 +44,7 @@ function SettingInsuranceRequirementUpdatePage() {
   const [error, setError] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
   const [hasChanges, setHasChanges] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
@@ -123,9 +133,7 @@ function SettingInsuranceRequirementUpdatePage() {
   };
 
   // Handle form submission
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const handleSubmit = async () => {
     // Clear previous errors
     setError(null);
     setValidationErrors({});
@@ -134,6 +142,12 @@ function SettingInsuranceRequirementUpdatePage() {
     const errors = validateForm();
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
+      setError("Please correct the errors below");
+      return;
+    }
+
+    if (!hasChanges) {
+      setError("No changes detected");
       return;
     }
 
@@ -153,16 +167,23 @@ function SettingInsuranceRequirementUpdatePage() {
         onUnauthorized,
       );
 
-      // Navigate to detail page with success message
-      navigate(`/admin/settings/insurance-requirement/${id}/detail`, {
-        state: { successMessage: "Insurance requirement updated successfully" },
-      });
+      setSuccessMessage("Insurance requirement updated successfully!");
+
+      // Navigate to detail page with success message after a short delay
+      setTimeout(() => {
+        navigate(`/admin/settings/insurance-requirement/${id}/detail`, {
+          state: {
+            successMessage: "Insurance requirement updated successfully",
+          },
+        });
+      }, 1500);
     } catch (err) {
       console.error("Failed to update insurance requirement:", err);
 
       // Handle validation errors from API
       if (err && typeof err === "object" && !err.message) {
         setValidationErrors(err);
+        setError("Please correct the errors below");
       } else {
         setError(err.message || "Failed to update insurance requirement");
       }
@@ -186,6 +207,19 @@ function SettingInsuranceRequirementUpdatePage() {
     }
   };
 
+  // Handle reset form
+  const handleReset = () => {
+    if (insuranceRequirement) {
+      setFormData({
+        name: insuranceRequirement.name || "",
+        description: insuranceRequirement.description || "",
+      });
+      setValidationErrors({});
+      setError(null);
+      setHasChanges(false);
+    }
+  };
+
   // Load data on component mount
   useEffect(() => {
     if (id) {
@@ -196,237 +230,544 @@ function SettingInsuranceRequirementUpdatePage() {
     }
   }, [id]);
 
-  // Breadcrumb items
-  const breadcrumbItems = [
-    { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
-    { label: "Settings", path: "/admin/settings", icon: "⚙️" },
-    {
-      label: "Insurance Requirements",
-      path: "/admin/settings/insurance-requirements",
-      icon: "🛡️",
-    },
-    {
-      label: insuranceRequirement?.name || "Loading...",
-      path: `/admin/settings/insurance-requirement/${id}/detail`,
-      icon: "📄",
-    },
-    { label: "Edit", icon: "✏️" },
-  ];
+  // Clear success message after 3 seconds
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(""), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
+  // Loading state
   if (isLoading) {
     return (
-      <div style={globalStyles.container}>
-        <Loading message="Loading insurance requirement details..." />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">
+            Loading insurance requirement details...
+          </p>
+        </div>
       </div>
     );
   }
 
+  // Error state (no data loaded)
   if (error && !insuranceRequirement) {
     return (
-      <div style={globalStyles.container}>
-        <Breadcrumb items={breadcrumbItems.slice(0, -2)} />
-        <Alert type="error">{error}</Alert>
-        <div style={{ marginTop: "20px" }}>
-          <Button
-            variant="outline"
-            onClick={() => navigate("/admin/settings/insurance-requirements")}
+      <div className="min-h-screen bg-gray-50 p-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-4">
+            <div className="flex items-center">
+              <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
+              {error}
+            </div>
+          </div>
+          <Link
+            to="/admin/settings/insurance-requirements"
+            className="inline-flex items-center text-blue-600 hover:text-blue-800"
           >
-            ← Back to Insurance Requirements
-          </Button>
+            <ArrowLeftIcon className="w-4 h-4 mr-2" />
+            Back to Insurance Requirements
+          </Link>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={globalStyles.container}>
-      <Breadcrumb items={breadcrumbItems} />
-
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "20px",
-        }}
-      >
-        <h1 style={{ margin: 0, fontSize: "24px", fontWeight: "600" }}>
-          ✏️ Edit Insurance Requirement
-        </h1>
-        {hasChanges && (
-          <div
-            style={{
-              fontSize: "14px",
-              color: theme.colors.warning,
-              fontWeight: "500",
-              display: "flex",
-              alignItems: "center",
-              gap: "5px",
-            }}
-          >
-            ⚠️ Unsaved changes
-          </div>
-        )}
-      </div>
-
-      {error && (
-        <Alert type="error" onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
-
-      <form onSubmit={handleSubmit}>
-        <Card title="Insurance Requirement Information">
-          <div style={{ display: "grid", gap: "20px", maxWidth: "600px" }}>
-            <Input
-              label="Name"
-              name="name"
-              value={formData.name}
-              onChange={handleInputChange}
-              error={validationErrors.name}
-              required
-              placeholder="Enter insurance requirement name"
-              disabled={isSubmitting}
-            />
-
-            <TextArea
-              label="Description"
-              name="description"
-              value={formData.description}
-              onChange={handleInputChange}
-              error={validationErrors.description}
-              placeholder="Enter description (optional)"
-              rows={4}
-              maxLength={500}
-              disabled={isSubmitting}
-            />
-
-            <div style={{ fontSize: "14px", color: "#666" }}>
-              <strong>Note:</strong> Insurance requirements are used to specify
-              different types of insurance coverage needed for jobs or
-              associates.
-            </div>
-          </div>
-        </Card>
-
-        {/* System Information Display */}
-        {insuranceRequirement && (
-          <Card
-            title="System Information"
-            style={{ backgroundColor: "#f8f9fa" }}
-          >
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-                gap: "15px",
-              }}
-            >
-              <div>
-                <label style={globalStyles.label}>Created At</label>
-                <div style={{ fontSize: "14px", color: "#666" }}>
-                  {insuranceRequirement.createdAt || "Not available"}
-                </div>
-              </div>
-              <div>
-                <label style={globalStyles.label}>Created By</label>
-                <div style={{ fontSize: "14px", color: "#666" }}>
-                  {insuranceRequirement.createdByUserName || "Not available"}
-                </div>
-              </div>
-              <div>
-                <label style={globalStyles.label}>Last Modified</label>
-                <div style={{ fontSize: "14px", color: "#666" }}>
-                  {insuranceRequirement.modifiedAt || "Not available"}
-                </div>
-              </div>
-              <div>
-                <label style={globalStyles.label}>Modified By</label>
-                <div style={{ fontSize: "14px", color: "#666" }}>
-                  {insuranceRequirement.modifiedByUserName || "Not available"}
-                </div>
-              </div>
-            </div>
-          </Card>
-        )}
-
-        <Card>
-          <div
-            style={{ display: "flex", gap: "15px", justifyContent: "flex-end" }}
-          >
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={handleCancel}
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isSubmitting || !hasChanges}>
-              {isSubmitting ? (
-                <>
-                  <span style={{ marginRight: "8px" }}>Updating...</span>⏳
-                </>
-              ) : (
-                <>
-                  <span style={{ marginRight: "8px" }}>
-                    Update Insurance Requirement
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Breadcrumb */}
+        <nav className="flex mb-4" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+            <li className="inline-flex items-center">
+              <Link
+                to="/admin/dashboard"
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <ChartBarIcon className="w-4 h-4 mr-2" />
+                Dashboard
+              </Link>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to="/admin/settings"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                >
+                  <span className="inline-flex items-center">
+                    <Cog6ToothIcon className="w-4 h-4 mr-2" />
+                    Settings
                   </span>
-                  ✅
-                </>
-              )}
-            </Button>
-          </div>
+                </Link>
+              </div>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to="/admin/settings/insurance-requirements"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                >
+                  <span className="inline-flex items-center">
+                    <ShieldCheckIcon className="w-4 h-4 mr-2" />
+                    Insurance Requirements
+                  </span>
+                </Link>
+              </div>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to={`/admin/settings/insurance-requirement/${id}/detail`}
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                >
+                  <span className="inline-flex items-center">
+                    <ClipboardDocumentIcon className="w-4 h-4 mr-2" />
+                    {insuranceRequirement?.name || "Detail"}
+                  </span>
+                </Link>
+              </div>
+            </li>
+            <li aria-current="page">
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
+                  <PencilSquareIcon className="w-4 h-4 mr-2" />
+                  Edit
+                </span>
+              </div>
+            </li>
+          </ol>
+        </nav>
 
-          {!hasChanges && !isSubmitting && (
-            <div
-              style={{
-                fontSize: "14px",
-                color: "#666",
-                textAlign: "center",
-                marginTop: "10px",
-              }}
-            >
-              Make changes above to enable the update button
+        {/* Page Title */}
+        <div className="mb-4 flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center">
+            <PencilSquareIcon className="w-7 h-7 mr-3 text-amber-600" />
+            Edit Insurance Requirement
+          </h1>
+          {hasChanges && (
+            <div className="flex items-center text-amber-600 text-sm font-medium">
+              <ExclamationTriangleIcon className="w-4 h-4 mr-1" />
+              Unsaved changes
             </div>
           )}
-        </Card>
-      </form>
+        </div>
 
-      {/* Show loading overlay when submitting */}
-      {isSubmitting && (
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: "rgba(0,0,0,0.3)",
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            zIndex: 9999,
-          }}
-        >
-          <div
-            style={{
-              backgroundColor: "white",
-              padding: "30px",
-              borderRadius: "8px",
-              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-              textAlign: "center",
-            }}
-          >
-            <div style={{ fontSize: "18px", marginBottom: "10px" }}>
-              Updating Insurance Requirement...
+        {/* Success/Error Messages */}
+        {successMessage && (
+          <div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center">
+              <CheckCircleIcon className="w-5 h-5 mr-2" />
+              {successMessage}
+            </span>
+            <button
+              onClick={() => setSuccessMessage("")}
+              className="text-green-600 hover:text-green-800"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center">
+              <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
+              {error}
+            </span>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-600 hover:text-red-800"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
+        {/* Two Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Edit Form (2 cols wide) */}
+          <div className="lg:col-span-2">
+            <div className="bg-white shadow-sm rounded-lg">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <DocumentCheckIcon className="w-5 h-5 mr-2" />
+                  Insurance Requirement Information
+                </h2>
+              </div>
+
+              <div className="p-6">
+                <div className="space-y-6">
+                  {/* Name Field */}
+                  <div>
+                    <label
+                      htmlFor="name"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="name"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      maxLength={100}
+                      placeholder="Enter insurance requirement name"
+                      disabled={isSubmitting}
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        validationErrors.name
+                          ? "border-red-500"
+                          : "border-gray-300"
+                      } ${isSubmitting ? "bg-gray-50 cursor-not-allowed" : ""}`}
+                    />
+                    {validationErrors.name && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {validationErrors.name}
+                      </p>
+                    )}
+                    <div className="mt-1 text-right">
+                      <span
+                        className={`text-xs ${
+                          formData.name.length > 80
+                            ? "text-amber-600"
+                            : "text-gray-500"
+                        }`}
+                      >
+                        {formData.name.length}/100 characters
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Description Field */}
+                  <div>
+                    <label
+                      htmlFor="description"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Description{" "}
+                      <span className="text-gray-500">(optional)</span>
+                    </label>
+                    <textarea
+                      id="description"
+                      name="description"
+                      value={formData.description}
+                      onChange={handleInputChange}
+                      rows={4}
+                      maxLength={500}
+                      placeholder="Enter description (optional)"
+                      disabled={isSubmitting}
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none ${
+                        validationErrors.description
+                          ? "border-red-500"
+                          : "border-gray-300"
+                      } ${isSubmitting ? "bg-gray-50 cursor-not-allowed" : ""}`}
+                    />
+                    {validationErrors.description && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {validationErrors.description}
+                      </p>
+                    )}
+                    <div className="mt-1 text-right">
+                      <span
+                        className={`text-xs ${
+                          formData.description.length > 400
+                            ? "text-amber-600"
+                            : "text-gray-500"
+                        }`}
+                      >
+                        {formData.description.length}/500 characters
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Change Summary */}
+                  {hasChanges && insuranceRequirement && (
+                    <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                      <h3 className="text-sm font-medium text-blue-900 mb-3 flex items-center">
+                        <DocumentTextIcon className="w-4 h-4 mr-2" />
+                        Change Summary
+                      </h3>
+                      <div className="space-y-3 text-sm">
+                        {formData.name !== insuranceRequirement.name && (
+                          <div>
+                            <p className="font-medium text-gray-700 mb-1">
+                              Name:
+                            </p>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="p-2 bg-red-50 rounded border border-red-200">
+                                <span className="text-xs text-gray-600">
+                                  Original:
+                                </span>
+                                <p className="text-gray-900">
+                                  {insuranceRequirement.name}
+                                </p>
+                              </div>
+                              <div className="p-2 bg-green-50 rounded border border-green-200">
+                                <span className="text-xs text-gray-600">
+                                  New:
+                                </span>
+                                <p className="text-gray-900">{formData.name}</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        {formData.description !==
+                          insuranceRequirement.description && (
+                          <div>
+                            <p className="font-medium text-gray-700 mb-1">
+                              Description:
+                            </p>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="p-2 bg-red-50 rounded border border-red-200">
+                                <span className="text-xs text-gray-600">
+                                  Original:
+                                </span>
+                                <p className="text-gray-900">
+                                  {insuranceRequirement.description || (
+                                    <span className="italic text-gray-400">
+                                      Empty
+                                    </span>
+                                  )}
+                                </p>
+                              </div>
+                              <div className="p-2 bg-green-50 rounded border border-green-200">
+                                <span className="text-xs text-gray-600">
+                                  New:
+                                </span>
+                                <p className="text-gray-900">
+                                  {formData.description || (
+                                    <span className="italic text-gray-400">
+                                      Empty
+                                    </span>
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Info Note */}
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-800 flex items-start">
+                      <InformationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+                      <span>
+                        <strong>Note:</strong> Insurance requirements are used
+                        to specify different types of insurance coverage needed
+                        for jobs or associates. Changes will be visible
+                        immediately after updating.
+                      </span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Form Actions */}
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    {hasChanges ? (
+                      <button
+                        type="button"
+                        onClick={handleReset}
+                        disabled={isSubmitting}
+                        className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <ArrowPathIcon className="w-4 h-4 mr-1.5" />
+                        Reset Changes
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleCancel}
+                        disabled={isSubmitting}
+                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={isSubmitting || !hasChanges}
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <svg
+                          className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Updating...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircleIcon className="w-4 h-4 mr-2" />
+                        Update Insurance Requirement
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {!hasChanges && !isSubmitting && (
+                  <div className="mt-3 text-center">
+                    <p className="text-sm text-gray-500">
+                      Make changes above to enable the update button
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
-            <div style={{ color: "#666" }}>
-              Please wait while we save your changes.
+          </div>
+
+          {/* Right Column - System Info & Tips */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* System Information */}
+            {insuranceRequirement && (
+              <div className="bg-white shadow-sm rounded-lg">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                    <InformationCircleIcon className="w-5 h-5 mr-2 text-blue-600" />
+                    System Information
+                  </h3>
+                </div>
+                <div className="p-6">
+                  <div className="space-y-4 text-sm">
+                    <div>
+                      <div className="flex items-center text-gray-500 mb-1">
+                        <CalendarIcon className="w-4 h-4 mr-1" />
+                        Created At
+                      </div>
+                      <p className="text-gray-900 ml-5">
+                        {insuranceRequirement.createdAt || "Not available"}
+                      </p>
+                    </div>
+                    <div>
+                      <div className="flex items-center text-gray-500 mb-1">
+                        <UserIcon className="w-4 h-4 mr-1" />
+                        Created By
+                      </div>
+                      <p className="text-gray-900 ml-5">
+                        {insuranceRequirement.createdByUserName ||
+                          "Not available"}
+                      </p>
+                    </div>
+                    <div>
+                      <div className="flex items-center text-gray-500 mb-1">
+                        <ClockIcon className="w-4 h-4 mr-1" />
+                        Last Modified
+                      </div>
+                      <p className="text-gray-900 ml-5">
+                        {insuranceRequirement.modifiedAt || "Never modified"}
+                      </p>
+                    </div>
+                    <div>
+                      <div className="flex items-center text-gray-500 mb-1">
+                        <UserIcon className="w-4 h-4 mr-1" />
+                        Modified By
+                      </div>
+                      <p className="text-gray-900 ml-5">
+                        {insuranceRequirement.modifiedByUserName ||
+                          "Not available"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Guidelines */}
+            <div className="bg-white shadow-sm rounded-lg">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <LightBulbIcon className="w-5 h-5 mr-2 text-amber-500" />
+                  Guidelines
+                </h3>
+              </div>
+              <div className="p-6">
+                <ul className="space-y-3 text-sm text-gray-600">
+                  <li className="flex items-start">
+                    <DocumentTextIcon className="w-4 h-4 mr-2 text-blue-500 flex-shrink-0 mt-0.5" />
+                    <span>
+                      Use clear, specific names that identify the type of
+                      coverage
+                    </span>
+                  </li>
+                  <li className="flex items-start">
+                    <BuildingOfficeIcon className="w-4 h-4 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span>
+                      Include coverage limits in the description when applicable
+                    </span>
+                  </li>
+                  <li className="flex items-start">
+                    <ShieldCheckIcon className="w-4 h-4 mr-2 text-purple-500 flex-shrink-0 mt-0.5" />
+                    <span>Use standard industry terminology</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircleIcon className="w-4 h-4 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span>Review changes before saving</span>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
-      )}
+
+        {/* Back Link */}
+        <div className="mt-6">
+          <Link
+            to={`/admin/settings/insurance-requirement/${id}/detail`}
+            className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+          >
+            <ArrowLeftIcon className="w-4 h-4 mr-1" />
+            Back to Insurance Requirement Detail
+          </Link>
+        </div>
+
+        {/* Loading Overlay */}
+        {isSubmitting && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 shadow-xl">
+              <div className="flex items-center space-x-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <div>
+                  <p className="text-lg font-medium text-gray-900">
+                    Updating Insurance Requirement...
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Please wait while we save your changes.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

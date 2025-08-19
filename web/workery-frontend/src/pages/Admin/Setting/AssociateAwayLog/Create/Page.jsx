@@ -6,17 +6,24 @@ import {
   useAssociateAwayLogManager,
   useAssociateManager,
 } from "../../../../../services/Services";
-import { theme, globalStyles } from "../../../../../constants/Theme";
 import {
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Breadcrumb,
-  Input,
-  Select,
-  FormGroup,
-} from "../../../../../components/UI";
+  CalendarDaysIcon,
+  ChevronRightIcon,
+  XMarkIcon,
+  PlusIcon,
+  Cog6ToothIcon,
+  ChartBarIcon,
+  InformationCircleIcon,
+  ArrowLeftIcon,
+  CheckCircleIcon,
+  UserGroupIcon,
+  CalendarIcon,
+  ClockIcon,
+  ExclamationCircleIcon,
+  DocumentTextIcon,
+  BriefcaseIcon,
+  SparklesIcon,
+} from "@heroicons/react/24/outline";
 
 const REASON_OPTIONS = [
   { value: "", label: "Please select" },
@@ -195,273 +202,433 @@ function SettingAssociateAwayLogCreatePage() {
     fetchAssociates();
   }, []);
 
-  // Format date for input (YYYY-MM-DD)
-  const formatDateForInput = (date) => {
-    if (!date) return "";
-    return new Date(date).toISOString().split("T")[0];
-  };
-
   // Get today's date for min date validation
   const today = new Date().toISOString().split("T")[0];
 
-  // Breadcrumb items
-  const breadcrumbItems = [
-    { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
-    { label: "Settings", path: "/admin/settings", icon: "⚙️" },
-    {
-      label: "Associate Away Logs",
-      path: "/admin/settings/associate-away-logs",
-      icon: "📅",
-    },
-    { label: "Create", icon: "➕" },
-  ];
-
   return (
-    <div style={globalStyles.container}>
-      <Breadcrumb items={breadcrumbItems} />
-
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "20px",
-        }}
-      >
-        <h1 style={{ fontSize: "28px", fontWeight: "bold", margin: 0 }}>
-          ➕ Create Associate Away Log
-        </h1>
-      </div>
-
-      {success && (
-        <Alert type="success" onClose={() => setSuccess(null)}>
-          {success}
-        </Alert>
-      )}
-
-      {error && (
-        <Alert type="error" onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
-
-      <Card>
-        {loadingAssociates ? (
-          <Loading message="Loading associates..." />
-        ) : (
-          <form onSubmit={handleSubmit}>
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
-                gap: "20px",
-              }}
-            >
-              {/* Associate Selection */}
-              <FormGroup>
-                <label style={globalStyles.label}>
-                  Associate <span style={{ color: "red" }}>*</span>
-                </label>
-                <select
-                  value={formData.associateId}
-                  onChange={(e) =>
-                    handleInputChange("associateId", e.target.value)
-                  }
-                  style={{
-                    ...globalStyles.input,
-                    borderColor: formErrors.associateId
-                      ? theme.colors.error
-                      : "#ddd",
-                  }}
-                  disabled={loading}
-                >
-                  <option value="">Please select an associate</option>
-                  {associates.map((associate) => (
-                    <option key={associate.id} value={associate.id}>
-                      {associate.firstName} {associate.lastName}{" "}
-                      {associate.email && `(${associate.email})`}
-                    </option>
-                  ))}
-                </select>
-                {formErrors.associateId && (
-                  <div style={globalStyles.errorMessage}>
-                    {formErrors.associateId}
-                  </div>
-                )}
-              </FormGroup>
-
-              {/* Reason Selection */}
-              <FormGroup>
-                <label style={globalStyles.label}>
-                  Reason <span style={{ color: "red" }}>*</span>
-                </label>
-                <select
-                  value={formData.reason}
-                  onChange={(e) => handleInputChange("reason", e.target.value)}
-                  style={{
-                    ...globalStyles.input,
-                    borderColor: formErrors.reason
-                      ? theme.colors.error
-                      : "#ddd",
-                  }}
-                  disabled={loading}
-                >
-                  {REASON_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                {formErrors.reason && (
-                  <div style={globalStyles.errorMessage}>
-                    {formErrors.reason}
-                  </div>
-                )}
-              </FormGroup>
-
-              {/* Other Reason (if selected) */}
-              {formData.reason === "1" && (
-                <FormGroup>
-                  <label style={globalStyles.label}>
-                    Specify Reason <span style={{ color: "red" }}>*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.reasonOther}
-                    onChange={(e) =>
-                      handleInputChange("reasonOther", e.target.value)
-                    }
-                    placeholder="Please specify the reason"
-                    style={{
-                      ...globalStyles.input,
-                      borderColor: formErrors.reasonOther
-                        ? theme.colors.error
-                        : "#ddd",
-                    }}
-                    disabled={loading}
-                  />
-                  {formErrors.reasonOther && (
-                    <div style={globalStyles.errorMessage}>
-                      {formErrors.reasonOther}
-                    </div>
-                  )}
-                </FormGroup>
-              )}
-
-              {/* Until Further Notice */}
-              <FormGroup>
-                <label style={globalStyles.label}>
-                  Until Further Notice? <span style={{ color: "red" }}>*</span>
-                </label>
-                <select
-                  value={formData.untilFurtherNotice}
-                  onChange={(e) =>
-                    handleInputChange("untilFurtherNotice", e.target.value)
-                  }
-                  style={{
-                    ...globalStyles.input,
-                    borderColor: formErrors.untilFurtherNotice
-                      ? theme.colors.error
-                      : "#ddd",
-                  }}
-                  disabled={loading}
-                >
-                  {UNTIL_FURTHER_NOTICE_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                {formErrors.untilFurtherNotice && (
-                  <div style={globalStyles.errorMessage}>
-                    {formErrors.untilFurtherNotice}
-                  </div>
-                )}
-              </FormGroup>
-
-              {/* Until Date (if not further notice) */}
-              {formData.untilFurtherNotice === "2" && (
-                <FormGroup>
-                  <label style={globalStyles.label}>
-                    Until Date <span style={{ color: "red" }}>*</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.untilDate}
-                    onChange={(e) =>
-                      handleInputChange("untilDate", e.target.value)
-                    }
-                    min={today}
-                    style={{
-                      ...globalStyles.input,
-                      borderColor: formErrors.untilDate
-                        ? theme.colors.error
-                        : "#ddd",
-                    }}
-                    disabled={loading}
-                  />
-                  {formErrors.untilDate && (
-                    <div style={globalStyles.errorMessage}>
-                      {formErrors.untilDate}
-                    </div>
-                  )}
-                </FormGroup>
-              )}
-
-              {/* Start Date */}
-              <FormGroup>
-                <label style={globalStyles.label}>
-                  Start Date <span style={{ color: "red" }}>*</span>
-                </label>
-                <input
-                  type="date"
-                  value={formData.startDate}
-                  onChange={(e) =>
-                    handleInputChange("startDate", e.target.value)
-                  }
-                  min={today}
-                  style={{
-                    ...globalStyles.input,
-                    borderColor: formErrors.startDate
-                      ? theme.colors.error
-                      : "#ddd",
-                  }}
-                  disabled={loading}
-                />
-                {formErrors.startDate && (
-                  <div style={globalStyles.errorMessage}>
-                    {formErrors.startDate}
-                  </div>
-                )}
-              </FormGroup>
-            </div>
-
-            {/* Action Buttons */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginTop: "30px",
-                paddingTop: "20px",
-                borderTop: "1px solid #eee",
-              }}
-            >
-              <Button
-                type="button"
-                onClick={() => navigate("/admin/settings/associate-away-logs")}
-                variant="outline"
-                disabled={loading}
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Breadcrumb */}
+        <nav className="flex mb-4" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+            <li className="inline-flex items-center">
+              <Link
+                to="/admin/dashboard"
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
               >
-                ← Cancel
-              </Button>
-              <Button type="submit" variant="primary" disabled={loading}>
-                {loading ? "Creating..." : "✅ Create Away Log"}
-              </Button>
-            </div>
-          </form>
+                <ChartBarIcon className="w-4 h-4 mr-2" />
+                Dashboard
+              </Link>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to="/admin/settings"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                >
+                  <span className="inline-flex items-center">
+                    <Cog6ToothIcon className="w-4 h-4 mr-2" />
+                    Settings
+                  </span>
+                </Link>
+              </div>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to="/admin/settings/associate-away-logs"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                >
+                  <span className="inline-flex items-center">
+                    <CalendarDaysIcon className="w-4 h-4 mr-2" />
+                    Associate Away Logs
+                  </span>
+                </Link>
+              </div>
+            </li>
+            <li aria-current="page">
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
+                  <PlusIcon className="w-4 h-4 mr-2" />
+                  Create
+                </span>
+              </div>
+            </li>
+          </ol>
+        </nav>
+
+        {/* Page Title */}
+        <div className="mb-4">
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center">
+            <CalendarDaysIcon className="w-7 h-7 mr-3" />
+            Create Associate Away Log
+          </h1>
+        </div>
+
+        {/* Success/Error Messages */}
+        {success && (
+          <div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center">
+              <CheckCircleIcon className="w-5 h-5 mr-2" />
+              {success}
+            </span>
+            <button
+              onClick={() => setSuccess(null)}
+              className="text-green-600 hover:text-green-800"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
         )}
-      </Card>
+
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center">
+              <ExclamationCircleIcon className="w-5 h-5 mr-2" />
+              {error}
+            </span>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-600 hover:text-red-800"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
+        {/* Two Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Form (2 columns wide) */}
+          <div className="lg:col-span-2 bg-white shadow-sm rounded-lg">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                <DocumentTextIcon className="w-5 h-5 mr-2" />
+                Away Log Details
+              </h2>
+            </div>
+
+            <div className="p-6">
+              {loadingAssociates ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600">Loading associates...</p>
+                  </div>
+                </div>
+              ) : (
+                <form onSubmit={handleSubmit}>
+                  <div className="space-y-6">
+                    {/* Associate Selection */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Associate <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={formData.associateId}
+                        onChange={(e) =>
+                          handleInputChange("associateId", e.target.value)
+                        }
+                        disabled={loading}
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                          formErrors.associateId
+                            ? "border-red-500"
+                            : "border-gray-300"
+                        }`}
+                      >
+                        <option value="">Please select an associate</option>
+                        {associates.map((associate) => (
+                          <option key={associate.id} value={associate.id}>
+                            {associate.firstName} {associate.lastName}{" "}
+                            {associate.email && `(${associate.email})`}
+                          </option>
+                        ))}
+                      </select>
+                      {formErrors.associateId && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {formErrors.associateId}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Reason Selection */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Reason <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        value={formData.reason}
+                        onChange={(e) =>
+                          handleInputChange("reason", e.target.value)
+                        }
+                        disabled={loading}
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                          formErrors.reason
+                            ? "border-red-500"
+                            : "border-gray-300"
+                        }`}
+                      >
+                        {REASON_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      {formErrors.reason && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {formErrors.reason}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Other Reason (conditional) */}
+                    {formData.reason === "1" && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Specify Reason <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.reasonOther}
+                          onChange={(e) =>
+                            handleInputChange("reasonOther", e.target.value)
+                          }
+                          placeholder="Please specify the reason"
+                          disabled={loading}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                            formErrors.reasonOther
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          }`}
+                        />
+                        {formErrors.reasonOther && (
+                          <p className="mt-1 text-sm text-red-600">
+                            {formErrors.reasonOther}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Date Fields Row */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Start Date */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Start Date <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="date"
+                          value={formData.startDate}
+                          onChange={(e) =>
+                            handleInputChange("startDate", e.target.value)
+                          }
+                          min={today}
+                          disabled={loading}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                            formErrors.startDate
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          }`}
+                        />
+                        {formErrors.startDate && (
+                          <p className="mt-1 text-sm text-red-600">
+                            {formErrors.startDate}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Until Further Notice */}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Until Further Notice?{" "}
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <select
+                          value={formData.untilFurtherNotice}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "untilFurtherNotice",
+                              e.target.value,
+                            )
+                          }
+                          disabled={loading}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                            formErrors.untilFurtherNotice
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          }`}
+                        >
+                          {UNTIL_FURTHER_NOTICE_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                        {formErrors.untilFurtherNotice && (
+                          <p className="mt-1 text-sm text-red-600">
+                            {formErrors.untilFurtherNotice}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Until Date (conditional) */}
+                    {formData.untilFurtherNotice === "2" && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Until Date <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="date"
+                          value={formData.untilDate}
+                          onChange={(e) =>
+                            handleInputChange("untilDate", e.target.value)
+                          }
+                          min={today}
+                          disabled={loading}
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                            formErrors.untilDate
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          }`}
+                        />
+                        {formErrors.untilDate && (
+                          <p className="mt-1 text-sm text-red-600">
+                            {formErrors.untilDate}
+                          </p>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Info Note */}
+                    <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-sm text-blue-800 flex items-start">
+                        <InformationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+                        <span>
+                          This log will mark the associate as unavailable for
+                          new work orders during the specified period.
+                        </span>
+                      </p>
+                    </div>
+
+                    {/* Form Actions */}
+                    <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          navigate("/admin/settings/associate-away-logs")
+                        }
+                        disabled={loading}
+                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <ArrowLeftIcon className="w-4 h-4 inline mr-2" />
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={loading}
+                        className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <CheckCircleIcon className="w-4 h-4 mr-2" />
+                        {loading ? "Creating..." : "Create Away Log"}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+
+          {/* Right Column - Guidelines */}
+          <div className="space-y-6">
+            {/* Important Notes */}
+            <div className="bg-white shadow-sm rounded-lg">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <ExclamationCircleIcon className="w-5 h-5 mr-2 text-amber-500" />
+                  Important Notes
+                </h2>
+              </div>
+              <div className="p-5">
+                <ul className="space-y-3 text-sm text-gray-600">
+                  <li className="flex items-start">
+                    <CalendarIcon className="w-4 h-4 mr-2 text-blue-500 flex-shrink-0 mt-0.5" />
+                    <span>
+                      Away logs prevent associates from being assigned new work
+                      orders
+                    </span>
+                  </li>
+                  <li className="flex items-start">
+                    <ClockIcon className="w-4 h-4 mr-2 text-purple-500 flex-shrink-0 mt-0.5" />
+                    <span>Existing work orders remain unaffected</span>
+                  </li>
+                  <li className="flex items-start">
+                    <UserGroupIcon className="w-4 h-4 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span>Associates can still access their account</span>
+                  </li>
+                  <li className="flex items-start">
+                    <BriefcaseIcon className="w-4 h-4 mr-2 text-orange-500 flex-shrink-0 mt-0.5" />
+                    <span>
+                      Update insurance/policy info before marking available
+                    </span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Quick Tips */}
+            <div className="bg-white shadow-sm rounded-lg">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <SparklesIcon className="w-5 h-5 mr-2 text-blue-500" />
+                  Quick Tips
+                </h2>
+              </div>
+              <div className="p-5">
+                <ul className="space-y-2.5 text-sm text-gray-600">
+                  <li className="flex items-start">
+                    <CheckCircleIcon className="w-4 h-4 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span>
+                      Use "Until Further Notice" for indefinite periods
+                    </span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircleIcon className="w-4 h-4 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span>Set specific end dates for planned vacations</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircleIcon className="w-4 h-4 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span>Update logs when circumstances change</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Back Link */}
+        <div className="mt-6">
+          <Link
+            to="/admin/settings/associate-away-logs"
+            className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+          >
+            <ArrowLeftIcon className="w-4 h-4 mr-1" />
+            Back to Associate Away Logs
+          </Link>
+        </div>
+
+        {/* Loading Overlay */}
+        {loading && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 flex items-center space-x-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
+              <span className="text-gray-700">Creating away log...</span>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
