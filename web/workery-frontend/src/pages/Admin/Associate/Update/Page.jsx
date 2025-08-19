@@ -18,52 +18,75 @@ import {
   Select,
   FormGroup,
 } from "../../../../components/UI";
+import {
+  SkillSetsMultiSelect,
+  InsuranceRequirementsMultiSelect,
+  VehicleTypesMultiSelect,
+  ServiceFeeSelect,
+  TagsMultiSelect,
+  HowHearAboutUsSelect,
+} from "../../../../components/Form";
 
-// Constants (these would typically be imported from constants files)
+// Constants
 const RESIDENTIAL_ASSOCIATE_TYPE_OF_ID = 2;
 const COMMERCIAL_ASSOCIATE_TYPE_OF_ID = 3;
 
 const ASSOCIATE_TYPE_OPTIONS = [
-  { value: "", label: "Please select" },
-  { value: RESIDENTIAL_ASSOCIATE_TYPE_OF_ID, label: "Residential" },
-  { value: COMMERCIAL_ASSOCIATE_TYPE_OF_ID, label: "Business" },
+  { value: 2, label: "Residential" },
+  { value: 3, label: "Commercial" },
 ];
 
 const ORGANIZATION_TYPE_OPTIONS = [
-  { value: "", label: "Please select" },
-  { value: 1, label: "Private Corporation" },
-  { value: 2, label: "Non-Profit Corporation" },
-  { value: 3, label: "Partnership" },
-  { value: 4, label: "Sole Proprietorship" },
-  { value: 5, label: "Other" },
+  { value: 0, label: "Please select" },
+  { value: 1, label: "Private" },
+  { value: 2, label: "Non-profit" },
+  { value: 3, label: "Government" },
 ];
 
 const PHONE_TYPE_OPTIONS = [
-  { value: "", label: "Please select" },
-  { value: 1, label: "Work" },
-  { value: 2, label: "Home" },
-  { value: 3, label: "Mobile" },
-  { value: 4, label: "Other" },
+  { value: 0, label: "Please select" },
+  { value: 1, label: "Landline" },
+  { value: 2, label: "Mobile" },
+  { value: 3, label: "Work" },
 ];
 
 const GENDER_OPTIONS = [
-  { value: "", label: "Please select" },
+  { value: 0, label: "Please select" },
   { value: 1, label: "Other" },
   { value: 2, label: "Male" },
   { value: 3, label: "Female" },
-  { value: 4, label: "Prefer not to say" },
+  { value: 4, label: "Transgender" },
+  { value: 5, label: "Non-Binary" },
+  { value: 6, label: "Two Spirit" },
+  { value: 7, label: "Prefer not to say" },
+  { value: 8, label: "Do not know" },
 ];
 
 const JOB_SEEKER_OPTIONS = [
-  { value: "", label: "Please select" },
   { value: 1, label: "Yes" },
   { value: 2, label: "No" },
 ];
 
 const LANGUAGE_OPTIONS = [
-  { value: "", label: "Please select" },
   { value: "English", label: "English" },
   { value: "French", label: "French" },
+];
+
+const REGION_OPTIONS = [
+  { value: "", label: "Please select" },
+  { value: "Alberta", label: "Alberta" },
+  { value: "British Columbia", label: "British Columbia" },
+  { value: "Manitoba", label: "Manitoba" },
+  { value: "New Brunswick", label: "New Brunswick" },
+  { value: "Newfoundland and Labrador", label: "Newfoundland and Labrador" },
+  { value: "Northwest Territories", label: "Northwest Territories" },
+  { value: "Nova Scotia", label: "Nova Scotia" },
+  { value: "Nunavut", label: "Nunavut" },
+  { value: "Ontario", label: "Ontario" },
+  { value: "Prince Edward Island", label: "Prince Edward Island" },
+  { value: "Quebec", label: "Quebec" },
+  { value: "Saskatchewan", label: "Saskatchewan" },
+  { value: "Yukon", label: "Yukon" },
 ];
 
 function AdminAssociateUpdatePage() {
@@ -78,26 +101,26 @@ function AdminAssociateUpdatePage() {
   const [errors, setErrors] = useState({});
   const [alert, setAlert] = useState(null);
 
-  // Associate data state
+  // Associate data state - Complete fields based on backend requirements
   const [associateData, setAssociateData] = useState({
     // Basic info
-    type: "",
+    type: 2,
     organizationName: "",
-    organizationType: "",
+    organizationType: 0,
     firstName: "",
     lastName: "",
     email: "",
     phone: "",
-    phoneType: "",
+    phoneType: 0,
     phoneExtension: "",
     otherPhone: "",
-    otherPhoneType: "",
+    otherPhoneType: 0,
     otherPhoneExtension: "",
     isOkToText: false,
     isOkToEmail: false,
 
     // Address
-    country: "CA",
+    country: "Canada",
     region: "",
     city: "",
     addressLine1: "",
@@ -106,17 +129,19 @@ function AdminAssociateUpdatePage() {
     hasShippingAddress: false,
     shippingName: "",
     shippingPhone: "",
-    shippingCountry: "CA",
+    shippingCountry: "Canada",
     shippingRegion: "",
     shippingCity: "",
     shippingAddressLine1: "",
     shippingAddressLine2: "",
     shippingPostalCode: "",
 
-    // Professional info
+    // Professional info (REQUIRED FIELDS)
     skillSets: [],
     insuranceRequirements: [],
-    hourlySalaryDesired: "",
+    vehicleTypes: [],
+    serviceFeeId: "",
+    hourlySalaryDesired: 0,
     limitSpecial: "",
     duesDate: "",
     commercialInsuranceExpiryDate: "",
@@ -126,41 +151,39 @@ function AdminAssociateUpdatePage() {
     policeCheck: "",
     taxId: "",
     driversLicenseClass: "",
-    vehicleTypes: [],
-    serviceFeeId: "",
-    isServiceFeeOther: false,
 
-    // Emergency contact
+    // Emergency contact (REQUIRED)
     emergencyContactName: "",
     emergencyContactRelationship: "",
     emergencyContactTelephone: "",
     emergencyContactAlternativeTelephone: "",
 
-    // Job seeker info
-    isJobSeeker: "",
-    statusInCountry: "",
-    statusInCountryOther: "",
-    countryOfOrigin: "",
-    dateOfEntryIntoCountry: "",
-    maritalStatus: "",
-    maritalStatusOther: "",
-    accomplishedEducation: "",
-    accomplishedEducationOther: "",
-
-    // Metrics
+    // Metrics (REQUIRED)
     tags: [],
     howDidYouHearAboutUsID: "",
     isHowDidYouHearAboutUsOther: false,
     howDidYouHearAboutUsOther: "",
-    gender: "",
+    gender: 0,
     genderOther: "",
     birthDate: "",
     joinDate: "",
+    additionalComment: "",
     identifyAs: [],
+
+    // Job seeker info
+    isJobSeeker: 2,
+    statusInCountry: 0,
+    statusInCountryOther: "",
+    countryOfOrigin: "",
+    dateOfEntryIntoCountry: "",
+    maritalStatus: 0,
+    maritalStatusOther: "",
+    accomplishedEducation: 0,
+    accomplishedEducationOther: "",
 
     // System
     description: "",
-    preferredLanguage: "",
+    preferredLanguage: "English",
   });
 
   const onUnauthorized = () => {
@@ -183,25 +206,36 @@ function AdminAssociateUpdatePage() {
           if (mounted) {
             console.log("Associate detail loaded:", data);
 
+            // Format dates properly for HTML date inputs
+            const formatDateForInput = (dateValue) => {
+              if (!dateValue) return "";
+              try {
+                const date = new Date(dateValue);
+                if (isNaN(date.getTime())) return "";
+                return date.toISOString().split("T")[0];
+              } catch (e) {
+                return "";
+              }
+            };
+
             // Map the API response to our form state
-            setAssociateData((prevData) => ({
-              ...prevData,
-              type: data.type || "",
+            setAssociateData({
+              type: data.type || 2,
               organizationName: data.organizationName || "",
-              organizationType: data.organizationType || "",
+              organizationType: data.organizationType || 0,
               firstName: data.firstName || "",
               lastName: data.lastName || "",
               email: data.email || "",
               phone: data.phone || "",
-              phoneType: data.phoneType || "",
+              phoneType: data.phoneType || 0,
               phoneExtension: data.phoneExtension || "",
               otherPhone: data.otherPhone || "",
-              otherPhoneType: data.otherPhoneType || "",
+              otherPhoneType: data.otherPhoneType || 0,
               otherPhoneExtension: data.otherPhoneExtension || "",
               isOkToText: data.isOkToText || false,
               isOkToEmail: data.isOkToEmail || false,
 
-              country: data.country || "CA",
+              country: data.country || "Canada",
               region: data.region || "",
               city: data.city || "",
               addressLine1: data.addressLine1 || "",
@@ -210,26 +244,46 @@ function AdminAssociateUpdatePage() {
               hasShippingAddress: data.hasShippingAddress || false,
               shippingName: data.shippingName || "",
               shippingPhone: data.shippingPhone || "",
-              shippingCountry: data.shippingCountry || "CA",
+              shippingCountry: data.shippingCountry || "Canada",
               shippingRegion: data.shippingRegion || "",
               shippingCity: data.shippingCity || "",
               shippingAddressLine1: data.shippingAddressLine1 || "",
               shippingAddressLine2: data.shippingAddressLine2 || "",
               shippingPostalCode: data.shippingPostalCode || "",
 
-              hourlySalaryDesired: data.hourlySalaryDesired || "",
+              // Extract skill set IDs from the array of objects
+              skillSets: data.skillSets
+                ? data.skillSets.map((ss) => ss.id)
+                : [],
+
+              // Extract insurance requirement IDs
+              insuranceRequirements: data.insuranceRequirements
+                ? data.insuranceRequirements.map((ir) => ir.id)
+                : [],
+
+              // Extract vehicle type IDs
+              vehicleTypes: data.vehicleTypes
+                ? data.vehicleTypes.map((vt) => vt.id)
+                : [],
+
+              // Extract tag IDs
+              tags: data.tags ? data.tags.map((tag) => tag.id) : [],
+
+              serviceFeeId: data.serviceFeeId || "",
+              hourlySalaryDesired: data.hourlySalaryDesired || 0,
               limitSpecial: data.limitSpecial || "",
-              duesDate: data.duesDate || "",
-              commercialInsuranceExpiryDate:
-                data.commercialInsuranceExpiryDate || "",
-              autoInsuranceExpiryDate: data.autoInsuranceExpiryDate || "",
+              duesDate: formatDateForInput(data.duesDate),
+              commercialInsuranceExpiryDate: formatDateForInput(
+                data.commercialInsuranceExpiryDate,
+              ),
+              autoInsuranceExpiryDate: formatDateForInput(
+                data.autoInsuranceExpiryDate,
+              ),
               wsibNumber: data.wsibNumber || "",
-              wsibInsuranceDate: data.wsibInsuranceDate || "",
-              policeCheck: data.policeCheck || "",
+              wsibInsuranceDate: formatDateForInput(data.wsibInsuranceDate),
+              policeCheck: formatDateForInput(data.policeCheck),
               taxId: data.taxId || "",
               driversLicenseClass: data.driversLicenseClass || "",
-              serviceFeeId: data.serviceFeeId || "",
-              isServiceFeeOther: data.isServiceFeeOther || false,
 
               emergencyContactName: data.emergencyContactName || "",
               emergencyContactRelationship:
@@ -238,28 +292,34 @@ function AdminAssociateUpdatePage() {
               emergencyContactAlternativeTelephone:
                 data.emergencyContactAlternativeTelephone || "",
 
-              isJobSeeker: data.isJobSeeker || "",
-              statusInCountry: data.statusInCountry || "",
-              statusInCountryOther: data.statusInCountryOther || "",
-              countryOfOrigin: data.countryOfOrigin || "",
-              dateOfEntryIntoCountry: data.dateOfEntryIntoCountry || "",
-              maritalStatus: data.maritalStatus || "",
-              maritalStatusOther: data.maritalStatusOther || "",
-              accomplishedEducation: data.accomplishedEducation || "",
-              accomplishedEducationOther: data.accomplishedEducationOther || "",
-
               howDidYouHearAboutUsID: data.howDidYouHearAboutUsID || "",
               isHowDidYouHearAboutUsOther:
                 data.isHowDidYouHearAboutUsOther || false,
               howDidYouHearAboutUsOther: data.howDidYouHearAboutUsOther || "",
-              gender: data.gender || "",
+              gender: data.gender || 0,
               genderOther: data.genderOther || "",
-              birthDate: data.birthDate || "",
-              joinDate: data.joinDate || "",
+              birthDate: formatDateForInput(data.birthDate),
+              joinDate: formatDateForInput(data.joinDate),
+              additionalComment: data.additionalComment || "",
+              identifyAs: data.identifyAs || [],
+
+              isJobSeeker: data.isJobSeeker || 2,
+              statusInCountry: data.statusInCountry || 0,
+              statusInCountryOther: data.statusInCountryOther || "",
+              countryOfOrigin: data.countryOfOrigin || "",
+              dateOfEntryIntoCountry: formatDateForInput(
+                data.dateOfEntryIntoCountry,
+              ),
+              maritalStatus: data.maritalStatus || 0,
+              maritalStatusOther: data.maritalStatusOther || "",
+              accomplishedEducation: data.accomplishedEducation || 0,
+              accomplishedEducationOther: data.accomplishedEducationOther || "",
 
               description: data.description || "",
-              preferredLanguage: data.preferredLanguage || "",
-            }));
+              preferredLanguage: data.preferredLanguage || "English",
+            });
+
+            setIsLoading(false);
           }
         },
         (error) => {
@@ -269,13 +329,10 @@ function AdminAssociateUpdatePage() {
               type: "error",
               message: "Failed to load associate details. Please try again.",
             });
-          }
-        },
-        () => {
-          if (mounted) {
             setIsLoading(false);
           }
         },
+        () => {},
         onUnauthorized,
       );
     };
@@ -316,21 +373,17 @@ function AdminAssociateUpdatePage() {
     if (!associateData.firstName.trim()) {
       newErrors.firstName = "First name is required";
     }
-
     if (!associateData.lastName.trim()) {
       newErrors.lastName = "Last name is required";
     }
-
     if (!associateData.email.trim()) {
       newErrors.email = "Email is required";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(associateData.email)) {
       newErrors.email = "Please enter a valid email address";
     }
-
     if (!associateData.phone.trim()) {
       newErrors.phone = "Phone number is required";
     }
-
     if (!associateData.type) {
       newErrors.type = "Associate type is required";
     }
@@ -351,19 +404,15 @@ function AdminAssociateUpdatePage() {
     if (!associateData.country) {
       newErrors.country = "Country is required";
     }
-
     if (!associateData.region.trim()) {
       newErrors.region = "Province/Territory is required";
     }
-
     if (!associateData.city.trim()) {
       newErrors.city = "City is required";
     }
-
     if (!associateData.addressLine1.trim()) {
       newErrors.addressLine1 = "Address line 1 is required";
     }
-
     if (!associateData.postalCode.trim()) {
       newErrors.postalCode = "Postal code is required";
     }
@@ -393,6 +442,68 @@ function AdminAssociateUpdatePage() {
       }
     }
 
+    // Professional fields validation
+    if (!associateData.skillSets || associateData.skillSets.length === 0) {
+      newErrors.skillSets = "At least one skill set is required";
+    }
+    if (
+      !associateData.insuranceRequirements ||
+      associateData.insuranceRequirements.length === 0
+    ) {
+      newErrors.insuranceRequirements =
+        "At least one insurance requirement is required";
+    }
+    if (!associateData.serviceFeeId) {
+      newErrors.serviceFeeId = "Service fee is required";
+    }
+    if (!associateData.duesDate) {
+      newErrors.duesDate = "Member dues date is required";
+    }
+    if (!associateData.policeCheck) {
+      newErrors.policeCheck = "Police check date is required";
+    }
+    if (!associateData.commercialInsuranceExpiryDate) {
+      newErrors.commercialInsuranceExpiryDate =
+        "Commercial insurance expiry date is required";
+    }
+
+    // Emergency contact validation
+    if (!associateData.emergencyContactName.trim()) {
+      newErrors.emergencyContactName = "Emergency contact name is required";
+    }
+    if (!associateData.emergencyContactRelationship.trim()) {
+      newErrors.emergencyContactRelationship =
+        "Emergency contact relationship is required";
+    }
+    if (!associateData.emergencyContactTelephone.trim()) {
+      newErrors.emergencyContactTelephone =
+        "Emergency contact telephone is required";
+    }
+
+    // Metrics validation
+    if (!associateData.howDidYouHearAboutUsID) {
+      newErrors.howDidYouHearAboutUsID =
+        "How did you hear about us is required";
+    }
+    if (
+      associateData.isHowDidYouHearAboutUsOther &&
+      !associateData.howDidYouHearAboutUsOther.trim()
+    ) {
+      newErrors.howDidYouHearAboutUsOther = "Please specify other option";
+    }
+    if (!associateData.gender) {
+      newErrors.gender = "Gender is required";
+    }
+    if (associateData.gender === 1 && !associateData.genderOther.trim()) {
+      newErrors.genderOther = "Please specify other gender";
+    }
+    if (!associateData.birthDate) {
+      newErrors.birthDate = "Birth date is required";
+    }
+    if (!associateData.preferredLanguage) {
+      newErrors.preferredLanguage = "Preferred language is required";
+    }
+
     return newErrors;
   };
 
@@ -407,44 +518,86 @@ function AdminAssociateUpdatePage() {
         type: "error",
         message: "Please correct the errors below before submitting.",
       });
+      window.scrollTo(0, 0);
       return;
     }
 
     setIsSaving(true);
     setErrors({});
 
+    // Format dates for API submission (convert to ISO strings)
+    const formatDateForAPI = (dateValue) => {
+      if (!dateValue) return "";
+      try {
+        const date = new Date(dateValue);
+        if (isNaN(date.getTime())) return "";
+        return date.toISOString();
+      } catch (e) {
+        return "";
+      }
+    };
+
     // Prepare data for submission
     const submitData = {
       id: aid,
       ...associateData,
-      // Convert string numbers to integers where needed
+      // Convert numeric fields
       type: parseInt(associateData.type),
       organizationType: associateData.organizationType
         ? parseInt(associateData.organizationType)
-        : undefined,
+        : 0,
       phoneType: associateData.phoneType
         ? parseInt(associateData.phoneType)
-        : undefined,
+        : 0,
       otherPhoneType: associateData.otherPhoneType
         ? parseInt(associateData.otherPhoneType)
-        : undefined,
+        : 0,
       hourlySalaryDesired: associateData.hourlySalaryDesired
         ? parseInt(associateData.hourlySalaryDesired)
-        : undefined,
+        : 0,
       isJobSeeker: associateData.isJobSeeker
         ? parseInt(associateData.isJobSeeker)
-        : undefined,
-      statusInCountry: associateData.statusInCountry
-        ? parseInt(associateData.statusInCountry)
-        : undefined,
-      maritalStatus: associateData.maritalStatus
-        ? parseInt(associateData.maritalStatus)
-        : undefined,
-      accomplishedEducation: associateData.accomplishedEducation
-        ? parseInt(associateData.accomplishedEducation)
-        : undefined,
-      gender: associateData.gender ? parseInt(associateData.gender) : undefined,
+        : 2,
+      gender: associateData.gender ? parseInt(associateData.gender) : 0,
+
+      // Format dates for API
+      birthDate: formatDateForAPI(associateData.birthDate),
+      joinDate: formatDateForAPI(associateData.joinDate),
+      duesDate: formatDateForAPI(associateData.duesDate),
+      commercialInsuranceExpiryDate: formatDateForAPI(
+        associateData.commercialInsuranceExpiryDate,
+      ),
+      autoInsuranceExpiryDate: formatDateForAPI(
+        associateData.autoInsuranceExpiryDate,
+      ),
+      wsibInsuranceDate: formatDateForAPI(associateData.wsibInsuranceDate),
+      policeCheck: formatDateForAPI(associateData.policeCheck),
+      dateOfEntryIntoCountry: formatDateForAPI(
+        associateData.dateOfEntryIntoCountry,
+      ),
+
+      // Ensure arrays are properly formatted (they should already be arrays of IDs)
+      skillSets: associateData.skillSets || [],
+      insuranceRequirements: associateData.insuranceRequirements || [],
+      vehicleTypes: associateData.vehicleTypes || [],
+      tags: associateData.tags || [],
+      identifyAs: associateData.identifyAs || [],
     };
+
+    // Handle optional numeric fields
+    if (associateData.statusInCountry) {
+      submitData.statusInCountry = parseInt(associateData.statusInCountry);
+    }
+    if (associateData.maritalStatus) {
+      submitData.maritalStatus = parseInt(associateData.maritalStatus);
+    }
+    if (associateData.accomplishedEducation) {
+      submitData.accomplishedEducation = parseInt(
+        associateData.accomplishedEducation,
+      );
+    }
+
+    console.log("Submitting update data:", submitData);
 
     associateManager.updateAssociateWithCallbacks(
       aid,
@@ -469,12 +622,28 @@ function AdminAssociateUpdatePage() {
           message:
             "Failed to update associate. Please check the form and try again.",
         });
+        window.scrollTo(0, 0);
       },
       () => {
         setIsSaving(false);
       },
       onUnauthorized,
     );
+  };
+
+  const handleHowHearChange = (value) => {
+    handleInputChange("howDidYouHearAboutUsID", value);
+  };
+
+  const handleHowHearOtherDetected = (isOther) => {
+    handleInputChange("isHowDidYouHearAboutUsOther", isOther);
+    if (!isOther) {
+      handleInputChange("howDidYouHearAboutUsOther", "");
+    }
+  };
+
+  const handleServiceFeeChange = (value) => {
+    handleInputChange("serviceFeeId", value);
   };
 
   const breadcrumbItems = [
@@ -513,7 +682,9 @@ function AdminAssociateUpdatePage() {
             <Select
               label="Associate Type"
               value={associateData.type}
-              onChange={(e) => handleInputChange("type", e.target.value)}
+              onChange={(e) =>
+                handleInputChange("type", parseInt(e.target.value))
+              }
               options={ASSOCIATE_TYPE_OPTIONS}
               error={errors.type}
               required
@@ -525,7 +696,7 @@ function AdminAssociateUpdatePage() {
             <h3>Contact Information</h3>
 
             {/* Organization fields for commercial associates */}
-            {associateData.type == COMMERCIAL_ASSOCIATE_TYPE_OF_ID && (
+            {associateData.type === COMMERCIAL_ASSOCIATE_TYPE_OF_ID && (
               <FormGroup>
                 <Input
                   label="Organization Name"
@@ -541,7 +712,10 @@ function AdminAssociateUpdatePage() {
                   label="Organization Type"
                   value={associateData.organizationType}
                   onChange={(e) =>
-                    handleInputChange("organizationType", e.target.value)
+                    handleInputChange(
+                      "organizationType",
+                      parseInt(e.target.value),
+                    )
                   }
                   options={ORGANIZATION_TYPE_OPTIONS}
                   error={errors.organizationType}
@@ -613,13 +787,15 @@ function AdminAssociateUpdatePage() {
               <Select
                 label="Phone Type"
                 value={associateData.phoneType}
-                onChange={(e) => handleInputChange("phoneType", e.target.value)}
+                onChange={(e) =>
+                  handleInputChange("phoneType", parseInt(e.target.value))
+                }
                 options={PHONE_TYPE_OPTIONS}
                 error={errors.phoneType}
               />
             </div>
 
-            {associateData.phoneType == 1 && (
+            {associateData.phoneType === 3 && (
               <Input
                 label="Phone Extension"
                 value={associateData.phoneExtension}
@@ -662,14 +838,14 @@ function AdminAssociateUpdatePage() {
                 label="Other Phone Type"
                 value={associateData.otherPhoneType}
                 onChange={(e) =>
-                  handleInputChange("otherPhoneType", e.target.value)
+                  handleInputChange("otherPhoneType", parseInt(e.target.value))
                 }
                 options={PHONE_TYPE_OPTIONS}
                 error={errors.otherPhoneType}
               />
             </div>
 
-            {associateData.otherPhoneType == 1 && (
+            {associateData.otherPhoneType === 3 && (
               <Input
                 label="Other Phone Extension"
                 value={associateData.otherPhoneExtension}
@@ -718,10 +894,11 @@ function AdminAssociateUpdatePage() {
                   required
                 />
 
-                <Input
+                <Select
                   label="Province/Territory"
                   value={associateData.region}
                   onChange={(e) => handleInputChange("region", e.target.value)}
+                  options={REGION_OPTIONS}
                   error={errors.region}
                   required
                 />
@@ -799,12 +976,13 @@ function AdminAssociateUpdatePage() {
                     required
                   />
 
-                  <Input
+                  <Select
                     label="Province/Territory"
                     value={associateData.shippingRegion}
                     onChange={(e) =>
                       handleInputChange("shippingRegion", e.target.value)
                     }
+                    options={REGION_OPTIONS}
                     error={errors.shippingRegion}
                     required
                   />
@@ -856,6 +1034,52 @@ function AdminAssociateUpdatePage() {
           <div style={globalStyles.section}>
             <h3>Professional Information</h3>
 
+            {/* Skill Sets */}
+            <SkillSetsMultiSelect
+              value={associateData.skillSets}
+              onChange={(value) => handleInputChange("skillSets", value)}
+              error={errors.skillSets}
+              required={true}
+              label="Skill Sets"
+              helperText="Select all skill sets that apply to this associate"
+              onUnauthorized={onUnauthorized}
+            />
+
+            {/* Insurance Requirements */}
+            <InsuranceRequirementsMultiSelect
+              value={associateData.insuranceRequirements}
+              onChange={(value) =>
+                handleInputChange("insuranceRequirements", value)
+              }
+              error={errors.insuranceRequirements}
+              required={true}
+              label="Insurance Requirements"
+              helperText="Select all insurance requirements for this associate"
+              onUnauthorized={onUnauthorized}
+            />
+
+            {/* Vehicle Types */}
+            <VehicleTypesMultiSelect
+              value={associateData.vehicleTypes}
+              onChange={(value) => handleInputChange("vehicleTypes", value)}
+              error={errors.vehicleTypes}
+              required={false}
+              label="Vehicle Types (Optional)"
+              helperText="Select all vehicle types the associate has access to"
+              onUnauthorized={onUnauthorized}
+            />
+
+            {/* Service Fee */}
+            <ServiceFeeSelect
+              value={associateData.serviceFeeId}
+              onChange={handleServiceFeeChange}
+              error={errors.serviceFeeId}
+              required={true}
+              label="Service Fee"
+              helperText="Select the applicable service fee for this associate"
+              onUnauthorized={onUnauthorized}
+            />
+
             <Input
               label="Hourly Rate (Optional)"
               type="number"
@@ -878,10 +1102,62 @@ function AdminAssociateUpdatePage() {
             />
 
             <Input
+              label="Member Dues Date"
+              type="date"
+              value={associateData.duesDate}
+              onChange={(e) => handleInputChange("duesDate", e.target.value)}
+              error={errors.duesDate}
+              required
+            />
+
+            <Input
+              label="Police Check Expiry"
+              type="date"
+              value={associateData.policeCheck}
+              onChange={(e) => handleInputChange("policeCheck", e.target.value)}
+              error={errors.policeCheck}
+              required
+            />
+
+            <Input
+              label="Commercial Insurance Expiry Date"
+              type="date"
+              value={associateData.commercialInsuranceExpiryDate}
+              onChange={(e) =>
+                handleInputChange(
+                  "commercialInsuranceExpiryDate",
+                  e.target.value,
+                )
+              }
+              error={errors.commercialInsuranceExpiryDate}
+              required
+            />
+
+            <Input
+              label="Auto Insurance Expiry Date (Optional)"
+              type="date"
+              value={associateData.autoInsuranceExpiryDate}
+              onChange={(e) =>
+                handleInputChange("autoInsuranceExpiryDate", e.target.value)
+              }
+              error={errors.autoInsuranceExpiryDate}
+            />
+
+            <Input
               label="WSIB # (Optional)"
               value={associateData.wsibNumber}
               onChange={(e) => handleInputChange("wsibNumber", e.target.value)}
               error={errors.wsibNumber}
+            />
+
+            <Input
+              label="WSIB Insurance Date (Optional)"
+              type="date"
+              value={associateData.wsibInsuranceDate}
+              onChange={(e) =>
+                handleInputChange("wsibInsuranceDate", e.target.value)
+              }
+              error={errors.wsibInsuranceDate}
             />
 
             <Input
@@ -919,6 +1195,7 @@ function AdminAssociateUpdatePage() {
                   handleInputChange("emergencyContactName", e.target.value)
                 }
                 error={errors.emergencyContactName}
+                required
               />
 
               <Input
@@ -931,6 +1208,7 @@ function AdminAssociateUpdatePage() {
                   )
                 }
                 error={errors.emergencyContactRelationship}
+                required
               />
             </div>
 
@@ -948,6 +1226,7 @@ function AdminAssociateUpdatePage() {
                   handleInputChange("emergencyContactTelephone", e.target.value)
                 }
                 error={errors.emergencyContactTelephone}
+                required
               />
 
               <Input
@@ -971,12 +1250,14 @@ function AdminAssociateUpdatePage() {
             <Select
               label="Is this Associate also a Job Seeker?"
               value={associateData.isJobSeeker}
-              onChange={(e) => handleInputChange("isJobSeeker", e.target.value)}
+              onChange={(e) =>
+                handleInputChange("isJobSeeker", parseInt(e.target.value))
+              }
               options={JOB_SEEKER_OPTIONS}
               error={errors.isJobSeeker}
             />
 
-            {associateData.isJobSeeker == 1 && (
+            {associateData.isJobSeeker === 1 && (
               <div>
                 <Input
                   label="Status in Country (Other)"
@@ -994,6 +1275,16 @@ function AdminAssociateUpdatePage() {
                     handleInputChange("countryOfOrigin", e.target.value)
                   }
                   error={errors.countryOfOrigin}
+                />
+
+                <Input
+                  label="Date of Entry into Country"
+                  type="date"
+                  value={associateData.dateOfEntryIntoCountry}
+                  onChange={(e) =>
+                    handleInputChange("dateOfEntryIntoCountry", e.target.value)
+                  }
+                  error={errors.dateOfEntryIntoCountry}
                 />
 
                 <Input
@@ -1020,19 +1311,56 @@ function AdminAssociateUpdatePage() {
             )}
           </div>
 
-          {/* Personal Information Section */}
+          {/* Metrics Section */}
           <div style={globalStyles.section}>
-            <h3>Personal Information</h3>
+            <h3>Metrics</h3>
+
+            {/* Tags */}
+            <TagsMultiSelect
+              value={associateData.tags}
+              onChange={(value) => handleInputChange("tags", value)}
+              error={errors.tags}
+              required={false}
+              label="Tags (Optional)"
+              helperText="Select tags to categorize this associate"
+              onUnauthorized={onUnauthorized}
+            />
+
+            {/* How Did You Hear About Us */}
+            <HowHearAboutUsSelect
+              value={associateData.howDidYouHearAboutUsID}
+              onChange={handleHowHearChange}
+              onOtherDetected={handleHowHearOtherDetected}
+              error={errors.howDidYouHearAboutUsID}
+              required={true}
+              helperText="Tell us how you discovered our organization"
+              onUnauthorized={onUnauthorized}
+            />
+
+            {associateData.isHowDidYouHearAboutUsOther && (
+              <Input
+                label="How did you hear about us? (Other)"
+                value={associateData.howDidYouHearAboutUsOther}
+                onChange={(e) =>
+                  handleInputChange("howDidYouHearAboutUsOther", e.target.value)
+                }
+                error={errors.howDidYouHearAboutUsOther}
+                required
+              />
+            )}
 
             <Select
               label="Gender"
               value={associateData.gender}
-              onChange={(e) => handleInputChange("gender", e.target.value)}
+              onChange={(e) =>
+                handleInputChange("gender", parseInt(e.target.value))
+              }
               options={GENDER_OPTIONS}
               error={errors.gender}
+              required
             />
 
-            {associateData.gender == 1 && (
+            {associateData.gender === 1 && (
               <Input
                 label="Gender (Other)"
                 value={associateData.genderOther}
@@ -1040,15 +1368,36 @@ function AdminAssociateUpdatePage() {
                   handleInputChange("genderOther", e.target.value)
                 }
                 error={errors.genderOther}
+                required
               />
             )}
 
             <Input
-              label="Birth Date (Optional)"
+              label="Birth Date"
               type="date"
               value={associateData.birthDate}
               onChange={(e) => handleInputChange("birthDate", e.target.value)}
               error={errors.birthDate}
+              required
+            />
+
+            <Input
+              label="Join Date"
+              type="date"
+              value={associateData.joinDate}
+              onChange={(e) => handleInputChange("joinDate", e.target.value)}
+              error={errors.joinDate}
+            />
+
+            <TextArea
+              label="Additional Comment (Optional)"
+              value={associateData.additionalComment}
+              onChange={(e) =>
+                handleInputChange("additionalComment", e.target.value)
+              }
+              error={errors.additionalComment}
+              maxLength={638}
+              rows={4}
             />
           </div>
 
@@ -1073,6 +1422,7 @@ function AdminAssociateUpdatePage() {
               }
               options={LANGUAGE_OPTIONS}
               error={errors.preferredLanguage}
+              required
             />
           </div>
 
