@@ -6,17 +6,33 @@ import {
   useAuthManager,
   useAssociateManager,
 } from "../../../../services/Services";
-import { theme, globalStyles } from "../../../../constants/Theme";
 import {
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Breadcrumb,
-  Modal,
-  Select,
-  FormGroup,
-} from "../../../../components/UI";
+  MagnifyingGlassIcon,
+  WrenchScrewdriverIcon,
+  ArrowLeftIcon,
+  XMarkIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ArrowsUpDownIcon,
+  ChartBarIcon,
+  AdjustmentsHorizontalIcon,
+  ExclamationTriangleIcon,
+  HomeIcon,
+  BuildingOffice2Icon,
+  PhoneIcon,
+  EnvelopeIcon,
+  MapPinIcon,
+  ArchiveBoxIcon,
+  EyeIcon,
+  CheckCircleIcon,
+  CalendarIcon,
+  FunnelIcon,
+  UserIcon,
+  ChevronDownIcon,
+  BriefcaseIcon,
+  DocumentTextIcon,
+} from "@heroicons/react/24/outline";
+import { ExclamationTriangleIcon as ExclamationTriangleIconSolid } from "@heroicons/react/24/solid";
 
 // Constants for associate types and statuses - matching old implementation
 const RESIDENTIAL_ASSOCIATE_TYPE_OF_ID = 1;
@@ -49,10 +65,10 @@ const ASSOCIATE_TYPE_OF_FILTER_OPTIONS = [
 
 // Page size options
 const PAGE_SIZE_OPTIONS = [
-  { value: 10, label: "10" },
-  { value: 25, label: "25" },
-  { value: 50, label: "50" },
-  { value: 100, label: "100" },
+  { value: 10, label: "10 per page" },
+  { value: 25, label: "25 per page" },
+  { value: 50, label: "50 per page" },
+  { value: 100, label: "100 per page" },
 ];
 
 function AdminAssociateSearchResultPage() {
@@ -84,6 +100,7 @@ function AdminAssociateSearchResultPage() {
   const [typeOf, setTypeOf] = useState(0); // 0 for all types
   const [createdAtGTE, setCreatedAtGTE] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
 
   // Check authentication on mount
   useEffect(() => {
@@ -309,324 +326,291 @@ function AdminAssociateSearchResultPage() {
     return phone;
   };
 
-  // Breadcrumb items
-  const breadcrumbItems = [
-    { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
-    { label: "Associates", path: "/admin/associates", icon: "👷" },
-    { label: "Search", path: "/admin/associates/search", icon: "🔍" },
-    { label: "Results", icon: "📋" },
-  ];
+  // Build search criteria display
+  const searchCriteria = [];
+  if (firstName)
+    searchCriteria.push({
+      label: "First Name",
+      value: firstName,
+      icon: UserIcon,
+    });
+  if (lastName)
+    searchCriteria.push({
+      label: "Last Name",
+      value: lastName,
+      icon: UserIcon,
+    });
+  if (email)
+    searchCriteria.push({ label: "Email", value: email, icon: EnvelopeIcon });
+  if (phone)
+    searchCriteria.push({ label: "Phone", value: phone, icon: PhoneIcon });
+  if (organizationName)
+    searchCriteria.push({
+      label: "Organization",
+      value: organizationName,
+      icon: BuildingOffice2Icon,
+    });
+  searchCriteria.push({
+    label: "Status",
+    value: isActive ? "Active Only" : "All",
+    icon: CheckCircleIcon,
+  });
+
+  // Handle sort change
+  const handleSortChange = (e) => {
+    const [field, order] = e.target.value.split(",");
+    setSortByValue(e.target.value);
+  };
+
+  // Handle page size change
+  const handlePageSizeChange = (e) => {
+    setPageSize(parseInt(e.target.value));
+    setPreviousCursors([]);
+    setCurrentCursor("");
+  };
+
+  // Calculate current page info
+  const currentPage = previousCursors.length + 1;
+  const totalCount = associates?.count || 0;
+  const startRecord = (currentPage - 1) * pageSize + 1;
+  const endRecord = Math.min(
+    startRecord + (associates?.results?.length || 0) - 1,
+    totalCount,
+  );
 
   if (isFetching && !associates) {
-    return <Loading message="Loading search results..." />;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading search results...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div style={globalStyles.container}>
-      <Breadcrumb items={breadcrumbItems} />
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb */}
+        <nav className="flex mb-8" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+            <li className="inline-flex items-center">
+              <Link
+                to="/admin/dashboard"
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <ChartBarIcon className="w-4 h-4 mr-2" />
+                Dashboard
+              </Link>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to="/admin/associates"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                >
+                  Associates
+                </Link>
+              </div>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to="/admin/associates/search"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                >
+                  Search
+                </Link>
+              </div>
+            </li>
+            <li aria-current="page">
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">
+                  Results
+                </span>
+              </div>
+            </li>
+          </ol>
+        </nav>
 
-      {/* Page Title */}
-      <h1 style={{ marginBottom: "10px" }}>👷 Associates</h1>
-      <h4 style={{ marginBottom: "30px", color: "#666" }}>🔍 Search Results</h4>
-      <hr style={{ marginBottom: "30px" }} />
-
-      {/* Success/Error Messages */}
-      {successMessage && (
-        <Alert type="success" onClose={() => setSuccessMessage("")}>
-          {successMessage}
-        </Alert>
-      )}
-      {errors.message && (
-        <Alert type="error" onClose={() => setErrors({})}>
-          {errors.message}
-        </Alert>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      <Modal
-        isOpen={!!selectedAssociateForDeletion}
-        onClose={() => setSelectedAssociateForDeletion(null)}
-        title="Are you sure?"
-        footer={
-          <>
-            <Button
-              onClick={() => setSelectedAssociateForDeletion(null)}
-              variant="secondary"
+        {/* Header Section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <div className="flex items-center">
+                <WrenchScrewdriverIcon className="h-8 w-8 text-blue-600 mr-3" />
+                <h1 className="text-3xl font-bold text-gray-900">
+                  Search Results
+                </h1>
+              </div>
+              <p className="mt-2 text-lg text-gray-600 ml-11">
+                Associate search results
+              </p>
+            </div>
+            <button
+              onClick={() => navigate("/admin/associates/search")}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              Cancel
-            </Button>
-            <Button onClick={onDeleteConfirmButtonClick} variant="danger">
-              Confirm Archive
-            </Button>
-          </>
-        }
-      >
-        <p>
-          You are about to <strong>archive</strong> this associate. It will no
-          longer appear on your dashboard. This action can be undone but you'll
-          need to contact the system administrator. Are you sure you would like
-          to continue?
-        </p>
-      </Modal>
-
-      {/* Results Card */}
-      <Card title="📋 Search Results">
-        {/* Filter Panel */}
-        <div
-          style={{
-            backgroundColor: theme.colors.light,
-            padding: "20px",
-            borderRadius: "8px",
-            marginBottom: "20px",
-          }}
-        >
-          <h5 style={{ marginBottom: "15px" }}>🔧 Filtering & Sorting</h5>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-              gap: "15px",
-            }}
-          >
-            <Select
-              label="Status"
-              value={status}
-              onChange={(e) => setStatus(parseInt(e.target.value))}
-              options={ASSOCIATE_STATUS_FILTER_OPTIONS}
-            />
-
-            <Select
-              label="Type"
-              value={typeOf}
-              onChange={(e) => setTypeOf(parseInt(e.target.value))}
-              options={ASSOCIATE_TYPE_OF_FILTER_OPTIONS}
-            />
-
-            <FormGroup>
-              <label style={globalStyles.label}>Created After</label>
-              <input
-                type="date"
-                value={createdAtGTE}
-                onChange={(e) => setCreatedAtGTE(e.target.value)}
-                style={globalStyles.input}
-              />
-            </FormGroup>
-
-            <Select
-              label="Sort by"
-              value={sortByValue}
-              onChange={(e) => setSortByValue(e.target.value)}
-              options={ASSOCIATE_SORT_OPTIONS}
-            />
+              <ArrowLeftIcon className="h-4 w-4 mr-2" />
+              Back to Search
+            </button>
           </div>
+
+          {/* Search Criteria Display */}
+          {searchCriteria.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {searchCriteria.map((criteria, index) => {
+                const Icon = criteria.icon;
+                return (
+                  <span
+                    key={index}
+                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
+                  >
+                    <Icon className="h-4 w-4 mr-1.5" />
+                    {criteria.label}: {criteria.value}
+                  </span>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* Search Criteria Summary */}
-        <div
-          style={{
-            backgroundColor: "#f0f9ff",
-            padding: "15px",
-            borderRadius: "8px",
-            marginBottom: "20px",
-          }}
-        >
-          <strong>Search Criteria:</strong>
-          <ul style={{ marginTop: "10px", marginBottom: 0 }}>
-            {firstName && <li>First Name: {firstName}</li>}
-            {lastName && <li>Last Name: {lastName}</li>}
-            {email && <li>Email: {email}</li>}
-            {phone && <li>Phone: {phone}</li>}
-            {organizationName && <li>Organization: {organizationName}</li>}
-            <li>Status: {isActive ? "Active Only" : "All"}</li>
-          </ul>
-        </div>
-
-        {/* Results Display */}
-        {isFetching ? (
-          <Loading message="Updating results..." />
-        ) : (
-          <>
-            {associates &&
-            associates.results &&
-            associates.results.length > 0 ? (
-              <>
-                {/* Results Grid */}
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns:
-                      "repeat(auto-fill, minmax(300px, 1fr))",
-                    gap: "20px",
-                    marginBottom: "20px",
-                  }}
+        {/* Success/Error Messages */}
+        {successMessage && (
+          <div className="mb-6 bg-green-50 border-l-4 border-green-400 p-4 rounded-lg">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <CheckCircleIcon className="h-5 w-5 text-green-400" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-green-800">{successMessage}</p>
+              </div>
+              <div className="ml-auto pl-3">
+                <button
+                  onClick={() => setSuccessMessage("")}
+                  className="inline-flex text-green-400 hover:text-green-500"
                 >
-                  {associates.results.map((associate) => (
-                    <div
-                      key={associate.id}
-                      style={{
-                        ...globalStyles.card,
-                        backgroundColor: "#e6f4ff",
-                        cursor: "pointer",
-                        transition: "all 0.3s",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = "translateY(-2px)";
-                        e.currentTarget.style.boxShadow =
-                          "0 4px 8px rgba(0,0,0,0.15)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = "translateY(0)";
-                        e.currentTarget.style.boxShadow =
-                          "0 2px 4px rgba(0,0,0,0.1)";
-                      }}
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {errors.message && (
+          <div className="mb-6 bg-red-50 border-l-4 border-red-400 p-4 rounded-lg">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <ExclamationTriangleIconSolid className="h-5 w-5 text-red-400" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-800">{errors.message}</p>
+              </div>
+              <div className="ml-auto pl-3">
+                <button
+                  onClick={() => setErrors({})}
+                  className="inline-flex text-red-400 hover:text-red-500"
+                >
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Main Content */}
+        <div className="bg-white shadow-sm rounded-lg">
+          {/* Results Header with Filters */}
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+                  <MagnifyingGlassIcon className="h-5 w-5 mr-2 text-blue-600" />
+                  Results
+                </h2>
+                {!isFetching && associates && associates.results && (
+                  <p className="mt-1 text-sm text-gray-600">
+                    Found <span className="font-semibold">{totalCount}</span>{" "}
+                    associates
+                    {searchCriteria.length > 0 && " matching your criteria"}
+                  </p>
+                )}
+              </div>
+
+              {/* Filters and Sorting */}
+              {!isFetching &&
+                associates &&
+                associates.results &&
+                associates.results.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-3">
+                    {/* Toggle Filters */}
+                    <button
+                      onClick={() => setShowFilters(!showFilters)}
+                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50"
                     >
-                      {/* Card Header */}
-                      <div style={{ marginBottom: "15px" }}>
-                        <Link
-                          to={`/admin/associate/${associate.id}`}
-                          style={{
-                            textDecoration: "none",
-                            color: theme.colors.primary,
-                            fontWeight: "bold",
-                            fontSize: "16px",
-                          }}
-                        >
-                          {associate.type ===
-                            COMMERCIAL_ASSOCIATE_TYPE_OF_ID && (
-                            <>
-                              🏢{" "}
-                              {associate.organizationName ||
-                                `${associate.firstName} ${associate.lastName}`}
-                            </>
-                          )}
-                          {associate.type ===
-                            RESIDENTIAL_ASSOCIATE_TYPE_OF_ID && (
-                            <>
-                              🏠 {associate.firstName} {associate.lastName}
-                            </>
-                          )}
-                        </Link>
-                      </div>
+                      <FunnelIcon className="h-4 w-4 mr-1.5" />
+                      Filters
+                      <ChevronDownIcon
+                        className={`h-4 w-4 ml-1 transition-transform ${showFilters ? "rotate-180" : ""}`}
+                      />
+                    </button>
 
-                      {/* Card Body */}
-                      <div style={{ fontSize: "14px", lineHeight: "1.6" }}>
-                        {associate.type ===
-                          RESIDENTIAL_ASSOCIATE_TYPE_OF_ID && (
-                          <div style={{ marginBottom: "5px" }}>
-                            <strong>
-                              {associate.firstName} {associate.lastName}
-                            </strong>
-                          </div>
-                        )}
-                        <div>{associate.addressLine1 || "-"}</div>
-                        <div>
-                          {associate.city && associate.region
-                            ? `${associate.city}, ${associate.region}`
-                            : "-"}
-                        </div>
-                        <div>
-                          📞{" "}
-                          {associate.phone ? (
-                            <a
-                              href={`tel:${associate.phone}`}
-                              style={{
-                                textDecoration: "none",
-                                color: theme.colors.primary,
-                              }}
-                            >
-                              {formatPhone(associate.phone)}
-                            </a>
-                          ) : (
-                            "-"
-                          )}
-                        </div>
-                        <div>
-                          ✉️{" "}
-                          {associate.email ? (
-                            <a
-                              href={`mailto:${associate.email}`}
-                              style={{
-                                textDecoration: "none",
-                                color: theme.colors.primary,
-                              }}
-                            >
-                              {associate.email}
-                            </a>
-                          ) : (
-                            "-"
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Card Footer */}
-                      <div
-                        style={{
-                          marginTop: "15px",
-                          paddingTop: "15px",
-                          borderTop: "1px solid #ccc",
-                          display: "flex",
-                          justifyContent: "space-between",
-                        }}
+                    {/* Sort By */}
+                    <div className="flex items-center">
+                      <ArrowsUpDownIcon className="h-4 w-4 text-gray-400 mr-2" />
+                      <select
+                        value={sortByValue}
+                        onChange={handleSortChange}
+                        className="block rounded-lg border-gray-300 py-1.5 pl-3 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                       >
-                        <Link
-                          to={`/admin/associate/${associate.id}`}
-                          style={{
-                            textDecoration: "none",
-                            color: theme.colors.primary,
-                            fontWeight: "500",
-                          }}
-                        >
-                          View Details →
-                        </Link>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedAssociateForDeletion(associate);
-                          }}
-                          style={{
-                            background: "none",
-                            border: "none",
-                            color: theme.colors.danger,
-                            cursor: "pointer",
-                            fontSize: "14px",
-                          }}
-                        >
-                          Archive
-                        </button>
-                      </div>
+                        {ASSOCIATE_SORT_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
                     </div>
-                  ))}
-                </div>
 
-                {/* Pagination Controls */}
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginTop: "20px",
-                    flexWrap: "wrap",
-                    gap: "10px",
-                  }}
-                >
+                    {/* Page Size */}
+                    <div className="flex items-center">
+                      <AdjustmentsHorizontalIcon className="h-4 w-4 text-gray-400 mr-2" />
+                      <select
+                        value={pageSize.toString()}
+                        onChange={handlePageSizeChange}
+                        className="block rounded-lg border-gray-300 py-1.5 pl-3 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        {PAGE_SIZE_OPTIONS.map((option) => (
+                          <option
+                            key={option.value}
+                            value={option.value.toString()}
+                          >
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
+            </div>
+
+            {/* Expandable Filters Panel */}
+            {showFilters && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label style={{ marginRight: "10px" }}>
-                      Results per page:
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Status
                     </label>
                     <select
-                      value={pageSize}
-                      onChange={(e) => {
-                        console.log("Page size changed to:", e.target.value);
-                        setPageSize(parseInt(e.target.value));
-                      }}
-                      style={{
-                        padding: "5px 10px",
-                        borderRadius: "4px",
-                        border: "1px solid #ddd",
-                      }}
+                      value={status}
+                      onChange={(e) => setStatus(parseInt(e.target.value))}
+                      className="w-full rounded-lg border-gray-300 py-2 pl-3 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     >
-                      {PAGE_SIZE_OPTIONS.map((option) => (
+                      {ASSOCIATE_STATUS_FILTER_OPTIONS.map((option) => (
                         <option key={option.value} value={option.value}>
                           {option.label}
                         </option>
@@ -634,72 +618,382 @@ function AdminAssociateSearchResultPage() {
                     </select>
                   </div>
 
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    {previousCursors.length > 0 && (
-                      <Button onClick={onPreviousClicked} variant="secondary">
-                        ← Previous
-                      </Button>
-                    )}
-                    {associates.hasNextPage && (
-                      <Button onClick={onNextClicked} variant="secondary">
-                        Next →
-                      </Button>
-                    )}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Type
+                    </label>
+                    <select
+                      value={typeOf}
+                      onChange={(e) => setTypeOf(parseInt(e.target.value))}
+                      className="w-full rounded-lg border-gray-300 py-2 pl-3 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      {ASSOCIATE_TYPE_OF_FILTER_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Created After
+                    </label>
+                    <input
+                      type="date"
+                      value={createdAtGTE}
+                      onChange={(e) => setCreatedAtGTE(e.target.value)}
+                      className="w-full rounded-lg border-gray-300 py-2 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
                   </div>
                 </div>
+              </div>
+            )}
+          </div>
+
+          {/* Results Content */}
+          <div className="p-6">
+            {isFetching ? (
+              <div className="flex flex-col items-center justify-center py-16">
+                <svg
+                  className="animate-spin h-10 w-10 text-blue-600 mb-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                <p className="text-gray-600">Updating results...</p>
+              </div>
+            ) : associates &&
+              associates.results &&
+              associates.results.length > 0 ? (
+              <>
+                {/* Results Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                  {associates.results.map((associate) => (
+                    <div
+                      key={associate.id}
+                      className="bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-shadow"
+                    >
+                      {/* Card Header */}
+                      <div className="p-4 border-b border-gray-100">
+                        <Link
+                          to={`/admin/associate/${associate.id}`}
+                          className="flex items-start text-blue-600 hover:text-blue-800 font-semibold"
+                        >
+                          {associate.type ===
+                          COMMERCIAL_ASSOCIATE_TYPE_OF_ID ? (
+                            <>
+                              <BuildingOffice2Icon className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+                              <span>
+                                {associate.organizationName ||
+                                  `${associate.firstName} ${associate.lastName}`}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <HomeIcon className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+                              <span>
+                                {associate.firstName} {associate.lastName}
+                              </span>
+                            </>
+                          )}
+                        </Link>
+                      </div>
+
+                      {/* Card Body */}
+                      <div className="p-4 space-y-2 text-sm">
+                        {associate.type ===
+                          RESIDENTIAL_ASSOCIATE_TYPE_OF_ID && (
+                          <div className="font-medium text-gray-900">
+                            {associate.firstName} {associate.lastName}
+                          </div>
+                        )}
+
+                        {associate.addressLine1 && (
+                          <div className="flex items-start text-gray-600">
+                            <MapPinIcon className="h-4 w-4 mr-2 text-gray-400 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <div>{associate.addressLine1}</div>
+                              {(associate.city || associate.region) && (
+                                <div>
+                                  {associate.city && associate.region
+                                    ? `${associate.city}, ${associate.region}`
+                                    : associate.city || associate.region}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {associate.phone && (
+                          <div className="flex items-center text-gray-600">
+                            <PhoneIcon className="h-4 w-4 mr-2 text-gray-400" />
+                            <a
+                              href={`tel:${associate.phone}`}
+                              className="text-blue-600 hover:text-blue-800"
+                            >
+                              {formatPhone(associate.phone)}
+                            </a>
+                          </div>
+                        )}
+
+                        {associate.email && (
+                          <div className="flex items-center text-gray-600">
+                            <EnvelopeIcon className="h-4 w-4 mr-2 text-gray-400" />
+                            <a
+                              href={`mailto:${associate.email}`}
+                              className="text-blue-600 hover:text-blue-800 truncate"
+                            >
+                              {associate.email}
+                            </a>
+                          </div>
+                        )}
+
+                        {/* Associate Type Badge */}
+                        <div className="pt-2">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              associate.type === COMMERCIAL_ASSOCIATE_TYPE_OF_ID
+                                ? "bg-blue-100 text-blue-800"
+                                : "bg-green-100 text-green-800"
+                            }`}
+                          >
+                            {associate.type === COMMERCIAL_ASSOCIATE_TYPE_OF_ID
+                              ? "Commercial"
+                              : "Residential"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Card Footer */}
+                      <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
+                        <Link
+                          to={`/admin/associate/${associate.id}`}
+                          className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800"
+                        >
+                          <EyeIcon className="h-4 w-4 mr-1" />
+                          View Details
+                        </Link>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedAssociateForDeletion(associate);
+                          }}
+                          className="inline-flex items-center text-sm font-medium text-red-600 hover:text-red-800"
+                        >
+                          <ArchiveBoxIcon className="h-4 w-4 mr-1" />
+                          Archive
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Pagination Footer */}
+                {(previousCursors.length > 0 || associates.hasNextPage) && (
+                  <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200">
+                    <div className="flex-1 flex justify-between sm:hidden">
+                      <button
+                        onClick={onPreviousClicked}
+                        disabled={previousCursors.length === 0}
+                        className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Previous
+                      </button>
+                      <button
+                        onClick={onNextClicked}
+                        disabled={!associates.hasNextPage}
+                        className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Next
+                      </button>
+                    </div>
+                    <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-sm text-gray-700">
+                          Showing{" "}
+                          <span className="font-medium">{startRecord}</span> to{" "}
+                          <span className="font-medium">{endRecord}</span> of{" "}
+                          <span className="font-medium">{totalCount}</span>{" "}
+                          results
+                        </p>
+                      </div>
+                      <div>
+                        <nav
+                          className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                          aria-label="Pagination"
+                        >
+                          <button
+                            onClick={onPreviousClicked}
+                            disabled={previousCursors.length === 0}
+                            className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <span className="sr-only">Previous</span>
+                            <ChevronLeftIcon
+                              className="h-5 w-5"
+                              aria-hidden="true"
+                            />
+                          </button>
+
+                          {/* Page Numbers */}
+                          <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                            Page {currentPage}
+                          </span>
+
+                          <button
+                            onClick={onNextClicked}
+                            disabled={!associates.hasNextPage}
+                            className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <span className="sr-only">Next</span>
+                            <ChevronRightIcon
+                              className="h-5 w-5"
+                              aria-hidden="true"
+                            />
+                          </button>
+                        </nav>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </>
             ) : (
-              <div
-                style={{
-                  textAlign: "center",
-                  padding: "40px",
-                  backgroundColor: theme.colors.light,
-                  borderRadius: "8px",
-                }}
-              >
-                <h3>📋 No Associates Found</h3>
-                <p style={{ marginTop: "10px", color: "#666" }}>
-                  No associates found matching your search criteria.
+              <div className="text-center py-16 px-4">
+                <WrenchScrewdriverIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  No Associates Found
+                </h3>
+                <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                  No associates match your search criteria. Try adjusting your
+                  search terms or filters.
                 </p>
                 <Link
                   to="/admin/associates/search"
-                  style={{
-                    display: "inline-block",
-                    marginTop: "20px",
-                    color: theme.colors.primary,
-                    textDecoration: "none",
-                    fontWeight: "500",
-                  }}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
-                  ← Search Again
+                  <ArrowLeftIcon className="h-4 w-4 mr-2" />
+                  Try New Search
                 </Link>
               </div>
             )}
-          </>
-        )}
-
-        {/* Action Buttons */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginTop: "30px",
-            paddingTop: "20px",
-            borderTop: "1px solid #e0e0e0",
-          }}
-        >
-          <Link
-            to="/admin/associates/search"
-            style={{ textDecoration: "none" }}
-          >
-            <Button variant="secondary">← Search Again</Button>
-          </Link>
-
-          <Link to="/admin/associates" style={{ textDecoration: "none" }}>
-            <Button variant="outline">Back to Associates</Button>
-          </Link>
+          </div>
         </div>
-      </Card>
+
+        {/* Bottom Action Buttons */}
+        <div className="mt-6 flex flex-col sm:flex-row justify-between gap-4">
+          <button
+            onClick={() => navigate("/admin/associates/search")}
+            className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <ArrowLeftIcon className="h-4 w-4 mr-2" />
+            Search Again
+          </button>
+          <button
+            onClick={() => navigate("/admin/associates")}
+            className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Back to Associates
+          </button>
+        </div>
+      </div>
+
+      {/* Delete Confirmation Modal */}
+      {selectedAssociateForDeletion && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                <ExclamationTriangleIcon className="h-5 w-5 mr-2 text-amber-600" />
+                Archive Associate
+              </h3>
+            </div>
+
+            <div className="px-6 py-4">
+              <p className="text-sm text-gray-600 mb-4">
+                You are about to <strong>archive</strong> this associate. It
+                will no longer appear on your dashboard. This action can be
+                undone but you'll need to contact the system administrator. Are
+                you sure you would like to continue?
+              </p>
+
+              <div className="p-4 bg-amber-50 rounded-lg border-l-4 border-amber-500">
+                <p className="text-sm font-medium text-gray-700">
+                  <strong>Name:</strong>{" "}
+                  {selectedAssociateForDeletion.type ===
+                  COMMERCIAL_ASSOCIATE_TYPE_OF_ID
+                    ? selectedAssociateForDeletion.organizationName ||
+                      `${selectedAssociateForDeletion.firstName} ${selectedAssociateForDeletion.lastName}`
+                    : `${selectedAssociateForDeletion.firstName} ${selectedAssociateForDeletion.lastName}`}
+                </p>
+                {selectedAssociateForDeletion.email && (
+                  <p className="text-sm text-gray-600 mt-1">
+                    <strong>Email:</strong> {selectedAssociateForDeletion.email}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+              <button
+                onClick={() => setSelectedAssociateForDeletion(null)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={onDeleteConfirmButtonClick}
+                disabled={isFetching}
+                className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isFetching ? (
+                  <>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Archiving...
+                  </>
+                ) : (
+                  <>
+                    <ArchiveBoxIcon className="h-4 w-4 mr-2" />
+                    Confirm Archive
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
