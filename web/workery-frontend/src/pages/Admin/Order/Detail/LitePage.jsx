@@ -12,6 +12,15 @@ import {
   Breadcrumb,
 } from "../../../../components/UI";
 import { SkillSetsDisplay, TagsDisplay } from "../../../../components/Display";
+import {
+  TASK_ITEM_TYPE_ASSIGN_ASSOCIATE,
+  TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_AND_CUSTOMER_AGREED_TO_MEET,
+  TASK_ITEM_TYPE_FOLLOW_UP_CUSTOMER_SURVEY,
+  TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_ACCEPT_JOB,
+  TASK_ITEM_TYPE_UPDATE_ONGOING_JOB,
+  TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_COMPLETE_JOB,
+  TASK_ITEM_TYPE_FOLLOW_UP_DID_CUSTOMER_REVIEW_ASSOCIATE_AFTER_JOB,
+} from "../../../../constants/Task";
 
 // Constants
 const CLIENT_PHONE_TYPE_WORK = 1;
@@ -44,6 +53,36 @@ function AdminOrderDetailLitePage() {
   // Handle unauthorized access
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
+  };
+
+  // Helper function to get task update URL based on type
+  const getTaskUpdateURL = (taskId, taskType) => {
+    // If taskType is not available, default to a basic pattern
+    if (!taskType) {
+      // TODO: Task type should be provided by the API as order.latestPendingTaskType
+      console.warn("Task type not available for task:", taskId);
+      return `/admin/task/${taskId}/assign-associate/step-1`; // Default fallback
+    }
+
+    switch (taskType) {
+      // Assign Associate
+      case TASK_ITEM_TYPE_ASSIGN_ASSOCIATE:
+        return `/admin/task/${taskId}/assign-associate/step-1`;
+      // Follow Up / Order Completion
+      case TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_COMPLETE_JOB:
+      case TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_AND_CUSTOMER_AGREED_TO_MEET:
+      case TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_ACCEPT_JOB:
+      case TASK_ITEM_TYPE_UPDATE_ONGOING_JOB:
+        return `/admin/task/${taskId}/order-completion/step-1`;
+      // Survey
+      case TASK_ITEM_TYPE_FOLLOW_UP_DID_CUSTOMER_REVIEW_ASSOCIATE_AFTER_JOB:
+      case TASK_ITEM_TYPE_FOLLOW_UP_CUSTOMER_SURVEY:
+        return `/admin/task/${taskId}/survey/step-1`;
+      // Default case for unknown types
+      default:
+        console.warn("Unknown task type:", taskType);
+        return `/admin/task/${taskId}/assign-associate/step-1`;
+    }
   };
 
   // Extract IDs from array of objects
@@ -262,7 +301,12 @@ function AdminOrderDetailLitePage() {
               </Link>
               {order.latestPendingTaskId &&
                 order.latestPendingTaskId !== "000000000000000000000000" && (
-                  <Link to={`/admin/task/${order.latestPendingTaskId}`}>
+                  <Link
+                    to={getTaskUpdateURL(
+                      order.latestPendingTaskId,
+                      order.latestPendingTaskType,
+                    )}
+                  >
                     <Button
                       variant="primary"
                       disabled={order.status === OrderStatusArchived}
@@ -645,7 +689,12 @@ function AdminOrderDetailLitePage() {
                   <td style={{ padding: "12px" }}>
                     {order.latestPendingTaskId &&
                     order.latestPendingTaskId !== "000000000000000000000000" ? (
-                      <Link to={`/admin/task/${order.latestPendingTaskId}`}>
+                      <Link
+                        to={getTaskUpdateURL(
+                          order.latestPendingTaskId,
+                          order.latestPendingTaskType,
+                        )}
+                      >
                         <Button variant="primary" size="sm">
                           {order.latestPendingTaskTitle} →
                         </Button>
@@ -702,7 +751,12 @@ function AdminOrderDetailLitePage() {
                 </Link>
                 {order.latestPendingTaskId &&
                   order.latestPendingTaskId !== "000000000000000000000000" && (
-                    <Link to={`/admin/task/${order.latestPendingTaskId}`}>
+                    <Link
+                      to={getTaskUpdateURL(
+                        order.latestPendingTaskId,
+                        order.latestPendingTaskType,
+                      )}
+                    >
                       <Button
                         variant="primary"
                         disabled={order.status === OrderStatusArchived}
