@@ -40,6 +40,7 @@ import {
 } from "../../../../constants/Task";
 import { CACHE_DURATIONS } from "../../../../constants/Storage";
 import { AUTH_ROUTES } from "../../../../constants/Authentication";
+import { formatDateForDisplay } from "../../../../services/Helpers/DateFormatter";
 
 function AdminTaskItemListPage() {
   const navigate = useNavigate();
@@ -388,17 +389,6 @@ function AdminTaskItemListPage() {
     }
   };
 
-  // Format date for display
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString();
-    } catch (e) {
-      return dateString;
-    }
-  };
-
   // Render grid view
   const renderGridView = () => {
     if (!tasks || !tasks.results || tasks.results.length === 0) {
@@ -427,7 +417,7 @@ function AdminTaskItemListPage() {
 
             <div style={{ marginTop: "10px" }}>
               <p>
-                <strong>Due Date:</strong> {formatDate(task.dueDate)}
+                <strong>Due Date:</strong> {formatDateForDisplay(task.dueDate)}
               </p>
               <p>
                 <strong>Client:</strong>{" "}
@@ -450,7 +440,7 @@ function AdminTaskItemListPage() {
                 )}
               </p>
               <p>
-                <strong>Created:</strong> {formatDate(task.createdAt)}
+                <strong>Created:</strong> {formatDateForDisplay(task.createdAt)}
               </p>
               <p>
                 <strong>Status:</strong> {task.isClosed ? "Closed" : "Open"}
@@ -484,7 +474,7 @@ function AdminTaskItemListPage() {
       {
         key: "dueDate",
         label: "Due Date",
-        render: (value) => formatDate(value),
+        render: (value) => formatDateForDisplay(value),
       },
       {
         key: "title",
