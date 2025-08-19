@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 import { useOrderManager, useAuthManager } from "../../../../services/Services";
 import { theme, globalStyles } from "../../../../constants/Theme";
+import { formatDateForDisplay } from "../../../../services/Helpers/dateFormatter";
 import {
   Card,
   Button,
@@ -501,12 +502,12 @@ function AdminOrderListPage() {
     {
       key: "startDate",
       label: "Start Date",
-      render: (value) => value || "-",
+      render: (value) => formatDateForDisplay(value),
     },
     {
       key: "completionDate",
       label: "Completion",
-      render: (value) => value || "-",
+      render: (value) => formatDateForDisplay(value),
     },
     {
       key: "actions",
@@ -817,12 +818,12 @@ function AdminOrderListPage() {
                             </div>
                             <div>
                               <strong>Start Date:</strong>{" "}
-                              {order.startDate || "-"}
+                              {formatDateForDisplay(order.startDate)}
                             </div>
                             {order.completionDate && (
                               <div>
                                 <strong>Completion:</strong>{" "}
-                                {order.completionDate}
+                                {formatDateForDisplay(order.completionDate)}
                               </div>
                             )}
                             {order.description && (

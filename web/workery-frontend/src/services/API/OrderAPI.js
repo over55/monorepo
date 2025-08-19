@@ -25,6 +25,37 @@ export class OrderAPI {
   }
 
   /**
+   * Safely formats a date string
+   * @private
+   * @param {string} dateString - ISO date string
+   * @param {string} format - Format type ('date' or 'datetime')
+   * @returns {string|null} - Formatted date or null
+   */
+  _formatDate(dateString, format = "date") {
+    if (!dateString) return null;
+
+    try {
+      const dt = DateTime.fromISO(dateString);
+
+      // Check if the date is valid
+      if (!dt.isValid) {
+        console.warn("Invalid date:", dateString, "Reason:", dt.invalidReason);
+        return null;
+      }
+
+      // Return formatted date based on format type
+      if (format === "datetime") {
+        return dt.toLocaleString(DateTime.DATETIME_MED);
+      } else {
+        return dt.toLocaleString(DateTime.DATE_MED);
+      }
+    } catch (error) {
+      console.error("Error formatting date:", dateString, error);
+      return null;
+    }
+  }
+
+  /**
    * Gets list of orders with optional filtering, sorting, and pagination
    * @param {Object} params - Query parameters { page, limit, search, sortBy, sortOrder, status, customerId, associateId }
    * @param {Function} onUnauthorizedCallback - Called when token refresh fails
@@ -108,20 +139,24 @@ export class OrderAPI {
         data.results.length > 0
       ) {
         data.results.forEach((item) => {
+          // Format dates safely
           if (item.createdAt) {
-            item.createdAt = DateTime.fromISO(item.createdAt).toLocaleString(
-              DateTime.DATETIME_MED,
-            );
+            item.createdAt =
+              this._formatDate(item.createdAt, "datetime") || item.createdAt;
           }
           if (item.startDate) {
-            item.startDate = DateTime.fromISO(item.startDate).toLocaleString(
-              DateTime.DATE_MED,
-            );
+            item.startDate =
+              this._formatDate(item.startDate, "date") || item.startDate;
           }
           if (item.completionDate) {
-            item.completionDate = DateTime.fromISO(
-              item.completionDate,
-            ).toLocaleString(DateTime.DATE_MED);
+            item.completionDate =
+              this._formatDate(item.completionDate, "date") ||
+              item.completionDate;
+          }
+          if (item.assignmentDate) {
+            item.assignmentDate =
+              this._formatDate(item.assignmentDate, "date") ||
+              item.assignmentDate;
           }
         });
       }
@@ -174,20 +209,24 @@ export class OrderAPI {
         data.results.length > 0
       ) {
         data.results.forEach((item, index) => {
+          // Format dates safely
           if (item.createdAt) {
-            item.createdAt = DateTime.fromISO(item.createdAt).toLocaleString(
-              DateTime.DATETIME_MED,
-            );
+            item.createdAt =
+              this._formatDate(item.createdAt, "datetime") || item.createdAt;
           }
           if (item.startDate) {
-            item.startDate = DateTime.fromISO(item.startDate).toLocaleString(
-              DateTime.DATE_MED,
-            );
+            item.startDate =
+              this._formatDate(item.startDate, "date") || item.startDate;
           }
           if (item.completionDate) {
-            item.completionDate = DateTime.fromISO(
-              item.completionDate,
-            ).toLocaleString(DateTime.DATE_MED);
+            item.completionDate =
+              this._formatDate(item.completionDate, "date") ||
+              item.completionDate;
+          }
+          if (item.assignmentDate) {
+            item.assignmentDate =
+              this._formatDate(item.assignmentDate, "date") ||
+              item.assignmentDate;
           }
         });
       }
@@ -356,19 +395,20 @@ export class OrderAPI {
 
       // Process date formatting
       if (data.createdAt) {
-        data.createdAt = DateTime.fromISO(data.createdAt).toLocaleString(
-          DateTime.DATETIME_MED,
-        );
+        data.createdAt =
+          this._formatDate(data.createdAt, "datetime") || data.createdAt;
       }
       if (data.startDate) {
-        data.startDate = DateTime.fromISO(data.startDate).toLocaleString(
-          DateTime.DATE_MED,
-        );
+        data.startDate =
+          this._formatDate(data.startDate, "date") || data.startDate;
       }
       if (data.completionDate) {
-        data.completionDate = DateTime.fromISO(
-          data.completionDate,
-        ).toLocaleString(DateTime.DATE_MED);
+        data.completionDate =
+          this._formatDate(data.completionDate, "date") || data.completionDate;
+      }
+      if (data.assignmentDate) {
+        data.assignmentDate =
+          this._formatDate(data.assignmentDate, "date") || data.assignmentDate;
       }
 
       // Log for debugging in development
