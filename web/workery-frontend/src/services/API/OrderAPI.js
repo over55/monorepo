@@ -34,6 +34,15 @@ export class OrderAPI {
   _formatDate(dateString, format = "date") {
     if (!dateString) return null;
 
+    // Check for zero/null date values (Go's zero time)
+    if (
+      dateString === "0001-01-01T00:00:00Z" ||
+      dateString === "0001-01-01T00:00:00" ||
+      dateString.startsWith("0001-01-01")
+    ) {
+      return null; // Return null so the component will show "-"
+    }
+
     try {
       const dt = DateTime.fromISO(dateString);
 
