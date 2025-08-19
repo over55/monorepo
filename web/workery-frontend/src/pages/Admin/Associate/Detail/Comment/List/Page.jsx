@@ -1,19 +1,30 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Associate/Detail/Comment/List/Page.jsx
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useNavigate, useParams } from "react-router";
+import {
+  ChartBarIcon,
+  UserGroupIcon,
+  InformationCircleIcon,
+  ChatBubbleLeftRightIcon,
+  ChevronLeftIcon,
+  ArrowPathIcon,
+  PlusCircleIcon,
+  ClockIcon,
+  ArchiveBoxIcon,
+  EllipsisHorizontalIcon,
+  ClipboardDocumentListIcon,
+  PaperClipIcon,
+  ChevronRightIcon,
+  ExclamationTriangleIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  UserIcon,
+} from "@heroicons/react/24/outline";
 import {
   useAssociateManager,
   useCommentManager,
 } from "../../../../../../services/Services";
-import { theme, globalStyles } from "../../../../../../constants/Theme";
-import {
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Breadcrumb,
-} from "../../../../../../components/UI";
 import { DateTime } from "luxon";
 
 // Constants for comment belonging types (from backend)
@@ -27,6 +38,10 @@ function AdminAssociateDetailCommentListPage() {
   const navigate = useNavigate();
   const associateManager = useAssociateManager();
   const commentManager = useCommentManager();
+
+  // Use refs to track if initial load has happened
+  const hasInitialLoad = useRef(false);
+  const lastFetchParams = useRef(null);
 
   // Component states
   const [errors, setErrors] = useState({});
@@ -70,10 +85,30 @@ function AdminAssociateDetailCommentListPage() {
   // Core fetch function
   const doFetchComments = useCallback(
     async (cursor = "", forceRefresh = false) => {
+      // Create a unique key for this fetch to prevent duplicates
+      const fetchKey = `${cursor}-${pageSize}-${sortByValue}`;
+
+      // Check if we're already fetching with these exact params
+      if (lastFetchParams.current === fetchKey && !forceRefresh) {
+        console.log("Skipping duplicate fetch with same params:", fetchKey);
+        return;
+      }
+
       try {
         if (forceRefresh) {
           setRefreshing(true);
-          commentManager.clearCommentsCache();
+          // Clear only the specific cache for these parameters
+          const sortArray = sortByValue.split(",");
+          const filtersMap = new Map();
+          filtersMap.set("page_size", pageSize.toString());
+          filtersMap.set("associate_id", aid);
+          filtersMap.set("belongs_to", BELONGS_TO_ASSOCIATE.toString());
+          filtersMap.set("sort_field", sortArray[0]);
+          filtersMap.set("sort_order", sortArray[1]);
+          if (cursor) {
+            filtersMap.set("cursor", cursor);
+          }
+          commentManager.clearSpecificCache(filtersMap);
         } else {
           setFetching(true);
         }
@@ -103,6 +138,9 @@ function AdminAssociateDetailCommentListPage() {
         Object.entries(params).forEach(([key, value]) => {
           filtersMap.set(key, value);
         });
+
+        // Update last fetch params
+        lastFetchParams.current = fetchKey;
 
         // Fetch comments
         const data = await commentManager.getCommentsWithFiltersMap(
@@ -172,10 +210,16 @@ function AdminAssociateDetailCommentListPage() {
       setTopAlertMessage("Comment created successfully");
       setTopAlertStatus("success");
 
-      // Reset and refresh
+      // Clear all cache and reset pagination
+      commentManager.clearCommentsCache();
+      lastFetchParams.current = null;
+
+      // Reset pagination state
       setCurrentCursor("");
       setPreviousCursors([]);
       setNextCursor("");
+
+      // Force refresh
       await doFetchComments("", true);
 
       setTimeout(() => {
@@ -197,10 +241,8 @@ function AdminAssociateDetailCommentListPage() {
 
   // Refresh handler
   const handleRefresh = () => {
-    setCurrentCursor("");
-    setPreviousCursors([]);
-    setNextCursor("");
-    doFetchComments("", true);
+    lastFetchParams.current = null;
+    doFetchComments(currentCursor, true);
   };
 
   // Pagination handlers
@@ -223,6 +265,28 @@ function AdminAssociateDetailCommentListPage() {
       }
       return prev;
     });
+  };
+
+  // Handle page size change
+  const handlePageSizeChange = (newSize) => {
+    console.log("Page size changed to:", newSize);
+    setPageSize(newSize);
+    // Reset pagination when page size changes
+    setCurrentCursor("");
+    setPreviousCursors([]);
+    setNextCursor("");
+    lastFetchParams.current = null;
+  };
+
+  // Handle sort change
+  const handleSortChange = (newSort) => {
+    console.log("Sort changed to:", newSort);
+    setSortByValue(newSort);
+    // Reset pagination when sort changes
+    setCurrentCursor("");
+    setPreviousCursors([]);
+    setNextCursor("");
+    lastFetchParams.current = null;
   };
 
   // Format helpers
@@ -250,29 +314,24 @@ function AdminAssociateDetailCommentListPage() {
     }
   };
 
-  // Initial load
+  // Initial load - only clear cache once on mount
   useEffect(() => {
-    window.scrollTo(0, 0);
-    fetchAssociateDetail();
-    commentManager.clearCommentsCache();
+    if (!hasInitialLoad.current) {
+      window.scrollTo(0, 0);
+      fetchAssociateDetail();
+      // Clear all comment cache on initial mount
+      commentManager.clearCommentsCache();
+      hasInitialLoad.current = true;
+    }
   }, [fetchAssociateDetail, commentManager]);
 
-  // Fetch comments when cursor changes - THIS IS THE KEY EFFECT FOR PAGINATION
+  // Fetch comments when parameters change
   useEffect(() => {
-    if (aid) {
-      console.log("Cursor changed, fetching with:", currentCursor);
+    if (aid && hasInitialLoad.current) {
+      console.log("Parameters changed, fetching with cursor:", currentCursor);
       doFetchComments(currentCursor, false);
     }
-  }, [aid, currentCursor, doFetchComments]);
-
-  // Reset when page size or sort changes
-  useEffect(() => {
-    console.log("Page size or sort changed, resetting...");
-    setCurrentCursor("");
-    setPreviousCursors([]);
-    setNextCursor("");
-    // The cursor reset above will trigger the fetch via the other useEffect
-  }, [pageSize, sortByValue]);
+  }, [aid, currentCursor, pageSize, sortByValue, doFetchComments]);
 
   // Page size options
   const pageSizeOptions = [
@@ -282,59 +341,112 @@ function AdminAssociateDetailCommentListPage() {
     { value: 100, label: "100" },
   ];
 
-  // Breadcrumb items
-  const breadcrumbItems = [
-    { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
-    { label: "Associates", path: "/admin/associates", icon: "👷" },
-    { label: "Detail", icon: "ℹ️" },
-  ];
-
   if (isFetching && !associate.id) {
     return (
-      <div style={globalStyles.container}>
-        <Loading message="Loading associate comments..." />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading associate comments...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={globalStyles.container}>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Breadcrumb */}
-      <Breadcrumb items={breadcrumbItems} />
+      <nav className="flex mb-6" aria-label="Breadcrumb">
+        <ol className="inline-flex items-center space-x-1 md:space-x-3">
+          <li className="inline-flex items-center">
+            <Link
+              to="/admin/dashboard"
+              className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+            >
+              <ChartBarIcon className="w-4 h-4 mr-2" />
+              Dashboard
+            </Link>
+          </li>
+          <li>
+            <div className="flex items-center">
+              <span className="mx-2 text-gray-400">/</span>
+              <Link
+                to="/admin/associates"
+                className="text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <span className="inline-flex items-center">
+                  <UserGroupIcon className="w-4 h-4 mr-2" />
+                  Associates
+                </span>
+              </Link>
+            </div>
+          </li>
+          <li aria-current="page">
+            <div className="flex items-center">
+              <span className="mx-2 text-gray-400">/</span>
+              <span className="text-sm font-medium text-gray-500 inline-flex items-center">
+                <InformationCircleIcon className="w-4 h-4 mr-2" />
+                Detail
+              </span>
+            </div>
+          </li>
+        </ol>
+      </nav>
 
       {/* Page Title */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "20px",
-        }}
-      >
-        <div>
-          <h1 style={{ margin: 0 }}>👷 Associate</h1>
-          <h4 style={{ margin: "5px 0 0 0", color: theme.colors.secondary }}>
-            ℹ️ Detail
-          </h4>
+      <div className="mb-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center">
+              <UserGroupIcon className="w-8 h-8 mr-3 text-blue-600" />
+              Associate
+            </h1>
+            <p className="mt-1 text-sm text-gray-600 flex items-center">
+              <InformationCircleIcon className="w-4 h-4 mr-1" />
+              View and manage comments
+            </p>
+          </div>
         </div>
       </div>
 
       {/* Status Alerts */}
       {associate && associate.status === 2 && (
-        <Alert type="info">📁 This associate is archived</Alert>
+        <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg flex items-center">
+          <ArchiveBoxIcon className="w-5 h-5 mr-2" />
+          This associate is archived
+        </div>
       )}
 
       {/* Top Alert Message */}
       {topAlertMessage && (
-        <Alert
-          type={topAlertStatus === "success" ? "success" : "error"}
-          onClose={() => {
-            setTopAlertMessage("");
-            setTopAlertStatus("");
-          }}
+        <div
+          className={`mb-4 px-4 py-3 rounded-lg ${
+            topAlertStatus === "success"
+              ? "bg-green-50 border border-green-200 text-green-700"
+              : "bg-red-50 border border-red-200 text-red-700"
+          }`}
         >
-          {topAlertMessage}
-        </Alert>
+          <div className="flex justify-between items-center">
+            <div className="flex items-center">
+              {topAlertStatus === "success" ? (
+                <CheckCircleIcon className="w-5 h-5 mr-2" />
+              ) : (
+                <XCircleIcon className="w-5 h-5 mr-2" />
+              )}
+              <span>{topAlertMessage}</span>
+            </div>
+            <button
+              onClick={() => {
+                setTopAlertMessage("");
+                setTopAlertStatus("");
+              }}
+              className="text-current hover:opacity-70"
+            >
+              ×
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Error Display */}
@@ -342,163 +454,111 @@ function AdminAssociateDetailCommentListPage() {
         typeof errors === "object" &&
         Object.keys(errors).length > 0 &&
         !topAlertMessage && (
-          <Alert type="error" onClose={() => setErrors({})}>
-            <strong>Error:</strong>
-            <ul
-              style={{
-                marginTop: "10px",
-                paddingLeft: "20px",
-                marginBottom: 0,
-              }}
-            >
-              {Object.entries(errors).map(([key, value]) => (
-                <li key={key}>
-                  {key}: {value}
-                </li>
-              ))}
-            </ul>
-          </Alert>
-        )}
-
-      {/* Main Content */}
-      <Card>
-        {/* Header with Title and Refresh Button */}
-        {associate && (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "30px",
-              flexWrap: "wrap",
-              gap: "10px",
-            }}
-          >
-            <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-              <h3 style={{ margin: 0 }}>💬 Comments</h3>
-              {lastFetchTime && (
-                <span
-                  style={{ fontSize: "14px", color: theme.colors.secondary }}
-                >
-                  {formatLastFetchTime()}
-                </span>
-              )}
+          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            <div className="flex items-start">
+              <ExclamationTriangleIcon className="w-5 h-5 mr-2 mt-0.5" />
+              <div className="flex-1">
+                <strong>Error:</strong>
+                <ul className="mt-2 list-disc list-inside">
+                  {Object.entries(errors).map(([key, value]) => (
+                    <li key={key}>
+                      {key}: {value}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <button
+                onClick={() => setErrors({})}
+                className="text-red-700 hover:text-red-900 ml-3"
+              >
+                ×
+              </button>
             </div>
-            <Button
-              onClick={handleRefresh}
-              variant="outline"
-              disabled={isRefreshing}
-            >
-              {isRefreshing ? "Refreshing..." : "🔄 Refresh"}
-            </Button>
           </div>
         )}
 
+      {/* Main Content */}
+      <div className="bg-white shadow-sm rounded-lg">
         {associate && (
           <>
-            {/* Tab Navigation */}
-            <div
-              style={{
-                borderBottom: "2px solid #e0e0e0",
-                marginBottom: "30px",
-                display: "flex",
-                gap: "20px",
-                flexWrap: "wrap",
-              }}
-            >
-              <Link
-                to={`/admin/associate/${aid}`}
-                style={{
-                  padding: "10px 0",
-                  textDecoration: "none",
-                  color: theme.colors.secondary,
-                }}
-              >
-                Summary
-              </Link>
-              <Link
-                to={`/admin/associate/${aid}/detail`}
-                style={{
-                  padding: "10px 0",
-                  textDecoration: "none",
-                  color: theme.colors.secondary,
-                }}
-              >
-                Detail
-              </Link>
-              <Link
-                to={`/admin/associate/${aid}/orders`}
-                style={{
-                  padding: "10px 0",
-                  textDecoration: "none",
-                  color: theme.colors.secondary,
-                }}
-              >
-                Orders
-              </Link>
-              <div
-                style={{
-                  padding: "10px 0",
-                  borderBottom: "3px solid " + theme.colors.primary,
-                  fontWeight: "bold",
-                }}
-              >
-                Comments
+            {/* Header with Title and Refresh Button */}
+            <div className="px-6 py-5 border-b border-gray-200">
+              <div className="flex justify-between items-center flex-wrap gap-4">
+                <div className="flex items-center gap-4">
+                  <h2 className="text-2xl font-semibold text-gray-900 flex items-center">
+                    <ChatBubbleLeftRightIcon className="w-7 h-7 mr-2 text-blue-600" />
+                    Comments
+                  </h2>
+                  {lastFetchTime && (
+                    <span className="text-sm text-gray-500 flex items-center">
+                      <ClockIcon className="w-4 h-4 mr-1" />
+                      {formatLastFetchTime()}
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={handleRefresh}
+                  disabled={isRefreshing}
+                  className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
+                >
+                  <ArrowPathIcon
+                    className={`w-5 h-5 mr-2 ${isRefreshing ? "animate-spin" : ""}`}
+                  />
+                  {isRefreshing ? "Refreshing..." : "Refresh"}
+                </button>
               </div>
-              <Link
-                to={`/admin/associate/${aid}/attachments`}
-                style={{
-                  padding: "10px 0",
-                  textDecoration: "none",
-                  color: theme.colors.secondary,
-                }}
-              >
-                Attachments
-              </Link>
-              <Link
-                to={`/admin/associate/${aid}/more`}
-                style={{
-                  padding: "10px 0",
-                  textDecoration: "none",
-                  color: theme.colors.secondary,
-                }}
-              >
-                More ⋯
-              </Link>
             </div>
 
-            {/* Sort Controls */}
-            <div
-              style={{
-                display: "flex",
-                gap: "15px",
-                marginBottom: "20px",
-                flexWrap: "wrap",
-                alignItems: "center",
-              }}
-            >
-              <div>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "5px",
-                    fontSize: "14px",
-                    fontWeight: "600",
-                  }}
+            {/* Tab Navigation */}
+            <div className="px-6 border-b border-gray-200">
+              <nav className="-mb-px flex space-x-8">
+                <Link
+                  to={`/admin/associate/${aid}`}
+                  className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
                 >
+                  Summary
+                </Link>
+                <Link
+                  to={`/admin/associate/${aid}/detail`}
+                  className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                >
+                  Detail
+                </Link>
+                <Link
+                  to={`/admin/associate/${aid}/orders`}
+                  className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                >
+                  Orders
+                </Link>
+                <div className="border-b-2 border-blue-600 py-4 px-1 text-base font-medium text-blue-600">
+                  Comments
+                </div>
+                <Link
+                  to={`/admin/associate/${aid}/attachments`}
+                  className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                >
+                  Attachments
+                </Link>
+                <Link
+                  to={`/admin/associate/${aid}/more`}
+                  className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center"
+                >
+                  More
+                  <EllipsisHorizontalIcon className="w-5 h-5 ml-1" />
+                </Link>
+              </nav>
+            </div>
+
+            <div className="p-6">
+              {/* Sort Controls */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Sort By:
                 </label>
                 <select
                   value={sortByValue}
-                  onChange={(e) => setSortByValue(e.target.value)}
-                  style={{
-                    padding: "8px 12px",
-                    border: "1px solid #ddd",
-                    borderRadius: "4px",
-                    backgroundColor: "white",
-                    fontSize: "14px",
-                    minWidth: "200px",
-                  }}
+                  onChange={(e) => handleSortChange(e.target.value)}
+                  className="block w-full md:w-64 px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                 >
                   <option value="created_at,DESC">Created Date (Newest)</option>
                   <option value="created_at,ASC">Created Date (Oldest)</option>
@@ -510,266 +570,196 @@ function AdminAssociateDetailCommentListPage() {
                   </option>
                 </select>
               </div>
-            </div>
 
-            {/* Add Comment Form */}
-            <div
-              style={{
-                backgroundColor: theme.colors.light,
-                padding: "20px",
-                borderRadius: "8px",
-                marginBottom: "30px",
-                border: "1px solid #e0e0e0",
-              }}
-            >
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "10px",
-                  fontWeight: "600",
-                  fontSize: "14px",
-                }}
-              >
-                Add New Comment <span style={{ color: "red" }}>*</span>
-              </label>
-              <textarea
-                name="content"
-                placeholder="Write your comment here..."
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                disabled={associate.status === 2 || isSubmitting}
-                style={{
-                  width: "100%",
-                  minHeight: "100px",
-                  padding: "12px",
-                  border:
+              {/* Add Comment Form */}
+              <div className="bg-gray-50 rounded-lg p-6 mb-8 border border-gray-200">
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Add New Comment <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  name="content"
+                  placeholder="Write your comment here..."
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  disabled={associate.status === 2 || isSubmitting}
+                  className={`block w-full px-4 py-3 border rounded-lg focus:ring-blue-500 focus:border-blue-500 resize-y ${
                     errors && errors.content
-                      ? "2px solid #dc3545"
-                      : "1px solid #ddd",
-                  borderRadius: "4px",
-                  fontSize: "14px",
-                  resize: "vertical",
-                  backgroundColor: associate.status === 2 ? "#f5f5f5" : "white",
-                  cursor: associate.status === 2 ? "not-allowed" : "text",
-                }}
-              />
-              {errors && errors.content && (
-                <div
-                  style={{
-                    color: "#dc3545",
-                    fontSize: "12px",
-                    marginTop: "5px",
-                  }}
-                >
-                  {errors.content}
-                </div>
-              )}
-              <Button
-                onClick={onSubmitClick}
-                disabled={
-                  associate.status === 2 || isSubmitting || !content.trim()
-                }
-                variant="primary"
-                style={{ marginTop: "10px" }}
-              >
-                {isSubmitting ? "Saving..." : "💾 Save Comment"}
-              </Button>
-            </div>
-
-            {/* Comments List */}
-            {isFetching || isRefreshing ? (
-              <div style={{ textAlign: "center", padding: "40px" }}>
-                <Loading
-                  message={
-                    isRefreshing
-                      ? "Refreshing comments..."
-                      : "Loading comments..."
-                  }
+                      ? "border-red-300 bg-red-50"
+                      : "border-gray-300"
+                  } ${
+                    associate.status === 2
+                      ? "bg-gray-100 cursor-not-allowed"
+                      : "bg-white"
+                  }`}
+                  rows="4"
                 />
-              </div>
-            ) : commentList.results && commentList.results.length > 0 ? (
-              <>
-                {/* Comments Display */}
-                <div style={{ marginBottom: "30px" }}>
-                  <h4 style={{ marginBottom: "20px" }}>
-                    Comments for {associate.name || "Associate"} (
-                    {commentList.results.length}{" "}
-                    {commentList.hasNextPage ? "+" : ""})
-                  </h4>
-                  {commentList.results.map((comment, index) => (
-                    <div
-                      key={comment.id || `comment-${index}`}
-                      style={{
-                        marginBottom: "20px",
-                        padding: "15px",
-                        backgroundColor: "#f8f9fa",
-                        borderRadius: "8px",
-                        border: "1px solid #e0e0e0",
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: "flex",
-                          justifyContent: "space-between",
-                          alignItems: "flex-start",
-                          marginBottom: "10px",
-                          flexWrap: "wrap",
-                          gap: "10px",
-                        }}
-                      >
-                        <div>
-                          <strong style={{ color: theme.colors.primary }}>
-                            {comment.createdByUserName || "System"}
-                          </strong>
-                          {comment.associateName &&
-                            comment.associateName !== associate.name && (
-                              <span
-                                style={{
-                                  color: "#666",
-                                  fontSize: "12px",
-                                  marginLeft: "10px",
-                                }}
-                              >
-                                (Re: {comment.associateName})
-                              </span>
-                            )}
-                        </div>
-                        <div style={{ color: "#666", fontSize: "14px" }}>
-                          {formatDateTime(comment.createdAt)}
-                        </div>
-                      </div>
-                      <div
-                        style={{
-                          padding: "10px",
-                          backgroundColor: "white",
-                          borderRadius: "4px",
-                          lineHeight: "1.6",
-                          whiteSpace: "pre-wrap",
-                          wordBreak: "break-word",
-                        }}
-                      >
-                        {comment.content}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Pagination Controls */}
-                {(previousCursors.length > 0 || commentList.hasNextPage) && (
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                      marginTop: "30px",
-                      borderTop: "1px solid #e0e0e0",
-                      paddingTop: "20px",
-                      flexWrap: "wrap",
-                      gap: "10px",
-                    }}
-                  >
-                    <div style={{ display: "flex", alignItems: "center" }}>
-                      <label
-                        style={{
-                          marginRight: "10px",
-                          fontSize: "14px",
-                          fontWeight: "600",
-                        }}
-                      >
-                        Items per page:
-                      </label>
-                      <select
-                        value={pageSize}
-                        onChange={(e) => setPageSize(parseInt(e.target.value))}
-                        style={{
-                          padding: "8px 12px",
-                          border: "1px solid #ddd",
-                          borderRadius: "4px",
-                          backgroundColor: "white",
-                          fontSize: "14px",
-                        }}
-                      >
-                        {pageSizeOptions.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div style={{ display: "flex", gap: "10px" }}>
-                      {previousCursors.length > 0 && (
-                        <Button onClick={onPreviousClicked} variant="secondary">
-                          ← Previous
-                        </Button>
-                      )}
-                      {commentList.hasNextPage && nextCursor && (
-                        <Button onClick={onNextClicked} variant="primary">
-                          Next →
-                        </Button>
-                      )}
-                    </div>
-                  </div>
+                {errors && errors.content && (
+                  <p className="mt-2 text-sm text-red-600">{errors.content}</p>
                 )}
-              </>
-            ) : (
-              // No comments message
-              previousCursors.length === 0 && (
-                <div
-                  style={{
-                    textAlign: "center",
-                    padding: "60px 20px",
-                    backgroundColor: theme.colors.light,
-                    borderRadius: "8px",
-                  }}
+                <button
+                  onClick={onSubmitClick}
+                  disabled={
+                    associate.status === 2 || isSubmitting || !content.trim()
+                  }
+                  className={`mt-4 inline-flex items-center px-5 py-2.5 border border-transparent rounded-lg text-base font-medium text-white transition-colors ${
+                    associate.status === 2 || isSubmitting || !content.trim()
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-blue-600 hover:bg-blue-700"
+                  }`}
                 >
-                  <div style={{ fontSize: "48px", marginBottom: "20px" }}>
-                    💭
-                  </div>
-                  <h3>No Comments Yet</h3>
-                  <p
-                    style={{
-                      color: theme.colors.secondary,
-                      marginBottom: "0",
-                    }}
-                  >
-                    Be the first to add a comment about this associate.
-                  </p>
-                </div>
-              )
-            )}
+                  <PlusCircleIcon className="w-5 h-5 mr-2" />
+                  {isSubmitting ? "Saving..." : "Save Comment"}
+                </button>
+              </div>
 
-            {/* Action Buttons */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginTop: "30px",
-                flexWrap: "wrap",
-                gap: "10px",
-              }}
-            >
-              <Link to="/admin/associates">
-                <Button variant="outline">← Back to Associates</Button>
-              </Link>
+              {/* Comments List */}
+              {isFetching || isRefreshing ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">
+                      {isRefreshing
+                        ? "Refreshing comments..."
+                        : "Loading comments..."}
+                    </p>
+                  </div>
+                </div>
+              ) : commentList.results && commentList.results.length > 0 ? (
+                <>
+                  {/* Comments Display */}
+                  <div className="mb-8">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                      Comments for {associate.name || "Associate"} (
+                      {commentList.results.length}
+                      {commentList.hasNextPage ? "+" : ""})
+                    </h3>
+                    <div className="space-y-4">
+                      {commentList.results.map((comment, index) => (
+                        <div
+                          key={comment.id || `comment-${index}`}
+                          className="bg-gray-50 rounded-lg border border-gray-200 p-4"
+                        >
+                          <div className="flex justify-between items-start mb-3">
+                            <div className="flex items-center">
+                              <UserIcon className="w-5 h-5 mr-2 text-blue-600" />
+                              <strong className="text-blue-600">
+                                {comment.createdByUserName || "System"}
+                              </strong>
+                              {comment.associateName &&
+                                comment.associateName !== associate.name && (
+                                  <span className="ml-3 text-xs text-gray-500">
+                                    (Re: {comment.associateName})
+                                  </span>
+                                )}
+                            </div>
+                            <div className="text-sm text-gray-500 flex items-center">
+                              <ClockIcon className="w-4 h-4 mr-1" />
+                              {formatDateTime(comment.createdAt)}
+                            </div>
+                          </div>
+                          <div className="bg-white rounded-md p-4 border border-gray-100">
+                            <p className="text-gray-900 whitespace-pre-wrap break-words">
+                              {comment.content}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Pagination Controls */}
+                  {(previousCursors.length > 0 || commentList.hasNextPage) && (
+                    <div className="flex justify-between items-center pt-6 border-t border-gray-200">
+                      <div className="flex items-center">
+                        <label className="mr-3 text-sm font-medium text-gray-700">
+                          Items per page:
+                        </label>
+                        <select
+                          value={pageSize}
+                          onChange={(e) =>
+                            handlePageSizeChange(parseInt(e.target.value))
+                          }
+                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                        >
+                          {pageSizeOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="flex gap-3">
+                        {previousCursors.length > 0 && (
+                          <button
+                            onClick={onPreviousClicked}
+                            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                          >
+                            <ChevronLeftIcon className="w-4 h-4 mr-2" />
+                            Previous
+                          </button>
+                        )}
+                        {commentList.hasNextPage && nextCursor && (
+                          <button
+                            onClick={onNextClicked}
+                            className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                          >
+                            Next
+                            <ChevronRightIcon className="w-4 h-4 ml-2" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                // No comments message
+                previousCursors.length === 0 && (
+                  <div className="text-center py-16 bg-gray-50 rounded-lg">
+                    <ChatBubbleLeftRightIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      No Comments Yet
+                    </h3>
+                    <p className="text-gray-500">
+                      Be the first to add a comment about this associate.
+                    </p>
+                  </div>
+                )
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex justify-start mt-8 pt-6 border-t border-gray-200">
+                <Link to="/admin/associates">
+                  <button className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                    <ChevronLeftIcon className="w-5 h-5 mr-2" />
+                    Back to Associates
+                  </button>
+                </Link>
+              </div>
             </div>
           </>
         )}
 
         {!associate && !isFetching && (
-          <div style={{ textAlign: "center", padding: "60px 20px" }}>
-            <div style={{ fontSize: "48px", marginBottom: "20px" }}>❓</div>
-            <h3>Associate Not Found</h3>
-            <p style={{ color: theme.colors.secondary, marginBottom: "30px" }}>
+          <div className="px-6 py-16 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
+              <UserGroupIcon className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Associate Not Found
+            </h3>
+            <p className="text-gray-500 mb-6">
               The associate you're looking for doesn't exist or you don't have
               permission to view it.
             </p>
             <Link to="/admin/associates">
-              <Button variant="primary">← Back to Associates</Button>
+              <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                <ChevronLeftIcon className="w-4 h-4 mr-2" />
+                Back to Associates
+              </button>
             </Link>
           </div>
         )}
-      </Card>
+      </div>
     </div>
   );
 }
