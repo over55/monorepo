@@ -10,6 +10,10 @@ import {
   Alert,
   Loading,
 } from "../../../../../components/UI";
+import {
+  SkillSetsDisplay,
+  TagsDisplay,
+} from "../../../../../components/Display";
 import { CLIENT_PHONE_TYPE_OF_MAP } from "../../../../../constants/FieldOptions";
 
 function AdminTaskItemAssignAssociateStep1Page() {
@@ -28,6 +32,21 @@ function AdminTaskItemAssignAssociateStep1Page() {
   // Event handling
   const onUnauthorized = () => {
     setForceURL("/login?unauthorized=true");
+  };
+
+  // Helper function to extract IDs from array of objects
+  const extractIds = (items) => {
+    if (!items || !Array.isArray(items)) return [];
+    return items
+      .map((item) => {
+        // Handle different possible structures
+        if (typeof item === "number" || typeof item === "string") {
+          return item;
+        }
+        // Try different possible ID properties
+        return item.id || item.value || item.skillSetId || item.tagId;
+      })
+      .filter(Boolean);
   };
 
   // Load task details
@@ -153,23 +172,23 @@ function AdminTaskItemAssignAssociateStep1Page() {
                       <td>{task.orderDescription || "-"}</td>
                     </tr>
                     <tr>
-                      <th>Job Skill Sets</th>
+                      <th style={{ verticalAlign: "top" }}>Job Skill Sets</th>
                       <td>
-                        {task.orderSkillSets && task.orderSkillSets.length > 0
-                          ? task.orderSkillSets
-                              .map((skill) => skill.name || skill.text)
-                              .join(", ")
-                          : "-"}
+                        <SkillSetsDisplay
+                          values={extractIds(task.orderSkillSets)}
+                          onUnauthorized={onUnauthorized}
+                          variant="primary"
+                        />
                       </td>
                     </tr>
                     <tr>
-                      <th>Job Tags</th>
+                      <th style={{ verticalAlign: "top" }}>Job Tags</th>
                       <td>
-                        {task.orderTags && task.orderTags.length > 0
-                          ? task.orderTags
-                              .map((tag) => tag.name || tag.text)
-                              .join(", ")
-                          : "-"}
+                        <TagsDisplay
+                          values={extractIds(task.orderTags)}
+                          onUnauthorized={onUnauthorized}
+                          variant="success"
+                        />
                       </td>
                     </tr>
                     <tr>
@@ -208,13 +227,13 @@ function AdminTaskItemAssignAssociateStep1Page() {
                       </tr>
                     )}
                     <tr>
-                      <th>Client Tags</th>
+                      <th style={{ verticalAlign: "top" }}>Client Tags</th>
                       <td>
-                        {task.customerTags && task.customerTags.length > 0
-                          ? task.customerTags
-                              .map((tag) => tag.name || tag.text)
-                              .join(", ")
-                          : "-"}
+                        <TagsDisplay
+                          values={extractIds(task.customerTags)}
+                          onUnauthorized={onUnauthorized}
+                          variant="info"
+                        />
                       </td>
                     </tr>
                     <tr>
