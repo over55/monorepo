@@ -4,6 +4,8 @@
  * Associate Constants
  */
 
+export const ASSOCIATE_STATUS_ACTIVE = 1;
+
 // Job Seeker Status
 export const ASSOCIATE_IS_JOB_SEEKER_YES = 1;
 export const ASSOCIATE_IS_JOB_SEEKER_NO = 2;
