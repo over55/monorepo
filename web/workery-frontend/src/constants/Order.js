@@ -17,15 +17,22 @@ export const ORDER_STATUS_COMPLETED_AND_PAID = 8;
 export const ORDER_STATUS_ARCHIVED = 9;
 
 // Constants for filtering and sorting
+// IMPORTANT: Convert numeric values to strings for HTML select elements
 export const ORDER_STATUS_OPTIONS = [
   { value: "", label: "All Statuses" },
-  { value: ORDER_STATUS_NEW, label: "New" },
-  { value: ORDER_STATUS_DECLINED, label: "Declined" },
-  { value: ORDER_STATUS_PENDING, label: "Pending" },
-  { value: ORDER_STATUS_CANCELLED, label: "Cancelled" },
-  { value: ORDER_STATUS_ONGOING, label: "Ongoing" },
-  { value: ORDER_STATUS_IN_PROGRESS, label: "In Progress" },
-  { value: ORDER_STATUS_COMPLETED_BUT_UNPAID, label: "Completed but unpaid" },
-  { value: ORDER_STATUS_COMPLETED_AND_PAID, label: "Completed and paid" },
-  { value: ORDER_STATUS_ARCHIVED, label: "Archived" },
+  { value: String(ORDER_STATUS_NEW), label: "New" }, // "1"
+  { value: String(ORDER_STATUS_DECLINED), label: "Declined" }, // "2"
+  { value: String(ORDER_STATUS_PENDING), label: "Pending" }, // "3"
+  { value: String(ORDER_STATUS_CANCELLED), label: "Cancelled" }, // "4"
+  { value: String(ORDER_STATUS_ONGOING), label: "Ongoing" }, // "5"
+  { value: String(ORDER_STATUS_IN_PROGRESS), label: "In Progress" }, // "6"
+  {
+    value: String(ORDER_STATUS_COMPLETED_BUT_UNPAID),
+    label: "Completed but unpaid",
+  }, // "7"
+  {
+    value: String(ORDER_STATUS_COMPLETED_AND_PAID),
+    label: "Completed and paid",
+  }, // "8"
+  { value: String(ORDER_STATUS_ARCHIVED), label: "Archived" }, // "9"
 ];

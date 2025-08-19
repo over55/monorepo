@@ -26,13 +26,36 @@ import {
   ORDER_STATUS_COMPLETED_BUT_UNPAID,
   ORDER_STATUS_COMPLETED_AND_PAID,
   ORDER_STATUS_ARCHIVED,
-  ORDER_STATUS_OPTIONS,
+  // ORDER_STATUS_OPTIONS is defined locally to fix issues with imported values
+  ORDER_TYPE_RESIDENTIAL,
+  ORDER_TYPE_COMMERCIAL,
 } from "../../../../constants/Order";
+
+// We define ORDER_STATUS_OPTIONS locally to ensure it is correct,
+// based on the imported constants.
+const ORDER_STATUS_OPTIONS = [
+  { value: "", label: "All Statuses" },
+  { value: String(ORDER_STATUS_NEW), label: "New" },
+  { value: String(ORDER_STATUS_DECLINED), label: "Declined" },
+  { value: String(ORDER_STATUS_PENDING), label: "Pending" },
+  { value: String(ORDER_STATUS_CANCELLED), label: "Cancelled" },
+  { value: String(ORDER_STATUS_ONGOING), label: "Ongoing" },
+  { value: String(ORDER_STATUS_IN_PROGRESS), label: "In Progress" },
+  {
+    value: String(ORDER_STATUS_COMPLETED_BUT_UNPAID),
+    label: "Completed but unpaid",
+  },
+  {
+    value: String(ORDER_STATUS_COMPLETED_AND_PAID),
+    label: "Completed and paid",
+  },
+  { value: String(ORDER_STATUS_ARCHIVED), label: "Archived" },
+];
 
 const ORDER_TYPE_OPTIONS = [
   { value: "", label: "All Types" },
-  { value: "1", label: "Residential" },
-  { value: "2", label: "Commercial" },
+  { value: String(ORDER_TYPE_RESIDENTIAL), label: "Residential" },
+  { value: String(ORDER_TYPE_COMMERCIAL), label: "Commercial" },
 ];
 
 const ORDER_SORT_OPTIONS = [
@@ -54,9 +77,9 @@ const PAGE_SIZE_OPTIONS = [
 const VIEW_TYPE_TABULAR = "tabular";
 const VIEW_TYPE_GRID = "grid";
 
-// Order type constants
-const RESIDENTIAL_ORDER_TYPE_ID = 1;
-const COMMERCIAL_ORDER_TYPE_ID = 2;
+// Order type constants are now imported from constants/Order.js
+// const RESIDENTIAL_ORDER_TYPE_ID = 1;
+// const COMMERCIAL_ORDER_TYPE_ID = 2;
 
 function AdminOrderListPage() {
   const orderManager = useOrderManager();
@@ -377,6 +400,10 @@ function AdminOrderListPage() {
 
   // Format order status for display
   const getOrderStatusDisplay = (status) => {
+    // Convert string to number if needed
+    const statusNum =
+      typeof status === "string" ? parseInt(status, 10) : status;
+
     const statusMap = {
       [ORDER_STATUS_NEW]: { label: "New", color: theme.colors.info },
       [ORDER_STATUS_DECLINED]: {
@@ -406,17 +433,24 @@ function AdminOrderListPage() {
         color: theme.colors.secondary,
       },
     };
+
     return (
-      statusMap[status] || { label: "Unknown", color: theme.colors.secondary }
+      statusMap[statusNum] || {
+        label: "Unknown",
+        color: theme.colors.secondary,
+      }
     );
   };
 
   // Format order type for display
   const getOrderTypeDisplay = (type) => {
-    switch (type) {
-      case COMMERCIAL_ORDER_TYPE_ID:
+    // Convert string to number if needed for comparison with numeric constants
+    const typeNum = typeof type === "string" ? parseInt(type, 10) : type;
+
+    switch (typeNum) {
+      case ORDER_TYPE_COMMERCIAL:
         return "Commercial";
-      case RESIDENTIAL_ORDER_TYPE_ID:
+      case ORDER_TYPE_RESIDENTIAL:
         return "Residential";
       default:
         return "Unknown";
@@ -630,6 +664,7 @@ function AdminOrderListPage() {
                   label="Status"
                   value={statusFilter}
                   onChange={(e) => {
+                    console.log("🧿Status change -->", e.target.value);
                     setStatusFilter(e.target.value);
                     setTimeout(() => handleFilterChange(), 0);
                   }}
