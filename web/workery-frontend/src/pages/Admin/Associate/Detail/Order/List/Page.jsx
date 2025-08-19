@@ -1,6 +1,6 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Associate/Detail/Order/List/Page.jsx
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import {
   useAssociateManager,
@@ -54,13 +54,35 @@ function AdminAssociateDetailOrderListPage() {
   const [isRefreshing, setRefreshing] = useState(false);
   const [associate, setAssociate] = useState({});
   const [orderList, setOrderList] = useState([]);
-  const [pageSize, setPageSize] = useState(50);
-  const [previousCursors, setPreviousCursors] = useState([]);
-  const [nextCursor, setNextCursor] = useState("");
+  const [totalCount, setTotalCount] = useState(0);
+
+  // Pagination state using cursor-based approach
   const [currentCursor, setCurrentCursor] = useState("");
+  const [nextCursor, setNextCursor] = useState("");
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [cursorHistory, setCursorHistory] = useState([]);
+  const [pageSize, setPageSize] = useState(50);
+
+  // Filter and sort state
   const [sortByValue, setSortByValue] = useState("assignment_date,DESC");
   const [status, setStatus] = useState(0);
   const [lastFetchTime, setLastFetchTime] = useState(null);
+
+  // Use refs to track the latest filter values to avoid stale closures
+  const filtersRef = useRef({
+    sortByValue,
+    status,
+    pageSize,
+  });
+
+  // Update refs when filters change
+  useEffect(() => {
+    filtersRef.current = {
+      sortByValue,
+      status,
+      pageSize,
+    };
+  }, [sortByValue, status, pageSize]);
 
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
@@ -80,88 +102,195 @@ function AdminAssociateDetailOrderListPage() {
     }
   };
 
-  // Fetch order list with force refresh option
+  // Fetch order list with force refresh option - now uses refs for filter values
   const fetchOrderList = useCallback(
-    async (forceRefresh = false) => {
-      try {
-        if (forceRefresh) {
-          setRefreshing(true);
-          // Clear the cache to force fresh data
-          orderManager.clearOrdersCache();
-        } else {
-          setFetching(true);
-        }
-        setErrors({});
+    async (cursor = "", isNavigatingBack = false) => {
+      // Get the latest filter values from refs
+      const currentFilters = filtersRef.current;
 
+      console.log(
+        "🔄 fetchOrderList called with cursor:",
+        cursor,
+        "filters:",
+        currentFilters,
+      );
+
+      setFetching(true);
+      setErrors({});
+
+      // Always clear the cache when fetching with new filters
+      if (!isNavigatingBack) {
+        orderManager.clearOrdersCache();
+      }
+
+      try {
         // Build filters map (matching old implementation)
         const filtersMap = new Map();
-        filtersMap.set("page_size", pageSize);
-        filtersMap.set("associate_id", aid);
 
-        if (currentCursor !== "") {
-          filtersMap.set("cursor", currentCursor);
+        // Add cursor if provided
+        if (cursor) {
+          filtersMap.set("cursor", cursor);
         }
 
+        // Add page size
+        filtersMap.set("page_size", currentFilters.pageSize.toString());
+
+        // IMPORTANT: Always include associate_id filter
+        filtersMap.set("associate_id", aid);
+
         // Handle sorting
-        const sortArray = sortByValue.split(",");
+        const sortArray = currentFilters.sortByValue.split(",");
         filtersMap.set("sort_field", sortArray[0]);
         filtersMap.set("sort_order", sortArray[1]);
 
-        if (status !== 0) {
-          filtersMap.set("status", status);
+        // Add status filter if not "All"
+        if (currentFilters.status !== 0) {
+          filtersMap.set("status", currentFilters.status.toString());
         }
+
+        console.log(
+          "🌐 Making API call with filters:",
+          Array.from(filtersMap.entries()),
+        );
 
         // Use the legacy method for compatibility with forceRefresh
         const data = await orderManager.getOrdersWithFiltersMap(
           filtersMap,
           onUnauthorized,
+          true, // Always force refresh
         );
 
-        if (data.results !== null) {
-          setOrderList(data);
-          if (data.hasNextPage) {
-            setNextCursor(data.nextCursor);
-          }
+        console.log("✅ API response received:", {
+          resultsCount: data.results?.length,
+          nextCursor: data.nextCursor,
+          hasNextPage: data.hasNextPage,
+          totalCount: data.count,
+        });
+
+        setOrderList(data);
+        setTotalCount(data.count || 0);
+
+        // Handle pagination response
+        if (
+          data.nextCursor !== undefined &&
+          data.nextCursor !== null &&
+          data.nextCursor !== ""
+        ) {
+          setNextCursor(data.nextCursor);
+          setHasNextPage(true);
+        } else {
+          setNextCursor("");
+          setHasNextPage(false);
         }
+
+        // Alternative: Check if hasNextPage is explicitly set
+        if (data.hasNextPage !== undefined) {
+          setHasNextPage(data.hasNextPage);
+        }
+
+        // Update current cursor if not navigating back
+        if (!isNavigatingBack) {
+          setCurrentCursor(cursor);
+        }
+
         setLastFetchTime(new Date());
       } catch (error) {
-        console.error("Failed to fetch order list:", error);
+        console.error("❌ Failed to fetch order list:", error);
         setErrors(error);
       } finally {
         setFetching(false);
         setRefreshing(false);
       }
     },
-    [
-      aid,
-      currentCursor,
-      pageSize,
-      sortByValue,
-      status,
-      orderManager,
-      onUnauthorized,
-    ],
+    [aid, orderManager, onUnauthorized],
   );
+
+  // Immediate filter application function
+  const applyFilters = useCallback(() => {
+    console.log("🔄 Applying filters - resetting pagination");
+    // Reset pagination when filters change
+    setCursorHistory([]);
+    setCurrentCursor("");
+    setNextCursor("");
+    setHasNextPage(false);
+    // Clear cache and fetch fresh data
+    orderManager.clearOrdersCache();
+    fetchOrderList("");
+  }, [fetchOrderList, orderManager]);
 
   // Refresh handler
   const handleRefresh = () => {
-    fetchOrderList(true);
+    setRefreshing(true);
+    applyFilters();
   };
 
   // Pagination handlers
-  const onNextClicked = () => {
-    console.log("Next Clicked");
-    let arr = [...previousCursors];
-    arr.push(currentCursor);
-    setPreviousCursors(arr);
-    setCurrentCursor(nextCursor);
+  const handleNextPage = () => {
+    console.log(
+      "🔜 handleNextPage clicked, nextCursor:",
+      nextCursor,
+      "hasNextPage:",
+      hasNextPage,
+    );
+
+    if (hasNextPage && nextCursor) {
+      console.log("✅ Going to next page with cursor:", nextCursor);
+
+      // Push current cursor to history for "Previous" functionality
+      setCursorHistory((prev) => [...prev, currentCursor]);
+
+      // Fetch next page
+      fetchOrderList(nextCursor);
+    } else {
+      console.log("❌ No next page available");
+    }
   };
 
-  const onPreviousClicked = () => {
-    let arr = [...previousCursors];
-    const previousCursor = arr.pop();
-    setPreviousCursors(arr);
-    setCurrentCursor(previousCursor);
+  const handlePreviousPage = () => {
+    console.log("🔙 handlePreviousPage clicked");
+
+    if (cursorHistory.length > 0) {
+      // Pop the last cursor from history
+      const newHistory = [...cursorHistory];
+      const previousCursor = newHistory.pop();
+
+      console.log(
+        "✅ Going to previous page with cursor:",
+        previousCursor || "start",
+      );
+
+      // Update history
+      setCursorHistory(newHistory);
+
+      // Fetch previous page
+      fetchOrderList(previousCursor || "", true);
+    } else {
+      console.log("❌ Already on first page");
+    }
+  };
+
+  // Handle page size change
+  const handlePageSizeChange = (e) => {
+    const newPageSize = parseInt(e.target.value);
+    console.log("📏 Page size changing from", pageSize, "to", newPageSize);
+    setPageSize(newPageSize);
+    // Apply filters immediately after state update
+    setTimeout(() => applyFilters(), 0);
+  };
+
+  // Handle sort change
+  const handleSortChange = (e) => {
+    setSortByValue(e.target.value);
+    // Apply filters immediately after state update
+    setTimeout(() => applyFilters(), 0);
+  };
+
+  // Handle status filter change
+  const handleStatusFilterChange = (e) => {
+    console.log("🎯 Status filter change:", e.target.value);
+    setStatus(parseInt(e.target.value));
+    // Apply filters immediately after state update
+    setTimeout(() => applyFilters(), 0);
   };
 
   // Format status helper with color
@@ -207,6 +336,7 @@ function AdminAssociateDetailOrderListPage() {
     }
   };
 
+  // Initial load - fetch associate detail
   useEffect(() => {
     window.scrollTo(0, 0);
     fetchAssociateDetail();
@@ -214,25 +344,13 @@ function AdminAssociateDetailOrderListPage() {
     orderManager.clearOrdersCache();
   }, [aid]);
 
+  // Initial data load - only on mount
   useEffect(() => {
     if (aid) {
-      fetchOrderList();
+      console.log("🚀 Initial mount - loading first page");
+      fetchOrderList("");
     }
-  }, [currentCursor, pageSize, sortByValue, status, aid]);
-
-  // Optional: Auto-refresh every 5 minutes
-  useEffect(() => {
-    const interval = setInterval(
-      () => {
-        if (!isFetching && !isRefreshing) {
-          fetchOrderList(true);
-        }
-      },
-      5 * 60 * 1000,
-    ); // 5 minutes
-
-    return () => clearInterval(interval);
-  }, [fetchOrderList, isFetching, isRefreshing]);
+  }, [aid]); // Only depend on aid, not fetchOrderList
 
   // Page size options
   const pageSizeOptions = [
@@ -248,6 +366,10 @@ function AdminAssociateDetailOrderListPage() {
     { label: "Associates", path: "/admin/associates", icon: "👷" },
     { label: "Detail", icon: "ℹ️" },
   ];
+
+  // Calculate pagination info
+  const hasPreviousPage = cursorHistory.length > 0;
+  const currentPageNumber = cursorHistory.length + 1;
 
   if (isFetching && !associate.id) {
     return (
@@ -436,11 +558,7 @@ function AdminAssociateDetailOrderListPage() {
                 </label>
                 <select
                   value={status}
-                  onChange={(e) => {
-                    setStatus(parseInt(e.target.value));
-                    setCurrentCursor(""); // Reset pagination
-                    setPreviousCursors([]);
-                  }}
+                  onChange={handleStatusFilterChange}
                   style={{
                     padding: "8px 12px",
                     border: "1px solid #ddd",
@@ -474,11 +592,7 @@ function AdminAssociateDetailOrderListPage() {
                 </label>
                 <select
                   value={sortByValue}
-                  onChange={(e) => {
-                    setSortByValue(e.target.value);
-                    setCurrentCursor(""); // Reset pagination
-                    setPreviousCursors([]);
-                  }}
+                  onChange={handleSortChange}
                   style={{
                     padding: "8px 12px",
                     border: "1px solid #ddd",
@@ -500,6 +614,51 @@ function AdminAssociateDetailOrderListPage() {
                   <option value="created_at,ASC">Created Date (Oldest)</option>
                 </select>
               </div>
+
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "5px",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                  }}
+                >
+                  Items per page:
+                </label>
+                <select
+                  value={pageSize}
+                  onChange={handlePageSizeChange}
+                  style={{
+                    padding: "8px 12px",
+                    border: "1px solid #ddd",
+                    borderRadius: "4px",
+                    backgroundColor: "white",
+                    fontSize: "14px",
+                  }}
+                >
+                  {pageSizeOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Results Count */}
+            <div
+              style={{ marginBottom: "20px", color: theme.colors.secondary }}
+            >
+              <div>
+                Showing{" "}
+                <strong>
+                  {orderList.results ? orderList.results.length : 0}
+                </strong>{" "}
+                orders
+                {totalCount > 0 && ` (Total: ${totalCount})`}
+                {status !== 0 && ` (filtered by status)`}
+              </div>
             </div>
 
             {isFetching || isRefreshing ? (
@@ -512,7 +671,7 @@ function AdminAssociateDetailOrderListPage() {
               </div>
             ) : orderList &&
               orderList.results &&
-              (orderList.results.length > 0 || previousCursors.length > 0) ? (
+              (orderList.results.length > 0 || cursorHistory.length > 0) ? (
               <>
                 {/* Orders Table - Desktop */}
                 <div
@@ -567,7 +726,7 @@ function AdminAssociateDetailOrderListPage() {
                             fontWeight: "600",
                           }}
                         >
-                          Assigned ↓
+                          Assigned
                         </th>
                         <th
                           style={{
@@ -823,45 +982,38 @@ function AdminAssociateDetailOrderListPage() {
                     gap: "10px",
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center" }}>
-                    <label
-                      style={{
-                        marginRight: "10px",
-                        fontSize: "14px",
-                        fontWeight: "600",
-                      }}
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "10px",
+                      alignItems: "center",
+                    }}
+                  >
+                    <Button
+                      variant="secondary"
+                      disabled={!hasPreviousPage}
+                      onClick={handlePreviousPage}
                     >
-                      Items per page:
-                    </label>
-                    <select
-                      value={pageSize}
-                      onChange={(e) => setPageSize(parseInt(e.target.value))}
-                      style={{
-                        padding: "8px 12px",
-                        border: "1px solid #ddd",
-                        borderRadius: "4px",
-                        backgroundColor: "white",
-                        fontSize: "14px",
-                      }}
+                      ← Previous
+                    </Button>
+
+                    <span style={{ padding: "0 15px", fontSize: "14px" }}>
+                      Page {currentPageNumber}
+                      {totalCount > 0 && (
+                        <span style={{ color: theme.colors.secondary }}>
+                          {" "}
+                          (Total: {totalCount} orders)
+                        </span>
+                      )}
+                    </span>
+
+                    <Button
+                      variant="secondary"
+                      disabled={!hasNextPage}
+                      onClick={handleNextPage}
                     >
-                      {pageSizeOptions.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    {previousCursors.length > 0 && (
-                      <Button onClick={onPreviousClicked} variant="secondary">
-                        ← Previous
-                      </Button>
-                    )}
-                    {orderList.hasNextPage && (
-                      <Button onClick={onNextClicked} variant="primary">
-                        Next →
-                      </Button>
-                    )}
+                      Next →
+                    </Button>
                   </div>
                 </div>
               </>
@@ -882,7 +1034,9 @@ function AdminAssociateDetailOrderListPage() {
                     marginBottom: "0",
                   }}
                 >
-                  This associate does not have any orders yet.
+                  {status !== 0
+                    ? "No orders match the selected status filter."
+                    : "This associate does not have any orders yet."}
                 </p>
               </div>
             )}
