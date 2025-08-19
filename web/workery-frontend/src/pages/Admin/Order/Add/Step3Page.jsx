@@ -5,8 +5,6 @@ import { Link, useNavigate } from "react-router";
 import {
   useAuthManager,
   useOrderCreationStorage,
-  useSkillSetManager,
-  useTagManager,
 } from "../../../../services/Services";
 import { theme, globalStyles } from "../../../../constants/Theme";
 import {
@@ -19,12 +17,14 @@ import {
   TextArea,
   FormGroup,
 } from "../../../../components/UI";
+import {
+  SkillSetsMultiSelect,
+  TagsMultiSelect,
+} from "../../../../components/Form";
 
 function AdminOrderAddStep3Page() {
   const authManager = useAuthManager();
   const orderCreationStorage = useOrderCreationStorage();
-  const skillSetManager = useSkillSetManager();
-  const tagManager = useTagManager();
   const navigate = useNavigate();
 
   const [errors, setErrors] = useState({});
@@ -44,31 +44,8 @@ function AdminOrderAddStep3Page() {
   );
   const [tags, setTags] = useState(existingOrder?.tags || []);
 
-  // Options
-  const [skillSetOptions, setSkillSetOptions] = useState([]);
-  const [tagOptions, setTagOptions] = useState([]);
-
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
-  };
-
-  const fetchOptions = async () => {
-    try {
-      // Fetch skill sets
-      const skillSetsData =
-        await skillSetManager.getSkillSetSelectOptions(onUnauthorized);
-      if (skillSetsData) {
-        setSkillSetOptions(skillSetsData);
-      }
-
-      // Fetch tags
-      const tagsData = await tagManager.getTagSelectOptions(onUnauthorized);
-      if (tagsData) {
-        setTagOptions(tagsData);
-      }
-    } catch (error) {
-      console.error("Failed to fetch options:", error);
-    }
   };
 
   const onSubmitClick = (e) => {
@@ -83,7 +60,7 @@ function AdminOrderAddStep3Page() {
       hasErrors = true;
     }
 
-    if (skillSets.length === 0) {
+    if (!skillSets || skillSets.length === 0) {
       newErrors["skillSets"] = "Please select at least one skill set";
       hasErrors = true;
     }
@@ -110,19 +87,23 @@ function AdminOrderAddStep3Page() {
     navigate("/admin/orders/add/step-4");
   };
 
-  const handleSkillSetChange = (skillSetId) => {
-    if (skillSets.includes(skillSetId)) {
-      setSkillSets(skillSets.filter((id) => id !== skillSetId));
-    } else {
-      setSkillSets([...skillSets, skillSetId]);
+  const handleSkillSetsChange = (value) => {
+    setSkillSets(value);
+    // Clear error when user selects skill sets
+    if (errors.skillSets && value.length > 0) {
+      setErrors((prev) => ({ ...prev, skillSets: undefined }));
     }
   };
 
-  const handleTagChange = (tagId) => {
-    if (tags.includes(tagId)) {
-      setTags(tags.filter((id) => id !== tagId));
-    } else {
-      setTags([...tags, tagId]);
+  const handleTagsChange = (value) => {
+    setTags(value);
+  };
+
+  const handleDescriptionChange = (e) => {
+    setDescription(e.target.value);
+    // Clear error when user starts typing
+    if (errors.description) {
+      setErrors((prev) => ({ ...prev, description: undefined }));
     }
   };
 
@@ -143,8 +124,6 @@ function AdminOrderAddStep3Page() {
         navigate("/admin/orders/add/step-1-search");
         return;
       }
-
-      fetchOptions();
     }
 
     return () => {
@@ -220,110 +199,69 @@ function AdminOrderAddStep3Page() {
 
         <form onSubmit={onSubmitClick}>
           <TextArea
-            label="Describe the Job:"
+            label="Describe the Job"
             name="description"
             placeholder="Describe the work that needs to be done..."
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={handleDescriptionChange}
             error={errors.description}
             required
             rows={4}
             maxLength={1000}
+            helperText="Please provide a clear description of the work required"
           />
 
-          <FormGroup>
-            <label>Please select required job skill(s): *</label>
-            {errors.skillSets && (
-              <div style={{ color: "red", fontSize: "12px" }}>
-                {errors.skillSets}
-              </div>
-            )}
-            <div
-              style={{
-                border: "1px solid #ddd",
-                borderRadius: "4px",
-                padding: "10px",
-                maxHeight: "200px",
-                overflowY: "auto",
-              }}
-            >
-              {skillSetOptions.length > 0 ? (
-                skillSetOptions.map((option) => (
-                  <div key={option.value}>
-                    <label>
-                      <input
-                        type="checkbox"
-                        value={option.value}
-                        checked={skillSets.includes(option.value)}
-                        onChange={() => handleSkillSetChange(option.value)}
-                      />{" "}
-                      {option.label}
-                    </label>
-                  </div>
-                ))
-              ) : (
-                <p>Loading skill sets...</p>
-              )}
-            </div>
-            <div style={{ fontSize: "12px", color: "#666", marginTop: "5px" }}>
-              Pick at least a single skill set at minimum.
-            </div>
-          </FormGroup>
+          {/* Skill Sets Multi-Select */}
+          <SkillSetsMultiSelect
+            value={skillSets}
+            onChange={handleSkillSetsChange}
+            error={errors.skillSets}
+            required={true}
+            label="Required Job Skills"
+            placeholder="Select required skill sets..."
+            helperText="Pick at least one skill set that is required for this job"
+            onUnauthorized={onUnauthorized}
+          />
 
-          <h4>📊 Metrics</h4>
+          <div style={{ marginTop: "30px", marginBottom: "20px" }}>
+            <h4>📊 Metrics</h4>
+          </div>
 
-          <FormGroup>
-            <label>Tags (Optional)</label>
-            <div
-              style={{
-                border: "1px solid #ddd",
-                borderRadius: "4px",
-                padding: "10px",
-                maxHeight: "200px",
-                overflowY: "auto",
-              }}
-            >
-              {tagOptions.length > 0 ? (
-                tagOptions.map((option) => (
-                  <div key={option.value}>
-                    <label>
-                      <input
-                        type="checkbox"
-                        value={option.value}
-                        checked={tags.includes(option.value)}
-                        onChange={() => handleTagChange(option.value)}
-                      />{" "}
-                      {option.label}
-                    </label>
-                  </div>
-                ))
-              ) : (
-                <p>Loading tags...</p>
-              )}
-            </div>
-            <div style={{ fontSize: "12px", color: "#666", marginTop: "5px" }}>
-              Pick the tags you would like to associate with this order.
-            </div>
-          </FormGroup>
+          {/* Tags Multi-Select */}
+          <TagsMultiSelect
+            value={tags}
+            onChange={handleTagsChange}
+            error={errors.tags}
+            required={false}
+            label="Tags (Optional)"
+            placeholder="Select tags..."
+            helperText="Pick any tags you would like to associate with this order"
+            onUnauthorized={onUnauthorized}
+          />
 
-          <h4>💬 Comments</h4>
+          <div style={{ marginTop: "30px", marginBottom: "20px" }}>
+            <h4>💬 Comments</h4>
+          </div>
 
           <TextArea
-            label="Additional comment(s): (Optional)"
+            label="Additional Comments (Optional)"
             name="additionalComment"
-            placeholder="Additional comments go here..."
+            placeholder="Any additional comments or special instructions..."
             value={additionalComment}
             onChange={(e) => setAdditionalComment(e.target.value)}
             error={errors.additionalComment}
             rows={4}
             maxLength={1000}
+            helperText="Add any additional information that might be helpful"
           />
 
           <div
             style={{
               display: "flex",
               justifyContent: "space-between",
-              marginTop: "20px",
+              marginTop: "40px",
+              paddingTop: "20px",
+              borderTop: "1px solid #ddd",
             }}
           >
             <Link to="/admin/orders/add/step-2">
