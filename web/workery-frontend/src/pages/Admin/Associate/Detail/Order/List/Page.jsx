@@ -1,6 +1,6 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Associate/Detail/Order/List/Page.jsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import {
   useAssociateManager,
@@ -20,21 +20,25 @@ import { DateTime } from "luxon";
 const COMMERCIAL_ASSOCIATE_TYPE_OF_ID = 3;
 const RESIDENTIAL_ASSOCIATE_TYPE_OF_ID = 2;
 
-// Order status mappings
+// Order status mappings (fixed to match backend)
 const ORDER_STATUS_OPTIONS = {
   1: { label: "New", color: theme.colors.info },
-  2: { label: "Assigned", color: theme.colors.primary },
-  3: { label: "In Progress", color: theme.colors.warning },
-  4: { label: "Completed", color: theme.colors.success },
-  5: { label: "Closed", color: theme.colors.secondary },
-  6: { label: "Cancelled", color: theme.colors.danger },
+  2: { label: "Declined", color: theme.colors.danger },
+  3: { label: "Pending", color: theme.colors.warning },
+  4: { label: "Cancelled", color: theme.colors.secondary },
+  5: { label: "Ongoing", color: theme.colors.primary },
+  6: { label: "In Progress", color: theme.colors.primary },
+  7: { label: "Completed (Unpaid)", color: theme.colors.warning },
+  8: { label: "Completed (Paid)", color: theme.colors.success },
+  9: { label: "Archived", color: theme.colors.secondary },
 };
 
-// Order type mappings
+// Order type mappings (fixed to match backend)
 const ORDER_TYPE_OPTIONS = {
-  1: { label: "Unassigned", icon: "❓" },
-  2: { label: "Residential", icon: "🏠" },
-  3: { label: "Commercial", icon: "🏢" },
+  0: { label: "-", icon: "➖" },
+  1: { label: "Residential", icon: "🏠" },
+  2: { label: "Commercial", icon: "🏢" },
+  3: { label: "Unassigned", icon: "❓" },
 };
 
 function AdminAssociateDetailOrderListPage() {
@@ -46,6 +50,7 @@ function AdminAssociateDetailOrderListPage() {
   // Component states
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
+  const [isRefreshing, setRefreshing] = useState(false);
   const [associate, setAssociate] = useState({});
   const [orderList, setOrderList] = useState([]);
   const [pageSize, setPageSize] = useState(50);
@@ -54,6 +59,7 @@ function AdminAssociateDetailOrderListPage() {
   const [currentCursor, setCurrentCursor] = useState("");
   const [sortByValue, setSortByValue] = useState("assignment_date,DESC");
   const [status, setStatus] = useState(0);
+  const [lastFetchTime, setLastFetchTime] = useState(null);
 
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
@@ -73,48 +79,72 @@ function AdminAssociateDetailOrderListPage() {
     }
   };
 
-  // Fetch order list
-  const fetchOrderList = async () => {
-    try {
-      setFetching(true);
-      setErrors({});
-
-      // Build filters map (matching old implementation)
-      const filtersMap = new Map();
-      filtersMap.set("page_size", pageSize);
-      filtersMap.set("associate_id", aid);
-
-      if (currentCursor !== "") {
-        filtersMap.set("cursor", currentCursor);
-      }
-
-      // Handle sorting
-      const sortArray = sortByValue.split(",");
-      filtersMap.set("sort_field", sortArray[0]);
-      filtersMap.set("sort_order", sortArray[1]);
-
-      if (status !== 0) {
-        filtersMap.set("status", status);
-      }
-
-      // Use the legacy method for compatibility
-      const data = await orderManager.getOrdersWithFiltersMap(
-        filtersMap,
-        onUnauthorized,
-      );
-
-      if (data.results !== null) {
-        setOrderList(data);
-        if (data.hasNextPage) {
-          setNextCursor(data.nextCursor);
+  // Fetch order list with force refresh option
+  const fetchOrderList = useCallback(
+    async (forceRefresh = false) => {
+      try {
+        if (forceRefresh) {
+          setRefreshing(true);
+          // Clear the cache to force fresh data
+          orderManager.clearOrdersCache();
+        } else {
+          setFetching(true);
         }
+        setErrors({});
+
+        // Build filters map (matching old implementation)
+        const filtersMap = new Map();
+        filtersMap.set("page_size", pageSize);
+        filtersMap.set("associate_id", aid);
+
+        if (currentCursor !== "") {
+          filtersMap.set("cursor", currentCursor);
+        }
+
+        // Handle sorting
+        const sortArray = sortByValue.split(",");
+        filtersMap.set("sort_field", sortArray[0]);
+        filtersMap.set("sort_order", sortArray[1]);
+
+        if (status !== 0) {
+          filtersMap.set("status", status);
+        }
+
+        // Use the legacy method for compatibility with forceRefresh
+        const data = await orderManager.getOrdersWithFiltersMap(
+          filtersMap,
+          onUnauthorized,
+        );
+
+        if (data.results !== null) {
+          setOrderList(data);
+          if (data.hasNextPage) {
+            setNextCursor(data.nextCursor);
+          }
+        }
+        setLastFetchTime(new Date());
+      } catch (error) {
+        console.error("Failed to fetch order list:", error);
+        setErrors(error);
+      } finally {
+        setFetching(false);
+        setRefreshing(false);
       }
-    } catch (error) {
-      console.error("Failed to fetch order list:", error);
-      setErrors(error);
-    } finally {
-      setFetching(false);
-    }
+    },
+    [
+      aid,
+      currentCursor,
+      pageSize,
+      sortByValue,
+      status,
+      orderManager,
+      onUnauthorized,
+    ],
+  );
+
+  // Refresh handler
+  const handleRefresh = () => {
+    fetchOrderList(true);
   };
 
   // Pagination handlers
@@ -146,7 +176,7 @@ function AdminAssociateDetailOrderListPage() {
   // Format status helper with color
   const formatStatus = (statusValue) => {
     const status = ORDER_STATUS_OPTIONS[statusValue];
-    if (!status) return <span>Unknown</span>;
+    if (!status) return <span>Unknown ({statusValue})</span>;
 
     return (
       <span
@@ -163,7 +193,7 @@ function AdminAssociateDetailOrderListPage() {
   // Format type helper with icon
   const formatType = (typeValue) => {
     const type = ORDER_TYPE_OPTIONS[typeValue];
-    if (!type) return <span>Unknown</span>;
+    if (!type) return <span>Unknown ({typeValue})</span>;
 
     return (
       <span>
@@ -172,9 +202,25 @@ function AdminAssociateDetailOrderListPage() {
     );
   };
 
+  // Format time since last fetch
+  const formatLastFetchTime = () => {
+    if (!lastFetchTime) return null;
+    const now = DateTime.now();
+    const fetchTime = DateTime.fromJSDate(lastFetchTime);
+    const diff = now.diff(fetchTime, ["minutes", "seconds"]);
+
+    if (diff.minutes >= 1) {
+      return `Last updated ${Math.floor(diff.minutes)} minute${Math.floor(diff.minutes) !== 1 ? "s" : ""} ago`;
+    } else {
+      return `Last updated ${Math.floor(diff.seconds)} seconds ago`;
+    }
+  };
+
   useEffect(() => {
     window.scrollTo(0, 0);
     fetchAssociateDetail();
+    // Clear cache on mount to ensure fresh data
+    orderManager.clearOrdersCache();
   }, [aid]);
 
   useEffect(() => {
@@ -182,6 +228,20 @@ function AdminAssociateDetailOrderListPage() {
       fetchOrderList();
     }
   }, [currentCursor, pageSize, sortByValue, status, aid]);
+
+  // Optional: Auto-refresh every 5 minutes
+  useEffect(() => {
+    const interval = setInterval(
+      () => {
+        if (!isFetching && !isRefreshing) {
+          fetchOrderList(true);
+        }
+      },
+      5 * 60 * 1000,
+    ); // 5 minutes
+
+    return () => clearInterval(interval);
+  }, [fetchOrderList, isFetching, isRefreshing]);
 
   // Page size options
   const pageSizeOptions = [
@@ -257,7 +317,7 @@ function AdminAssociateDetailOrderListPage() {
 
       {/* Main Content */}
       <Card>
-        {/* Header with Title */}
+        {/* Header with Title and Refresh Button */}
         {associate && (
           <div
             style={{
@@ -269,7 +329,23 @@ function AdminAssociateDetailOrderListPage() {
               gap: "10px",
             }}
           >
-            <h3 style={{ margin: 0 }}>🔧 Orders</h3>
+            <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
+              <h3 style={{ margin: 0 }}>🔧 Orders</h3>
+              {lastFetchTime && (
+                <span
+                  style={{ fontSize: "14px", color: theme.colors.secondary }}
+                >
+                  {formatLastFetchTime()}
+                </span>
+              )}
+            </div>
+            <Button
+              onClick={handleRefresh}
+              variant="outline"
+              disabled={isRefreshing}
+            >
+              {isRefreshing ? "Refreshing..." : "🔄 Refresh"}
+            </Button>
           </div>
         )}
 
@@ -346,9 +422,102 @@ function AdminAssociateDetailOrderListPage() {
               </Link>
             </div>
 
-            {isFetching ? (
+            {/* Filters Section */}
+            <div
+              style={{
+                display: "flex",
+                gap: "15px",
+                marginBottom: "20px",
+                flexWrap: "wrap",
+                alignItems: "center",
+              }}
+            >
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "5px",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                  }}
+                >
+                  Status Filter:
+                </label>
+                <select
+                  value={status}
+                  onChange={(e) => {
+                    setStatus(parseInt(e.target.value));
+                    setCurrentCursor(""); // Reset pagination
+                    setPreviousCursors([]);
+                  }}
+                  style={{
+                    padding: "8px 12px",
+                    border: "1px solid #ddd",
+                    borderRadius: "4px",
+                    backgroundColor: "white",
+                    fontSize: "14px",
+                    minWidth: "150px",
+                  }}
+                >
+                  <option value={0}>All Statuses</option>
+                  {Object.entries(ORDER_STATUS_OPTIONS).map(
+                    ([value, option]) => (
+                      <option key={value} value={value}>
+                        {option.label}
+                      </option>
+                    ),
+                  )}
+                </select>
+              </div>
+
+              <div>
+                <label
+                  style={{
+                    display: "block",
+                    marginBottom: "5px",
+                    fontSize: "14px",
+                    fontWeight: "600",
+                  }}
+                >
+                  Sort By:
+                </label>
+                <select
+                  value={sortByValue}
+                  onChange={(e) => {
+                    setSortByValue(e.target.value);
+                    setCurrentCursor(""); // Reset pagination
+                    setPreviousCursors([]);
+                  }}
+                  style={{
+                    padding: "8px 12px",
+                    border: "1px solid #ddd",
+                    borderRadius: "4px",
+                    backgroundColor: "white",
+                    fontSize: "14px",
+                    minWidth: "200px",
+                  }}
+                >
+                  <option value="assignment_date,DESC">
+                    Assignment Date (Newest)
+                  </option>
+                  <option value="assignment_date,ASC">
+                    Assignment Date (Oldest)
+                  </option>
+                  <option value="start_date,DESC">Start Date (Newest)</option>
+                  <option value="start_date,ASC">Start Date (Oldest)</option>
+                  <option value="created_at,DESC">Created Date (Newest)</option>
+                  <option value="created_at,ASC">Created Date (Oldest)</option>
+                </select>
+              </div>
+            </div>
+
+            {isFetching || isRefreshing ? (
               <div style={{ textAlign: "center", padding: "40px" }}>
-                <Loading message="Loading orders..." />
+                <Loading
+                  message={
+                    isRefreshing ? "Refreshing orders..." : "Loading orders..."
+                  }
+                />
               </div>
             ) : orderList &&
               orderList.results &&
