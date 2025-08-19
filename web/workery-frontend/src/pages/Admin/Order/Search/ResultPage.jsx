@@ -211,10 +211,6 @@ function AdminOrderSearchResultPage() {
     }
   };
 
-  const handleOrderClick = (order) => {
-    navigate(`/admin/order/${order.wjid}`);
-  };
-
   const getSearchSummary = () => {
     const criteria = [];
 
@@ -349,7 +345,7 @@ function AdminOrderSearchResultPage() {
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
-  // Table columns
+  // Table columns - FIXED: Make Job # column clickable and add Actions column
   const tableColumns = [
     {
       key: "wjid",
@@ -357,9 +353,17 @@ function AdminOrderSearchResultPage() {
       render: (value, order) => {
         const wjid = getFieldValue(order, "wjid") || `#${order.id}`;
         return (
-          <span style={{ fontWeight: "600", color: theme.colors.primary }}>
+          <Link
+            to={`/admin/order/${wjid}`}
+            style={{
+              fontWeight: "600",
+              color: theme.colors.primary,
+              textDecoration: "none",
+            }}
+            className="hover:underline"
+          >
             {wjid}
-          </span>
+          </Link>
         );
       },
     },
@@ -440,6 +444,22 @@ function AdminOrderSearchResultPage() {
             ? `${description.substring(0, 50)}...`
             : description;
         return <span title={description}>{truncated}</span>;
+      },
+    },
+    {
+      key: "actions",
+      label: "Actions",
+      render: (value, order) => {
+        const wjid = getFieldValue(order, "wjid") || order.id;
+        return (
+          <div style={{ display: "flex", gap: "8px" }}>
+            <Link to={`/admin/order/${wjid}`}>
+              <Button variant="outline" size="sm">
+                View
+              </Button>
+            </Link>
+          </div>
+        );
       },
     },
   ];
@@ -618,11 +638,7 @@ function AdminOrderSearchResultPage() {
           <>
             {orders.length > 0 ? (
               <>
-                <Table
-                  columns={tableColumns}
-                  data={orders}
-                  onRowClick={handleOrderClick}
-                />
+                <Table columns={tableColumns} data={orders} />
 
                 {/* Pagination */}
                 {totalPages > 1 && (

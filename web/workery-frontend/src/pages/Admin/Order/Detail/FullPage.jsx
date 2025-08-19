@@ -11,23 +11,28 @@ import {
   Loading,
   Breadcrumb,
 } from "../../../../components/UI";
-
-// Constants
-const CLIENT_PHONE_TYPE_WORK = 1;
-const ASSOCIATE_PHONE_TYPE_WORK = 1;
-const OrderStatusNew = 1;
-const OrderStatusDeclined = 2;
-const OrderStatusPending = 3;
-const OrderStatusCancelled = 4;
-const OrderStatusOngoing = 5;
-const OrderStatusInProgress = 6;
-const OrderStatusCompletedButUnpaid = 7;
-const OrderStatusCompletedAndPaid = 8;
-const OrderStatusArchived = 9;
-const STAFF_TYPE_MANAGEMENT = 2;
-const STAFF_TYPE_EXECUTIVE = 1;
-const ORDER_STATUS_COMPLETED_BUT_UNPAID = 4;
-const ORDER_STATUS_COMPLETED_AND_PAID = 5;
+import { SkillSetsDisplay, TagsDisplay } from "../../../../components/Display";
+import {
+  TASK_ITEM_TYPE_ASSIGN_ASSOCIATE,
+  TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_AND_CUSTOMER_AGREED_TO_MEET,
+  TASK_ITEM_TYPE_FOLLOW_UP_CUSTOMER_SURVEY,
+  TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_ACCEPT_JOB,
+  TASK_ITEM_TYPE_UPDATE_ONGOING_JOB,
+  TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_COMPLETE_JOB,
+  TASK_ITEM_TYPE_FOLLOW_UP_DID_CUSTOMER_REVIEW_ASSOCIATE_AFTER_JOB,
+} from "../../../../constants/Task";
+import {
+  ORDER_STATUS_COMPLETED_BUT_UNPAID,
+  ORDER_STATUS_COMPLETED_AND_PAID,
+  ORDER_STATUS_ARCHIVED,
+} from "../../../../constants/Order";
+import { CLIENT_PHONE_TYPE_WORK } from "../../../../constants/Customer";
+import { ASSOCIATE_PHONE_TYPE_WORK } from "../../../../constants/Associate";
+import {
+  STAFF_TYPE_MANAGEMENT,
+  STAFF_TYPE_EXECUTIVE,
+} from "../../../../constants/Staff";
+import { formatDateForDisplay } from "../../../../services/Helpers/dateFormatter";
 
 function AdminOrderDetailFullPage() {
   const { oid } = useParams();
@@ -44,6 +49,50 @@ function AdminOrderDetailFullPage() {
   // Handle unauthorized access
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
+  };
+
+  // Helper function to get task update URL based on type
+  const getTaskUpdateURL = (taskId, taskType) => {
+    // If taskType is not available, default to a basic pattern
+    if (!taskType) {
+      // TODO: Task type should be provided by the API as order.latestPendingTaskType
+      console.warn("Task type not available for task:", taskId);
+      return `/admin/task/${taskId}/assign-associate/step-1`; // Default fallback
+    }
+
+    switch (taskType) {
+      // Assign Associate
+      case TASK_ITEM_TYPE_ASSIGN_ASSOCIATE:
+        return `/admin/task/${taskId}/assign-associate/step-1`;
+      // Follow Up / Order Completion
+      case TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_COMPLETE_JOB:
+      case TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_AND_CUSTOMER_AGREED_TO_MEET:
+      case TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_ACCEPT_JOB:
+      case TASK_ITEM_TYPE_UPDATE_ONGOING_JOB:
+        return `/admin/task/${taskId}/order-completion/step-1`;
+      // Survey
+      case TASK_ITEM_TYPE_FOLLOW_UP_DID_CUSTOMER_REVIEW_ASSOCIATE_AFTER_JOB:
+      case TASK_ITEM_TYPE_FOLLOW_UP_CUSTOMER_SURVEY:
+        return `/admin/task/${taskId}/survey/step-1`;
+      // Default case for unknown types
+      default:
+        console.warn("Unknown task type:", taskType);
+        return `/admin/task/${taskId}/assign-associate/step-1`;
+    }
+  };
+
+  // Extract IDs from array of objects
+  const extractIds = (items) => {
+    if (!items || !Array.isArray(items)) return [];
+    return items
+      .map((item) => {
+        // Handle different possible structures
+        if (typeof item === "number" || typeof item === "string") {
+          return item;
+        }
+        return item.id || item.value || item.skillSetId || item.tagId;
+      })
+      .filter(Boolean);
   };
 
   // Fetch order data
@@ -102,20 +151,6 @@ function AdminOrderDetailFullPage() {
     return extension ? `${formatted} ext. ${extension}` : formatted;
   };
 
-  // Format tags for display
-  const formatTags = (tags) => {
-    if (!tags || tags.length === 0) return "-";
-    return tags.map((tag) => tag.text || tag.name || tag).join(", ");
-  };
-
-  // Format skill sets for display
-  const formatSkillSets = (skillSets) => {
-    if (!skillSets || skillSets.length === 0) return "-";
-    return skillSets
-      .map((skill) => skill.subCategory || skill.name || skill)
-      .join(", ");
-  };
-
   // Format address for display
   const formatAddress = (order) => {
     if (!order) return "-";
@@ -136,55 +171,6 @@ function AdminOrderDetailFullPage() {
       );
     }
     return address || "-";
-  };
-
-  // Format date for display
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString();
-  };
-
-  // Format date and time for display
-  const formatDateTime = (dateString) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleString();
-  };
-
-  // Get order status text and color
-  const getOrderStatusText = (status) => {
-    const statusMap = {
-      [OrderStatusNew]: "New",
-      [OrderStatusDeclined]: "Declined",
-      [OrderStatusPending]: "Pending",
-      [OrderStatusCancelled]: "Cancelled",
-      [OrderStatusOngoing]: "Ongoing",
-      [OrderStatusInProgress]: "In Progress",
-      [OrderStatusCompletedButUnpaid]: "Completed (Unpaid)",
-      [OrderStatusCompletedAndPaid]: "Completed (Paid)",
-      [OrderStatusArchived]: "Archived",
-    };
-    return statusMap[status] || "Unknown";
-  };
-
-  const getOrderStatusColor = (status) => {
-    switch (status) {
-      case OrderStatusNew:
-      case OrderStatusOngoing:
-      case OrderStatusInProgress:
-        return theme.colors.success;
-      case OrderStatusPending:
-        return theme.colors.warning;
-      case OrderStatusDeclined:
-      case OrderStatusCancelled:
-        return theme.colors.danger;
-      case OrderStatusCompletedButUnpaid:
-      case OrderStatusCompletedAndPaid:
-        return theme.colors.info;
-      case OrderStatusArchived:
-        return theme.colors.secondary;
-      default:
-        return theme.colors.dark;
-    }
   };
 
   // Format checkbox value
@@ -236,7 +222,7 @@ function AdminOrderDetailFullPage() {
       </div>
 
       {/* Status Alerts */}
-      {order && order.status === OrderStatusArchived && (
+      {order && order.status === ORDER_STATUS_ARCHIVED && (
         <Alert type="info">📁 This order is archived</Alert>
       )}
 
@@ -267,7 +253,7 @@ function AdminOrderDetailFullPage() {
                 <Link to={`/admin/order/${oid}/more/unassign`}>
                   <Button
                     variant="secondary"
-                    disabled={order.status === OrderStatusArchived}
+                    disabled={order.status === ORDER_STATUS_ARCHIVED}
                   >
                     👤❌ Unassign
                   </Button>
@@ -276,7 +262,7 @@ function AdminOrderDetailFullPage() {
               <Link to={`/admin/order/${oid}/more/close`}>
                 <Button
                   variant="danger"
-                  disabled={order.status === OrderStatusArchived}
+                  disabled={order.status === ORDER_STATUS_ARCHIVED}
                 >
                   ❌ Close
                 </Button>
@@ -284,30 +270,35 @@ function AdminOrderDetailFullPage() {
               <Link to={`/admin/order/${oid}/edit`}>
                 <Button
                   variant="warning"
-                  disabled={order.status === OrderStatusArchived}
+                  disabled={order.status === ORDER_STATUS_ARCHIVED}
                 >
                   ✏️ Edit
                 </Button>
               </Link>
               {order.latestPendingTaskId &&
                 order.latestPendingTaskId !== "000000000000000000000000" && (
-                  <Link to={`/admin/task/${order.latestPendingTaskId}`}>
+                  <Link
+                    to={getTaskUpdateURL(
+                      order.latestPendingTaskId,
+                      order.latestPendingTaskType,
+                    )}
+                  >
                     <Button
                       variant="primary"
-                      disabled={order.status === OrderStatusArchived}
+                      disabled={order.status === ORDER_STATUS_ARCHIVED}
                     >
                       Go to Task →
                     </Button>
                   </Link>
                 )}
-              {(order.status === OrderStatusCompletedButUnpaid ||
-                order.status === OrderStatusCompletedAndPaid) &&
+              {(order.status === ORDER_STATUS_COMPLETED_BUT_UNPAID ||
+                order.status === ORDER_STATUS_COMPLETED_AND_PAID) &&
                 (currentUser?.role === STAFF_TYPE_MANAGEMENT ||
                   currentUser?.role === STAFF_TYPE_EXECUTIVE) && (
                   <Link to={`/admin/financial/${oid}`}>
                     <Button
                       variant="info"
-                      disabled={order.status === OrderStatusArchived}
+                      disabled={order.status === ORDER_STATUS_ARCHIVED}
                     >
                       Go to Financials →
                     </Button>
@@ -516,12 +507,15 @@ function AdminOrderDetailFullPage() {
                       width: "30%",
                       textAlign: "left",
                       fontWeight: "600",
+                      verticalAlign: "top",
                     }}
                   >
                     Description
                   </th>
                   <td style={{ padding: "12px" }}>
-                    {order.description || "-"}
+                    <div style={{ whiteSpace: "pre-wrap" }}>
+                      {order.description || "-"}
+                    </div>
                   </td>
                 </tr>
                 <tr>
@@ -532,12 +526,16 @@ function AdminOrderDetailFullPage() {
                       width: "30%",
                       textAlign: "left",
                       fontWeight: "600",
+                      verticalAlign: "top",
                     }}
                   >
                     Skill Sets
                   </th>
                   <td style={{ padding: "12px" }}>
-                    {formatSkillSets(order.skillSets)}
+                    <SkillSetsDisplay
+                      values={extractIds(order.skillSets)}
+                      onUnauthorized={onUnauthorized}
+                    />
                   </td>
                 </tr>
 
@@ -620,7 +618,7 @@ function AdminOrderDetailFullPage() {
                           Assignment Date
                         </th>
                         <td style={{ padding: "12px" }}>
-                          {formatDate(order.assignmentDate)}
+                          {formatDateForDisplay(order.assignmentDate)}
                         </td>
                       </tr>
                     </>
@@ -697,7 +695,7 @@ function AdminOrderDetailFullPage() {
                     Start date
                   </th>
                   <td style={{ padding: "12px" }}>
-                    {formatDate(order.startDate)}
+                    {formatDateForDisplay(order.startDate)}
                   </td>
                 </tr>
                 <tr>
@@ -713,7 +711,7 @@ function AdminOrderDetailFullPage() {
                     Completion date
                   </th>
                   <td style={{ padding: "12px" }}>
-                    {formatDate(order.completionDate)}
+                    {formatDateForDisplay(order.completionDate)}
                   </td>
                 </tr>
                 <tr>
@@ -752,11 +750,17 @@ function AdminOrderDetailFullPage() {
                       width: "30%",
                       textAlign: "left",
                       fontWeight: "600",
+                      verticalAlign: "top",
                     }}
                   >
                     Tag(s):
                   </th>
-                  <td style={{ padding: "12px" }}>{formatTags(order.tags)}</td>
+                  <td style={{ padding: "12px" }}>
+                    <TagsDisplay
+                      values={extractIds(order.tags)}
+                      onUnauthorized={onUnauthorized}
+                    />
+                  </td>
                 </tr>
                 <tr>
                   <th
@@ -782,7 +786,10 @@ function AdminOrderDetailFullPage() {
                         <div>
                           Click the following to begin:{" "}
                           <Link
-                            to={`/admin/task/${order.latestPendingTaskId}`}
+                            to={getTaskUpdateURL(
+                              order.latestPendingTaskId,
+                              order.latestPendingTaskType,
+                            )}
                             style={{
                               color: theme.colors.primary,
                               textDecoration: "none",
@@ -838,7 +845,7 @@ function AdminOrderDetailFullPage() {
                     Created at:
                   </th>
                   <td style={{ padding: "12px" }}>
-                    {formatDateTime(order.createdAt)}
+                    {formatDateForDisplay(order.createdAt)}
                   </td>
                 </tr>
                 <tr>
@@ -909,7 +916,7 @@ function AdminOrderDetailFullPage() {
                     Modified at:
                   </th>
                   <td style={{ padding: "12px" }}>
-                    {formatDateTime(order.modifiedAt)}
+                    {formatDateForDisplay(order.modifiedAt)}
                   </td>
                 </tr>
                 <tr>
@@ -1005,7 +1012,12 @@ function AdminOrderDetailFullPage() {
                 </Link>
                 {order.latestPendingTaskId &&
                   order.latestPendingTaskId !== "000000000000000000000000" && (
-                    <Link to={`/admin/task/${order.latestPendingTaskId}`}>
+                    <Link
+                      to={getTaskUpdateURL(
+                        order.latestPendingTaskId,
+                        order.latestPendingTaskType,
+                      )}
+                    >
                       <Button variant="primary" disabled={order.status === 2}>
                         Go to Task →
                       </Button>

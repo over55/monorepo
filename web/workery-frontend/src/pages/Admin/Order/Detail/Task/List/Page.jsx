@@ -11,16 +11,14 @@ import {
   Loading,
   Breadcrumb,
 } from "../../../../../../components/UI";
-
-const OrderStatusNew = 1;
-const OrderStatusDeclined = 2;
-const OrderStatusPending = 3;
-const OrderStatusCancelled = 4;
-const OrderStatusOngoing = 5;
-const OrderStatusInProgress = 6;
-const OrderStatusCompletedButUnpaid = 7;
-const OrderStatusCompletedAndPaid = 8;
-const OrderStatusArchived = 9;
+import { formatDateForDisplay } from "../../../../../../services/Helpers/dateFormatter";
+import {
+  ORDER_STATUS_DECLINED,
+  ORDER_STATUS_CANCELLED,
+  ORDER_STATUS_COMPLETED_BUT_UNPAID,
+  ORDER_STATUS_COMPLETED_AND_PAID,
+  ORDER_STATUS_ARCHIVED,
+} from "../../../../../../constants/Order";
 
 function AdminOrderDetailMoreTaskListPage() {
   // Get order ID from URL parameters
@@ -171,11 +169,11 @@ function AdminOrderDetailMoreTaskListPage() {
   const isOrderActionable =
     order &&
     ![
-      OrderStatusDeclined,
-      OrderStatusCancelled,
-      OrderStatusCompletedButUnpaid,
-      OrderStatusCompletedAndPaid,
-      OrderStatusArchived,
+      ORDER_STATUS_DECLINED,
+      ORDER_STATUS_CANCELLED,
+      ORDER_STATUS_COMPLETED_BUT_UNPAID,
+      ORDER_STATUS_COMPLETED_AND_PAID,
+      ORDER_STATUS_ARCHIVED,
     ].includes(order.status);
 
   return (
@@ -458,12 +456,12 @@ function AdminOrderDetailMoreTaskListPage() {
                   <td
                     style={{ padding: "12px", color: theme.colors.secondary }}
                   >
-                    {task.dueDate || "-"}
+                    {formatDateForDisplay(task.dueDate)}
                   </td>
                   <td
                     style={{ padding: "12px", color: theme.colors.secondary }}
                   >
-                    {task.createdAt}
+                    {formatDateForDisplay(task.createdAt)}
                   </td>
                   <td style={{ padding: "12px", textAlign: "right" }}>
                     <div

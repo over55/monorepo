@@ -1,6 +1,6 @@
 // File Path: web/workery-frontend/src/pages/Admin/Order/Add/Step1PartBPage.jsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import {
   useAuthManager,
@@ -46,72 +46,111 @@ function AdminOrderAddStep1PartBPage() {
   // Filter states
   const [status, setStatus] = useState("");
   const [typeOf, setTypeOf] = useState(0);
-  const [sortByValue, setSortByValue] = useState("lexical_name,ASC");
 
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
-  };
+  }, [navigate]);
 
-  const fetchList = async () => {
+  const fetchList = useCallback(async () => {
     setFetching(true);
     setErrors({});
 
     try {
-      const params = {
-        page: currentCursor ? currentCursor : 1,
-        limit: pageSize,
-        sortBy: sortByValue.split(",")[0],
-        sortOrder: sortByValue.split(",")[1],
-      };
+      // Build filters map for the search (matching customer add pattern)
+      const filtersMap = new Map();
+      filtersMap.set("page_size", pageSize);
 
-      // Add search parameters
-      if (firstName) params.firstName = firstName;
-      if (lastName) params.lastName = lastName;
-      if (email) params.email = email;
-      if (phone) params.phone = phone;
-      if (status) params.status = status;
-      if (typeOf) params.type = typeOf;
+      // Use lexical_name for sorting to maintain alphabetical order
+      filtersMap.set("sort_field", "lexical_name");
+      filtersMap.set("sort_order", "ASC");
 
-      const response = await customerManager.getCustomers(
-        params,
-        onUnauthorized,
+      // Add search filters - using snake_case as the backend expects
+      if (firstName) {
+        filtersMap.set("first_name", firstName);
+      }
+      if (lastName) {
+        filtersMap.set("last_name", lastName);
+      }
+      if (email) {
+        filtersMap.set("email", email);
+      }
+      if (phone) {
+        filtersMap.set("phone", phone);
+      }
+
+      // Add status and type filters
+      if (status) {
+        filtersMap.set("status", status);
+      }
+      if (typeOf && typeOf !== 0) {
+        filtersMap.set("type", typeOf);
+      }
+
+      // Add cursor for pagination
+      if (currentCursor) {
+        filtersMap.set("cursor", currentCursor);
+      }
+
+      console.log(
+        "Fetching customers with filters:",
+        Array.from(filtersMap.entries()),
       );
 
-      setCustomers(response);
+      // IMPORTANT: Force refresh to bypass cache and get fresh results
+      const customersData = await customerManager.getCustomersWithFiltersMap(
+        filtersMap,
+        onUnauthorized,
+        true, // Force refresh to bypass cache
+      );
 
-      if (response.hasNextPage) {
-        setNextCursor(response.nextCursor);
-      }
+      console.log("Customers data received:", customersData);
+
+      setCustomers(customersData);
+      setNextCursor(customersData.hasNextPage ? customersData.nextCursor : "");
     } catch (error) {
       console.error("Failed to fetch customers:", error);
       setErrors(error);
     } finally {
       setFetching(false);
     }
-  };
+  }, [
+    customerManager,
+    pageSize,
+    firstName,
+    lastName,
+    email,
+    phone,
+    status,
+    typeOf,
+    currentCursor,
+    onUnauthorized,
+  ]);
 
   const onNextClicked = () => {
-    let arr = [...previousCursors];
-    arr.push(currentCursor);
-    setPreviousCursors(arr);
+    setPreviousCursors((prev) => [...prev, currentCursor]);
     setCurrentCursor(nextCursor);
   };
 
   const onPreviousClicked = () => {
-    let arr = [...previousCursors];
-    const previousCursor = arr.pop();
-    setPreviousCursors(arr);
+    const newPreviousCursors = [...previousCursors];
+    const previousCursor = newPreviousCursors.pop();
+    setPreviousCursors(newPreviousCursors);
     setCurrentCursor(previousCursor);
   };
 
-  const onAddOrderClick = (id, firstName, lastName) => {
-    console.log("Selected customer:", id, firstName, lastName);
+  const onSelectCustomer = (customer) => {
+    console.log(
+      "Selected customer:",
+      customer.id,
+      customer.firstName,
+      customer.lastName,
+    );
 
     // Initialize order state with selected customer
     const orderState = {
-      customerId: id,
-      customerFirstName: firstName,
-      customerLastName: lastName,
+      customerId: customer.id,
+      customerFirstName: customer.firstName,
+      customerLastName: customer.lastName,
       startDate: null,
       isOngoing: null,
       isHomeSupportService: null,
@@ -123,6 +162,12 @@ function AdminOrderAddStep1PartBPage() {
 
     orderCreationStorage.saveOrderCreation(orderState);
     navigate("/admin/orders/add/step-2");
+  };
+
+  const handleFilterChange = (setter, value) => {
+    setter(value);
+    setCurrentCursor("");
+    setPreviousCursors([]);
   };
 
   useEffect(() => {
@@ -142,10 +187,20 @@ function AdminOrderAddStep1PartBPage() {
     return () => {
       mounted = false;
     };
-  }, [currentCursor, pageSize, sortByValue, status, typeOf]);
+  }, [currentCursor, pageSize, status, typeOf]);
+
+  // Build search description
+  const getSearchDescription = () => {
+    const parts = [];
+    if (firstName) parts.push(`First Name: "${firstName}"`);
+    if (lastName) parts.push(`Last Name: "${lastName}"`);
+    if (email) parts.push(`Email: "${email}"`);
+    if (phone) parts.push(`Phone: "${phone}"`);
+    return parts.length > 0 ? parts.join(", ") : "All Customers";
+  };
 
   if (isFetching) {
-    return <Loading message="Loading customers..." />;
+    return <Loading message="Searching customers..." />;
   }
 
   return (
@@ -175,6 +230,19 @@ function AdminOrderAddStep1PartBPage() {
       <Card title="Search results:">
         {errors.message && <Alert type="error">{errors.message}</Alert>}
 
+        {/* Display search criteria */}
+        <div
+          style={{
+            padding: "10px",
+            backgroundColor: "#e7f3ff",
+            borderRadius: "4px",
+            marginBottom: "20px",
+            fontSize: "14px",
+          }}
+        >
+          <strong>🔍 Searching for:</strong> {getSearchDescription()}
+        </div>
+
         {/* Filters */}
         <div
           style={{
@@ -196,7 +264,7 @@ function AdminOrderAddStep1PartBPage() {
             <Select
               label="Status"
               value={status}
-              onChange={(e) => setStatus(e.target.value)}
+              onChange={(e) => handleFilterChange(setStatus, e.target.value)}
               options={[
                 { value: "", label: "All" },
                 { value: "1", label: "Active" },
@@ -207,7 +275,9 @@ function AdminOrderAddStep1PartBPage() {
             <Select
               label="Type"
               value={typeOf}
-              onChange={(e) => setTypeOf(parseInt(e.target.value))}
+              onChange={(e) =>
+                handleFilterChange(setTypeOf, parseInt(e.target.value))
+              }
               options={[
                 { value: 0, label: "All" },
                 {
@@ -219,14 +289,16 @@ function AdminOrderAddStep1PartBPage() {
             />
 
             <Select
-              label="Sort by"
-              value={sortByValue}
-              onChange={(e) => setSortByValue(e.target.value)}
+              label="Show"
+              value={pageSize}
+              onChange={(e) =>
+                handleFilterChange(setPageSize, parseInt(e.target.value))
+              }
               options={[
-                { value: "last_name,ASC", label: "Last Name (A-Z)" },
-                { value: "last_name,DESC", label: "Last Name (Z-A)" },
-                { value: "created_at,DESC", label: "Newest First" },
-                { value: "created_at,ASC", label: "Oldest First" },
+                { value: 10, label: "10 per page" },
+                { value: 25, label: "25 per page" },
+                { value: 50, label: "50 per page" },
+                { value: 100, label: "100 per page" },
               ]}
             />
           </div>
@@ -235,6 +307,12 @@ function AdminOrderAddStep1PartBPage() {
         {/* Customer List */}
         {customers && customers.results && customers.results.length > 0 ? (
           <>
+            <p style={{ marginBottom: "15px", color: "#6c757d" }}>
+              Found{" "}
+              <strong>{customers.count || customers.results.length}</strong>{" "}
+              customer(s) matching your criteria
+            </p>
+
             <div
               style={{
                 display: "grid",
@@ -246,7 +324,11 @@ function AdminOrderAddStep1PartBPage() {
                 <Card key={customer.id} style={{ backgroundColor: "#e8f4fd" }}>
                   <h4>
                     {customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID ? (
-                      <>🏢 {customer.organizationName}</>
+                      <>
+                        🏢{" "}
+                        {customer.organizationName ||
+                          `${customer.firstName} ${customer.lastName}`}
+                      </>
                     ) : (
                       <>
                         🏠 {customer.firstName} {customer.lastName}
@@ -254,21 +336,19 @@ function AdminOrderAddStep1PartBPage() {
                     )}
                   </h4>
 
-                  <p>{customer.addressLine1}</p>
-                  <p>
-                    {customer.city}, {customer.region}
-                  </p>
-                  <p>📞 {customer.phone || "-"}</p>
-                  <p>✉️ {customer.email || "-"}</p>
+                  {customer.addressLine1 && <p>{customer.addressLine1}</p>}
+                  {(customer.city || customer.region) && (
+                    <p>
+                      {customer.city && customer.region
+                        ? `${customer.city}, ${customer.region}`
+                        : customer.city || customer.region}
+                    </p>
+                  )}
+                  {customer.phone && <p>📞 {customer.phone}</p>}
+                  {customer.email && <p>✉️ {customer.email}</p>}
 
                   <Button
-                    onClick={() =>
-                      onAddOrderClick(
-                        customer.id,
-                        customer.firstName,
-                        customer.lastName,
-                      )
-                    }
+                    onClick={() => onSelectCustomer(customer)}
                     variant="primary"
                     fullWidth
                   >
@@ -283,46 +363,51 @@ function AdminOrderAddStep1PartBPage() {
               style={{
                 display: "flex",
                 justifyContent: "space-between",
+                alignItems: "center",
                 marginTop: "20px",
+                paddingTop: "20px",
+                borderTop: "1px solid #eee",
               }}
             >
-              <Select
-                value={pageSize}
-                onChange={(e) => setPageSize(parseInt(e.target.value))}
-                options={[
-                  { value: 10, label: "10 per page" },
-                  { value: 25, label: "25 per page" },
-                  { value: 50, label: "50 per page" },
-                  { value: 100, label: "100 per page" },
-                ]}
-              />
-
               <div>
+                Showing {customers.results.length} of{" "}
+                {customers.count || customers.results.length} results
+              </div>
+
+              <div style={{ display: "flex", gap: "10px" }}>
                 {previousCursors.length > 0 && (
                   <Button onClick={onPreviousClicked} variant="secondary">
-                    Previous
+                    ← Previous
                   </Button>
                 )}
                 {customers.hasNextPage && (
-                  <Button
-                    onClick={onNextClicked}
-                    variant="secondary"
-                    style={{ marginLeft: "10px" }}
-                  >
-                    Next
+                  <Button onClick={onNextClicked} variant="secondary">
+                    Next →
                   </Button>
                 )}
               </div>
             </div>
           </>
         ) : (
-          <div style={{ textAlign: "center", padding: "40px" }}>
-            <h3>No Customers Found</h3>
-            <p>No customers match your search criteria.</p>
-            <Link to="/admin/orders/add/step-1-search">
-              <Button variant="primary">Search Again →</Button>
-            </Link>
-          </div>
+          !isFetching && (
+            <div style={{ textAlign: "center", padding: "40px" }}>
+              <h3>📊 No Customers Found</h3>
+              <p
+                style={{
+                  fontSize: "16px",
+                  color: "#6c757d",
+                  marginBottom: "20px",
+                }}
+              >
+                No customers match your search criteria:
+                <br />
+                <strong>{getSearchDescription()}</strong>
+              </p>
+              <p style={{ fontSize: "14px", color: "#6c757d" }}>
+                You can try a different search or add a new customer.
+              </p>
+            </div>
+          )
         )}
 
         <div style={{ textAlign: "center", margin: "30px 0" }}>

@@ -116,6 +116,20 @@ func (impl OrderStorerImpl) LiteListByFilter(ctx context.Context, f *OrderPagina
 	// Create a slice to store conditions
 	var conditions []bson.M
 
+	// Add StartDate filter conditions
+	if !f.StartDateGTE.IsZero() {
+		conditions = append(conditions, bson.M{"start_date": bson.M{"$gte": f.StartDateGTE}})
+	}
+	if !f.StartDateGT.IsZero() {
+		conditions = append(conditions, bson.M{"start_date": bson.M{"$gt": f.StartDateGT}})
+	}
+	if !f.StartDateLTE.IsZero() {
+		conditions = append(conditions, bson.M{"start_date": bson.M{"$lte": f.StartDateLTE}})
+	}
+	if !f.StartDateLT.IsZero() {
+		conditions = append(conditions, bson.M{"start_date": bson.M{"$lt": f.StartDateLT}})
+	}
+
 	// Add filter conditions to the slice
 	if !f.AssignmentDateGTE.IsZero() {
 		conditions = append(conditions, bson.M{"assignment_date": bson.M{"$gte": f.AssignmentDateGTE}})

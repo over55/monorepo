@@ -40,6 +40,9 @@ function AdminOrderAddStep1PartAPage() {
     e.preventDefault();
     console.log("onSubmitClick: Beginning...");
 
+    // Clear any previous errors
+    setErrors({});
+
     if (firstName === "" && lastName === "" && email === "" && phone === "") {
       setErrors({
         message: "Please enter at least one search criteria",
@@ -57,29 +60,12 @@ function AdminOrderAddStep1PartAPage() {
     navigate(`/admin/orders/add/step-1-results?${params.toString()}`);
   };
 
-  const onAddOrderClick = (e) => {
-    e.preventDefault();
-    console.log("Starting new order creation without search");
-
-    // Clear any existing order state
-    orderCreationStorage.clearOrderCreation();
-
-    // Initialize new order state
-    const newOrderState = {
-      customerId: null,
-      customerFirstName: null,
-      customerLastName: null,
-      startDate: null,
-      isOngoing: null,
-      isHomeSupportService: null,
-      description: "",
-      skillSets: [],
-      additionalComment: "",
-      tags: [],
-    };
-
-    orderCreationStorage.saveOrderCreation(newOrderState);
-    navigate("/admin/orders/add/step-3");
+  const handleCancel = () => {
+    if (firstName || lastName || email || phone) {
+      setShowCancelWarning(true);
+    } else {
+      navigate("/admin/orders");
+    }
   };
 
   useEffect(() => {
@@ -178,11 +164,7 @@ function AdminOrderAddStep1PartAPage() {
               marginTop: "20px",
             }}
           >
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setShowCancelWarning(true)}
-            >
+            <Button type="button" variant="secondary" onClick={handleCancel}>
               Cancel
             </Button>
             <Button type="submit" variant="primary">

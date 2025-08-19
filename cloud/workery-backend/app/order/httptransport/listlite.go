@@ -1,3 +1,5 @@
+// File Path: cloud/workery-backend/app/order/httptransport/listlite.go
+
 package httptransport
 
 import (
@@ -6,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/bartmika/timekit"
 	o_s "github.com/over55/monorepo/cloud/workery-backend/app/order/datastore"
 	"github.com/over55/monorepo/cloud/workery-backend/utils/httperror"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -17,7 +20,7 @@ func (h *Handler) LiteList(w http.ResponseWriter, r *http.Request) {
 	f := &o_s.OrderPaginationListFilter{
 		Cursor:    "",
 		PageSize:  25,
-		SortField: "assignment_date",
+		SortField: "created_at",
 		SortOrder: o_s.SortOrderDescending,
 		Page:      1, // Default to page 1
 	}
@@ -174,6 +177,172 @@ func (h *Handler) LiteList(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		f.TenantID = tenantIDObj
+	}
+
+	// ===== DATE FILTERS HANDLING USING timekit =====
+
+	// Start Date Filters
+	startDateGTEStr := query.Get("start_date_gte")
+	if startDateGTEStr != "" {
+		startDateGTE, err := timekit.ParseJavaScriptTimeString(startDateGTEStr)
+		if err != nil {
+			httperror.ResponseError(w, err)
+			return
+		}
+		f.StartDateGTE = startDateGTE
+	}
+
+	startDateGTStr := query.Get("start_date_gt")
+	if startDateGTStr != "" {
+		startDateGT, err := timekit.ParseJavaScriptTimeString(startDateGTStr)
+		if err != nil {
+			httperror.ResponseError(w, err)
+			return
+		}
+		f.StartDateGT = startDateGT
+	}
+
+	startDateLTEStr := query.Get("start_date_lte")
+	if startDateLTEStr != "" {
+		startDateLTE, err := timekit.ParseJavaScriptTimeString(startDateLTEStr)
+		if err != nil {
+			httperror.ResponseError(w, err)
+			return
+		}
+		f.StartDateLTE = startDateLTE
+	}
+
+	startDateLTStr := query.Get("start_date_lt")
+	if startDateLTStr != "" {
+		startDateLT, err := timekit.ParseJavaScriptTimeString(startDateLTStr)
+		if err != nil {
+			httperror.ResponseError(w, err)
+			return
+		}
+		f.StartDateLT = startDateLT
+	}
+
+	// Completion Date Filters
+	completionDateGTEStr := query.Get("completion_date_gte")
+	if completionDateGTEStr != "" {
+		completionDateGTE, err := timekit.ParseJavaScriptTimeString(completionDateGTEStr)
+		if err != nil {
+			httperror.ResponseError(w, err)
+			return
+		}
+		f.CompletionDateGTE = completionDateGTE
+	}
+
+	completionDateGTStr := query.Get("completion_date_gt")
+	if completionDateGTStr != "" {
+		completionDateGT, err := timekit.ParseJavaScriptTimeString(completionDateGTStr)
+		if err != nil {
+			httperror.ResponseError(w, err)
+			return
+		}
+		f.CompletionDateGT = completionDateGT
+	}
+
+	completionDateLTEStr := query.Get("completion_date_lte")
+	if completionDateLTEStr != "" {
+		completionDateLTE, err := timekit.ParseJavaScriptTimeString(completionDateLTEStr)
+		if err != nil {
+			httperror.ResponseError(w, err)
+			return
+		}
+		f.CompletionDateLTE = completionDateLTE
+	}
+
+	completionDateLTStr := query.Get("completion_date_lt")
+	if completionDateLTStr != "" {
+		completionDateLT, err := timekit.ParseJavaScriptTimeString(completionDateLTStr)
+		if err != nil {
+			httperror.ResponseError(w, err)
+			return
+		}
+		f.CompletionDateLT = completionDateLT
+	}
+
+	// Assignment Date Filters (if needed separately)
+	assignmentDateGTEStr := query.Get("assignment_date_gte")
+	if assignmentDateGTEStr != "" {
+		assignmentDateGTE, err := timekit.ParseJavaScriptTimeString(assignmentDateGTEStr)
+		if err != nil {
+			httperror.ResponseError(w, err)
+			return
+		}
+		f.AssignmentDateGTE = assignmentDateGTE
+	}
+
+	assignmentDateGTStr := query.Get("assignment_date_gt")
+	if assignmentDateGTStr != "" {
+		assignmentDateGT, err := timekit.ParseJavaScriptTimeString(assignmentDateGTStr)
+		if err != nil {
+			httperror.ResponseError(w, err)
+			return
+		}
+		f.AssignmentDateGT = assignmentDateGT
+	}
+
+	assignmentDateLTEStr := query.Get("assignment_date_lte")
+	if assignmentDateLTEStr != "" {
+		assignmentDateLTE, err := timekit.ParseJavaScriptTimeString(assignmentDateLTEStr)
+		if err != nil {
+			httperror.ResponseError(w, err)
+			return
+		}
+		f.AssignmentDateLTE = assignmentDateLTE
+	}
+
+	assignmentDateLTStr := query.Get("assignment_date_lt")
+	if assignmentDateLTStr != "" {
+		assignmentDateLT, err := timekit.ParseJavaScriptTimeString(assignmentDateLTStr)
+		if err != nil {
+			httperror.ResponseError(w, err)
+			return
+		}
+		f.AssignmentDateLT = assignmentDateLT
+	}
+
+	// Invoice Service Fee Payment Date Filters (if needed)
+	invoiceServiceFeePaymentDateGTEStr := query.Get("invoice_service_fee_payment_date_gte")
+	if invoiceServiceFeePaymentDateGTEStr != "" {
+		invoiceServiceFeePaymentDateGTE, err := timekit.ParseJavaScriptTimeString(invoiceServiceFeePaymentDateGTEStr)
+		if err != nil {
+			httperror.ResponseError(w, err)
+			return
+		}
+		f.InvoiceServiceFeePaymentDateGTE = invoiceServiceFeePaymentDateGTE
+	}
+
+	invoiceServiceFeePaymentDateGTStr := query.Get("invoice_service_fee_payment_date_gt")
+	if invoiceServiceFeePaymentDateGTStr != "" {
+		invoiceServiceFeePaymentDateGT, err := timekit.ParseJavaScriptTimeString(invoiceServiceFeePaymentDateGTStr)
+		if err != nil {
+			httperror.ResponseError(w, err)
+			return
+		}
+		f.InvoiceServiceFeePaymentDateGT = invoiceServiceFeePaymentDateGT
+	}
+
+	invoiceServiceFeePaymentDateLTEStr := query.Get("invoice_service_fee_payment_date_lte")
+	if invoiceServiceFeePaymentDateLTEStr != "" {
+		invoiceServiceFeePaymentDateLTE, err := timekit.ParseJavaScriptTimeString(invoiceServiceFeePaymentDateLTEStr)
+		if err != nil {
+			httperror.ResponseError(w, err)
+			return
+		}
+		f.InvoiceServiceFeePaymentDateLTE = invoiceServiceFeePaymentDateLTE
+	}
+
+	invoiceServiceFeePaymentDateLTStr := query.Get("invoice_service_fee_payment_date_lt")
+	if invoiceServiceFeePaymentDateLTStr != "" {
+		invoiceServiceFeePaymentDateLT, err := timekit.ParseJavaScriptTimeString(invoiceServiceFeePaymentDateLTStr)
+		if err != nil {
+			httperror.ResponseError(w, err)
+			return
+		}
+		f.InvoiceServiceFeePaymentDateLT = invoiceServiceFeePaymentDateLT
 	}
 
 	// Perform our database operation.

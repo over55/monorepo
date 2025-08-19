@@ -1,6 +1,6 @@
 // File Path: web/workery-frontend/src/pages/Admin/Order/List/Page.jsx
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router";
 import { useOrderManager, useAuthManager } from "../../../../services/Services";
 import { theme, globalStyles } from "../../../../constants/Theme";
@@ -26,13 +26,11 @@ import {
   ORDER_STATUS_COMPLETED_BUT_UNPAID,
   ORDER_STATUS_COMPLETED_AND_PAID,
   ORDER_STATUS_ARCHIVED,
-  // ORDER_STATUS_OPTIONS is defined locally to fix issues with imported values
   ORDER_TYPE_RESIDENTIAL,
   ORDER_TYPE_COMMERCIAL,
 } from "../../../../constants/Order";
 
-// We define ORDER_STATUS_OPTIONS locally to ensure it is correct,
-// based on the imported constants.
+// We define ORDER_STATUS_OPTIONS locally to ensure it is correct
 const ORDER_STATUS_OPTIONS = [
   { value: "", label: "All Statuses" },
   { value: String(ORDER_STATUS_NEW), label: "New" },
@@ -77,10 +75,6 @@ const PAGE_SIZE_OPTIONS = [
 const VIEW_TYPE_TABULAR = "tabular";
 const VIEW_TYPE_GRID = "grid";
 
-// Order type constants are now imported from constants/Order.js
-// const RESIDENTIAL_ORDER_TYPE_ID = 1;
-// const COMMERCIAL_ORDER_TYPE_ID = 2;
-
 function AdminOrderListPage() {
   const orderManager = useOrderManager();
   const authManager = useAuthManager();
@@ -117,23 +111,71 @@ function AdminOrderListPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState(null);
 
+  // Use refs to track the latest filter values to avoid stale closures
+  const filtersRef = useRef({
+    searchQuery,
+    statusFilter,
+    typeFilter,
+    sortBy,
+    startDateGte,
+    startDateLte,
+    completionDateGte,
+    completionDateLte,
+    pageSize,
+  });
+
+  // Update refs when filters change
+  useEffect(() => {
+    filtersRef.current = {
+      searchQuery,
+      statusFilter,
+      typeFilter,
+      sortBy,
+      startDateGte,
+      startDateLte,
+      completionDateGte,
+      completionDateLte,
+      pageSize,
+    };
+  }, [
+    searchQuery,
+    statusFilter,
+    typeFilter,
+    sortBy,
+    startDateGte,
+    startDateLte,
+    completionDateGte,
+    completionDateLte,
+    pageSize,
+  ]);
+
   // Handle unauthorized access
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
   };
 
-  // Fetch orders using the new manager
+  // Fetch orders using the new manager - now uses refs for filter values
   const fetchOrders = useCallback(
     async (cursor = "", isNavigatingBack = false) => {
+      // Get the latest filter values from refs
+      const currentFilters = filtersRef.current;
+
       console.log(
         "🔄 fetchOrders called with cursor:",
         cursor,
         "pageSize:",
-        pageSize,
+        currentFilters.pageSize,
+        "filters:",
+        currentFilters,
       );
 
       setLoading(true);
       setError(null);
+
+      // Always clear the cache when fetching with new filters
+      if (!isNavigatingBack) {
+        orderManager.clearOrdersCache();
+      }
 
       try {
         // Build params using Map for legacy filtersMap approach
@@ -145,41 +187,41 @@ function AdminOrderListPage() {
         }
 
         // Add page size
-        filtersMap.set("page_size", pageSize.toString());
+        filtersMap.set("page_size", currentFilters.pageSize.toString());
 
         // Add sorting
-        if (sortBy) {
-          const [sortField, sortOrder] = sortBy.split(",");
+        if (currentFilters.sortBy) {
+          const [sortField, sortOrder] = currentFilters.sortBy.split(",");
           filtersMap.set("sort_field", sortField);
           filtersMap.set("sort_order", sortOrder);
         }
 
         // Add search
-        if (searchQuery.trim()) {
-          filtersMap.set("search", searchQuery.trim());
+        if (currentFilters.searchQuery.trim()) {
+          filtersMap.set("search", currentFilters.searchQuery.trim());
         }
 
         // Add filters
-        if (statusFilter) {
-          filtersMap.set("status", statusFilter);
+        if (currentFilters.statusFilter) {
+          filtersMap.set("status", currentFilters.statusFilter);
         }
-        if (typeFilter) {
-          filtersMap.set("type", typeFilter);
+        if (currentFilters.typeFilter) {
+          filtersMap.set("type", currentFilters.typeFilter);
         }
-        if (startDateGte) {
-          const date = new Date(startDateGte);
+        if (currentFilters.startDateGte) {
+          const date = new Date(currentFilters.startDateGte);
           filtersMap.set("start_date_gte", date.getTime().toString());
         }
-        if (startDateLte) {
-          const date = new Date(startDateLte);
+        if (currentFilters.startDateLte) {
+          const date = new Date(currentFilters.startDateLte);
           filtersMap.set("start_date_lte", date.getTime().toString());
         }
-        if (completionDateGte) {
-          const date = new Date(completionDateGte);
+        if (currentFilters.completionDateGte) {
+          const date = new Date(currentFilters.completionDateGte);
           filtersMap.set("completion_date_gte", date.getTime().toString());
         }
-        if (completionDateLte) {
-          const date = new Date(completionDateLte);
+        if (currentFilters.completionDateLte) {
+          const date = new Date(currentFilters.completionDateLte);
           filtersMap.set("completion_date_lte", date.getTime().toString());
         }
 
@@ -188,11 +230,11 @@ function AdminOrderListPage() {
           Array.from(filtersMap.entries()),
         );
 
-        // Use the manager method
+        // Use the manager method - always force refresh to avoid cache issues
         const response = await orderManager.getOrdersWithFiltersMap(
           filtersMap,
           onUnauthorized,
-          true, // force refresh
+          true, // Always force refresh
         );
 
         console.log("✅ API response received:", {
@@ -234,19 +276,7 @@ function AdminOrderListPage() {
         setLoading(false);
       }
     },
-    [
-      pageSize,
-      sortBy,
-      searchQuery,
-      statusFilter,
-      typeFilter,
-      startDateGte,
-      startDateLte,
-      completionDateGte,
-      completionDateLte,
-      orderManager,
-      onUnauthorized,
-    ],
+    [orderManager, onUnauthorized],
   );
 
   // Handle search
@@ -261,16 +291,18 @@ function AdminOrderListPage() {
     fetchOrders("");
   };
 
-  // Handle filter changes
-  const handleFilterChange = useCallback(() => {
-    console.log("🔄 Filter changed - resetting pagination");
+  // Immediate filter application function
+  const applyFilters = useCallback(() => {
+    console.log("🔄 Applying filters - resetting pagination");
     // Reset pagination when filters change
     setCursorHistory([]);
     setCurrentCursor("");
     setNextCursor("");
     setHasNextPage(false);
+    // Clear cache and fetch fresh data
+    orderManager.clearOrdersCache();
     fetchOrders("");
-  }, [fetchOrders]);
+  }, [fetchOrders, orderManager]);
 
   // Pagination handlers
   const handleNextPage = () => {
@@ -322,33 +354,35 @@ function AdminOrderListPage() {
     const newPageSize = parseInt(e.target.value);
     console.log("📏 Page size changing from", pageSize, "to", newPageSize);
     setPageSize(newPageSize);
-
-    // Reset pagination when page size changes
-    setCursorHistory([]);
-    setCurrentCursor("");
-    setNextCursor("");
-    setHasNextPage(false);
+    // Apply filters immediately after state update
+    setTimeout(() => applyFilters(), 0);
   };
-
-  // Effect to refetch when pageSize changes
-  useEffect(() => {
-    if (pageSize) {
-      console.log("📏 Page size changed to:", pageSize, "- fetching data");
-      fetchOrders("");
-    }
-  }, [pageSize]);
 
   // Handle sort change
   const handleSortChange = (e) => {
     setSortBy(e.target.value);
+    // Apply filters immediately after state update
+    setTimeout(() => applyFilters(), 0);
+  };
 
-    // Reset pagination when sort changes
-    setCursorHistory([]);
-    setCurrentCursor("");
-    setNextCursor("");
-    setHasNextPage(false);
+  // Handle status filter change
+  const handleStatusFilterChange = (e) => {
+    console.log("🧿 Status change -->", e.target.value);
+    setStatusFilter(e.target.value);
+    // Apply filters immediately after state update
+    setTimeout(() => applyFilters(), 0);
+  };
 
-    setTimeout(() => fetchOrders(""), 0);
+  // Handle type filter change
+  const handleTypeFilterChange = (e) => {
+    setTypeFilter(e.target.value);
+    setTimeout(() => applyFilters(), 0);
+  };
+
+  // Handle date filter changes
+  const handleDateFilterChange = (setter) => (e) => {
+    setter(e.target.value);
+    setTimeout(() => applyFilters(), 0);
   };
 
   // Handle delete order
@@ -389,8 +423,10 @@ function AdminOrderListPage() {
     setNextCursor("");
     setHasNextPage(false);
     setShowFilters(false);
-    fetchOrders("");
-  }, [fetchOrders]);
+    // Clear cache and fetch fresh data
+    orderManager.clearOrdersCache();
+    setTimeout(() => fetchOrders(""), 0);
+  }, [fetchOrders, orderManager]);
 
   // Initial data load - only on mount
   useEffect(() => {
@@ -663,21 +699,14 @@ function AdminOrderListPage() {
                 <Select
                   label="Status"
                   value={statusFilter}
-                  onChange={(e) => {
-                    console.log("🧿Status change -->", e.target.value);
-                    setStatusFilter(e.target.value);
-                    setTimeout(() => handleFilterChange(), 0);
-                  }}
+                  onChange={handleStatusFilterChange}
                   options={ORDER_STATUS_OPTIONS}
                 />
 
                 <Select
                   label="Type"
                   value={typeFilter}
-                  onChange={(e) => {
-                    setTypeFilter(e.target.value);
-                    setTimeout(() => handleFilterChange(), 0);
-                  }}
+                  onChange={handleTypeFilterChange}
                   options={ORDER_TYPE_OPTIONS}
                 />
 
@@ -685,40 +714,28 @@ function AdminOrderListPage() {
                   label="Start Date (From)"
                   type="date"
                   value={startDateGte}
-                  onChange={(e) => {
-                    setStartDateGte(e.target.value);
-                    setTimeout(() => handleFilterChange(), 0);
-                  }}
+                  onChange={handleDateFilterChange(setStartDateGte)}
                 />
 
                 <Input
                   label="Start Date (To)"
                   type="date"
                   value={startDateLte}
-                  onChange={(e) => {
-                    setStartDateLte(e.target.value);
-                    setTimeout(() => handleFilterChange(), 0);
-                  }}
+                  onChange={handleDateFilterChange(setStartDateLte)}
                 />
 
                 <Input
                   label="Completion Date (From)"
                   type="date"
                   value={completionDateGte}
-                  onChange={(e) => {
-                    setCompletionDateGte(e.target.value);
-                    setTimeout(() => handleFilterChange(), 0);
-                  }}
+                  onChange={handleDateFilterChange(setCompletionDateGte)}
                 />
 
                 <Input
                   label="Completion Date (To)"
                   type="date"
                   value={completionDateLte}
-                  onChange={(e) => {
-                    setCompletionDateLte(e.target.value);
-                    setTimeout(() => handleFilterChange(), 0);
-                  }}
+                  onChange={handleDateFilterChange(setCompletionDateLte)}
                 />
               </div>
 

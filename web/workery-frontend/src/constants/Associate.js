@@ -50,3 +50,5 @@ export const ASSOCIATE_EDUCATION_COLLEGE = "college";
 export const ASSOCIATE_EDUCATION_UNIVERSITY = "university";
 export const ASSOCIATE_EDUCATION_POST_GRADUATE = "post_graduate";
 export const ASSOCIATE_EDUCATION_OTHER = "other";
+
+export const ASSOCIATE_PHONE_TYPE_WORK = 1;

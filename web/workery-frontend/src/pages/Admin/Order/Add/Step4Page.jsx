@@ -6,8 +6,6 @@ import {
   useAuthManager,
   useOrderCreationStorage,
   useOrderManager,
-  useSkillSetManager,
-  useTagManager,
 } from "../../../../services/Services";
 import { theme, globalStyles } from "../../../../constants/Theme";
 import {
@@ -18,13 +16,12 @@ import {
   Breadcrumb,
   Modal,
 } from "../../../../components/UI";
+import { SkillSetsDisplay, TagsDisplay } from "../../../../components/Display";
 
 function AdminOrderAddStep4Page() {
   const authManager = useAuthManager();
   const orderCreationStorage = useOrderCreationStorage();
   const orderManager = useOrderManager();
-  const skillSetManager = useSkillSetManager();
-  const tagManager = useTagManager();
   const navigate = useNavigate();
 
   const [errors, setErrors] = useState({});
@@ -34,43 +31,8 @@ function AdminOrderAddStep4Page() {
   // Get existing order state
   const orderData = orderCreationStorage.getOrderCreation();
 
-  // For displaying labels
-  const [skillSetLabels, setSkillSetLabels] = useState([]);
-  const [tagLabels, setTagLabels] = useState([]);
-
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
-  };
-
-  const fetchLabels = async () => {
-    try {
-      // Fetch skill set labels
-      if (orderData?.skillSets?.length > 0) {
-        const skillSetsData =
-          await skillSetManager.getSkillSetSelectOptions(onUnauthorized);
-        if (skillSetsData) {
-          const labels = orderData.skillSets.map((id) => {
-            const option = skillSetsData.find((opt) => opt.value === id);
-            return option ? option.label : `ID: ${id}`;
-          });
-          setSkillSetLabels(labels);
-        }
-      }
-
-      // Fetch tag labels
-      if (orderData?.tags?.length > 0) {
-        const tagsData = await tagManager.getTagSelectOptions(onUnauthorized);
-        if (tagsData) {
-          const labels = orderData.tags.map((id) => {
-            const option = tagsData.find((opt) => opt.value === id);
-            return option ? option.label : `ID: ${id}`;
-          });
-          setTagLabels(labels);
-        }
-      }
-    } catch (error) {
-      console.error("Failed to fetch labels:", error);
-    }
   };
 
   const onSubmitClick = async (e) => {
@@ -130,8 +92,6 @@ function AdminOrderAddStep4Page() {
         navigate("/admin/orders/add/step-1-search");
         return;
       }
-
-      fetchLabels();
     }
 
     return () => {
@@ -146,6 +106,17 @@ function AdminOrderAddStep4Page() {
   if (!orderData) {
     return <Loading message="Loading order data..." />;
   }
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return "-";
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString();
+    } catch (e) {
+      return dateString;
+    }
+  };
 
   return (
     <div style={globalStyles.container}>
@@ -236,6 +207,7 @@ function AdminOrderAddStep4Page() {
                 <Link
                   to={`/admin/customer/${orderData.customerId}`}
                   target="_blank"
+                  style={{ color: theme.colors.primary }}
                 >
                   {orderData.customerFirstName} {orderData.customerLastName}
                 </Link>
@@ -253,7 +225,7 @@ function AdminOrderAddStep4Page() {
                 Start Date:
               </th>
               <td style={{ padding: "10px", borderBottom: "1px solid #ddd" }}>
-                {orderData.startDate || "-"}
+                {formatDate(orderData.startDate)}
               </td>
             </tr>
             <tr>
@@ -268,7 +240,11 @@ function AdminOrderAddStep4Page() {
                 Is Ongoing:
               </th>
               <td style={{ padding: "10px", borderBottom: "1px solid #ddd" }}>
-                {orderData.isOngoing === 1 ? "✓ Yes" : "✗ No"}
+                {orderData.isOngoing === 1 ? (
+                  <span style={{ color: "green" }}>✓ Yes</span>
+                ) : (
+                  <span style={{ color: "red" }}>✗ No</span>
+                )}
               </td>
             </tr>
             <tr>
@@ -283,7 +259,11 @@ function AdminOrderAddStep4Page() {
                 Is Home Support Service:
               </th>
               <td style={{ padding: "10px", borderBottom: "1px solid #ddd" }}>
-                {orderData.isHomeSupportService === 1 ? "✓ Yes" : "✗ No"}
+                {orderData.isHomeSupportService === 1 ? (
+                  <span style={{ color: "green" }}>✓ Yes</span>
+                ) : (
+                  <span style={{ color: "red" }}>✗ No</span>
+                )}
               </td>
             </tr>
             <tr>
@@ -293,12 +273,15 @@ function AdminOrderAddStep4Page() {
                   backgroundColor: "#f5f5f5",
                   textAlign: "left",
                   borderBottom: "1px solid #ddd",
+                  verticalAlign: "top",
                 }}
               >
                 Description:
               </th>
               <td style={{ padding: "10px", borderBottom: "1px solid #ddd" }}>
-                {orderData.description}
+                <div style={{ whiteSpace: "pre-wrap" }}>
+                  {orderData.description || "-"}
+                </div>
               </td>
             </tr>
             <tr>
@@ -308,14 +291,20 @@ function AdminOrderAddStep4Page() {
                   backgroundColor: "#f5f5f5",
                   textAlign: "left",
                   borderBottom: "1px solid #ddd",
+                  verticalAlign: "top",
                 }}
               >
                 Skill Sets:
               </th>
               <td style={{ padding: "10px", borderBottom: "1px solid #ddd" }}>
-                {skillSetLabels.length > 0
-                  ? skillSetLabels.join(", ")
-                  : "Loading..."}
+                {orderData.skillSets && orderData.skillSets.length > 0 ? (
+                  <SkillSetsDisplay
+                    values={orderData.skillSets}
+                    onUnauthorized={onUnauthorized}
+                  />
+                ) : (
+                  <span style={{ color: "#999" }}>No skill sets selected</span>
+                )}
               </td>
             </tr>
             <tr>
@@ -325,12 +314,15 @@ function AdminOrderAddStep4Page() {
                   backgroundColor: "#f5f5f5",
                   textAlign: "left",
                   borderBottom: "1px solid #ddd",
+                  verticalAlign: "top",
                 }}
               >
                 Additional Comment:
               </th>
               <td style={{ padding: "10px", borderBottom: "1px solid #ddd" }}>
-                {orderData.additionalComment || "-"}
+                <div style={{ whiteSpace: "pre-wrap" }}>
+                  {orderData.additionalComment || "-"}
+                </div>
               </td>
             </tr>
             <tr>
@@ -340,12 +332,20 @@ function AdminOrderAddStep4Page() {
                   backgroundColor: "#f5f5f5",
                   textAlign: "left",
                   borderBottom: "1px solid #ddd",
+                  verticalAlign: "top",
                 }}
               >
                 Tags:
               </th>
               <td style={{ padding: "10px", borderBottom: "1px solid #ddd" }}>
-                {tagLabels.length > 0 ? tagLabels.join(", ") : "-"}
+                {orderData.tags && orderData.tags.length > 0 ? (
+                  <TagsDisplay
+                    values={orderData.tags}
+                    onUnauthorized={onUnauthorized}
+                  />
+                ) : (
+                  <span style={{ color: "#999" }}>No tags selected</span>
+                )}
               </td>
             </tr>
           </tbody>
@@ -355,7 +355,9 @@ function AdminOrderAddStep4Page() {
           style={{
             display: "flex",
             justifyContent: "space-between",
-            marginTop: "20px",
+            marginTop: "30px",
+            paddingTop: "20px",
+            borderTop: "2px solid #eee",
           }}
         >
           <Link to="/admin/orders/add/step-3">
@@ -365,10 +367,10 @@ function AdminOrderAddStep4Page() {
           </Link>
           <Button
             onClick={onSubmitClick}
-            variant="primary"
+            variant="success"
             disabled={isFetching}
           >
-            ✓ Submit
+            {isFetching ? "Submitting..." : "✓ Submit Order"}
           </Button>
         </div>
       </Card>
