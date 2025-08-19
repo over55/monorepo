@@ -23,21 +23,31 @@ export class CommentManager {
     forceRefresh = false,
   ) {
     try {
+      // Create a filters map from params for cache key generation
+      const filtersMap = new Map();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          filtersMap.set(key, value.toString());
+        }
+      });
+
       // Check storage cache first (unless force refresh is requested)
       if (!forceRefresh) {
-        const cachedComments = this.commentStorage.getCommentsFromCache();
+        const cachedComments =
+          this.commentStorage.getCommentsFromCache(filtersMap);
         if (cachedComments) {
+          console.log("CommentManager: Returning cached comments");
           return cachedComments;
         }
       }
 
-      // Prevent multiple simultaneous requests
-      if (this.commentStorage.isCommentsCacheLoading()) {
+      // Prevent multiple simultaneous requests for the same filters
+      if (this.commentStorage.isCommentsCacheLoading(filtersMap)) {
         console.log("CommentManager: Comments request already in progress");
-        return this._waitForCurrentCommentsRequest();
+        return this._waitForCurrentCommentsRequest(filtersMap);
       }
 
-      this.commentStorage.setCommentsCacheLoading(true);
+      this.commentStorage.setCommentsCacheLoading(filtersMap, true);
 
       console.log("CommentManager: Fetching fresh comments data", params);
 
@@ -51,8 +61,8 @@ export class CommentManager {
           onUnauthorizedCallback,
         );
 
-        // Save to storage cache
-        this.commentStorage.saveCommentsToCache(commentsData);
+        // Save to storage cache with filters
+        this.commentStorage.saveCommentsToCache(filtersMap, commentsData);
 
         console.log("CommentManager: Comments data fetched successfully:", {
           count: commentsData.results ? commentsData.results.length : 0,
@@ -61,10 +71,16 @@ export class CommentManager {
 
         return commentsData;
       } finally {
-        this.commentStorage.setCommentsCacheLoading(false);
+        this.commentStorage.setCommentsCacheLoading(filtersMap, false);
       }
     } catch (error) {
-      this.commentStorage.setCommentsCacheLoading(false);
+      const filtersMap = new Map();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          filtersMap.set(key, value.toString());
+        }
+      });
+      this.commentStorage.setCommentsCacheLoading(filtersMap, false);
       console.error("CommentManager: Failed to get comments", error);
       throw error;
     }
@@ -85,23 +101,28 @@ export class CommentManager {
     try {
       // Check storage cache first (unless force refresh is requested)
       if (!forceRefresh) {
-        const cachedComments = this.commentStorage.getCommentsFromCache();
+        const cachedComments =
+          this.commentStorage.getCommentsFromCache(filtersMap);
         if (cachedComments) {
+          console.log(
+            "CommentManager: Returning cached comments for filters",
+            Array.from(filtersMap.entries()),
+          );
           return cachedComments;
         }
       }
 
-      // Prevent multiple simultaneous requests
-      if (this.commentStorage.isCommentsCacheLoading()) {
+      // Prevent multiple simultaneous requests for the same filters
+      if (this.commentStorage.isCommentsCacheLoading(filtersMap)) {
         console.log("CommentManager: Comments request already in progress");
-        return this._waitForCurrentCommentsRequest();
+        return this._waitForCurrentCommentsRequest(filtersMap);
       }
 
-      this.commentStorage.setCommentsCacheLoading(true);
+      this.commentStorage.setCommentsCacheLoading(filtersMap, true);
 
       console.log(
         "CommentManager: Fetching fresh comments data with filtersMap",
-        filtersMap,
+        Array.from(filtersMap.entries()),
       );
 
       try {
@@ -111,20 +132,22 @@ export class CommentManager {
           onUnauthorizedCallback,
         );
 
-        // Save to storage cache
-        this.commentStorage.saveCommentsToCache(commentsData);
+        // Save to storage cache with the same filters map
+        this.commentStorage.saveCommentsToCache(filtersMap, commentsData);
 
         console.log("CommentManager: Comments data fetched successfully:", {
           count: commentsData.results ? commentsData.results.length : 0,
           totalCount: commentsData.count,
+          hasNextPage: commentsData.hasNextPage,
+          nextCursor: commentsData.nextCursor,
         });
 
         return commentsData;
       } finally {
-        this.commentStorage.setCommentsCacheLoading(false);
+        this.commentStorage.setCommentsCacheLoading(filtersMap, false);
       }
     } catch (error) {
-      this.commentStorage.setCommentsCacheLoading(false);
+      this.commentStorage.setCommentsCacheLoading(filtersMap, false);
       console.error(
         "CommentManager: Failed to get comments with filtersMap",
         error,
@@ -154,6 +177,14 @@ export class CommentManager {
    */
   clearCommentsCache() {
     this.commentStorage.clearCommentsCache();
+  }
+
+  /**
+   * Clears specific cache entry
+   * @param {Map} filtersMap - Map of filter parameters
+   */
+  clearSpecificCache(filtersMap = new Map()) {
+    this.commentStorage.clearSpecificCache(filtersMap);
   }
 
   /**
@@ -339,16 +370,18 @@ export class CommentManager {
   /**
    * Waits for current comments request to complete
    * @private
+   * @param {Map} filtersMap - Map of filter parameters
    * @returns {Promise<Object>}
    */
-  _waitForCurrentCommentsRequest() {
+  _waitForCurrentCommentsRequest(filtersMap = new Map()) {
     return new Promise((resolve, reject) => {
       const checkInterval = setInterval(() => {
-        if (!this.commentStorage.isCommentsCacheLoading()) {
+        if (!this.commentStorage.isCommentsCacheLoading(filtersMap)) {
           clearInterval(checkInterval);
 
           // Try to get cached data
-          const cachedData = this.commentStorage.getCommentsFromCache();
+          const cachedData =
+            this.commentStorage.getCommentsFromCache(filtersMap);
           if (cachedData) {
             resolve(cachedData);
           } else {

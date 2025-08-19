@@ -6,16 +6,13 @@
  */
 export class CommentStorage {
   constructor() {
-    this.COMMENTS_CACHE_KEY = "WORKERY_COMMENTS_CACHE";
-    this.COMMENTS_TIMESTAMP_KEY = "WORKERY_COMMENTS_TIMESTAMP";
+    this.COMMENTS_CACHE_KEY_PREFIX = "WORKERY_COMMENTS_CACHE_";
+    this.COMMENTS_TIMESTAMP_KEY_PREFIX = "WORKERY_COMMENTS_TIMESTAMP_";
     this.DEFAULT_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds (shorter for comments)
 
-    // In-memory cache for current session
-    this.memoryCache = {
-      comments: null,
-      commentsTimestamp: null,
-      isCommentsLoading: false,
-    };
+    // In-memory cache for current session - now uses Map for multiple cache entries
+    this.memoryCache = new Map();
+    this.loadingStates = new Map();
 
     if (process.env.NODE_ENV === "development") {
       console.log("CommentStorage initialized");
@@ -23,21 +20,48 @@ export class CommentStorage {
   }
 
   /**
+   * Generates a cache key based on filter parameters
+   * @private
+   * @param {Map} filtersMap - Map of filter parameters
+   * @returns {string} - Cache key
+   */
+  _generateCacheKey(filtersMap = new Map()) {
+    // Sort the keys to ensure consistent cache keys
+    const sortedEntries = Array.from(filtersMap.entries()).sort((a, b) =>
+      a[0].localeCompare(b[0]),
+    );
+
+    // Create a unique key based on all filter parameters
+    const keyParts = sortedEntries.map(([key, value]) => `${key}:${value}`);
+    return keyParts.join("|");
+  }
+
+  /**
    * Gets comments list from cache (memory first, then localStorage)
+   * @param {Map} filtersMap - Map of filter parameters (including cursor, page_size, etc.)
    * @param {number} maxAge - Maximum age of cache in milliseconds
    * @returns {Object|null} - Cached comments data or null if not found/expired
    */
-  getCommentsFromCache(maxAge = this.DEFAULT_CACHE_DURATION) {
+  getCommentsFromCache(
+    filtersMap = new Map(),
+    maxAge = this.DEFAULT_CACHE_DURATION,
+  ) {
+    const cacheKey = this._generateCacheKey(filtersMap);
+    const fullCacheKey = this.COMMENTS_CACHE_KEY_PREFIX + cacheKey;
+    const timestampKey = this.COMMENTS_TIMESTAMP_KEY_PREFIX + cacheKey;
+
     // Check memory cache first (fastest)
-    if (this._isCommentsMemoryCacheValid(maxAge)) {
-      console.log("CommentStorage: Using memory cache for comments list");
-      return this.memoryCache.comments;
+    if (this._isMemoryCacheValid(cacheKey, maxAge)) {
+      console.log("CommentStorage: Using memory cache for comments list", {
+        cacheKey,
+      });
+      return this.memoryCache.get(cacheKey).data;
     }
 
     // Check localStorage cache
     try {
-      const cachedComments = localStorage.getItem(this.COMMENTS_CACHE_KEY);
-      const cachedTimestamp = localStorage.getItem(this.COMMENTS_TIMESTAMP_KEY);
+      const cachedComments = localStorage.getItem(fullCacheKey);
+      const cachedTimestamp = localStorage.getItem(timestampKey);
 
       if (cachedComments && cachedTimestamp) {
         const timestamp = parseInt(cachedTimestamp);
@@ -47,17 +71,21 @@ export class CommentStorage {
           const commentsData = JSON.parse(cachedComments);
 
           // Update memory cache with localStorage data
-          this.memoryCache.comments = commentsData;
-          this.memoryCache.commentsTimestamp = timestamp;
-          this.memoryCache.isCommentsLoading = false;
+          this.memoryCache.set(cacheKey, {
+            data: commentsData,
+            timestamp: timestamp,
+          });
 
           console.log(
             "CommentStorage: Using localStorage cache for comments list",
+            { cacheKey },
           );
           return commentsData;
         } else {
-          console.log("CommentStorage: localStorage cache expired, clearing");
-          this._clearCommentsLocalStorageCache();
+          console.log("CommentStorage: localStorage cache expired, clearing", {
+            cacheKey,
+          });
+          this._clearSpecificLocalStorageCache(fullCacheKey, timestampKey);
         }
       }
     } catch (error) {
@@ -65,7 +93,7 @@ export class CommentStorage {
         "CommentStorage: Error reading comments from localStorage",
         error,
       );
-      this._clearCommentsLocalStorageCache();
+      this._clearSpecificLocalStorageCache(fullCacheKey, timestampKey);
     }
 
     return null;
@@ -73,9 +101,10 @@ export class CommentStorage {
 
   /**
    * Saves comments list to cache (both memory and localStorage)
+   * @param {Map} filtersMap - Map of filter parameters
    * @param {Object} commentsData - Comments data to cache
    */
-  saveCommentsToCache(commentsData) {
+  saveCommentsToCache(filtersMap = new Map(), commentsData) {
     if (!commentsData) {
       console.warn(
         "CommentStorage: Attempted to save null/undefined comments data",
@@ -83,22 +112,24 @@ export class CommentStorage {
       return;
     }
 
+    const cacheKey = this._generateCacheKey(filtersMap);
+    const fullCacheKey = this.COMMENTS_CACHE_KEY_PREFIX + cacheKey;
+    const timestampKey = this.COMMENTS_TIMESTAMP_KEY_PREFIX + cacheKey;
     const timestamp = Date.now();
 
     // Save to memory cache
-    this.memoryCache.comments = commentsData;
-    this.memoryCache.commentsTimestamp = timestamp;
-    this.memoryCache.isCommentsLoading = false;
+    this.memoryCache.set(cacheKey, {
+      data: commentsData,
+      timestamp: timestamp,
+    });
 
     // Save to localStorage
     try {
-      localStorage.setItem(
-        this.COMMENTS_CACHE_KEY,
-        JSON.stringify(commentsData),
-      );
-      localStorage.setItem(this.COMMENTS_TIMESTAMP_KEY, timestamp.toString());
+      localStorage.setItem(fullCacheKey, JSON.stringify(commentsData));
+      localStorage.setItem(timestampKey, timestamp.toString());
 
       console.log("CommentStorage: Comments list cached successfully", {
+        cacheKey,
         timestamp: new Date(timestamp).toISOString(),
         count: commentsData.results ? commentsData.results.length : 0,
       });
@@ -112,18 +143,68 @@ export class CommentStorage {
   }
 
   /**
-   * Clears comments cache (memory and localStorage)
+   * Clears all comments cache (memory and localStorage)
    */
   clearCommentsCache() {
     // Clear memory cache
-    this.memoryCache.comments = null;
-    this.memoryCache.commentsTimestamp = null;
-    this.memoryCache.isCommentsLoading = false;
+    this.memoryCache.clear();
+    this.loadingStates.clear();
 
-    // Clear localStorage cache
-    this._clearCommentsLocalStorageCache();
+    // Clear localStorage cache - remove all comment cache entries
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (
+        key &&
+        (key.startsWith(this.COMMENTS_CACHE_KEY_PREFIX) ||
+          key.startsWith(this.COMMENTS_TIMESTAMP_KEY_PREFIX))
+      ) {
+        keysToRemove.push(key);
+      }
+    }
 
-    console.log("CommentStorage: Comments cache cleared");
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
+
+    console.log("CommentStorage: All comments cache cleared");
+  }
+
+  /**
+   * Clears specific cache entry
+   * @param {Map} filtersMap - Map of filter parameters
+   */
+  clearSpecificCache(filtersMap = new Map()) {
+    const cacheKey = this._generateCacheKey(filtersMap);
+    const fullCacheKey = this.COMMENTS_CACHE_KEY_PREFIX + cacheKey;
+    const timestampKey = this.COMMENTS_TIMESTAMP_KEY_PREFIX + cacheKey;
+
+    // Clear from memory cache
+    this.memoryCache.delete(cacheKey);
+    this.loadingStates.delete(cacheKey);
+
+    // Clear from localStorage
+    this._clearSpecificLocalStorageCache(fullCacheKey, timestampKey);
+
+    console.log("CommentStorage: Specific cache cleared", { cacheKey });
+  }
+
+  /**
+   * Sets loading state for comments cache
+   * @param {Map} filtersMap - Map of filter parameters
+   * @param {boolean} isLoading - Loading state
+   */
+  setCommentsCacheLoading(filtersMap = new Map(), isLoading) {
+    const cacheKey = this._generateCacheKey(filtersMap);
+    this.loadingStates.set(cacheKey, isLoading);
+  }
+
+  /**
+   * Gets loading state from comments cache
+   * @param {Map} filtersMap - Map of filter parameters
+   * @returns {boolean} - Current loading state
+   */
+  isCommentsCacheLoading(filtersMap = new Map()) {
+    const cacheKey = this._generateCacheKey(filtersMap);
+    return this.loadingStates.get(cacheKey) || false;
   }
 
   /**
@@ -135,48 +216,36 @@ export class CommentStorage {
   }
 
   /**
-   * Sets loading state for comments cache
-   * @param {boolean} isLoading - Loading state
-   */
-  setCommentsCacheLoading(isLoading) {
-    this.memoryCache.isCommentsLoading = isLoading;
-  }
-
-  /**
-   * Gets loading state from comments cache
-   * @returns {boolean} - Current loading state
-   */
-  isCommentsCacheLoading() {
-    return this.memoryCache.isCommentsLoading;
-  }
-
-  /**
    * Gets cache information for debugging
    * @returns {Object} - Cache state information
    */
   getCommentsCacheInfo() {
-    const commentsMemoryValid = this._isCommentsMemoryCacheValid();
-    const commentsLocalStorageValid = this._isCommentsLocalStorageCacheValid();
-
-    return {
-      comments: {
-        memoryCache: {
-          hasData: !!this.memoryCache.comments,
-          timestamp: this.memoryCache.commentsTimestamp,
-          age: this.memoryCache.commentsTimestamp
-            ? Date.now() - this.memoryCache.commentsTimestamp
-            : null,
-          isValid: commentsMemoryValid,
-          isLoading: this.memoryCache.isCommentsLoading,
-        },
-        localStorage: {
-          hasData: !!localStorage.getItem(this.COMMENTS_CACHE_KEY),
-          timestamp: localStorage.getItem(this.COMMENTS_TIMESTAMP_KEY),
-          isValid: commentsLocalStorageValid,
-        },
-        cacheDuration: this.DEFAULT_CACHE_DURATION,
+    const cacheInfo = {
+      memoryCache: {
+        entries: this.memoryCache.size,
+        keys: Array.from(this.memoryCache.keys()),
       },
+      loadingStates: {
+        entries: this.loadingStates.size,
+        loading: Array.from(this.loadingStates.entries())
+          .filter(([_, loading]) => loading)
+          .map(([key, _]) => key),
+      },
+      localStorage: {
+        entries: 0,
+      },
+      cacheDuration: this.DEFAULT_CACHE_DURATION,
     };
+
+    // Count localStorage entries
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(this.COMMENTS_CACHE_KEY_PREFIX)) {
+        cacheInfo.localStorage.entries++;
+      }
+    }
+
+    return cacheInfo;
   }
 
   /**
@@ -258,32 +327,17 @@ export class CommentStorage {
    * Private helper methods for cache validation
    */
 
-  _isCommentsMemoryCacheValid(maxAge = this.DEFAULT_CACHE_DURATION) {
-    if (!this.memoryCache.comments || !this.memoryCache.commentsTimestamp) {
+  _isMemoryCacheValid(cacheKey, maxAge = this.DEFAULT_CACHE_DURATION) {
+    const cached = this.memoryCache.get(cacheKey);
+    if (!cached || !cached.timestamp) {
       return false;
     }
-    const age = Date.now() - this.memoryCache.commentsTimestamp;
+    const age = Date.now() - cached.timestamp;
     return age < maxAge;
   }
 
-  _isCommentsLocalStorageCacheValid(maxAge = this.DEFAULT_CACHE_DURATION) {
-    try {
-      const timestamp = localStorage.getItem(this.COMMENTS_TIMESTAMP_KEY);
-      const comments = localStorage.getItem(this.COMMENTS_CACHE_KEY);
-
-      if (!timestamp || !comments) {
-        return false;
-      }
-
-      const age = Date.now() - parseInt(timestamp);
-      return age < maxAge;
-    } catch (error) {
-      return false;
-    }
-  }
-
-  _clearCommentsLocalStorageCache() {
-    localStorage.removeItem(this.COMMENTS_CACHE_KEY);
-    localStorage.removeItem(this.COMMENTS_TIMESTAMP_KEY);
+  _clearSpecificLocalStorageCache(fullCacheKey, timestampKey) {
+    localStorage.removeItem(fullCacheKey);
+    localStorage.removeItem(timestampKey);
   }
 }
