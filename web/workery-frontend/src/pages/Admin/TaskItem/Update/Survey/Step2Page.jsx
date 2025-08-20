@@ -1,7 +1,19 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/TaskItem/Update/Survey/Step2Page.jsx
+
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { useSurveyStorage } from "../../../../../services/Services";
+import {
+  Breadcrumb,
+  Card,
+  Button,
+  Alert,
+  Radio,
+  Select,
+  Textarea,
+  FormGroup,
+  Input,
+} from "../../../../../components/UI";
 
 const TASK_ITEM_NO_SURVEY_CONDUCTED_REASON_OPTIONS = [
   { value: 0, label: "Please select" },
@@ -21,29 +33,29 @@ export default function AdminTaskItemSurveyStep2Page() {
 
   const [errors, setErrors] = useState({});
   const [wasSurveyConducted, setWasSurveyConducted] = useState(
-    formData.wasSurveyConducted,
+    formData.wasSurveyConducted || 0,
   );
   const [noSurveyConductedReason, setNoSurveyConductedReason] = useState(
-    formData.noSurveyConductedReason,
+    formData.noSurveyConductedReason || 0,
   );
   const [noSurveyConductedReasonOther, setNoSurveyConductedReasonOther] =
-    useState(formData.noSurveyConductedReasonOther);
-  const [comment, setComment] = useState(formData.comment);
+    useState(formData.noSurveyConductedReasonOther || "");
+  const [comment, setComment] = useState(formData.comment || "");
   const [wasJobSatisfactory, setWasJobSatisfactory] = useState(
-    formData.wasJobSatisfactory,
+    formData.wasJobSatisfactory || 0,
   );
   const [wasJobFinishedOnTimeAndOnBudget, setWasJobFinishedOnTimeAndOnBudget] =
-    useState(formData.wasJobFinishedOnTimeAndOnBudget);
+    useState(formData.wasJobFinishedOnTimeAndOnBudget || 0);
   const [wasAssociatePunctual, setWasAssociatePunctual] = useState(
-    formData.wasAssociatePunctual,
+    formData.wasAssociatePunctual || 0,
   );
   const [wasAssociateProfessional, setWasAssociateProfessional] = useState(
-    formData.wasAssociateProfessional,
+    formData.wasAssociateProfessional || 0,
   );
   const [
     wouldCustomerReferOurOrganization,
     setWouldCustomerReferOurOrganization,
-  ] = useState(formData.wouldCustomerReferOurOrganization);
+  ] = useState(formData.wouldCustomerReferOurOrganization || 0);
 
   const onSubmitClick = () => {
     console.log("onSubmitClick: Beginning...");
@@ -57,7 +69,7 @@ export default function AdminTaskItemSurveyStep2Page() {
       wasSurveyConducted === "" ||
       wasSurveyConducted === 0
     ) {
-      newErrors["wasSurveyConducted"] = "missing value";
+      newErrors["wasSurveyConducted"] = "This field is required";
       hasErrors = true;
     }
 
@@ -68,7 +80,7 @@ export default function AdminTaskItemSurveyStep2Page() {
         wasJobSatisfactory === "" ||
         wasJobSatisfactory === 0
       ) {
-        newErrors["wasJobSatisfactory"] = "missing value";
+        newErrors["wasJobSatisfactory"] = "This field is required";
         hasErrors = true;
       }
       if (
@@ -77,7 +89,7 @@ export default function AdminTaskItemSurveyStep2Page() {
         wasJobFinishedOnTimeAndOnBudget === "" ||
         wasJobFinishedOnTimeAndOnBudget === 0
       ) {
-        newErrors["wasJobFinishedOnTimeAndOnBudget"] = "missing value";
+        newErrors["wasJobFinishedOnTimeAndOnBudget"] = "This field is required";
         hasErrors = true;
       }
       if (
@@ -86,7 +98,7 @@ export default function AdminTaskItemSurveyStep2Page() {
         wasAssociatePunctual === "" ||
         wasAssociatePunctual === 0
       ) {
-        newErrors["wasAssociatePunctual"] = "missing value";
+        newErrors["wasAssociatePunctual"] = "This field is required";
         hasErrors = true;
       }
       if (
@@ -95,7 +107,7 @@ export default function AdminTaskItemSurveyStep2Page() {
         wasAssociateProfessional === "" ||
         wasAssociateProfessional === 0
       ) {
-        newErrors["wasAssociateProfessional"] = "missing value";
+        newErrors["wasAssociateProfessional"] = "This field is required";
         hasErrors = true;
       }
       if (
@@ -104,7 +116,8 @@ export default function AdminTaskItemSurveyStep2Page() {
         wouldCustomerReferOurOrganization === "" ||
         wouldCustomerReferOurOrganization === 0
       ) {
-        newErrors["wouldCustomerReferOurOrganization"] = "missing value";
+        newErrors["wouldCustomerReferOurOrganization"] =
+          "This field is required";
         hasErrors = true;
       }
     }
@@ -116,7 +129,7 @@ export default function AdminTaskItemSurveyStep2Page() {
         noSurveyConductedReason === "" ||
         noSurveyConductedReason === 0
       ) {
-        newErrors["noSurveyConductedReason"] = "missing value";
+        newErrors["noSurveyConductedReason"] = "This field is required";
         hasErrors = true;
       } else {
         if (noSurveyConductedReason === 1) {
@@ -126,13 +139,14 @@ export default function AdminTaskItemSurveyStep2Page() {
             noSurveyConductedReasonOther === "" ||
             noSurveyConductedReasonOther === 0
           ) {
-            newErrors["noSurveyConductedReasonOther"] = "missing value";
+            newErrors["noSurveyConductedReasonOther"] =
+              "This field is required";
             hasErrors = true;
           }
         }
       }
       if (comment === undefined || comment === null || comment === "") {
-        newErrors["comment"] = "missing value";
+        newErrors["comment"] = "This field is required";
         hasErrors = true;
       }
     }
@@ -161,366 +175,302 @@ export default function AdminTaskItemSurveyStep2Page() {
     navigate(`/admin/task/${tid}/survey/step-3`);
   };
 
+  const breadcrumbItems = [
+    { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
+    { label: "Tasks", path: "/admin/tasks", icon: "📋" },
+    { label: "Task Detail", icon: "ℹ️" },
+  ];
+
   return (
-    <div>
-      {/* Breadcrumbs */}
-      <nav aria-label="breadcrumb">
-        <ol>
-          <li>
-            <Link to="/admin/dashboard">Dashboard</Link>
-          </li>
-          <li>
-            <Link to="/admin/tasks">Tasks</Link>
-          </li>
-          <li>Task Detail</li>
-        </ol>
-      </nav>
+    <div className="container">
+      <Breadcrumb items={breadcrumbItems} />
 
       {/* Page Title */}
-      <h1>Task Survey</h1>
-      <h4>Detail</h4>
+      <h1>📋 Task Survey</h1>
+      <h4>📝 Survey Questions</h4>
       <hr />
 
       {/* Progress */}
-      <div>
+      <Card>
         <p>Step 2 of 3</p>
         <progress value="66" max="100">
           66%
         </progress>
-      </div>
+      </Card>
 
       {/* Page Content */}
-      <div>
-        <h2>Task Detail - Survey</h2>
-
+      <Card title="📋 Task Detail - Survey">
         {/* Errors */}
         {errors && Object.keys(errors).length > 0 && (
-          <div style={{ color: "red", marginBottom: "20px" }}>
-            <h3>Errors:</h3>
+          <Alert type="error">
+            <h4>Please correct the following errors:</h4>
             <ul>
               {Object.entries(errors).map(([key, value]) => (
-                <li key={key}>
-                  {key}: {value}
-                </li>
+                <li key={key}>{value}</li>
               ))}
             </ul>
-          </div>
+          </Alert>
         )}
 
-        <div>
-          <div>
-            <label>
-              Was there a survey conducted?
-              {errors.wasSurveyConducted && (
-                <span style={{ color: "red" }}>
-                  {" "}
-                  ({errors.wasSurveyConducted})
-                </span>
-              )}
-            </label>
-            <div>
-              <label>
-                <input
-                  type="radio"
-                  value={1}
-                  checked={wasSurveyConducted === 1}
-                  onChange={(e) =>
-                    setWasSurveyConducted(parseInt(e.target.value))
-                  }
-                />
-                Yes
-              </label>
-              <label style={{ marginLeft: "20px" }}>
-                <input
-                  type="radio"
-                  value={2}
-                  checked={wasSurveyConducted === 2}
-                  onChange={(e) =>
-                    setWasSurveyConducted(parseInt(e.target.value))
-                  }
-                />
-                No
-              </label>
+        {/* Survey Form */}
+        <div style={{ maxWidth: "800px" }}>
+          {/* Was Survey Conducted */}
+          <FormGroup
+            label="Was there a survey conducted?"
+            required={true}
+            error={errors.wasSurveyConducted}
+            helperText="Selecting 'Yes' will close this job as success"
+          >
+            <div style={{ display: "flex", gap: "20px", marginTop: "10px" }}>
+              <Radio
+                label="Yes"
+                name="wasSurveyConducted"
+                value={1}
+                checked={wasSurveyConducted === 1}
+                onChange={(e) =>
+                  setWasSurveyConducted(parseInt(e.target.value))
+                }
+              />
+              <Radio
+                label="No"
+                name="wasSurveyConducted"
+                value={2}
+                checked={wasSurveyConducted === 2}
+                onChange={(e) =>
+                  setWasSurveyConducted(parseInt(e.target.value))
+                }
+              />
             </div>
-            <small>Selecting `yes` will close this job as success</small>
-          </div>
+          </FormGroup>
 
+          {/* Survey Questions - Show if Yes */}
           {wasSurveyConducted === 1 && (
-            <>
-              <div style={{ marginTop: "20px" }}>
-                <label>
-                  Was the quality of the work satisfactory?
-                  {errors.wasJobSatisfactory && (
-                    <span style={{ color: "red" }}>
-                      {" "}
-                      ({errors.wasJobSatisfactory})
-                    </span>
-                  )}
-                </label>
-                <div>
-                  <label>
-                    <input
-                      type="radio"
-                      value={1}
-                      checked={wasJobSatisfactory === 1}
-                      onChange={(e) =>
-                        setWasJobSatisfactory(parseInt(e.target.value))
-                      }
-                    />
-                    Yes
-                  </label>
-                  <label style={{ marginLeft: "20px" }}>
-                    <input
-                      type="radio"
-                      value={2}
-                      checked={wasJobSatisfactory === 2}
-                      onChange={(e) =>
-                        setWasJobSatisfactory(parseInt(e.target.value))
-                      }
-                    />
-                    No
-                  </label>
-                </div>
-              </div>
+            <Card className="mt-4" style={{ backgroundColor: "#f8f9fa" }}>
+              <h4 style={{ marginBottom: "20px" }}>📝 Survey Questions</h4>
 
-              <div style={{ marginTop: "20px" }}>
-                <label>
-                  Was the work completed on time and on budget?
-                  {errors.wasJobFinishedOnTimeAndOnBudget && (
-                    <span style={{ color: "red" }}>
-                      {" "}
-                      ({errors.wasJobFinishedOnTimeAndOnBudget})
-                    </span>
-                  )}
-                </label>
-                <div>
-                  <label>
-                    <input
-                      type="radio"
-                      value={1}
-                      checked={wasJobFinishedOnTimeAndOnBudget === 1}
-                      onChange={(e) =>
-                        setWasJobFinishedOnTimeAndOnBudget(
-                          parseInt(e.target.value),
-                        )
-                      }
-                    />
-                    Yes
-                  </label>
-                  <label style={{ marginLeft: "20px" }}>
-                    <input
-                      type="radio"
-                      value={2}
-                      checked={wasJobFinishedOnTimeAndOnBudget === 2}
-                      onChange={(e) =>
-                        setWasJobFinishedOnTimeAndOnBudget(
-                          parseInt(e.target.value),
-                        )
-                      }
-                    />
-                    No
-                  </label>
-                </div>
-              </div>
-
-              <div style={{ marginTop: "20px" }}>
-                <label>
-                  Was the Associate Member punctual?
-                  {errors.wasAssociatePunctual && (
-                    <span style={{ color: "red" }}>
-                      {" "}
-                      ({errors.wasAssociatePunctual})
-                    </span>
-                  )}
-                </label>
-                <div>
-                  <label>
-                    <input
-                      type="radio"
-                      value={1}
-                      checked={wasAssociatePunctual === 1}
-                      onChange={(e) =>
-                        setWasAssociatePunctual(parseInt(e.target.value))
-                      }
-                    />
-                    Yes
-                  </label>
-                  <label style={{ marginLeft: "20px" }}>
-                    <input
-                      type="radio"
-                      value={2}
-                      checked={wasAssociatePunctual === 2}
-                      onChange={(e) =>
-                        setWasAssociatePunctual(parseInt(e.target.value))
-                      }
-                    />
-                    No
-                  </label>
-                </div>
-              </div>
-
-              <div style={{ marginTop: "20px" }}>
-                <label>
-                  Was the Associate Member professional?
-                  {errors.wasAssociateProfessional && (
-                    <span style={{ color: "red" }}>
-                      {" "}
-                      ({errors.wasAssociateProfessional})
-                    </span>
-                  )}
-                </label>
-                <div>
-                  <label>
-                    <input
-                      type="radio"
-                      value={1}
-                      checked={wasAssociateProfessional === 1}
-                      onChange={(e) =>
-                        setWasAssociateProfessional(parseInt(e.target.value))
-                      }
-                    />
-                    Yes
-                  </label>
-                  <label style={{ marginLeft: "20px" }}>
-                    <input
-                      type="radio"
-                      value={2}
-                      checked={wasAssociateProfessional === 2}
-                      onChange={(e) =>
-                        setWasAssociateProfessional(parseInt(e.target.value))
-                      }
-                    />
-                    No
-                  </label>
-                </div>
-              </div>
-
-              <div style={{ marginTop: "20px" }}>
-                <label>
-                  Would you refer Over55 to a friend of family member?
-                  {errors.wouldCustomerReferOurOrganization && (
-                    <span style={{ color: "red" }}>
-                      {" "}
-                      ({errors.wouldCustomerReferOurOrganization})
-                    </span>
-                  )}
-                </label>
-                <div>
-                  <label>
-                    <input
-                      type="radio"
-                      value={1}
-                      checked={wouldCustomerReferOurOrganization === 1}
-                      onChange={(e) =>
-                        setWouldCustomerReferOurOrganization(
-                          parseInt(e.target.value),
-                        )
-                      }
-                    />
-                    Yes
-                  </label>
-                  <label style={{ marginLeft: "20px" }}>
-                    <input
-                      type="radio"
-                      value={2}
-                      checked={wouldCustomerReferOurOrganization === 2}
-                      onChange={(e) =>
-                        setWouldCustomerReferOurOrganization(
-                          parseInt(e.target.value),
-                        )
-                      }
-                    />
-                    No
-                  </label>
-                </div>
-              </div>
-            </>
-          )}
-
-          {wasSurveyConducted === 2 && (
-            <>
-              <div style={{ marginTop: "20px" }}>
-                <label>
-                  Please select why the survey was not conducted?
-                  {errors.noSurveyConductedReason && (
-                    <span style={{ color: "red" }}>
-                      {" "}
-                      ({errors.noSurveyConductedReason})
-                    </span>
-                  )}
-                </label>
-                <select
-                  value={noSurveyConductedReason}
-                  onChange={(e) =>
-                    setNoSurveyConductedReason(parseInt(e.target.value))
-                  }
+              {/* Job Satisfactory */}
+              <FormGroup
+                label="Was the quality of the work satisfactory?"
+                required={true}
+                error={errors.wasJobSatisfactory}
+              >
+                <div
+                  style={{ display: "flex", gap: "20px", marginTop: "10px" }}
                 >
-                  {TASK_ITEM_NO_SURVEY_CONDUCTED_REASON_OPTIONS.map(
-                    (option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ),
-                  )}
-                </select>
-              </div>
-
-              {noSurveyConductedReason === 1 && (
-                <div style={{ marginTop: "20px" }}>
-                  <label>
-                    Please select why the survey was not conducted? (Other)
-                    {errors.noSurveyConductedReasonOther && (
-                      <span style={{ color: "red" }}>
-                        {" "}
-                        ({errors.noSurveyConductedReasonOther})
-                      </span>
-                    )}
-                  </label>
-                  <input
-                    type="text"
-                    value={noSurveyConductedReasonOther}
+                  <Radio
+                    label="Yes"
+                    name="wasJobSatisfactory"
+                    value={1}
+                    checked={wasJobSatisfactory === 1}
                     onChange={(e) =>
-                      setNoSurveyConductedReasonOther(e.target.value)
+                      setWasJobSatisfactory(parseInt(e.target.value))
                     }
-                    placeholder="Text input"
-                    style={{ width: "100%", maxWidth: "380px" }}
+                  />
+                  <Radio
+                    label="No"
+                    name="wasJobSatisfactory"
+                    value={2}
+                    checked={wasJobSatisfactory === 2}
+                    onChange={(e) =>
+                      setWasJobSatisfactory(parseInt(e.target.value))
+                    }
                   />
                 </div>
-              )}
+              </FormGroup>
 
-              <div style={{ marginTop: "20px" }}>
-                <label>
-                  Comment
-                  {errors.comment && (
-                    <span style={{ color: "red" }}> ({errors.comment})</span>
-                  )}
-                </label>
-                <textarea
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  placeholder="Write any additional comments here."
-                  rows={5}
-                  style={{ width: "100%", maxWidth: "500px" }}
-                />
-                <small>Include any additional information here.</small>
-              </div>
-            </>
+              {/* On Time and Budget */}
+              <FormGroup
+                label="Was the work completed on time and on budget?"
+                required={true}
+                error={errors.wasJobFinishedOnTimeAndOnBudget}
+              >
+                <div
+                  style={{ display: "flex", gap: "20px", marginTop: "10px" }}
+                >
+                  <Radio
+                    label="Yes"
+                    name="wasJobFinishedOnTimeAndOnBudget"
+                    value={1}
+                    checked={wasJobFinishedOnTimeAndOnBudget === 1}
+                    onChange={(e) =>
+                      setWasJobFinishedOnTimeAndOnBudget(
+                        parseInt(e.target.value),
+                      )
+                    }
+                  />
+                  <Radio
+                    label="No"
+                    name="wasJobFinishedOnTimeAndOnBudget"
+                    value={2}
+                    checked={wasJobFinishedOnTimeAndOnBudget === 2}
+                    onChange={(e) =>
+                      setWasJobFinishedOnTimeAndOnBudget(
+                        parseInt(e.target.value),
+                      )
+                    }
+                  />
+                </div>
+              </FormGroup>
+
+              {/* Associate Punctual */}
+              <FormGroup
+                label="Was the Associate Member punctual?"
+                required={true}
+                error={errors.wasAssociatePunctual}
+              >
+                <div
+                  style={{ display: "flex", gap: "20px", marginTop: "10px" }}
+                >
+                  <Radio
+                    label="Yes"
+                    name="wasAssociatePunctual"
+                    value={1}
+                    checked={wasAssociatePunctual === 1}
+                    onChange={(e) =>
+                      setWasAssociatePunctual(parseInt(e.target.value))
+                    }
+                  />
+                  <Radio
+                    label="No"
+                    name="wasAssociatePunctual"
+                    value={2}
+                    checked={wasAssociatePunctual === 2}
+                    onChange={(e) =>
+                      setWasAssociatePunctual(parseInt(e.target.value))
+                    }
+                  />
+                </div>
+              </FormGroup>
+
+              {/* Associate Professional */}
+              <FormGroup
+                label="Was the Associate Member professional?"
+                required={true}
+                error={errors.wasAssociateProfessional}
+              >
+                <div
+                  style={{ display: "flex", gap: "20px", marginTop: "10px" }}
+                >
+                  <Radio
+                    label="Yes"
+                    name="wasAssociateProfessional"
+                    value={1}
+                    checked={wasAssociateProfessional === 1}
+                    onChange={(e) =>
+                      setWasAssociateProfessional(parseInt(e.target.value))
+                    }
+                  />
+                  <Radio
+                    label="No"
+                    name="wasAssociateProfessional"
+                    value={2}
+                    checked={wasAssociateProfessional === 2}
+                    onChange={(e) =>
+                      setWasAssociateProfessional(parseInt(e.target.value))
+                    }
+                  />
+                </div>
+              </FormGroup>
+
+              {/* Would Refer */}
+              <FormGroup
+                label="Would you refer Over55 to a friend or family member?"
+                required={true}
+                error={errors.wouldCustomerReferOurOrganization}
+              >
+                <div
+                  style={{ display: "flex", gap: "20px", marginTop: "10px" }}
+                >
+                  <Radio
+                    label="Yes"
+                    name="wouldCustomerReferOurOrganization"
+                    value={1}
+                    checked={wouldCustomerReferOurOrganization === 1}
+                    onChange={(e) =>
+                      setWouldCustomerReferOurOrganization(
+                        parseInt(e.target.value),
+                      )
+                    }
+                  />
+                  <Radio
+                    label="No"
+                    name="wouldCustomerReferOurOrganization"
+                    value={2}
+                    checked={wouldCustomerReferOurOrganization === 2}
+                    onChange={(e) =>
+                      setWouldCustomerReferOurOrganization(
+                        parseInt(e.target.value),
+                      )
+                    }
+                  />
+                </div>
+              </FormGroup>
+            </Card>
           )}
 
-          <div style={{ marginTop: "30px" }}>
+          {/* No Survey Conducted - Show if No */}
+          {wasSurveyConducted === 2 && (
+            <Card className="mt-4" style={{ backgroundColor: "#fff3cd" }}>
+              <h4 style={{ marginBottom: "20px" }}>⚠️ No Survey Conducted</h4>
+
+              {/* Reason Select */}
+              <Select
+                label="Please select why the survey was not conducted"
+                value={noSurveyConductedReason}
+                onChange={(e) =>
+                  setNoSurveyConductedReason(parseInt(e.target.value))
+                }
+                options={TASK_ITEM_NO_SURVEY_CONDUCTED_REASON_OPTIONS}
+                required={true}
+                error={errors.noSurveyConductedReason}
+              />
+
+              {/* Other Reason Input */}
+              {noSurveyConductedReason === 1 && (
+                <Input
+                  label="Please specify the reason"
+                  type="text"
+                  value={noSurveyConductedReasonOther}
+                  onChange={(e) =>
+                    setNoSurveyConductedReasonOther(e.target.value)
+                  }
+                  placeholder="Enter the specific reason..."
+                  required={true}
+                  error={errors.noSurveyConductedReasonOther}
+                />
+              )}
+
+              {/* Comment Textarea */}
+              <Textarea
+                label="Comment"
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Write any additional comments here..."
+                rows={5}
+                required={true}
+                error={errors.comment}
+                helperText="Include any additional information here."
+              />
+            </Card>
+          )}
+
+          {/* Action Buttons */}
+          <div
+            style={{
+              marginTop: "30px",
+              display: "flex",
+              justifyContent: "space-between",
+            }}
+          >
             <Link to={`/admin/task/${tid}/survey/step-1`}>
-              ← Back to Step 1
+              <Button variant="secondary">← Back to Step 1</Button>
             </Link>
-            <button
-              onClick={onSubmitClick}
-              style={{ float: "right" }}
-              type="button"
-            >
+            <Button onClick={onSubmitClick} variant="primary">
               Save & Continue →
-            </button>
+            </Button>
           </div>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
