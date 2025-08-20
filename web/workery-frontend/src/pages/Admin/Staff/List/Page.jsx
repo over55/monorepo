@@ -18,40 +18,12 @@ import {
   PAGE_SIZE_OPTIONS,
   DEFAULT_STAFF_LIST_SORT_BY_VALUE,
 } from "../../../../constants/FieldOptions";
-
-// Staff type filter options
-const STAFF_TYPE_FILTER_OPTIONS = [
-  { value: 0, label: "All" },
-  { value: 1, label: "Executive" },
-  { value: 2, label: "Management" },
-  { value: 3, label: "Frontline" },
-];
-
-// Staff status filter options
-const STAFF_STATUS_FILTER_OPTIONS = [
-  { value: 0, label: "All" },
-  { value: 1, label: "Active" },
-  { value: 2, label: "Archived" },
-];
-
-// Staff sort options
-const STAFF_SORT_OPTIONS = [
-  { value: "lexical_name,DESC", label: "Name (Z → A)" },
-  { value: "lexical_name,ASC", label: "Name (A → Z)" },
-  { value: "join_date,DESC", label: "Join Date (Newest → Oldest)" },
-  { value: "join_date,ASC", label: "Join Date (Oldest → Newest)" },
-  { value: "created_at,DESC", label: "Created (Newest → Oldest)" },
-  { value: "created_at,ASC", label: "Created (Oldest → Newest)" },
-  { value: "email,ASC", label: "Email (A → Z)" },
-  { value: "email,DESC", label: "Email (Z → A)" },
-];
-
-// Staff type mapping
-const STAFF_TYPE_MAP = {
-  1: "Executive",
-  2: "Management",
-  3: "Frontline",
-};
+import {
+  STAFF_TYPE_FILTER_OPTIONS,
+  STAFF_STATUS_FILTER_OPTIONS,
+  STAFF_SORT_OPTIONS,
+  STAFF_TYPE_MAP,
+} from "../../../../constants/Staff";
 
 function AdminStaffListPage() {
   const navigate = useNavigate();
