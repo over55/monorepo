@@ -100,7 +100,7 @@ export const API_ENDPOINTS = {
   STAFF: "/staffs", // <-- Changed to plural
   STAFF_DETAIL: "/staff/{id}",
   STAFF_ARCHIVE_OPERATION: "/staff/operation/archive",
-  STAFF_CREATE_COMMENT_OPERATION: "/staff/operation/create-comment",
+  STAFF_CREATE_COMMENT_OPERATION: "/staffs/operation/create-comment",
   STAFF_UPGRADE_OPERATION: "/staff/operation/upgrade",
   STAFF_DOWNGRADE_OPERATION: "/staff/operation/downgrade",
   STAFF_AVATAR_OPERATION: "/staff/operation/avatar",
