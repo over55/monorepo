@@ -297,3 +297,33 @@ export const ORDER_INVOICE_QUOTE_VALIDITY_OPTIONS = [
 
 export const DEFAULT_STAFF_LIST_SORT_BY_VALUE = "lexical_name,ASC";
 export const DEFAULT_STAFF_STATUS_FILTER_OPTION = 1; // 1=Active
+
+export const GENDER_OPTIONS = [
+  { value: 2, label: "Male" },
+  { value: 3, label: "Female" },
+  { value: 4, label: "Transgender" },
+  { value: 5, label: "Gender non-binary" },
+  { value: 6, label: "Two Spirit" },
+  { value: 7, label: "Prefer not to say" },
+  { value: 8, label: "Do not know" },
+  { value: 1, label: "Other" },
+];
+
+export const GENDER_OPTIONS_WITH_EMPTY_OPTION = [
+  { value: 0, label: "Please select" }, // EMPTY OPTION
+  ...GENDER_OPTIONS,
+];
+
+export const IDENTIFY_AS_OPTIONS = [
+  // { value: 1, label: 'Other' },
+  { value: 2, label: "Prefer not to say" },
+  { value: 3, label: "Women " },
+  { value: 4, label: "Newcomer" },
+  { value: 5, label: "Racialized Person" },
+  { value: 6, label: "Veteran" },
+  { value: 7, label: "Francophone" },
+  { value: 8, label: "Person with disability" },
+  { value: 9, label: "Inuit" },
+  { value: 10, label: "First Nations" },
+  { value: 11, label: "Metis" },
+];

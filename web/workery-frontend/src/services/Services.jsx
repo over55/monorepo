@@ -33,6 +33,7 @@ import { OrderIncidentStorage } from "./Storage/OrderIncidentStorage";
 import { HowHearAboutUsItemStorage } from "./Storage/HowHearAboutUsItemStorage";
 import { SurveyStorage } from "./Storage/SurveyStorage";
 import { InvoiceGenerationStorage } from "./Storage/InvoiceGenerationStorage";
+import { StaffAddWizardStorage } from "./Storage/StaffAddWizardStorage";
 
 // Import all API services
 import { AuthAPI } from "./API/AuthAPI";
@@ -219,6 +220,10 @@ const SERVICE_DEFINITIONS = {
     },
     invoiceGeneration: {
       factory: () => new InvoiceGenerationStorage(),
+      singleton: true,
+    },
+    staffAddWizard: {
+      factory: () => new StaffAddWizardStorage(),
       singleton: true,
     },
   },
@@ -870,6 +875,10 @@ export const useSurveyStorage = createServiceHook("storage", "survey");
 export const useInvoiceGenerationStorage = createServiceHook(
   "storage",
   "invoiceGeneration",
+);
+export const useStaffAddWizardStorage = createServiceHook(
+  "storage",
+  "staffAddWizard",
 );
 
 /**

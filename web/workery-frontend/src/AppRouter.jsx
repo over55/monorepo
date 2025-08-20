@@ -241,6 +241,7 @@ import AdminStaffAddStep3Page from "./pages/Admin/Staff/Add/Step3Page";
 import AdminStaffAddStep4Page from "./pages/Admin/Staff/Add/Step4Page";
 import AdminStaffAddStep5Page from "./pages/Admin/Staff/Add/Step5Page";
 import AdminStaffAddStep6Page from "./pages/Admin/Staff/Add/Step6Page";
+import AdminStaffAddStep7Page from "./pages/Admin/Staff/Add/Step7Page";
 import AdminStaffSearchCriteriaPage from "./pages/Admin/Staff/Search/CriteriaPage";
 import AdminStaffSearchResultPage from "./pages/Admin/Staff/Search/ResultPage";
 import AdminStaffUpdatePage from "./pages/Admin/Staff/Update/Page";
@@ -905,7 +906,7 @@ function AppRouter() {
               path="/admin/staff/add/step-1-search"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Staff - Step 1" />
+                  <AdminStaffAddStep1PartAPage />
                 </Layout>
               }
             />
@@ -913,7 +914,7 @@ function AppRouter() {
               path="/admin/staff/add/step-1-results"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Staff - Step 1 Results" />
+                  <AdminStaffAddStep1PartBPage />
                 </Layout>
               }
             />
@@ -921,7 +922,7 @@ function AppRouter() {
               path="/admin/staff/add/step-2"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Staff - Step 2" />
+                  <AdminStaffAddStep2Page />
                 </Layout>
               }
             />
@@ -929,7 +930,7 @@ function AppRouter() {
               path="/admin/staff/add/step-3"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Staff - Step 3" />
+                  <AdminStaffAddStep3Page />
                 </Layout>
               }
             />
@@ -937,7 +938,7 @@ function AppRouter() {
               path="/admin/staff/add/step-4"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Staff - Step 4" />
+                  <AdminStaffAddStep4Page />
                 </Layout>
               }
             />
@@ -945,7 +946,7 @@ function AppRouter() {
               path="/admin/staff/add/step-5"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Staff - Step 5" />
+                  <AdminStaffAddStep5Page />
                 </Layout>
               }
             />
@@ -953,7 +954,7 @@ function AppRouter() {
               path="/admin/staff/add/step-6"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Staff - Step 6" />
+                  <AdminStaffAddStep6Page />
                 </Layout>
               }
             />
@@ -961,7 +962,7 @@ function AppRouter() {
               path="/admin/staff/add/step-7"
               element={
                 <Layout>
-                  <PlaceholderPage title="Add Staff - Step 7" />
+                  <AdminStaffAddStep7Page />
                 </Layout>
               }
             />

@@ -13,6 +13,10 @@ export const STAFF_TYPE_EXECUTIVE = 1;
 export const STAFF_TYPE_MANAGEMENT = 2;
 export const STAFF_TYPE_FRONTLINE = 3;
 
+export const UNASSIGNED_STAFF_TYPE_OF_ID = 1;
+export const RESIDENTIAL_STAFF_TYPE_OF_ID = 2;
+export const COMMERCIAL_STAFF_TYPE_OF_ID = 3;
+
 // Staff type filter options
 export const STAFF_TYPE_FILTER_OPTIONS = [
   { value: 0, label: "All" },
@@ -46,3 +50,25 @@ export const STAFF_TYPE_MAP = {
   2: "Management",
   3: "Frontline",
 };
+
+export const STAFF_PHONE_TYPE_OF_OPTIONS = [
+  { value: STAFF_PHONE_TYPE_LANDLINE, label: "Landline" },
+  { value: STAFF_PHONE_TYPE_MOBILE, label: "Mobile" },
+  { value: STAFF_PHONE_TYPE_WORK, label: "Work" },
+];
+
+export const STAFF_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS = [
+  { value: 0, label: "Please select" }, // EMPTY OPTION
+  ...STAFF_PHONE_TYPE_OF_OPTIONS,
+];
+
+export const STAFF_ORGANIZATION_TYPE_OPTIONS = [
+  { value: STAFF_ORGANIZATION_TYPE_PRIVATE, label: "Private" },
+  { value: STAFF_ORGANIZATION_TYPE_NON_PROFIT, label: "Non-profit" },
+  { value: STAFF_ORGANIZATION_TYPE_GOVERNMENT, label: "Government" },
+];
+
+export const STAFF_ORGANIZATION_TYPE_OPTIONS_WITH_EMPTY_OPTIONS = [
+  { value: 0, label: "Please select" }, // EMPTY OPTION
+  ...STAFF_ORGANIZATION_TYPE_OPTIONS,
+];
