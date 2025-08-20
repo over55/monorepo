@@ -25,6 +25,7 @@ import {
   STAFF_PHONE_TYPE_LANDLINE,
   STAFF_PHONE_TYPE_MOBILE,
   STAFF_PHONE_TYPE_WORK,
+  STAFF_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS,
 } from "../../../../constants/Staff";
 
 function AdminStaffAddStep3Page() {
@@ -34,24 +35,19 @@ function AdminStaffAddStep3Page() {
   const wizardState = wizardStorage.getWizardState();
 
   const [errors, setErrors] = useState({});
-  const [email, setEmail] = useState(wizardState.email);
-  const [phone, setPhone] = useState(wizardState.phone);
-  const [phoneType, setPhoneType] = useState(wizardState.phoneType);
-  const [firstName, setFirstName] = useState(wizardState.firstName);
-  const [lastName, setLastName] = useState(wizardState.lastName);
-  const [otherPhone, setOtherPhone] = useState(wizardState.otherPhone);
+  const [email, setEmail] = useState(wizardState.email || "");
+  const [phone, setPhone] = useState(wizardState.phone || "");
+  const [phoneType, setPhoneType] = useState(wizardState.phoneType || 0);
+  const [firstName, setFirstName] = useState(wizardState.firstName || "");
+  const [lastName, setLastName] = useState(wizardState.lastName || "");
+  const [otherPhone, setOtherPhone] = useState(wizardState.otherPhone || "");
   const [otherPhoneType, setOtherPhoneType] = useState(
-    wizardState.otherPhoneType,
+    wizardState.otherPhoneType || 0,
   );
-  const [isOkToText, setIsOkToText] = useState(wizardState.isOkToText);
-  const [isOkToEmail, setIsOkToEmail] = useState(wizardState.isOkToEmail);
-
-  const phoneTypeOptions = [
-    { value: 0, label: "Please select" },
-    { value: STAFF_PHONE_TYPE_LANDLINE, label: "Landline" },
-    { value: STAFF_PHONE_TYPE_MOBILE, label: "Mobile" },
-    { value: STAFF_PHONE_TYPE_WORK, label: "Work" },
-  ];
+  const [isOkToText, setIsOkToText] = useState(wizardState.isOkToText || false);
+  const [isOkToEmail, setIsOkToEmail] = useState(
+    wizardState.isOkToEmail || false,
+  );
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -178,7 +174,7 @@ function AdminStaffAddStep3Page() {
           label="Phone Type"
           value={phoneType}
           onChange={(e) => setPhoneType(parseInt(e.target.value))}
-          options={phoneTypeOptions}
+          options={STAFF_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS}
           error={errors.phoneType}
           required
         />
@@ -200,7 +196,7 @@ function AdminStaffAddStep3Page() {
             label="Other Phone Type (Optional)"
             value={otherPhoneType}
             onChange={(e) => setOtherPhoneType(parseInt(e.target.value))}
-            options={phoneTypeOptions}
+            options={STAFF_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS}
           />
         )}
 

@@ -31,6 +31,9 @@ import {
   IDENTIFY_AS_OPTIONS,
 } from "../../../../constants/FieldOptions";
 
+// Import gender constant for "Other" option
+const GENDER_OTHER = 1;
+
 function AdminStaffAddStep6Page() {
   const navigate = useNavigate();
   const wizardStorage = useStaffAddWizardStorage();
@@ -38,23 +41,23 @@ function AdminStaffAddStep6Page() {
   const wizardState = wizardStorage.getWizardState();
 
   const [errors, setErrors] = useState({});
-  const [tags, setTags] = useState(wizardState.tags);
+  const [tags, setTags] = useState(wizardState.tags || []);
   const [howDidYouHearAboutUsID, setHowDidYouHearAboutUsID] = useState(
-    wizardState.howDidYouHearAboutUsID,
+    wizardState.howDidYouHearAboutUsID || "",
   );
   const [isHowDidYouHearAboutUsOther, setIsHowDidYouHearAboutUsOther] =
-    useState(wizardState.isHowDidYouHearAboutUsOther);
+    useState(wizardState.isHowDidYouHearAboutUsOther || false);
   const [howDidYouHearAboutUsOther, setHowDidYouHearAboutUsOther] = useState(
-    wizardState.howDidYouHearAboutUsOther,
+    wizardState.howDidYouHearAboutUsOther || "",
   );
-  const [birthDate, setBirthDate] = useState(wizardState.birthDate);
-  const [joinDate, setJoinDate] = useState(wizardState.joinDate);
-  const [gender, setGender] = useState(wizardState.gender);
-  const [genderOther, setGenderOther] = useState(wizardState.genderOther);
+  const [birthDate, setBirthDate] = useState(wizardState.birthDate || "");
+  const [joinDate, setJoinDate] = useState(wizardState.joinDate || "");
+  const [gender, setGender] = useState(wizardState.gender || 0);
+  const [genderOther, setGenderOther] = useState(wizardState.genderOther || "");
   const [additionalComment, setAdditionalComment] = useState(
-    wizardState.additionalComment,
+    wizardState.additionalComment || "",
   );
-  const [identifyAs, setIdentifyAs] = useState(wizardState.identifyAs);
+  const [identifyAs, setIdentifyAs] = useState(wizardState.identifyAs || []);
 
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
@@ -82,7 +85,7 @@ function AdminStaffAddStep6Page() {
       hasErrors = true;
     }
 
-    if (gender === 1 && !genderOther) {
+    if (gender === GENDER_OTHER && !genderOther) {
       newErrors.genderOther = "Please specify gender";
       hasErrors = true;
     }
@@ -188,7 +191,7 @@ function AdminStaffAddStep6Page() {
           required
         />
 
-        {gender === 1 && (
+        {gender === GENDER_OTHER && (
           <Input
             label="Gender (Other)"
             value={genderOther}

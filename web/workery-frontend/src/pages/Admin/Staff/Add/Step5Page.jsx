@@ -33,31 +33,35 @@ function AdminStaffAddStep5Page() {
   const wizardState = wizardStorage.getWizardState();
 
   const [errors, setErrors] = useState({});
-  const [limitSpecial, setLimitSpecial] = useState(wizardState.limitSpecial);
-  const [policeCheck, setPoliceCheck] = useState(wizardState.policeCheck);
-  const [driversLicenseClass, setDriversLicenseClass] = useState(
-    wizardState.driversLicenseClass,
+  const [limitSpecial, setLimitSpecial] = useState(
+    wizardState.limitSpecial || "",
   );
-  const [vehicleTypes, setVehicleTypes] = useState(wizardState.vehicleTypes);
+  const [policeCheck, setPoliceCheck] = useState(wizardState.policeCheck || "");
+  const [driversLicenseClass, setDriversLicenseClass] = useState(
+    wizardState.driversLicenseClass || "",
+  );
+  const [vehicleTypes, setVehicleTypes] = useState(
+    wizardState.vehicleTypes || [],
+  );
   const [emergencyContactName, setEmergencyContactName] = useState(
-    wizardState.emergencyContactName,
+    wizardState.emergencyContactName || "",
   );
   const [emergencyContactRelationship, setEmergencyContactRelationship] =
-    useState(wizardState.emergencyContactRelationship);
+    useState(wizardState.emergencyContactRelationship || "");
   const [emergencyContactTelephone, setEmergencyContactTelephone] = useState(
-    wizardState.emergencyContactTelephone,
+    wizardState.emergencyContactTelephone || "",
   );
   const [
     emergencyContactAlternativeTelephone,
     setEmergencyContactAlternativeTelephone,
-  ] = useState(wizardState.emergencyContactAlternativeTelephone);
-  const [description, setDescription] = useState(wizardState.description);
+  ] = useState(wizardState.emergencyContactAlternativeTelephone || "");
+  const [description, setDescription] = useState(wizardState.description || "");
   const [preferredLanguage, setPreferredLanguage] = useState(
-    wizardState.preferredLanguage,
+    wizardState.preferredLanguage || "",
   );
-  const [password, setPassword] = useState(wizardState.password);
+  const [password, setPassword] = useState(wizardState.password || "");
   const [passwordRepeated, setPasswordRepeated] = useState(
-    wizardState.passwordRepeated,
+    wizardState.passwordRepeated || "",
   );
 
   const onUnauthorized = () => {

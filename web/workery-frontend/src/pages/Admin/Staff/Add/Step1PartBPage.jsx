@@ -15,6 +15,7 @@ import {
   Modal,
   Select,
   Table,
+  ProgressBar, // Added missing import
 } from "../../../../components/UI";
 import {
   PlusIcon,

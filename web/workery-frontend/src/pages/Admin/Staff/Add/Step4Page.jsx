@@ -29,32 +29,42 @@ function AdminStaffAddStep4Page() {
   const wizardState = wizardStorage.getWizardState();
 
   const [errors, setErrors] = useState({});
-  const [postalCode, setPostalCode] = useState(wizardState.postalCode);
-  const [addressLine1, setAddressLine1] = useState(wizardState.addressLine1);
-  const [addressLine2, setAddressLine2] = useState(wizardState.addressLine2);
-  const [city, setCity] = useState(wizardState.city);
-  const [region, setRegion] = useState(wizardState.region);
-  const [country, setCountry] = useState(wizardState.country);
-  const [hasShippingAddress, setHasShippingAddress] = useState(
-    wizardState.hasShippingAddress,
+  const [postalCode, setPostalCode] = useState(wizardState.postalCode || "");
+  const [addressLine1, setAddressLine1] = useState(
+    wizardState.addressLine1 || "",
   );
-  const [shippingName, setShippingName] = useState(wizardState.shippingName);
-  const [shippingPhone, setShippingPhone] = useState(wizardState.shippingPhone);
+  const [addressLine2, setAddressLine2] = useState(
+    wizardState.addressLine2 || "",
+  );
+  const [city, setCity] = useState(wizardState.city || "");
+  const [region, setRegion] = useState(wizardState.region || "");
+  const [country, setCountry] = useState(wizardState.country || "");
+  const [hasShippingAddress, setHasShippingAddress] = useState(
+    wizardState.hasShippingAddress || false,
+  );
+  const [shippingName, setShippingName] = useState(
+    wizardState.shippingName || "",
+  );
+  const [shippingPhone, setShippingPhone] = useState(
+    wizardState.shippingPhone || "",
+  );
   const [shippingCountry, setShippingCountry] = useState(
-    wizardState.shippingCountry,
+    wizardState.shippingCountry || "",
   );
   const [shippingRegion, setShippingRegion] = useState(
-    wizardState.shippingRegion,
+    wizardState.shippingRegion || "",
   );
-  const [shippingCity, setShippingCity] = useState(wizardState.shippingCity);
+  const [shippingCity, setShippingCity] = useState(
+    wizardState.shippingCity || "",
+  );
   const [shippingAddressLine1, setShippingAddressLine1] = useState(
-    wizardState.shippingAddressLine1,
+    wizardState.shippingAddressLine1 || "",
   );
   const [shippingAddressLine2, setShippingAddressLine2] = useState(
-    wizardState.shippingAddressLine2,
+    wizardState.shippingAddressLine2 || "",
   );
   const [shippingPostalCode, setShippingPostalCode] = useState(
-    wizardState.shippingPostalCode,
+    wizardState.shippingPostalCode || "",
   );
 
   useEffect(() => {

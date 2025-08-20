@@ -43,6 +43,9 @@ import {
   STAFF_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS,
 } from "../../../../constants/Staff";
 
+// Import gender constant for "Other" option
+const GENDER_OTHER = 1;
+
 function AdminStaffAddStep7Page() {
   const navigate = useNavigate();
   const wizardStorage = useStaffAddWizardStorage();
@@ -385,7 +388,7 @@ function AdminStaffAddStep7Page() {
           <p>
             <strong>Gender:</strong> {formatGender(wizardState.gender)}
           </p>
-          {wizardState.gender === 1 && wizardState.genderOther && (
+          {wizardState.gender === GENDER_OTHER && wizardState.genderOther && (
             <p>
               <strong>Gender (Other):</strong> {wizardState.genderOther}
             </p>
