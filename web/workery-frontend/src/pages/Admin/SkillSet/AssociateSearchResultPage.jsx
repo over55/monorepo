@@ -88,6 +88,16 @@ function AdminSkillSetAssociateSearchResultPage() {
   const [hasNextPage, setHasNextPage] = useState(false);
   const [currentCursor, setCurrentCursor] = useState("");
 
+  // Clear filters handler
+  const handleClearFilters = () => {
+    setStatus("1");
+    setType("");
+    setSortBy("lexical_name,ASC");
+    setCurrentCursor("");
+    setPreviousCursors([]);
+    setCurrentPage(1);
+  };
+
   // Fetch associates data
   const fetchAssociates = async () => {
     setFetching(true);
@@ -123,16 +133,17 @@ function AdminSkillSetAssociateSearchResultPage() {
         filtersMap.set("type", type.toString());
       }
 
-      // Add skill set filtering based on search type
+      // FIXED: Use the correct backend parameter names for skill set filtering
       if (searchType === "all" && skillSetIDsStr) {
         // For "all" search type, associates must have ALL selected skill sets
-        filtersMap.set("skill_set_ids", skillSetIDsStr);
-        filtersMap.set("skill_set_search_type", "all");
+        // Backend expects "all_skill_set_ids" parameter
+        filtersMap.set("all_skill_set_ids", skillSetIDsStr);
       } else if (searchType === "in" && skillSetIDsStr) {
         // For "in" search type, associates must have ANY of the selected skill sets
-        filtersMap.set("skill_set_ids", skillSetIDsStr);
-        filtersMap.set("skill_set_search_type", "in");
+        // Backend expects "in_skill_set_ids" parameter
+        filtersMap.set("in_skill_set_ids", skillSetIDsStr);
       }
+      // NOTE: Removed "skill_set_search_type" as it's not used by the backend
 
       // Call API through manager using filtersMap approach
       const response = await associateManager.getAssociatesWithFiltersMap(
