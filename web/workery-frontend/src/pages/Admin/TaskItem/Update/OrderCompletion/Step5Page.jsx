@@ -81,6 +81,7 @@ function AdminTaskItemOrderCompletionStep5Page() {
 
       // Prepare payload for API
       const payload = {
+        task_id: tid,
         task_item_id: tid,
         was_completed: formData.wasCompleted,
         reason: formData.reason,
