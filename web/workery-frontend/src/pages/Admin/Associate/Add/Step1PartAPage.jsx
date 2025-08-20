@@ -96,25 +96,26 @@ function AdminAssociateAddStep1PartAPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {/* Breadcrumb */}
         <nav className="flex mb-4" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-wrap">
             <li className="inline-flex items-center">
               <Link
                 to="/admin/dashboard"
                 className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
               >
-                <ChartBarIcon className="w-4 h-4 mr-2" />
-                Dashboard
+                <ChartBarIcon className="w-4 h-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Dashboard</span>
+                <span className="sm:hidden">Dash</span>
               </Link>
             </li>
             <li>
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                 <Link
                   to="/admin/associates"
                   className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
                 >
                   <span className="inline-flex items-center">
-                    <WrenchScrewdriverIcon className="w-4 h-4 mr-2" />
+                    <WrenchScrewdriverIcon className="w-4 h-4 mr-1 sm:mr-2" />
                     Associates
                   </span>
                 </Link>
@@ -122,9 +123,9 @@ function AdminAssociateAddStep1PartAPage() {
             </li>
             <li aria-current="page">
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                 <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
-                  <UserPlusIcon className="w-4 h-4 mr-2" />
+                  <UserPlusIcon className="w-4 h-4 mr-1 sm:mr-2" />
                   Add
                 </span>
               </div>
@@ -134,15 +135,16 @@ function AdminAssociateAddStep1PartAPage() {
 
         {/* Page Title */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-            <UserPlusIcon className="w-7 h-7 mr-3 text-blue-600" />
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+            <UserPlusIcon className="w-6 h-6 sm:w-7 sm:h-7 mr-2 sm:mr-3 text-blue-600" />
             Add New Associate
           </h1>
         </div>
 
-        {/* Wizard Steps */}
+        {/* Wizard Steps - Responsive Design */}
         <div className="mb-6">
-          <div className="flex items-center justify-center overflow-x-auto">
+          {/* Desktop/Laptop View (1920x1080 and above) */}
+          <div className="hidden 2xl:flex items-center justify-center">
             <div className="flex items-center">
               {/* Step 1 - Active */}
               <div className="flex items-center">
@@ -240,18 +242,211 @@ function AdminAssociateAddStep1PartAPage() {
               </div>
             </div>
           </div>
+
+          {/* Medium Screens (1366x768 to 1919px) - Horizontal Scroll */}
+          <div className="hidden lg:block 2xl:hidden">
+            <div className="overflow-x-auto pb-2">
+              <div className="flex items-center min-w-max px-4">
+                {/* Step 1 - Active */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-9 h-9 bg-blue-600 rounded-full">
+                    <span className="text-white font-semibold text-sm">1</span>
+                  </div>
+                  <div className="ml-2">
+                    <p className="text-xs font-medium text-gray-900">Search</p>
+                    <p className="text-xs text-gray-500 hidden xl:block">
+                      Check Existing
+                    </p>
+                  </div>
+                </div>
+
+                {/* Connector */}
+                <div className="mx-1 w-8 h-0.5 bg-gray-300"></div>
+
+                {/* Step 2 */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-9 h-9 bg-gray-300 rounded-full">
+                    <span className="text-gray-600 font-semibold text-sm">
+                      2
+                    </span>
+                  </div>
+                  <div className="ml-2">
+                    <p className="text-xs font-medium text-gray-500">Type</p>
+                    <p className="text-xs text-gray-400 hidden xl:block">
+                      Select Type
+                    </p>
+                  </div>
+                </div>
+
+                {/* Connector */}
+                <div className="mx-1 w-8 h-0.5 bg-gray-300"></div>
+
+                {/* Step 3 */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-9 h-9 bg-gray-300 rounded-full">
+                    <span className="text-gray-600 font-semibold text-sm">
+                      3
+                    </span>
+                  </div>
+                  <div className="ml-2">
+                    <p className="text-xs font-medium text-gray-500">Contact</p>
+                    <p className="text-xs text-gray-400 hidden xl:block">
+                      Basic Info
+                    </p>
+                  </div>
+                </div>
+
+                {/* Connector */}
+                <div className="mx-1 w-8 h-0.5 bg-gray-300"></div>
+
+                {/* Step 4 */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-9 h-9 bg-gray-300 rounded-full">
+                    <span className="text-gray-600 font-semibold text-sm">
+                      4
+                    </span>
+                  </div>
+                  <div className="ml-2">
+                    <p className="text-xs font-medium text-gray-500">Address</p>
+                    <p className="text-xs text-gray-400 hidden xl:block">
+                      Location
+                    </p>
+                  </div>
+                </div>
+
+                {/* Connector */}
+                <div className="mx-1 w-8 h-0.5 bg-gray-300"></div>
+
+                {/* Step 5 */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-9 h-9 bg-gray-300 rounded-full">
+                    <span className="text-gray-600 font-semibold text-sm">
+                      5
+                    </span>
+                  </div>
+                  <div className="ml-2">
+                    <p className="text-xs font-medium text-gray-500">Account</p>
+                    <p className="text-xs text-gray-400 hidden xl:block">
+                      Settings
+                    </p>
+                  </div>
+                </div>
+
+                {/* Connector */}
+                <div className="mx-1 w-8 h-0.5 bg-gray-300"></div>
+
+                {/* Step 6 */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-9 h-9 bg-gray-300 rounded-full">
+                    <span className="text-gray-600 font-semibold text-sm">
+                      6
+                    </span>
+                  </div>
+                  <div className="ml-2">
+                    <p className="text-xs font-medium text-gray-500">Metrics</p>
+                    <p className="text-xs text-gray-400 hidden xl:block">
+                      Performance
+                    </p>
+                  </div>
+                </div>
+
+                {/* Connector */}
+                <div className="mx-1 w-8 h-0.5 bg-gray-300"></div>
+
+                {/* Step 7 */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-9 h-9 bg-gray-300 rounded-full">
+                    <span className="text-gray-600 font-semibold text-sm">
+                      7
+                    </span>
+                  </div>
+                  <div className="ml-2">
+                    <p className="text-xs font-medium text-gray-500">
+                      Comments
+                    </p>
+                    <p className="text-xs text-gray-400 hidden xl:block">
+                      Notes
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Tablet View (md to lg screens) - Compact Horizontal Scroll */}
+          <div className="hidden md:block lg:hidden">
+            <div className="overflow-x-auto pb-2">
+              <div className="flex items-center min-w-max px-2">
+                {[
+                  { num: 1, title: "Search", active: true },
+                  { num: 2, title: "Type", active: false },
+                  { num: 3, title: "Contact", active: false },
+                  { num: 4, title: "Address", active: false },
+                  { num: 5, title: "Account", active: false },
+                  { num: 6, title: "Metrics", active: false },
+                  { num: 7, title: "Comments", active: false },
+                ].map((step, index) => (
+                  <React.Fragment key={step.num}>
+                    <div className="flex items-center">
+                      <div
+                        className={`flex items-center justify-center w-8 h-8 ${step.active ? "bg-blue-600" : "bg-gray-300"} rounded-full`}
+                      >
+                        <span
+                          className={`${step.active ? "text-white" : "text-gray-600"} font-semibold text-xs`}
+                        >
+                          {step.num}
+                        </span>
+                      </div>
+                      <div className="ml-2">
+                        <p
+                          className={`text-xs font-medium ${step.active ? "text-gray-900" : "text-gray-500"}`}
+                        >
+                          {step.title}
+                        </p>
+                      </div>
+                    </div>
+                    {index < 6 && (
+                      <div className="mx-1 w-6 h-0.5 bg-gray-300"></div>
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile View - Simplified Current Step Display */}
+          <div className="md:hidden">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full">
+                    <span className="text-white font-semibold text-sm">1</span>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-900">
+                      Step 1: Search
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Check for existing associates
+                    </p>
+                  </div>
+                </div>
+                <div className="text-xs text-gray-500">1 of 7</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Error Message */}
         {errors.message && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
-            <span className="flex items-center">
-              <ExclamationCircleIcon className="w-5 h-5 mr-2" />
-              {errors.message}
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-3 sm:px-4 py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center text-sm">
+              <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+              <span>{errors.message}</span>
             </span>
             <button
               onClick={() => setErrors({})}
-              className="text-red-600 hover:text-red-800"
+              className="text-red-600 hover:text-red-800 ml-2"
             >
               <XMarkIcon className="w-5 h-5" />
             </button>
@@ -262,23 +457,25 @@ function AdminAssociateAddStep1PartAPage() {
         <div>
           <div>
             <div className="bg-white shadow-sm rounded-lg">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+              <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
                   <MagnifyingGlassIcon className="w-5 h-5 mr-2" />
                   Search for Existing Associate
                 </h2>
               </div>
 
               {isLoading ? (
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                   <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                    <span className="ml-3 text-gray-600">Searching...</span>
+                    <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-blue-600"></div>
+                    <span className="ml-3 text-gray-600 text-sm sm:text-base">
+                      Searching...
+                    </span>
                   </div>
                 </div>
               ) : (
                 <>
-                  <form onSubmit={onSubmitClick} className="p-6">
+                  <form onSubmit={onSubmitClick} className="p-4 sm:p-6">
                     <div className="space-y-4">
                       {/* Name Fields */}
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -300,7 +497,7 @@ function AdminAssociateAddStep1PartAPage() {
                               value={firstName}
                               onChange={(e) => setFirstName(e.target.value)}
                               placeholder="Enter first name"
-                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                             />
                           </div>
                         </div>
@@ -323,7 +520,7 @@ function AdminAssociateAddStep1PartAPage() {
                               value={lastName}
                               onChange={(e) => setLastName(e.target.value)}
                               placeholder="Enter last name"
-                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                             />
                           </div>
                         </div>
@@ -349,7 +546,7 @@ function AdminAssociateAddStep1PartAPage() {
                               value={email}
                               onChange={(e) => setEmail(e.target.value)}
                               placeholder="Enter email address"
-                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                             />
                           </div>
                         </div>
@@ -372,15 +569,15 @@ function AdminAssociateAddStep1PartAPage() {
                               value={phone}
                               onChange={(e) => setPhone(e.target.value)}
                               placeholder="Enter phone number"
-                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                             />
                           </div>
                         </div>
                       </div>
 
                       {/* Info Note */}
-                      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                        <p className="text-sm text-blue-800 flex items-start">
+                      <div className="p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-xs sm:text-sm text-blue-800 flex items-start">
                           <InformationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
                           <span>
                             Enter at least one search criteria to check for
@@ -392,18 +589,18 @@ function AdminAssociateAddStep1PartAPage() {
                     </div>
 
                     {/* Search Actions */}
-                    <div className="mt-6 flex items-center justify-between">
+                    <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                       <button
                         type="button"
                         onClick={handleCancel}
-                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                       >
                         <XMarkIcon className="w-4 h-4 inline mr-2" />
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                       >
                         <MagnifyingGlassIcon className="w-4 h-4 mr-2" />
                         Search
@@ -412,8 +609,8 @@ function AdminAssociateAddStep1PartAPage() {
                   </form>
 
                   {/* OR Divider */}
-                  <div className="relative px-6 py-3">
-                    <div className="absolute inset-0 flex items-center px-6">
+                  <div className="relative px-4 sm:px-6 py-3">
+                    <div className="absolute inset-0 flex items-center px-4 sm:px-6">
                       <div className="w-full border-t border-gray-200"></div>
                     </div>
                     <div className="relative flex justify-center">
@@ -424,15 +621,15 @@ function AdminAssociateAddStep1PartAPage() {
                   </div>
 
                   {/* Add New Associate */}
-                  <div className="px-6 pb-5">
+                  <div className="px-4 sm:px-6 pb-5">
                     <div className="text-center">
-                      <p className="text-sm text-gray-600 mb-4">
+                      <p className="text-xs sm:text-sm text-gray-600 mb-4">
                         If you're sure this is a new associate, skip the search
                         and proceed directly to creation
                       </p>
                       <button
                         onClick={onAddAssociateClick}
-                        className="inline-flex items-center px-6 py-3 text-base font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                        className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
                       >
                         <UserPlusIcon className="w-5 h-5 mr-2" />
                         Add New Associate
@@ -461,30 +658,30 @@ function AdminAssociateAddStep1PartAPage() {
       {showCancelWarning && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
                 <ExclamationCircleIcon className="h-5 w-5 mr-2 text-amber-600" />
                 Are you sure?
               </h3>
             </div>
 
-            <div className="px-6 py-4">
+            <div className="px-4 sm:px-6 py-4">
               <p className="text-sm text-gray-600">
                 Your Associate record will be cancelled and your work will be
                 lost. This cannot be undone. Do you want to continue?
               </p>
             </div>
 
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+            <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row sm:justify-end gap-3">
               <button
                 onClick={() => setShowCancelWarning(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 order-2 sm:order-1"
               >
                 No, Keep Working
               </button>
               <button
                 onClick={handleConfirmCancel}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700"
+                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 order-1 sm:order-2"
               >
                 Yes, Cancel
               </button>

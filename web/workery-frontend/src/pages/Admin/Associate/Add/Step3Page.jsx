@@ -213,7 +213,8 @@ function AdminAssociateAddStep3Page() {
                 className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
               >
                 <ChartBarIcon className="w-4 h-4 mr-2" />
-                Dashboard
+                <span className="hidden sm:inline">Dashboard</span>
+                <span className="sm:hidden">Home</span>
               </Link>
             </li>
             <li>
@@ -244,16 +245,153 @@ function AdminAssociateAddStep3Page() {
 
         {/* Page Title */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-            <UserPlusIcon className="w-7 h-7 mr-3 text-blue-600" />
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+            <UserPlusIcon className="w-6 h-6 sm:w-7 sm:h-7 mr-3 text-blue-600" />
             Add New Associate
           </h1>
         </div>
 
-        {/* Wizard Steps */}
+        {/* Wizard Steps - Responsive Version */}
         <div className="mb-6">
-          <div className="flex items-center justify-center overflow-x-auto">
-            <div className="flex items-center">
+          <div className="flex items-center justify-center">
+            {/* Mobile/Tablet View (< 1920px) */}
+            <div className="xl:hidden w-full overflow-x-auto pb-2">
+              <div className="flex items-center min-w-max px-2">
+                {/* Step 1 - Complete */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex-shrink-0">
+                    <CheckIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  </div>
+                  <div className="ml-2 sm:ml-3">
+                    <p className="text-xs sm:text-sm font-medium text-gray-900">
+                      Search
+                    </p>
+                    <p className="text-xs text-gray-500 hidden sm:block">
+                      Complete
+                    </p>
+                  </div>
+                </div>
+
+                {/* Connector */}
+                <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-green-600"></div>
+
+                {/* Step 2 - Complete */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex-shrink-0">
+                    <CheckIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  </div>
+                  <div className="ml-2 sm:ml-3">
+                    <p className="text-xs sm:text-sm font-medium text-gray-900">
+                      Type
+                    </p>
+                    <p className="text-xs text-gray-500 hidden sm:block">
+                      Complete
+                    </p>
+                  </div>
+                </div>
+
+                {/* Connector */}
+                <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-gray-300"></div>
+
+                {/* Step 3 - Active */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-full flex-shrink-0">
+                    <span className="text-white font-semibold text-sm">3</span>
+                  </div>
+                  <div className="ml-2 sm:ml-3">
+                    <p className="text-xs sm:text-sm font-medium text-gray-900">
+                      Contact
+                    </p>
+                    <p className="text-xs text-gray-500 hidden sm:block">
+                      Basic Info
+                    </p>
+                  </div>
+                </div>
+
+                {/* Connector */}
+                <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-gray-300"></div>
+
+                {/* Step 4 - Inactive */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
+                    <span className="text-gray-600 font-semibold text-sm">
+                      4
+                    </span>
+                  </div>
+                  <div className="ml-2 sm:ml-3">
+                    <p className="text-xs sm:text-sm font-medium text-gray-500">
+                      Address
+                    </p>
+                    <p className="text-xs text-gray-400 hidden sm:block">
+                      Location
+                    </p>
+                  </div>
+                </div>
+
+                {/* Connector */}
+                <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-gray-300"></div>
+
+                {/* Step 5 - Inactive */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
+                    <span className="text-gray-600 font-semibold text-sm">
+                      5
+                    </span>
+                  </div>
+                  <div className="ml-2 sm:ml-3">
+                    <p className="text-xs sm:text-sm font-medium text-gray-500">
+                      Account
+                    </p>
+                    <p className="text-xs text-gray-400 hidden sm:block">
+                      Settings
+                    </p>
+                  </div>
+                </div>
+
+                {/* Connector */}
+                <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-gray-300"></div>
+
+                {/* Step 6 - Inactive */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
+                    <span className="text-gray-600 font-semibold text-sm">
+                      6
+                    </span>
+                  </div>
+                  <div className="ml-2 sm:ml-3">
+                    <p className="text-xs sm:text-sm font-medium text-gray-500">
+                      Metrics
+                    </p>
+                    <p className="text-xs text-gray-400 hidden sm:block">
+                      Performance
+                    </p>
+                  </div>
+                </div>
+
+                {/* Connector */}
+                <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-gray-300"></div>
+
+                {/* Step 7 - Inactive */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
+                    <span className="text-gray-600 font-semibold text-sm">
+                      7
+                    </span>
+                  </div>
+                  <div className="ml-2 sm:ml-3">
+                    <p className="text-xs sm:text-sm font-medium text-gray-500">
+                      Comments
+                    </p>
+                    <p className="text-xs text-gray-400 hidden sm:block">
+                      Notes
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Desktop View (≥ 1920px) - Original Layout */}
+            <div className="hidden xl:flex items-center">
               {/* Step 1 - Complete */}
               <div className="flex items-center">
                 <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
@@ -356,12 +494,12 @@ function AdminAssociateAddStep3Page() {
         {errors.general && (
           <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
             <span className="flex items-center">
-              <ExclamationCircleIcon className="w-5 h-5 mr-2" />
-              {errors.general}
+              <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+              <span className="text-sm">{errors.general}</span>
             </span>
             <button
               onClick={() => setErrors({})}
-              className="text-red-600 hover:text-red-800"
+              className="text-red-600 hover:text-red-800 ml-2"
             >
               <XMarkIcon className="w-5 h-5" />
             </button>
@@ -370,14 +508,14 @@ function AdminAssociateAddStep3Page() {
 
         {/* Main Content */}
         <div className="bg-white shadow-sm rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
               <IdentificationIcon className="w-5 h-5 mr-2" />
               Contact Information
             </h2>
           </div>
 
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -391,8 +529,11 @@ function AdminAssociateAddStep3Page() {
                     <>
                       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
                         <p className="text-sm text-blue-800 flex items-center">
-                          <BuildingOfficeIcon className="w-5 h-5 mr-2" />
-                          Commercial Associate - Additional Information Required
+                          <BuildingOfficeIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+                          <span>
+                            Commercial Associate - Additional Information
+                            Required
+                          </span>
                         </p>
                       </div>
 
@@ -723,7 +864,7 @@ function AdminAssociateAddStep3Page() {
                 </div>
 
                 {/* Form Actions */}
-                <div className="mt-6 flex gap-3">
+                <div className="mt-6 flex flex-col sm:flex-row gap-3">
                   <Link
                     to="/admin/associates/add/step-2"
                     className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"

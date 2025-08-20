@@ -335,7 +335,7 @@ function AdminAssociateAddStep7Page() {
                 className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
               >
                 <ChartBarIcon className="w-4 h-4 mr-2" />
-                Dashboard
+                <span className="hidden sm:inline">Dashboard</span>
               </Link>
             </li>
             <li>
@@ -347,7 +347,7 @@ function AdminAssociateAddStep7Page() {
                 >
                   <span className="inline-flex items-center">
                     <WrenchScrewdriverIcon className="w-4 h-4 mr-2" />
-                    Associates
+                    <span className="hidden sm:inline">Associates</span>
                   </span>
                 </Link>
               </div>
@@ -366,25 +366,26 @@ function AdminAssociateAddStep7Page() {
 
         {/* Page Title */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-            <UserPlusIcon className="w-7 h-7 mr-3 text-blue-600" />
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+            <UserPlusIcon className="w-6 sm:w-7 h-6 sm:h-7 mr-2 sm:mr-3 text-blue-600" />
             Add New Associate
           </h1>
         </div>
 
-        {/* Wizard Steps */}
+        {/* Wizard Steps - Responsive Design */}
         <div className="mb-6">
-          <div className="flex items-center justify-center overflow-x-auto">
+          {/* Desktop/Tablet View (768px and up) */}
+          <div className="hidden md:flex items-center justify-center overflow-x-auto">
             <div className="flex items-center">
               {/* Steps 1-6 Complete */}
               {[1, 2, 3, 4, 5, 6].map((step, index) => (
                 <React.Fragment key={step}>
                   <div className="flex items-center">
-                    <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
-                      <CheckIcon className="w-6 h-6 text-white" />
+                    <div className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-green-600 rounded-full">
+                      <CheckIcon className="w-4 h-4 lg:w-6 lg:h-6 text-white" />
                     </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-900">
+                    <div className="ml-2 lg:ml-3">
+                      <p className="text-xs lg:text-sm font-medium text-gray-900">
                         {step === 1 && "Search"}
                         {step === 2 && "Type"}
                         {step === 3 && "Contact"}
@@ -392,23 +393,62 @@ function AdminAssociateAddStep7Page() {
                         {step === 5 && "Account"}
                         {step === 6 && "Metrics"}
                       </p>
-                      <p className="text-xs text-gray-500">Complete</p>
+                      <p className="text-xs text-gray-500 hidden xl:block">
+                        Complete
+                      </p>
                     </div>
                   </div>
                   {index < 6 && (
-                    <div className="mx-2 w-12 h-0.5 bg-green-600"></div>
+                    <div className="mx-1 lg:mx-2 w-8 lg:w-12 h-0.5 bg-green-600"></div>
                   )}
                 </React.Fragment>
               ))}
 
               {/* Step 7 - Active */}
               <div className="flex items-center">
+                <div className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-blue-600 rounded-full">
+                  <span className="text-white font-semibold text-sm lg:text-base">
+                    7
+                  </span>
+                </div>
+                <div className="ml-2 lg:ml-3">
+                  <p className="text-xs lg:text-sm font-medium text-gray-900">
+                    Review
+                  </p>
+                  <p className="text-xs text-gray-500 hidden xl:block">
+                    Submit
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile View (below 768px) */}
+          <div className="md:hidden">
+            <div className="flex items-center justify-between px-4">
+              <div className="flex items-center">
                 <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
                   <span className="text-white font-semibold">7</span>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">Review</p>
-                  <p className="text-xs text-gray-500">Submit</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    Step 7 of 7
+                  </p>
+                  <p className="text-xs text-gray-500">Review & Submit</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-gray-500">Progress</p>
+                <div className="flex items-center mt-1">
+                  <div className="flex">
+                    {[1, 2, 3, 4, 5, 6].map((step) => (
+                      <div
+                        key={step}
+                        className="w-2 h-2 bg-green-600 rounded-full mr-1"
+                      ></div>
+                    ))}
+                    <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -417,15 +457,15 @@ function AdminAssociateAddStep7Page() {
 
         {/* Main Content */}
         <div className="bg-white shadow-sm rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
               <CheckCircleIcon className="w-5 h-5 mr-2" />
               Review and Submit
             </h2>
           </div>
 
-          <div className="p-6">
-            <p className="text-gray-600 mb-6">
+          <div className="p-4 sm:p-6">
+            <p className="text-sm sm:text-base text-gray-600 mb-6">
               Please carefully review the following associate details. If
               everything looks correct, click the <strong>Submit</strong> button
               to create the new associate.
@@ -433,8 +473,8 @@ function AdminAssociateAddStep7Page() {
 
             {errors.message && (
               <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center">
-                <ExclamationCircleIcon className="w-5 h-5 mr-2" />
-                {errors.message}
+                <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+                <span className="text-sm sm:text-base">{errors.message}</span>
               </div>
             )}
 
@@ -447,30 +487,30 @@ function AdminAssociateAddStep7Page() {
               </div>
             ) : (
               <div className="max-w-3xl mx-auto">
-                <div className="space-y-8">
+                <div className="space-y-6 sm:space-y-8">
                   {/* Contact Information Section */}
                   <div>
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-                        <UserIcon className="w-5 h-5 mr-2 text-blue-600" />
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
+                        <UserIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600" />
                         Contact Information
                       </h3>
                       <Link
                         to="/admin/associates/add/step-3"
-                        className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+                        className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
                       >
-                        <PencilSquareIcon className="w-4 h-4 mr-1" />
+                        <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
                         Edit
                       </Link>
                     </div>
 
-                    <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
                         <div>
-                          <span className="text-sm font-medium text-gray-500">
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
                             Type:
                           </span>
-                          <p className="text-sm text-gray-900">
+                          <p className="text-xs sm:text-sm text-gray-900">
                             {getTypeLabel(associateData.type)}
                           </p>
                         </div>
@@ -479,18 +519,18 @@ function AdminAssociateAddStep7Page() {
                           COMMERCIAL_ASSOCIATE_TYPE_OF_ID && (
                           <>
                             <div>
-                              <span className="text-sm font-medium text-gray-500">
+                              <span className="text-xs sm:text-sm font-medium text-gray-500">
                                 Organization Name:
                               </span>
-                              <p className="text-sm text-gray-900">
+                              <p className="text-xs sm:text-sm text-gray-900">
                                 {associateData.organizationName}
                               </p>
                             </div>
                             <div>
-                              <span className="text-sm font-medium text-gray-500">
+                              <span className="text-xs sm:text-sm font-medium text-gray-500">
                                 Organization Type:
                               </span>
-                              <p className="text-sm text-gray-900">
+                              <p className="text-xs sm:text-sm text-gray-900">
                                 {associateData.organizationType}
                               </p>
                             </div>
@@ -498,34 +538,34 @@ function AdminAssociateAddStep7Page() {
                         )}
 
                         <div>
-                          <span className="text-sm font-medium text-gray-500">
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
                             First Name:
                           </span>
-                          <p className="text-sm text-gray-900">
+                          <p className="text-xs sm:text-sm text-gray-900">
                             {associateData.firstName}
                           </p>
                         </div>
                         <div>
-                          <span className="text-sm font-medium text-gray-500">
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
                             Last Name:
                           </span>
-                          <p className="text-sm text-gray-900">
+                          <p className="text-xs sm:text-sm text-gray-900">
                             {associateData.lastName}
                           </p>
                         </div>
                         <div>
-                          <span className="text-sm font-medium text-gray-500">
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
                             Email:
                           </span>
-                          <p className="text-sm text-gray-900">
+                          <p className="text-xs sm:text-sm text-gray-900 break-all">
                             {associateData.email}
                           </p>
                         </div>
                         <div>
-                          <span className="text-sm font-medium text-gray-500">
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
                             Phone:
                           </span>
-                          <p className="text-sm text-gray-900">
+                          <p className="text-xs sm:text-sm text-gray-900">
                             {associateData.phone} (
                             {getPhoneTypeLabel(associateData.phoneType)})
                           </p>
@@ -535,38 +575,38 @@ function AdminAssociateAddStep7Page() {
                           ASSOCIATE_PHONE_TYPE_WORK &&
                           associateData.phoneExtension && (
                             <div>
-                              <span className="text-sm font-medium text-gray-500">
+                              <span className="text-xs sm:text-sm font-medium text-gray-500">
                                 Phone Extension:
                               </span>
-                              <p className="text-sm text-gray-900">
+                              <p className="text-xs sm:text-sm text-gray-900">
                                 {associateData.phoneExtension}
                               </p>
                             </div>
                           )}
 
                         <div>
-                          <span className="text-sm font-medium text-gray-500">
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
                             OK to Email:
                           </span>
-                          <p className="text-sm text-gray-900">
+                          <p className="text-xs sm:text-sm text-gray-900">
                             {associateData.isOkToEmail ? "Yes" : "No"}
                           </p>
                         </div>
                         <div>
-                          <span className="text-sm font-medium text-gray-500">
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
                             OK to Text:
                           </span>
-                          <p className="text-sm text-gray-900">
+                          <p className="text-xs sm:text-sm text-gray-900">
                             {associateData.isOkToText ? "Yes" : "No"}
                           </p>
                         </div>
 
                         {associateData.otherPhone && (
                           <div>
-                            <span className="text-sm font-medium text-gray-500">
+                            <span className="text-xs sm:text-sm font-medium text-gray-500">
                               Other Phone:
                             </span>
-                            <p className="text-sm text-gray-900">
+                            <p className="text-xs sm:text-sm text-gray-900">
                               {associateData.otherPhone} (
                               {getPhoneTypeLabel(associateData.otherPhoneType)})
                             </p>
@@ -579,68 +619,68 @@ function AdminAssociateAddStep7Page() {
                   {/* Address Information Section */}
                   <div className="pt-6 border-t">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-                        <MapPinIcon className="w-5 h-5 mr-2 text-green-600" />
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
+                        <MapPinIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-green-600" />
                         Address Information
                       </h3>
                       <Link
                         to="/admin/associates/add/step-4"
-                        className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+                        className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
                       >
-                        <PencilSquareIcon className="w-4 h-4 mr-1" />
+                        <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
                         Edit
                       </Link>
                     </div>
 
-                    <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
                         <div>
-                          <span className="text-sm font-medium text-gray-500">
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
                             Address:
                           </span>
-                          <p className="text-sm text-gray-900">
+                          <p className="text-xs sm:text-sm text-gray-900">
                             {associateData.addressLine1}
                           </p>
                         </div>
                         {associateData.addressLine2 && (
                           <div>
-                            <span className="text-sm font-medium text-gray-500">
+                            <span className="text-xs sm:text-sm font-medium text-gray-500">
                               Address Line 2:
                             </span>
-                            <p className="text-sm text-gray-900">
+                            <p className="text-xs sm:text-sm text-gray-900">
                               {associateData.addressLine2}
                             </p>
                           </div>
                         )}
                         <div>
-                          <span className="text-sm font-medium text-gray-500">
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
                             City:
                           </span>
-                          <p className="text-sm text-gray-900">
+                          <p className="text-xs sm:text-sm text-gray-900">
                             {associateData.city}
                           </p>
                         </div>
                         <div>
-                          <span className="text-sm font-medium text-gray-500">
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
                             Province/Territory:
                           </span>
-                          <p className="text-sm text-gray-900">
+                          <p className="text-xs sm:text-sm text-gray-900">
                             {associateData.region}
                           </p>
                         </div>
                         <div>
-                          <span className="text-sm font-medium text-gray-500">
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
                             Postal Code:
                           </span>
-                          <p className="text-sm text-gray-900">
+                          <p className="text-xs sm:text-sm text-gray-900">
                             {associateData.postalCode}
                           </p>
                         </div>
                         <div>
-                          <span className="text-sm font-medium text-gray-500">
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
                             Country:
                           </span>
-                          <p className="text-sm text-gray-900">
+                          <p className="text-xs sm:text-sm text-gray-900">
                             {associateData.country}
                           </p>
                         </div>
@@ -648,73 +688,73 @@ function AdminAssociateAddStep7Page() {
 
                       {associateData.hasShippingAddress && (
                         <div className="mt-4 pt-4 border-t border-gray-200">
-                          <p className="text-sm font-semibold text-gray-700 mb-2">
+                          <p className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">
                             Shipping Address
                           </p>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
                             <div>
-                              <span className="text-sm font-medium text-gray-500">
+                              <span className="text-xs sm:text-sm font-medium text-gray-500">
                                 Name:
                               </span>
-                              <p className="text-sm text-gray-900">
+                              <p className="text-xs sm:text-sm text-gray-900">
                                 {associateData.shippingName}
                               </p>
                             </div>
                             <div>
-                              <span className="text-sm font-medium text-gray-500">
+                              <span className="text-xs sm:text-sm font-medium text-gray-500">
                                 Phone:
                               </span>
-                              <p className="text-sm text-gray-900">
+                              <p className="text-xs sm:text-sm text-gray-900">
                                 {associateData.shippingPhone}
                               </p>
                             </div>
                             <div>
-                              <span className="text-sm font-medium text-gray-500">
+                              <span className="text-xs sm:text-sm font-medium text-gray-500">
                                 Address:
                               </span>
-                              <p className="text-sm text-gray-900">
+                              <p className="text-xs sm:text-sm text-gray-900">
                                 {associateData.shippingAddressLine1}
                               </p>
                             </div>
                             {associateData.shippingAddressLine2 && (
                               <div>
-                                <span className="text-sm font-medium text-gray-500">
+                                <span className="text-xs sm:text-sm font-medium text-gray-500">
                                   Address Line 2:
                                 </span>
-                                <p className="text-sm text-gray-900">
+                                <p className="text-xs sm:text-sm text-gray-900">
                                   {associateData.shippingAddressLine2}
                                 </p>
                               </div>
                             )}
                             <div>
-                              <span className="text-sm font-medium text-gray-500">
+                              <span className="text-xs sm:text-sm font-medium text-gray-500">
                                 City:
                               </span>
-                              <p className="text-sm text-gray-900">
+                              <p className="text-xs sm:text-sm text-gray-900">
                                 {associateData.shippingCity}
                               </p>
                             </div>
                             <div>
-                              <span className="text-sm font-medium text-gray-500">
+                              <span className="text-xs sm:text-sm font-medium text-gray-500">
                                 Province/Territory:
                               </span>
-                              <p className="text-sm text-gray-900">
+                              <p className="text-xs sm:text-sm text-gray-900">
                                 {associateData.shippingRegion}
                               </p>
                             </div>
                             <div>
-                              <span className="text-sm font-medium text-gray-500">
+                              <span className="text-xs sm:text-sm font-medium text-gray-500">
                                 Postal Code:
                               </span>
-                              <p className="text-sm text-gray-900">
+                              <p className="text-xs sm:text-sm text-gray-900">
                                 {associateData.shippingPostalCode}
                               </p>
                             </div>
                             <div>
-                              <span className="text-sm font-medium text-gray-500">
+                              <span className="text-xs sm:text-sm font-medium text-gray-500">
                                 Country:
                               </span>
-                              <p className="text-sm text-gray-900">
+                              <p className="text-xs sm:text-sm text-gray-900">
                                 {associateData.shippingCountry}
                               </p>
                             </div>
@@ -727,20 +767,20 @@ function AdminAssociateAddStep7Page() {
                   {/* Account Information Section */}
                   <div className="pt-6 border-t">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-                        <ClipboardDocumentIcon className="w-5 h-5 mr-2 text-purple-600" />
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
+                        <ClipboardDocumentIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-purple-600" />
                         Account Information
                       </h3>
                       <Link
                         to="/admin/associates/add/step-5"
-                        className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+                        className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
                       >
-                        <PencilSquareIcon className="w-4 h-4 mr-1" />
+                        <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
                         Edit
                       </Link>
                     </div>
 
-                    <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-3">
                       {/* Skill Sets Display */}
                       {associateData.skillSets && (
                         <div className="mb-2">
@@ -790,47 +830,47 @@ function AdminAssociateAddStep7Page() {
                         </div>
                       )}
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
                         {associateData.hourlySalaryDesired && (
                           <div>
-                            <span className="text-sm font-medium text-gray-500">
+                            <span className="text-xs sm:text-sm font-medium text-gray-500">
                               Hourly Rate:
                             </span>
-                            <p className="text-sm text-gray-900">
+                            <p className="text-xs sm:text-sm text-gray-900">
                               ${associateData.hourlySalaryDesired}/hr
                             </p>
                           </div>
                         )}
 
                         <div>
-                          <span className="text-sm font-medium text-gray-500">
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
                             Member Dues Date:
                           </span>
-                          <p className="text-sm text-gray-900">
+                          <p className="text-xs sm:text-sm text-gray-900">
                             {associateData.duesDate}
                           </p>
                         </div>
                         <div>
-                          <span className="text-sm font-medium text-gray-500">
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
                             Police Check Expiry:
                           </span>
-                          <p className="text-sm text-gray-900">
+                          <p className="text-xs sm:text-sm text-gray-900">
                             {associateData.policeCheck}
                           </p>
                         </div>
                         <div>
-                          <span className="text-sm font-medium text-gray-500">
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
                             Commercial Insurance Expiry:
                           </span>
-                          <p className="text-sm text-gray-900">
+                          <p className="text-xs sm:text-sm text-gray-900">
                             {associateData.commercialInsuranceExpiryDate}
                           </p>
                         </div>
                         <div>
-                          <span className="text-sm font-medium text-gray-500">
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
                             Preferred Language:
                           </span>
-                          <p className="text-sm text-gray-900">
+                          <p className="text-xs sm:text-sm text-gray-900">
                             {associateData.preferredLanguage}
                           </p>
                         </div>
@@ -838,40 +878,40 @@ function AdminAssociateAddStep7Page() {
 
                       {associateData.emergencyContactName && (
                         <div className="mt-4 pt-4 border-t border-gray-200">
-                          <p className="text-sm font-semibold text-gray-700 mb-2">
+                          <p className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">
                             Emergency Contact
                           </p>
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
                             <div>
-                              <span className="text-sm font-medium text-gray-500">
+                              <span className="text-xs sm:text-sm font-medium text-gray-500">
                                 Name:
                               </span>
-                              <p className="text-sm text-gray-900">
+                              <p className="text-xs sm:text-sm text-gray-900">
                                 {associateData.emergencyContactName}
                               </p>
                             </div>
                             <div>
-                              <span className="text-sm font-medium text-gray-500">
+                              <span className="text-xs sm:text-sm font-medium text-gray-500">
                                 Relationship:
                               </span>
-                              <p className="text-sm text-gray-900">
+                              <p className="text-xs sm:text-sm text-gray-900">
                                 {associateData.emergencyContactRelationship}
                               </p>
                             </div>
                             <div>
-                              <span className="text-sm font-medium text-gray-500">
+                              <span className="text-xs sm:text-sm font-medium text-gray-500">
                                 Phone:
                               </span>
-                              <p className="text-sm text-gray-900">
+                              <p className="text-xs sm:text-sm text-gray-900">
                                 {associateData.emergencyContactTelephone}
                               </p>
                             </div>
                             {associateData.emergencyContactAlternativeTelephone && (
                               <div>
-                                <span className="text-sm font-medium text-gray-500">
+                                <span className="text-xs sm:text-sm font-medium text-gray-500">
                                   Alternative Phone:
                                 </span>
-                                <p className="text-sm text-gray-900">
+                                <p className="text-xs sm:text-sm text-gray-900">
                                   {
                                     associateData.emergencyContactAlternativeTelephone
                                   }
@@ -887,26 +927,26 @@ function AdminAssociateAddStep7Page() {
                   {/* Metrics Information Section */}
                   <div className="pt-6 border-t">
                     <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold text-gray-800 flex items-center">
-                        <ChartBarSquareIcon className="w-5 h-5 mr-2 text-orange-600" />
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
+                        <ChartBarSquareIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-orange-600" />
                         Metrics Information
                       </h3>
                       <Link
                         to="/admin/associates/add/step-6"
-                        className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+                        className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
                       >
-                        <PencilSquareIcon className="w-4 h-4 mr-1" />
+                        <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
                         Edit
                       </Link>
                     </div>
 
-                    <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2">
+                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
                         <div>
-                          <span className="text-sm font-medium text-gray-500">
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
                             Is Job Seeker:
                           </span>
-                          <p className="text-sm text-gray-900">
+                          <p className="text-xs sm:text-sm text-gray-900">
                             {associateData.isJobSeeker ===
                             ASSOCIATE_IS_JOB_SEEKER_YES
                               ? "Yes"
@@ -919,30 +959,30 @@ function AdminAssociateAddStep7Page() {
                           <>
                             {associateData.statusInCountry && (
                               <div>
-                                <span className="text-sm font-medium text-gray-500">
+                                <span className="text-xs sm:text-sm font-medium text-gray-500">
                                   Status in Country:
                                 </span>
-                                <p className="text-sm text-gray-900">
+                                <p className="text-xs sm:text-sm text-gray-900">
                                   {associateData.statusInCountry}
                                 </p>
                               </div>
                             )}
                             {associateData.maritalStatus && (
                               <div>
-                                <span className="text-sm font-medium text-gray-500">
+                                <span className="text-xs sm:text-sm font-medium text-gray-500">
                                   Marital Status:
                                 </span>
-                                <p className="text-sm text-gray-900">
+                                <p className="text-xs sm:text-sm text-gray-900">
                                   {associateData.maritalStatus}
                                 </p>
                               </div>
                             )}
                             {associateData.accomplishedEducation && (
                               <div>
-                                <span className="text-sm font-medium text-gray-500">
+                                <span className="text-xs sm:text-sm font-medium text-gray-500">
                                   Education Level:
                                 </span>
-                                <p className="text-sm text-gray-900">
+                                <p className="text-xs sm:text-sm text-gray-900">
                                   {associateData.accomplishedEducation}
                                 </p>
                               </div>
@@ -951,38 +991,38 @@ function AdminAssociateAddStep7Page() {
                         )}
 
                         <div>
-                          <span className="text-sm font-medium text-gray-500">
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
                             Gender:
                           </span>
-                          <p className="text-sm text-gray-900">
+                          <p className="text-xs sm:text-sm text-gray-900">
                             {getGenderLabel(associateData.gender)}
                           </p>
                         </div>
                         {associateData.gender === 1 && (
                           <div>
-                            <span className="text-sm font-medium text-gray-500">
+                            <span className="text-xs sm:text-sm font-medium text-gray-500">
                               Gender (Other):
                             </span>
-                            <p className="text-sm text-gray-900">
+                            <p className="text-xs sm:text-sm text-gray-900">
                               {associateData.genderOther}
                             </p>
                           </div>
                         )}
 
                         <div>
-                          <span className="text-sm font-medium text-gray-500">
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
                             Birth Date:
                           </span>
-                          <p className="text-sm text-gray-900">
+                          <p className="text-xs sm:text-sm text-gray-900">
                             {associateData.birthDate}
                           </p>
                         </div>
 
                         <div>
-                          <span className="text-sm font-medium text-gray-500">
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
                             Join Date:
                           </span>
-                          <p className="text-sm text-gray-900">
+                          <p className="text-xs sm:text-sm text-gray-900">
                             {associateData.joinDate}
                           </p>
                         </div>
@@ -1011,10 +1051,10 @@ function AdminAssociateAddStep7Page() {
 
                       {associateData.additionalComment && (
                         <div className="mt-3">
-                          <span className="text-sm font-medium text-gray-500">
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
                             Additional Comments:
                           </span>
-                          <p className="text-sm text-gray-900 mt-1">
+                          <p className="text-xs sm:text-sm text-gray-900 mt-1">
                             {associateData.additionalComment}
                           </p>
                         </div>
@@ -1024,7 +1064,7 @@ function AdminAssociateAddStep7Page() {
                 </div>
 
                 {/* Form Actions */}
-                <div className="mt-8 flex gap-3">
+                <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3">
                   <Link
                     to="/admin/associates/add/step-6"
                     className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
@@ -1037,7 +1077,7 @@ function AdminAssociateAddStep7Page() {
                     disabled={isLoading}
                     className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
                   >
-                    <CheckCircleIcon className="w-5 h-5 mr-2" />
+                    <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
                     Submit
                   </button>
                 </div>

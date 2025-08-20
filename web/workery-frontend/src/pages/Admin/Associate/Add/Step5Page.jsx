@@ -339,68 +339,76 @@ function AdminAssociateAddStep5Page() {
           </h1>
         </div>
 
-        {/* Wizard Steps */}
-        <div className="mb-6">
-          <div className="flex items-center justify-center overflow-x-auto">
+        {/* Wizard Steps - Responsive */}
+        <div className="mb-6 overflow-x-auto">
+          <div className="flex items-center justify-start xl:justify-center min-w-max px-2">
             <div className="flex items-center">
               {/* Steps 1-4 Complete */}
               {[1, 2, 3, 4].map((step, index) => (
                 <React.Fragment key={step}>
                   <div className="flex items-center">
-                    <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
-                      <CheckIcon className="w-6 h-6 text-white" />
+                    <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full">
+                      <CheckIcon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                     </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-900">
+                    <div className="ml-2 sm:ml-3">
+                      <p className="text-xs sm:text-sm font-medium text-gray-900">
                         {step === 1 && "Search"}
                         {step === 2 && "Type"}
                         {step === 3 && "Contact"}
                         {step === 4 && "Address"}
                       </p>
-                      <p className="text-xs text-gray-500">Complete</p>
+                      <p className="text-xs text-gray-500 hidden lg:block">
+                        Complete
+                      </p>
                     </div>
                   </div>
                   {index < 6 && (
-                    <div className="mx-2 w-12 h-0.5 bg-green-600"></div>
+                    <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-green-600"></div>
                   )}
                 </React.Fragment>
               ))}
 
               {/* Step 5 - Active */}
               <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
-                  <span className="text-white font-semibold">5</span>
+                <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-full">
+                  <span className="text-white font-semibold text-sm sm:text-base">
+                    5
+                  </span>
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">Account</p>
-                  <p className="text-xs text-gray-500">Settings</p>
+                <div className="ml-2 sm:ml-3">
+                  <p className="text-xs sm:text-sm font-medium text-gray-900">
+                    Account
+                  </p>
+                  <p className="text-xs text-gray-500 hidden lg:block">
+                    Settings
+                  </p>
                 </div>
               </div>
 
-              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+              <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-gray-300"></div>
 
               {/* Steps 6-7 Inactive */}
               {[6, 7].map((step, index) => (
                 <React.Fragment key={step}>
                   <div className="flex items-center">
-                    <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
-                      <span className="text-gray-600 font-semibold">
+                    <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full">
+                      <span className="text-gray-600 font-semibold text-sm sm:text-base">
                         {step}
                       </span>
                     </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-500">
+                    <div className="ml-2 sm:ml-3">
+                      <p className="text-xs sm:text-sm font-medium text-gray-500">
                         {step === 6 && "Metrics"}
                         {step === 7 && "Comments"}
                       </p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-gray-400 hidden lg:block">
                         {step === 6 && "Performance"}
                         {step === 7 && "Notes"}
                       </p>
                     </div>
                   </div>
                   {index === 0 && (
-                    <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+                    <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-gray-300"></div>
                   )}
                 </React.Fragment>
               ))}
@@ -426,14 +434,14 @@ function AdminAssociateAddStep5Page() {
 
         {/* Main Content */}
         <div className="bg-white shadow-sm rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900 flex items-center">
               <ClipboardDocumentIcon className="w-5 h-5 mr-2" />
               Account Information
             </h2>
           </div>
 
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -444,7 +452,7 @@ function AdminAssociateAddStep5Page() {
                 <div className="space-y-8">
                   {/* Skill Sets Section */}
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4 flex items-center">
                       <AcademicCapIcon className="w-5 h-5 mr-2 text-blue-600" />
                       Skill Sets
                     </h3>
@@ -460,7 +468,7 @@ function AdminAssociateAddStep5Page() {
 
                   {/* Insurance Requirements Section */}
                   <div className="pt-6 border-t">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4 flex items-center">
                       <ShieldCheckIcon className="w-5 h-5 mr-2 text-green-600" />
                       Insurance Requirements
                     </h3>
@@ -476,7 +484,7 @@ function AdminAssociateAddStep5Page() {
 
                   {/* Financial Information */}
                   <div className="pt-6 border-t">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4 flex items-center">
                       <CurrencyDollarIcon className="w-5 h-5 mr-2 text-green-600" />
                       Financial Information
                     </h3>
@@ -556,7 +564,7 @@ function AdminAssociateAddStep5Page() {
 
                   {/* Important Dates */}
                   <div className="pt-6 border-t">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4 flex items-center">
                       <CalendarDaysIcon className="w-5 h-5 mr-2 text-purple-600" />
                       Important Dates
                     </h3>
@@ -644,7 +652,7 @@ function AdminAssociateAddStep5Page() {
                         />
                       </div>
 
-                      <div>
+                      <div className="md:col-span-2 lg:col-span-1">
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                           WSIB Insurance Date (Optional)
                         </label>
@@ -660,7 +668,7 @@ function AdminAssociateAddStep5Page() {
 
                   {/* Licenses & Certifications */}
                   <div className="pt-6 border-t">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4 flex items-center">
                       <IdentificationIcon className="w-5 h-5 mr-2 text-orange-600" />
                       Licenses & Certifications
                     </h3>
@@ -692,7 +700,7 @@ function AdminAssociateAddStep5Page() {
                         />
                       </div>
 
-                      <div>
+                      <div className="md:col-span-2 lg:col-span-1">
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                           Driver's License Class (Optional)
                         </label>
@@ -725,7 +733,7 @@ function AdminAssociateAddStep5Page() {
 
                   {/* Emergency Contact */}
                   <div className="pt-6 border-t">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4 flex items-center">
                       <UserGroupIcon className="w-5 h-5 mr-2 text-red-600" />
                       Emergency Contact
                     </h3>
@@ -834,7 +842,7 @@ function AdminAssociateAddStep5Page() {
 
                   {/* System Settings */}
                   <div className="pt-6 border-t">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4 flex items-center">
                       <ComputerDesktopIcon className="w-5 h-5 mr-2 text-indigo-600" />
                       System Settings
                     </h3>
@@ -893,7 +901,7 @@ function AdminAssociateAddStep5Page() {
 
                   {/* Login Credentials */}
                   <div className="pt-6 border-t">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4 flex items-center">
                       <LockClosedIcon className="w-5 h-5 mr-2 text-gray-600" />
                       Login Credentials
                     </h3>
@@ -953,7 +961,7 @@ function AdminAssociateAddStep5Page() {
                 </div>
 
                 {/* Form Actions */}
-                <div className="mt-8 flex gap-3">
+                <div className="mt-8 flex flex-col sm:flex-row gap-3">
                   <Link
                     to="/admin/associates/add/step-4"
                     className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"

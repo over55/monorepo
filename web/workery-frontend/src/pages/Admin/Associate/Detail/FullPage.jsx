@@ -40,6 +40,7 @@ import {
   ClockIcon,
   MapIcon,
   HashtagIcon,
+  Bars3Icon,
 } from "@heroicons/react/24/outline";
 import {
   useAssociateManager,
@@ -138,6 +139,7 @@ function AdminAssociateDetailFullPage() {
   const [associate, setAssociate] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Handle unauthorized access
   const onUnauthorized = () => {
@@ -215,36 +217,44 @@ function AdminAssociateDetailFullPage() {
     return items.map((item) => item.id || item.value).filter(Boolean);
   };
 
-  // Section Component
+  // Section Component - Improved for responsiveness
   const DetailSection = ({ title, icon: Icon, children }) => (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-      <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 rounded-t-lg">
-        <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-          <Icon className="w-5 h-5 mr-2 text-blue-600" />
-          {title}
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-4 sm:mb-6">
+      <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-b border-gray-200 rounded-t-lg">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600 flex-shrink-0" />
+          <span className="truncate">{title}</span>
         </h3>
       </div>
-      <div className="p-6">
-        <dl className="grid grid-cols-1 md:grid-cols-2 gap-6">{children}</dl>
+      <div className="p-4 sm:p-6">
+        <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          {children}
+        </dl>
       </div>
     </div>
   );
 
-  // Detail Field Component
+  // Detail Field Component - Improved for responsiveness
   const DetailField = ({ label, value, fullWidth = false }) => (
-    <div className={fullWidth ? "md:col-span-2" : ""}>
-      <dt className="text-sm font-medium text-gray-600 mb-1">{label}</dt>
-      <dd className="text-base text-gray-900">{value || "-"}</dd>
+    <div className={fullWidth ? "lg:col-span-2" : ""}>
+      <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+        {label}
+      </dt>
+      <dd className="text-sm sm:text-base text-gray-900 break-words">
+        {value || "-"}
+      </dd>
     </div>
   );
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading associate details...</p>
+            <p className="mt-4 text-sm sm:text-base text-gray-600">
+              Loading associate details...
+            </p>
           </div>
         </div>
       </div>
@@ -252,28 +262,32 @@ function AdminAssociateDetailFullPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Breadcrumb */}
-      <nav className="flex mb-6" aria-label="Breadcrumb">
-        <ol className="inline-flex items-center space-x-1 md:space-x-3">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+      {/* Responsive Breadcrumb */}
+      <nav
+        className="flex mb-4 sm:mb-6 overflow-x-auto"
+        aria-label="Breadcrumb"
+      >
+        <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
           <li className="inline-flex items-center">
             <Link
               to="/admin/dashboard"
-              className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+              className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
             >
-              <ChartBarIcon className="w-4 h-4 mr-2" />
-              Dashboard
+              <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+              <span className="hidden sm:inline">Dashboard</span>
+              <span className="sm:hidden">Dash</span>
             </Link>
           </li>
           <li>
             <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
+              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
               <Link
                 to="/admin/associates"
-                className="text-sm font-medium text-gray-700 hover:text-blue-600"
+                className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
               >
                 <span className="inline-flex items-center">
-                  <UserGroupIcon className="w-4 h-4 mr-2" />
+                  <UserGroupIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                   Associates
                 </span>
               </Link>
@@ -281,9 +295,9 @@ function AdminAssociateDetailFullPage() {
           </li>
           <li aria-current="page">
             <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <span className="text-sm font-medium text-gray-500 inline-flex items-center">
-                <InformationCircleIcon className="w-4 h-4 mr-2" />
+              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
+              <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
+                <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                 Detail
               </span>
             </div>
@@ -291,38 +305,38 @@ function AdminAssociateDetailFullPage() {
         </ol>
       </nav>
 
-      {/* Page Title */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center">
+      {/* Page Title - Responsive */}
+      <div className="mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-              <UserGroupIcon className="w-8 h-8 mr-3 text-blue-600" />
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+              <UserGroupIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
               Associate
             </h1>
-            <p className="mt-1 text-sm text-gray-600 flex items-center">
-              <InformationCircleIcon className="w-4 h-4 mr-1" />
+            <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+              <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
               View complete associate information
             </p>
           </div>
         </div>
       </div>
 
-      {/* Status Alerts */}
+      {/* Status Alerts - Responsive */}
       {associate && associate.status === 2 && (
-        <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg flex items-center">
-          <ArchiveBoxIcon className="w-5 h-5 mr-2" />
+        <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center text-sm sm:text-base">
+          <ArchiveBoxIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
           This associate is archived
         </div>
       )}
 
-      {/* Error Display */}
+      {/* Error Display - Responsive */}
       {error && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base">
           <div className="flex justify-between items-center">
-            <span>{error}</span>
+            <span className="break-words">{error}</span>
             <button
               onClick={() => setError(null)}
-              className="text-red-700 hover:text-red-900"
+              className="text-red-700 hover:text-red-900 ml-2 flex-shrink-0"
             >
               ×
             </button>
@@ -334,30 +348,36 @@ function AdminAssociateDetailFullPage() {
       <div className="bg-white shadow-sm rounded-lg">
         {associate && (
           <>
-            {/* Header with Actions */}
-            <div className="px-6 py-5 border-b border-gray-200">
-              <div className="flex justify-between items-center flex-wrap gap-4">
-                <h2 className="text-2xl font-semibold text-gray-900 flex items-center">
-                  <ClipboardDocumentListIcon className="w-7 h-7 mr-2 text-blue-600" />
+            {/* Header with Actions - Responsive */}
+            <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 flex items-center">
+                  <ClipboardDocumentListIcon className="w-5 sm:w-7 h-5 sm:h-7 mr-2 text-blue-600 flex-shrink-0" />
                   Full Details
                 </h2>
-                <div className="flex gap-3">
-                  <Link to="/admin/associates">
-                    <button className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                      <ChevronLeftIcon className="w-5 h-5 mr-2" />
+                <div className="flex gap-2 sm:gap-3">
+                  <Link
+                    to="/admin/associates"
+                    className="flex-1 sm:flex-initial"
+                  >
+                    <button className="w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                      <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                       Back
                     </button>
                   </Link>
-                  <Link to={`/admin/associate/${aid}/edit`}>
+                  <Link
+                    to={`/admin/associate/${aid}/edit`}
+                    className="flex-1 sm:flex-initial"
+                  >
                     <button
                       disabled={associate.status === 2}
-                      className={`inline-flex items-center px-5 py-2.5 border rounded-lg text-base font-medium transition-colors ${
+                      className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
                         associate.status === 2
                           ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
                           : "border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100"
                       }`}
                     >
-                      <PencilSquareIcon className="w-5 h-5 mr-2" />
+                      <PencilSquareIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                       Edit
                     </button>
                   </Link>
@@ -365,48 +385,50 @@ function AdminAssociateDetailFullPage() {
               </div>
             </div>
 
-            {/* Tab Navigation */}
-            <div className="px-6 border-b border-gray-200">
-              <nav className="-mb-px flex space-x-8">
-                <Link
-                  to={`/admin/associate/${associate.id}`}
-                  className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                >
-                  Summary
-                </Link>
-                <div className="border-b-2 border-blue-600 py-4 px-1 text-base font-medium text-blue-600">
-                  Detail
-                </div>
-                <Link
-                  to={`/admin/associate/${associate.id}/orders`}
-                  className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                >
-                  Orders
-                </Link>
-                <Link
-                  to={`/admin/associate/${associate.id}/comments`}
-                  className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                >
-                  Comments
-                </Link>
-                <Link
-                  to={`/admin/associate/${associate.id}/attachments`}
-                  className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                >
-                  Attachments
-                </Link>
-                <Link
-                  to={`/admin/associate/${associate.id}/more`}
-                  className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center"
-                >
-                  More
-                  <EllipsisHorizontalIcon className="w-5 h-5 ml-1" />
-                </Link>
-              </nav>
+            {/* Tab Navigation - Responsive with horizontal scroll on mobile */}
+            <div className="border-b border-gray-200">
+              <div className="px-4 sm:px-6">
+                <nav className="-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide">
+                  <Link
+                    to={`/admin/associate/${associate.id}`}
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
+                  >
+                    Summary
+                  </Link>
+                  <div className="border-b-2 border-blue-600 py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-blue-600 whitespace-nowrap">
+                    Detail
+                  </div>
+                  <Link
+                    to={`/admin/associate/${associate.id}/orders`}
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
+                  >
+                    Orders
+                  </Link>
+                  <Link
+                    to={`/admin/associate/${associate.id}/comments`}
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
+                  >
+                    Comments
+                  </Link>
+                  <Link
+                    to={`/admin/associate/${associate.id}/attachments`}
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
+                  >
+                    Attachments
+                  </Link>
+                  <Link
+                    to={`/admin/associate/${associate.id}/more`}
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center whitespace-nowrap"
+                  >
+                    More
+                    <EllipsisHorizontalIcon className="w-4 sm:w-5 h-4 sm:h-5 ml-1" />
+                  </Link>
+                </nav>
+              </div>
             </div>
 
-            {/* Detail Sections */}
-            <div className="p-6">
+            {/* Detail Sections - Responsive */}
+            <div className="p-4 sm:p-6">
               {/* Personal Information */}
               <DetailSection title="Personal Information" icon={UserIcon}>
                 {/* First Row - Names */}
@@ -435,21 +457,21 @@ function AdminAssociateDetailFullPage() {
                 />
 
                 {/* Fourth Row - Type, Gender, Date of Birth */}
-                <div className="md:col-span-2">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="lg:col-span-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                     <div>
-                      <dt className="text-sm font-medium text-gray-600 mb-1">
+                      <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
                         Type
                       </dt>
-                      <dd className="text-base text-gray-900">
+                      <dd className="text-sm sm:text-base text-gray-900">
                         {ASSOCIATE_TYPE_OPTIONS[associate.type] || "Unknown"}
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-sm font-medium text-gray-600 mb-1">
+                      <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
                         Gender
                       </dt>
-                      <dd className="text-base text-gray-900">
+                      <dd className="text-sm sm:text-base text-gray-900">
                         {associate.gender ? (
                           <>
                             {GENDER_OPTIONS[associate.gender] || "Unknown"}
@@ -463,10 +485,10 @@ function AdminAssociateDetailFullPage() {
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-sm font-medium text-gray-600 mb-1">
+                      <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
                         Date of Birth
                       </dt>
-                      <dd className="text-base text-gray-900">
+                      <dd className="text-sm sm:text-base text-gray-900">
                         {formatDate(associate.birthDate)}
                       </dd>
                     </div>
@@ -503,7 +525,7 @@ function AdminAssociateDetailFullPage() {
                     associate.email ? (
                       <a
                         href={`mailto:${associate.email}`}
-                        className="text-blue-600 hover:text-blue-700"
+                        className="text-blue-600 hover:text-blue-700 break-all"
                       >
                         {associate.email}
                       </a>
@@ -517,12 +539,12 @@ function AdminAssociateDetailFullPage() {
                   value={
                     associate.isOkToEmail ? (
                       <span className="inline-flex items-center text-green-700">
-                        <CheckCircleIcon className="w-4 h-4 mr-1" />
+                        <CheckCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
                         Yes
                       </span>
                     ) : (
                       <span className="inline-flex items-center text-red-700">
-                        <XCircleIcon className="w-4 h-4 mr-1" />
+                        <XCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
                         No
                       </span>
                     )
@@ -563,12 +585,12 @@ function AdminAssociateDetailFullPage() {
                   value={
                     associate.isOkToText ? (
                       <span className="inline-flex items-center text-green-700">
-                        <CheckCircleIcon className="w-4 h-4 mr-1" />
+                        <CheckCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
                         Yes
                       </span>
                     ) : (
                       <span className="inline-flex items-center text-red-700">
-                        <XCircleIcon className="w-4 h-4 mr-1" />
+                        <XCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
                         No
                       </span>
                     )
@@ -586,7 +608,7 @@ function AdminAssociateDetailFullPage() {
                         href={associate.fullAddressUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-blue-600 hover:text-blue-700"
+                        className="text-blue-600 hover:text-blue-700 break-words"
                       >
                         {formatAddress(associate)}
                       </a>
@@ -673,7 +695,7 @@ function AdminAssociateDetailFullPage() {
                   label="Is active"
                   value={
                     <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      className={`inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         associate.status === 1
                           ? "bg-green-100 text-green-800"
                           : "bg-gray-100 text-gray-800"
@@ -802,7 +824,7 @@ function AdminAssociateDetailFullPage() {
               <DetailSection title="Internal Metrics" icon={ChartPieIcon}>
                 <div>
                   {associate.isHowDidYouHearAboutUsOther ? (
-                    <span className="text-base text-gray-900">
+                    <span className="text-sm sm:text-base text-gray-900">
                       {associate.howDidYouHearAboutUsOther}
                     </span>
                   ) : (
@@ -829,7 +851,7 @@ function AdminAssociateDetailFullPage() {
                 <DetailField
                   label="ID"
                   value={
-                    <span className="font-mono text-sm bg-gray-100 px-2 py-1 rounded">
+                    <span className="font-mono text-xs sm:text-sm bg-gray-100 px-1 sm:px-2 py-0.5 sm:py-1 rounded break-all">
                       {associate.publicId || associate.id || "-"}
                     </span>
                   }
@@ -846,7 +868,7 @@ function AdminAssociateDetailFullPage() {
                   label="Created from"
                   value={
                     associate.createdFromIpAddress && (
-                      <span className="font-mono text-sm">
+                      <span className="font-mono text-xs sm:text-sm break-all">
                         {associate.createdFromIpAddress}
                       </span>
                     )
@@ -864,7 +886,7 @@ function AdminAssociateDetailFullPage() {
                   label="Modified from"
                   value={
                     associate.modifiedFromIpAddress && (
-                      <span className="font-mono text-sm">
+                      <span className="font-mono text-xs sm:text-sm break-all">
                         {associate.modifiedFromIpAddress}
                       </span>
                     )
@@ -876,26 +898,29 @@ function AdminAssociateDetailFullPage() {
                 />
               </DetailSection>
 
-              {/* Action Buttons */}
-              <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
-                <Link to="/admin/associates">
-                  <button className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                    <ChevronLeftIcon className="w-5 h-5 mr-2" />
+              {/* Action Buttons - Responsive */}
+              <div className="flex flex-col sm:flex-row sm:justify-between items-stretch sm:items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 gap-3">
+                <Link to="/admin/associates" className="order-2 sm:order-1">
+                  <button className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                    <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                     Back to Associates
                   </button>
                 </Link>
 
-                <div className="flex gap-3">
-                  <Link to={`/admin/associate/${aid}/edit`}>
+                <div className="flex gap-2 sm:gap-3 order-1 sm:order-2">
+                  <Link
+                    to={`/admin/associate/${aid}/edit`}
+                    className="flex-1 sm:flex-initial"
+                  >
                     <button
                       disabled={associate.status === 2}
-                      className={`inline-flex items-center px-5 py-2.5 border rounded-lg text-base font-medium transition-colors ${
+                      className={`w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
                         associate.status === 2
                           ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
                           : "border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100"
                       }`}
                     >
-                      <PencilSquareIcon className="w-5 h-5 mr-2" />
+                      <PencilSquareIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                       Edit
                     </button>
                   </Link>
@@ -906,20 +931,20 @@ function AdminAssociateDetailFullPage() {
         )}
 
         {!associate && !loading && (
-          <div className="px-6 py-16 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
-              <UserGroupIcon className="w-8 h-8 text-gray-400" />
+          <div className="px-4 sm:px-6 py-8 sm:py-16 text-center">
+            <div className="inline-flex items-center justify-center w-12 sm:w-16 h-12 sm:h-16 bg-gray-100 rounded-full mb-4">
+              <UserGroupIcon className="w-6 sm:w-8 h-6 sm:h-8 text-gray-400" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
               Associate Not Found
             </h3>
-            <p className="text-gray-500 mb-6">
+            <p className="text-sm sm:text-base text-gray-500 mb-4 sm:mb-6">
               The associate you're looking for doesn't exist or you don't have
               permission to view it.
             </p>
             <Link to="/admin/associates">
-              <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-                <ChevronLeftIcon className="w-4 h-4 mr-2" />
+              <button className="inline-flex items-center px-3 sm:px-4 py-2 border border-transparent rounded-lg text-xs sm:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                <ChevronLeftIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
                 Back to Associates
               </button>
             </Link>
