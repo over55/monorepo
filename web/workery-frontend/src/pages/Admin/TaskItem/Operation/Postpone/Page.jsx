@@ -107,6 +107,7 @@ function AdminTaskItemPostponeOperationPage() {
     try {
       // Prepare payload
       const payload = {
+        task_id: tid,
         task_item_id: tid,
         reason: reason,
         reason_other: reason === 1 ? reasonOther : null,

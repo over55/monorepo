@@ -120,6 +120,7 @@ function AdminTaskItemCloseOperationPage() {
     try {
       // Prepare payload
       const payload = {
+        task_id: tid,
         task_item_id: tid,
         was_completed: wasCompleted,
         completion_date: wasCompleted === 1 ? completionDate : null,
