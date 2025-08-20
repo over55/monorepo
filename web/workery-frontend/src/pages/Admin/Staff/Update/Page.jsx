@@ -1,7 +1,7 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Staff/Update/Page.jsx
 
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   useStaffManager,
   useHowHearAboutUsItemManager,
@@ -11,10 +11,13 @@ import {
   TagsMultiSelect,
   VehicleTypesMultiSelect,
   HowHearAboutUsSelect,
+  SkillSetsMultiSelect,
+  InsuranceRequirementsMultiSelect,
 } from "../../../../components/Form";
 import {
-  RESIDENTIAL_STAFF_TYPE_OF_ID,
-  COMMERCIAL_STAFF_TYPE_OF_ID,
+  STAFF_TYPE_EXECUTIVE,
+  STAFF_TYPE_MANAGEMENT,
+  STAFF_TYPE_FRONTLINE,
   STAFF_PHONE_TYPE_OF_OPTIONS,
   STAFF_GENDER_OTHER,
 } from "../../../../constants/Staff";
@@ -38,14 +41,16 @@ function AdminStaffUpdatePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form Fields - Basic Info
-  const [staffType, setStaffType] = useState(RESIDENTIAL_STAFF_TYPE_OF_ID);
+  const [staffType, setStaffType] = useState(STAFF_TYPE_FRONTLINE);
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [phoneType, setPhoneType] = useState(0);
+  const [phoneExtension, setPhoneExtension] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [otherPhone, setOtherPhone] = useState("");
   const [otherPhoneType, setOtherPhoneType] = useState(0);
+  const [otherPhoneExtension, setOtherPhoneExtension] = useState("");
   const [isOkToText, setIsOkToText] = useState(false);
   const [isOkToEmail, setIsOkToEmail] = useState(false);
 
@@ -71,6 +76,8 @@ function AdminStaffUpdatePage() {
   const [policeCheck, setPoliceCheck] = useState("");
   const [driversLicenseClass, setDriversLicenseClass] = useState("");
   const [vehicleTypes, setVehicleTypes] = useState([]);
+  const [skillSets, setSkillSets] = useState([]);
+  const [insuranceRequirements, setInsuranceRequirements] = useState([]);
   const [emergencyContactName, setEmergencyContactName] = useState("");
   const [emergencyContactRelationship, setEmergencyContactRelationship] =
     useState("");
@@ -119,14 +126,16 @@ function AdminStaffUpdatePage() {
         if (!mounted) return;
 
         // Populate form fields
-        setStaffType(staffData.type || RESIDENTIAL_STAFF_TYPE_OF_ID);
+        setStaffType(staffData.type || STAFF_TYPE_FRONTLINE);
         setEmail(staffData.email || "");
         setPhone(staffData.phone || "");
         setPhoneType(staffData.phoneType || 0);
+        setPhoneExtension(staffData.phoneExtension || "");
         setFirstName(staffData.firstName || "");
         setLastName(staffData.lastName || "");
         setOtherPhone(staffData.otherPhone || "");
         setOtherPhoneType(staffData.otherPhoneType || 0);
+        setOtherPhoneExtension(staffData.otherPhoneExtension || "");
         setIsOkToText(staffData.isOkToText || false);
         setIsOkToEmail(staffData.isOkToEmail || false);
 
@@ -149,13 +158,37 @@ function AdminStaffUpdatePage() {
 
         // Additional fields
         setLimitSpecial(staffData.limitSpecial || "");
-        setPoliceCheck(staffData.policeCheck || "");
         setDriversLicenseClass(staffData.driversLicenseClass || "");
+
+        // Police Check - Format date if exists
+        if (staffData.policeCheck) {
+          const date = new Date(staffData.policeCheck);
+          if (!isNaN(date.getTime())) {
+            setPoliceCheck(date.toISOString().split("T")[0]);
+          }
+        }
 
         // Vehicle Types - Extract IDs from array of objects
         if (staffData.vehicleTypes && Array.isArray(staffData.vehicleTypes)) {
           const vtIds = staffData.vehicleTypes.map((vt) => vt.id || vt);
           setVehicleTypes(vtIds);
+        }
+
+        // Skill Sets - Extract IDs from array of objects
+        if (staffData.skillSets && Array.isArray(staffData.skillSets)) {
+          const ssIds = staffData.skillSets.map((ss) => ss.id || ss);
+          setSkillSets(ssIds);
+        }
+
+        // Insurance Requirements - Extract IDs from array of objects
+        if (
+          staffData.insuranceRequirements &&
+          Array.isArray(staffData.insuranceRequirements)
+        ) {
+          const irIds = staffData.insuranceRequirements.map(
+            (ir) => ir.id || ir,
+          );
+          setInsuranceRequirements(irIds);
         }
 
         setEmergencyContactName(staffData.emergencyContactName || "");
@@ -177,7 +210,7 @@ function AdminStaffUpdatePage() {
 
         setHowDidYouHearAboutUsID(staffData.howDidYouHearAboutUsID || "");
         setIsHowDidYouHearAboutUsOther(
-          staffData.howDidYouHearAboutUsText === "Other",
+          staffData.isHowDidYouHearAboutUsOther || false,
         );
         setHowDidYouHearAboutUsOther(staffData.howDidYouHearAboutUsOther || "");
 
@@ -235,8 +268,10 @@ function AdminStaffUpdatePage() {
         email,
         phone,
         phoneType: parseInt(phoneType),
+        phoneExtension,
         otherPhone,
         otherPhoneType: parseInt(otherPhoneType),
+        otherPhoneExtension,
         isOkToText,
         isOkToEmail,
         postalCode,
@@ -255,9 +290,11 @@ function AdminStaffUpdatePage() {
         shippingAddressLine2,
         shippingPostalCode,
         limitSpecial,
-        policeCheck,
+        policeCheck: policeCheck || null,
         driversLicenseClass,
         vehicleTypes: vehicleTypes || [],
+        skillSets: skillSets || [],
+        insuranceRequirements: insuranceRequirements || [],
         emergencyContactName,
         emergencyContactRelationship,
         emergencyContactTelephone,
@@ -357,26 +394,16 @@ function AdminStaffUpdatePage() {
           <div style={{ marginBottom: "15px" }}>
             <label>
               Type: <span style={{ color: "red" }}>*</span>
-              <div>
-                <label>
-                  <input
-                    type="radio"
-                    value={RESIDENTIAL_STAFF_TYPE_OF_ID}
-                    checked={staffType === RESIDENTIAL_STAFF_TYPE_OF_ID}
-                    onChange={(e) => setStaffType(parseInt(e.target.value))}
-                  />
-                  Residential
-                </label>
-                <label style={{ marginLeft: "15px" }}>
-                  <input
-                    type="radio"
-                    value={COMMERCIAL_STAFF_TYPE_OF_ID}
-                    checked={staffType === COMMERCIAL_STAFF_TYPE_OF_ID}
-                    onChange={(e) => setStaffType(parseInt(e.target.value))}
-                  />
-                  Commercial
-                </label>
-              </div>
+              <select
+                value={staffType}
+                onChange={(e) => setStaffType(parseInt(e.target.value))}
+                style={{ display: "block", width: "100%", padding: "5px" }}
+                required
+              >
+                <option value={STAFF_TYPE_EXECUTIVE}>Executive</option>
+                <option value={STAFF_TYPE_MANAGEMENT}>Management</option>
+                <option value={STAFF_TYPE_FRONTLINE}>Frontline</option>
+              </select>
             </label>
             {errors.type && <div style={{ color: "red" }}>{errors.type}</div>}
           </div>
@@ -454,11 +481,12 @@ function AdminStaffUpdatePage() {
 
           <div style={{ marginBottom: "15px" }}>
             <label>
-              Phone Type:
+              Phone Type: <span style={{ color: "red" }}>*</span>
               <select
                 value={phoneType}
                 onChange={(e) => setPhoneType(parseInt(e.target.value))}
                 style={{ display: "block", width: "100%", padding: "5px" }}
+                required
               >
                 <option value={0}>Please select</option>
                 {STAFF_PHONE_TYPE_OF_OPTIONS.map((opt) => (
@@ -467,6 +495,21 @@ function AdminStaffUpdatePage() {
                   </option>
                 ))}
               </select>
+            </label>
+            {errors.phoneType && (
+              <div style={{ color: "red" }}>{errors.phoneType}</div>
+            )}
+          </div>
+
+          <div style={{ marginBottom: "15px" }}>
+            <label>
+              Phone Extension (Optional):
+              <input
+                type="text"
+                value={phoneExtension}
+                onChange={(e) => setPhoneExtension(e.target.value)}
+                style={{ display: "block", width: "100%", padding: "5px" }}
+              />
             </label>
           </div>
 
@@ -510,6 +553,18 @@ function AdminStaffUpdatePage() {
               </select>
             </label>
           </div>
+
+          <div style={{ marginBottom: "15px" }}>
+            <label>
+              Other Phone Extension (Optional):
+              <input
+                type="text"
+                value={otherPhoneExtension}
+                onChange={(e) => setOtherPhoneExtension(e.target.value)}
+                style={{ display: "block", width: "100%", padding: "5px" }}
+              />
+            </label>
+          </div>
         </fieldset>
 
         {/* Address Information */}
@@ -547,10 +602,13 @@ function AdminStaffUpdatePage() {
                     value={country}
                     onChange={(e) => setCountry(e.target.value)}
                     style={{ display: "block", width: "100%", padding: "5px" }}
-                    placeholder="e.g., CA"
+                    placeholder="e.g., Canada"
                     required
                   />
                 </label>
+                {errors.country && (
+                  <div style={{ color: "red" }}>{errors.country}</div>
+                )}
               </div>
 
               <div style={{ marginBottom: "15px" }}>
@@ -565,6 +623,9 @@ function AdminStaffUpdatePage() {
                     required
                   />
                 </label>
+                {errors.region && (
+                  <div style={{ color: "red" }}>{errors.region}</div>
+                )}
               </div>
 
               <div style={{ marginBottom: "15px" }}>
@@ -578,6 +639,9 @@ function AdminStaffUpdatePage() {
                     required
                   />
                 </label>
+                {errors.city && (
+                  <div style={{ color: "red" }}>{errors.city}</div>
+                )}
               </div>
 
               <div style={{ marginBottom: "15px" }}>
@@ -591,6 +655,9 @@ function AdminStaffUpdatePage() {
                     required
                   />
                 </label>
+                {errors.addressLine1 && (
+                  <div style={{ color: "red" }}>{errors.addressLine1}</div>
+                )}
               </div>
 
               <div style={{ marginBottom: "15px" }}>
@@ -616,6 +683,9 @@ function AdminStaffUpdatePage() {
                     required
                   />
                 </label>
+                {errors.postalCode && (
+                  <div style={{ color: "red" }}>{errors.postalCode}</div>
+                )}
               </div>
             </div>
 
@@ -625,7 +695,7 @@ function AdminStaffUpdatePage() {
 
                 <div style={{ marginBottom: "15px" }}>
                   <label>
-                    Name:
+                    Name: <span style={{ color: "red" }}>*</span>
                     <input
                       type="text"
                       value={shippingName}
@@ -635,13 +705,17 @@ function AdminStaffUpdatePage() {
                         width: "100%",
                         padding: "5px",
                       }}
+                      required={hasShippingAddress}
                     />
                   </label>
+                  {errors.shippingName && (
+                    <div style={{ color: "red" }}>{errors.shippingName}</div>
+                  )}
                 </div>
 
                 <div style={{ marginBottom: "15px" }}>
                   <label>
-                    Phone:
+                    Phone: <span style={{ color: "red" }}>*</span>
                     <input
                       type="tel"
                       value={shippingPhone}
@@ -651,13 +725,17 @@ function AdminStaffUpdatePage() {
                         width: "100%",
                         padding: "5px",
                       }}
+                      required={hasShippingAddress}
                     />
                   </label>
+                  {errors.shippingPhone && (
+                    <div style={{ color: "red" }}>{errors.shippingPhone}</div>
+                  )}
                 </div>
 
                 <div style={{ marginBottom: "15px" }}>
                   <label>
-                    Country:
+                    Country: <span style={{ color: "red" }}>*</span>
                     <input
                       type="text"
                       value={shippingCountry}
@@ -667,13 +745,17 @@ function AdminStaffUpdatePage() {
                         width: "100%",
                         padding: "5px",
                       }}
+                      required={hasShippingAddress}
                     />
                   </label>
+                  {errors.shippingCountry && (
+                    <div style={{ color: "red" }}>{errors.shippingCountry}</div>
+                  )}
                 </div>
 
                 <div style={{ marginBottom: "15px" }}>
                   <label>
-                    Province/State:
+                    Province/State: <span style={{ color: "red" }}>*</span>
                     <input
                       type="text"
                       value={shippingRegion}
@@ -683,13 +765,17 @@ function AdminStaffUpdatePage() {
                         width: "100%",
                         padding: "5px",
                       }}
+                      required={hasShippingAddress}
                     />
                   </label>
+                  {errors.shippingRegion && (
+                    <div style={{ color: "red" }}>{errors.shippingRegion}</div>
+                  )}
                 </div>
 
                 <div style={{ marginBottom: "15px" }}>
                   <label>
-                    City:
+                    City: <span style={{ color: "red" }}>*</span>
                     <input
                       type="text"
                       value={shippingCity}
@@ -699,13 +785,17 @@ function AdminStaffUpdatePage() {
                         width: "100%",
                         padding: "5px",
                       }}
+                      required={hasShippingAddress}
                     />
                   </label>
+                  {errors.shippingCity && (
+                    <div style={{ color: "red" }}>{errors.shippingCity}</div>
+                  )}
                 </div>
 
                 <div style={{ marginBottom: "15px" }}>
                   <label>
-                    Address Line 1:
+                    Address Line 1: <span style={{ color: "red" }}>*</span>
                     <input
                       type="text"
                       value={shippingAddressLine1}
@@ -715,13 +805,19 @@ function AdminStaffUpdatePage() {
                         width: "100%",
                         padding: "5px",
                       }}
+                      required={hasShippingAddress}
                     />
                   </label>
+                  {errors.shippingAddressLine1 && (
+                    <div style={{ color: "red" }}>
+                      {errors.shippingAddressLine1}
+                    </div>
+                  )}
                 </div>
 
                 <div style={{ marginBottom: "15px" }}>
                   <label>
-                    Address Line 2:
+                    Address Line 2 (Optional):
                     <input
                       type="text"
                       value={shippingAddressLine2}
@@ -737,7 +833,7 @@ function AdminStaffUpdatePage() {
 
                 <div style={{ marginBottom: "15px" }}>
                   <label>
-                    Postal Code:
+                    Postal Code: <span style={{ color: "red" }}>*</span>
                     <input
                       type="text"
                       value={shippingPostalCode}
@@ -747,8 +843,14 @@ function AdminStaffUpdatePage() {
                         width: "100%",
                         padding: "5px",
                       }}
+                      required={hasShippingAddress}
                     />
                   </label>
+                  {errors.shippingPostalCode && (
+                    <div style={{ color: "red" }}>
+                      {errors.shippingPostalCode}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -818,6 +920,34 @@ function AdminStaffUpdatePage() {
               onUnauthorized={onUnauthorized}
             />
           </div>
+
+          {/* Skill Sets using the reusable component */}
+          <div style={{ marginBottom: "15px" }}>
+            <SkillSetsMultiSelect
+              value={skillSets}
+              onChange={(value) => setSkillSets(value)}
+              error={errors.skillSets}
+              required={false}
+              label="Skill Sets (Optional)"
+              placeholder="Select skill sets..."
+              helperText="Select the skill sets for this staff member"
+              onUnauthorized={onUnauthorized}
+            />
+          </div>
+
+          {/* Insurance Requirements using the reusable component */}
+          <div style={{ marginBottom: "15px" }}>
+            <InsuranceRequirementsMultiSelect
+              value={insuranceRequirements}
+              onChange={(value) => setInsuranceRequirements(value)}
+              error={errors.insuranceRequirements}
+              required={false}
+              label="Insurance Requirements (Optional)"
+              placeholder="Select insurance requirements..."
+              helperText="Select the insurance requirements for this staff member"
+              onUnauthorized={onUnauthorized}
+            />
+          </div>
         </fieldset>
 
         {/* Emergency Contact */}
@@ -834,19 +964,23 @@ function AdminStaffUpdatePage() {
 
           <div style={{ marginBottom: "15px" }}>
             <label>
-              Contact Name:
+              Contact Name: <span style={{ color: "red" }}>*</span>
               <input
                 type="text"
                 value={emergencyContactName}
                 onChange={(e) => setEmergencyContactName(e.target.value)}
                 style={{ display: "block", width: "100%", padding: "5px" }}
+                required
               />
             </label>
+            {errors.emergencyContactName && (
+              <div style={{ color: "red" }}>{errors.emergencyContactName}</div>
+            )}
           </div>
 
           <div style={{ marginBottom: "15px" }}>
             <label>
-              Contact Relationship:
+              Contact Relationship: <span style={{ color: "red" }}>*</span>
               <input
                 type="text"
                 value={emergencyContactRelationship}
@@ -854,20 +988,32 @@ function AdminStaffUpdatePage() {
                   setEmergencyContactRelationship(e.target.value)
                 }
                 style={{ display: "block", width: "100%", padding: "5px" }}
+                required
               />
             </label>
+            {errors.emergencyContactRelationship && (
+              <div style={{ color: "red" }}>
+                {errors.emergencyContactRelationship}
+              </div>
+            )}
           </div>
 
           <div style={{ marginBottom: "15px" }}>
             <label>
-              Contact Telephone:
+              Contact Telephone: <span style={{ color: "red" }}>*</span>
               <input
                 type="tel"
                 value={emergencyContactTelephone}
                 onChange={(e) => setEmergencyContactTelephone(e.target.value)}
                 style={{ display: "block", width: "100%", padding: "5px" }}
+                required
               />
             </label>
+            {errors.emergencyContactTelephone && (
+              <div style={{ color: "red" }}>
+                {errors.emergencyContactTelephone}
+              </div>
+            )}
           </div>
 
           <div style={{ marginBottom: "15px" }}>
@@ -938,6 +1084,11 @@ function AdminStaffUpdatePage() {
                   required={isHowDidYouHearAboutUsOther}
                 />
               </label>
+              {errors.howDidYouHearAboutUsOther && (
+                <div style={{ color: "red" }}>
+                  {errors.howDidYouHearAboutUsOther}
+                </div>
+              )}
             </div>
           )}
 
@@ -971,6 +1122,9 @@ function AdminStaffUpdatePage() {
                   required={gender === STAFF_GENDER_OTHER}
                 />
               </label>
+              {errors.genderOther && (
+                <div style={{ color: "red" }}>{errors.genderOther}</div>
+              )}
             </div>
           )}
 
@@ -1028,7 +1182,7 @@ function AdminStaffUpdatePage() {
 
           <div style={{ marginBottom: "15px" }}>
             <label>
-              Preferred Language:
+              Preferred Language: <span style={{ color: "red" }}>*</span>
               <div>
                 <label>
                   <input
@@ -1050,6 +1204,9 @@ function AdminStaffUpdatePage() {
                 </label>
               </div>
             </label>
+            {errors.preferredLanguage && (
+              <div style={{ color: "red" }}>{errors.preferredLanguage}</div>
+            )}
           </div>
 
           <div style={{ marginBottom: "15px" }}>
