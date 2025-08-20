@@ -1,7 +1,7 @@
 // File Path: web/workery-frontend/src/pages/Admin/Setting/NOC/Search/Page.jsx
 
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import {
   MagnifyingGlassIcon,
   AcademicCapIcon,
@@ -79,20 +79,51 @@ function SettingNOCSearchPage() {
   };
 
   useEffect(() => {
+    // Scroll to top when component mounts
+    window.scrollTo(0, 0);
+
     // Reset loading state on mount
     setIsFetching(false);
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumb */}
-        <nav className="flex mb-8" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+    <div
+      className="min-h-screen bg-gray-50"
+      style={{
+        minHeight: "100vh",
+        minHeight: "100dvh",
+        paddingBottom: "env(keyboard-inset-height, 0px)",
+      }}
+    >
+      <div
+        className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8"
+        style={{
+          paddingBottom:
+            "max(1rem, env(safe-area-inset-bottom), env(keyboard-inset-height, 0px))",
+          paddingLeft: "max(0.75rem, env(safe-area-inset-left))",
+          paddingRight: "max(0.75rem, env(safe-area-inset-right))",
+        }}
+      >
+        {/* Breadcrumb - iOS & Android Optimized */}
+        <nav
+          className="flex mb-4 sm:mb-6 lg:mb-8 overflow-x-auto -webkit-overflow-scrolling-touch"
+          aria-label="Breadcrumb"
+          style={{
+            WebkitOverflowScrolling: "touch",
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+          }}
+        >
+          <ol className="inline-flex items-center space-x-1 md:space-x-3 whitespace-nowrap">
             <li className="inline-flex items-center">
               <button
                 onClick={() => navigate("/admin/dashboard")}
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-indigo-600"
+                className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors duration-200 min-h-[48px] px-2 py-2 rounded-md touch-manipulation"
+                style={{
+                  WebkitTapHighlightColor: "transparent",
+                  minHeight: "48px",
+                  touchAction: "manipulation",
+                }}
               >
                 Dashboard
               </button>
@@ -116,7 +147,12 @@ function SettingNOCSearchPage() {
                 </svg>
                 <button
                   onClick={() => navigate("/admin/settings")}
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-indigo-600 md:ml-2"
+                  className="ml-1 text-xs sm:text-sm font-medium text-gray-700 hover:text-indigo-600 md:ml-2 transition-colors duration-200 min-h-[48px] px-2 py-2 rounded-md touch-manipulation"
+                  style={{
+                    WebkitTapHighlightColor: "transparent",
+                    minHeight: "48px",
+                    touchAction: "manipulation",
+                  }}
                 >
                   Settings
                 </button>
@@ -139,7 +175,7 @@ function SettingNOCSearchPage() {
                     d="m1 9 4-4-4-4"
                   />
                 </svg>
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">
+                <span className="ml-1 text-xs sm:text-sm font-medium text-gray-500 md:ml-2">
                   NOC Search
                 </span>
               </div>
@@ -147,70 +183,88 @@ function SettingNOCSearchPage() {
           </ol>
         </nav>
 
-        {/* Header Section */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div>
-              <div className="flex items-center">
-                <AcademicCapIcon className="h-8 w-8 text-indigo-600 mr-3" />
-                <h1 className="text-3xl font-bold text-gray-900">
-                  National Occupational Classification
-                </h1>
+        {/* Header Section - Improved mobile layout */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col space-y-4 lg:flex-row lg:items-start lg:justify-between lg:space-y-0">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start">
+                <AcademicCapIcon className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-600 mr-2 sm:mr-3 flex-shrink-0 mt-1" />
+                <div>
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">
+                    National Occupational Classification
+                  </h1>
+                  <p className="mt-1 sm:mt-2 text-sm sm:text-base lg:text-lg text-gray-600">
+                    Search for NOC codes and occupational classifications
+                  </p>
+                </div>
               </div>
-              <p className="mt-2 text-lg text-gray-600 ml-11">
-                Search for NOC codes and occupational classifications
-              </p>
             </div>
-            <button
-              onClick={() => navigate("/admin/settings")}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              <ArrowLeftIcon className="h-4 w-4 mr-2" />
-              Back to Settings
-            </button>
+            <div className="flex-shrink-0">
+              <button
+                onClick={() => navigate("/admin/settings")}
+                className="inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-xs sm:text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200 w-full sm:w-auto justify-center min-h-[48px] touch-manipulation"
+                style={{
+                  WebkitTapHighlightColor: "transparent",
+                  minHeight: "48px",
+                  touchAction: "manipulation",
+                }}
+              >
+                <ArrowLeftIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                Back to Settings
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Error Alert */}
+        {/* Error Alert - Improved mobile layout */}
         {errors.message && (
-          <div className="mb-6 bg-red-50 border-l-4 border-red-400 p-4 rounded-lg">
+          <div className="mb-4 sm:mb-6 bg-red-50 border-l-4 border-red-400 p-3 sm:p-4 rounded-lg">
             <div className="flex">
               <div className="flex-shrink-0">
-                <ExclamationTriangleIcon className="h-5 w-5 text-red-400" />
+                <ExclamationTriangleIcon className="h-4 w-4 sm:h-5 sm:w-5 text-red-400" />
               </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-800">{errors.message}</p>
+              <div className="ml-2 sm:ml-3 flex-1">
+                <p className="text-xs sm:text-sm text-red-800">
+                  {errors.message}
+                </p>
               </div>
-              <div className="ml-auto pl-3">
+              <div className="ml-auto pl-2 sm:pl-3">
                 <button
                   onClick={() => setErrors({})}
-                  className="inline-flex text-red-400 hover:text-red-500"
+                  className="inline-flex text-red-400 hover:text-red-500 transition-colors duration-200 p-2 min-h-[48px] min-w-[48px] items-center justify-center rounded-md touch-manipulation"
+                  style={{
+                    WebkitTapHighlightColor: "transparent",
+                    minHeight: "48px",
+                    minWidth: "48px",
+                    touchAction: "manipulation",
+                  }}
                 >
-                  <XMarkIcon className="h-5 w-5" />
+                  <XMarkIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Main Content Grid - Improved responsive layout */}
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
           {/* Main Search Form - Left Column */}
-          <div className="lg:col-span-2">
+          <div className="xl:col-span-2">
             <div className="bg-white shadow-sm rounded-lg">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-                  <MagnifyingGlassIcon className="h-5 w-5 mr-2 text-indigo-600" />
+              <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center">
+                  <MagnifyingGlassIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-indigo-600" />
                   Search NOC Database
                 </h2>
-                <p className="mt-1 text-sm text-gray-600">
+                <p className="mt-1 text-xs sm:text-sm text-gray-600">
                   Enter one or more search criteria to find occupational
                   classifications
                 </p>
               </div>
 
-              <form onSubmit={onSubmitClick} className="p-6">
+              <form onSubmit={onSubmitClick} className="p-4 sm:p-6">
                 {/* Basic Search */}
-                <div className="mb-6">
+                <div className="mb-4 sm:mb-6">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     <MagnifyingGlassIcon className="inline h-4 w-4 mr-1" />
                     Search Keywords
@@ -222,20 +276,31 @@ function SettingNOCSearchPage() {
                     onChange={(e) => setActualSearchText(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder="Enter occupation, job title, or keywords..."
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                    className="block w-full px-3 py-2.5 sm:py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm sm:text-base min-h-[48px] touch-manipulation"
+                    style={{
+                      minHeight: "48px",
+                      fontSize: "16px", // Prevents zoom on iOS
+                      touchAction: "manipulation",
+                      WebkitAppearance: "none",
+                    }}
                   />
-                  <p className="mt-1 text-sm text-gray-500">
+                  <p className="mt-1 text-xs sm:text-sm text-gray-500">
                     Search across all NOC fields including titles, descriptions,
                     and tasks
                   </p>
                 </div>
 
                 {/* Advanced Search Toggle */}
-                <div className="mb-6">
+                <div className="mb-4 sm:mb-6">
                   <button
                     type="button"
                     onClick={() => setIsAdvancedFiltering(!isAdvancedFiltering)}
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    className="inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 shadow-sm text-xs sm:text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200 w-full sm:w-auto justify-center sm:justify-start min-h-[48px] touch-manipulation"
+                    style={{
+                      WebkitTapHighlightColor: "transparent",
+                      minHeight: "48px",
+                      touchAction: "manipulation",
+                    }}
                   >
                     <SparklesIcon className="h-4 w-4 mr-2" />
                     Advanced Search Options
@@ -249,12 +314,12 @@ function SettingNOCSearchPage() {
 
                 {/* Advanced Search Fields */}
                 {isAdvancedFiltering && (
-                  <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
-                    <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center">
+                  <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <h3 className="text-sm font-semibold text-gray-700 mb-3 sm:mb-4 flex items-center">
                       <SparklesIcon className="h-4 w-4 mr-2 text-indigo-600" />
                       Advanced Search Criteria
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                           <HashtagIcon className="inline h-4 w-4 mr-1" />
@@ -267,7 +332,13 @@ function SettingNOCSearchPage() {
                           onChange={(e) => setCode(e.target.value)}
                           onKeyPress={handleKeyPress}
                           placeholder="e.g., 1234"
-                          className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                          className="block w-full px-3 py-2.5 sm:py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm sm:text-base min-h-[48px] touch-manipulation"
+                          style={{
+                            minHeight: "48px",
+                            fontSize: "16px", // Prevents zoom on iOS
+                            touchAction: "manipulation",
+                            WebkitAppearance: "none",
+                          }}
                         />
                         <p className="mt-1 text-xs text-gray-500">
                           Enter specific 4-digit NOC code
@@ -286,7 +357,13 @@ function SettingNOCSearchPage() {
                           onChange={(e) => setUnitGroupTitle(e.target.value)}
                           onKeyPress={handleKeyPress}
                           placeholder="e.g., Software Engineers"
-                          className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                          className="block w-full px-3 py-2.5 sm:py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm sm:text-base min-h-[48px] touch-manipulation"
+                          style={{
+                            minHeight: "48px",
+                            fontSize: "16px", // Prevents zoom on iOS
+                            touchAction: "manipulation",
+                            WebkitAppearance: "none",
+                          }}
                         />
                         <p className="mt-1 text-xs text-gray-500">
                           Search by occupation group name
@@ -296,13 +373,18 @@ function SettingNOCSearchPage() {
                   </div>
                 )}
 
-                {/* Action Buttons */}
-                <div className="flex justify-between items-center">
-                  <div className="flex space-x-3">
+                {/* Action Buttons - Improved mobile layout */}
+                <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                     <button
                       type="button"
                       onClick={() => navigate("/admin/settings")}
-                      className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      className="inline-flex items-center px-3 sm:px-4 py-2.5 sm:py-2 border border-gray-300 shadow-sm text-xs sm:text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200 justify-center min-h-[48px] touch-manipulation"
+                      style={{
+                        WebkitTapHighlightColor: "transparent",
+                        minHeight: "48px",
+                        touchAction: "manipulation",
+                      }}
                     >
                       <ArrowLeftIcon className="h-4 w-4 mr-2" />
                       Back
@@ -310,7 +392,12 @@ function SettingNOCSearchPage() {
                     <button
                       type="button"
                       onClick={handleClearForm}
-                      className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                      className="inline-flex items-center px-3 sm:px-4 py-2.5 sm:py-2 border border-gray-300 shadow-sm text-xs sm:text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200 justify-center min-h-[48px] touch-manipulation"
+                      style={{
+                        WebkitTapHighlightColor: "transparent",
+                        minHeight: "48px",
+                        touchAction: "manipulation",
+                      }}
                     >
                       <XMarkIcon className="h-4 w-4 mr-2" />
                       Clear
@@ -320,7 +407,12 @@ function SettingNOCSearchPage() {
                   <button
                     type="submit"
                     disabled={isFetching}
-                    className="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="inline-flex items-center px-4 sm:px-6 py-2.5 sm:py-2 border border-transparent text-xs sm:text-sm font-medium rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 justify-center min-h-[48px] touch-manipulation"
+                    style={{
+                      WebkitTapHighlightColor: "transparent",
+                      minHeight: "48px",
+                      touchAction: "manipulation",
+                    }}
                   >
                     {isFetching ? (
                       <>
@@ -358,18 +450,18 @@ function SettingNOCSearchPage() {
             </div>
           </div>
 
-          {/* Right Column - Help & Information */}
-          <div className="lg:col-span-1 space-y-6">
+          {/* Right Column - Help & Information - Better mobile spacing */}
+          <div className="xl:col-span-1 space-y-4 sm:space-y-6">
             {/* Quick Tips */}
             <div className="bg-white shadow-sm rounded-lg">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <LightBulbIcon className="w-5 h-5 mr-2 text-yellow-500" />
+              <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+                  <LightBulbIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-yellow-500" />
                   Search Tips
                 </h3>
               </div>
-              <div className="p-6">
-                <ul className="space-y-3 text-sm text-gray-600">
+              <div className="p-4 sm:p-6">
+                <ul className="space-y-2 sm:space-y-3 text-xs sm:text-sm text-gray-600">
                   <li className="flex items-start">
                     <CheckCircleIcon className="w-4 h-4 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
                     <span>Use broad terms for general searches</span>
@@ -392,20 +484,25 @@ function SettingNOCSearchPage() {
 
             {/* Common Examples */}
             <div className="bg-white shadow-sm rounded-lg">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <ClipboardDocumentCheckIcon className="w-5 h-5 mr-2 text-indigo-600" />
+              <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+                  <ClipboardDocumentCheckIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-indigo-600" />
                   Popular Searches
                 </h3>
               </div>
-              <div className="p-6">
-                <div className="space-y-2">
+              <div className="p-4 sm:p-6">
+                <div className="space-y-1 sm:space-y-2">
                   <button
                     onClick={() => {
                       setActualSearchText("software");
                       setIsAdvancedFiltering(false);
                     }}
-                    className="w-full text-left px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                    className="w-full text-left px-3 py-2 text-xs sm:text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors duration-200 min-h-[48px] touch-manipulation"
+                    style={{
+                      WebkitTapHighlightColor: "transparent",
+                      minHeight: "48px",
+                      touchAction: "manipulation",
+                    }}
                   >
                     Software Developers
                   </button>
@@ -414,7 +511,12 @@ function SettingNOCSearchPage() {
                       setActualSearchText("nurse");
                       setIsAdvancedFiltering(false);
                     }}
-                    className="w-full text-left px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                    className="w-full text-left px-3 py-2 text-xs sm:text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors duration-200 min-h-[48px] touch-manipulation"
+                    style={{
+                      WebkitTapHighlightColor: "transparent",
+                      minHeight: "48px",
+                      touchAction: "manipulation",
+                    }}
                   >
                     Registered Nurses
                   </button>
@@ -423,7 +525,12 @@ function SettingNOCSearchPage() {
                       setActualSearchText("construction");
                       setIsAdvancedFiltering(false);
                     }}
-                    className="w-full text-left px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                    className="w-full text-left px-3 py-2 text-xs sm:text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors duration-200 min-h-[48px] touch-manipulation"
+                    style={{
+                      WebkitTapHighlightColor: "transparent",
+                      minHeight: "48px",
+                      touchAction: "manipulation",
+                    }}
                   >
                     Construction Trades
                   </button>
@@ -432,7 +539,12 @@ function SettingNOCSearchPage() {
                       setActualSearchText("manager");
                       setIsAdvancedFiltering(false);
                     }}
-                    className="w-full text-left px-3 py-2 text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                    className="w-full text-left px-3 py-2 text-xs sm:text-sm text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors duration-200 min-h-[48px] touch-manipulation"
+                    style={{
+                      WebkitTapHighlightColor: "transparent",
+                      minHeight: "48px",
+                      touchAction: "manipulation",
+                    }}
                   >
                     Management Occupations
                   </button>
@@ -442,14 +554,14 @@ function SettingNOCSearchPage() {
 
             {/* About NOC */}
             <div className="bg-white shadow-sm rounded-lg">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <InformationCircleIcon className="w-5 h-5 mr-2 text-blue-600" />
+              <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+                  <InformationCircleIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-600" />
                   About NOC
                 </h3>
               </div>
-              <div className="p-6">
-                <div className="space-y-3 text-sm text-gray-600">
+              <div className="p-4 sm:p-6">
+                <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm text-gray-600">
                   <p>
                     The National Occupational Classification (NOC) is Canada's
                     national system for describing occupations.
@@ -469,20 +581,20 @@ function SettingNOCSearchPage() {
             </div>
 
             {/* Help Link */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
               <div className="flex">
-                <QuestionMarkCircleIcon className="h-5 w-5 text-blue-600 flex-shrink-0" />
-                <div className="ml-3">
-                  <h4 className="text-sm font-semibold text-blue-900">
+                <QuestionMarkCircleIcon className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 flex-shrink-0" />
+                <div className="ml-2 sm:ml-3">
+                  <h4 className="text-xs sm:text-sm font-semibold text-blue-900">
                     Need Help?
                   </h4>
-                  <p className="mt-1 text-sm text-blue-700">
+                  <p className="mt-1 text-xs sm:text-sm text-blue-700">
                     Visit the official{" "}
                     <a
                       href="https://noc.esdc.gc.ca/"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="underline font-medium hover:text-blue-800"
+                      className="underline font-medium hover:text-blue-800 transition-colors duration-200"
                     >
                       NOC website
                     </a>{" "}
