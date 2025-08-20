@@ -4,11 +4,14 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import {
   useStaffManager,
-  useTagManager,
-  useVehicleTypeManager,
   useHowHearAboutUsItemManager,
 } from "../../../../services/Services";
 import { Loading, Alert, Button, Breadcrumb } from "../../../../components/UI";
+import {
+  TagsMultiSelect,
+  VehicleTypesMultiSelect,
+  HowHearAboutUsSelect,
+} from "../../../../components/Form";
 import {
   RESIDENTIAL_STAFF_TYPE_OF_ID,
   COMMERCIAL_STAFF_TYPE_OF_ID,
@@ -27,20 +30,12 @@ function AdminStaffUpdatePage() {
 
   // Services
   const staffManager = useStaffManager();
-  const tagManager = useTagManager();
-  const vehicleTypeManager = useVehicleTypeManager();
-  const howHearManager = useHowHearAboutUsItemManager();
 
   // Component State
   const [isLoading, setIsLoading] = useState(true);
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Options for dropdowns
-  const [tagOptions, setTagOptions] = useState([]);
-  const [vehicleTypeOptions, setVehicleTypeOptions] = useState([]);
-  const [howHearOptions, setHowHearOptions] = useState([]);
 
   // Form Fields - Basic Info
   const [staffType, setStaffType] = useState(RESIDENTIAL_STAFF_TYPE_OF_ID);
@@ -106,7 +101,7 @@ function AdminStaffUpdatePage() {
     navigate("/login?unauthorized=true");
   };
 
-  // Load staff detail and options on mount
+  // Load staff detail on mount
   useEffect(() => {
     let mounted = true;
 
@@ -157,7 +152,7 @@ function AdminStaffUpdatePage() {
         setPoliceCheck(staffData.policeCheck || "");
         setDriversLicenseClass(staffData.driversLicenseClass || "");
 
-        // Vehicle Types - Extract IDs
+        // Vehicle Types - Extract IDs from array of objects
         if (staffData.vehicleTypes && Array.isArray(staffData.vehicleTypes)) {
           const vtIds = staffData.vehicleTypes.map((vt) => vt.id || vt);
           setVehicleTypes(vtIds);
@@ -174,7 +169,7 @@ function AdminStaffUpdatePage() {
         setDescription(staffData.description || "");
         setPreferredLanguage(staffData.preferredLanguage || "English");
 
-        // Tags - Extract IDs
+        // Tags - Extract IDs from array of objects
         if (staffData.tags && Array.isArray(staffData.tags)) {
           const tagIds = staffData.tags.map((tag) => tag.id || tag);
           setTags(tagIds);
@@ -188,7 +183,6 @@ function AdminStaffUpdatePage() {
 
         // Date fields
         if (staffData.birthDate) {
-          // Convert to YYYY-MM-DD format for HTML date input
           const date = new Date(staffData.birthDate);
           if (!isNaN(date.getTime())) {
             setBirthDate(date.toISOString().split("T")[0]);
@@ -205,37 +199,6 @@ function AdminStaffUpdatePage() {
         setGender(staffData.gender || 0);
         setGenderOther(staffData.genderOther || "");
         setIdentifyAs(staffData.identifyAs || []);
-
-        // Load select options
-        const [tagsData, vehicleTypesData, howHearData] = await Promise.all([
-          tagManager.getTagSelectOptions(onUnauthorized),
-          vehicleTypeManager.getVehicleTypeSelectOptions(onUnauthorized),
-          howHearManager.getSelectOptions(onUnauthorized),
-        ]);
-
-        if (!mounted) return;
-
-        // Process options
-        if (tagsData) {
-          const options = Array.isArray(tagsData)
-            ? tagsData
-            : tagsData.results || tagsData.data || [];
-          setTagOptions(options);
-        }
-
-        if (vehicleTypesData) {
-          const options = Array.isArray(vehicleTypesData)
-            ? vehicleTypesData
-            : vehicleTypesData.results || vehicleTypesData.data || [];
-          setVehicleTypeOptions(options);
-        }
-
-        if (howHearData) {
-          const options = Array.isArray(howHearData)
-            ? howHearData
-            : howHearData.results || howHearData.data || [];
-          setHowHearOptions(options);
-        }
       } catch (error) {
         console.error("Error loading staff detail:", error);
         if (mounted) {
@@ -294,13 +257,13 @@ function AdminStaffUpdatePage() {
         limitSpecial,
         policeCheck,
         driversLicenseClass,
-        vehicleTypes: vehicleTypes.map((id) => parseInt(id)),
+        vehicleTypes: vehicleTypes || [],
         emergencyContactName,
         emergencyContactRelationship,
         emergencyContactTelephone,
         emergencyContactAlternativeTelephone,
         description,
-        tags: tags.map((id) => parseInt(id)),
+        tags: tags || [],
         gender: parseInt(gender),
         genderOther,
         joinDate: joinDate || null,
@@ -333,23 +296,16 @@ function AdminStaffUpdatePage() {
     }
   };
 
-  // Handle tag selection
-  const handleTagChange = (tagId) => {
-    const id = parseInt(tagId);
-    if (tags.includes(id)) {
-      setTags(tags.filter((t) => t !== id));
-    } else {
-      setTags([...tags, id]);
-    }
+  // Handle how hear change
+  const handleHowHearChange = (value) => {
+    setHowDidYouHearAboutUsID(value);
   };
 
-  // Handle vehicle type selection
-  const handleVehicleTypeChange = (vtId) => {
-    const id = parseInt(vtId);
-    if (vehicleTypes.includes(id)) {
-      setVehicleTypes(vehicleTypes.filter((v) => v !== id));
-    } else {
-      setVehicleTypes([...vehicleTypes, id]);
+  // Handle how hear other detected
+  const handleHowHearOtherDetected = (isOther) => {
+    setIsHowDidYouHearAboutUsOther(isOther);
+    if (!isOther) {
+      setHowDidYouHearAboutUsOther("");
     }
   };
 
@@ -849,31 +805,18 @@ function AdminStaffUpdatePage() {
             </label>
           </div>
 
+          {/* Vehicle Types using the reusable component */}
           <div style={{ marginBottom: "15px" }}>
-            <label>Vehicle Types (Optional):</label>
-            <div
-              style={{
-                maxHeight: "150px",
-                overflowY: "auto",
-                border: "1px solid #ddd",
-                padding: "10px",
-              }}
-            >
-              {vehicleTypeOptions.map((vt) => (
-                <label
-                  key={vt.value}
-                  style={{ display: "block", marginBottom: "5px" }}
-                >
-                  <input
-                    type="checkbox"
-                    value={vt.value}
-                    checked={vehicleTypes.includes(parseInt(vt.value))}
-                    onChange={(e) => handleVehicleTypeChange(e.target.value)}
-                  />
-                  {vt.label}
-                </label>
-              ))}
-            </div>
+            <VehicleTypesMultiSelect
+              value={vehicleTypes}
+              onChange={(value) => setVehicleTypes(value)}
+              error={errors.vehicleTypes}
+              required={false}
+              label="Vehicle Types (Optional)"
+              placeholder="Select vehicle types..."
+              helperText="Select the vehicle types available to this staff member"
+              onUnauthorized={onUnauthorized}
+            />
           </div>
         </fieldset>
 
@@ -954,61 +897,32 @@ function AdminStaffUpdatePage() {
             <strong>Metrics</strong>
           </legend>
 
+          {/* Tags using the reusable component */}
           <div style={{ marginBottom: "15px" }}>
-            <label>Tags (Optional):</label>
-            <div
-              style={{
-                maxHeight: "150px",
-                overflowY: "auto",
-                border: "1px solid #ddd",
-                padding: "10px",
-              }}
-            >
-              {tagOptions.map((tag) => (
-                <label
-                  key={tag.value}
-                  style={{ display: "block", marginBottom: "5px" }}
-                >
-                  <input
-                    type="checkbox"
-                    value={tag.value}
-                    checked={tags.includes(parseInt(tag.value))}
-                    onChange={(e) => handleTagChange(e.target.value)}
-                  />
-                  {tag.label}
-                </label>
-              ))}
-            </div>
+            <TagsMultiSelect
+              value={tags}
+              onChange={(value) => setTags(value)}
+              error={errors.tags}
+              required={false}
+              label="Tags (Optional)"
+              placeholder="Select tags..."
+              helperText="Select tags to categorize this staff member"
+              onUnauthorized={onUnauthorized}
+            />
           </div>
 
+          {/* How did you hear about us using the reusable component */}
           <div style={{ marginBottom: "15px" }}>
-            <label>
-              How did you hear about us? <span style={{ color: "red" }}>*</span>
-              <select
-                value={howDidYouHearAboutUsID}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  setHowDidYouHearAboutUsID(value);
-                  // Check if "Other" was selected
-                  const selectedOption = howHearOptions.find(
-                    (opt) => String(opt.value) === String(value),
-                  );
-                  setIsHowDidYouHearAboutUsOther(
-                    selectedOption &&
-                      selectedOption.label.toLowerCase() === "other",
-                  );
-                }}
-                style={{ display: "block", width: "100%", padding: "5px" }}
-                required
-              >
-                <option value="">Please select</option>
-                {howHearOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <HowHearAboutUsSelect
+              value={howDidYouHearAboutUsID}
+              onChange={handleHowHearChange}
+              onOtherDetected={handleHowHearOtherDetected}
+              error={errors.howDidYouHearAboutUsID}
+              required={true}
+              label="How did you hear about us?"
+              helperText="Tell us how this person discovered our organization"
+              onUnauthorized={onUnauthorized}
+            />
           </div>
 
           {isHowDidYouHearAboutUsOther && (
