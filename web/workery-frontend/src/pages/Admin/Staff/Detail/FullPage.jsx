@@ -10,6 +10,11 @@ import {
   Loading,
   Breadcrumb,
 } from "../../../../components/UI";
+import {
+  TagsDisplay,
+  HowHearAboutUsDisplay,
+  SkillSetsDisplay,
+} from "../../../../components/Display";
 
 // Staff type mapping
 const STAFF_TYPE_MAP = {
@@ -102,7 +107,7 @@ function AdminStaffDetailFullPage() {
   // Format functions
   const formatPhoneNumber = (phone) => {
     if (!phone) return "-";
-    const cleaned = phone.replace(/\D/g, "");
+    const cleaned = phone.replace(/\\D/g, "");
     if (cleaned.length === 10) {
       return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
     }
@@ -140,18 +145,6 @@ function AdminStaffDetailFullPage() {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
   };
 
-  const formatTags = (tags) => {
-    if (!tags || tags.length === 0) return "-";
-    return tags.map((tag) => tag.text || tag.name || tag).join(", ");
-  };
-
-  const formatSkillSets = (skillSets) => {
-    if (!skillSets || skillSets.length === 0) return "-";
-    return skillSets
-      .map((skill) => skill.text || skill.name || skill)
-      .join(", ");
-  };
-
   const formatIdentifyAs = (values) => {
     if (!values || values.length === 0) return "-";
     return values
@@ -160,6 +153,12 @@ function AdminStaffDetailFullPage() {
         return option ? option.label : value;
       })
       .join(", ");
+  };
+
+  // Extract IDs from array of objects
+  const extractIds = (items) => {
+    if (!items || !Array.isArray(items)) return [];
+    return items.map((item) => item.id || item.value).filter(Boolean);
   };
 
   // Tab navigation component
@@ -392,10 +391,27 @@ function AdminStaffDetailFullPage() {
             }
           />
           <DataRow label="Description" value={staff.description || "-"} />
-          <DataRow label="Tags" value={formatTags(staff.tags)} />
+          <DataRow
+            label="Tags"
+            value={
+              <TagsDisplay
+                values={extractIds(staff.tags)}
+                onUnauthorized={onUnauthorized}
+              />
+            }
+          />
           <DataRow
             label="Skill Sets"
-            value={formatSkillSets(staff.skillSets)}
+            value={
+              staff.skillSets && staff.skillSets.length > 0 ? (
+                <SkillSetsDisplay
+                  values={extractIds(staff.skillSets)}
+                  onUnauthorized={onUnauthorized}
+                />
+              ) : (
+                "-"
+              )
+            }
           />
         </DataTable>
 
@@ -557,9 +573,19 @@ function AdminStaffDetailFullPage() {
           <DataRow
             label="How did they discover us?"
             value={
-              staff.isHowDidYouHearAboutUsOther
-                ? staff.howDidYouHearAboutUsOther
-                : staff.howDidYouHearAboutUsText || "-"
+              staff.isHowDidYouHearAboutUsOther ? (
+                staff.howDidYouHearAboutUsOther
+              ) : staff.howDidYouHearAboutUsId ||
+                staff.howDidYouHearAboutUsID ? (
+                <HowHearAboutUsDisplay
+                  value={
+                    staff.howDidYouHearAboutUsId || staff.howDidYouHearAboutUsID
+                  }
+                  onUnauthorized={onUnauthorized}
+                />
+              ) : (
+                "-"
+              )
             }
           />
           <DataRow label="Join date" value={formatDateTime(staff.joinDate)} />

@@ -10,6 +10,10 @@ import {
   Loading,
   Breadcrumb,
 } from "../../../../components/UI";
+import {
+  TagsDisplay,
+  HowHearAboutUsDisplay,
+} from "../../../../components/Display";
 
 // Staff type mapping
 const STAFF_TYPE_MAP = {
@@ -78,8 +82,7 @@ function AdminStaffDetailLitePage() {
   // Format phone number
   const formatPhoneNumber = (phone) => {
     if (!phone) return "-";
-    // Simple formatting - you can enhance this
-    const cleaned = phone.replace(/\D/g, "");
+    const cleaned = phone.replace(/\\D/g, "");
     if (cleaned.length === 10) {
       return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
     }
@@ -107,10 +110,10 @@ function AdminStaffDetailLitePage() {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
   };
 
-  // Format tags
-  const formatTags = (tags) => {
-    if (!tags || tags.length === 0) return "-";
-    return tags.map((tag) => tag.text || tag.name || tag).join(", ");
+  // Extract IDs from array of objects
+  const extractIds = (items) => {
+    if (!items || !Array.isArray(items)) return [];
+    return items.map((item) => item.id || item.value).filter(Boolean);
   };
 
   // Tab navigation component
@@ -414,9 +417,36 @@ function AdminStaffDetailLitePage() {
                 </span>
               </div>
 
+              {/* Use TagsDisplay component */}
               <div style={{ marginBottom: "10px" }}>
-                <strong>🏷️ Tags:</strong> {formatTags(staff.tags)}
+                <TagsDisplay
+                  values={extractIds(staff.tags)}
+                  label="Tags"
+                  onUnauthorized={onUnauthorized}
+                />
               </div>
+
+              {/* Use HowHearAboutUsDisplay component if applicable */}
+              {(staff.howDidYouHearAboutUsId ||
+                staff.howDidYouHearAboutUsID) && (
+                <div style={{ marginBottom: "10px" }}>
+                  {staff.isHowDidYouHearAboutUsOther ? (
+                    <>
+                      <strong>How did they discover us:</strong>{" "}
+                      {staff.howDidYouHearAboutUsOther}
+                    </>
+                  ) : (
+                    <HowHearAboutUsDisplay
+                      value={
+                        staff.howDidYouHearAboutUsId ||
+                        staff.howDidYouHearAboutUsID
+                      }
+                      label="How did they discover us?"
+                      onUnauthorized={onUnauthorized}
+                    />
+                  )}
+                </div>
+              )}
 
               {staff.publicId && (
                 <div style={{ marginBottom: "10px" }}>
