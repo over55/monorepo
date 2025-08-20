@@ -265,6 +265,10 @@ import AdminStaffDetailMoreUnarchivePage from "./pages/Admin/Staff/Detail/More/U
 import AdminStaffDetailMoreUnbanPage from "./pages/Admin/Staff/Detail/More/Unban/Page";
 import AdminStaffDetailMoreUpgradePage from "./pages/Admin/Staff/Detail/More/Upgrade/Page";
 
+// Admin skill set pages.
+import AdminSkillSetAssociateSearchCriteriaPage from "./pages/Admin/SkillSet/AssociateSearchCriteriaPage";
+import AdminSkillSetAssociateSearchResultPage from "./pages/Admin/SkillSet/AssociateSearchResultPage";
+
 ////////////////////////////////////////////////////////////////
 // Associate pages
 ////////////////////////////////////////////////////////////////
@@ -866,7 +870,7 @@ function AppRouter() {
               path="/admin/skill-sets"
               element={
                 <Layout>
-                  <PlaceholderPage title="Skill Sets Search" />
+                  <AdminSkillSetAssociateSearchCriteriaPage />
                 </Layout>
               }
             />
@@ -874,7 +878,7 @@ function AppRouter() {
               path="/admin/skill-sets/search-results"
               element={
                 <Layout>
-                  <PlaceholderPage title="Skill Sets Search Results" />
+                  <AdminSkillSetAssociateSearchResultPage />
                 </Layout>
               }
             />
