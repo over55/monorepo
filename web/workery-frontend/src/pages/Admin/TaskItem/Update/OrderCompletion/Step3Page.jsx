@@ -38,6 +38,47 @@ function AdminTaskItemOrderCompletionStep3Page() {
   const [isLoading, setIsLoading] = useState(true);
   const [taxRate, setTaxRate] = useState(0);
 
+  // Helper function to safely format date for input field
+  const formatDateForInput = (date) => {
+    if (!date) return "";
+
+    try {
+      // If it's already a Date object
+      if (date instanceof Date && !isNaN(date)) {
+        return date.toISOString().slice(0, 10);
+      }
+
+      // If it's a string, try to parse it
+      if (typeof date === "string") {
+        const parsed = new Date(date);
+        if (!isNaN(parsed)) {
+          return parsed.toISOString().slice(0, 10);
+        }
+      }
+
+      return "";
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "";
+    }
+  };
+
+  // Helper function to safely parse date from input
+  const parseDateFromInput = (value) => {
+    if (!value) return null;
+
+    try {
+      const date = new Date(value);
+      if (!isNaN(date)) {
+        return date;
+      }
+      return null;
+    } catch (error) {
+      console.error("Error parsing date:", error);
+      return null;
+    }
+  };
+
   // Form state from storage
   const savedState = orderCompletionStorage.getState();
   const [hasInputtedFinancials, setHasInputtedFinancials] = useState(
@@ -102,7 +143,7 @@ function AdminTaskItemOrderCompletionStep3Page() {
     savedState.invoiceBalanceOwingAmount,
   );
   const [paymentMethods, setPaymentMethods] = useState(
-    savedState.paymentMethods,
+    savedState.paymentMethods || [],
   );
   const [serviceFeeOptions, setServiceFeeOptions] = useState([]);
 
@@ -273,14 +314,14 @@ function AdminTaskItemOrderCompletionStep3Page() {
       return;
     }
 
-    // Save to storage
+    // Save to storage - ensure invoiceIDs is stored as a string
     orderCompletionStorage.updateState({
       hasInputtedFinancials,
       invoicePaidTo,
       paymentStatus,
       completionDate,
       invoiceDate,
-      invoiceIDs,
+      invoiceIDs: String(invoiceIDs || ""), // Ensure it's a string
       invoiceQuotedLabourAmount: parseFloat(invoiceQuotedLabourAmount || 0),
       invoiceQuotedMaterialAmount: parseFloat(invoiceQuotedMaterialAmount || 0),
       invoiceQuotedOtherCostsAmount: parseFloat(
@@ -480,12 +521,10 @@ function AdminTaskItemOrderCompletionStep3Page() {
             <Input
               label="Completion Date"
               type="date"
-              value={
-                completionDate
-                  ? new Date(completionDate).toISOString().slice(0, 10)
-                  : ""
+              value={formatDateForInput(completionDate)}
+              onChange={(e) =>
+                setCompletionDate(parseDateFromInput(e.target.value))
               }
-              onChange={(e) => setCompletionDate(new Date(e.target.value))}
               error={errors.completionDate}
               max={new Date().toISOString().slice(0, 10)}
             />
@@ -493,12 +532,10 @@ function AdminTaskItemOrderCompletionStep3Page() {
             <Input
               label="Invoice Date"
               type="date"
-              value={
-                invoiceDate
-                  ? new Date(invoiceDate).toISOString().slice(0, 10)
-                  : ""
+              value={formatDateForInput(invoiceDate)}
+              onChange={(e) =>
+                setInvoiceDate(parseDateFromInput(e.target.value))
               }
-              onChange={(e) => setInvoiceDate(new Date(e.target.value))}
               error={errors.invoiceDate}
               required
             />
@@ -628,7 +665,7 @@ function AdminTaskItemOrderCompletionStep3Page() {
                 setInvoiceServiceFeeID(selectedId);
                 // Find and set the percentage
                 const selected = serviceFeeOptions.find(
-                  (opt) => opt.value === selectedId,
+                  (opt) => opt.value === selectedId || opt.id === selectedId,
                 );
                 if (selected) {
                   setInvoiceServiceFeePercentage(selected.percentage || 0);
@@ -639,8 +676,8 @@ function AdminTaskItemOrderCompletionStep3Page() {
               options={[
                 { value: "", label: "Please select..." },
                 ...serviceFeeOptions.map((sf) => ({
-                  value: sf.id,
-                  label: `${sf.title} (${sf.percentage}%)`,
+                  value: sf.id || sf.value,
+                  label: `${sf.title || sf.label} (${sf.percentage}%)`,
                 })),
               ]}
             />
@@ -660,15 +697,11 @@ function AdminTaskItemOrderCompletionStep3Page() {
                   : "Invoice Service Fee Payment Date (Optional)"
               }
               type="date"
-              value={
-                invoiceServiceFeePaymentDate
-                  ? new Date(invoiceServiceFeePaymentDate)
-                      .toISOString()
-                      .slice(0, 10)
-                  : ""
-              }
+              value={formatDateForInput(invoiceServiceFeePaymentDate)}
               onChange={(e) =>
-                setInvoiceServiceFeePaymentDate(new Date(e.target.value))
+                setInvoiceServiceFeePaymentDate(
+                  parseDateFromInput(e.target.value),
+                )
               }
               error={errors.invoiceServiceFeePaymentDate}
             />
