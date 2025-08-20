@@ -1,14 +1,13 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Staff/Add/Step4Page.jsx
 
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { useStaffAddWizardStorage } from "../../../../services/Services";
 import {
   Card,
   Button,
   Alert,
   Input,
-  Select,
   Checkbox,
   Breadcrumb,
   ProgressBar,
@@ -162,23 +161,21 @@ function AdminStaffAddStep4Page() {
   ];
 
   return (
-    <div>
-      {/* Breadcrumb */}
+    <div className="max-w-4xl mx-auto">
       <Breadcrumb items={breadcrumbItems} />
 
-      {/* Page Title */}
-      <h1>New Staff Member</h1>
-      <p>Step 4 of 7 - Address Information</p>
+      <h1 className="text-2xl font-bold mb-2">New Staff Member</h1>
+      <p className="text-gray-600 mb-4">Step 4 of 7 - Address Information</p>
 
-      {/* Progress Bar */}
-      <ProgressBar value={57} max={100} color="green" />
+      <ProgressBar value={57} max={100} color="green" className="mb-6" />
 
-      {/* Main Content */}
       <Card>
-        <h2>
-          <MapPinIcon /> Address Information
-        </h2>
-        <p>
+        <div className="flex items-center mb-6">
+          <MapPinIcon className="h-6 w-6 text-gray-600 mr-2" />
+          <h2 className="text-xl font-semibold">Address Information</h2>
+        </div>
+
+        <p className="text-gray-600 mb-6">
           Please fill out all the required fields before submitting this form.
         </p>
 
@@ -186,16 +183,22 @@ function AdminStaffAddStep4Page() {
           <Alert type="error">Please correct the errors below.</Alert>
         )}
 
-        <Checkbox
-          label="Has shipping address different than billing address"
-          checked={hasShippingAddress}
-          onChange={() => setHasShippingAddress(!hasShippingAddress)}
-        />
+        <div className="mb-6">
+          <Checkbox
+            label="Has shipping address different than billing address"
+            checked={hasShippingAddress}
+            onChange={() => setHasShippingAddress(!hasShippingAddress)}
+          />
+        </div>
 
-        <div>
-          <div>
-            {hasShippingAddress && <h3>Billing Address</h3>}
+        <div className="space-y-6">
+          {hasShippingAddress && (
+            <h3 className="text-lg font-semibold text-gray-700 border-b pb-2">
+              Billing Address
+            </h3>
+          )}
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <Input
               label="Country"
               value={country}
@@ -221,20 +224,6 @@ function AdminStaffAddStep4Page() {
             />
 
             <Input
-              label="Address Line 1"
-              value={addressLine1}
-              onChange={(e) => setAddressLine1(e.target.value)}
-              error={errors.addressLine1}
-              required
-            />
-
-            <Input
-              label="Address Line 2 (Optional)"
-              value={addressLine2}
-              onChange={(e) => setAddressLine2(e.target.value)}
-            />
-
-            <Input
               label="Postal Code"
               value={postalCode}
               onChange={(e) => setPostalCode(e.target.value)}
@@ -243,51 +232,77 @@ function AdminStaffAddStep4Page() {
             />
           </div>
 
+          <Input
+            label="Address Line 1"
+            value={addressLine1}
+            onChange={(e) => setAddressLine1(e.target.value)}
+            error={errors.addressLine1}
+            required
+          />
+
+          <Input
+            label="Address Line 2 (Optional)"
+            value={addressLine2}
+            onChange={(e) => setAddressLine2(e.target.value)}
+          />
+
           {hasShippingAddress && (
-            <div>
-              <h3>Shipping Address</h3>
+            <>
+              <h3 className="text-lg font-semibold text-gray-700 border-b pb-2 mt-8">
+                Shipping Address
+              </h3>
 
-              <Input
-                label="Name"
-                value={shippingName}
-                onChange={(e) => setShippingName(e.target.value)}
-                error={errors.shippingName}
-                helperText="The name to contact for this shipping address"
-                required
-              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  label="Name"
+                  value={shippingName}
+                  onChange={(e) => setShippingName(e.target.value)}
+                  error={errors.shippingName}
+                  helperText="The name to contact for this shipping address"
+                  required
+                />
 
-              <Input
-                label="Phone"
-                value={shippingPhone}
-                onChange={(e) => setShippingPhone(e.target.value)}
-                error={errors.shippingPhone}
-                helperText="The contact phone number for this shipping address"
-                required
-              />
+                <Input
+                  label="Phone"
+                  value={shippingPhone}
+                  onChange={(e) => setShippingPhone(e.target.value)}
+                  error={errors.shippingPhone}
+                  helperText="The contact phone number for this shipping address"
+                  required
+                />
 
-              <Input
-                label="Country"
-                value={shippingCountry}
-                onChange={(e) => setShippingCountry(e.target.value)}
-                error={errors.shippingCountry}
-                required
-              />
+                <Input
+                  label="Country"
+                  value={shippingCountry}
+                  onChange={(e) => setShippingCountry(e.target.value)}
+                  error={errors.shippingCountry}
+                  required
+                />
 
-              <Input
-                label="Province/Territory"
-                value={shippingRegion}
-                onChange={(e) => setShippingRegion(e.target.value)}
-                error={errors.shippingRegion}
-                required
-              />
+                <Input
+                  label="Province/Territory"
+                  value={shippingRegion}
+                  onChange={(e) => setShippingRegion(e.target.value)}
+                  error={errors.shippingRegion}
+                  required
+                />
 
-              <Input
-                label="City"
-                value={shippingCity}
-                onChange={(e) => setShippingCity(e.target.value)}
-                error={errors.shippingCity}
-                required
-              />
+                <Input
+                  label="City"
+                  value={shippingCity}
+                  onChange={(e) => setShippingCity(e.target.value)}
+                  error={errors.shippingCity}
+                  required
+                />
+
+                <Input
+                  label="Postal Code"
+                  value={shippingPostalCode}
+                  onChange={(e) => setShippingPostalCode(e.target.value)}
+                  error={errors.shippingPostalCode}
+                  required
+                />
+              </div>
 
               <Input
                 label="Address Line 1"
@@ -302,19 +317,11 @@ function AdminStaffAddStep4Page() {
                 value={shippingAddressLine2}
                 onChange={(e) => setShippingAddressLine2(e.target.value)}
               />
-
-              <Input
-                label="Postal Code"
-                value={shippingPostalCode}
-                onChange={(e) => setShippingPostalCode(e.target.value)}
-                error={errors.shippingPostalCode}
-                required
-              />
-            </div>
+            </>
           )}
         </div>
 
-        <div>
+        <div className="flex gap-3 pt-6 border-t">
           <Button
             variant="secondary"
             onClick={() => navigate("/admin/staff/add/step-3")}

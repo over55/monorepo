@@ -72,3 +72,9 @@ export const STAFF_ORGANIZATION_TYPE_OPTIONS_WITH_EMPTY_OPTIONS = [
   { value: 0, label: "Please select" }, // EMPTY OPTION
   ...STAFF_ORGANIZATION_TYPE_OPTIONS,
 ];
+
+// Gender constant for Staff (similar to Associate)
+export const STAFF_GENDER_OTHER = 1;
+export const STAFF_GENDER_MALE = 2;
+export const STAFF_GENDER_FEMALE = 3;
+export const STAFF_GENDER_PREFER_NOT_TO_SAY = 4;

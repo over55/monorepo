@@ -13,6 +13,7 @@ import {
   Loading,
   Breadcrumb,
   ProgressBar,
+  Badge,
 } from "../../../../components/UI";
 import {
   TagsDisplay,
@@ -41,10 +42,8 @@ import {
 import {
   STAFF_TYPE_FILTER_OPTIONS,
   STAFF_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS,
+  STAFF_GENDER_OTHER,
 } from "../../../../constants/Staff";
-
-// Import gender constant for "Other" option
-const GENDER_OTHER = 1;
 
 function AdminStaffAddStep7Page() {
   const navigate = useNavigate();
@@ -131,284 +130,384 @@ function AdminStaffAddStep7Page() {
   }
 
   return (
-    <div>
-      {/* Breadcrumb */}
+    <div className="max-w-4xl mx-auto">
       <Breadcrumb items={breadcrumbItems} />
 
-      {/* Page Title */}
-      <h1>New Staff Member</h1>
-      <p>Step 7 of 7 - Review and Submit</p>
+      <h1 className="text-2xl font-bold mb-2">New Staff Member</h1>
+      <p className="text-gray-600 mb-4">Step 7 of 7 - Review and Submit</p>
 
-      {/* Progress Bar */}
-      <ProgressBar value={100} max={100} color="green" />
+      <ProgressBar value={100} max={100} color="green" className="mb-6" />
 
-      {/* Main Content */}
       <Card>
-        <h2>
-          <QuestionMarkCircleIcon /> Are you ready to submit?
-        </h2>
-        <p>
+        <div className="flex items-center mb-6">
+          <QuestionMarkCircleIcon className="h-6 w-6 text-gray-600 mr-2" />
+          <h2 className="text-xl font-semibold">Are you ready to submit?</h2>
+        </div>
+
+        <p className="text-gray-600 mb-6">
           Please carefully review the following staff details and if you are
           ready click Submit to complete.
         </p>
 
         {Object.keys(errors).length > 0 && (
-          <Alert type="error">Please correct the errors below.</Alert>
+          <Alert type="error">
+            {errors.message || "Please correct the errors below."}
+          </Alert>
         )}
 
-        {/* Contact Section */}
-        <div>
-          <h3>
-            <IdentificationIcon /> Contact
-            <Link to="/admin/staff/add/step-3">
-              <PencilIcon /> Edit
-            </Link>
-          </h3>
+        <div className="space-y-8">
+          {/* Contact Section */}
+          <div className="border rounded-lg p-6">
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center">
+                <IdentificationIcon className="h-5 w-5 text-gray-600 mr-2" />
+                <h3 className="text-lg font-semibold">Contact</h3>
+              </div>
+              <Link
+                to="/admin/staff/add/step-3"
+                className="text-blue-600 hover:text-blue-800 flex items-center text-sm"
+              >
+                <PencilIcon className="h-4 w-4 mr-1" />
+                Edit
+              </Link>
+            </div>
 
-          <p>
-            <strong>Type:</strong> {formatStaffType(wizardState.type)}
-          </p>
-          <p>
-            <strong>First Name:</strong> {wizardState.firstName}
-          </p>
-          <p>
-            <strong>Last Name:</strong> {wizardState.lastName}
-          </p>
-          <p>
-            <strong>Email:</strong> {wizardState.email}
-          </p>
-          <p>
-            <strong>OK to Email:</strong>{" "}
-            {wizardState.isOkToEmail ? "Yes" : "No"}
-          </p>
-          <p>
-            <strong>Phone:</strong> {wizardState.phone}
-          </p>
-          <p>
-            <strong>Phone Type:</strong>{" "}
-            {formatPhoneType(wizardState.phoneType)}
-          </p>
-          <p>
-            <strong>OK to Text:</strong> {wizardState.isOkToText ? "Yes" : "No"}
-          </p>
-          {wizardState.otherPhone && (
-            <>
-              <p>
-                <strong>Other Phone:</strong> {wizardState.otherPhone}
-              </p>
-              <p>
-                <strong>Other Phone Type:</strong>{" "}
-                {formatPhoneType(wizardState.otherPhoneType)}
-              </p>
-            </>
-          )}
-        </div>
-
-        {/* Address Section */}
-        <div>
-          <h3>
-            <MapPinIcon /> Address
-            <Link to="/admin/staff/add/step-4">
-              <PencilIcon /> Edit
-            </Link>
-          </h3>
-
-          <p>
-            <strong>Has Different Shipping Address:</strong>{" "}
-            {wizardState.hasShippingAddress ? "Yes" : "No"}
-          </p>
-
-          <div>
-            {wizardState.hasShippingAddress && <h4>Billing Address</h4>}
-            <p>
-              <strong>Country:</strong> {wizardState.country}
-            </p>
-            <p>
-              <strong>Province/Territory:</strong> {wizardState.region}
-            </p>
-            <p>
-              <strong>City:</strong> {wizardState.city}
-            </p>
-            <p>
-              <strong>Address Line 1:</strong> {wizardState.addressLine1}
-            </p>
-            {wizardState.addressLine2 && (
-              <p>
-                <strong>Address Line 2:</strong> {wizardState.addressLine2}
-              </p>
-            )}
-            <p>
-              <strong>Postal Code:</strong> {wizardState.postalCode}
-            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="font-medium text-gray-600">Type:</span>{" "}
+                {formatStaffType(wizardState.type)}
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">First Name:</span>{" "}
+                {wizardState.firstName}
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">Last Name:</span>{" "}
+                {wizardState.lastName}
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">Email:</span>{" "}
+                {wizardState.email}
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">OK to Email:</span>{" "}
+                <Badge
+                  variant={wizardState.isOkToEmail ? "success" : "default"}
+                >
+                  {wizardState.isOkToEmail ? "Yes" : "No"}
+                </Badge>
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">Phone:</span>{" "}
+                {wizardState.phone}
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">Phone Type:</span>{" "}
+                {formatPhoneType(wizardState.phoneType)}
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">OK to Text:</span>{" "}
+                <Badge variant={wizardState.isOkToText ? "success" : "default"}>
+                  {wizardState.isOkToText ? "Yes" : "No"}
+                </Badge>
+              </div>
+              {wizardState.otherPhone && (
+                <>
+                  <div>
+                    <span className="font-medium text-gray-600">
+                      Other Phone:
+                    </span>{" "}
+                    {wizardState.otherPhone}
+                  </div>
+                  <div>
+                    <span className="font-medium text-gray-600">
+                      Other Phone Type:
+                    </span>{" "}
+                    {formatPhoneType(wizardState.otherPhoneType)}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
 
-          {wizardState.hasShippingAddress && (
-            <div>
-              <h4>Shipping Address</h4>
-              <p>
-                <strong>Name:</strong> {wizardState.shippingName}
+          {/* Address Section */}
+          <div className="border rounded-lg p-6">
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center">
+                <MapPinIcon className="h-5 w-5 text-gray-600 mr-2" />
+                <h3 className="text-lg font-semibold">Address</h3>
+              </div>
+              <Link
+                to="/admin/staff/add/step-4"
+                className="text-blue-600 hover:text-blue-800 flex items-center text-sm"
+              >
+                <PencilIcon className="h-4 w-4 mr-1" />
+                Edit
+              </Link>
+            </div>
+
+            <div className="text-sm">
+              <p className="mb-2">
+                <span className="font-medium text-gray-600">
+                  Has Different Shipping Address:
+                </span>{" "}
+                <Badge
+                  variant={wizardState.hasShippingAddress ? "info" : "default"}
+                >
+                  {wizardState.hasShippingAddress ? "Yes" : "No"}
+                </Badge>
               </p>
-              <p>
-                <strong>Phone:</strong> {wizardState.shippingPhone}
-              </p>
-              <p>
-                <strong>Country:</strong> {wizardState.shippingCountry}
-              </p>
-              <p>
-                <strong>Province/Territory:</strong>{" "}
-                {wizardState.shippingRegion}
-              </p>
-              <p>
-                <strong>City:</strong> {wizardState.shippingCity}
-              </p>
-              <p>
-                <strong>Address Line 1:</strong>{" "}
-                {wizardState.shippingAddressLine1}
-              </p>
-              {wizardState.shippingAddressLine2 && (
-                <p>
-                  <strong>Address Line 2:</strong>{" "}
-                  {wizardState.shippingAddressLine2}
-                </p>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  {wizardState.hasShippingAddress && (
+                    <h4 className="font-semibold mb-2">Billing Address</h4>
+                  )}
+                  <p>{wizardState.addressLine1}</p>
+                  {wizardState.addressLine2 && (
+                    <p>{wizardState.addressLine2}</p>
+                  )}
+                  <p>
+                    {wizardState.city}, {wizardState.region}
+                  </p>
+                  <p>{wizardState.postalCode}</p>
+                  <p>{wizardState.country}</p>
+                </div>
+
+                {wizardState.hasShippingAddress && (
+                  <div>
+                    <h4 className="font-semibold mb-2">Shipping Address</h4>
+                    <p className="font-medium">{wizardState.shippingName}</p>
+                    <p>{wizardState.shippingPhone}</p>
+                    <p>{wizardState.shippingAddressLine1}</p>
+                    {wizardState.shippingAddressLine2 && (
+                      <p>{wizardState.shippingAddressLine2}</p>
+                    )}
+                    <p>
+                      {wizardState.shippingCity}, {wizardState.shippingRegion}
+                    </p>
+                    <p>{wizardState.shippingPostalCode}</p>
+                    <p>{wizardState.shippingCountry}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Account Details Section */}
+          <div className="border rounded-lg p-6">
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center">
+                <ScaleIcon className="h-5 w-5 text-gray-600 mr-2" />
+                <h3 className="text-lg font-semibold">Account Details</h3>
+              </div>
+              <Link
+                to="/admin/staff/add/step-5"
+                className="text-blue-600 hover:text-blue-800 flex items-center text-sm"
+              >
+                <PencilIcon className="h-4 w-4 mr-1" />
+                Edit
+              </Link>
+            </div>
+
+            <div className="space-y-3 text-sm">
+              {wizardState.limitSpecial && (
+                <div>
+                  <span className="font-medium text-gray-600">
+                    Limitations/Special Considerations:
+                  </span>
+                  <p className="mt-1">{wizardState.limitSpecial}</p>
+                </div>
               )}
-              <p>
-                <strong>Postal Code:</strong> {wizardState.shippingPostalCode}
-              </p>
+              {wizardState.policeCheck && (
+                <div>
+                  <span className="font-medium text-gray-600">
+                    Police Check Expiry:
+                  </span>{" "}
+                  {wizardState.policeCheck}
+                </div>
+              )}
+              {wizardState.driversLicenseClass && (
+                <div>
+                  <span className="font-medium text-gray-600">
+                    Drivers License Class:
+                  </span>{" "}
+                  {wizardState.driversLicenseClass}
+                </div>
+              )}
+              {wizardState.vehicleTypes &&
+                wizardState.vehicleTypes.length > 0 && (
+                  <VehicleTypesDisplay
+                    values={wizardState.vehicleTypes}
+                    onUnauthorized={onUnauthorized}
+                  />
+                )}
+              <div>
+                <span className="font-medium text-gray-600">
+                  Preferred Language:
+                </span>{" "}
+                {wizardState.preferredLanguage}
+              </div>
+            </div>
+          </div>
+
+          {/* Emergency Contact Section */}
+          <div className="border rounded-lg p-6">
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center">
+                <UsersIcon className="h-5 w-5 text-gray-600 mr-2" />
+                <h3 className="text-lg font-semibold">Emergency Contact</h3>
+              </div>
+              <Link
+                to="/admin/staff/add/step-5"
+                className="text-blue-600 hover:text-blue-800 flex items-center text-sm"
+              >
+                <PencilIcon className="h-4 w-4 mr-1" />
+                Edit
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+              <div>
+                <span className="font-medium text-gray-600">Contact Name:</span>{" "}
+                {wizardState.emergencyContactName}
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">
+                  Contact Relationship:
+                </span>{" "}
+                {wizardState.emergencyContactRelationship}
+              </div>
+              <div>
+                <span className="font-medium text-gray-600">
+                  Contact Telephone:
+                </span>{" "}
+                {wizardState.emergencyContactTelephone}
+              </div>
+              {wizardState.emergencyContactAlternativeTelephone && (
+                <div>
+                  <span className="font-medium text-gray-600">
+                    Alternative Telephone:
+                  </span>{" "}
+                  {wizardState.emergencyContactAlternativeTelephone}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* System Section */}
+          {wizardState.description && (
+            <div className="border rounded-lg p-6">
+              <div className="flex justify-between items-center mb-4">
+                <div className="flex items-center">
+                  <ServerIcon className="h-5 w-5 text-gray-600 mr-2" />
+                  <h3 className="text-lg font-semibold">System</h3>
+                </div>
+                <Link
+                  to="/admin/staff/add/step-5"
+                  className="text-blue-600 hover:text-blue-800 flex items-center text-sm"
+                >
+                  <PencilIcon className="h-4 w-4 mr-1" />
+                  Edit
+                </Link>
+              </div>
+
+              <div className="text-sm">
+                <span className="font-medium text-gray-600">Description:</span>
+                <p className="mt-1">{wizardState.description}</p>
+              </div>
             </div>
           )}
+
+          {/* Metrics Section */}
+          <div className="border rounded-lg p-6">
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center">
+                <ChartPieIcon className="h-5 w-5 text-gray-600 mr-2" />
+                <h3 className="text-lg font-semibold">Metrics</h3>
+              </div>
+              <Link
+                to="/admin/staff/add/step-6"
+                className="text-blue-600 hover:text-blue-800 flex items-center text-sm"
+              >
+                <PencilIcon className="h-4 w-4 mr-1" />
+                Edit
+              </Link>
+            </div>
+
+            <div className="space-y-3 text-sm">
+              {wizardState.identifyAs && wizardState.identifyAs.length > 0 && (
+                <div>
+                  <span className="font-medium text-gray-600">
+                    Identifies As:
+                  </span>{" "}
+                  {formatIdentifyAs(wizardState.identifyAs)}
+                </div>
+              )}
+
+              {wizardState.tags && wizardState.tags.length > 0 && (
+                <TagsDisplay
+                  values={wizardState.tags}
+                  onUnauthorized={onUnauthorized}
+                />
+              )}
+
+              <HowHearAboutUsDisplay
+                value={wizardState.howDidYouHearAboutUsID}
+                onUnauthorized={onUnauthorized}
+              />
+
+              {wizardState.howDidYouHearAboutUsOther && (
+                <div>
+                  <span className="font-medium text-gray-600">
+                    How did you hear about us (Other):
+                  </span>{" "}
+                  {wizardState.howDidYouHearAboutUsOther}
+                </div>
+              )}
+
+              <div>
+                <span className="font-medium text-gray-600">Gender:</span>{" "}
+                {formatGender(wizardState.gender)}
+              </div>
+
+              {wizardState.gender === STAFF_GENDER_OTHER &&
+                wizardState.genderOther && (
+                  <div>
+                    <span className="font-medium text-gray-600">
+                      Gender (Other):
+                    </span>{" "}
+                    {wizardState.genderOther}
+                  </div>
+                )}
+
+              {wizardState.birthDate && (
+                <div>
+                  <span className="font-medium text-gray-600">Birth Date:</span>{" "}
+                  {wizardState.birthDate}
+                </div>
+              )}
+
+              {wizardState.joinDate && (
+                <div>
+                  <span className="font-medium text-gray-600">Join Date:</span>{" "}
+                  {wizardState.joinDate}
+                </div>
+              )}
+
+              {wizardState.additionalComment && (
+                <div>
+                  <span className="font-medium text-gray-600">
+                    Additional Comment:
+                  </span>
+                  <p className="mt-1">{wizardState.additionalComment}</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Account Details Section */}
-        <div>
-          <h3>
-            <ScaleIcon /> Insurance, Financial, etc.
-            <Link to="/admin/staff/add/step-5">
-              <PencilIcon /> Edit
-            </Link>
-          </h3>
-
-          {wizardState.limitSpecial && (
-            <p>
-              <strong>Limitations/Special Considerations:</strong>{" "}
-              {wizardState.limitSpecial}
-            </p>
-          )}
-          {wizardState.policeCheck && (
-            <p>
-              <strong>Police Check Expiry:</strong> {wizardState.policeCheck}
-            </p>
-          )}
-          {wizardState.driversLicenseClass && (
-            <p>
-              <strong>Drivers License Class:</strong>{" "}
-              {wizardState.driversLicenseClass}
-            </p>
-          )}
-          {wizardState.vehicleTypes && wizardState.vehicleTypes.length > 0 && (
-            <VehicleTypesDisplay values={wizardState.vehicleTypes} />
-          )}
-          <p>
-            <strong>Preferred Language:</strong> {wizardState.preferredLanguage}
-          </p>
-        </div>
-
-        {/* Emergency Contact Section */}
-        <div>
-          <h3>
-            <UsersIcon /> Emergency Contact
-            <Link to="/admin/staff/add/step-5">
-              <PencilIcon /> Edit
-            </Link>
-          </h3>
-
-          <p>
-            <strong>Contact Name:</strong> {wizardState.emergencyContactName}
-          </p>
-          <p>
-            <strong>Contact Relationship:</strong>{" "}
-            {wizardState.emergencyContactRelationship}
-          </p>
-          <p>
-            <strong>Contact Telephone:</strong>{" "}
-            {wizardState.emergencyContactTelephone}
-          </p>
-          {wizardState.emergencyContactAlternativeTelephone && (
-            <p>
-              <strong>Alternative Telephone:</strong>{" "}
-              {wizardState.emergencyContactAlternativeTelephone}
-            </p>
-          )}
-        </div>
-
-        {/* System Section */}
-        <div>
-          <h3>
-            <ServerIcon /> System
-            <Link to="/admin/staff/add/step-5">
-              <PencilIcon /> Edit
-            </Link>
-          </h3>
-
-          {wizardState.description && (
-            <p>
-              <strong>Description:</strong> {wizardState.description}
-            </p>
-          )}
-        </div>
-
-        {/* Metrics Section */}
-        <div>
-          <h3>
-            <ChartPieIcon /> Metrics
-            <Link to="/admin/staff/add/step-6">
-              <PencilIcon /> Edit
-            </Link>
-          </h3>
-
-          {wizardState.identifyAs && wizardState.identifyAs.length > 0 && (
-            <p>
-              <strong>Identifies As:</strong>{" "}
-              {formatIdentifyAs(wizardState.identifyAs)}
-            </p>
-          )}
-
-          {wizardState.tags && wizardState.tags.length > 0 && (
-            <TagsDisplay values={wizardState.tags} />
-          )}
-
-          <HowHearAboutUsDisplay value={wizardState.howDidYouHearAboutUsID} />
-
-          {wizardState.howDidYouHearAboutUsOther && (
-            <p>
-              <strong>How did you hear about us (Other):</strong>{" "}
-              {wizardState.howDidYouHearAboutUsOther}
-            </p>
-          )}
-
-          <p>
-            <strong>Gender:</strong> {formatGender(wizardState.gender)}
-          </p>
-          {wizardState.gender === GENDER_OTHER && wizardState.genderOther && (
-            <p>
-              <strong>Gender (Other):</strong> {wizardState.genderOther}
-            </p>
-          )}
-
-          {wizardState.birthDate && (
-            <p>
-              <strong>Birth Date:</strong> {wizardState.birthDate}
-            </p>
-          )}
-
-          {wizardState.additionalComment && (
-            <p>
-              <strong>Additional Comment:</strong>{" "}
-              {wizardState.additionalComment}
-            </p>
-          )}
-        </div>
-
-        <div>
+        <div className="flex gap-3 pt-6 border-t">
           <Button
             variant="secondary"
             onClick={() => navigate("/admin/staff/add/step-6")}

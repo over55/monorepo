@@ -1,7 +1,7 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Staff/Add/Step6Page.jsx
 
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { useStaffAddWizardStorage } from "../../../../services/Services";
 import {
   Card,
@@ -32,7 +32,7 @@ import {
 } from "../../../../constants/FieldOptions";
 
 // Import gender constant for "Other" option
-const GENDER_OTHER = 1;
+import { STAFF_GENDER_OTHER } from "../../../../constants/Staff";
 
 function AdminStaffAddStep6Page() {
   const navigate = useNavigate();
@@ -85,7 +85,8 @@ function AdminStaffAddStep6Page() {
       hasErrors = true;
     }
 
-    if (gender === GENDER_OTHER && !genderOther) {
+    // Use constant instead of magic number
+    if (gender === STAFF_GENDER_OTHER && !genderOther) {
       newErrors.genderOther = "Please specify gender";
       hasErrors = true;
     }
@@ -124,23 +125,21 @@ function AdminStaffAddStep6Page() {
   ];
 
   return (
-    <div>
-      {/* Breadcrumb */}
+    <div className="max-w-4xl mx-auto">
       <Breadcrumb items={breadcrumbItems} />
 
-      {/* Page Title */}
-      <h1>New Staff Member</h1>
-      <p>Step 6 of 7 - Metrics</p>
+      <h1 className="text-2xl font-bold mb-2">New Staff Member</h1>
+      <p className="text-gray-600 mb-4">Step 6 of 7 - Metrics</p>
 
-      {/* Progress Bar */}
-      <ProgressBar value={86} max={100} color="green" />
+      <ProgressBar value={86} max={100} color="green" className="mb-6" />
 
-      {/* Main Content */}
       <Card>
-        <h2>
-          <ChartPieIcon /> Metrics
-        </h2>
-        <p>
+        <div className="flex items-center mb-6">
+          <ChartPieIcon className="h-6 w-6 text-gray-600 mr-2" />
+          <h2 className="text-xl font-semibold">Metrics</h2>
+        </div>
+
+        <p className="text-gray-600 mb-6">
           Please fill out all the required fields before submitting this form.
         </p>
 
@@ -148,77 +147,92 @@ function AdminStaffAddStep6Page() {
           <Alert type="error">Please correct the errors below.</Alert>
         )}
 
-        <TagsMultiSelect
-          value={tags}
-          onChange={setTags}
-          onUnauthorized={onUnauthorized}
-          label="Tags (Optional)"
-          helperText="Select tags to categorize this staff member"
-        />
-
-        <MultiSelect
-          label="Do you identify as belonging to any of the following groups? (Optional)"
-          value={identifyAs}
-          onChange={setIdentifyAs}
-          options={IDENTIFY_AS_OPTIONS}
-        />
-
-        <HowHearAboutUsSelect
-          value={howDidYouHearAboutUsID}
-          onChange={setHowDidYouHearAboutUsID}
-          onOtherDetected={setIsHowDidYouHearAboutUsOther}
-          error={errors.howDidYouHearAboutUsID}
-          required
-          onUnauthorized={onUnauthorized}
-        />
-
-        {isHowDidYouHearAboutUsOther && (
-          <Input
-            label="How did you hear about us? (Other)"
-            value={howDidYouHearAboutUsOther}
-            onChange={(e) => setHowDidYouHearAboutUsOther(e.target.value)}
-            error={errors.howDidYouHearAboutUsOther}
-            required
+        <div className="space-y-6">
+          <TagsMultiSelect
+            value={tags}
+            onChange={setTags}
+            onUnauthorized={onUnauthorized}
+            label="Tags (Optional)"
+            helperText="Select tags to categorize this staff member"
           />
-        )}
 
-        <Select
-          label="Gender"
-          value={gender}
-          onChange={(e) => setGender(parseInt(e.target.value))}
-          options={GENDER_OPTIONS_WITH_EMPTY_OPTION}
-          error={errors.gender}
-          required
-        />
-
-        {gender === GENDER_OTHER && (
-          <Input
-            label="Gender (Other)"
-            value={genderOther}
-            onChange={(e) => setGenderOther(e.target.value)}
-            error={errors.genderOther}
-            required
+          <MultiSelect
+            label="Do you identify as belonging to any of the following groups? (Optional)"
+            value={identifyAs}
+            onChange={setIdentifyAs}
+            options={IDENTIFY_AS_OPTIONS}
+            helperText="Select all that apply"
           />
-        )}
 
-        <Input
-          label="Birth Date"
-          type="date"
-          value={birthDate}
-          onChange={(e) => setBirthDate(e.target.value)}
-          error={errors.birthDate}
-          required
-        />
+          <HowHearAboutUsSelect
+            value={howDidYouHearAboutUsID}
+            onChange={setHowDidYouHearAboutUsID}
+            onOtherDetected={setIsHowDidYouHearAboutUsOther}
+            error={errors.howDidYouHearAboutUsID}
+            required
+            onUnauthorized={onUnauthorized}
+          />
 
-        <Textarea
-          label="Additional Comment (Optional)"
-          value={additionalComment}
-          onChange={(e) => setAdditionalComment(e.target.value)}
-          helperText="Max 638 characters"
-          rows={4}
-        />
+          {isHowDidYouHearAboutUsOther && (
+            <Input
+              label="How did you hear about us? (Other)"
+              value={howDidYouHearAboutUsOther}
+              onChange={(e) => setHowDidYouHearAboutUsOther(e.target.value)}
+              error={errors.howDidYouHearAboutUsOther}
+              required
+            />
+          )}
 
-        <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Select
+              label="Gender"
+              value={gender}
+              onChange={(e) => setGender(parseInt(e.target.value))}
+              options={GENDER_OPTIONS_WITH_EMPTY_OPTION}
+              error={errors.gender}
+              required
+            />
+
+            {gender === STAFF_GENDER_OTHER && (
+              <Input
+                label="Gender (Other)"
+                value={genderOther}
+                onChange={(e) => setGenderOther(e.target.value)}
+                error={errors.genderOther}
+                required
+              />
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label="Birth Date"
+              type="date"
+              value={birthDate}
+              onChange={(e) => setBirthDate(e.target.value)}
+              error={errors.birthDate}
+              required
+            />
+
+            <Input
+              label="Join Date (Optional)"
+              type="date"
+              value={joinDate}
+              onChange={(e) => setJoinDate(e.target.value)}
+              helperText="Date when the staff member joined the organization"
+            />
+          </div>
+
+          <Textarea
+            label="Additional Comment (Optional)"
+            value={additionalComment}
+            onChange={(e) => setAdditionalComment(e.target.value)}
+            helperText="Max 638 characters"
+            rows={4}
+          />
+        </div>
+
+        <div className="flex gap-3 pt-6 border-t">
           <Button
             variant="secondary"
             onClick={() => navigate("/admin/staff/add/step-5")}
