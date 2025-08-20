@@ -109,6 +109,8 @@ function AdminAssociateAddStep6Page() {
     }
 
     loadAssociateState();
+    // Scroll to top when component mounts
+    window.scrollTo(0, 0);
   }, [authManager, navigate]);
 
   const loadAssociateState = () => {
@@ -138,9 +140,11 @@ function AdminAssociateAddStep6Page() {
         setGenderOther(associateState.genderOther || "");
         setAdditionalComment(associateState.additionalComment || "");
         setIdentifyAs(associateState.identifyAs || []);
-        // Ensure numeric values are parsed as integers
+
+        // Fixed: Handle 0 as a valid value, not falsy
         setStatusInCountry(
-          associateState.statusInCountry
+          associateState.statusInCountry !== undefined &&
+            associateState.statusInCountry !== null
             ? parseInt(associateState.statusInCountry)
             : 0,
         );
@@ -148,13 +152,15 @@ function AdminAssociateAddStep6Page() {
         setCountryOfOrigin(associateState.countryOfOrigin || "");
         setDateOfEntryIntoCountry(associateState.dateOfEntryIntoCountry || "");
         setMaritalStatus(
-          associateState.maritalStatus
+          associateState.maritalStatus !== undefined &&
+            associateState.maritalStatus !== null
             ? parseInt(associateState.maritalStatus)
             : 0,
         );
         setMaritalStatusOther(associateState.maritalStatusOther || "");
         setAccomplishedEducation(
-          associateState.accomplishedEducation
+          associateState.accomplishedEducation !== undefined &&
+            associateState.accomplishedEducation !== null
             ? parseInt(associateState.accomplishedEducation)
             : 0,
         );
@@ -217,14 +223,18 @@ function AdminAssociateAddStep6Page() {
       hasErrors = true;
     }
 
-    if (!isJobSeeker) {
+    // Validate isJobSeeker is set (not checking for falsy since NO is a valid value)
+    if (
+      isJobSeeker !== ASSOCIATE_IS_JOB_SEEKER_YES &&
+      isJobSeeker !== ASSOCIATE_IS_JOB_SEEKER_NO
+    ) {
       newErrors.isJobSeeker = "Please specify if this is a job seeker";
       hasErrors = true;
     }
 
     // Job seeker specific validation
     if (isJobSeeker === ASSOCIATE_IS_JOB_SEEKER_YES) {
-      if (!statusInCountry || statusInCountry === 0) {
+      if (statusInCountry === 0) {
         newErrors.statusInCountry = "Status in country is required";
         hasErrors = true;
       } else if (
@@ -240,7 +250,7 @@ function AdminAssociateAddStep6Page() {
         statusInCountry === ASSOCIATE_STATUS_IN_COUNTRY_NATURALIZED_CITIZEN ||
         statusInCountry === ASSOCIATE_STATUS_IN_COUNTRY_PROTECTED_PERSON
       ) {
-        if (!countryOfOrigin) {
+        if (!countryOfOrigin || countryOfOrigin === "") {
           newErrors.countryOfOrigin = "Country of origin is required";
           hasErrors = true;
         }
@@ -251,7 +261,7 @@ function AdminAssociateAddStep6Page() {
         }
       }
 
-      if (!maritalStatus || maritalStatus === 0) {
+      if (maritalStatus === 0) {
         newErrors.maritalStatus = "Marital status is required";
         hasErrors = true;
       } else if (
@@ -262,7 +272,7 @@ function AdminAssociateAddStep6Page() {
         hasErrors = true;
       }
 
-      if (!accomplishedEducation || accomplishedEducation === 0) {
+      if (accomplishedEducation === 0) {
         newErrors.accomplishedEducation = "Education level is required";
         hasErrors = true;
       } else if (
@@ -439,7 +449,7 @@ function AdminAssociateAddStep6Page() {
                 className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
               >
                 <ChartBarIcon className="w-4 h-4 mr-2" />
-                Dashboard
+                <span className="hidden sm:inline">Dashboard</span>
               </Link>
             </li>
             <li>
@@ -451,7 +461,7 @@ function AdminAssociateAddStep6Page() {
                 >
                   <span className="inline-flex items-center">
                     <WrenchScrewdriverIcon className="w-4 h-4 mr-2" />
-                    Associates
+                    <span className="hidden sm:inline">Associates</span>
                   </span>
                 </Link>
               </div>
@@ -470,62 +480,72 @@ function AdminAssociateAddStep6Page() {
 
         {/* Page Title */}
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-            <UserPlusIcon className="w-7 h-7 mr-3 text-blue-600" />
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+            <UserPlusIcon className="w-6 sm:w-7 h-6 sm:h-7 mr-2 sm:mr-3 text-blue-600" />
             Add New Associate
           </h1>
         </div>
 
-        {/* Wizard Steps */}
-        <div className="mb-6">
-          <div className="flex items-center justify-center overflow-x-auto">
-            <div className="flex items-center">
-              {/* Steps 1-5 Complete */}
-              {[1, 2, 3, 4, 5].map((step, index) => (
-                <React.Fragment key={step}>
-                  <div className="flex items-center">
-                    <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
-                      <CheckIcon className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-900">
-                        {step === 1 && "Search"}
-                        {step === 2 && "Type"}
-                        {step === 3 && "Contact"}
-                        {step === 4 && "Address"}
-                        {step === 5 && "Account"}
-                      </p>
-                      <p className="text-xs text-gray-500">Complete</p>
-                    </div>
+        {/* Wizard Steps - Responsive Container */}
+        <div className="mb-6 overflow-x-auto pb-2">
+          <div className="inline-flex items-center min-w-max px-2 sm:px-0">
+            {/* Steps 1-5 Complete */}
+            {[1, 2, 3, 4, 5].map((step, index) => (
+              <React.Fragment key={step}>
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex-shrink-0">
+                    <CheckIcon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                   </div>
-                  {index < 6 && (
-                    <div className="mx-2 w-12 h-0.5 bg-green-600"></div>
-                  )}
-                </React.Fragment>
-              ))}
+                  <div className="ml-2 sm:ml-3">
+                    <p className="text-xs sm:text-sm font-medium text-gray-900 whitespace-nowrap">
+                      {step === 1 && "Search"}
+                      {step === 2 && "Type"}
+                      {step === 3 && "Contact"}
+                      {step === 4 && "Address"}
+                      {step === 5 && "Account"}
+                    </p>
+                    <p className="text-xs text-gray-500 hidden lg:block">
+                      Complete
+                    </p>
+                  </div>
+                </div>
+                {index < 6 && (
+                  <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-green-600 flex-shrink-0"></div>
+                )}
+              </React.Fragment>
+            ))}
 
-              {/* Step 6 - Active */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
-                  <span className="text-white font-semibold">6</span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">Metrics</p>
-                  <p className="text-xs text-gray-500">Performance</p>
-                </div>
+            {/* Step 6 - Active */}
+            <div className="flex items-center">
+              <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-full flex-shrink-0">
+                <span className="text-white font-semibold text-sm sm:text-base">
+                  6
+                </span>
               </div>
+              <div className="ml-2 sm:ml-3">
+                <p className="text-xs sm:text-sm font-medium text-gray-900 whitespace-nowrap">
+                  Metrics
+                </p>
+                <p className="text-xs text-gray-500 hidden lg:block">
+                  Performance
+                </p>
+              </div>
+            </div>
 
-              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+            <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-gray-300 flex-shrink-0"></div>
 
-              {/* Step 7 Inactive */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
-                  <span className="text-gray-600 font-semibold">7</span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-500">Comments</p>
-                  <p className="text-xs text-gray-400">Notes</p>
-                </div>
+            {/* Step 7 Inactive */}
+            <div className="flex items-center">
+              <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
+                <span className="text-gray-600 font-semibold text-sm sm:text-base">
+                  7
+                </span>
+              </div>
+              <div className="ml-2 sm:ml-3">
+                <p className="text-xs sm:text-sm font-medium text-gray-500 whitespace-nowrap">
+                  Comments
+                </p>
+                <p className="text-xs text-gray-400 hidden lg:block">Notes</p>
               </div>
             </div>
           </div>
@@ -536,7 +556,7 @@ function AdminAssociateAddStep6Page() {
           <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
             <span className="flex items-center">
               <ExclamationCircleIcon className="w-5 h-5 mr-2" />
-              {errors.general}
+              <span className="text-sm sm:text-base">{errors.general}</span>
             </span>
             <button
               onClick={() => setErrors({})}
@@ -549,14 +569,14 @@ function AdminAssociateAddStep6Page() {
 
         {/* Main Content */}
         <div className="bg-white shadow-sm rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
               <ChartBarIcon className="w-5 h-5 mr-2" />
               Metrics Information
             </h2>
           </div>
 
-          <div className="p-6">
+          <div className="p-4 sm:p-6">
             {isLoading ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -564,10 +584,10 @@ function AdminAssociateAddStep6Page() {
               </div>
             ) : (
               <form onSubmit={onSubmitClick} className="max-w-3xl mx-auto">
-                <div className="space-y-8">
+                <div className="space-y-6 sm:space-y-8">
                   {/* Job Seeker Section */}
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4 flex items-center">
                       <BriefcaseIcon className="w-5 h-5 mr-2 text-blue-600" />
                       Job Seeker Information
                     </h3>
@@ -631,12 +651,17 @@ function AdminAssociateAddStep6Page() {
                               <span className="text-red-500">*</span>
                             </label>
                             <select
-                              value={statusInCountry}
-                              onChange={(e) =>
-                                setStatusInCountry(
-                                  parseInt(e.target.value) || 0,
-                                )
-                              }
+                              value={String(statusInCountry)}
+                              onChange={(e) => {
+                                const value = parseInt(e.target.value, 10);
+                                setStatusInCountry(value);
+                                // Clear error when user selects a valid value
+                                if (value !== 0 && errors.statusInCountry) {
+                                  const newErrors = { ...errors };
+                                  delete newErrors.statusInCountry;
+                                  setErrors(newErrors);
+                                }
+                              }}
                               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                                 errors.statusInCountry
                                   ? "border-red-500"
@@ -644,7 +669,10 @@ function AdminAssociateAddStep6Page() {
                               }`}
                             >
                               {statusInCountryOptions.map((option) => (
-                                <option key={option.value} value={option.value}>
+                                <option
+                                  key={option.value}
+                                  value={String(option.value)}
+                                >
                                   {option.label}
                                 </option>
                               ))}
@@ -758,10 +786,17 @@ function AdminAssociateAddStep6Page() {
                               <span className="text-red-500">*</span>
                             </label>
                             <select
-                              value={maritalStatus}
-                              onChange={(e) =>
-                                setMaritalStatus(parseInt(e.target.value) || 0)
-                              }
+                              value={String(maritalStatus)}
+                              onChange={(e) => {
+                                const value = parseInt(e.target.value, 10);
+                                setMaritalStatus(value);
+                                // Clear error when user selects a valid value
+                                if (value !== 0 && errors.maritalStatus) {
+                                  const newErrors = { ...errors };
+                                  delete newErrors.maritalStatus;
+                                  setErrors(newErrors);
+                                }
+                              }}
                               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                                 errors.maritalStatus
                                   ? "border-red-500"
@@ -769,7 +804,10 @@ function AdminAssociateAddStep6Page() {
                               }`}
                             >
                               {maritalStatusOptions.map((option) => (
-                                <option key={option.value} value={option.value}>
+                                <option
+                                  key={option.value}
+                                  value={String(option.value)}
+                                >
                                   {option.label}
                                 </option>
                               ))}
@@ -815,12 +853,20 @@ function AdminAssociateAddStep6Page() {
                               <span className="text-red-500">*</span>
                             </label>
                             <select
-                              value={accomplishedEducation}
-                              onChange={(e) =>
-                                setAccomplishedEducation(
-                                  parseInt(e.target.value) || 0,
-                                )
-                              }
+                              value={String(accomplishedEducation)}
+                              onChange={(e) => {
+                                const value = parseInt(e.target.value, 10);
+                                setAccomplishedEducation(value);
+                                // Clear error when user selects a valid value
+                                if (
+                                  value !== 0 &&
+                                  errors.accomplishedEducation
+                                ) {
+                                  const newErrors = { ...errors };
+                                  delete newErrors.accomplishedEducation;
+                                  setErrors(newErrors);
+                                }
+                              }}
                               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                                 errors.accomplishedEducation
                                   ? "border-red-500"
@@ -828,7 +874,10 @@ function AdminAssociateAddStep6Page() {
                               }`}
                             >
                               {educationOptions.map((option) => (
-                                <option key={option.value} value={option.value}>
+                                <option
+                                  key={option.value}
+                                  value={String(option.value)}
+                                >
                                   {option.label}
                                 </option>
                               ))}
@@ -874,7 +923,7 @@ function AdminAssociateAddStep6Page() {
 
                   {/* Personal Information Section */}
                   <div className="pt-6 border-t">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4 flex items-center">
                       <UserIcon className="w-5 h-5 mr-2 text-purple-600" />
                       Personal Information
                     </h3>
@@ -903,7 +952,7 @@ function AdminAssociateAddStep6Page() {
                           Do you identify as belonging to any of the following
                           groups? (Optional)
                         </label>
-                        <div className="space-y-2 ml-6">
+                        <div className="space-y-2 ml-2 sm:ml-6">
                           {identifyAsOptions.map((option) => (
                             <label
                               key={option.value}
@@ -988,14 +1037,17 @@ function AdminAssociateAddStep6Page() {
                           Gender <span className="text-red-500">*</span>
                         </label>
                         <select
-                          value={gender}
+                          value={String(gender)}
                           onChange={(e) => setGender(parseInt(e.target.value))}
                           className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                             errors.gender ? "border-red-500" : "border-gray-300"
                           }`}
                         >
                           {genderOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
+                            <option
+                              key={option.value}
+                              value={String(option.value)}
+                            >
                               {option.label}
                             </option>
                           ))}
@@ -1094,8 +1146,8 @@ function AdminAssociateAddStep6Page() {
                   </div>
                 </div>
 
-                {/* Form Actions */}
-                <div className="mt-8 flex gap-3">
+                {/* Form Actions - Responsive */}
+                <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3">
                   <Link
                     to="/admin/associates/add/step-5"
                     className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
@@ -1125,34 +1177,34 @@ function AdminAssociateAddStep6Page() {
         </div>
       </div>
 
-      {/* Cancel Confirmation Modal */}
+      {/* Cancel Confirmation Modal - Responsive */}
       {showCancelWarning && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
                 <ExclamationTriangleIcon className="h-5 w-5 mr-2 text-amber-600" />
                 Are you sure?
               </h3>
             </div>
 
-            <div className="px-6 py-4">
+            <div className="px-4 sm:px-6 py-4">
               <p className="text-sm text-gray-600">
                 Your Associate record will be cancelled and your work will be
                 lost. This cannot be undone. Do you want to continue?
               </p>
             </div>
 
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+            <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
               <button
                 onClick={() => setShowCancelWarning(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
               >
                 No, Keep Working
               </button>
               <button
                 onClick={handleConfirmCancel}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700"
+                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700"
               >
                 Yes, Cancel
               </button>
