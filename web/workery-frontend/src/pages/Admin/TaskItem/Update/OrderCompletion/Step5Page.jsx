@@ -85,15 +85,15 @@ function AdminTaskItemOrderCompletionStep5Page() {
         task_item_id: tid,
         was_completed: formData.wasCompleted,
         reason: formData.reason,
-        reason_other: formData.reasonOther,
-        reason_comment: formData.reasonComment,
+        reason_other: formData.reasonOther || "",
+        reason_comment: formData.reasonComment || "",
         completion_date: formData.completionDate
           ? new Date(formData.completionDate).toISOString()
           : null,
-        visits: parseInt(formData.visits),
-        closing_reason_comment: formData.closingReasonComment,
+        visits: parseInt(formData.visits || 0),
+        closing_reason_comment: formData.closingReasonComment || "",
         has_inputted_financials: formData.hasInputtedFinancials,
-        comment: formData.comment,
+        comment: formData.comment || "",
       };
 
       // Add financial fields if applicable
@@ -104,47 +104,53 @@ function AdminTaskItemOrderCompletionStep5Page() {
           invoice_date: formData.invoiceDate
             ? new Date(formData.invoiceDate).toISOString()
             : null,
-          invoice_ids: formData.invoiceIDs,
+          invoice_ids: String(formData.invoiceIDs || ""), // FIX: Convert to string
           invoice_quoted_labour_amount: parseFloat(
-            formData.invoiceQuotedLabourAmount,
+            formData.invoiceQuotedLabourAmount || 0,
           ),
           invoice_quoted_material_amount: parseFloat(
-            formData.invoiceQuotedMaterialAmount,
+            formData.invoiceQuotedMaterialAmount || 0,
           ),
           invoice_quoted_other_costs_amount: parseFloat(
-            formData.invoiceQuotedOtherCostsAmount,
+            formData.invoiceQuotedOtherCostsAmount || 0,
           ),
           invoice_total_quote_amount: parseFloat(
-            formData.invoiceTotalQuoteAmount,
+            formData.invoiceTotalQuoteAmount || 0,
           ),
-          invoice_labour_amount: parseFloat(formData.invoiceLabourAmount),
-          invoice_material_amount: parseFloat(formData.invoiceMaterialAmount),
+          invoice_labour_amount: parseFloat(formData.invoiceLabourAmount || 0),
+          invoice_material_amount: parseFloat(
+            formData.invoiceMaterialAmount || 0,
+          ),
           invoice_other_costs_amount: parseFloat(
-            formData.invoiceOtherCostsAmount,
+            formData.invoiceOtherCostsAmount || 0,
           ),
-          invoice_tax_amount: parseFloat(formData.invoiceTaxAmount),
-          invoice_is_custom_tax_amount: formData.invoiceIsCustomTaxAmount,
-          invoice_total_amount: parseFloat(formData.invoiceTotalAmount),
-          invoice_deposit_amount: parseFloat(formData.invoiceDepositAmount),
-          invoice_amount_due: parseFloat(formData.invoiceAmountDue),
-          invoice_service_fee_id: formData.invoiceServiceFeeID,
+          invoice_tax_amount: parseFloat(formData.invoiceTaxAmount || 0),
+          invoice_is_custom_tax_amount: Boolean(
+            formData.invoiceIsCustomTaxAmount,
+          ),
+          invoice_total_amount: parseFloat(formData.invoiceTotalAmount || 0),
+          invoice_deposit_amount: parseFloat(
+            formData.invoiceDepositAmount || 0,
+          ),
+          invoice_amount_due: parseFloat(formData.invoiceAmountDue || 0),
+          invoice_service_fee_id: formData.invoiceServiceFeeID || "",
           invoice_service_fee_percentage: parseFloat(
-            formData.invoiceServiceFeePercentage,
+            formData.invoiceServiceFeePercentage || 0,
           ),
           invoice_service_fee_amount: parseFloat(
-            formData.invoiceServiceFeeAmount,
+            formData.invoiceServiceFeeAmount || 0,
           ),
           invoice_service_fee_payment_date:
             formData.invoiceServiceFeePaymentDate
               ? new Date(formData.invoiceServiceFeePaymentDate).toISOString()
               : null,
           invoice_actual_service_fee_amount_paid: parseFloat(
-            formData.invoiceActualServiceFeeAmountPaid,
+            formData.invoiceActualServiceFeeAmountPaid || 0,
           ),
           invoice_balance_owing_amount: parseFloat(
-            formData.invoiceBalanceOwingAmount,
+            formData.invoiceBalanceOwingAmount || 0,
           ),
-          payment_methods: formData.paymentMethods,
+          payment_methods: formData.paymentMethods || [],
         });
       }
 
