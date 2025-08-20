@@ -986,7 +986,7 @@ function AppRouter() {
               path="/admin/staff/:aid/edit"
               element={
                 <Layout>
-                  <PlaceholderPage title="Edit Staff" />
+                  <AdminStaffUpdatePage />
                 </Layout>
               }
             />
