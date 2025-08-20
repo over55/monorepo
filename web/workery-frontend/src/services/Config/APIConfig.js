@@ -97,7 +97,7 @@ export const API_ENDPOINTS = {
   CUSTOMER_UNBAN_OPERATION: "/customers/operations/unban",
 
   // Staff endpoints
-  STAFF: "/staffs", // <-- Changed to plural
+  STAFF: "/staffs",
   STAFF_DETAIL: "/staff/{id}",
   STAFF_ARCHIVE_OPERATION: "/staff/operation/archive",
   STAFF_CREATE_COMMENT_OPERATION: "/staffs/operation/create-comment",
