@@ -61,6 +61,7 @@ function AdminTaskItemAssignAssociateStep4Page() {
 
     // Prepare payload - using snake_case as required by API
     const payload = {
+      task_id: tid,
       task_item_id: tid,
       associate_id: assignmentData.associateID,
       status: assignmentData.status,

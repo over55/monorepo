@@ -143,11 +143,11 @@ export const API_ENDPOINTS = {
   TASK_DETAIL: "/task/{id}",
   TASK_COUNT: "/tasks/count",
   TASK_ASSIGNABLE_ASSOCIATES: "/task/{id}/assignable-associates",
-  TASK_ASSIGN_ASSOCIATE_OPERATION: "/tasks/operation/assign-associate",
-  TASK_ORDER_COMPLETION_OPERATION: "/tasks/operation/order-completion",
-  TASK_SURVEY_OPERATION: "/tasks/operation/survey",
-  TASK_POSTPONE_OPERATION: "/tasks/operation/postpone",
-  TASK_CLOSE_OPERATION: "/tasks/operation/close",
+  TASK_ASSIGN_ASSOCIATE_OPERATION: "/task-operations/assign-associate",
+  TASK_ORDER_COMPLETION_OPERATION: "/task-operations/order-completion",
+  TASK_SURVEY_OPERATION: "/task-operations/survey",
+  TASK_POSTPONE_OPERATION: "/task-operations/postpone",
+  TASK_CLOSE_OPERATION: "/task-operations/close",
 
   // Activity Sheet endpoints
   ACTIVITY_SHEETS: "/activity-sheets",
