@@ -34,6 +34,7 @@ function AdminTaskItemPostponeOperationPage() {
   const [errors, setErrors] = useState({});
   const [task, setTask] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   // Form fields
   const [reason, setReason] = useState(0);
@@ -56,6 +57,11 @@ function AdminTaskItemPostponeOperationPage() {
       try {
         const taskData = await taskManager.getTaskDetail(tid, onUnauthorized);
         setTask(taskData);
+
+        // If task is already closed, don't allow postponement
+        if (taskData.isClosed) {
+          console.log("Task is already closed, cannot postpone");
+        }
       } catch (error) {
         console.error("Failed to fetch task details:", error);
         setErrors(error);
@@ -116,15 +122,54 @@ function AdminTaskItemPostponeOperationPage() {
       };
 
       // Submit postpone operation
-      await taskManager.postponeTask(payload, onUnauthorized);
+      const response = await taskManager.postponeTask(payload, onUnauthorized);
 
-      // Navigate to task detail page
-      navigate(getTaskUpdateURL(task.id, task.type));
+      console.log("Task postponed successfully:", response);
+
+      // Show success message
+      setShowSuccessMessage(true);
+
+      // Clear the task cache to ensure fresh data
+      taskManager.clearTasksCache();
+
+      // Navigate after a short delay to let user see the success message
+      setTimeout(() => {
+        // Navigate to the tasks list or the order detail page
+        if (task && task.orderWjid) {
+          // Navigate to the order detail page which will show the new task
+          navigate(`/admin/order/${task.orderWjid}`);
+        } else {
+          // Fallback to tasks list
+          navigate("/admin/tasks", {
+            state: {
+              message: `Task #${task?.publicId || tid} has been successfully postponed. A new follow-up task has been created with the new start date.`,
+              messageType: "success",
+            },
+          });
+        }
+      }, 1500);
     } catch (error) {
       console.error("Failed to postpone task:", error);
-      setErrors(error);
+
+      // Check if it's a "task already closed" error
+      if (
+        error?.taskItemId?.includes("closed") ||
+        error?.task_item_id?.includes("closed")
+      ) {
+        setErrors({
+          message:
+            "This task has already been closed. Please refresh the page to see the updated status.",
+        });
+
+        // Refresh the task data
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
+      } else {
+        setErrors(error);
+      }
+
       window.scrollTo(0, 0);
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -179,6 +224,14 @@ function AdminTaskItemPostponeOperationPage() {
       )}
 
       <Card title="Postpone Task">
+        {/* Success Message */}
+        {showSuccessMessage && (
+          <Alert type="success">
+            Task has been successfully postponed! Redirecting...
+          </Alert>
+        )}
+
+        {/* Error Messages */}
         {errors && errors.message && (
           <Alert type="error" onClose={() => setErrors({})}>
             {errors.message}
@@ -197,21 +250,35 @@ function AdminTaskItemPostponeOperationPage() {
                 }}
               >
                 <h3>Task Closed</h3>
-                <p>
-                  This task has been closed and no work is needed to be done
-                  here.
+                <p>This task has been closed and cannot be postponed.</p>
+                <p style={{ marginTop: "10px", color: "#666" }}>
+                  A new follow-up task may have been created. Please check the
+                  order details or tasks list.
                 </p>
-                <Link to="/admin/tasks">
-                  <Button style={{ marginTop: "20px" }}>
-                    Go back to tasks list →
-                  </Button>
-                </Link>
+                <div
+                  style={{
+                    marginTop: "20px",
+                    display: "flex",
+                    gap: "10px",
+                    justifyContent: "center",
+                  }}
+                >
+                  {task.orderWjid && (
+                    <Link to={`/admin/order/${task.orderWjid}`}>
+                      <Button>View Order →</Button>
+                    </Link>
+                  )}
+                  <Link to="/admin/tasks">
+                    <Button variant="secondary">Go to Tasks List →</Button>
+                  </Link>
+                </div>
               </div>
             ) : (
               <>
                 <p>
                   Please fill out all the required fields before submitting this
-                  form.
+                  form. This will close the current task and create a new
+                  follow-up task with the specified start date.
                 </p>
 
                 <Select
@@ -221,6 +288,7 @@ function AdminTaskItemPostponeOperationPage() {
                   options={ORDER_POSTPONE_REASON_OPTIONS_WITH_EMPTY_OPTION}
                   error={errors.reason}
                   required
+                  disabled={isSubmitting}
                 />
 
                 {reason === 1 && (
@@ -232,6 +300,7 @@ function AdminTaskItemPostponeOperationPage() {
                     error={errors.reasonOther}
                     required
                     placeholder="Please specify..."
+                    disabled={isSubmitting}
                   />
                 )}
 
@@ -242,6 +311,7 @@ function AdminTaskItemPostponeOperationPage() {
                   onChange={(e) => setStartDate(e.target.value)}
                   error={errors.startDate}
                   required
+                  disabled={isSubmitting}
                 />
 
                 <TextArea
@@ -252,6 +322,7 @@ function AdminTaskItemPostponeOperationPage() {
                   required
                   rows={5}
                   placeholder="Include any additional information about the postponement..."
+                  disabled={isSubmitting}
                 />
 
                 <div
@@ -268,7 +339,9 @@ function AdminTaskItemPostponeOperationPage() {
                         : "/admin/tasks"
                     }
                   >
-                    <Button variant="secondary">← Back to Detail</Button>
+                    <Button variant="secondary" disabled={isSubmitting}>
+                      ← Back to Detail
+                    </Button>
                   </Link>
 
                   <Button
@@ -276,7 +349,7 @@ function AdminTaskItemPostponeOperationPage() {
                     disabled={isSubmitting || task.status === 2}
                     variant="success"
                   >
-                    {isSubmitting ? "Submitting..." : "Submit"}
+                    {isSubmitting ? "Processing..." : "Submit Postponement"}
                   </Button>
                 </div>
               </>
