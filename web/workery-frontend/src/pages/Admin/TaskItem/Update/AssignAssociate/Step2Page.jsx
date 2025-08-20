@@ -84,11 +84,6 @@ function AdminTaskItemAssignAssociateStep2Page() {
           filtersMap.set("inSkillSetIds", skillSetIds.join(","));
         }
 
-        // You might also want to add other filters:
-        // filtersMap.set("pageSize", 250); // Get more results
-        // filtersMap.set("sortField", "lexical_name");
-        // filtersMap.set("sortOrder", "ASC");
-
         // Step 4: Fetch associates with skill set filtering
         console.log("Fetching associates with skill set filters:", skillSetIds);
 
@@ -151,7 +146,7 @@ function AdminTaskItemAssignAssociateStep2Page() {
   // Helper function to render skill sets with matching highlights
   const renderSkillSets = (associateSkillSets, taskSkillSets) => {
     if (!associateSkillSets || associateSkillSets.length === 0) {
-      return <span style={{ color: "#999" }}>No skills</span>;
+      return <span className="has-text-grey">-</span>;
     }
 
     // Create a Set of task skill IDs for faster lookup
@@ -181,7 +176,7 @@ function AdminTaskItemAssignAssociateStep2Page() {
 
     // Render skill sets with matching ones first and highlighted
     return (
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+      <div className="tags">
         {/* Show matching skills first with green highlight */}
         {matchingSkills.map((skill) => (
           <span
@@ -198,540 +193,647 @@ function AdminTaskItemAssignAssociateStep2Page() {
             {skill.name}
           </span>
         ))}
-        {/* Show match count if there are matches */}
-        {matchingSkills.length > 0 && taskSkillIds.size > 0 && (
-          <span className="tag is-info is-light">
-            {matchingSkills.length}/{taskSkillIds.size} matches
-          </span>
-        )}
       </div>
     );
   };
 
   // Desktop view component
   const DesktopView = ({ associates, task }) => (
-    <div className="table-wrapper">
-      <table className="table is-fullwidth is-striped is-hoverable">
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Phone</th>
-            <th>Email</th>
-            <th>Contacts (30 days)</th>
-            <th>WSIB #</th>
-            <th>Rate</th>
-            <th>Skill Sets</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {associates.results.map((associate) => (
-            <tr key={associate.id}>
-              <td>
-                <Link to={`/admin/associate/${associate.id}`} target="_blank">
-                  {associate.name}
-                </Link>
-              </td>
-              <td>
-                {associate.phone ? (
-                  <a href={`tel:${associate.phone}`}>{associate.phone}</a>
-                ) : (
-                  <span style={{ color: "#999" }}>-</span>
-                )}
-              </td>
-              <td>
-                {associate.email ? (
-                  <a href={`mailto:${associate.email}`}>{associate.email}</a>
-                ) : (
-                  <span style={{ color: "#999" }}>-</span>
-                )}
-              </td>
-              <td>{associate.contactsLast30Days || 0}</td>
-              <td>
-                {associate.wsibNumber || (
-                  <span style={{ color: "#999" }}>-</span>
-                )}
-              </td>
-              <td>
-                {associate.hourlySalaryDesired ? (
-                  `$${associate.hourlySalaryDesired}/hr`
-                ) : (
-                  <span style={{ color: "#999" }}>-</span>
-                )}
-              </td>
-              <td>
-                {renderSkillSets(associate.skillSets, task?.orderSkillSets)}
-              </td>
-              <td>
-                <button
-                  className="button is-small is-primary"
-                  onClick={() => onSelectClick(associate)}
-                >
-                  Assign →
-                </button>
-              </td>
+    <div className="b-table">
+      <div className="table-wrapper has-mobile-cards">
+        <table className="table is-fullwidth is-striped is-hoverable is-fullwidth">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Name</th>
+              <th>Phone</th>
+              <th>Email</th>
+              <th>Contacts (30 days)</th>
+              <th>WSIB #</th>
+              <th>Rate</th>
+              <th>Matching Skill Sets</th>
+              <th></th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {associates.results.map((associate, index) => (
+              <tr key={associate.id}>
+                <td>{index + 1}</td>
+                <td data-label="Name">
+                  <Link
+                    to={`/admin/associate/${associate.id}`}
+                    target="_blank"
+                    className="has-text-primary"
+                  >
+                    <strong>{associate.name}</strong>
+                  </Link>
+                </td>
+                <td data-label="Phone">
+                  {associate.phone ? (
+                    <a
+                      href={`tel:${associate.phone}`}
+                      className="has-text-link"
+                    >
+                      📞 {associate.phone}
+                    </a>
+                  ) : (
+                    <span className="has-text-grey">-</span>
+                  )}
+                </td>
+                <td data-label="Email">
+                  {associate.email ? (
+                    <a
+                      href={`mailto:${associate.email}`}
+                      className="has-text-link"
+                    >
+                      ✉️ {associate.email}
+                    </a>
+                  ) : (
+                    <span className="has-text-grey">-</span>
+                  )}
+                </td>
+                <td data-label="Contacts (30 days)">
+                  {associate.contactsLast30Days || 0}
+                </td>
+                <td data-label="WSIB #">
+                  {associate.wsibNumber || (
+                    <span className="has-text-grey">-</span>
+                  )}
+                </td>
+                <td data-label="Rate">
+                  {associate.hourlySalaryDesired ? (
+                    <span className="has-text-success">
+                      ${associate.hourlySalaryDesired}/hr
+                    </span>
+                  ) : (
+                    <span className="has-text-grey">-</span>
+                  )}
+                </td>
+                <td data-label="Matching Skills">
+                  {renderSkillSets(associate.skillSets, task?.orderSkillSets)}
+                </td>
+                <td className="is-actions-cell">
+                  <div className="buttons is-right">
+                    <button
+                      className="button is-small is-primary"
+                      onClick={() => onSelectClick(associate)}
+                    >
+                      Assign →
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 
   // Mobile view component
   const MobileView = ({ associates, task }) => (
-    <div>
-      {associates.results.map((associate) => (
-        <div
-          key={associate.id}
-          className="box"
-          style={{ marginBottom: "1rem" }}
-        >
-          <div className="content">
-            <p>
-              <strong>Name:</strong>{" "}
-              <Link to={`/admin/associate/${associate.id}`} target="_blank">
-                {associate.name}
-              </Link>
-            </p>
-
-            <p>
-              <strong>Phone:</strong>{" "}
-              {associate.phone ? (
-                <a href={`tel:${associate.phone}`}>{associate.phone}</a>
-              ) : (
-                <span style={{ color: "#999" }}>-</span>
-              )}
-            </p>
-
-            <p>
-              <strong>Email:</strong>{" "}
-              {associate.email ? (
-                <a href={`mailto:${associate.email}`}>{associate.email}</a>
-              ) : (
-                <span style={{ color: "#999" }}>-</span>
-              )}
-            </p>
-
-            {associate.organizationName && (
-              <p>
-                <strong>Organization:</strong> {associate.organizationName}
-              </p>
-            )}
-
-            <p>
-              <strong>Contacts (30 days):</strong>{" "}
-              {associate.contactsLast30Days || 0}
-            </p>
-
-            <p>
-              <strong>WSIB #:</strong>{" "}
-              {associate.wsibNumber || <span style={{ color: "#999" }}>-</span>}
-            </p>
-
-            <p>
-              <strong>Rate:</strong>{" "}
-              {associate.hourlySalaryDesired ? (
-                `$${associate.hourlySalaryDesired}/hr`
-              ) : (
-                <span style={{ color: "#999" }}>-</span>
-              )}
-            </p>
-
-            <div style={{ marginBottom: "1rem" }}>
-              <strong>Skill Sets:</strong>
-              <div style={{ marginTop: "0.5rem" }}>
-                {renderSkillSets(associate.skillSets, task?.orderSkillSets)}
-              </div>
-            </div>
-
-            <button
-              className="button is-primary is-fullwidth"
-              onClick={() => onSelectClick(associate)}
-            >
-              Assign →
-            </button>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-
-  return (
-    <div className="container">
-      <section className="section">
-        {/* Desktop Breadcrumbs */}
-        <nav
-          className="breadcrumb has-background-light is-hidden-touch p-4"
-          aria-label="breadcrumbs"
-        >
-          <ul>
-            <li>
-              <Link to="/admin/dashboard">
-                <span className="icon is-small">📊</span>
-                <span>Dashboard</span>
-              </Link>
-            </li>
-            <li>
-              <Link to="/admin/tasks">
-                <span className="icon is-small">📋</span>
-                <span>Tasks</span>
-              </Link>
-            </li>
-            <li className="is-active">
-              <Link aria-current="page">
-                <span className="icon is-small">ℹ️</span>
-                <span>Task Detail</span>
-              </Link>
-            </li>
-          </ul>
-        </nav>
-
-        {/* Mobile Breadcrumbs */}
-        <nav
-          className="breadcrumb has-background-light is-hidden-desktop p-4"
-          aria-label="breadcrumbs"
-        >
-          <ul>
-            <li>
-              <Link to="/admin/tasks">
-                <span className="icon is-small">←</span>
-                <span>Back to Tasks</span>
-              </Link>
-            </li>
-          </ul>
-        </nav>
-
-        {/* Page banner */}
-        {task && task.status === 2 && (
-          <div className="notification is-info is-light">
-            <strong>Archived</strong>
-          </div>
-        )}
-
-        {/* Page Title */}
-        <h1 className="title is-2">
-          <span className="icon is-small">📋</span>
-          <span>Task</span>
-        </h1>
-        <h4 className="subtitle is-4">
-          <span className="icon is-small">ℹ️</span>
-          <span>Detail</span>
-        </h4>
-        <hr />
-
-        {/* Progress Wizard */}
-        <nav className="box has-background-light">
-          <p className="subtitle is-5">Step 2 of 4</p>
-          <progress className="progress is-success" value="50" max="100">
-            50%
-          </progress>
-        </nav>
-
-        {/* Page Content */}
-        <nav className="box">
-          {/* Title */}
-          {task && (
-            <div className="columns">
-              <div className="column">
-                <p className="title is-4">
-                  <span className="icon is-small">📋</span>
-                  <span>Task Detail - Assign Associate</span>
-                </p>
-              </div>
-            </div>
-          )}
-
-          {isFetching ? (
-            <div className="has-text-centered" style={{ padding: "3rem" }}>
-              <div
-                className="loader is-loading"
-                style={{ fontSize: "3rem" }}
-              ></div>
-              <p style={{ marginTop: "1rem" }}>Loading...</p>
-            </div>
+    <>
+      {associates.results.map((associate, index) => (
+        <div key={associate.id} className="mb-5">
+          {index !== 0 && <hr />}
+          <strong>👤 Name:</strong>
+          &nbsp;
+          <Link
+            to={`/admin/associate/${associate.id}`}
+            target="_blank"
+            className="has-text-primary"
+          >
+            <strong>{associate.name}</strong>
+          </Link>
+          <br />
+          <br />
+          <strong>📞 Phone:</strong>
+          &nbsp;
+          {associate.phone ? (
+            <a href={`tel:${associate.phone}`} className="has-text-link">
+              {associate.phone}
+            </a>
           ) : (
+            <span className="has-text-grey">-</span>
+          )}
+          <br />
+          <br />
+          <strong>✉️ Email:</strong>
+          &nbsp;
+          {associate.email ? (
+            <a href={`mailto:${associate.email}`} className="has-text-link">
+              {associate.email}
+            </a>
+          ) : (
+            <span className="has-text-grey">-</span>
+          )}
+          <br />
+          <br />
+          {associate.organizationName && (
             <>
-              {/* Error Display */}
-              {errors && Object.keys(errors).length > 0 && (
-                <div className="notification is-danger">
-                  <button
-                    className="delete"
-                    onClick={() => setErrors({})}
-                  ></button>
-                  {Object.entries(errors).map(([key, value]) => (
-                    <div key={key}>
-                      <strong>{key}:</strong> {value}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {task && (
-                <div className="container">
-                  {/* Task Summary Table */}
-                  <table className="table is-fullwidth">
-                    <thead>
-                      <tr className="has-background-success-light">
-                        <th colSpan="2">Task Detail</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <th
-                          className="has-background-light"
-                          style={{ width: "30%" }}
-                        >
-                          Type
-                        </th>
-                        <td>Assign Associate</td>
-                      </tr>
-                      <tr>
-                        <th className="has-background-light">Description</th>
-                        <td>{task.description}</td>
-                      </tr>
-                      <tr>
-                        <th className="has-background-light">Job #</th>
-                        <td>
-                          <Link to={`/admin/order/${task.orderWjid}`}>
-                            {task.orderWjid}
-                          </Link>
-                        </td>
-                      </tr>
-                      <tr>
-                        <th className="has-background-light">Job Start Date</th>
-                        <td>
-                          {task.orderStartDate
-                            ? new Date(task.orderStartDate).toLocaleDateString()
-                            : "-"}
-                        </td>
-                      </tr>
-                      <tr>
-                        <th className="has-background-light">
-                          Job Description
-                        </th>
-                        <td>{task.orderDescription || "-"}</td>
-                      </tr>
-                      <tr>
-                        <th className="has-background-light">
-                          Required Skill Sets
-                        </th>
-                        <td>
-                          {task.orderSkillSets &&
-                          task.orderSkillSets.length > 0 ? (
-                            <div
-                              style={{
-                                display: "flex",
-                                flexWrap: "wrap",
-                                gap: "4px",
-                              }}
-                            >
-                              {task.orderSkillSets.map((skill, index) => (
-                                <span
-                                  key={skill.id || skill.value || index}
-                                  className="tag is-primary"
-                                >
-                                  {skill.name || skill.text || skill.label}
-                                </span>
-                              ))}
-                            </div>
-                          ) : (
-                            <span style={{ color: "#999" }}>
-                              No specific skills required
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-                      <tr>
-                        <th className="has-background-light">Job Tags</th>
-                        <td>
-                          {task.orderTags && task.orderTags.length > 0 ? (
-                            <div
-                              style={{
-                                display: "flex",
-                                flexWrap: "wrap",
-                                gap: "4px",
-                              }}
-                            >
-                              {task.orderTags.map((tag, index) => (
-                                <span
-                                  key={tag.id || tag.value || index}
-                                  className="tag is-info"
-                                >
-                                  {tag.name || tag.text || tag.label}
-                                </span>
-                              ))}
-                            </div>
-                          ) : (
-                            <span style={{ color: "#999" }}>-</span>
-                          )}
-                        </td>
-                      </tr>
-                      <tr>
-                        <th className="has-background-light">Client Name</th>
-                        <td>
-                          <Link to={`/admin/client/${task.customerId}`}>
-                            {task.customerName}
-                          </Link>
-                        </td>
-                      </tr>
-                      {task.customerPhone && (
-                        <tr>
-                          <th className="has-background-light">
-                            Client Phone Number (
-                            {CLIENT_PHONE_TYPE_OF_MAP[task.customerPhoneType]}):
-                          </th>
-                          <td>
-                            <a href={`tel:${task.customerPhone}`}>
-                              {task.customerPhone}
-                              {task.customerPhoneExtension && (
-                                <span>
-                                  &nbsp;ext. {task.customerPhoneExtension}
-                                </span>
-                              )}
-                            </a>
-                          </td>
-                        </tr>
-                      )}
-                      {task.customerFullAddressUrl && (
-                        <tr>
-                          <th className="has-background-light">
-                            Client Address
-                          </th>
-                          <td>
-                            <a
-                              href={task.customerFullAddressUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              {task.customerFullAddressWithoutPostalCode}
-                            </a>
-                          </td>
-                        </tr>
-                      )}
-                      <tr>
-                        <th className="has-background-light">Client Tags</th>
-                        <td>
-                          {task.customerTags && task.customerTags.length > 0 ? (
-                            <div
-                              style={{
-                                display: "flex",
-                                flexWrap: "wrap",
-                                gap: "4px",
-                              }}
-                            >
-                              {task.customerTags.map((tag, index) => (
-                                <span
-                                  key={tag.id || tag.value || index}
-                                  className="tag is-warning"
-                                >
-                                  {tag.name || tag.text || tag.label}
-                                </span>
-                              ))}
-                            </div>
-                          ) : (
-                            <span style={{ color: "#999" }}>-</span>
-                          )}
-                        </td>
-                      </tr>
-                      <tr>
-                        <th className="has-background-light">Comments</th>
-                        <td>
-                          <Link to={`/admin/order/${task.orderWjid}/comments`}>
-                            View comments
-                          </Link>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-
-                  {/* Available Associates Section */}
-                  <div className="columns pt-5">
-                    <div className="column">
-                      <p className="title is-4">
-                        <span className="icon is-small">👷</span>
-                        <span>Available Associates</span>
-                        {task.orderSkillSets &&
-                          task.orderSkillSets.length > 0 && (
-                            <span className="tag is-info is-light ml-2">
-                              Filtered by required skills
-                            </span>
-                          )}
-                      </p>
-                    </div>
-                  </div>
-
-                  {associates &&
-                  associates.results &&
-                  associates.results.length > 0 ? (
-                    <>
-                      <div className="notification is-info is-light">
-                        <strong>Note:</strong> Associates are shown based on
-                        matching skill sets. Green highlighted skills match the
-                        job requirements.
-                      </div>
-
-                      {/* Desktop View */}
-                      <div className="is-hidden-touch">
-                        <DesktopView associates={associates} task={task} />
-                      </div>
-
-                      {/* Mobile View */}
-                      <div className="is-hidden-desktop">
-                        <MobileView associates={associates} task={task} />
-                      </div>
-                    </>
-                  ) : (
-                    <section className="hero is-medium has-background-white-ter">
-                      <div className="hero-body">
-                        <p className="title">
-                          <span className="icon">👷</span>
-                          <span>No Matching Associates</span>
-                        </p>
-                        <p className="subtitle">
-                          {task.orderSkillSets &&
-                          task.orderSkillSets.length > 0 ? (
-                            <>
-                              No active associates found with the required skill
-                              sets.{" "}
-                              <Link to="/admin/associates/add/step-1">
-                                <strong>Click here →</strong>
-                              </Link>{" "}
-                              to add a new associate.
-                            </>
-                          ) : (
-                            <>
-                              No active associates found.{" "}
-                              <Link to="/admin/associates/add/step-1">
-                                <strong>Click here →</strong>
-                              </Link>{" "}
-                              to add a new associate.
-                            </>
-                          )}
-                        </p>
-                      </div>
-                    </section>
-                  )}
-
-                  {/* Navigation Buttons */}
-                  <div className="columns pt-5">
-                    <div className="column is-half">
-                      <Link
-                        className="button is-fullwidth-mobile"
-                        to={`/admin/task/${tid}/assign-associate/step-1`}
-                      >
-                        <span className="icon is-small">←</span>
-                        <span>Back to Step 1</span>
-                      </Link>
-                    </div>
-                    <div className="column is-half has-text-right"></div>
-                  </div>
-                </div>
-              )}
+              <strong>🏢 Organization:</strong>
+              &nbsp;{associate.organizationName}
+              <br />
+              <br />
             </>
           )}
-        </nav>
-      </section>
-    </div>
+          <strong>📅 Contacts (30 days):</strong>
+          &nbsp;{associate.contactsLast30Days || 0}
+          <br />
+          <br />
+          <strong>🆔 WSIB #:</strong>
+          &nbsp;
+          {associate.wsibNumber || <span className="has-text-grey">-</span>}
+          <br />
+          <br />
+          <strong>💵 Rate:</strong>
+          &nbsp;
+          {associate.hourlySalaryDesired ? (
+            <span className="has-text-success">
+              ${associate.hourlySalaryDesired}/hr
+            </span>
+          ) : (
+            <span className="has-text-grey">-</span>
+          )}
+          <br />
+          <br />
+          <strong>🔧 Matching Skill Sets:</strong>
+          <br />
+          {renderSkillSets(associate.skillSets, task?.orderSkillSets)}
+          <br />
+          <button
+            className="button is-primary is-fullwidth"
+            onClick={() => onSelectClick(associate)}
+          >
+            Assign →
+          </button>
+        </div>
+      ))}
+    </>
+  );
+
+  if (forceURL !== "") {
+    return <Navigate to={forceURL} />;
+  }
+
+  return (
+    <>
+      <div className="container">
+        <section className="section">
+          {/* Desktop Breadcrumbs */}
+          <nav
+            className="breadcrumb has-background-light is-hidden-touch p-4"
+            aria-label="breadcrumbs"
+          >
+            <ul>
+              <li className="">
+                <Link to="/admin/dashboard" aria-current="page">
+                  📊 Dashboard
+                </Link>
+              </li>
+              <li className="">
+                <Link to="/admin/tasks" aria-current="page">
+                  📋 Tasks
+                </Link>
+              </li>
+              <li className="is-active">
+                <Link aria-current="page">ℹ️ Task Detail</Link>
+              </li>
+            </ul>
+          </nav>
+
+          {/* Mobile Breadcrumbs */}
+          <nav
+            className="breadcrumb has-background-light is-hidden-desktop p-4"
+            aria-label="breadcrumbs"
+          >
+            <ul>
+              <li className="">
+                <Link to="/admin/tasks" aria-current="page">
+                  ← Back to Tasks
+                </Link>
+              </li>
+            </ul>
+          </nav>
+
+          {/* Page banner */}
+          {task && task.status === 2 && (
+            <div className="notification is-info is-light">
+              ℹ️ <strong>Note:</strong> This task is archived.
+            </div>
+          )}
+
+          {/* Page Title */}
+          <h1 className="title is-2">📋 Task</h1>
+          <h4 className="subtitle is-4">ℹ️ Detail</h4>
+          <hr />
+
+          {/* Progress Wizard*/}
+          <nav className="box has-background-light">
+            <p className="subtitle is-5">Step 2 of 4</p>
+            <progress className="progress is-success" value="50" max="100">
+              50%
+            </progress>
+          </nav>
+
+          {/* Page */}
+          <nav className="box">
+            {/* Title + Options */}
+            {task && (
+              <div className="columns">
+                <div className="column">
+                  <p className="title is-4">
+                    📋 Task Detail - Assign Associate
+                  </p>
+                </div>
+                <div className="column has-text-right"></div>
+              </div>
+            )}
+
+            {isFetching ? (
+              <div className="has-text-centered" style={{ padding: "40px" }}>
+                <div className="lds-ring">
+                  <div></div>
+                  <div></div>
+                  <div></div>
+                  <div></div>
+                </div>
+                <p className="has-text-grey" style={{ marginTop: "20px" }}>
+                  Loading...
+                </p>
+                <style>{`
+                  .lds-ring {
+                    display: inline-block;
+                    position: relative;
+                    width: 80px;
+                    height: 80px;
+                  }
+                  .lds-ring div {
+                    box-sizing: border-box;
+                    display: block;
+                    position: absolute;
+                    width: 64px;
+                    height: 64px;
+                    margin: 8px;
+                    border: 8px solid #00d1b2;
+                    border-radius: 50%;
+                    animation: lds-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+                    border-color: #00d1b2 transparent transparent transparent;
+                  }
+                  .lds-ring div:nth-child(1) {
+                    animation-delay: -0.45s;
+                  }
+                  .lds-ring div:nth-child(2) {
+                    animation-delay: -0.3s;
+                  }
+                  .lds-ring div:nth-child(3) {
+                    animation-delay: -0.15s;
+                  }
+                  @keyframes lds-ring {
+                    0% {
+                      transform: rotate(0deg);
+                    }
+                    100% {
+                      transform: rotate(360deg);
+                    }
+                  }
+                `}</style>
+              </div>
+            ) : (
+              <>
+                {/* Error Display */}
+                {errors && Object.keys(errors).length > 0 && (
+                  <div className="notification is-danger">
+                    <button
+                      className="delete"
+                      onClick={() => setErrors({})}
+                    ></button>
+                    <p className="title is-5">⚠️ Error</p>
+                    {Object.entries(errors).map(([key, value]) => (
+                      <p key={key}>
+                        <strong>{key}:</strong> {value}
+                      </p>
+                    ))}
+                  </div>
+                )}
+
+                {task && (
+                  <div className="container">
+                    <table className="table is-fullwidth">
+                      <thead>
+                        <tr className="has-background-success-light">
+                          <th colSpan="2">Task Detail</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <th
+                            className="has-background-light"
+                            style={{ width: "30%" }}
+                          >
+                            Type
+                          </th>
+                          <td>Assign Associate</td>
+                        </tr>
+                        <tr>
+                          <th
+                            className="has-background-light"
+                            style={{ width: "30%" }}
+                          >
+                            Description
+                          </th>
+                          <td>{task.description}</td>
+                        </tr>
+                        <tr>
+                          <th
+                            className="has-background-light"
+                            style={{ width: "30%" }}
+                          >
+                            Job #
+                          </th>
+                          <td>
+                            <Link
+                              to={`/admin/order/${task.orderWjid}`}
+                              className="has-text-primary"
+                            >
+                              {task.orderWjid} →
+                            </Link>
+                          </td>
+                        </tr>
+                        <tr>
+                          <th
+                            className="has-background-light"
+                            style={{ width: "30%" }}
+                          >
+                            Job Start Date
+                          </th>
+                          <td>
+                            {task.orderStartDate
+                              ? new Date(
+                                  task.orderStartDate,
+                                ).toLocaleDateString()
+                              : "-"}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th
+                            className="has-background-light"
+                            style={{ width: "30%" }}
+                          >
+                            Job Description
+                          </th>
+                          <td>
+                            {task.orderDescription ? (
+                              task.orderDescription
+                            ) : (
+                              <>-</>
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th
+                            className="has-background-light"
+                            style={{ width: "30%" }}
+                          >
+                            Job Skill Sets
+                          </th>
+                          <td>
+                            {task.orderSkillSets &&
+                            task.orderSkillSets.length > 0 ? (
+                              <div className="tags">
+                                {task.orderSkillSets.map((skill, index) => (
+                                  <span
+                                    key={skill.id || skill.value || index}
+                                    className="tag is-primary"
+                                  >
+                                    🔧 {skill.name || skill.text || skill.label}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="has-text-grey">-</span>
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th
+                            className="has-background-light"
+                            style={{ width: "30%" }}
+                          >
+                            Job Tags
+                          </th>
+                          <td>
+                            {task.orderTags && task.orderTags.length > 0 ? (
+                              <div className="tags">
+                                {task.orderTags.map((tag, index) => (
+                                  <span
+                                    key={tag.id || tag.value || index}
+                                    className="tag is-info is-light"
+                                  >
+                                    🏷️ {tag.name || tag.text || tag.label}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="has-text-grey">-</span>
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th
+                            className="has-background-light"
+                            style={{ width: "30%" }}
+                          >
+                            Client Name
+                          </th>
+                          <td>
+                            <Link
+                              to={`/admin/client/${task.customerId}`}
+                              className="has-text-primary"
+                            >
+                              {task.customerName} →
+                            </Link>
+                          </td>
+                        </tr>
+                        {task.customerPhone && (
+                          <tr>
+                            <th
+                              className="has-background-light"
+                              style={{ width: "30%" }}
+                            >
+                              Client Phone Number (
+                              {CLIENT_PHONE_TYPE_OF_MAP[task.customerPhoneType]}
+                              ):
+                            </th>
+                            <td>
+                              <a
+                                href={`tel:${task.customerPhone}`}
+                                className="has-text-link"
+                              >
+                                📞 {task.customerPhone}
+                                {task.customerPhoneExtension && (
+                                  <> ext. {task.customerPhoneExtension}</>
+                                )}
+                              </a>
+                            </td>
+                          </tr>
+                        )}
+                        {task.customerFullAddressUrl && (
+                          <tr>
+                            <th
+                              className="has-background-light"
+                              style={{ width: "30%" }}
+                            >
+                              Client Address
+                            </th>
+                            <td>
+                              <a
+                                href={task.customerFullAddressUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="has-text-link"
+                              >
+                                📍 {task.customerFullAddressWithoutPostalCode}
+                              </a>
+                            </td>
+                          </tr>
+                        )}
+                        <tr>
+                          <th
+                            className="has-background-light"
+                            style={{ width: "30%" }}
+                          >
+                            Client Tags
+                          </th>
+                          <td>
+                            {task.customerTags &&
+                            task.customerTags.length > 0 ? (
+                              <div className="tags">
+                                {task.customerTags.map((tag, index) => (
+                                  <span
+                                    key={tag.id || tag.value || index}
+                                    className="tag is-warning is-light"
+                                  >
+                                    🏷️ {tag.name || tag.text || tag.label}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="has-text-grey">-</span>
+                            )}
+                          </td>
+                        </tr>
+                        <tr>
+                          <th
+                            className="has-background-light"
+                            style={{ width: "30%" }}
+                          >
+                            Comments
+                          </th>
+                          <td>
+                            <Link
+                              to={`/admin/order/${task.orderWjid}/comments`}
+                              className="has-text-primary"
+                            >
+                              💬 View comments →
+                            </Link>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+
+                    {/* Available Associates */}
+                    {task && (
+                      <div className="columns pt-5">
+                        <div className="column">
+                          <p className="title is-4">👷 Available Associates</p>
+                          {task.orderSkillSets &&
+                            task.orderSkillSets.length > 0 && (
+                              <div className="notification is-info is-light">
+                                ℹ️ <strong>Note:</strong> Associates are
+                                filtered by matching skill sets. Green
+                                highlighted skills match the job requirements.
+                              </div>
+                            )}
+                        </div>
+                        <div className="column has-text-right"></div>
+                      </div>
+                    )}
+
+                    {associates &&
+                    associates.results &&
+                    associates.results.length > 0 ? (
+                      <div className="container">
+                        {/*
+                          ##################################################################
+                          EVERYTHING INSIDE HERE WILL ONLY BE DISPLAYED ON A DESKTOP SCREEN.
+                          ##################################################################
+                        */}
+                        <div className="is-hidden-touch">
+                          <DesktopView associates={associates} task={task} />
+                        </div>
+
+                        {/*
+                          ###########################################################################
+                          EVERYTHING INSIDE HERE WILL ONLY BE DISPLAYED ON A TABLET OR MOBILE SCREEN.
+                          ###########################################################################
+                        */}
+                        <div className="is-fullwidth is-hidden-desktop">
+                          <MobileView associates={associates} task={task} />
+                        </div>
+                      </div>
+                    ) : (
+                      <section className="hero is-medium has-background-white-ter">
+                        <div className="hero-body">
+                          <p className="title">⚠️ No Associates</p>
+                          <p className="subtitle">
+                            {task.orderSkillSets &&
+                            task.orderSkillSets.length > 0 ? (
+                              <>
+                                No active associates found with the required
+                                skill sets.{" "}
+                                <b>
+                                  <Link to="/admin/associates/add/step-1-search">
+                                    Click here →
+                                  </Link>
+                                </b>{" "}
+                                to get started creating your first associate.
+                              </>
+                            ) : (
+                              <>
+                                No active associates found.{" "}
+                                <b>
+                                  <Link to="/admin/associates/add/step-1-search">
+                                    Click here →
+                                  </Link>
+                                </b>{" "}
+                                to get started creating your first associate.
+                              </>
+                            )}
+                          </p>
+                        </div>
+                      </section>
+                    )}
+
+                    <div className="columns pt-5">
+                      <div className="column is-half">
+                        <Link
+                          className="button is-fullwidth-mobile"
+                          to={`/admin/task/${tid}/assign-associate/step-1`}
+                        >
+                          ← Back to Step 1
+                        </Link>
+                      </div>
+                      <div className="column is-half has-text-right"></div>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </nav>
+        </section>
+      </div>
+    </>
   );
 }
 
