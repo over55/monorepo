@@ -1,3 +1,4 @@
+// cloud/workery-backend/app/taskitem/controller/opclose.go
 package controller
 
 import (
@@ -169,6 +170,7 @@ func (impl *TaskItemControllerImpl) CloseOperation(ctx context.Context, req *Tas
 		////
 
 		var newTask *ti_s.TaskItem
+		var newTaskID primitive.ObjectID // Store the ID separately for logging
 
 		if req.WasCompleted == 1 { // --------- Success --------- //
 			title := "Survey"
@@ -249,11 +251,13 @@ func (impl *TaskItemControllerImpl) CloseOperation(ctx context.Context, req *Tas
 				OrderTags:      toTaskItemTagsFromOrderTags(o.Tags),
 			}
 
+			// Store the ID for logging
+			newTaskID = newTask.ID
+
 			if err := impl.TaskItemStorer.Create(sessCtx, newTask); err != nil {
 				impl.Logger.Error("task creation error",
 					slog.Any("task_item_id", req.TaskItemID),
-					slog.Any("new_task_item_id", newTask.ID),
-					slog.Any("order_id", ti.OrderID),
+					slog.Any("new_task_item_id", newTaskID),
 					slog.Any("order_id", ti.OrderID),
 					slog.Any("order_wjid", ti.OrderWJID),
 					slog.Any("error", err))
@@ -262,7 +266,7 @@ func (impl *TaskItemControllerImpl) CloseOperation(ctx context.Context, req *Tas
 
 			impl.Logger.Debug("new task item created for closure operation",
 				slog.Any("task_item_id", req.TaskItemID),
-				slog.Any("new_task_item_id", newTask.ID),
+				slog.Any("new_task_item_id", newTaskID),
 				slog.Any("order_id", ti.OrderID),
 				slog.Any("order_wjid", ti.OrderWJID))
 
@@ -287,9 +291,9 @@ func (impl *TaskItemControllerImpl) CloseOperation(ctx context.Context, req *Tas
 			o.ModifiedFromIPAddress = ipAddress
 
 			if err := impl.OrderStorer.UpdateByID(sessCtx, o); err != nil {
-				impl.Logger.Error("task creation error",
+				impl.Logger.Error("order update error",
 					slog.Any("task_item_id", req.TaskItemID),
-					slog.Any("new_task_item_id", newTask.ID),
+					slog.Any("new_task_item_id", newTaskID),
 					slog.Any("order_id", ti.OrderID),
 					slog.Any("order_wjid", ti.OrderWJID),
 					slog.Any("error", err))
@@ -298,7 +302,7 @@ func (impl *TaskItemControllerImpl) CloseOperation(ctx context.Context, req *Tas
 
 			impl.Logger.Debug("updated completed order because of closure operation",
 				slog.Any("task_item_id", req.TaskItemID),
-				slog.Any("new_task_item_id", newTask.ID),
+				slog.Any("new_task_item_id", newTaskID),
 				slog.Any("order_id", ti.OrderID),
 				slog.Any("order_wjid", ti.OrderWJID))
 
@@ -326,20 +330,30 @@ func (impl *TaskItemControllerImpl) CloseOperation(ctx context.Context, req *Tas
 			o.ModifiedFromIPAddress = ipAddress
 
 			if err := impl.OrderStorer.UpdateByID(sessCtx, o); err != nil {
-				impl.Logger.Error("order update error",
+				// Use a safe logging approach when newTask might be nil
+				logFields := []any{
 					slog.Any("task_item_id", req.TaskItemID),
-					slog.Any("new_task_item_id", newTask.ID),
 					slog.Any("order_id", ti.OrderID),
 					slog.Any("order_wjid", ti.OrderWJID),
-					slog.Any("error", err))
+					slog.Any("error", err),
+				}
+				if newTaskID != primitive.NilObjectID {
+					logFields = append(logFields, slog.Any("new_task_item_id", newTaskID))
+				}
+				impl.Logger.Error("order update error", logFields...)
 				return nil, err
 			}
 
-			impl.Logger.Debug("updated not completed order because of closure operation",
+			// Use safe logging approach
+			logFields := []any{
 				slog.Any("task_item_id", req.TaskItemID),
-				slog.Any("new_task_item_id", newTask.ID),
 				slog.Any("order_id", ti.OrderID),
-				slog.Any("order_wjid", ti.OrderWJID))
+				slog.Any("order_wjid", ti.OrderWJID),
+			}
+			if newTaskID != primitive.NilObjectID {
+				logFields = append(logFields, slog.Any("new_task_item_id", newTaskID))
+			}
+			impl.Logger.Debug("updated not completed order because of closure operation", logFields...)
 		}
 
 		////
@@ -361,17 +375,27 @@ func (impl *TaskItemControllerImpl) CloseOperation(ctx context.Context, req *Tas
 			Status:                com_s.CommentStatusActive,
 		}
 		if err := impl.CommentStorer.Create(sessCtx, com); err != nil {
-			impl.Logger.Error("comment creation error",
+			// Use safe logging approach
+			logFields := []any{
 				slog.Any("task_item_id", req.TaskItemID),
-				slog.Any("new_task_item_id", newTask.ID),
-				slog.Any("error", err))
+				slog.Any("error", err),
+			}
+			if newTaskID != primitive.NilObjectID {
+				logFields = append(logFields, slog.Any("new_task_item_id", newTaskID))
+			}
+			impl.Logger.Error("comment creation error", logFields...)
 			return nil, err
 		}
 
-		impl.Logger.Debug("comment created for closure operation",
+		// Use safe logging approach
+		logFields := []any{
 			slog.Any("task_item_id", req.TaskItemID),
-			slog.Any("new_task_item_id", newTask.ID),
-			slog.Any("comment_id", com.ID))
+			slog.Any("comment_id", com.ID),
+		}
+		if newTaskID != primitive.NilObjectID {
+			logFields = append(logFields, slog.Any("new_task_item_id", newTaskID))
+		}
+		impl.Logger.Debug("comment created for closure operation", logFields...)
 
 		oc := &o_s.OrderComment{
 			ID:                    com.ID,
@@ -396,10 +420,15 @@ func (impl *TaskItemControllerImpl) CloseOperation(ctx context.Context, req *Tas
 		o.Comments = append(o.Comments, oc)
 
 		if err := impl.OrderStorer.UpdateByID(sessCtx, o); err != nil {
-			impl.Logger.Error("order update error",
+			// Use safe logging approach
+			logFields := []any{
 				slog.Any("task_item_id", req.TaskItemID),
-				slog.Any("new_task_item_id", newTask.ID),
-				slog.Any("error", err))
+				slog.Any("error", err),
+			}
+			if newTaskID != primitive.NilObjectID {
+				logFields = append(logFields, slog.Any("new_task_item_id", newTaskID))
+			}
+			impl.Logger.Error("order update error", logFields...)
 			return nil, err
 		}
 
@@ -408,19 +437,29 @@ func (impl *TaskItemControllerImpl) CloseOperation(ctx context.Context, req *Tas
 		com.OrderID = o.ID
 		com.OrderWJID = o.WJID
 		if err := impl.CommentStorer.UpdateByID(sessCtx, com); err != nil {
-			impl.Logger.Error("comment update error",
+			// Use safe logging approach
+			logFields := []any{
 				slog.Any("task_item_id", req.TaskItemID),
-				slog.Any("new_task_item_id", newTask.ID),
-				slog.Any("error", err))
+				slog.Any("error", err),
+			}
+			if newTaskID != primitive.NilObjectID {
+				logFields = append(logFields, slog.Any("new_task_item_id", newTaskID))
+			}
+			impl.Logger.Error("comment update error", logFields...)
 			return nil, err
 		}
 
-		impl.Logger.Debug("order comment created for closure operation",
+		// Use safe logging approach for final log
+		finalLogFields := []any{
 			slog.Any("task_item_id", req.TaskItemID),
-			slog.Any("new_task_item_id", newTask.ID),
 			slog.Any("order_id", ti.OrderID),
 			slog.Any("order_wjid", ti.OrderWJID),
-			slog.Any("comment_id", com.ID))
+			slog.Any("comment_id", com.ID),
+		}
+		if newTaskID != primitive.NilObjectID {
+			finalLogFields = append(finalLogFields, slog.Any("new_task_item_id", newTaskID))
+		}
+		impl.Logger.Debug("order comment created for closure operation", finalLogFields...)
 
 		////
 		//// Exit our transaction successfully.
