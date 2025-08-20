@@ -33,8 +33,9 @@ function AdminTaskItemAssignAssociateStep3Page() {
   const [comment, setComment] = useState("");
   const [howWasJobAccepted, setHowWasJobAccepted] = useState(0);
   const [whyJobDeclined, setWhyJobDeclined] = useState(0);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
-  // Load associate data from session storage
+  // Load associate data and form data from session storage
   useEffect(() => {
     const storedData = sessionStorage.getItem(
       STORAGE_KEYS.WORKERY_ASSIGN_ASSOCIATE_DATA,
@@ -46,6 +47,31 @@ function AdminTaskItemAssignAssociateStep3Page() {
 
     const data = JSON.parse(storedData);
     setAssociateData(data);
+
+    // Load previously entered form data if it exists
+    if (data.status !== undefined && data.status !== null) {
+      console.log("Loading previous form data from sessionStorage");
+
+      // Set the status
+      setStatus(data.status);
+
+      // Set the comment
+      setComment(data.comment || "");
+
+      // Set the predefined comment
+      setPredefinedComment(data.predefinedComment || "");
+
+      // Set how job was accepted or why it was declined based on status
+      if (data.status === TASK_ASSIGN_ASSOCIATE_STATUS.ACCEPTED) {
+        setHowWasJobAccepted(data.howWasJobAccepted || 0);
+        setWhyJobDeclined(0);
+      } else if (data.status === TASK_ASSIGN_ASSOCIATE_STATUS.DECLINED) {
+        setWhyJobDeclined(data.whyJobDeclined || 0);
+        setHowWasJobAccepted(0);
+      }
+    }
+
+    setIsDataLoaded(true);
   }, [tid]);
 
   // Event handling
@@ -102,9 +128,12 @@ function AdminTaskItemAssignAssociateStep3Page() {
 
   const handleStatusChange = (value) => {
     setStatus(value);
-    setPredefinedComment("");
-    setHowWasJobAccepted(0);
-    setWhyJobDeclined(0);
+    // Only reset these if we're changing to a different status
+    if (value !== status) {
+      setPredefinedComment("");
+      setHowWasJobAccepted(0);
+      setWhyJobDeclined(0);
+    }
   };
 
   const handleHowAcceptedChange = (value) => {
@@ -204,8 +233,16 @@ function AdminTaskItemAssignAssociateStep3Page() {
           </Alert>
         )}
 
-        {associateData && (
+        {associateData && isDataLoaded && (
           <div>
+            {/* Show notification if data was loaded from previous submission */}
+            {status !== 0 && (
+              <Alert type="info">
+                ℹ️ Your previous responses have been loaded. You can review and
+                modify them if needed.
+              </Alert>
+            )}
+
             {/* Associate Info */}
             <FormGroup>
               <label>Associate</label>
@@ -426,13 +463,17 @@ function AdminTaskItemAssignAssociateStep3Page() {
                 <Button variant="secondary">← Back to Step 2</Button>
               </Link>
 
-              <div style={{ marginLeft: "auto" }}>
+              <div style={{ marginLeft: "auto", display: "flex", gap: "10px" }}>
                 <Button onClick={onSubmitClick} variant="primary">
                   Confirm & Continue →
                 </Button>
               </div>
             </div>
           </div>
+        )}
+
+        {!isDataLoaded && associateData && (
+          <Loading message="Loading form data..." />
         )}
       </Card>
     </div>

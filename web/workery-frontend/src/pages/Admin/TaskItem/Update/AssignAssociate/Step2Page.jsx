@@ -24,6 +24,7 @@ function AdminTaskItemAssignAssociateStep2Page() {
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
   const [forceURL, setForceURL] = useState("");
+  const [selectedAssociateId, setSelectedAssociateId] = useState(null); // Track selected associate
 
   // Event handling
   const onUnauthorized = () => {
@@ -48,6 +49,24 @@ function AdminTaskItemAssignAssociateStep2Page() {
     );
     setForceURL(`/admin/task/${tid}/assign-associate/step-3`);
   };
+
+  // Load previously selected associate from session storage
+  useEffect(() => {
+    const storedData = sessionStorage.getItem(
+      STORAGE_KEYS.WORKERY_ASSIGN_ASSOCIATE_DATA,
+    );
+    if (storedData) {
+      try {
+        const data = JSON.parse(storedData);
+        if (data.associateID) {
+          setSelectedAssociateId(data.associateID);
+          console.log("Found previously selected associate:", data.associateID);
+        }
+      } catch (error) {
+        console.error("Error parsing stored associate data:", error);
+      }
+    }
+  }, []);
 
   // Load task details and then load filtered associates
   useEffect(() => {
@@ -197,7 +216,7 @@ function AdminTaskItemAssignAssociateStep2Page() {
     );
   };
 
-  // Desktop view component
+  // Desktop view component with selection highlighting
   const DesktopView = ({ associates, task }) => (
     <div className="b-table">
       <div className="table-wrapper has-mobile-cards">
@@ -216,159 +235,179 @@ function AdminTaskItemAssignAssociateStep2Page() {
             </tr>
           </thead>
           <tbody>
-            {associates.results.map((associate, index) => (
-              <tr key={associate.id}>
-                <td>{index + 1}</td>
-                <td data-label="Name">
-                  <Link
-                    to={`/admin/associate/${associate.id}`}
-                    target="_blank"
-                    className="has-text-primary"
-                  >
-                    <strong>{associate.name}</strong>
-                  </Link>
-                </td>
-                <td data-label="Phone">
-                  {associate.phone ? (
-                    <a
-                      href={`tel:${associate.phone}`}
-                      className="has-text-link"
+            {associates.results.map((associate, index) => {
+              const isSelected = selectedAssociateId === associate.id;
+              return (
+                <tr
+                  key={associate.id}
+                  className={isSelected ? "has-background-primary-light" : ""}
+                >
+                  <td>{index + 1}</td>
+                  <td data-label="Name">
+                    <Link
+                      to={`/admin/associate/${associate.id}`}
+                      target="_blank"
+                      className="has-text-primary"
                     >
-                      📞 {associate.phone}
-                    </a>
-                  ) : (
-                    <span className="has-text-grey">-</span>
-                  )}
-                </td>
-                <td data-label="Email">
-                  {associate.email ? (
-                    <a
-                      href={`mailto:${associate.email}`}
-                      className="has-text-link"
-                    >
-                      ✉️ {associate.email}
-                    </a>
-                  ) : (
-                    <span className="has-text-grey">-</span>
-                  )}
-                </td>
-                <td data-label="Contacts (30 days)">
-                  {associate.contactsLast30Days || 0}
-                </td>
-                <td data-label="WSIB #">
-                  {associate.wsibNumber || (
-                    <span className="has-text-grey">-</span>
-                  )}
-                </td>
-                <td data-label="Rate">
-                  {associate.hourlySalaryDesired ? (
-                    <span className="has-text-success">
-                      ${associate.hourlySalaryDesired}/hr
-                    </span>
-                  ) : (
-                    <span className="has-text-grey">-</span>
-                  )}
-                </td>
-                <td data-label="Matching Skills">
-                  {renderSkillSets(associate.skillSets, task?.orderSkillSets)}
-                </td>
-                <td className="is-actions-cell">
-                  <div className="buttons is-right">
-                    <button
-                      className="button is-small is-primary"
-                      onClick={() => onSelectClick(associate)}
-                    >
-                      Assign →
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+                      <strong>{associate.name}</strong>
+                    </Link>
+                    {isSelected && (
+                      <span className="tag is-primary is-light ml-2">
+                        Selected
+                      </span>
+                    )}
+                  </td>
+                  <td data-label="Phone">
+                    {associate.phone ? (
+                      <a
+                        href={`tel:${associate.phone}`}
+                        className="has-text-link"
+                      >
+                        📞 {associate.phone}
+                      </a>
+                    ) : (
+                      <span className="has-text-grey">-</span>
+                    )}
+                  </td>
+                  <td data-label="Email">
+                    {associate.email ? (
+                      <a
+                        href={`mailto:${associate.email}`}
+                        className="has-text-link"
+                      >
+                        ✉️ {associate.email}
+                      </a>
+                    ) : (
+                      <span className="has-text-grey">-</span>
+                    )}
+                  </td>
+                  <td data-label="Contacts (30 days)">
+                    {associate.contactsLast30Days || 0}
+                  </td>
+                  <td data-label="WSIB #">
+                    {associate.wsibNumber || (
+                      <span className="has-text-grey">-</span>
+                    )}
+                  </td>
+                  <td data-label="Rate">
+                    {associate.hourlySalaryDesired ? (
+                      <span className="has-text-success">
+                        ${associate.hourlySalaryDesired}/hr
+                      </span>
+                    ) : (
+                      <span className="has-text-grey">-</span>
+                    )}
+                  </td>
+                  <td data-label="Matching Skills">
+                    {renderSkillSets(associate.skillSets, task?.orderSkillSets)}
+                  </td>
+                  <td className="is-actions-cell">
+                    <div className="buttons is-right">
+                      <button
+                        className={`button is-small ${isSelected ? "is-success" : "is-primary"}`}
+                        onClick={() => onSelectClick(associate)}
+                      >
+                        {isSelected ? "Reselect →" : "Assign →"}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
     </div>
   );
 
-  // Mobile view component
+  // Mobile view component with selection highlighting
   const MobileView = ({ associates, task }) => (
     <>
-      {associates.results.map((associate, index) => (
-        <div key={associate.id} className="mb-5">
-          {index !== 0 && <hr />}
-          <strong>👤 Name:</strong>
-          &nbsp;
-          <Link
-            to={`/admin/associate/${associate.id}`}
-            target="_blank"
-            className="has-text-primary"
+      {associates.results.map((associate, index) => {
+        const isSelected = selectedAssociateId === associate.id;
+        return (
+          <div
+            key={associate.id}
+            className={`mb-5 ${isSelected ? "box has-background-primary-light" : ""}`}
           >
-            <strong>{associate.name}</strong>
-          </Link>
-          <br />
-          <br />
-          <strong>📞 Phone:</strong>
-          &nbsp;
-          {associate.phone ? (
-            <a href={`tel:${associate.phone}`} className="has-text-link">
-              {associate.phone}
-            </a>
-          ) : (
-            <span className="has-text-grey">-</span>
-          )}
-          <br />
-          <br />
-          <strong>✉️ Email:</strong>
-          &nbsp;
-          {associate.email ? (
-            <a href={`mailto:${associate.email}`} className="has-text-link">
-              {associate.email}
-            </a>
-          ) : (
-            <span className="has-text-grey">-</span>
-          )}
-          <br />
-          <br />
-          {associate.organizationName && (
-            <>
-              <strong>🏢 Organization:</strong>
-              &nbsp;{associate.organizationName}
-              <br />
-              <br />
-            </>
-          )}
-          <strong>📅 Contacts (30 days):</strong>
-          &nbsp;{associate.contactsLast30Days || 0}
-          <br />
-          <br />
-          <strong>🆔 WSIB #:</strong>
-          &nbsp;
-          {associate.wsibNumber || <span className="has-text-grey">-</span>}
-          <br />
-          <br />
-          <strong>💵 Rate:</strong>
-          &nbsp;
-          {associate.hourlySalaryDesired ? (
-            <span className="has-text-success">
-              ${associate.hourlySalaryDesired}/hr
-            </span>
-          ) : (
-            <span className="has-text-grey">-</span>
-          )}
-          <br />
-          <br />
-          <strong>🔧 Matching Skill Sets:</strong>
-          <br />
-          {renderSkillSets(associate.skillSets, task?.orderSkillSets)}
-          <br />
-          <button
-            className="button is-primary is-fullwidth"
-            onClick={() => onSelectClick(associate)}
-          >
-            Assign →
-          </button>
-        </div>
-      ))}
+            {index !== 0 && <hr />}
+            <strong>👤 Name:</strong>
+            &nbsp;
+            <Link
+              to={`/admin/associate/${associate.id}`}
+              target="_blank"
+              className="has-text-primary"
+            >
+              <strong>{associate.name}</strong>
+            </Link>
+            {isSelected && (
+              <span className="tag is-primary is-light ml-2">Selected</span>
+            )}
+            <br />
+            <br />
+            <strong>📞 Phone:</strong>
+            &nbsp;
+            {associate.phone ? (
+              <a href={`tel:${associate.phone}`} className="has-text-link">
+                {associate.phone}
+              </a>
+            ) : (
+              <span className="has-text-grey">-</span>
+            )}
+            <br />
+            <br />
+            <strong>✉️ Email:</strong>
+            &nbsp;
+            {associate.email ? (
+              <a href={`mailto:${associate.email}`} className="has-text-link">
+                {associate.email}
+              </a>
+            ) : (
+              <span className="has-text-grey">-</span>
+            )}
+            <br />
+            <br />
+            {associate.organizationName && (
+              <>
+                <strong>🏢 Organization:</strong>
+                &nbsp;{associate.organizationName}
+                <br />
+                <br />
+              </>
+            )}
+            <strong>📅 Contacts (30 days):</strong>
+            &nbsp;{associate.contactsLast30Days || 0}
+            <br />
+            <br />
+            <strong>🆔 WSIB #:</strong>
+            &nbsp;
+            {associate.wsibNumber || <span className="has-text-grey">-</span>}
+            <br />
+            <br />
+            <strong>💵 Rate:</strong>
+            &nbsp;
+            {associate.hourlySalaryDesired ? (
+              <span className="has-text-success">
+                ${associate.hourlySalaryDesired}/hr
+              </span>
+            ) : (
+              <span className="has-text-grey">-</span>
+            )}
+            <br />
+            <br />
+            <strong>🔧 Matching Skill Sets:</strong>
+            <br />
+            {renderSkillSets(associate.skillSets, task?.orderSkillSets)}
+            <br />
+            <button
+              className={`button is-fullwidth ${isSelected ? "is-success" : "is-primary"}`}
+              onClick={() => onSelectClick(associate)}
+            >
+              {isSelected ? "Reselect →" : "Assign →"}
+            </button>
+          </div>
+        );
+      })}
     </>
   );
 
@@ -755,6 +794,13 @@ function AdminTaskItemAssignAssociateStep2Page() {
                                 highlighted skills match the job requirements.
                               </div>
                             )}
+                          {selectedAssociateId && (
+                            <div className="notification is-success is-light">
+                              ✓ <strong>Associate Selected:</strong> You have
+                              already selected an associate. You can continue or
+                              choose a different one.
+                            </div>
+                          )}
                         </div>
                         <div className="column has-text-right"></div>
                       </div>
@@ -824,7 +870,16 @@ function AdminTaskItemAssignAssociateStep2Page() {
                           ← Back to Step 1
                         </Link>
                       </div>
-                      <div className="column is-half has-text-right"></div>
+                      <div className="column is-half has-text-right">
+                        {selectedAssociateId && (
+                          <Link
+                            className="button is-primary is-fullwidth-mobile"
+                            to={`/admin/task/${tid}/assign-associate/step-3`}
+                          >
+                            Continue to Step 3 →
+                          </Link>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
