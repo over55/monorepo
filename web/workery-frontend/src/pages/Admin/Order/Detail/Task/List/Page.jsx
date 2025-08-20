@@ -372,15 +372,6 @@ function AdminOrderDetailMoreTaskListPage() {
                   fontWeight: "bold",
                 }}
               >
-                Status
-              </th>
-              <th
-                style={{
-                  padding: "12px",
-                  textAlign: "left",
-                  fontWeight: "bold",
-                }}
-              >
                 Due Date
               </th>
               <th
@@ -442,16 +433,6 @@ function AdminOrderDetailMoreTaskListPage() {
                     >
                       {task.title || task.description || "No title"}
                     </div>
-                  </td>
-                  <td style={{ padding: "12px" }}>
-                    <span
-                      style={{
-                        color: getStatusColor(task.status),
-                        fontWeight: "600",
-                      }}
-                    >
-                      {getTaskStatusLabel(task.status)}
-                    </span>
                   </td>
                   <td
                     style={{ padding: "12px", color: theme.colors.secondary }}
