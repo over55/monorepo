@@ -14,8 +14,7 @@ import {
   Breadcrumb,
   Modal,
   Select,
-  Table,
-  ProgressBar, // Added missing import
+  ProgressBar,
 } from "../../../../components/UI";
 import {
   PlusIcon,
@@ -40,7 +39,6 @@ function AdminStaffAddStep1PartBPage() {
   const staffManager = useStaffManager();
   const wizardStorage = useStaffAddWizardStorage();
 
-  // Get search parameters
   const firstName = searchParams.get("fn") || "";
   const lastName = searchParams.get("ln") || "";
   const email = searchParams.get("e") || "";
@@ -49,10 +47,7 @@ function AdminStaffAddStep1PartBPage() {
   const [errors, setErrors] = useState({});
   const [staffList, setStaffList] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedStaffForDeletion, setSelectedStaffForDeletion] =
-    useState(null);
 
-  // Pagination and filters
   const [pageSize, setPageSize] = useState(50);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState("lexical_name,ASC");
@@ -100,20 +95,6 @@ function AdminStaffAddStep1PartBPage() {
     navigate("/admin/staff/add/step-2");
   };
 
-  const onDeleteConfirmClick = async () => {
-    try {
-      await staffManager.deleteStaff(
-        selectedStaffForDeletion.id,
-        onUnauthorized,
-      );
-      setSelectedStaffForDeletion(null);
-      fetchStaffList();
-    } catch (error) {
-      console.error("Error deleting staff:", error);
-      setErrors(error);
-    }
-  };
-
   const breadcrumbItems = [
     { label: "Dashboard", href: "/admin/dashboard", icon: HomeIcon },
     { label: "Staff", href: "/admin/staff", icon: UserIcon },
@@ -121,25 +102,18 @@ function AdminStaffAddStep1PartBPage() {
   ];
 
   return (
-    <div>
-      {/* Breadcrumb */}
+    <div className="max-w-6xl mx-auto">
       <Breadcrumb items={breadcrumbItems} />
 
-      {/* Page Title */}
-      <h1>New Staff Member</h1>
-      <p>Step 1 of 7 - Search Results</p>
+      <h1 className="text-2xl font-bold mb-2">New Staff Member</h1>
+      <p className="text-gray-600 mb-4">Step 1 of 7 - Search Results</p>
 
-      {/* Progress Bar */}
-      <ProgressBar value={14} max={100} color="green" />
+      <ProgressBar value={14} max={100} color="green" className="mb-6" />
 
-      {/* Main Content */}
       <Card>
-        <h2>Search Results</h2>
+        <h2 className="text-xl font-semibold mb-4">Search Results</h2>
 
-        {/* Filters */}
-        <div>
-          <h3>Filtering & Sorting</h3>
-
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
           <Select
             label="Status"
             value={status}
@@ -162,7 +136,6 @@ function AdminStaffAddStep1PartBPage() {
           />
         </div>
 
-        {/* Results */}
         {isLoading ? (
           <Loading text="Loading staff..." />
         ) : (
@@ -171,104 +144,104 @@ function AdminStaffAddStep1PartBPage() {
 
             {staffList && staffList.results && staffList.results.length > 0 ? (
               <div>
-                {/* Staff Cards Grid */}
-                <div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                   {staffList.results.map((staff) => (
-                    <div key={staff.id}>
-                      <Card>
-                        <h3>
-                          {staff.type === COMMERCIAL_STAFF_TYPE_OF_ID && (
-                            <>
-                              <BuildingOfficeIcon />
-                              {staff.organizationName}
-                            </>
-                          )}
-                          {staff.type === RESIDENTIAL_STAFF_TYPE_OF_ID && (
-                            <>
-                              <HomeIcon />
-                              {staff.firstName} {staff.lastName}
-                            </>
-                          )}
-                        </h3>
-                        <p>{staff.addressLine1}</p>
-                        <p>
-                          {staff.city}, {staff.region}
-                        </p>
-                        <p>{staff.phone}</p>
-                        <p>{staff.email}</p>
-                        <Link to={`/admin/staff/${staff.id}`}>
-                          Select <ArrowRightIcon />
+                    <Card key={staff.id} className="p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center mb-2">
+                            {staff.type === COMMERCIAL_STAFF_TYPE_OF_ID ? (
+                              <>
+                                <BuildingOfficeIcon className="h-5 w-5 mr-2 text-gray-600" />
+                                <h3 className="font-semibold">
+                                  {staff.organizationName}
+                                </h3>
+                              </>
+                            ) : (
+                              <>
+                                <HomeIcon className="h-5 w-5 mr-2 text-gray-600" />
+                                <h3 className="font-semibold">
+                                  {staff.firstName} {staff.lastName}
+                                </h3>
+                              </>
+                            )}
+                          </div>
+                          <p className="text-sm text-gray-600">
+                            {staff.addressLine1}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {staff.city}, {staff.region}
+                          </p>
+                          <p className="text-sm text-gray-600">{staff.phone}</p>
+                          <p className="text-sm text-gray-600">{staff.email}</p>
+                        </div>
+                        <Link
+                          to={`/admin/staff/${staff.id}`}
+                          className="flex items-center text-blue-600 hover:text-blue-800"
+                        >
+                          Select
+                          <ArrowRightIcon className="h-4 w-4 ml-1" />
                         </Link>
-                      </Card>
-                    </div>
+                      </div>
+                    </Card>
                   ))}
                 </div>
 
-                {/* Pagination */}
-                <div>
+                <div className="flex items-center justify-between">
                   <Select
                     value={pageSize}
                     onChange={(e) => setPageSize(parseInt(e.target.value))}
                     options={PAGE_SIZE_OPTIONS}
                   />
 
-                  {currentPage > 1 && (
-                    <Button onClick={() => setCurrentPage(currentPage - 1)}>
-                      Previous
-                    </Button>
-                  )}
+                  <div className="flex gap-2">
+                    {currentPage > 1 && (
+                      <Button onClick={() => setCurrentPage(currentPage - 1)}>
+                        Previous
+                      </Button>
+                    )}
 
-                  {staffList.hasNextPage && (
-                    <Button onClick={() => setCurrentPage(currentPage + 1)}>
-                      Next
-                    </Button>
-                  )}
+                    {staffList.hasNextPage && (
+                      <Button onClick={() => setCurrentPage(currentPage + 1)}>
+                        Next
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             ) : (
-              <div>
-                <p>No staff found.</p>
-                <Link to="/admin/staff/add/step-1-search">
+              <div className="text-center py-8">
+                <p className="text-gray-600 mb-4">No staff found.</p>
+                <Link
+                  to="/admin/staff/add/step-1-search"
+                  className="text-blue-600 hover:text-blue-800"
+                >
                   Click here to search again
                 </Link>
               </div>
             )}
 
-            <div>
-              <p>- OR -</p>
+            <div className="mt-8 pt-8 border-t">
+              <p className="text-center text-gray-500 mb-4">- OR -</p>
 
-              <Link to="/admin/staff/add/step-1-search">
-                <ArrowLeftIcon /> Search Again
-              </Link>
+              <div className="flex gap-3 justify-center">
+                <Link
+                  to="/admin/staff/add/step-1-search"
+                  className="flex items-center text-blue-600 hover:text-blue-800"
+                >
+                  <ArrowLeftIcon className="h-4 w-4 mr-2" />
+                  Search Again
+                </Link>
 
-              <Button variant="success" onClick={onAddStaffClick}>
-                <PlusIcon /> Add New Staff Member
-              </Button>
+                <Button variant="success" onClick={onAddStaffClick}>
+                  <PlusIcon className="h-4 w-4 mr-2" />
+                  Add New Staff Member
+                </Button>
+              </div>
             </div>
           </>
         )}
       </Card>
-
-      {/* Delete Confirmation Modal */}
-      <Modal
-        isOpen={!!selectedStaffForDeletion}
-        onClose={() => setSelectedStaffForDeletion(null)}
-        title="Are you sure?"
-      >
-        <p>
-          You are about to archive this staff member. This action can be undone
-          but you'll need to contact the system administrator. Are you sure?
-        </p>
-        <Button variant="success" onClick={onDeleteConfirmClick}>
-          Confirm
-        </Button>
-        <Button
-          variant="secondary"
-          onClick={() => setSelectedStaffForDeletion(null)}
-        >
-          Cancel
-        </Button>
-      </Modal>
     </div>
   );
 }

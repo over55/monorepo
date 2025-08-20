@@ -1,7 +1,7 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Staff/Add/Step1PartAPage.jsx
 
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { useStaffAddWizardStorage } from "../../../../services/Services";
 import {
   Card,
@@ -17,7 +17,6 @@ import {
   MagnifyingGlassIcon,
   XCircleIcon,
   UserIcon,
-  ChartBarIcon,
   HomeIcon,
 } from "@heroicons/react/24/outline";
 
@@ -34,19 +33,15 @@ function AdminStaffAddStep1PartAPage() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    // Clear wizard state when starting fresh
     wizardStorage.clearWizardState();
   }, []);
 
   const onAddStaffClick = () => {
-    console.log("Starting new staff creation");
     wizardStorage.resetWizardState();
     navigate("/admin/staff/add/step-2");
   };
 
   const onSubmitClick = () => {
-    console.log("Searching for existing staff");
-
     if (firstName === "" && lastName === "" && email === "" && phone === "") {
       setErrors({
         message: "Please enter at least one search criterion",
@@ -54,7 +49,6 @@ function AdminStaffAddStep1PartAPage() {
       return;
     }
 
-    // Navigate to search results with query parameters
     const params = new URLSearchParams();
     if (firstName) params.append("fn", firstName);
     if (lastName) params.append("ln", lastName);
@@ -71,28 +65,28 @@ function AdminStaffAddStep1PartAPage() {
   ];
 
   return (
-    <div>
-      {/* Breadcrumb */}
+    <div className="max-w-4xl mx-auto">
       <Breadcrumb items={breadcrumbItems} />
 
-      {/* Page Title */}
-      <h1>New Staff Member</h1>
-      <p>Step 1 of 7 - Search for Existing Staff</p>
+      <h1 className="text-2xl font-bold mb-2">New Staff Member</h1>
+      <p className="text-gray-600 mb-4">
+        Step 1 of 7 - Search for Existing Staff
+      </p>
 
-      {/* Progress Bar */}
-      <ProgressBar value={14} max={100} color="green" />
+      <ProgressBar value={14} max={100} color="green" className="mb-6" />
 
-      {/* Main Content */}
       <Card>
-        <h2>Search for existing staff:</h2>
-        <p>
+        <h2 className="text-xl font-semibold mb-4">
+          Search for existing staff:
+        </h2>
+        <p className="text-gray-600 mb-6">
           Search the database to check if this staff member already exists
           before creating a new record.
         </p>
 
         {errors.message && <Alert type="error">{errors.message}</Alert>}
 
-        <div>
+        <div className="space-y-4">
           <Input
             label="First Name"
             value={firstName}
@@ -122,7 +116,7 @@ function AdminStaffAddStep1PartAPage() {
             error={errors.phone}
           />
 
-          <div>
+          <div className="flex gap-3 pt-4">
             <Button
               variant="secondary"
               onClick={() => setShowCancelWarning(true)}
@@ -140,11 +134,11 @@ function AdminStaffAddStep1PartAPage() {
             </Button>
           </div>
 
-          <div>
-            <p>- OR -</p>
+          <div className="text-center py-4">
+            <p className="text-gray-500">- OR -</p>
           </div>
 
-          <div>
+          <div className="text-center">
             <Button variant="success" onClick={onAddStaffClick} icon={PlusIcon}>
               Add New Staff Member
             </Button>
@@ -152,25 +146,24 @@ function AdminStaffAddStep1PartAPage() {
         </div>
       </Card>
 
-      {/* Cancel Warning Modal */}
       <Modal
         isOpen={showCancelWarning}
         onClose={() => setShowCancelWarning(false)}
         title="Are you sure?"
       >
-        <p>
+        <p className="mb-4">
           Your staff record will be cancelled and your work will be lost. This
           cannot be undone. Do you want to continue?
         </p>
-        <div>
-          <Button variant="success" onClick={() => navigate("/admin/staff")}>
-            Yes
-          </Button>
+        <div className="flex gap-3 justify-end">
           <Button
             variant="secondary"
             onClick={() => setShowCancelWarning(false)}
           >
             No
+          </Button>
+          <Button variant="success" onClick={() => navigate("/admin/staff")}>
+            Yes
           </Button>
         </div>
       </Modal>

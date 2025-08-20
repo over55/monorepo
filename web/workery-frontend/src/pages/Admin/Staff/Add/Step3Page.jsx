@@ -1,7 +1,7 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Staff/Add/Step3Page.jsx
 
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { useStaffAddWizardStorage } from "../../../../services/Services";
 import {
   Card,
@@ -17,21 +17,14 @@ import {
   PlusIcon,
   ArrowLeftIcon,
   ArrowRightIcon,
-  IdentificationIcon,
   UserIcon,
   HomeIcon,
 } from "@heroicons/react/24/outline";
-import {
-  STAFF_PHONE_TYPE_LANDLINE,
-  STAFF_PHONE_TYPE_MOBILE,
-  STAFF_PHONE_TYPE_WORK,
-  STAFF_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS,
-} from "../../../../constants/Staff";
+import { STAFF_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS } from "../../../../constants/Staff";
 
 function AdminStaffAddStep3Page() {
   const navigate = useNavigate();
   const wizardStorage = useStaffAddWizardStorage();
-
   const wizardState = wizardStorage.getWizardState();
 
   const [errors, setErrors] = useState({});
@@ -84,7 +77,6 @@ function AdminStaffAddStep3Page() {
       return;
     }
 
-    // Save to storage
     wizardStorage.updateWizardState({
       firstName,
       lastName,
@@ -107,23 +99,17 @@ function AdminStaffAddStep3Page() {
   ];
 
   return (
-    <div>
-      {/* Breadcrumb */}
+    <div className="max-w-4xl mx-auto">
       <Breadcrumb items={breadcrumbItems} />
 
-      {/* Page Title */}
-      <h1>New Staff Member</h1>
-      <p>Step 3 of 7 - Contact Information</p>
+      <h1 className="text-2xl font-bold mb-2">New Staff Member</h1>
+      <p className="text-gray-600 mb-4">Step 3 of 7 - Contact Information</p>
 
-      {/* Progress Bar */}
-      <ProgressBar value={43} max={100} color="green" />
+      <ProgressBar value={43} max={100} color="green" className="mb-6" />
 
-      {/* Main Content */}
       <Card>
-        <h2>
-          <IdentificationIcon /> Contact Information
-        </h2>
-        <p>
+        <h2 className="text-xl font-semibold mb-4">Contact Information</h2>
+        <p className="text-gray-600 mb-6">
           Please fill out all the required fields before submitting this form.
         </p>
 
@@ -131,91 +117,99 @@ function AdminStaffAddStep3Page() {
           <Alert type="error">Please correct the errors below.</Alert>
         )}
 
-        <Input
-          label="First Name"
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-          error={errors.firstName}
-          required
-        />
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label="First Name"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              error={errors.firstName}
+              required
+            />
 
-        <Input
-          label="Last Name"
-          value={lastName}
-          onChange={(e) => setLastName(e.target.value)}
-          error={errors.lastName}
-          required
-        />
+            <Input
+              label="Last Name"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              error={errors.lastName}
+              required
+            />
+          </div>
 
-        <Input
-          label="Email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          error={errors.email}
-          required
-        />
-
-        <Checkbox
-          label="I agree to receive electronic email"
-          checked={isOkToEmail}
-          onChange={() => setIsOkToEmail(!isOkToEmail)}
-        />
-
-        <Input
-          label="Phone"
-          value={phone}
-          onChange={(e) => setPhone(e.target.value)}
-          error={errors.phone}
-          required
-        />
-
-        <Select
-          label="Phone Type"
-          value={phoneType}
-          onChange={(e) => setPhoneType(parseInt(e.target.value))}
-          options={STAFF_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS}
-          error={errors.phoneType}
-          required
-        />
-
-        <Checkbox
-          label="I agree to receive texts to my phone"
-          checked={isOkToText}
-          onChange={() => setIsOkToText(!isOkToText)}
-        />
-
-        <Input
-          label="Other Phone (Optional)"
-          value={otherPhone}
-          onChange={(e) => setOtherPhone(e.target.value)}
-        />
-
-        {otherPhone && (
-          <Select
-            label="Other Phone Type (Optional)"
-            value={otherPhoneType}
-            onChange={(e) => setOtherPhoneType(parseInt(e.target.value))}
-            options={STAFF_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS}
+          <Input
+            label="Email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            error={errors.email}
+            required
           />
-        )}
 
-        <div>
-          <Button
-            variant="secondary"
-            onClick={() => navigate("/admin/staff/add/step-2")}
-            icon={ArrowLeftIcon}
-          >
-            Back
-          </Button>
+          <Checkbox
+            label="I agree to receive electronic email"
+            checked={isOkToEmail}
+            onChange={() => setIsOkToEmail(!isOkToEmail)}
+          />
 
-          <Button
-            variant="primary"
-            onClick={onSubmitClick}
-            icon={ArrowRightIcon}
-          >
-            Next
-          </Button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label="Phone"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              error={errors.phone}
+              required
+            />
+
+            <Select
+              label="Phone Type"
+              value={phoneType}
+              onChange={(e) => setPhoneType(parseInt(e.target.value))}
+              options={STAFF_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS}
+              error={errors.phoneType}
+              required
+            />
+          </div>
+
+          <Checkbox
+            label="I agree to receive texts to my phone"
+            checked={isOkToText}
+            onChange={() => setIsOkToText(!isOkToText)}
+          />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Input
+              label="Other Phone (Optional)"
+              value={otherPhone}
+              onChange={(e) => setOtherPhone(e.target.value)}
+            />
+
+            {otherPhone && (
+              <Select
+                label="Other Phone Type (Optional)"
+                value={otherPhoneType}
+                onChange={(e) => setOtherPhoneType(parseInt(e.target.value))}
+                options={STAFF_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS}
+              />
+            )}
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <Button
+              variant="secondary"
+              onClick={() => navigate("/admin/staff/add/step-2")}
+              icon={ArrowLeftIcon}
+            >
+              Back
+            </Button>
+
+            <Button
+              variant="primary"
+              onClick={onSubmitClick}
+              icon={ArrowRightIcon}
+            >
+              Next
+            </Button>
+          </div>
         </div>
       </Card>
     </div>
