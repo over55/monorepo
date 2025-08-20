@@ -191,8 +191,9 @@ function AdminTaskItemOrderCompletionStep1Page() {
                   Job Skill Sets
                 </th>
                 <td style={{ padding: "10px" }}>
-                  {task.orderSkillSets?.map((skill) => skill.text).join(", ") ||
-                    "-"}
+                  {task.orderSkillSets
+                    ?.map((skill) => skill.subCategory)
+                    .join(", ") || "-"}
                 </td>
               </tr>
               <tr>
