@@ -30,12 +30,34 @@ import {
   EmptyState,
   Table,
 } from "../../../components/UI";
-import {
-  ASSOCIATE_STATUS_OPTIONS,
-  ASSOCIATE_TYPE_OPTIONS,
-  ASSOCIATE_SORT_OPTIONS,
-} from "../../../constants/Associate";
-import { PAGE_SIZE_OPTIONS } from "../../../constants/FieldOptions";
+
+// Constants for filtering and sorting
+const ASSOCIATE_STATUS_OPTIONS = [
+  { value: "", label: "All Statuses" },
+  { value: "1", label: "Active" },
+  { value: "0", label: "Archived" },
+];
+
+const ASSOCIATE_TYPE_OPTIONS = [
+  { value: "", label: "All Types" },
+  { value: "0", label: "All" },
+  { value: "1", label: "Residential" },
+  { value: "2", label: "Commercial" },
+];
+
+const ASSOCIATE_SORT_OPTIONS = [
+  { value: "lexical_name,ASC", label: "Name (A → Z)" },
+  { value: "lexical_name,DESC", label: "Name (Z → A)" },
+  { value: "join_date,DESC", label: "Join Date (Newest → Oldest)" },
+  { value: "join_date,ASC", label: "Join Date (Oldest → Newest)" },
+];
+
+const PAGE_SIZE_OPTIONS = [
+  { value: 25, label: "25 per page" },
+  { value: 50, label: "50 per page" },
+  { value: 100, label: "100 per page" },
+  { value: 250, label: "250 per page" },
+];
 
 function AdminSkillSetAssociateSearchResultPage() {
   const [searchParams] = useSearchParams();
@@ -46,15 +68,15 @@ function AdminSkillSetAssociateSearchResultPage() {
   const targetSkillSetIDs = skillSetIDsStr ? skillSetIDsStr.split(",") : [];
   const searchType = searchParams.get("type");
 
-  // Component states
+  // State management
   const [associates, setAssociates] = useState(null);
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
   // Filtering and sorting states
-  const [status, setStatus] = useState(1); // Active by default
-  const [type, setType] = useState(0); // All types
+  const [status, setStatus] = useState("1"); // Active by default (string to match select value)
+  const [type, setType] = useState(""); // Empty string for "All Types"
   const [sortBy, setSortBy] = useState("lexical_name,ASC");
 
   // Pagination states
@@ -63,6 +85,7 @@ function AdminSkillSetAssociateSearchResultPage() {
   const [totalCount, setTotalCount] = useState(0);
   const [previousCursors, setPreviousCursors] = useState([]);
   const [nextCursor, setNextCursor] = useState("");
+  const [hasNextPage, setHasNextPage] = useState(false);
   const [currentCursor, setCurrentCursor] = useState("");
 
   // Fetch associates data
@@ -71,34 +94,73 @@ function AdminSkillSetAssociateSearchResultPage() {
     setErrors({});
 
     try {
-      // Build params for API call
-      const params = {
-        pageSize: pageSize,
-        cursor: currentCursor,
-        status: status,
-        type: type,
-        sortBy: sortBy,
-      };
+      // Build filters map for API call (matching AdminAssociateListPage pattern)
+      const filtersMap = new Map();
 
-      // Add skill set filtering based on search type
-      if (searchType === "all") {
-        params.allSkillSetIds = skillSetIDsStr;
-      } else if (searchType === "in") {
-        params.inSkillSetIds = skillSetIDsStr;
+      // Add cursor if provided
+      if (currentCursor) {
+        filtersMap.set("cursor", currentCursor);
       }
 
-      // Call API through manager
-      const response = await associateManager.getAssociates(params);
+      // Use the correct parameter name for page size
+      filtersMap.set("page_size", pageSize.toString());
+
+      // Add sorting
+      if (sortBy) {
+        const [sortField, sortOrder] = sortBy.split(",");
+        filtersMap.set("sort_field", sortField);
+        // Backend expects 1 for ASC, -1 for DESC
+        filtersMap.set("sort_order", sortOrder === "DESC" ? "-1" : "1");
+      }
+
+      // Add status filter
+      if (status !== "") {
+        filtersMap.set("status", status.toString());
+      }
+
+      // Add type filter
+      if (type !== "" && type !== "0") {
+        filtersMap.set("type", type.toString());
+      }
+
+      // Add skill set filtering based on search type
+      if (searchType === "all" && skillSetIDsStr) {
+        // For "all" search type, associates must have ALL selected skill sets
+        filtersMap.set("skill_set_ids", skillSetIDsStr);
+        filtersMap.set("skill_set_search_type", "all");
+      } else if (searchType === "in" && skillSetIDsStr) {
+        // For "in" search type, associates must have ANY of the selected skill sets
+        filtersMap.set("skill_set_ids", skillSetIDsStr);
+        filtersMap.set("skill_set_search_type", "in");
+      }
+
+      // Call API through manager using filtersMap approach
+      const response = await associateManager.getAssociatesWithFiltersMap(
+        filtersMap,
+        null,
+        true, // force refresh to ensure we get fresh results
+      );
 
       if (response) {
         setAssociates(response);
         setTotalCount(response.count || 0);
 
-        // Handle pagination
-        if (response.hasNextPage) {
+        // Handle pagination response
+        if (
+          response.nextCursor !== undefined &&
+          response.nextCursor !== null &&
+          response.nextCursor !== ""
+        ) {
           setNextCursor(response.nextCursor);
+          setHasNextPage(true);
         } else {
           setNextCursor("");
+          setHasNextPage(false);
+        }
+
+        // Alternative: Check if hasNextPage is explicitly set
+        if (response.hasNextPage !== undefined) {
+          setHasNextPage(response.hasNextPage);
         }
       }
     } catch (error) {
@@ -112,25 +174,31 @@ function AdminSkillSetAssociateSearchResultPage() {
     }
   };
 
-  // Load data when dependencies change
+  // Load data when component mounts or search parameters change
+  useEffect(() => {
+    if (skillSetIDsStr && searchType) {
+      // Reset pagination when filters change
+      if (currentCursor === "") {
+        setPreviousCursors([]);
+        setCurrentPage(1);
+      }
+      fetchAssociates();
+    }
+  }, [skillSetIDsStr, searchType]); // Only depend on search parameters
+
+  // Load data when pagination or filters change
   useEffect(() => {
     if (skillSetIDsStr && searchType) {
       fetchAssociates();
     }
-  }, [
-    currentCursor,
-    pageSize,
-    status,
-    type,
-    sortBy,
-    skillSetIDsStr,
-    searchType,
-  ]);
+  }, [currentCursor, pageSize, status, type, sortBy]);
 
   // Handle pagination
   const handleNextPage = () => {
-    if (nextCursor) {
-      setPreviousCursors([...previousCursors, currentCursor]);
+    if (hasNextPage && nextCursor) {
+      // Push current cursor to history for "Previous" functionality
+      setPreviousCursors((prev) => [...prev, currentCursor]);
+      // Update current cursor which will trigger fetchAssociates via useEffect
       setCurrentCursor(nextCursor);
       setCurrentPage(currentPage + 1);
     }
@@ -138,29 +206,35 @@ function AdminSkillSetAssociateSearchResultPage() {
 
   const handlePreviousPage = () => {
     if (previousCursors.length > 0) {
-      const newPreviousCursors = [...previousCursors];
-      const previousCursor = newPreviousCursors.pop();
-      setPreviousCursors(newPreviousCursors);
-      setCurrentCursor(previousCursor);
+      // Pop the last cursor from history
+      const newHistory = [...previousCursors];
+      const previousCursor = newHistory.pop();
+      // Update history
+      setPreviousCursors(newHistory);
+      // Update current cursor which will trigger fetchAssociates via useEffect
+      setCurrentCursor(previousCursor || "");
       setCurrentPage(currentPage - 1);
     }
   };
 
-  // Handle filter reset
-  const handleClearFilters = (e) => {
-    e.preventDefault();
-    setStatus(1);
-    setType(0);
-    setSortBy("lexical_name,ASC");
+  // Handle page size change
+  const handlePageSizeChange = (newPageSize) => {
+    setPageSize(newPageSize);
     setCurrentCursor("");
     setPreviousCursors([]);
     setCurrentPage(1);
+    setNextCursor("");
+    setHasNextPage(false);
   };
 
   // Check if a skill set ID is in the target list
   const isTargetSkillSet = (skillSetId) => {
     return targetSkillSetIDs.includes(String(skillSetId));
   };
+
+  // Calculate pagination info
+  const hasPreviousPage = previousCursors.length > 0;
+  const currentPageNumber = previousCursors.length + 1;
 
   // Render loading state
   if (isFetching && !associates) {
@@ -364,8 +438,8 @@ function AdminSkillSetAssociateSearchResultPage() {
               >
                 {showFilters ? "Hide" : "Show"} Filters
               </Button>
-              {(status !== 1 ||
-                type !== 0 ||
+              {(status !== "1" ||
+                type !== "" ||
                 sortBy !== "lexical_name,ASC") && (
                 <Button
                   variant="ghost"
@@ -388,7 +462,7 @@ function AdminSkillSetAssociateSearchResultPage() {
                 label="Status"
                 value={status}
                 onChange={(e) => {
-                  setStatus(parseInt(e.target.value));
+                  setStatus(e.target.value);
                   setCurrentCursor("");
                   setPreviousCursors([]);
                   setCurrentPage(1);
@@ -400,7 +474,7 @@ function AdminSkillSetAssociateSearchResultPage() {
                 label="Type"
                 value={type}
                 onChange={(e) => {
-                  setType(parseInt(e.target.value));
+                  setType(e.target.value);
                   setCurrentCursor("");
                   setPreviousCursors([]);
                   setCurrentPage(1);
@@ -441,12 +515,9 @@ function AdminSkillSetAssociateSearchResultPage() {
                   <span className="text-sm text-gray-700">Show</span>
                   <select
                     value={pageSize}
-                    onChange={(e) => {
-                      setPageSize(parseInt(e.target.value));
-                      setCurrentCursor("");
-                      setPreviousCursors([]);
-                      setCurrentPage(1);
-                    }}
+                    onChange={(e) =>
+                      handlePageSizeChange(parseInt(e.target.value))
+                    }
                     className="text-sm border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   >
                     {PAGE_SIZE_OPTIONS.map((option) => (
@@ -459,7 +530,7 @@ function AdminSkillSetAssociateSearchResultPage() {
 
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-700">
-                    Page {currentPage} • Total: {totalCount} associates
+                    Page {currentPageNumber} • Total: {totalCount} associates
                   </span>
                 </div>
 
@@ -468,7 +539,7 @@ function AdminSkillSetAssociateSearchResultPage() {
                     variant="outline"
                     size="sm"
                     onClick={handlePreviousPage}
-                    disabled={previousCursors.length === 0}
+                    disabled={!hasPreviousPage}
                     icon={ChevronLeftIcon}
                   >
                     Previous
@@ -477,7 +548,7 @@ function AdminSkillSetAssociateSearchResultPage() {
                     variant="outline"
                     size="sm"
                     onClick={handleNextPage}
-                    disabled={!nextCursor}
+                    disabled={!hasNextPage}
                   >
                     Next
                     <ChevronRightIcon className="w-4 h-4 ml-1" />
