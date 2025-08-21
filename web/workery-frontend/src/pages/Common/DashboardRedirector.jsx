@@ -87,10 +87,8 @@ function DashboardRedirector() {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    // Cross-platform viewport handling
-    minHeight: "100vh",
-    minHeight: "100dvh", // Dynamic viewport height for modern browsers
-    minHeight: "100svh", // Small viewport height for Android Chrome
+    // Use the most modern viewport unit available (100dvh is preferred)
+    minHeight: "100dvh",
     backgroundColor: "#f8fafc",
     padding: "1rem",
     // iOS safe area support
@@ -148,7 +146,8 @@ function DashboardRedirector() {
   };
 
   const headingStyles = {
-    fontSize: "clamp(1.25rem, 4vw, 1.5rem)",
+    // Combined fontSize using max() to prevent auto-zoom while maintaining responsive sizing
+    fontSize: "max(clamp(1.25rem, 4vw, 1.5rem), 16px)",
     fontWeight: "600",
     color: "#1e293b",
     margin: "0 0 1rem 0",
@@ -157,14 +156,13 @@ function DashboardRedirector() {
     WebkitFontSmoothing: "antialiased",
     MozOsxFontSmoothing: "grayscale",
     textRendering: "optimizeLegibility", // Android text optimization
-    // Prevent auto-zoom on both platforms
-    fontSize: "max(1.25rem, 16px)",
     // Android accessibility
     fontFeatureSettings: "'liga' 1, 'kern' 1",
   };
 
   const paragraphStyles = {
-    fontSize: "clamp(0.875rem, 3vw, 1rem)",
+    // Combined fontSize using max() to prevent auto-zoom while maintaining responsive sizing
+    fontSize: "max(clamp(0.875rem, 3vw, 1rem), 16px)",
     color: "#64748b",
     margin: "0 0 1.5rem 0",
     lineHeight: "1.6",
@@ -172,8 +170,6 @@ function DashboardRedirector() {
     WebkitFontSmoothing: "antialiased",
     MozOsxFontSmoothing: "grayscale",
     textRendering: "optimizeLegibility",
-    // Prevent auto-zoom
-    fontSize: "max(0.875rem, 16px)",
     // Android typography optimization
     fontFeatureSettings: "'liga' 1, 'kern' 1",
     wordBreak: "break-word", // Better text wrapping on Android
@@ -207,16 +203,20 @@ function DashboardRedirector() {
   React.useEffect(() => {
     const style = document.createElement("style");
     style.textContent = `
-      /* Cross-platform viewport support */
-      @supports (height: 100dvh) {
-        .dashboard-redirector-container {
-          min-height: 100dvh !important;
-        }
+      /* Cross-platform viewport support with fallbacks */
+      .dashboard-redirector-container {
+        min-height: 100vh;
       }
 
       @supports (height: 100svh) {
         .dashboard-redirector-container {
           min-height: 100svh !important;
+        }
+      }
+
+      @supports (height: 100dvh) {
+        .dashboard-redirector-container {
+          min-height: 100dvh !important;
         }
       }
 

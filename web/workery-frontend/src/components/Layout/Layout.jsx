@@ -289,7 +289,6 @@ function Layout({ children }) {
       `}
       style={{
         ...(isIOS && {
-          height: "100vh",
           height: "calc(var(--vh, 1vh) * 100)",
           paddingTop: "env(safe-area-inset-top)",
           paddingBottom: "env(safe-area-inset-bottom)",
@@ -299,7 +298,6 @@ function Layout({ children }) {
           touchAction: "manipulation",
         }),
         ...(isAndroid && {
-          height: "100vh",
           height: "calc(var(--android-vh, 1vh) * 100)",
           touchAction: "pan-y",
           overscrollBehavior: "none",
