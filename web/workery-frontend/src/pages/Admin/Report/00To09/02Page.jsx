@@ -2,19 +2,15 @@
 
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
-import {
-  useReportManager,
-  useAssociateManager,
-} from "../../../../services/Services";
+import { useReportManager } from "../../../../services/Services";
+import { AssociateSelect } from "../../../../components/Form";
 import { ORDER_STATUS_FILTER_OPTIONS } from "../../../../constants/FieldOptions";
 import {
   Card,
   Button,
   Alert,
   Loading,
-  Breadcrumb,
   Select,
-  Input,
 } from "../../../../components/UI";
 import {
   HomeIcon,
@@ -26,25 +22,17 @@ import {
   ExclamationTriangleIcon,
   CheckCircleIcon,
   InformationCircleIcon,
-  MagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 
 function AdminReport02Page() {
   const navigate = useNavigate();
   const reportManager = useReportManager();
-  const associateManager = useAssociateManager();
 
   // Form state
   const [associateID, setAssociateID] = useState("");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [jobStatus, setJobStatus] = useState("0");
-
-  // Associate search state
-  const [associateSearch, setAssociateSearch] = useState("");
-  const [associates, setAssociates] = useState([]);
-  const [isLoadingAssociates, setIsLoadingAssociates] = useState(false);
-  const [selectedAssociate, setSelectedAssociate] = useState(null);
 
   // UI state
   const [errors, setErrors] = useState({});
@@ -73,63 +61,9 @@ function AdminReport02Page() {
     navigate("/login?unauthorized=true");
   };
 
-  // Search for associates
-  const searchAssociates = async (searchTerm) => {
-    if (!searchTerm || searchTerm.length < 2) {
-      setAssociates([]);
-      return;
-    }
-
-    setIsLoadingAssociates(true);
-    try {
-      // Use the associate manager to search
-      const response = await associateManager.getAssociateList(
-        searchTerm, // search
-        1, // status (active)
-        0, // type (all)
-        1, // page
-        25, // pageSize
-        "lexical_name,ASC", // sortBy
-        onUnauthorized,
-      );
-
-      if (response && response.results) {
-        setAssociates(response.results);
-      } else {
-        setAssociates([]);
-      }
-    } catch (error) {
-      console.error("Error searching associates:", error);
-      setAssociates([]);
-    } finally {
-      setIsLoadingAssociates(false);
-    }
-  };
-
-  // Handle associate search input change
-  const handleAssociateSearchChange = (e) => {
-    const value = e.target.value;
-    setAssociateSearch(value);
-
-    // Debounce search
-    if (value.length >= 2) {
-      const timeoutId = setTimeout(() => {
-        searchAssociates(value);
-      }, 300);
-      return () => clearTimeout(timeoutId);
-    } else {
-      setAssociates([]);
-    }
-  };
-
-  // Handle associate selection
-  const handleAssociateSelect = (associate) => {
-    setSelectedAssociate(associate);
-    setAssociateID(associate.id);
-    setAssociateSearch(
-      associate.name || `${associate.firstName} ${associate.lastName}`,
-    );
-    setAssociates([]);
+  // Handle associate selection change
+  const handleAssociateChange = (value) => {
+    setAssociateID(value);
 
     // Clear associate error if it exists
     if (errors.associateID) {
@@ -273,24 +207,6 @@ function AdminReport02Page() {
       (item) => item.reportId === 2 || item.reportType === "Associate Jobs",
     )
     .slice(0, 5);
-
-  // Breadcrumb items
-  const breadcrumbItems = [
-    {
-      label: "Dashboard",
-      href: "/admin/dashboard",
-      icon: HomeIcon,
-    },
-    {
-      label: "Reports",
-      href: "/admin/reports",
-      icon: ChartBarIcon,
-    },
-    {
-      label: "Associate Jobs",
-      icon: UserIcon,
-    },
-  ];
 
   if (isLoading) {
     return <Loading fullScreen message="Loading report settings..." />;
@@ -449,106 +365,18 @@ function AdminReport02Page() {
 
               {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Associate Selection Field */}
-                <div>
-                  <label
-                    htmlFor="associateSearch"
-                    className="block text-sm font-medium text-gray-700 mb-2"
-                  >
-                    Select Associate
-                    <span className="text-red-500 ml-1">*</span>
-                  </label>
-                  <div className="relative">
-                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
-                    </div>
-                    <input
-                      type="text"
-                      id="associateSearch"
-                      name="associateSearch"
-                      value={associateSearch}
-                      onChange={handleAssociateSearchChange}
-                      placeholder="Search for an associate by name..."
-                      className={`
-                        w-full pl-10 pr-3 py-2.5
-                        border rounded-lg
-                        transition-all duration-200
-                        focus:outline-none focus:ring-2 focus:ring-offset-1
-                        ${
-                          errors.associateID
-                            ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
-                            : "border-gray-300 focus:border-blue-500 focus:ring-blue-500/20"
-                        }
-                      `}
-                    />
-                  </div>
-
-                  {/* Associate search results dropdown */}
-                  {associates.length > 0 && (
-                    <div className="absolute z-10 mt-1 w-full max-w-lg bg-white shadow-lg rounded-md border border-gray-200">
-                      <ul className="max-h-60 overflow-auto py-1">
-                        {associates.map((associate) => (
-                          <li
-                            key={associate.id}
-                            onClick={() => handleAssociateSelect(associate)}
-                            className="cursor-pointer px-4 py-2 hover:bg-gray-100"
-                          >
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <p className="text-sm font-medium text-gray-900">
-                                  {associate.name ||
-                                    `${associate.firstName} ${associate.lastName}`}
-                                </p>
-                                <p className="text-xs text-gray-500">
-                                  {associate.email}
-                                </p>
-                              </div>
-                              {associate.type && (
-                                <span className="text-xs px-2 py-1 bg-gray-100 rounded">
-                                  {associate.type === 1
-                                    ? "Residential"
-                                    : "Commercial"}
-                                </span>
-                              )}
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Loading indicator for associate search */}
-                  {isLoadingAssociates && (
-                    <div className="absolute z-10 mt-1 w-full max-w-lg bg-white shadow-lg rounded-md border border-gray-200 p-4">
-                      <div className="flex items-center justify-center">
-                        <Loading size="sm" text="Searching associates..." />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Selected associate display */}
-                  {selectedAssociate && (
-                    <div className="mt-2 p-2 bg-blue-50 rounded-md">
-                      <p className="text-sm text-blue-700">
-                        Selected:{" "}
-                        <strong>
-                          {selectedAssociate.name ||
-                            `${selectedAssociate.firstName} ${selectedAssociate.lastName}`}
-                        </strong>
-                      </p>
-                    </div>
-                  )}
-
-                  {errors.associateID && (
-                    <p className="mt-2 text-sm text-red-600 flex items-center">
-                      <ExclamationTriangleIcon className="h-4 w-4 mr-1" />
-                      {errors.associateID}
-                    </p>
-                  )}
-                  <p className="mt-1 text-xs text-gray-500">
-                    Start typing to search for an associate
-                  </p>
-                </div>
+                {/* Associate Selection Field - Using new AssociateSelect component */}
+                <AssociateSelect
+                  value={associateID}
+                  onChange={handleAssociateChange}
+                  error={errors.associateID}
+                  required={true}
+                  label="Select Associate"
+                  helperText="Start typing to search for an associate by name"
+                  onUnauthorized={onUnauthorized}
+                  placeholder="Please select an associate"
+                  statusFilter={1} // Only show active associates
+                />
 
                 {/* Date Range Row */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
