@@ -2,35 +2,50 @@
 
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router";
-import { useStaffManager } from "../../../../services/Services";
 import {
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Breadcrumb,
-} from "../../../../components/UI";
+  ChartBarIcon,
+  UserGroupIcon,
+  InformationCircleIcon,
+  PencilSquareIcon,
+  ChevronLeftIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  MapPinIcon,
+  BuildingOfficeIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ArchiveBoxIcon,
+  ClipboardDocumentListIcon,
+  ChatBubbleLeftRightIcon,
+  PaperClipIcon,
+  EllipsisHorizontalIcon,
+  UserIcon,
+  ExclamationTriangleIcon,
+  ChartPieIcon,
+  ComputerDesktopIcon,
+  UserCircleIcon,
+  GlobeAltIcon,
+} from "@heroicons/react/24/outline";
+import { useStaffManager, useAuthManager } from "../../../../services/Services";
 import {
   TagsDisplay,
   HowHearAboutUsDisplay,
   SkillSetsDisplay,
 } from "../../../../components/Display";
 
-// Staff type mapping
+// Constants
 const STAFF_TYPE_MAP = {
   1: "Executive",
   2: "Management",
   3: "Frontline",
 };
 
-// Phone type mapping
 const PHONE_TYPE_MAP = {
   1: "Landline",
   2: "Mobile",
   3: "Work",
 };
 
-// Gender options
 const GENDER_MAP = {
   1: "Other",
   2: "Male",
@@ -38,16 +53,14 @@ const GENDER_MAP = {
   4: "Prefer not to say",
 };
 
-// Identify as options
-const IDENTIFY_AS_OPTIONS = [
-  { value: 1, label: "Indigenous" },
-  { value: 2, label: "Newcomer" },
-  { value: 3, label: "Visible minority" },
-  { value: 4, label: "Women" },
-  { value: 5, label: "Prefer not to say" },
-];
+const IDENTIFY_AS_OPTIONS = {
+  1: "Indigenous",
+  2: "Newcomer",
+  3: "Visible minority",
+  4: "Women",
+  5: "Prefer not to say",
+};
 
-// Organization type options
 const ORGANIZATION_TYPE_MAP = {
   1: "Corporation",
   2: "Partnership",
@@ -56,26 +69,28 @@ const ORGANIZATION_TYPE_MAP = {
 };
 
 function AdminStaffDetailFullPage() {
-  const navigate = useNavigate();
   const { aid } = useParams();
   const staffManager = useStaffManager();
+  const authManager = useAuthManager();
+  const navigate = useNavigate();
 
-  // Component state
+  // State management
   const [staff, setStaff] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Breadcrumb items
-  const breadcrumbItems = [
-    { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
-    { label: "Staff", path: "/admin/staff", icon: "👔" },
-    { label: "Detail", icon: "ℹ️" },
-  ];
+  // Handle unauthorized access
+  const onUnauthorized = () => {
+    navigate("/login?unauthorized=true");
+  };
 
-  // Fetch staff detail
-  const fetchStaffDetail = () => {
-    setIsLoading(true);
-    setErrors({});
+  // Fetch staff data
+  const fetchStaff = async () => {
+    if (!aid) return;
+
+    setLoading(true);
+    setError(null);
 
     staffManager.getStaffDetailWithCallbacks(
       aid,
@@ -93,37 +108,47 @@ function AdminStaffDetailFullPage() {
 
   const onFetchError = (error) => {
     console.error("Error fetching staff detail:", error);
-    setErrors(error);
+    setError(
+      error.message || "Failed to load staff details. Please try again.",
+    );
   };
 
   const onFetchDone = () => {
-    setIsLoading(false);
+    setLoading(false);
   };
 
-  const onUnauthorized = () => {
-    navigate("/login?unauthorized=true");
+  // Initial data load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    fetchStaff();
+  }, [aid]);
+
+  // Helper functions for formatting
+  const formatDate = (dateString) => {
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleDateString();
   };
 
-  // Format functions
-  const formatPhoneNumber = (phone) => {
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleString();
+  };
+
+  const formatPhone = (phone, extension = null) => {
     if (!phone) return "-";
-    const cleaned = phone.replace(/\\D/g, "");
+    const cleaned = phone.replace(/\D/g, "");
     if (cleaned.length === 10) {
-      return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
+      const formatted = `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
+      return extension ? `${formatted} ext. ${extension}` : formatted;
     }
     return phone;
   };
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
-  };
-
-  const formatDateTime = (dateTimeString) => {
-    if (!dateTimeString) return "-";
-    const date = new Date(dateTimeString);
-    return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+  const formatMultiSelect = (selectedValues, options) => {
+    if (!selectedValues || selectedValues.length === 0) return "-";
+    return selectedValues
+      .map((value) => options[value] || `Unknown (${value})`)
+      .join(", ");
   };
 
   const formatAddress = (staff) => {
@@ -145,499 +170,598 @@ function AdminStaffDetailFullPage() {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
   };
 
-  const formatIdentifyAs = (values) => {
-    if (!values || values.length === 0) return "-";
-    return values
-      .map((value) => {
-        const option = IDENTIFY_AS_OPTIONS.find((opt) => opt.value === value);
-        return option ? option.label : value;
-      })
-      .join(", ");
-  };
-
   // Extract IDs from array of objects
   const extractIds = (items) => {
     if (!items || !Array.isArray(items)) return [];
     return items.map((item) => item.id || item.value).filter(Boolean);
   };
 
-  // Tab navigation component
-  const TabNavigation = () => (
-    <div
-      style={{
-        borderBottom: "2px solid #e0e0e0",
-        marginBottom: "20px",
-        display: "flex",
-        gap: "0",
-      }}
-    >
-      <Link to={`/admin/staff/${aid}`}>
-        <button
-          style={{
-            padding: "10px 20px",
-            border: "none",
-            background: "transparent",
-            color: "#666",
-            cursor: "pointer",
-          }}
-        >
-          Summary
-        </button>
-      </Link>
-      <button
-        style={{
-          padding: "10px 20px",
-          border: "none",
-          background: "#007bff",
-          color: "white",
-          cursor: "pointer",
-          borderBottom: "3px solid #007bff",
-          fontWeight: "bold",
-        }}
-      >
-        Detail
-      </button>
-      <Link to={`/admin/staff/${aid}/comments`}>
-        <button
-          style={{
-            padding: "10px 20px",
-            border: "none",
-            background: "transparent",
-            color: "#666",
-            cursor: "pointer",
-          }}
-        >
-          Comments
-        </button>
-      </Link>
-      <Link to={`/admin/staff/${aid}/attachments`}>
-        <button
-          style={{
-            padding: "10px 20px",
-            border: "none",
-            background: "transparent",
-            color: "#666",
-            cursor: "pointer",
-          }}
-        >
-          Attachments
-        </button>
-      </Link>
-      <Link to={`/admin/staff/${aid}/more`}>
-        <button
-          style={{
-            padding: "10px 20px",
-            border: "none",
-            background: "transparent",
-            color: "#666",
-            cursor: "pointer",
-          }}
-        >
-          More ⋯
-        </button>
-      </Link>
+  // Section Component - Improved for responsiveness
+  const DetailSection = ({ title, icon: Icon, children }) => (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-4 sm:mb-6">
+      <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-b border-gray-200 rounded-t-lg">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600 flex-shrink-0" />
+          <span className="truncate">{title}</span>
+        </h3>
+      </div>
+      <div className="p-4 sm:p-6">
+        <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          {children}
+        </dl>
+      </div>
     </div>
   );
 
-  // Data table component
-  const DataTable = ({ title, children }) => (
-    <table
-      style={{
-        width: "100%",
-        marginBottom: "30px",
-        borderCollapse: "collapse",
-        border: "1px solid #ddd",
-      }}
-    >
-      <thead>
-        <tr style={{ backgroundColor: "#333" }}>
-          <th
-            colSpan="2"
-            style={{
-              color: "white",
-              padding: "10px",
-              textAlign: "left",
-            }}
-          >
-            {title}
-          </th>
-        </tr>
-      </thead>
-      <tbody>{children}</tbody>
-    </table>
-  );
-
-  // Data row component
-  const DataRow = ({ label, value, width = "30%" }) => (
-    <tr>
-      <th
-        style={{
-          backgroundColor: "#f5f5f5",
-          padding: "10px",
-          width: width,
-          borderBottom: "1px solid #ddd",
-          textAlign: "left",
-        }}
-      >
+  // Detail Field Component - Improved for responsiveness
+  const DetailField = ({ label, value, fullWidth = false }) => (
+    <div className={fullWidth ? "lg:col-span-2" : ""}>
+      <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
         {label}
-      </th>
-      <td
-        style={{
-          padding: "10px",
-          borderBottom: "1px solid #ddd",
-        }}
-      >
-        {value}
-      </td>
-    </tr>
+      </dt>
+      <dd className="text-sm sm:text-base text-gray-900 break-words">
+        {value || "-"}
+      </dd>
+    </div>
   );
 
-  // Fetch data on component mount
-  useEffect(() => {
-    fetchStaffDetail();
-  }, [aid]);
-
-  // Render loading state
-  if (isLoading) {
-    return <Loading message="Loading staff member details..." />;
-  }
-
-  // Render error state
-  if (errors.message) {
+  if (loading) {
     return (
-      <div style={{ padding: "20px" }}>
-        <Breadcrumb items={breadcrumbItems} />
-        <Alert type="error">
-          {errors.message || "An error occurred while loading staff details."}
-        </Alert>
-        <div style={{ marginTop: "20px" }}>
-          <Link to="/admin/staff">
-            <Button variant="secondary">← Back to Staff</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  // Render staff not found
-  if (!staff) {
-    return (
-      <div style={{ padding: "20px" }}>
-        <Breadcrumb items={breadcrumbItems} />
-        <Alert type="warning">Staff member not found.</Alert>
-        <div style={{ marginTop: "20px" }}>
-          <Link to="/admin/staff">
-            <Button variant="secondary">← Back to Staff</Button>
-          </Link>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-sm sm:text-base text-gray-600">
+              Loading staff details...
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={{ padding: "20px" }}>
-      <Breadcrumb items={breadcrumbItems} />
-
-      {/* Page Title */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "20px",
-        }}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+      {/* Responsive Breadcrumb */}
+      <nav
+        className="flex mb-4 sm:mb-6 overflow-x-auto"
+        aria-label="Breadcrumb"
       >
-        <div>
-          <h1 style={{ fontSize: "2rem", marginBottom: "5px" }}>
-            👔 Staff Member
-          </h1>
-          <h4 style={{ fontSize: "1.2rem", color: "#666", margin: 0 }}>
-            ℹ️ Full Detail
-          </h4>
-        </div>
-        <div>
-          <Link to={`/admin/staff/${aid}/edit`}>
-            <Button variant="warning" disabled={staff.status === 2}>
-              ✏️ Edit
-            </Button>
-          </Link>
+        <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
+          <li className="inline-flex items-center">
+            <Link
+              to="/admin/dashboard"
+              className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
+            >
+              <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+              <span className="hidden sm:inline">Dashboard</span>
+              <span className="sm:hidden">Dash</span>
+            </Link>
+          </li>
+          <li>
+            <div className="flex items-center">
+              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
+              <Link
+                to="/admin/staff"
+                className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
+              >
+                <span className="inline-flex items-center">
+                  <UserCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                  Staff
+                </span>
+              </Link>
+            </div>
+          </li>
+          <li aria-current="page">
+            <div className="flex items-center">
+              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
+              <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
+                <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                Detail
+              </span>
+            </div>
+          </li>
+        </ol>
+      </nav>
+
+      {/* Page Title - Responsive */}
+      <div className="mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+              <UserCircleIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
+              Staff Member
+            </h1>
+            <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+              <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
+              View complete staff information
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Archived Banner */}
-      {staff.status === 2 && (
-        <Alert type="info" style={{ marginBottom: "20px" }}>
-          This staff member is archived.
-        </Alert>
+      {/* Status Alerts - Responsive */}
+      {staff && staff.status === 2 && (
+        <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center text-sm sm:text-base">
+          <ArchiveBoxIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+          This staff member is archived
+        </div>
       )}
 
-      {/* Main Card */}
-      <Card>
-        {/* Tab Navigation */}
-        <TabNavigation />
+      {/* Error Display - Responsive */}
+      {error && (
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base">
+          <div className="flex justify-between items-center">
+            <span className="break-words">{error}</span>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-700 hover:text-red-900 ml-2 flex-shrink-0"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
 
-        {/* Personal Information */}
-        <DataTable title="Personal Information">
-          <DataRow label="Type" value={STAFF_TYPE_MAP[staff.type] || "-"} />
-          <DataRow label="First Name" value={staff.firstName || "-"} />
-          <DataRow label="Last Name" value={staff.lastName || "-"} />
-          <DataRow label="Date of Birth" value={formatDate(staff.birthDate)} />
-          <DataRow
-            label="Gender"
-            value={
-              staff.gender
-                ? `${GENDER_MAP[staff.gender] || "-"}${staff.gender === 1 && staff.genderOther ? ` - ${staff.genderOther}` : ""}`
-                : "-"
-            }
-          />
-          <DataRow label="Description" value={staff.description || "-"} />
-          <DataRow
-            label="Tags"
-            value={
-              <TagsDisplay
-                values={extractIds(staff.tags)}
-                onUnauthorized={onUnauthorized}
-              />
-            }
-          />
-          <DataRow
-            label="Skill Sets"
-            value={
-              staff.skillSets && staff.skillSets.length > 0 ? (
-                <SkillSetsDisplay
-                  values={extractIds(staff.skillSets)}
-                  onUnauthorized={onUnauthorized}
+      {/* Main Content */}
+      <div className="bg-white shadow-sm rounded-lg">
+        {staff && (
+          <>
+            {/* Header with Actions - Responsive */}
+            <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 flex items-center">
+                  <ClipboardDocumentListIcon className="w-5 sm:w-7 h-5 sm:h-7 mr-2 text-blue-600 flex-shrink-0" />
+                  Full Details
+                </h2>
+                <div className="flex gap-2 sm:gap-3">
+                  <Link to="/admin/staff" className="flex-1 sm:flex-initial">
+                    <button className="w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                      <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
+                      Back
+                    </button>
+                  </Link>
+                  <Link
+                    to={`/admin/staff/${aid}/edit`}
+                    className="flex-1 sm:flex-initial"
+                  >
+                    <button
+                      disabled={staff.status === 2}
+                      className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
+                        staff.status === 2
+                          ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+                          : "border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100"
+                      }`}
+                    >
+                      <PencilSquareIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
+                      Edit
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Tab Navigation - Responsive with horizontal scroll on mobile */}
+            <div className="border-b border-gray-200">
+              <div className="px-4 sm:px-6">
+                <nav className="-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide">
+                  <Link
+                    to={`/admin/staff/${staff.id}`}
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
+                  >
+                    Summary
+                  </Link>
+                  <div className="border-b-2 border-blue-600 py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-blue-600 whitespace-nowrap">
+                    Detail
+                  </div>
+                  <Link
+                    to={`/admin/staff/${staff.id}/comments`}
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
+                  >
+                    Comments
+                  </Link>
+                  <Link
+                    to={`/admin/staff/${staff.id}/attachments`}
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
+                  >
+                    Attachments
+                  </Link>
+                  <Link
+                    to={`/admin/staff/${staff.id}/more`}
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center whitespace-nowrap"
+                  >
+                    More
+                    <EllipsisHorizontalIcon className="w-4 sm:w-5 h-4 sm:h-5 ml-1" />
+                  </Link>
+                </nav>
+              </div>
+            </div>
+
+            {/* Detail Sections - Responsive */}
+            <div className="p-4 sm:p-6">
+              {/* Personal Information */}
+              <DetailSection title="Personal Information" icon={UserIcon}>
+                {/* First Row - Names and Type */}
+                <DetailField
+                  label="Type"
+                  value={STAFF_TYPE_MAP[staff.type] || "-"}
                 />
-              ) : (
-                "-"
-              )
-            }
-          />
-        </DataTable>
+                <DetailField label="First Name" value={staff.firstName} />
 
-        {/* Company Information (if commercial type) */}
-        {staff.type === 3 && (
-          <DataTable title="Company Information">
-            <DataRow
-              label="Company Name"
-              value={staff.organizationName || "-"}
-            />
-            <DataRow
-              label="Company Type"
-              value={ORGANIZATION_TYPE_MAP[staff.organizationType] || "-"}
-            />
-          </DataTable>
+                {/* Second Row - Last Name and Date of Birth */}
+                <DetailField label="Last Name" value={staff.lastName} />
+                <DetailField
+                  label="Date of Birth"
+                  value={formatDate(staff.birthDate)}
+                />
+
+                {/* Third Row - Gender */}
+                <DetailField
+                  label="Gender"
+                  value={
+                    staff.gender ? (
+                      <>
+                        {GENDER_MAP[staff.gender] || "Unknown"}
+                        {staff.gender === 1 &&
+                          staff.genderOther &&
+                          ` - ${staff.genderOther}`}
+                      </>
+                    ) : (
+                      "-"
+                    )
+                  }
+                />
+
+                {/* Fourth Row - Description */}
+                <DetailField
+                  label="Description"
+                  value={staff.description}
+                  fullWidth
+                />
+
+                {/* Fifth Row - Tags and Skills */}
+                <div>
+                  <TagsDisplay
+                    values={extractIds(staff.tags)}
+                    onUnauthorized={onUnauthorized}
+                  />
+                </div>
+                {staff.skillSets && staff.skillSets.length > 0 && (
+                  <div>
+                    <SkillSetsDisplay
+                      values={extractIds(staff.skillSets)}
+                      onUnauthorized={onUnauthorized}
+                    />
+                  </div>
+                )}
+              </DetailSection>
+
+              {/* Company Information (for Frontline staff type) */}
+              {staff.type === 3 && (
+                <DetailSection
+                  title="Company Information"
+                  icon={BuildingOfficeIcon}
+                >
+                  <DetailField
+                    label="Company Name"
+                    value={staff.organizationName}
+                  />
+                  <DetailField
+                    label="Company Type"
+                    value={ORGANIZATION_TYPE_MAP[staff.organizationType]}
+                  />
+                </DetailSection>
+              )}
+
+              {/* Contact Point */}
+              <DetailSection title="Contact Point" icon={PhoneIcon}>
+                <DetailField
+                  label="Email"
+                  value={
+                    staff.email ? (
+                      <a
+                        href={`mailto:${staff.email}`}
+                        className="text-blue-600 hover:text-blue-700 break-all"
+                      >
+                        {staff.email}
+                      </a>
+                    ) : (
+                      "-"
+                    )
+                  }
+                />
+                <DetailField
+                  label="I agree to receive electronic email"
+                  value={
+                    staff.isOkToEmail ? (
+                      <span className="inline-flex items-center text-green-700">
+                        <CheckCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                        Yes
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center text-red-700">
+                        <XCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                        No
+                      </span>
+                    )
+                  }
+                />
+                <DetailField
+                  label="Phone"
+                  value={
+                    staff.phone ? (
+                      <a
+                        href={`tel:${staff.phone}`}
+                        className="text-blue-600 hover:text-blue-700"
+                      >
+                        {formatPhone(staff.phone)}
+                      </a>
+                    ) : (
+                      "-"
+                    )
+                  }
+                />
+                <DetailField
+                  label="Phone Type"
+                  value={PHONE_TYPE_MAP[staff.phoneType]}
+                />
+                {staff.otherPhone && (
+                  <>
+                    <DetailField
+                      label="Other Phone (Optional)"
+                      value={
+                        <a
+                          href={`tel:${staff.otherPhone}`}
+                          className="text-blue-600 hover:text-blue-700"
+                        >
+                          {formatPhone(staff.otherPhone)}
+                        </a>
+                      }
+                    />
+                    <DetailField
+                      label="Other Phone Type (Optional)"
+                      value={PHONE_TYPE_MAP[staff.otherPhoneType]}
+                    />
+                  </>
+                )}
+                <DetailField
+                  label="I agree to receive texts to my phone"
+                  value={
+                    staff.isOkToText ? (
+                      <span className="inline-flex items-center text-green-700">
+                        <CheckCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                        Yes
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center text-red-700">
+                        <XCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                        No
+                      </span>
+                    )
+                  }
+                />
+              </DetailSection>
+
+              {/* Address */}
+              <DetailSection title="Address" icon={MapPinIcon}>
+                <DetailField
+                  label="Location"
+                  value={
+                    formatAddress(staff) !== "-" ? (
+                      <a
+                        href={getGoogleMapsUrl(staff)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 hover:text-blue-700 break-words"
+                      >
+                        {formatAddress(staff)}
+                      </a>
+                    ) : (
+                      "-"
+                    )
+                  }
+                  fullWidth
+                />
+              </DetailSection>
+
+              {/* Account */}
+              <DetailSection title="Account" icon={GlobeAltIcon}>
+                <DetailField
+                  label="Is active"
+                  value={
+                    <span
+                      className={`inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        staff.status === 1
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {staff.status === 1 ? "Active" : "Archived"}
+                    </span>
+                  }
+                />
+                <DetailField
+                  label="Preferred Language"
+                  value={staff.preferredLanguage || "English"}
+                />
+              </DetailSection>
+
+              {/* Emergency Contact */}
+              <DetailSection
+                title="Emergency Contact"
+                icon={ExclamationTriangleIcon}
+              >
+                <DetailField label="Name" value={staff.emergencyContactName} />
+                <DetailField
+                  label="Relationship"
+                  value={staff.emergencyContactRelationship}
+                />
+                <DetailField
+                  label="Telephone"
+                  value={
+                    staff.emergencyContactTelephone ? (
+                      <a
+                        href={`tel:${staff.emergencyContactTelephone}`}
+                        className="text-blue-600 hover:text-blue-700"
+                      >
+                        {formatPhone(staff.emergencyContactTelephone)}
+                      </a>
+                    ) : (
+                      "-"
+                    )
+                  }
+                />
+                <DetailField
+                  label="Alternate Telephone"
+                  value={
+                    staff.emergencyContactAlternativeTelephone ? (
+                      <a
+                        href={`tel:${staff.emergencyContactAlternativeTelephone}`}
+                        className="text-blue-600 hover:text-blue-700"
+                      >
+                        {formatPhone(
+                          staff.emergencyContactAlternativeTelephone,
+                        )}
+                      </a>
+                    ) : (
+                      "-"
+                    )
+                  }
+                />
+              </DetailSection>
+
+              {/* Internal Metrics */}
+              <DetailSection title="Internal Metrics" icon={ChartPieIcon}>
+                <div>
+                  {staff.isHowDidYouHearAboutUsOther ? (
+                    <span className="text-sm sm:text-base text-gray-900">
+                      {staff.howDidYouHearAboutUsOther}
+                    </span>
+                  ) : (
+                    <HowHearAboutUsDisplay
+                      value={
+                        staff.howDidYouHearAboutUsId ||
+                        staff.howDidYouHearAboutUsID
+                      }
+                      onUnauthorized={onUnauthorized}
+                    />
+                  )}
+                </div>
+                <DetailField
+                  label="Join date"
+                  value={formatDateTime(staff.joinDate)}
+                />
+                <DetailField
+                  label="Do you identify as belonging to any of the following groups?"
+                  value={formatMultiSelect(
+                    staff.identifyAs,
+                    IDENTIFY_AS_OPTIONS,
+                  )}
+                  fullWidth
+                />
+              </DetailSection>
+
+              {/* System */}
+              <DetailSection title="System" icon={ComputerDesktopIcon}>
+                <DetailField
+                  label="ID"
+                  value={
+                    <span className="font-mono text-xs sm:text-sm bg-gray-100 px-1 sm:px-2 py-0.5 sm:py-1 rounded break-all">
+                      {staff.publicId || staff.id || "-"}
+                    </span>
+                  }
+                />
+                <DetailField
+                  label="Created at"
+                  value={formatDateTime(staff.createdAt)}
+                />
+                <DetailField
+                  label="Created by"
+                  value={staff.createdByUserName}
+                />
+                <DetailField
+                  label="Created from"
+                  value={
+                    staff.createdFromIpAddress && (
+                      <span className="font-mono text-xs sm:text-sm break-all">
+                        {staff.createdFromIpAddress}
+                      </span>
+                    )
+                  }
+                />
+                <DetailField
+                  label="Modified at"
+                  value={formatDateTime(staff.modifiedAt)}
+                />
+                <DetailField
+                  label="Modified by"
+                  value={staff.modifiedByUserName}
+                />
+                <DetailField
+                  label="Modified from"
+                  value={
+                    staff.modifiedFromIpAddress && (
+                      <span className="font-mono text-xs sm:text-sm break-all">
+                        {staff.modifiedFromIpAddress}
+                      </span>
+                    )
+                  }
+                />
+              </DetailSection>
+
+              {/* Action Buttons - Responsive */}
+              <div className="flex flex-col sm:flex-row sm:justify-between items-stretch sm:items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 gap-3">
+                <Link to="/admin/staff" className="order-2 sm:order-1">
+                  <button className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                    <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
+                    Back to Staff
+                  </button>
+                </Link>
+
+                <div className="flex gap-2 sm:gap-3 order-1 sm:order-2">
+                  <Link
+                    to={`/admin/staff/${aid}/edit`}
+                    className="flex-1 sm:flex-initial"
+                  >
+                    <button
+                      disabled={staff.status === 2}
+                      className={`w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
+                        staff.status === 2
+                          ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+                          : "border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100"
+                      }`}
+                    >
+                      <PencilSquareIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
+                      Edit Staff
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </>
         )}
 
-        {/* Contact Point */}
-        <DataTable title="Contact Point">
-          <DataRow
-            label="Email"
-            value={
-              staff.email ? (
-                <a href={`mailto:${staff.email}`} style={{ color: "#007bff" }}>
-                  {staff.email}
-                </a>
-              ) : (
-                "-"
-              )
-            }
-          />
-          <DataRow
-            label="I agree to receive electronic email"
-            value={staff.isOkToEmail ? "✓ Yes" : "✗ No"}
-          />
-          <DataRow
-            label="Phone"
-            value={
-              staff.phone ? (
-                <a href={`tel:${staff.phone}`} style={{ color: "#007bff" }}>
-                  {formatPhoneNumber(staff.phone)}
-                </a>
-              ) : (
-                "-"
-              )
-            }
-          />
-          <DataRow
-            label="Phone Type"
-            value={PHONE_TYPE_MAP[staff.phoneType] || "-"}
-          />
-          {staff.otherPhone && (
-            <>
-              <DataRow
-                label="Other Phone (Optional)"
-                value={
-                  <a
-                    href={`tel:${staff.otherPhone}`}
-                    style={{ color: "#007bff" }}
-                  >
-                    {formatPhoneNumber(staff.otherPhone)}
-                  </a>
-                }
-              />
-              <DataRow
-                label="Other Phone Type (Optional)"
-                value={PHONE_TYPE_MAP[staff.otherPhoneType] || "-"}
-              />
-            </>
-          )}
-          <DataRow
-            label="I agree to receive texts to my phone"
-            value={staff.isOkToText ? "✓ Yes" : "✗ No"}
-          />
-        </DataTable>
-
-        {/* Address */}
-        <DataTable title="Address">
-          <DataRow
-            label="Location"
-            value={
-              formatAddress(staff) !== "-" ? (
-                <a
-                  href={getGoogleMapsUrl(staff)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ color: "#007bff", textDecoration: "none" }}
-                >
-                  {formatAddress(staff)}
-                </a>
-              ) : (
-                "-"
-              )
-            }
-          />
-        </DataTable>
-
-        {/* Account */}
-        <DataTable title="Account">
-          <DataRow
-            label="Is active"
-            value={staff.status === 1 ? "Active" : "Archived"}
-          />
-          <DataRow
-            label="Preferred Language"
-            value={
-              staff.preferredLanguage === "English"
-                ? "English"
-                : staff.preferredLanguage === "French"
-                  ? "French"
-                  : staff.preferredLanguage || "-"
-            }
-          />
-        </DataTable>
-
-        {/* Emergency Contact */}
-        <DataTable title="Emergency Contact">
-          <DataRow label="Name" value={staff.emergencyContactName || "-"} />
-          <DataRow
-            label="Relationship"
-            value={staff.emergencyContactRelationship || "-"}
-          />
-          <DataRow
-            label="Telephone"
-            value={
-              staff.emergencyContactTelephone ? (
-                <a
-                  href={`tel:${staff.emergencyContactTelephone}`}
-                  style={{ color: "#007bff" }}
-                >
-                  {formatPhoneNumber(staff.emergencyContactTelephone)}
-                </a>
-              ) : (
-                "-"
-              )
-            }
-          />
-          <DataRow
-            label="Alternate Telephone"
-            value={
-              staff.emergencyContactAlternativeTelephone ? (
-                <a
-                  href={`tel:${staff.emergencyContactAlternativeTelephone}`}
-                  style={{ color: "#007bff" }}
-                >
-                  {formatPhoneNumber(
-                    staff.emergencyContactAlternativeTelephone,
-                  )}
-                </a>
-              ) : (
-                "-"
-              )
-            }
-          />
-        </DataTable>
-
-        {/* Internal Metrics */}
-        <DataTable title="Internal Metrics">
-          <DataRow
-            label="How did they discover us?"
-            value={
-              staff.isHowDidYouHearAboutUsOther ? (
-                staff.howDidYouHearAboutUsOther
-              ) : staff.howDidYouHearAboutUsId ||
-                staff.howDidYouHearAboutUsID ? (
-                <HowHearAboutUsDisplay
-                  value={
-                    staff.howDidYouHearAboutUsId || staff.howDidYouHearAboutUsID
-                  }
-                  onUnauthorized={onUnauthorized}
-                />
-              ) : (
-                "-"
-              )
-            }
-          />
-          <DataRow label="Join date" value={formatDateTime(staff.joinDate)} />
-          <DataRow
-            label="Do you identify as belonging to any of the following groups?"
-            value={formatIdentifyAs(staff.identifyAs)}
-          />
-        </DataTable>
-
-        {/* System */}
-        <DataTable title="System">
-          <DataRow label="ID" value={staff.publicId || staff.id || "-"} />
-          <DataRow label="Created at" value={formatDateTime(staff.createdAt)} />
-          <DataRow label="Created by" value={staff.createdByUserName || "-"} />
-          <DataRow
-            label="Created from"
-            value={staff.createdFromIpAddress || "-"}
-          />
-          <DataRow
-            label="Modified at"
-            value={formatDateTime(staff.modifiedAt)}
-          />
-          <DataRow
-            label="Modified by"
-            value={staff.modifiedByUserName || "-"}
-          />
-          <DataRow
-            label="Modified from"
-            value={staff.modifiedFromIpAddress || "-"}
-          />
-        </DataTable>
-
-        {/* Action Buttons */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginTop: "30px",
-            paddingTop: "20px",
-            borderTop: "1px solid #e0e0e0",
-          }}
-        >
-          <Link to="/admin/staff">
-            <Button variant="secondary">← Back to Staff</Button>
-          </Link>
-          <Link to={`/admin/staff/${aid}/edit`}>
-            <Button variant="warning" disabled={staff.status === 2}>
-              ✏️ Edit Staff
-            </Button>
-          </Link>
-        </div>
-      </Card>
+        {!staff && !loading && (
+          <div className="px-4 sm:px-6 py-8 sm:py-16 text-center">
+            <div className="inline-flex items-center justify-center w-12 sm:w-16 h-12 sm:h-16 bg-gray-100 rounded-full mb-4">
+              <UserCircleIcon className="w-6 sm:w-8 h-6 sm:h-8 text-gray-400" />
+            </div>
+            <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
+              Staff Member Not Found
+            </h3>
+            <p className="text-sm sm:text-base text-gray-500 mb-4 sm:mb-6">
+              The staff member you're looking for doesn't exist or you don't
+              have permission to view it.
+            </p>
+            <Link to="/admin/staff">
+              <button className="inline-flex items-center px-3 sm:px-4 py-2 border border-transparent rounded-lg text-xs sm:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                <ChevronLeftIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
+                Back to Staff
+              </button>
+            </Link>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
