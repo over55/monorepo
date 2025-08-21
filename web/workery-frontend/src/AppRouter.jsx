@@ -274,6 +274,11 @@ import AdminOrderIncidentListPage from "./pages/Admin/OrderIncident/List/Page";
 import AdminOrderIncidentDetailPage from "./pages/Admin/OrderIncident/Detail/Page";
 import AdminOrderIncidentAddPage from "./pages/Admin/OrderIncident/Add/Page";
 
+// Admin order history pages.
+import AdminJobHistoryLaunchpad from "./pages/Admin/OrderHistory/LaunchpadView";
+import AdminMyJobHistoryListView from "./pages/Admin/OrderHistory/MyJobHistoryView";
+import AdminTeamJobHistoryListView from "./pages/Admin/OrderHistory/TeamJobHistoryView";
+
 ////////////////////////////////////////////////////////////////
 // Associate pages
 ////////////////////////////////////////////////////////////////
@@ -1891,10 +1896,7 @@ function AppRouter() {
               path="/admin/job-history"
               element={
                 <Layout>
-                  <PlaceholderPage
-                    title="Job History"
-                    description="Job history tracking system"
-                  />
+                  <AdminJobHistoryLaunchpad />
                 </Layout>
               }
             />
@@ -1902,7 +1904,7 @@ function AppRouter() {
               path="/admin/job-history/my-job-history"
               element={
                 <Layout>
-                  <PlaceholderPage title="My Job History" />
+                  <AdminMyJobHistoryListView />
                 </Layout>
               }
             />
@@ -1910,7 +1912,7 @@ function AppRouter() {
               path="/admin/job-history/team-job-history"
               element={
                 <Layout>
-                  <PlaceholderPage title="Team Job History" />
+                  <AdminTeamJobHistoryListView />
                 </Layout>
               }
             />
