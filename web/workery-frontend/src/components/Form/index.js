@@ -6,3 +6,4 @@ export { default as InsuranceRequirementsMultiSelect } from "./InsuranceRequirem
 export { default as VehicleTypesMultiSelect } from "./VehicleTypesMultiSelect";
 export { default as SkillSetsMultiSelect } from "./SkillSetsMultiSelect";
 export { default as ServiceFeeSelect } from "./ServiceFeeSelect";
+export { default as AssociateSelect } from "./AssociateSelect";
