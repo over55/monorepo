@@ -2,15 +2,22 @@
 
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router";
-import { useAssociateManager } from "../../../../../../services/Services";
-import { theme, globalStyles } from "../../../../../../constants/Theme";
 import {
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Breadcrumb,
-} from "../../../../../../components/UI";
+  ChartBarIcon,
+  UserGroupIcon,
+  InformationCircleIcon,
+  ChevronLeftIcon,
+  CameraIcon,
+  ExclamationTriangleIcon,
+  CheckCircleIcon,
+  XMarkIcon,
+  DocumentArrowUpIcon,
+  TrashIcon,
+  ArrowUpTrayIcon,
+  Cog6ToothIcon,
+  EllipsisHorizontalIcon,
+} from "@heroicons/react/24/outline";
+import { useAssociateManager } from "../../../../../../services/Services";
 
 function AdminAssociateDetailMoreAvatarPage() {
   // URL Parameters
@@ -157,203 +164,281 @@ function AdminAssociateDetailMoreAvatarPage() {
     }
   };
 
-  // Breadcrumb items
-  const breadcrumbItems = [
-    { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
-    { label: "Associates", path: "/admin/associates", icon: "👷" },
-    { label: "Detail", path: `/admin/associate/${aid}`, icon: "👤" },
-    { label: "More", path: `/admin/associate/${aid}/more`, icon: "⚙️" },
-    { label: "Avatar", icon: "🖼️" },
-  ];
-
   // Render loading state
   if (isFetching && !associate) {
     return (
-      <div style={globalStyles.container}>
-        <Breadcrumb items={breadcrumbItems} />
-        <Card title="Change Photo">
-          <Loading message="Loading associate details..." />
-        </Card>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading associate details...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={globalStyles.container}>
-      <Breadcrumb items={breadcrumbItems} />
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Breadcrumb */}
+      <nav className="flex mb-6" aria-label="Breadcrumb">
+        <ol className="inline-flex items-center space-x-1 md:space-x-3">
+          <li className="inline-flex items-center">
+            <Link
+              to="/admin/dashboard"
+              className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+            >
+              <ChartBarIcon className="w-4 h-4 mr-2" />
+              Dashboard
+            </Link>
+          </li>
+          <li>
+            <div className="flex items-center">
+              <span className="mx-2 text-gray-400">/</span>
+              <Link
+                to="/admin/associates"
+                className="text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <span className="inline-flex items-center">
+                  <UserGroupIcon className="w-4 h-4 mr-2" />
+                  Associates
+                </span>
+              </Link>
+            </div>
+          </li>
+          <li>
+            <div className="flex items-center">
+              <span className="mx-2 text-gray-400">/</span>
+              <Link
+                to={`/admin/associate/${aid}`}
+                className="text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <span className="inline-flex items-center">
+                  <InformationCircleIcon className="w-4 h-4 mr-2" />
+                  Detail
+                </span>
+              </Link>
+            </div>
+          </li>
+          <li>
+            <div className="flex items-center">
+              <span className="mx-2 text-gray-400">/</span>
+              <Link
+                to={`/admin/associate/${aid}/more`}
+                className="text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <span className="inline-flex items-center">
+                  <Cog6ToothIcon className="w-4 h-4 mr-2" />
+                  More
+                </span>
+              </Link>
+            </div>
+          </li>
+          <li aria-current="page">
+            <div className="flex items-center">
+              <span className="mx-2 text-gray-400">/</span>
+              <span className="text-sm font-medium text-gray-500 inline-flex items-center">
+                <CameraIcon className="w-4 h-4 mr-2" />
+                Avatar
+              </span>
+            </div>
+          </li>
+        </ol>
+      </nav>
 
       {/* Page Title */}
-      <h1 style={{ marginBottom: "10px" }}>
-        👷 Associate: {associate?.firstName} {associate?.lastName}
-      </h1>
-      <h2 style={{ marginBottom: "20px", color: "#666" }}>Change Photo</h2>
+      <div className="mb-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center">
+              <UserGroupIcon className="w-6 h-6 md:w-8 md:h-8 mr-3 text-blue-600" />
+              Associate: {associate?.firstName} {associate?.lastName}
+            </h1>
+            <p className="mt-1 text-sm text-gray-600 flex items-center">
+              <CameraIcon className="w-4 h-4 mr-1" />
+              Change Photo
+            </p>
+          </div>
+        </div>
+      </div>
 
       {/* Success Message */}
-      {successMessage && <Alert type="success">{successMessage}</Alert>}
+      {successMessage && (
+        <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center">
+          <CheckCircleIcon className="w-5 h-5 mr-2" />
+          {successMessage}
+        </div>
+      )}
 
       {/* Error Messages */}
       {errors && Object.keys(errors).length > 0 && (
-        <Alert type="error">
-          {errors.file ||
-            errors.message ||
-            errors.detail ||
-            "An error occurred. Please try again."}
-        </Alert>
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className="flex justify-between items-center">
+            <span>
+              {errors.file ||
+                errors.message ||
+                errors.detail ||
+                "An error occurred. Please try again."}
+            </span>
+            <button
+              onClick={() => setErrors({})}
+              className="text-red-700 hover:text-red-900"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
       )}
 
-      {/* Main Card */}
-      <Card>
-        {/* Warning Message */}
-        <Alert type="warning">
-          <strong>Warning:</strong> Uploading a new photo will replace the
-          existing one. The previous photo cannot be recovered.
-        </Alert>
+      {/* Main Content Card */}
+      <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+        <div className="px-4 sm:px-6 py-5 border-b border-gray-200">
+          <h2 className="text-xl md:text-2xl font-semibold text-gray-900 flex items-center">
+            <ArrowUpTrayIcon className="w-6 h-6 md:w-7 md:h-7 mr-2 text-blue-600" />
+            Upload Photo
+          </h2>
+        </div>
 
-        {/* File Upload Section */}
-        <div style={{ marginTop: "20px" }}>
-          {selectedFile ? (
-            <>
-              {/* File Selected */}
-              <div
-                style={{
-                  padding: "20px",
-                  backgroundColor: theme.colors.successBg,
-                  border: `1px solid ${theme.colors.success}`,
-                  borderRadius: "4px",
-                  marginBottom: "20px",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <div>
-                    <p
-                      style={{
-                        color: theme.colors.success,
-                        marginBottom: "5px",
-                      }}
-                    >
-                      ✓ File ready to upload
-                    </p>
-                    <p style={{ fontSize: "14px", color: "#666" }}>
-                      <strong>File name:</strong> {selectedFile.name}
-                    </p>
-                    <p style={{ fontSize: "14px", color: "#666" }}>
-                      <strong>File size:</strong>{" "}
-                      {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
+        <div className="p-6">
+          {/* Warning Message */}
+          <div className="mb-6 bg-amber-50 border border-amber-200 text-amber-700 px-4 py-3 rounded-lg flex items-start">
+            <ExclamationTriangleIcon className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" />
+            <div>
+              <strong>Warning:</strong> Uploading a new photo will replace the
+              existing one. The previous photo cannot be recovered.
+            </div>
+          </div>
+
+          {/* File Upload Section */}
+          <div className="mb-6">
+            {selectedFile ? (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1">
+                    <div className="flex items-center text-green-700 mb-2">
+                      <CheckCircleIcon className="w-5 h-5 mr-2" />
+                      <span className="font-medium">File ready to upload</span>
+                    </div>
+                    <div className="text-sm text-gray-600 space-y-1">
+                      <p>
+                        <span className="font-medium">File name:</span>{" "}
+                        {selectedFile.name}
+                      </p>
+                      <p>
+                        <span className="font-medium">File size:</span>{" "}
+                        {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
                   </div>
-                  <Button
-                    variant="danger"
-                    size="sm"
+                  <button
                     onClick={handleRemoveFile}
                     disabled={isUploading}
+                    className={`inline-flex items-center px-3 py-1.5 border rounded-lg text-sm font-medium transition-colors ${
+                      isUploading
+                        ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+                        : "border-red-300 text-red-700 bg-red-50 hover:bg-red-100"
+                    }`}
                   >
-                    ✕ Remove
-                  </Button>
+                    <TrashIcon className="w-4 h-4 mr-1" />
+                    Remove
+                  </button>
                 </div>
               </div>
-            </>
-          ) : (
-            <>
-              {/* File Input */}
-              <div style={{ marginBottom: "20px" }}>
-                <label
-                  style={{
-                    display: "block",
-                    marginBottom: "10px",
-                    fontWeight: "600",
-                  }}
-                >
+            ) : (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Select Photo File
                 </label>
-                <input
-                  id="avatar-file-input"
-                  name="file"
-                  type="file"
-                  accept="image/jpeg,image/jpg,image/png,image/gif"
-                  onChange={handleFileChange}
-                  disabled={isUploading}
-                  style={{
-                    padding: "10px",
-                    border: "1px solid #ddd",
-                    borderRadius: "4px",
-                    width: "100%",
-                    maxWidth: "400px",
-                    cursor: "pointer",
-                  }}
-                />
-                <p
-                  style={{ fontSize: "12px", color: "#666", marginTop: "5px" }}
-                >
+                <div className="relative">
+                  <input
+                    id="avatar-file-input"
+                    name="file"
+                    type="file"
+                    accept="image/jpeg,image/jpg,image/png,image/gif"
+                    onChange={handleFileChange}
+                    disabled={isUploading}
+                    className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed file:mr-4 file:py-2 file:px-4 file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                  />
+                </div>
+                <p className="mt-2 text-xs text-gray-500">
                   Accepted formats: JPEG, PNG, GIF. Maximum size: 10 MB.
                 </p>
               </div>
-            </>
-          )}
-        </div>
-
-        {/* Associate Information */}
-        {associate && (
-          <div
-            style={{
-              padding: "15px",
-              backgroundColor: "#f8f9fa",
-              borderRadius: "4px",
-              marginBottom: "20px",
-              marginTop: "20px",
-            }}
-          >
-            <h4 style={{ marginBottom: "10px" }}>
-              Current Associate Information:
-            </h4>
-            <div style={{ display: "grid", gap: "5px" }}>
-              <div>
-                <strong>Name:</strong> {associate.firstName}{" "}
-                {associate.lastName}
-              </div>
-              <div>
-                <strong>Email:</strong> {associate.email}
-              </div>
-              {associate.avatarObjectUrl && (
-                <div>
-                  <strong>Current Photo:</strong> Photo exists (will be
-                  replaced)
-                </div>
-              )}
-            </div>
+            )}
           </div>
-        )}
 
-        {/* Action Buttons */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            flexWrap: "wrap",
-            gap: "10px",
-            marginTop: "20px",
-          }}
-        >
-          <Link to={`/admin/associate/${aid}/more`}>
-            <Button variant="secondary" disabled={isUploading}>
-              ← Back to More
-            </Button>
-          </Link>
+          {/* Associate Information */}
+          {associate && (
+            <div className="bg-gray-50 rounded-lg p-4 mb-6">
+              <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
+                <InformationCircleIcon className="w-4 h-4 mr-2" />
+                Current Associate Information
+              </h3>
+              <div className="space-y-2 text-sm">
+                <div>
+                  <span className="font-medium text-gray-700">Name:</span>{" "}
+                  <span className="text-gray-900">
+                    {associate.firstName} {associate.lastName}
+                  </span>
+                </div>
+                <div>
+                  <span className="font-medium text-gray-700">Email:</span>{" "}
+                  <span className="text-gray-900">{associate.email}</span>
+                </div>
+                {associate.avatarObjectUrl && (
+                  <div>
+                    <span className="font-medium text-gray-700">
+                      Current Photo:
+                    </span>{" "}
+                    <span className="text-gray-900">
+                      Photo exists (will be replaced)
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
-          <Button
-            variant="success"
-            onClick={handleSubmit}
-            disabled={!selectedFile || isUploading}
-          >
-            {isUploading ? "Uploading..." : <>✓ Save Photo</>}
-          </Button>
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row justify-between gap-4">
+            <Link to={`/admin/associate/${aid}/more`}>
+              <button
+                disabled={isUploading}
+                className={`w-full sm:w-auto inline-flex items-center justify-center px-4 md:px-5 py-2 md:py-2.5 border rounded-lg text-sm md:text-base font-medium transition-colors ${
+                  isUploading
+                    ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+                    : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
+                }`}
+              >
+                <ChevronLeftIcon className="w-4 h-4 md:w-5 md:h-5 mr-2" />
+                Back to More
+              </button>
+            </Link>
+
+            <button
+              onClick={handleSubmit}
+              disabled={!selectedFile || isUploading}
+              className={`w-full sm:w-auto inline-flex items-center justify-center px-4 md:px-5 py-2 md:py-2.5 border rounded-lg text-sm md:text-base font-medium transition-colors ${
+                !selectedFile || isUploading
+                  ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+                  : "border-green-600 text-white bg-green-600 hover:bg-green-700"
+              }`}
+            >
+              {isUploading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <CheckCircleIcon className="w-4 h-4 md:w-5 md:h-5 mr-2" />
+                  Save Photo
+                </>
+              )}
+            </button>
+          </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
 }

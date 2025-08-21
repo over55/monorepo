@@ -1,24 +1,21 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Staff/Add/Step3Page.jsx
 
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useStaffAddWizardStorage } from "../../../../services/Services";
 import {
-  Card,
-  Button,
-  Alert,
-  Input,
-  Select,
-  Checkbox,
-  Breadcrumb,
-  ProgressBar,
-} from "../../../../components/UI";
-import {
-  PlusIcon,
+  UserPlusIcon,
+  ChevronRightIcon,
+  XMarkIcon,
   ArrowLeftIcon,
-  ArrowRightIcon,
+  ChartBarIcon,
   UserIcon,
-  HomeIcon,
+  ExclamationCircleIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  IdentificationIcon,
+  CheckIcon,
+  ArrowRightIcon,
 } from "@heroicons/react/24/outline";
 import { STAFF_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS } from "../../../../constants/Staff";
 
@@ -27,15 +24,25 @@ function AdminStaffAddStep3Page() {
   const wizardStorage = useStaffAddWizardStorage();
   const wizardState = wizardStorage.getWizardState();
 
+  // Component states
   const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Form data
   const [email, setEmail] = useState(wizardState.email || "");
   const [phone, setPhone] = useState(wizardState.phone || "");
   const [phoneType, setPhoneType] = useState(wizardState.phoneType || 0);
+  const [phoneExtension, setPhoneExtension] = useState(
+    wizardState.phoneExtension || "",
+  );
   const [firstName, setFirstName] = useState(wizardState.firstName || "");
   const [lastName, setLastName] = useState(wizardState.lastName || "");
   const [otherPhone, setOtherPhone] = useState(wizardState.otherPhone || "");
   const [otherPhoneType, setOtherPhoneType] = useState(
     wizardState.otherPhoneType || 0,
+  );
+  const [otherPhoneExtension, setOtherPhoneExtension] = useState(
+    wizardState.otherPhoneExtension || "",
   );
   const [isOkToText, setIsOkToText] = useState(wizardState.isOkToText || false);
   const [isOkToEmail, setIsOkToEmail] = useState(
@@ -46,24 +53,31 @@ function AdminStaffAddStep3Page() {
     window.scrollTo(0, 0);
   }, []);
 
-  const onSubmitClick = () => {
-    const newErrors = {};
+  const onSubmitClick = (e) => {
+    e.preventDefault();
+    setErrors({});
+
+    let newErrors = {};
     let hasErrors = false;
 
-    if (!firstName) {
+    // General validation
+    if (!firstName.trim()) {
       newErrors.firstName = "First name is required";
       hasErrors = true;
     }
-    if (!lastName) {
+    if (!lastName.trim()) {
       newErrors.lastName = "Last name is required";
       hasErrors = true;
     }
-    if (!email) {
+    if (!email.trim()) {
       newErrors.email = "Email is required";
       hasErrors = true;
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = "Please enter a valid email address";
+      hasErrors = true;
     }
-    if (!phone) {
-      newErrors.phone = "Phone is required";
+    if (!phone.trim()) {
+      newErrors.phone = "Phone number is required";
       hasErrors = true;
     }
     if (phoneType === 0) {
@@ -77,14 +91,17 @@ function AdminStaffAddStep3Page() {
       return;
     }
 
+    // Save to wizard storage
     wizardStorage.updateWizardState({
       firstName,
       lastName,
       email,
       phone,
       phoneType,
+      phoneExtension,
       otherPhone,
       otherPhoneType,
+      otherPhoneExtension,
       isOkToText,
       isOkToEmail,
     });
@@ -92,126 +109,625 @@ function AdminStaffAddStep3Page() {
     navigate("/admin/staff/add/step-4");
   };
 
-  const breadcrumbItems = [
-    { label: "Dashboard", href: "/admin/dashboard", icon: HomeIcon },
-    { label: "Staff", href: "/admin/staff", icon: UserIcon },
-    { label: "New", icon: PlusIcon },
-  ];
-
   return (
-    <div className="max-w-4xl mx-auto">
-      <Breadcrumb items={breadcrumbItems} />
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        {/* Breadcrumb */}
+        <nav className="flex mb-4" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+            <li className="inline-flex items-center">
+              <Link
+                to="/admin/dashboard"
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <ChartBarIcon className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Dashboard</span>
+                <span className="sm:hidden">Home</span>
+              </Link>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to="/admin/staff"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                >
+                  <span className="inline-flex items-center">
+                    <UserIcon className="w-4 h-4 mr-2" />
+                    Staff
+                  </span>
+                </Link>
+              </div>
+            </li>
+            <li aria-current="page">
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
+                  <UserPlusIcon className="w-4 h-4 mr-2" />
+                  Add
+                </span>
+              </div>
+            </li>
+          </ol>
+        </nav>
 
-      <h1 className="text-2xl font-bold mb-2">New Staff Member</h1>
-      <p className="text-gray-600 mb-4">Step 3 of 7 - Contact Information</p>
+        {/* Page Title */}
+        <div className="mb-6">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+            <UserPlusIcon className="w-6 h-6 sm:w-7 sm:h-7 mr-3 text-blue-600" />
+            Add New Staff Member
+          </h1>
+        </div>
 
-      <ProgressBar value={43} max={100} color="green" className="mb-6" />
+        {/* Wizard Steps - Responsive Version */}
+        <div className="mb-6">
+          <div className="flex items-center justify-center">
+            {/* Mobile/Tablet View (< 1920px) */}
+            <div className="xl:hidden w-full overflow-x-auto pb-2">
+              <div className="flex items-center min-w-max px-2">
+                {/* Step 1 - Complete */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex-shrink-0">
+                    <CheckIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  </div>
+                  <div className="ml-2 sm:ml-3">
+                    <p className="text-xs sm:text-sm font-medium text-gray-900">
+                      Search
+                    </p>
+                    <p className="text-xs text-gray-500 hidden sm:block">
+                      Complete
+                    </p>
+                  </div>
+                </div>
 
-      <Card>
-        <h2 className="text-xl font-semibold mb-4">Contact Information</h2>
-        <p className="text-gray-600 mb-6">
-          Please fill out all the required fields before submitting this form.
-        </p>
+                {/* Connector */}
+                <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-green-600"></div>
 
-        {Object.keys(errors).length > 0 && (
-          <Alert type="error">Please correct the errors below.</Alert>
-        )}
+                {/* Step 2 - Complete */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex-shrink-0">
+                    <CheckIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  </div>
+                  <div className="ml-2 sm:ml-3">
+                    <p className="text-xs sm:text-sm font-medium text-gray-900">
+                      Type
+                    </p>
+                    <p className="text-xs text-gray-500 hidden sm:block">
+                      Complete
+                    </p>
+                  </div>
+                </div>
 
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              label="First Name"
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              error={errors.firstName}
-              required
-            />
+                {/* Connector */}
+                <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-gray-300"></div>
 
-            <Input
-              label="Last Name"
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              error={errors.lastName}
-              required
-            />
-          </div>
+                {/* Step 3 - Active */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-full flex-shrink-0">
+                    <span className="text-white font-semibold text-sm">3</span>
+                  </div>
+                  <div className="ml-2 sm:ml-3">
+                    <p className="text-xs sm:text-sm font-medium text-gray-900">
+                      Contact
+                    </p>
+                    <p className="text-xs text-gray-500 hidden sm:block">
+                      Basic Info
+                    </p>
+                  </div>
+                </div>
 
-          <Input
-            label="Email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            error={errors.email}
-            required
-          />
+                {/* Connector */}
+                <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-gray-300"></div>
 
-          <Checkbox
-            label="I agree to receive electronic email"
-            checked={isOkToEmail}
-            onChange={() => setIsOkToEmail(!isOkToEmail)}
-          />
+                {/* Step 4 - Inactive */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
+                    <span className="text-gray-600 font-semibold text-sm">
+                      4
+                    </span>
+                  </div>
+                  <div className="ml-2 sm:ml-3">
+                    <p className="text-xs sm:text-sm font-medium text-gray-500">
+                      Address
+                    </p>
+                    <p className="text-xs text-gray-400 hidden sm:block">
+                      Location
+                    </p>
+                  </div>
+                </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              label="Phone"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              error={errors.phone}
-              required
-            />
+                {/* Connector */}
+                <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-gray-300"></div>
 
-            <Select
-              label="Phone Type"
-              value={phoneType}
-              onChange={(e) => setPhoneType(parseInt(e.target.value))}
-              options={STAFF_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS}
-              error={errors.phoneType}
-              required
-            />
-          </div>
+                {/* Step 5 - Inactive */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
+                    <span className="text-gray-600 font-semibold text-sm">
+                      5
+                    </span>
+                  </div>
+                  <div className="ml-2 sm:ml-3">
+                    <p className="text-xs sm:text-sm font-medium text-gray-500">
+                      Account
+                    </p>
+                    <p className="text-xs text-gray-400 hidden sm:block">
+                      Settings
+                    </p>
+                  </div>
+                </div>
 
-          <Checkbox
-            label="I agree to receive texts to my phone"
-            checked={isOkToText}
-            onChange={() => setIsOkToText(!isOkToText)}
-          />
+                {/* Connector */}
+                <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-gray-300"></div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              label="Other Phone (Optional)"
-              value={otherPhone}
-              onChange={(e) => setOtherPhone(e.target.value)}
-            />
+                {/* Step 6 - Inactive */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
+                    <span className="text-gray-600 font-semibold text-sm">
+                      6
+                    </span>
+                  </div>
+                  <div className="ml-2 sm:ml-3">
+                    <p className="text-xs sm:text-sm font-medium text-gray-500">
+                      Comments
+                    </p>
+                    <p className="text-xs text-gray-400 hidden sm:block">
+                      Notes
+                    </p>
+                  </div>
+                </div>
 
-            {otherPhone && (
-              <Select
-                label="Other Phone Type (Optional)"
-                value={otherPhoneType}
-                onChange={(e) => setOtherPhoneType(parseInt(e.target.value))}
-                options={STAFF_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS}
-              />
-            )}
-          </div>
+                {/* Connector */}
+                <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-gray-300"></div>
 
-          <div className="flex gap-3 pt-4">
-            <Button
-              variant="secondary"
-              onClick={() => navigate("/admin/staff/add/step-2")}
-              icon={ArrowLeftIcon}
-            >
-              Back
-            </Button>
+                {/* Step 7 - Inactive */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
+                    <span className="text-gray-600 font-semibold text-sm">
+                      7
+                    </span>
+                  </div>
+                  <div className="ml-2 sm:ml-3">
+                    <p className="text-xs sm:text-sm font-medium text-gray-500">
+                      Complete
+                    </p>
+                    <p className="text-xs text-gray-400 hidden sm:block">
+                      Finish
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-            <Button
-              variant="primary"
-              onClick={onSubmitClick}
-              icon={ArrowRightIcon}
-            >
-              Next
-            </Button>
+            {/* Desktop View (≥ 1920px) - Original Layout */}
+            <div className="hidden xl:flex items-center">
+              {/* Step 1 - Complete */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
+                  <CheckIcon className="w-6 h-6 text-white" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">Search</p>
+                  <p className="text-xs text-gray-500">Complete</p>
+                </div>
+              </div>
+
+              {/* Connector */}
+              <div className="mx-2 w-12 h-0.5 bg-green-600"></div>
+
+              {/* Step 2 - Complete */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
+                  <CheckIcon className="w-6 h-6 text-white" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">Type</p>
+                  <p className="text-xs text-gray-500">Complete</p>
+                </div>
+              </div>
+
+              {/* Connector */}
+              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+
+              {/* Step 3 - Active */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
+                  <span className="text-white font-semibold">3</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">Contact</p>
+                  <p className="text-xs text-gray-500">Basic Info</p>
+                </div>
+              </div>
+
+              {/* Connector */}
+              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+
+              {/* Step 4 - Inactive */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
+                  <span className="text-gray-600 font-semibold">4</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-500">Address</p>
+                  <p className="text-xs text-gray-400">Location</p>
+                </div>
+              </div>
+
+              {/* Connector */}
+              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+
+              {/* Step 5 - Inactive */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
+                  <span className="text-gray-600 font-semibold">5</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-500">Account</p>
+                  <p className="text-xs text-gray-400">Settings</p>
+                </div>
+              </div>
+
+              {/* Connector */}
+              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+
+              {/* Step 6 - Inactive */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
+                  <span className="text-gray-600 font-semibold">6</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-500">Comments</p>
+                  <p className="text-xs text-gray-400">Notes</p>
+                </div>
+              </div>
+
+              {/* Connector */}
+              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+
+              {/* Step 7 - Inactive */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
+                  <span className="text-gray-600 font-semibold">7</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-500">Complete</p>
+                  <p className="text-xs text-gray-400">Finish</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </Card>
+
+        {/* Error Message */}
+        {errors.general && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center">
+              <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+              <span className="text-sm">{errors.general}</span>
+            </span>
+            <button
+              onClick={() => setErrors({})}
+              className="text-red-600 hover:text-red-800 ml-2"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
+        {/* Main Content */}
+        <div className="bg-white shadow-sm rounded-lg">
+          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+              <IdentificationIcon className="w-5 h-5 mr-2" />
+              Contact Information
+            </h2>
+          </div>
+
+          <div className="p-4 sm:p-6">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <span className="ml-3 text-gray-600">Submitting...</span>
+              </div>
+            ) : (
+              <form onSubmit={onSubmitClick} className="max-w-2xl mx-auto">
+                <div className="space-y-4">
+                  {/* Name Fields */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        First Name <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <UserIcon className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <input
+                          type="text"
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                          placeholder="Enter first name"
+                          className={`w-full pl-10 pr-3 py-2 border ${
+                            errors.firstName
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                        />
+                      </div>
+                      {errors.firstName && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {errors.firstName}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Last Name <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <UserIcon className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <input
+                          type="text"
+                          value={lastName}
+                          onChange={(e) => setLastName(e.target.value)}
+                          placeholder="Enter last name"
+                          className={`w-full pl-10 pr-3 py-2 border ${
+                            errors.lastName
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                        />
+                      </div>
+                      {errors.lastName && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {errors.lastName}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Email */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Email Address <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <EnvelopeIcon className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Enter email address"
+                        className={`w-full pl-10 pr-3 py-2 border ${
+                          errors.email ? "border-red-500" : "border-gray-300"
+                        } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                      />
+                    </div>
+                    {errors.email && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors.email}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Email Consent */}
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="isOkToEmail"
+                      checked={isOkToEmail}
+                      onChange={(e) => setIsOkToEmail(e.target.checked)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label
+                      htmlFor="isOkToEmail"
+                      className="ml-2 text-sm font-semibold text-gray-700"
+                    >
+                      I agree to receive electronic email
+                    </label>
+                  </div>
+
+                  {/* Phone */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Phone Number <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <PhoneIcon className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <input
+                          type="tel"
+                          value={phone}
+                          onChange={(e) => setPhone(e.target.value)}
+                          placeholder="Enter phone number"
+                          className={`w-full pl-10 pr-3 py-2 border ${
+                            errors.phone ? "border-red-500" : "border-gray-300"
+                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                        />
+                      </div>
+                      {errors.phone && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {errors.phone}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Phone Type <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <PhoneIcon className="h-5 w-5 text-gray-400" />
+                        </div>
+                        <select
+                          value={phoneType}
+                          onChange={(e) =>
+                            setPhoneType(parseInt(e.target.value))
+                          }
+                          className={`w-full pl-10 pr-3 py-2 border ${
+                            errors.phoneType
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white`}
+                        >
+                          {STAFF_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS.map(
+                            (option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ),
+                          )}
+                        </select>
+                      </div>
+                      {errors.phoneType && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {errors.phoneType}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Phone Extension - Only show for Work phone */}
+                  {STAFF_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS.find(
+                    (opt) => opt.value === phoneType,
+                  )?.label === "Work" && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Phone Extension (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={phoneExtension}
+                        onChange={(e) => setPhoneExtension(e.target.value)}
+                        placeholder="Enter extension"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  )}
+
+                  {/* Text Consent */}
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="isOkToText"
+                      checked={isOkToText}
+                      onChange={(e) => setIsOkToText(e.target.checked)}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    />
+                    <label
+                      htmlFor="isOkToText"
+                      className="ml-2 text-sm font-semibold text-gray-700"
+                    >
+                      I agree to receive texts to my phone
+                    </label>
+                  </div>
+
+                  {/* Other Phone (Optional) */}
+                  <div className="border-t pt-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Other Phone Number (Optional)
+                        </label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <PhoneIcon className="h-5 w-5 text-gray-400" />
+                          </div>
+                          <input
+                            type="tel"
+                            value={otherPhone}
+                            onChange={(e) => setOtherPhone(e.target.value)}
+                            placeholder="Enter other phone number"
+                            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                      </div>
+
+                      {otherPhone && (
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Other Phone Type
+                          </label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                              <PhoneIcon className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <select
+                              value={otherPhoneType}
+                              onChange={(e) =>
+                                setOtherPhoneType(parseInt(e.target.value))
+                              }
+                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                            >
+                              {STAFF_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS.map(
+                                (option) => (
+                                  <option
+                                    key={option.value}
+                                    value={option.value}
+                                  >
+                                    {option.label}
+                                  </option>
+                                ),
+                              )}
+                            </select>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Other Phone Extension - Only show for Work phone */}
+                    {STAFF_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS.find(
+                      (opt) => opt.value === otherPhoneType,
+                    )?.label === "Work" &&
+                      otherPhone && (
+                        <div className="mt-4">
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Other Phone Extension (Optional)
+                          </label>
+                          <input
+                            type="text"
+                            value={otherPhoneExtension}
+                            onChange={(e) =>
+                              setOtherPhoneExtension(e.target.value)
+                            }
+                            placeholder="Enter extension"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                      )}
+                  </div>
+                </div>
+
+                {/* Form Actions */}
+                <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                  <Link
+                    to="/admin/staff/add/step-2"
+                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    <ArrowLeftIcon className="w-4 h-4 mr-2" />
+                    Back
+                  </Link>
+                  <button
+                    type="submit"
+                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    Next
+                    <ArrowRightIcon className="w-4 h-4 ml-2" />
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

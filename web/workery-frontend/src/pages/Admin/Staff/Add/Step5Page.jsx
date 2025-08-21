@@ -1,34 +1,44 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Staff/Add/Step5Page.jsx
 
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { useStaffAddWizardStorage } from "../../../../services/Services";
-import {
-  Card,
-  Button,
-  Alert,
-  Input,
-  Textarea,
-  Radio,
-  Breadcrumb,
-  ProgressBar,
-} from "../../../../components/UI";
 import { VehicleTypesMultiSelect } from "../../../../components/Form";
 import {
-  PlusIcon,
+  UserPlusIcon,
+  ChevronRightIcon,
+  XMarkIcon,
   ArrowLeftIcon,
-  ArrowRightIcon,
+  ChartBarIcon,
   UserIcon,
-  HomeIcon,
-  ScaleIcon,
-  UsersIcon,
-  KeyIcon,
-  ServerIcon,
+  ExclamationCircleIcon,
+  CheckIcon,
+  ArrowRightIcon,
+  ShieldCheckIcon,
+  CalendarDaysIcon,
+  TruckIcon,
+  LanguageIcon,
+  PhoneIcon,
+  UserGroupIcon,
+  LockClosedIcon,
+  ComputerDesktopIcon,
+  ClipboardDocumentIcon,
+  IdentificationIcon,
 } from "@heroicons/react/24/outline";
 
 // Language constants
 const LANGUAGE_ENGLISH = "English";
 const LANGUAGE_FRENCH = "French";
+
+// Password validation constants
+const PASSWORD_MIN_LENGTH = 8;
+const PASSWORD_MAX_LENGTH = 255;
+const PASSWORD_REGEX = {
+  hasUpperCase: /[A-Z]/,
+  hasLowerCase: /[a-z]/,
+  hasNumbers: /\d/,
+  hasSpecialChar: /[!@#$%^&*(),.?":{}|<>]/,
+};
 
 function AdminStaffAddStep5Page() {
   const navigate = useNavigate();
@@ -36,7 +46,19 @@ function AdminStaffAddStep5Page() {
 
   const wizardState = wizardStorage.getWizardState();
 
+  // Component states
   const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [passwordStrength, setPasswordStrength] = useState(0);
+  const [passwordRequirements, setPasswordRequirements] = useState({
+    minLength: false,
+    hasUpperCase: false,
+    hasLowerCase: false,
+    hasNumbers: false,
+    hasSpecialChar: false,
+  });
+
+  // Account form data
   const [limitSpecial, setLimitSpecial] = useState(
     wizardState.limitSpecial || "",
   );
@@ -61,7 +83,7 @@ function AdminStaffAddStep5Page() {
   ] = useState(wizardState.emergencyContactAlternativeTelephone || "");
   const [description, setDescription] = useState(wizardState.description || "");
   const [preferredLanguage, setPreferredLanguage] = useState(
-    wizardState.preferredLanguage || "",
+    wizardState.preferredLanguage || LANGUAGE_ENGLISH,
   );
   const [password, setPassword] = useState(wizardState.password || "");
   const [passwordRepeated, setPasswordRepeated] = useState(
@@ -76,270 +98,834 @@ function AdminStaffAddStep5Page() {
     window.scrollTo(0, 0);
   }, []);
 
-  const onSubmitClick = () => {
-    const newErrors = {};
+  // Password strength calculator
+  const calculatePasswordStrength = (pwd) => {
+    if (!pwd) return 0;
+
+    let strength = 0;
+    const requirements = {
+      minLength: pwd.length >= PASSWORD_MIN_LENGTH,
+      hasUpperCase: PASSWORD_REGEX.hasUpperCase.test(pwd),
+      hasLowerCase: PASSWORD_REGEX.hasLowerCase.test(pwd),
+      hasNumbers: PASSWORD_REGEX.hasNumbers.test(pwd),
+      hasSpecialChar: PASSWORD_REGEX.hasSpecialChar.test(pwd),
+    };
+
+    // Calculate strength based on requirements met
+    Object.values(requirements).forEach((met) => {
+      if (met) strength += 20;
+    });
+
+    setPasswordRequirements(requirements);
+    setPasswordStrength(strength);
+    return requirements;
+  };
+
+  // Handle password change with validation
+  const handlePasswordChange = (e) => {
+    const newPassword = e.target.value;
+    setPassword(newPassword);
+    calculatePasswordStrength(newPassword);
+
+    // Clear password errors when user starts typing
+    if (errors.password) {
+      const newErrors = { ...errors };
+      delete newErrors.password;
+      setErrors(newErrors);
+    }
+  };
+
+  // Validate password according to business rules
+  const validatePassword = (pwd, pwdRepeated) => {
+    const errors = {};
+
+    if (!pwd || pwd.trim() === "") {
+      errors.password = "Password is required";
+      return errors;
+    }
+
+    if (pwd.length < PASSWORD_MIN_LENGTH) {
+      errors.password = `Password must be at least ${PASSWORD_MIN_LENGTH} characters long`;
+      return errors;
+    }
+
+    if (pwd.length > PASSWORD_MAX_LENGTH) {
+      errors.password = `Password must not exceed ${PASSWORD_MAX_LENGTH} characters`;
+      return errors;
+    }
+
+    // Check password complexity requirements
+    const requirements = calculatePasswordStrength(pwd);
+    const missingRequirements = [];
+
+    if (!requirements.hasUpperCase)
+      missingRequirements.push("one uppercase letter");
+    if (!requirements.hasLowerCase)
+      missingRequirements.push("one lowercase letter");
+    if (!requirements.hasNumbers) missingRequirements.push("one number");
+    if (!requirements.hasSpecialChar)
+      missingRequirements.push("one special character");
+
+    if (missingRequirements.length > 0) {
+      errors.password = `Password must contain at least ${missingRequirements.join(", ")}`;
+      return errors;
+    }
+
+    if (pwd !== pwdRepeated) {
+      errors.password = "Passwords do not match";
+      errors.passwordRepeated = "Passwords do not match";
+      return errors;
+    }
+
+    return errors;
+  };
+
+  const onSubmitClick = async (e) => {
+    e.preventDefault();
+    setErrors({});
+
+    let newErrors = {};
     let hasErrors = false;
 
-    if (!emergencyContactName) {
+    // Basic validation for emergency contact
+    if (!emergencyContactName.trim()) {
       newErrors.emergencyContactName = "Emergency contact name is required";
       hasErrors = true;
     }
-    if (!emergencyContactRelationship) {
+    if (!emergencyContactRelationship.trim()) {
       newErrors.emergencyContactRelationship =
         "Emergency contact relationship is required";
       hasErrors = true;
     }
-    if (!emergencyContactTelephone) {
+    if (!emergencyContactTelephone.trim()) {
       newErrors.emergencyContactTelephone =
         "Emergency contact telephone is required";
       hasErrors = true;
     }
-    if (!preferredLanguage) {
+    if (!preferredLanguage.trim()) {
       newErrors.preferredLanguage = "Preferred language is required";
       hasErrors = true;
     }
-    if (password && password !== passwordRepeated) {
-      newErrors.password = "Passwords do not match";
-      newErrors.passwordRepeated = "Passwords do not match";
+
+    // Password validation - now required
+    const passwordErrors = validatePassword(password, passwordRepeated);
+    if (Object.keys(passwordErrors).length > 0) {
+      newErrors = { ...newErrors, ...passwordErrors };
+      hasErrors = true;
+    }
+
+    // Check if password confirmation is empty when password is provided
+    if (password && !passwordRepeated) {
+      newErrors.passwordRepeated = "Please confirm your password";
       hasErrors = true;
     }
 
     if (hasErrors) {
       setErrors(newErrors);
+      // Scroll to top to show errors
       window.scrollTo(0, 0);
       return;
     }
 
-    // Save to storage
-    wizardStorage.updateWizardState({
-      limitSpecial,
-      policeCheck,
-      driversLicenseClass,
-      vehicleTypes,
-      emergencyContactName,
-      emergencyContactRelationship,
-      emergencyContactTelephone,
-      emergencyContactAlternativeTelephone,
-      description,
-      preferredLanguage,
-      password,
-      passwordRepeated,
-    });
+    setIsLoading(true);
 
-    navigate("/admin/staff/add/step-6");
+    try {
+      // Save to storage with encrypted password consideration
+      const dataToSave = {
+        limitSpecial,
+        policeCheck,
+        driversLicenseClass,
+        vehicleTypes,
+        emergencyContactName,
+        emergencyContactRelationship,
+        emergencyContactTelephone,
+        emergencyContactAlternativeTelephone,
+        description,
+        preferredLanguage,
+        password, // In production, consider hashing this before storage
+        passwordRepeated,
+      };
+
+      // Update wizard storage
+      wizardStorage.updateWizardState(dataToSave);
+
+      // Note: The actual API call to save the staff member would typically happen
+      // in the final step of the wizard. Here we're just storing it in the wizard state.
+      // If you need to validate the password against the server, you could add an API call here:
+
+      // Example API call (uncomment and modify as needed):
+      /*
+      const response = await validatePasswordWithServer({
+        password: password,
+        email: wizardState.email, // Assuming email is stored in previous steps
+      });
+
+      if (!response.valid) {
+        setErrors({ password: response.message || "Password validation failed" });
+        setIsLoading(false);
+        return;
+      }
+      */
+
+      // Navigate to next step
+      navigate("/admin/staff/add/step-6");
+    } catch (error) {
+      console.error("Error saving account information:", error);
+      setErrors({
+        general: "Failed to save account information. Please try again.",
+      });
+      setIsLoading(false);
+    }
   };
 
-  const breadcrumbItems = [
-    { label: "Dashboard", href: "/admin/dashboard", icon: HomeIcon },
-    { label: "Staff", href: "/admin/staff", icon: UserIcon },
-    { label: "New", icon: PlusIcon },
-  ];
+  // Get password strength color
+  const getPasswordStrengthColor = () => {
+    if (passwordStrength <= 20) return "bg-red-500";
+    if (passwordStrength <= 40) return "bg-orange-500";
+    if (passwordStrength <= 60) return "bg-yellow-500";
+    if (passwordStrength <= 80) return "bg-blue-500";
+    return "bg-green-500";
+  };
+
+  // Get password strength text
+  const getPasswordStrengthText = () => {
+    if (passwordStrength <= 20) return "Weak";
+    if (passwordStrength <= 40) return "Fair";
+    if (passwordStrength <= 60) return "Good";
+    if (passwordStrength <= 80) return "Strong";
+    return "Very Strong";
+  };
 
   return (
-    <div className="max-w-4xl mx-auto">
-      <Breadcrumb items={breadcrumbItems} />
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        {/* Breadcrumb */}
+        <nav className="flex mb-4" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+            <li className="inline-flex items-center">
+              <Link
+                to="/admin/dashboard"
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <ChartBarIcon className="w-4 h-4 mr-2" />
+                Dashboard
+              </Link>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to="/admin/staff"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                >
+                  <span className="inline-flex items-center">
+                    <UserIcon className="w-4 h-4 mr-2" />
+                    Staff
+                  </span>
+                </Link>
+              </div>
+            </li>
+            <li aria-current="page">
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
+                  <UserPlusIcon className="w-4 h-4 mr-2" />
+                  Add
+                </span>
+              </div>
+            </li>
+          </ol>
+        </nav>
 
-      <h1 className="text-2xl font-bold mb-2">New Staff Member</h1>
-      <p className="text-gray-600 mb-4">Step 5 of 7 - Account Details</p>
-
-      <ProgressBar value={71} max={100} color="green" className="mb-6" />
-
-      <Card>
-        <div className="flex items-center mb-6">
-          <UserIcon className="h-6 w-6 text-gray-600 mr-2" />
-          <h2 className="text-xl font-semibold">Account Details</h2>
+        {/* Page Title */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center">
+            <UserPlusIcon className="w-7 h-7 mr-3 text-blue-600" />
+            Add New Staff Member
+          </h1>
         </div>
 
-        <p className="text-gray-600 mb-6">
-          Please fill out all the required fields before submitting this form.
-        </p>
+        {/* Wizard Steps - Responsive */}
+        <div className="mb-6 overflow-x-auto">
+          <div className="flex items-center justify-start xl:justify-center min-w-max px-2">
+            <div className="flex items-center">
+              {/* Steps 1-4 Complete */}
+              {[1, 2, 3, 4].map((step, index) => (
+                <React.Fragment key={step}>
+                  <div className="flex items-center">
+                    <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full">
+                      <CheckIcon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
+                    </div>
+                    <div className="ml-2 sm:ml-3">
+                      <p className="text-xs sm:text-sm font-medium text-gray-900">
+                        {step === 1 && "Search"}
+                        {step === 2 && "Type"}
+                        {step === 3 && "Contact"}
+                        {step === 4 && "Address"}
+                      </p>
+                      <p className="text-xs text-gray-500 hidden lg:block">
+                        Complete
+                      </p>
+                    </div>
+                  </div>
+                  {index < 6 && (
+                    <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-green-600"></div>
+                  )}
+                </React.Fragment>
+              ))}
 
-        {Object.keys(errors).length > 0 && (
-          <Alert type="error">Please correct the errors below.</Alert>
+              {/* Step 5 - Active */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-full">
+                  <span className="text-white font-semibold text-sm sm:text-base">
+                    5
+                  </span>
+                </div>
+                <div className="ml-2 sm:ml-3">
+                  <p className="text-xs sm:text-sm font-medium text-gray-900">
+                    Account
+                  </p>
+                  <p className="text-xs text-gray-500 hidden lg:block">
+                    Details
+                  </p>
+                </div>
+              </div>
+
+              <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-gray-300"></div>
+
+              {/* Steps 6-7 Inactive */}
+              {[6, 7].map((step, index) => (
+                <React.Fragment key={step}>
+                  <div className="flex items-center">
+                    <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full">
+                      <span className="text-gray-600 font-semibold text-sm sm:text-base">
+                        {step}
+                      </span>
+                    </div>
+                    <div className="ml-2 sm:ml-3">
+                      <p className="text-xs sm:text-sm font-medium text-gray-500">
+                        {step === 6 && "Metrics"}
+                        {step === 7 && "Comments"}
+                      </p>
+                      <p className="text-xs text-gray-400 hidden lg:block">
+                        {step === 6 && "Performance"}
+                        {step === 7 && "Notes"}
+                      </p>
+                    </div>
+                  </div>
+                  {index === 0 && (
+                    <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-gray-300"></div>
+                  )}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Error Message */}
+        {errors.general && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center">
+              <ExclamationCircleIcon className="w-5 h-5 mr-2" />
+              {errors.general}
+            </span>
+            <button
+              onClick={() => setErrors({})}
+              className="text-red-600 hover:text-red-800"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
         )}
 
-        <div className="space-y-8">
-          {/* Insurance & Financial Section */}
-          <div>
-            <div className="flex items-center mb-4">
-              <ScaleIcon className="h-5 w-5 text-gray-600 mr-2" />
-              <h3 className="text-lg font-semibold text-gray-700">
-                Insurance, Financial, etc.
-              </h3>
-            </div>
+        {/* Main Content */}
+        <div className="bg-white shadow-sm rounded-lg">
+          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+              <ClipboardDocumentIcon className="w-5 h-5 mr-2" />
+              Account Information
+            </h2>
+          </div>
 
-            <div className="space-y-4">
-              <Textarea
-                label="Limitation or special consideration (optional)"
-                value={limitSpecial}
-                onChange={(e) => setLimitSpecial(e.target.value)}
-                helperText="Max 638 characters"
-                rows={4}
-              />
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  label="Police Check Expiry (optional)"
-                  type="date"
-                  value={policeCheck}
-                  onChange={(e) => setPoliceCheck(e.target.value)}
-                />
-
-                <Input
-                  label="Drivers License Class (optional)"
-                  value={driversLicenseClass}
-                  onChange={(e) => setDriversLicenseClass(e.target.value)}
-                />
+          <div className="p-4 sm:p-6">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <span className="ml-3 text-gray-600">Submitting...</span>
               </div>
+            ) : (
+              <form onSubmit={onSubmitClick} className="max-w-3xl mx-auto">
+                <div className="space-y-8">
+                  {/* Insurance & Financial Section */}
+                  <div>
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                      <ShieldCheckIcon className="w-5 h-5 mr-2 text-green-600" />
+                      Insurance, Financial, etc.
+                    </h3>
 
-              <VehicleTypesMultiSelect
-                value={vehicleTypes}
-                onChange={setVehicleTypes}
-                onUnauthorized={onUnauthorized}
-                label="Vehicle Types (optional)"
-                helperText="Select the vehicle types this staff member can operate"
-              />
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Limitation or Special Consideration (Optional)
+                        </label>
+                        <textarea
+                          value={limitSpecial}
+                          onChange={(e) => setLimitSpecial(e.target.value)}
+                          placeholder="Enter any limitations or special considerations"
+                          rows={3}
+                          maxLength={638}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                        <p className="mt-1 text-xs text-gray-500">
+                          Max 638 characters
+                        </p>
+                      </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Preferred Language *
-                </label>
-                <div className="space-y-2">
-                  <Radio
-                    name="preferredLanguage"
-                    value={LANGUAGE_ENGLISH}
-                    checked={preferredLanguage === LANGUAGE_ENGLISH}
-                    onChange={(e) => setPreferredLanguage(e.target.value)}
-                    label="English"
-                  />
-                  <Radio
-                    name="preferredLanguage"
-                    value={LANGUAGE_FRENCH}
-                    checked={preferredLanguage === LANGUAGE_FRENCH}
-                    onChange={(e) => setPreferredLanguage(e.target.value)}
-                    label="French"
-                  />
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Police Check Expiry (Optional)
+                          </label>
+                          <input
+                            type="date"
+                            value={policeCheck}
+                            onChange={(e) => setPoliceCheck(e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                            Driver's License Class (Optional)
+                          </label>
+                          <input
+                            type="text"
+                            value={driversLicenseClass}
+                            onChange={(e) =>
+                              setDriversLicenseClass(e.target.value)
+                            }
+                            placeholder="Enter license class"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Vehicle Types Section */}
+                  <div className="pt-6 border-t">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                      <TruckIcon className="w-5 h-5 mr-2 text-blue-600" />
+                      Vehicle Types
+                    </h3>
+                    <VehicleTypesMultiSelect
+                      value={vehicleTypes}
+                      onChange={setVehicleTypes}
+                      error={errors.vehicleTypes}
+                      required={false}
+                      helperText="Select all vehicle types the staff member has access to"
+                      onUnauthorized={onUnauthorized}
+                    />
+                  </div>
+
+                  {/* Emergency Contact */}
+                  <div className="pt-6 border-t">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                      <UserGroupIcon className="w-5 h-5 mr-2 text-red-600" />
+                      Emergency Contact
+                    </h3>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Contact Name <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={emergencyContactName}
+                          onChange={(e) =>
+                            setEmergencyContactName(e.target.value)
+                          }
+                          placeholder="Enter emergency contact name"
+                          className={`w-full px-3 py-2 border ${
+                            errors.emergencyContactName
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                        />
+                        {errors.emergencyContactName && (
+                          <p className="mt-1 text-sm text-red-600">
+                            {errors.emergencyContactName}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Relationship <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={emergencyContactRelationship}
+                          onChange={(e) =>
+                            setEmergencyContactRelationship(e.target.value)
+                          }
+                          placeholder="Enter relationship"
+                          className={`w-full px-3 py-2 border ${
+                            errors.emergencyContactRelationship
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                        />
+                        {errors.emergencyContactRelationship && (
+                          <p className="mt-1 text-sm text-red-600">
+                            {errors.emergencyContactRelationship}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Phone Number <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <PhoneIcon className="h-5 w-5 text-gray-400" />
+                          </div>
+                          <input
+                            type="tel"
+                            value={emergencyContactTelephone}
+                            onChange={(e) =>
+                              setEmergencyContactTelephone(e.target.value)
+                            }
+                            placeholder="Enter phone number"
+                            className={`w-full pl-10 pr-3 py-2 border ${
+                              errors.emergencyContactTelephone
+                                ? "border-red-500"
+                                : "border-gray-300"
+                            } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                          />
+                        </div>
+                        {errors.emergencyContactTelephone && (
+                          <p className="mt-1 text-sm text-red-600">
+                            {errors.emergencyContactTelephone}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Alternative Phone (Optional)
+                        </label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <PhoneIcon className="h-5 w-5 text-gray-400" />
+                          </div>
+                          <input
+                            type="tel"
+                            value={emergencyContactAlternativeTelephone}
+                            onChange={(e) =>
+                              setEmergencyContactAlternativeTelephone(
+                                e.target.value,
+                              )
+                            }
+                            placeholder="Enter alternative phone number"
+                            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* System Settings */}
+                  <div className="pt-6 border-t">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                      <ComputerDesktopIcon className="w-5 h-5 mr-2 text-indigo-600" />
+                      System Settings
+                    </h3>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Preferred Language{" "}
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <LanguageIcon className="h-5 w-5 text-gray-400" />
+                          </div>
+                          <select
+                            value={preferredLanguage}
+                            onChange={(e) =>
+                              setPreferredLanguage(e.target.value)
+                            }
+                            className={`w-full pl-10 pr-3 py-2 border ${
+                              errors.preferredLanguage
+                                ? "border-red-500"
+                                : "border-gray-300"
+                            } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white`}
+                          >
+                            <option value={LANGUAGE_ENGLISH}>English</option>
+                            <option value={LANGUAGE_FRENCH}>French</option>
+                          </select>
+                        </div>
+                        {errors.preferredLanguage && (
+                          <p className="mt-1 text-sm text-red-600">
+                            {errors.preferredLanguage}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Description (Optional)
+                        </label>
+                        <textarea
+                          value={description}
+                          onChange={(e) => setDescription(e.target.value)}
+                          placeholder="Enter any additional notes or description about this staff member"
+                          rows={4}
+                          maxLength={638}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        />
+                        <p className="mt-1 text-xs text-gray-500">
+                          Any internal notes about this staff member (not
+                          visible to the staff member)
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Login Credentials - UPDATED SECTION */}
+                  <div className="pt-6 border-t">
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                      <LockClosedIcon className="w-5 h-5 mr-2 text-gray-600" />
+                      Login Credentials
+                    </h3>
+
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Password <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="password"
+                          value={password}
+                          onChange={handlePasswordChange}
+                          placeholder="Enter a secure password"
+                          className={`w-full px-3 py-2 border ${
+                            errors.password
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                        />
+
+                        {/* Password strength indicator */}
+                        {password && (
+                          <div className="mt-2">
+                            <div className="flex items-center justify-between mb-1">
+                              <span className="text-xs text-gray-600">
+                                Password strength:
+                              </span>
+                              <span
+                                className={`text-xs font-medium ${
+                                  passwordStrength >= 80
+                                    ? "text-green-600"
+                                    : passwordStrength >= 60
+                                      ? "text-blue-600"
+                                      : passwordStrength >= 40
+                                        ? "text-yellow-600"
+                                        : "text-red-600"
+                                }`}
+                              >
+                                {getPasswordStrengthText()}
+                              </span>
+                            </div>
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div
+                                className={`h-2 rounded-full transition-all duration-300 ${getPasswordStrengthColor()}`}
+                                style={{ width: `${passwordStrength}%` }}
+                              ></div>
+                            </div>
+
+                            {/* Password requirements checklist */}
+                            <div className="mt-2 space-y-1">
+                              <div
+                                className={`text-xs flex items-center ${
+                                  passwordRequirements.minLength
+                                    ? "text-green-600"
+                                    : "text-gray-500"
+                                }`}
+                              >
+                                <CheckIcon
+                                  className={`w-3 h-3 mr-1 ${
+                                    passwordRequirements.minLength
+                                      ? "visible"
+                                      : "invisible"
+                                  }`}
+                                />
+                                At least 8 characters
+                              </div>
+                              <div
+                                className={`text-xs flex items-center ${
+                                  passwordRequirements.hasUpperCase
+                                    ? "text-green-600"
+                                    : "text-gray-500"
+                                }`}
+                              >
+                                <CheckIcon
+                                  className={`w-3 h-3 mr-1 ${
+                                    passwordRequirements.hasUpperCase
+                                      ? "visible"
+                                      : "invisible"
+                                  }`}
+                                />
+                                One uppercase letter
+                              </div>
+                              <div
+                                className={`text-xs flex items-center ${
+                                  passwordRequirements.hasLowerCase
+                                    ? "text-green-600"
+                                    : "text-gray-500"
+                                }`}
+                              >
+                                <CheckIcon
+                                  className={`w-3 h-3 mr-1 ${
+                                    passwordRequirements.hasLowerCase
+                                      ? "visible"
+                                      : "invisible"
+                                  }`}
+                                />
+                                One lowercase letter
+                              </div>
+                              <div
+                                className={`text-xs flex items-center ${
+                                  passwordRequirements.hasNumbers
+                                    ? "text-green-600"
+                                    : "text-gray-500"
+                                }`}
+                              >
+                                <CheckIcon
+                                  className={`w-3 h-3 mr-1 ${
+                                    passwordRequirements.hasNumbers
+                                      ? "visible"
+                                      : "invisible"
+                                  }`}
+                                />
+                                One number
+                              </div>
+                              <div
+                                className={`text-xs flex items-center ${
+                                  passwordRequirements.hasSpecialChar
+                                    ? "text-green-600"
+                                    : "text-gray-500"
+                                }`}
+                              >
+                                <CheckIcon
+                                  className={`w-3 h-3 mr-1 ${
+                                    passwordRequirements.hasSpecialChar
+                                      ? "visible"
+                                      : "invisible"
+                                  }`}
+                                />
+                                One special character (!@#$%^&*...)
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {errors.password && (
+                          <p className="mt-1 text-sm text-red-600">
+                            {errors.password}
+                          </p>
+                        )}
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Confirm Password{" "}
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="password"
+                          value={passwordRepeated}
+                          onChange={(e) => {
+                            setPasswordRepeated(e.target.value);
+                            // Clear error when user starts typing
+                            if (errors.passwordRepeated) {
+                              const newErrors = { ...errors };
+                              delete newErrors.passwordRepeated;
+                              setErrors(newErrors);
+                            }
+                          }}
+                          placeholder="Re-enter your password"
+                          className={`w-full px-3 py-2 border ${
+                            errors.passwordRepeated
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                        />
+                        {errors.passwordRepeated && (
+                          <p className="mt-1 text-sm text-red-600">
+                            {errors.passwordRepeated}
+                          </p>
+                        )}
+                        {passwordRepeated && password === passwordRepeated && (
+                          <p className="mt-1 text-sm text-green-600 flex items-center">
+                            <CheckIcon className="w-4 h-4 mr-1" />
+                            Passwords match
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                      <p className="text-sm text-blue-800">
+                        <strong>Security Note:</strong> The staff member will
+                        need this password to log into their account. Make sure
+                        to securely share this password with them after account
+                        creation.
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                {errors.preferredLanguage && (
-                  <p className="mt-2 text-sm text-red-600">
-                    {errors.preferredLanguage}
-                  </p>
-                )}
-              </div>
-            </div>
-          </div>
 
-          {/* Emergency Contact Section */}
-          <div>
-            <div className="flex items-center mb-4">
-              <UsersIcon className="h-5 w-5 text-gray-600 mr-2" />
-              <h3 className="text-lg font-semibold text-gray-700">
-                Emergency Contact
-              </h3>
-            </div>
-
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
-                  label="Contact Name"
-                  value={emergencyContactName}
-                  onChange={(e) => setEmergencyContactName(e.target.value)}
-                  error={errors.emergencyContactName}
-                  required
-                />
-
-                <Input
-                  label="Contact Relationship"
-                  value={emergencyContactRelationship}
-                  onChange={(e) =>
-                    setEmergencyContactRelationship(e.target.value)
-                  }
-                  error={errors.emergencyContactRelationship}
-                  required
-                />
-
-                <Input
-                  label="Contact Telephone"
-                  value={emergencyContactTelephone}
-                  onChange={(e) => setEmergencyContactTelephone(e.target.value)}
-                  error={errors.emergencyContactTelephone}
-                  required
-                />
-
-                <Input
-                  label="Contact Alternative Telephone (Optional)"
-                  value={emergencyContactAlternativeTelephone}
-                  onChange={(e) =>
-                    setEmergencyContactAlternativeTelephone(e.target.value)
-                  }
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Login Credentials Section */}
-          <div>
-            <div className="flex items-center mb-4">
-              <KeyIcon className="h-5 w-5 text-gray-600 mr-2" />
-              <h3 className="text-lg font-semibold text-gray-700">
-                Login Credentials
-              </h3>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                label="Password (Optional)"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                error={errors.password}
-              />
-
-              <Input
-                label="Password Repeated (Optional)"
-                type="password"
-                value={passwordRepeated}
-                onChange={(e) => setPasswordRepeated(e.target.value)}
-                error={errors.passwordRepeated}
-              />
-            </div>
-          </div>
-
-          {/* System Section */}
-          <div>
-            <div className="flex items-center mb-4">
-              <ServerIcon className="h-5 w-5 text-gray-600 mr-2" />
-              <h3 className="text-lg font-semibold text-gray-700">System</h3>
-            </div>
-
-            <Textarea
-              label="Description (optional)"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              helperText="Max 638 characters"
-              rows={4}
-            />
+                {/* Form Actions */}
+                <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                  <Link
+                    to="/admin/staff/add/step-4"
+                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    <ArrowLeftIcon className="w-4 h-4 mr-2" />
+                    Back
+                  </Link>
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className={`flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                      isLoading
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-blue-600 hover:bg-blue-700"
+                    }`}
+                  >
+                    {isLoading ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        Next
+                        <ArrowRightIcon className="w-4 h-4 ml-2" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
-
-        <div className="flex gap-3 pt-6 border-t">
-          <Button
-            variant="secondary"
-            onClick={() => navigate("/admin/staff/add/step-4")}
-            icon={ArrowLeftIcon}
-          >
-            Back
-          </Button>
-
-          <Button
-            variant="primary"
-            onClick={onSubmitClick}
-            icon={ArrowRightIcon}
-          >
-            Next
-          </Button>
-        </div>
-      </Card>
+      </div>
     </div>
   );
 }
