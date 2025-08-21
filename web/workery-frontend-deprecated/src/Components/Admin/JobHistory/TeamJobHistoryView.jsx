@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/JobHistory/TeamJobHistoryView.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -27,7 +28,7 @@ import {
   faTimesCircle,
   faWrench,
   faChevronRight,
-  faUserFriends
+  faUserFriends,
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 
@@ -61,7 +62,6 @@ import {
   DEFAULT_CLIENT_LIST_SORT_BY_VALUE,
   DEFAULT_CLIENT_STATUS_FILTER_OPTION,
 } from "../../../Constants/App";
-
 
 function AdminTeamJobHistoryListView() {
   ////
@@ -310,7 +310,6 @@ function AdminTeamJobHistoryListView() {
 
           {/* Page Modal(s) */}
 
-
           {/* Page */}
           <nav className="box">
             <p className="title is-4">
@@ -327,64 +326,61 @@ function AdminTeamJobHistoryListView() {
               {isFetching ? (
                 <PageLoadingContent displayMessage={"Loading..."} />
               ) : (
-                  <table className="is-fullwidth is-striped table">
-                    <thead>
-                      <tr>
-                        <th>Job #</th>
-                        <th>Client Name</th>
-                        <th>Associate Name</th>
-                        <th>Created</th>
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {users.teamJobHistory &&
-                        users.teamJobHistory.map(function (datum, i) {
-                          return (
-                            <tr>
-                              <td>
-                                <Link
-                                  to={`/admin/order/${datum.wjid}`}
-                                  className=""
-                                >
-                                  {datum.wjid}
-                                </Link>
-                              </td>
-                              <td>{datum.customerName}</td>
-                              <td>{datum.associateName}</td>
-                              <td>
-                                <DateTimeTextFormatter
-                                  value={datum.modifiedAt}
+                <table className="is-fullwidth is-striped table">
+                  <thead>
+                    <tr>
+                      <th>Job #</th>
+                      <th>Client Name</th>
+                      <th>Associate Name</th>
+                      <th>Created</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.teamJobHistory &&
+                      users.teamJobHistory.map(function (datum, i) {
+                        return (
+                          <tr>
+                            <td>
+                              <Link
+                                to={`/admin/order/${datum.wjid}`}
+                                className=""
+                              >
+                                {datum.wjid}
+                              </Link>
+                            </td>
+                            <td>{datum.customerName}</td>
+                            <td>{datum.associateName}</td>
+                            <td>
+                              <DateTimeTextFormatter value={datum.modifiedAt} />
+                            </td>
+                            <td>
+                              <Link
+                                to={`/admin/order/${datum.wjid}`}
+                                className=""
+                              >
+                                View&nbsp;
+                                <FontAwesomeIcon
+                                  className="mdi"
+                                  icon={faChevronRight}
                                 />
-                              </td>
-                              <td>
-                                <Link
-                                  to={`/admin/order/${datum.wjid}`}
-                                  className=""
-                                >
-                                  View&nbsp;
-                                  <FontAwesomeIcon
-                                    className="mdi"
-                                    icon={faChevronRight}
-                                  />
-                                </Link>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                    </tbody>
-                  </table>
+                              </Link>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
               )}
 
               <div className="container">
-                <div className="columns">
-                </div>
+                <div className="columns"></div>
 
                 <div className="columns pt-5">
                   <div className="column is-half">
                     <button
                       className="button is-medium is-fullwidth-mobile"
-                      onClick={(e) => setForceURL("/admin/job-history") }
+                      onClick={(e) => setForceURL("/admin/job-history")}
                     >
                       <FontAwesomeIcon className="fas" icon={faArrowLeft} />
                       &nbsp;Back to Job History (Launchpad)

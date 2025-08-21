@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/JobHistory/LaunchpadView.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -26,7 +27,7 @@ import {
   faBuildingUser,
   faTimesCircle,
   faUserFriends,
-  faUser
+  faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 
@@ -325,7 +326,6 @@ function AdminJobHistoryLaunchapd() {
 
           {/* Page Modal(s) */}
 
-
           {/* Page */}
           <nav className="box">
             <p className="title is-4">
@@ -359,9 +359,7 @@ function AdminJobHistoryLaunchapd() {
                       <div className="card-content">
                         <div className="media">
                           <div className="media-content">
-                            <p className="title is-4">
-                              My Job History
-                            </p>
+                            <p className="title is-4">My Job History</p>
                           </div>
                         </div>
 
@@ -405,9 +403,7 @@ function AdminJobHistoryLaunchapd() {
                       <div className="card-content">
                         <div className="media">
                           <div className="media-content">
-                            <p className="title is-4">
-                              Team Job History
-                            </p>
+                            <p className="title is-4">Team Job History</p>
                           </div>
                         </div>
 
@@ -438,7 +434,7 @@ function AdminJobHistoryLaunchapd() {
                   <div className="column is-half">
                     <button
                       className="button is-medium is-fullwidth-mobile"
-                      onClick={(e) => setForceURL("/admin/dashboard") }
+                      onClick={(e) => setForceURL("/admin/dashboard")}
                     >
                       <FontAwesomeIcon className="fas" icon={faArrowLeft} />
                       &nbsp;Back to Dashboard

@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/JobHistory/MyJobHistoryView.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -27,7 +28,7 @@ import {
   faTimesCircle,
   faWrench,
   faChevronRight,
-  faUser
+  faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 
@@ -61,7 +62,6 @@ import {
   DEFAULT_CLIENT_LIST_SORT_BY_VALUE,
   DEFAULT_CLIENT_STATUS_FILTER_OPTION,
 } from "../../../Constants/App";
-
 
 function AdminMyJobHistoryListView() {
   ////
@@ -310,7 +310,6 @@ function AdminMyJobHistoryListView() {
 
           {/* Page Modal(s) */}
 
-
           {/* Page */}
           <nav className="box">
             <p className="title is-4">
@@ -321,9 +320,9 @@ function AdminMyJobHistoryListView() {
             <h5 className="title is-6 has-text-grey">
               Maximum of 5 orders are listed here:
             </h5>
-          {isFetching ? (
-            <PageLoadingContent displayMessage={"Loading..."} />
-          ) : (
+            {isFetching ? (
+              <PageLoadingContent displayMessage={"Loading..."} />
+            ) : (
               <table className="is-fullwidth is-striped table">
                 <thead>
                   <tr>
@@ -350,9 +349,7 @@ function AdminMyJobHistoryListView() {
                           <td>{datum.customerName}</td>
                           <td>{datum.associateName}</td>
                           <td>
-                            <DateTimeTextFormatter
-                              value={datum.modifiedAt}
-                            />
+                            <DateTimeTextFormatter value={datum.modifiedAt} />
                           </td>
                           <td>
                             <Link
@@ -371,18 +368,17 @@ function AdminMyJobHistoryListView() {
                     })}
                 </tbody>
               </table>
-          )}
+            )}
 
             <FormErrorBox errors={errors} />
             <div className="container">
-              <div className="columns">
-              </div>
+              <div className="columns"></div>
 
               <div className="columns pt-5">
                 <div className="column is-half">
                   <button
                     className="button is-medium is-fullwidth-mobile"
-                    onClick={(e) => setForceURL("/admin/job-history") }
+                    onClick={(e) => setForceURL("/admin/job-history")}
                   >
                     <FontAwesomeIcon className="fas" icon={faArrowLeft} />
                     &nbsp;Back to Job History (Launchpad)
@@ -391,9 +387,7 @@ function AdminMyJobHistoryListView() {
                 <div className="column is-half has-text-right"></div>
               </div>
             </div>
-
           </nav>
-
         </section>
       </div>
     </>
