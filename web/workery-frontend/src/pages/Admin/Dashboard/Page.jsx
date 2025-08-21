@@ -1,4 +1,4 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Admin/Dashboard/Page.jsx
+// File Path: web/workery-frontend/src/pages/Admin/Dashboard/Page.jsx
 
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
@@ -26,6 +26,7 @@ import {
   PlusIcon,
   TrashIcon,
   ExclamationTriangleIcon,
+  ArrowRightIcon,
 } from "@heroicons/react/24/outline";
 
 function AdminDashboardPage() {
@@ -37,6 +38,7 @@ function AdminDashboardPage() {
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
   const [dashboard, setDashboard] = useState({});
+  const [bulletins, setBulletins] = useState([]);
 
   // Modal states
   const [showBulletinModal, setShowBulletinModal] = useState(false);
@@ -45,10 +47,14 @@ function AdminDashboardPage() {
   const [bulletinText, setBulletinText] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Constants
+  const MAX_BULLETINS_DISPLAY = 10;
+
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
   };
 
+  // Fetch dashboard statistics
   const fetchDashboard = async () => {
     setFetching(true);
     setErrors({});
@@ -60,10 +66,46 @@ function AdminDashboardPage() {
     } catch (error) {
       console.error("AdminDashboard: Failed to fetch dashboard:", error);
       setErrors({ fetch: error.message || "Failed to load dashboard data" });
-      window.scrollTo(0, 0);
     } finally {
       setFetching(false);
     }
+  };
+
+  // Fetch bulletins separately - limited to recent 10
+  const fetchBulletins = async () => {
+    try {
+      // Fetch only the most recent bulletins for dashboard
+      const params = {
+        page: 1,
+        limit: MAX_BULLETINS_DISPLAY,
+        status: 1, // Active bulletins only
+        sortBy: "created_at",
+        sortOrder: "DESC",
+      };
+
+      const response = await bulletinManager.getBulletins(
+        params,
+        onUnauthorized,
+        true,
+      );
+
+      if (response && response.results) {
+        setBulletins(response.results);
+        console.log("Bulletins loaded:", response.results.length);
+      } else {
+        setBulletins([]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch bulletins:", error);
+      setBulletins([]);
+    }
+  };
+
+  // Initial load
+  const loadAllData = async () => {
+    setFetching(true);
+    await Promise.all([fetchDashboard(), fetchBulletins()]);
+    setFetching(false);
   };
 
   const handleCreateBulletin = async (e) => {
@@ -92,16 +134,22 @@ function AdminDashboardPage() {
         status: 1, // Active status
       };
 
-      await bulletinManager.createBulletin(bulletinData, onUnauthorized);
+      const newBulletin = await bulletinManager.createBulletin(
+        bulletinData,
+        onUnauthorized,
+      );
 
-      console.log("Bulletin created successfully");
+      console.log("Bulletin created successfully:", newBulletin);
 
       // Clear form and close modal
       setBulletinText("");
       setShowBulletinModal(false);
 
-      // Refresh dashboard to show new bulletin
-      await fetchDashboard();
+      // If we're at max display, remove the last one and add new one at the beginning
+      setBulletins((prevBulletins) => {
+        const updated = [newBulletin, ...prevBulletins];
+        return updated.slice(0, MAX_BULLETINS_DISPLAY);
+      });
     } catch (error) {
       console.error("Failed to create bulletin:", error);
       setErrors({ bulletin: error.message || "Failed to create bulletin" });
@@ -122,16 +170,25 @@ function AdminDashboardPage() {
 
       console.log("Bulletin deleted successfully:", selectedBulletin.id);
 
+      // Remove the deleted bulletin from the list
+      setBulletins((prevBulletins) =>
+        prevBulletins.filter((bulletin) => bulletin.id !== selectedBulletin.id),
+      );
+
       // Close modal and clear selection
       setShowDeleteModal(false);
       setSelectedBulletin(null);
 
-      // Refresh dashboard to reflect deletion
-      await fetchDashboard();
+      // Optionally refetch to get the next bulletin if we had 10
+      if (bulletins.length === MAX_BULLETINS_DISPLAY) {
+        await fetchBulletins();
+      }
     } catch (error) {
       console.error("Failed to delete bulletin:", error);
       setErrors({ delete: error.message || "Failed to delete bulletin" });
+      // Still close the modal on error
       setShowDeleteModal(false);
+      setSelectedBulletin(null);
     } finally {
       setIsSubmitting(false);
     }
@@ -148,7 +205,7 @@ function AdminDashboardPage() {
         return;
       }
 
-      fetchDashboard();
+      loadAllData();
     }
 
     return () => {
@@ -262,44 +319,88 @@ function AdminDashboardPage() {
             <h2 className="text-lg font-semibold text-gray-800 flex items-center">
               <NewspaperIcon className="w-5 h-5 mr-2" />
               Office News
+              {bulletins.length > 0 && (
+                <span className="ml-2 text-sm text-gray-500 font-normal">
+                  (Latest {Math.min(bulletins.length, MAX_BULLETINS_DISPLAY)})
+                </span>
+              )}
             </h2>
-            <Button
-              variant="primary"
-              size="sm"
-              icon={PlusIcon}
-              onClick={() => {
-                setBulletinText("");
-                setErrors({});
-                setShowBulletinModal(true);
-              }}
-            >
-              Add Bulletin
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => fetchBulletins()}
+                title="Refresh bulletins"
+              >
+                Refresh
+              </Button>
+              <Button
+                variant="primary"
+                size="sm"
+                icon={PlusIcon}
+                onClick={() => {
+                  setBulletinText("");
+                  setErrors({});
+                  setShowBulletinModal(true);
+                }}
+              >
+                Add Bulletin
+              </Button>
+            </div>
           </div>
 
           <div className="p-6">
-            {dashboard.bulletins && dashboard.bulletins.length > 0 ? (
-              <div className="space-y-3">
-                {dashboard.bulletins.map((bulletin, index) => (
-                  <div
-                    key={bulletin.id || index}
-                    className="flex items-start justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                  >
-                    <p className="text-gray-700 flex-1 mr-4">{bulletin.text}</p>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setSelectedBulletin(bulletin);
-                        setShowDeleteModal(true);
-                      }}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+            {bulletins && bulletins.length > 0 ? (
+              <>
+                <div className="space-y-3">
+                  {bulletins.slice(0, MAX_BULLETINS_DISPLAY).map((bulletin) => (
+                    <div
+                      key={bulletin.id}
+                      className="flex items-start justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group"
                     >
-                      <TrashIcon className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
+                      <div className="flex-1 mr-4">
+                        <p className="text-gray-700">{bulletin.text}</p>
+                        {bulletin.createdAt && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            {new Date(bulletin.createdAt).toLocaleDateString(
+                              "en-US",
+                              {
+                                month: "short",
+                                day: "numeric",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              },
+                            )}
+                          </p>
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedBulletin(bulletin);
+                          setShowDeleteModal(true);
+                        }}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <TrashIcon className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+
+                {/* View All Bulletins Link */}
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                  <Link
+                    to="/admin/settings/bulletins"
+                    className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                  >
+                    View All Bulletins
+                    <ArrowRightIcon className="w-4 h-4 ml-1" />
+                  </Link>
+                </div>
+              </>
             ) : (
               <div className="text-center py-8 text-gray-500">
                 <NewspaperIcon className="w-12 h-12 mx-auto mb-3 text-gray-400" />
