@@ -1,9 +1,9 @@
 // File Path: web/workery-frontend/src/pages/Admin/Staff/Detail/Attachment/Detail/Page.jsx
 
 import React, { useState, useEffect } from "react";
-import { Link, useParams, useNavigate } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import { useAttachmentManager } from "../../../../../../services/Services";
-import { theme } from "../../../../../../constants/Theme";
+import { theme, globalStyles } from "../../../../../../constants/Theme";
 import {
   Card,
   Button,
@@ -16,75 +16,77 @@ import {
 function AdminStaffDetailAttachmentDetailPage() {
   const { aid, atid } = useParams();
   const navigate = useNavigate();
-
-  // Services
   const attachmentManager = useAttachmentManager();
 
-  // Component state
-  const [attachment, setAttachment] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // Component states
   const [errors, setErrors] = useState({});
+  const [isFetching, setFetching] = useState(false);
+  const [attachment, setAttachment] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertStatus, setAlertStatus] = useState("");
 
-  // Breadcrumb items
-  const breadcrumbItems = [
-    { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
-    { label: "Staff", path: "/admin/staff", icon: "👔" },
-    {
-      label: "Attachments",
-      path: `/admin/staff/${aid}/attachments`,
-      icon: "📎",
-    },
-    { label: "Detail", icon: "📄" },
-  ];
-
-  // Fetch attachment detail
-  const fetchAttachmentDetail = async () => {
-    setIsLoading(true);
-    setErrors({});
-
-    try {
-      const response = await attachmentManager.getAttachmentDetail(
-        atid,
-        onUnauthorized,
-      );
-      setAttachment(response);
-    } catch (error) {
-      console.error("Error fetching attachment detail:", error);
-      setErrors(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  // Unauthorized callback
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
   };
 
-  // Delete handler
-  const handleDelete = async () => {
-    setIsDeleting(true);
-    setErrors({});
+  // Fetch data on mount
+  useEffect(() => {
+    fetchData();
+    window.scrollTo(0, 0);
+  }, [aid, atid]);
 
+  const fetchData = async () => {
     try {
+      setFetching(true);
+
+      // Fetch attachment details
+      const attachmentData = await attachmentManager.getAttachmentDetail(
+        atid,
+        onUnauthorized,
+      );
+
+      setAttachment(attachmentData);
+    } catch (error) {
+      console.error("Failed to fetch data:", error);
+      setErrors({ general: "Failed to load details" });
+    } finally {
+      setFetching(false);
+    }
+  };
+
+  // Delete handlers
+  const onSelectAttachmentForDeletion = () => {
+    setShowDeleteModal(true);
+  };
+
+  const onDeleteConfirmButtonClick = async () => {
+    try {
+      setFetching(true);
+      setShowDeleteModal(false);
+
       await attachmentManager.deleteAttachment(atid, onUnauthorized);
 
-      // Show success and redirect
-      navigate(`/admin/staff/${aid}/attachments`, {
-        state: { message: "Attachment deleted successfully" },
-      });
+      setAlertMessage("Attachment deleted successfully");
+      setAlertStatus("success");
+
+      // Redirect after 2 seconds
+      setTimeout(() => {
+        navigate(`/admin/staff/${aid}/attachments`);
+      }, 2000);
     } catch (error) {
-      console.error("Error deleting attachment:", error);
+      console.error("Failed to delete attachment:", error);
       setErrors(error);
-      setShowDeleteModal(false);
+      setAlertMessage("Failed to delete attachment");
+      setAlertStatus("error");
     } finally {
-      setIsDeleting(false);
+      setFetching(false);
     }
   };
 
   // Download handler
-  const handleDownload = async () => {
+  const onDownloadClick = async () => {
     try {
       const blob = await attachmentManager.downloadAttachment(
         atid,
@@ -95,17 +97,18 @@ function AdminStaffDetailAttachmentDetailPage() {
       // Trigger download
       attachmentManager.triggerFileDownload(
         blob,
-        attachment.filename || "download",
+        attachment?.filename || attachment?.fileName || "download",
       );
     } catch (error) {
-      console.error("Error downloading attachment:", error);
-      setErrors({ download: "Failed to download file" });
+      console.error("Failed to download attachment:", error);
+      setAlertMessage("Failed to download attachment");
+      setAlertStatus("error");
     }
   };
 
   // Format date helper
   const formatDateTime = (dateString) => {
-    if (!dateString) return "-";
+    if (!dateString) return "N/A";
     try {
       const date = new Date(dateString);
       return date.toLocaleString();
@@ -116,228 +119,167 @@ function AdminStaffDetailAttachmentDetailPage() {
 
   // Format file size
   const formatFileSize = (bytes) => {
-    if (!bytes) return "-";
+    if (!bytes) return "N/A";
     const sizes = ["Bytes", "KB", "MB", "GB"];
     if (bytes === 0) return "0 Bytes";
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
     return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + " " + sizes[i];
   };
 
-  // Effect
-  useEffect(() => {
-    window.scrollTo(0, 0);
-    fetchAttachmentDetail();
-  }, [atid]);
+  // Breadcrumb items
+  const breadcrumbItems = [
+    { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
+    { path: "/admin/staff", label: "Staff", icon: "👔" },
+    {
+      path: `/admin/staff/${aid}/attachments`,
+      label: "Detail (Attachments)",
+      icon: "📎",
+    },
+    { label: "Attachment", icon: "📄" },
+  ];
 
-  // Data table component
-  const DataTable = ({ title, children }) => (
-    <table
-      style={{
-        width: "100%",
-        marginBottom: "30px",
-        borderCollapse: "collapse",
-        border: "1px solid #ddd",
-      }}
-    >
-      <thead>
-        <tr style={{ backgroundColor: "#333" }}>
-          <th
-            colSpan="2"
-            style={{
-              color: "white",
-              padding: "10px",
-              textAlign: "left",
-            }}
-          >
-            {title}
-          </th>
-        </tr>
-      </thead>
-      <tbody>{children}</tbody>
-    </table>
-  );
-
-  // Data row component
+  // Data display row component
   const DataRow = ({ label, value }) => (
-    <tr>
-      <th
-        style={{
-          backgroundColor: "#f5f5f5",
-          padding: "10px",
-          width: "30%",
-          borderBottom: "1px solid #ddd",
-          textAlign: "left",
-        }}
-      >
-        {label}
-      </th>
-      <td
-        style={{
-          padding: "10px",
-          borderBottom: "1px solid #ddd",
-        }}
-      >
-        {value}
-      </td>
-    </tr>
+    <div style={{ marginBottom: "15px" }}>
+      <strong>{label}:</strong> {value || "N/A"}
+    </div>
   );
-
-  // Render loading state
-  if (isLoading) {
-    return (
-      <div style={{ padding: "20px" }}>
-        <Breadcrumb items={breadcrumbItems} />
-        <Loading message="Loading attachment details..." />
-      </div>
-    );
-  }
-
-  // Render error state if attachment not found
-  if (!attachment) {
-    return (
-      <div style={{ padding: "20px" }}>
-        <Breadcrumb items={breadcrumbItems} />
-        <Alert type="warning">Attachment not found.</Alert>
-        <div style={{ marginTop: "20px" }}>
-          <Link to={`/admin/staff/${aid}/attachments`}>
-            <Button variant="secondary">← Back to Attachments</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div style={{ padding: "20px" }}>
+    <div style={globalStyles.container}>
       <Breadcrumb items={breadcrumbItems} />
 
-      {/* Page Title */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "20px",
-        }}
-      >
-        <div>
-          <h1 style={{ fontSize: "2rem", marginBottom: "5px" }}>
-            📄 Attachment Detail
-          </h1>
-          <h4 style={{ fontSize: "1.2rem", color: "#666", margin: 0 }}>
-            {attachment.title || attachment.filename}
-          </h4>
-        </div>
-        <div style={{ display: "flex", gap: "10px" }}>
-          <Link to={`/admin/staff/${aid}/attachment/${atid}/edit`}>
-            <Button variant="warning">✏️ Edit</Button>
-          </Link>
-          <Button variant="danger" onClick={() => setShowDeleteModal(true)}>
-            🗑️ Delete
-          </Button>
-        </div>
-      </div>
-
-      {/* Error Display */}
-      {errors && Object.keys(errors).length > 0 && (
-        <Alert type="error">
-          {typeof errors === "string"
-            ? errors
-            : errors.message || "An error occurred."}
+      {alertMessage && (
+        <Alert
+          type={alertStatus}
+          onClose={() => {
+            setAlertMessage("");
+            setAlertStatus("");
+          }}
+        >
+          {alertMessage}
         </Alert>
       )}
 
-      {/* Main Card */}
-      <Card>
-        {/* Attachment Information */}
-        <DataTable title="Attachment Information">
-          <DataRow label="Title" value={attachment.title || "-"} />
-          <DataRow label="Description" value={attachment.description || "-"} />
-          <DataRow label="File Name" value={attachment.filename || "-"} />
-          <DataRow
-            label="File Size"
-            value={formatFileSize(attachment.fileSize)}
-          />
-          <DataRow label="File Type" value={attachment.fileType || "-"} />
-          <DataRow
-            label="Download"
-            value={
-              <Button size="sm" variant="primary" onClick={handleDownload}>
-                ⬇️ Download File
+      <h1>👔 Staff - Attachment Detail</h1>
+
+      <Card
+        title="📄 Attachment"
+        actions={
+          attachment && (
+            <>
+              <Link to={`/admin/staff/${aid}/attachment/${atid}/edit`}>
+                <Button variant="warning" size="sm">
+                  Edit
+                </Button>
+              </Link>
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={onSelectAttachmentForDeletion}
+              >
+                🗑️ Delete
               </Button>
-            }
-          />
-        </DataTable>
+            </>
+          )
+        }
+      >
+        {isFetching ? (
+          <Loading message="Loading..." />
+        ) : (
+          <>
+            {errors.general && <Alert type="error">{errors.general}</Alert>}
 
-        {/* System Information */}
-        <DataTable title="System Information">
-          <DataRow label="ID" value={attachment.id || "-"} />
-          <DataRow
-            label="Created At"
-            value={formatDateTime(attachment.createdAt)}
-          />
-          <DataRow
-            label="Created By"
-            value={attachment.createdByUserName || "-"}
-          />
-          <DataRow
-            label="Modified At"
-            value={formatDateTime(attachment.modifiedAt)}
-          />
-          <DataRow
-            label="Modified By"
-            value={attachment.modifiedByUserName || "-"}
-          />
-        </DataTable>
+            {attachment && (
+              <>
+                <DataRow label="Title" value={attachment.title} />
+                <DataRow label="Description" value={attachment.description} />
 
-        {/* Action Buttons */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginTop: "30px",
-            paddingTop: "20px",
-            borderTop: "1px solid #e0e0e0",
-          }}
-        >
-          <Link to={`/admin/staff/${aid}/attachments`}>
-            <Button variant="secondary">← Back to Attachments</Button>
-          </Link>
-          <Link to={`/admin/staff/${aid}/attachment/${atid}/edit`}>
-            <Button variant="warning">✏️ Edit Attachment</Button>
-          </Link>
-        </div>
+                <div style={{ marginBottom: "15px" }}>
+                  <strong>File:</strong>{" "}
+                  <button
+                    onClick={onDownloadClick}
+                    style={{
+                      color: theme.colors.primary,
+                      textDecoration: "underline",
+                      background: "none",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    📥{" "}
+                    {attachment.filename ||
+                      attachment.fileName ||
+                      "Download File"}
+                  </button>
+                </div>
+
+                <DataRow
+                  label="File Size"
+                  value={formatFileSize(attachment.fileSize)}
+                />
+                <DataRow label="File Type" value={attachment.fileType} />
+                <DataRow
+                  label="Created At"
+                  value={formatDateTime(attachment.createdAt)}
+                />
+                <DataRow
+                  label="Created By"
+                  value={attachment.createdByUserName}
+                />
+                <DataRow
+                  label="Modified At"
+                  value={formatDateTime(attachment.modifiedAt)}
+                />
+                <DataRow
+                  label="Modified By"
+                  value={attachment.modifiedByUserName}
+                />
+
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    gap: "10px",
+                    marginTop: "30px",
+                  }}
+                >
+                  <Link to={`/admin/staff/${aid}/attachments`}>
+                    <Button variant="secondary">← Back to Attachments</Button>
+                  </Link>
+                  <Link to={`/admin/staff/${aid}/attachment/${atid}/edit`}>
+                    <Button variant="warning">✏️ Edit</Button>
+                  </Link>
+                </div>
+              </>
+            )}
+          </>
+        )}
       </Card>
 
       {/* Delete Confirmation Modal */}
       <Modal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        title="⚠️ Confirm Deletion"
+        title="Are you sure?"
         footer={
           <>
             <Button
-              onClick={() => setShowDeleteModal(false)}
               variant="secondary"
-              disabled={isDeleting}
+              onClick={() => setShowDeleteModal(false)}
             >
               Cancel
             </Button>
-            <Button
-              onClick={handleDelete}
-              variant="danger"
-              disabled={isDeleting}
-            >
-              {isDeleting ? "Deleting..." : "Delete Permanently"}
+            <Button variant="success" onClick={onDeleteConfirmButtonClick}>
+              Confirm
             </Button>
           </>
         }
       >
         <p>
           You are about to <strong>permanently delete</strong> this attachment.
-          This action cannot be undone.
+          This action cannot be undone. Are you sure you would like to continue?
         </p>
-        <p>Are you sure you want to continue?</p>
       </Modal>
     </div>
   );
