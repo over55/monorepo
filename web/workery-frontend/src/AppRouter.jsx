@@ -279,6 +279,9 @@ import AdminJobHistoryLaunchpad from "./pages/Admin/OrderHistory/LaunchpadView";
 import AdminMyJobHistoryListView from "./pages/Admin/OrderHistory/MyJobHistoryView";
 import AdminTeamJobHistoryListView from "./pages/Admin/OrderHistory/TeamJobHistoryView";
 
+// Admin comment pages.
+import AdminCommentList from "./pages/Admin/Comment/Page";
+
 ////////////////////////////////////////////////////////////////
 // Associate pages
 ////////////////////////////////////////////////////////////////
@@ -1920,10 +1923,7 @@ function AppRouter() {
               path="/admin/all-comments"
               element={
                 <Layout>
-                  <PlaceholderPage
-                    title="Comments"
-                    description="Comment management system"
-                  />
+                  <AdminCommentList />
                 </Layout>
               }
             />
