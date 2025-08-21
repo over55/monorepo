@@ -282,6 +282,9 @@ import AdminTeamJobHistoryListView from "./pages/Admin/OrderHistory/TeamJobHisto
 // Admin comment pages.
 import AdminCommentList from "./pages/Admin/Comment/Page";
 
+// Admin report pages.
+import AdminReportPage from "./pages/Admin/Report/Page";
+
 ////////////////////////////////////////////////////////////////
 // Associate pages
 ////////////////////////////////////////////////////////////////
@@ -712,10 +715,7 @@ function AppRouter() {
               path="/admin/reports"
               element={
                 <Layout>
-                  <PlaceholderPage
-                    title="Reports"
-                    description="Reporting system"
-                  />
+                  <AdminReportPage />
                 </Layout>
               }
             />
