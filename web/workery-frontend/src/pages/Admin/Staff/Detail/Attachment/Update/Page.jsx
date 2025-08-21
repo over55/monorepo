@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router";
 import { useAttachmentManager } from "../../../../../../services/Services";
-import { theme } from "../../../../../../constants/Theme";
+import { theme, globalStyles } from "../../../../../../constants/Theme";
 import {
   Card,
   Button,
@@ -27,57 +27,48 @@ function AdminStaffDetailAttachmentUpdatePage() {
   // Component state
   const [attachment, setAttachment] = useState(null);
   const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFetching, setFetching] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertStatus, setAlertStatus] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  // Breadcrumb items
-  const breadcrumbItems = [
-    { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
-    { label: "Staff", path: "/admin/staff", icon: "👔" },
-    {
-      label: "Attachments",
-      path: `/admin/staff/${aid}/attachments`,
-      icon: "📎",
-    },
-    {
-      label: "Detail",
-      path: `/admin/staff/${aid}/attachment/${atid}`,
-      icon: "📄",
-    },
-    { label: "Edit", icon: "✏️" },
-  ];
-
+  // Unauthorized callback
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
   };
 
-  // Fetch attachment detail
-  const fetchAttachmentDetail = async () => {
-    setIsLoading(true);
-    setErrors({});
+  // Fetch attachment detail on mount
+  useEffect(() => {
+    fetchAttachmentDetail();
+    window.scrollTo(0, 0);
+  }, [atid]);
 
+  const fetchAttachmentDetail = async () => {
     try {
+      setFetching(true);
+      setErrors({});
+
       const response = await attachmentManager.getAttachmentDetail(
         atid,
         onUnauthorized,
       );
+
       setAttachment(response);
       setTitle(response.title || "");
       setDescription(response.description || "");
     } catch (error) {
       console.error("Error fetching attachment detail:", error);
-      setErrors(error);
+      setErrors({ general: "Failed to load attachment details" });
     } finally {
-      setIsLoading(false);
+      setFetching(false);
     }
   };
 
-  // File change handler
-  const handleFileChange = (event) => {
+  // Event handlers
+  const onHandleFileChange = (event) => {
     const file = event.target.files[0];
 
     if (file) {
@@ -96,25 +87,20 @@ function AdminStaffDetailAttachmentUpdatePage() {
     }
   };
 
-  // Submit handler
-  const handleSubmit = async () => {
-    // Validation
-    const validationErrors = {};
-
-    if (!title || !title.trim()) {
-      validationErrors.title = "Title is required";
-    }
-
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      return;
-    }
-
-    setIsSubmitting(true);
+  const onSubmitClick = async () => {
+    console.log("onSubmitClick: Starting...");
+    setFetching(true);
     setErrors({});
     setUploadProgress(0);
 
     try {
+      // Validate inputs
+      if (!title || !title.trim()) {
+        setErrors({ title: "Title is required" });
+        setFetching(false);
+        return;
+      }
+
       // Check if we need to upload a new file or just update metadata
       if (selectedFile) {
         // Upload new file with updated metadata
@@ -125,8 +111,7 @@ function AdminStaffDetailAttachmentUpdatePage() {
           entityType: "4", // ATTACHMENT_OWNERSHIP_TYPE.STAFF
         };
 
-        // Note: You might need to implement a replace attachment method
-        // For now, we'll delete old and upload new
+        // Delete old attachment and upload new one
         await attachmentManager.deleteAttachment(atid, onUnauthorized);
         await attachmentManager.uploadAttachment(
           selectedFile,
@@ -148,16 +133,22 @@ function AdminStaffDetailAttachmentUpdatePage() {
         );
       }
 
-      // Success - redirect to attachment detail
-      navigate(`/admin/staff/${aid}/attachment/${atid}`, {
-        state: { message: "Attachment updated successfully" },
-      });
+      // Show success message
+      setAlertMessage("Attachment updated successfully");
+      setAlertStatus("success");
+
+      // Redirect after 2 seconds
+      setTimeout(() => {
+        navigate(`/admin/staff/${aid}/attachments`);
+      }, 2000);
     } catch (error) {
-      console.error("Error updating attachment:", error);
+      console.error("Failed to update attachment:", error);
       setErrors(error);
+      setAlertMessage("Failed to update attachment");
+      setAlertStatus("error");
       setUploadProgress(0);
     } finally {
-      setIsSubmitting(false);
+      setFetching(false);
     }
   };
 
@@ -169,258 +160,119 @@ function AdminStaffDetailAttachmentUpdatePage() {
     return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + " " + sizes[i];
   };
 
-  // Effect
-  useEffect(() => {
-    window.scrollTo(0, 0);
-    fetchAttachmentDetail();
-  }, [atid]);
-
-  // Render loading state
-  if (isLoading) {
-    return (
-      <div style={{ padding: "20px" }}>
-        <Breadcrumb items={breadcrumbItems} />
-        <Loading message="Loading attachment details..." />
-      </div>
-    );
-  }
-
-  // Render error state if attachment not found
-  if (!attachment) {
-    return (
-      <div style={{ padding: "20px" }}>
-        <Breadcrumb items={breadcrumbItems} />
-        <Alert type="warning">Attachment not found.</Alert>
-        <div style={{ marginTop: "20px" }}>
-          <Link to={`/admin/staff/${aid}/attachments`}>
-            <Button variant="secondary">← Back to Attachments</Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  // Breadcrumb items
+  const breadcrumbItems = [
+    { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
+    { path: "/admin/staff", label: "Staff", icon: "👔" },
+    {
+      path: `/admin/staff/${aid}/attachments`,
+      label: "Detail (Attachments)",
+      icon: "📎",
+    },
+    {
+      path: `/admin/staff/${aid}/attachment/${atid}`,
+      label: "Attachment",
+      icon: "📄",
+    },
+    { label: "Edit", icon: "✏️" },
+  ];
 
   return (
-    <div style={{ padding: "20px" }}>
+    <div style={globalStyles.container}>
       <Breadcrumb items={breadcrumbItems} />
 
-      {/* Page Title */}
-      <div style={{ marginBottom: "20px" }}>
-        <h1 style={{ fontSize: "2rem", marginBottom: "5px" }}>
-          👔 Staff Member
-        </h1>
-        <h4 style={{ fontSize: "1.2rem", color: "#666", margin: 0 }}>
-          ✏️ Edit Attachment
-        </h4>
-      </div>
-
-      {/* Warning Message */}
-      <Alert type="warning" style={{ marginBottom: "20px" }}>
-        <strong>⚠️ Warning:</strong> Uploading a new file will replace the
-        existing file permanently.
-      </Alert>
-
-      {/* Error Display */}
-      {errors && Object.keys(errors).length > 0 && (
-        <Alert type="error">
-          {typeof errors === "string" ? (
-            errors
-          ) : errors.message ? (
-            errors.message
-          ) : (
-            <ul style={{ margin: 0, paddingLeft: "20px" }}>
-              {Object.entries(errors).map(([key, value]) => (
-                <li key={key}>
-                  <strong>{key}:</strong> {value}
-                </li>
-              ))}
-            </ul>
-          )}
+      {alertMessage && (
+        <Alert
+          type={alertStatus}
+          onClose={() => {
+            setAlertMessage("");
+            setAlertStatus("");
+          }}
+        >
+          {alertMessage}
         </Alert>
       )}
 
-      {/* Main Card */}
-      <Card title="📎 Edit Attachment">
-        {isSubmitting ? (
-          <div style={{ textAlign: "center", padding: "40px" }}>
-            <Loading message="Updating attachment..." />
-            {uploadProgress > 0 && (
-              <div style={{ marginTop: "20px" }}>
-                <div
-                  style={{
-                    width: "100%",
-                    backgroundColor: "#e0e0e0",
-                    borderRadius: "10px",
-                    overflow: "hidden",
-                  }}
-                >
-                  <div
-                    style={{
-                      width: `${uploadProgress}%`,
-                      height: "30px",
-                      backgroundColor: theme.colors.success,
-                      transition: "width 0.3s ease",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "white",
-                      fontWeight: "bold",
-                    }}
-                  >
-                    {uploadProgress}%
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
+      <h1>👔 Staff - Edit Attachment</h1>
+
+      <Card title="✏️ Edit Attachment">
+        {isFetching ? (
+          <Loading message="Processing..." />
         ) : (
           <>
+            {errors.general && <Alert type="error">{errors.general}</Alert>}
+
+            <Alert type="warning">
+              <strong>Warning:</strong> Uploading a new file will replace the
+              existing file.
+            </Alert>
+
             <Input
               label="Title"
               name="title"
-              placeholder="Enter attachment title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               error={errors.title}
               required
-              maxLength={255}
+              placeholder="Enter attachment title"
             />
 
             <TextArea
-              label="Description (Optional)"
+              label="Description"
               name="description"
-              placeholder="Enter attachment description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               error={errors.description}
+              placeholder="Enter attachment description (optional)"
               rows={4}
-              maxLength={1000}
             />
 
-            {/* Current File Info */}
             <div style={{ marginBottom: "20px" }}>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "5px",
-                  fontWeight: "600",
-                  fontSize: "14px",
-                }}
-              >
-                Current File
+              <label style={globalStyles.label}>
+                <strong>File (Optional)</strong>
               </label>
+              <p
+                style={{ fontSize: "12px", color: "#666", marginBottom: "5px" }}
+              >
+                Current file:{" "}
+                {attachment?.filename || attachment?.fileName || "Unknown"}
+                {attachment &&
+                  attachment.fileSize &&
+                  ` (${formatFileSize(attachment.fileSize)})`}
+              </p>
+              {selectedFile ? (
+                <Alert type="success">
+                  ✅ New file ready to upload: {selectedFile.name}
+                  {uploadProgress > 0 && ` (${uploadProgress}%)`}
+                </Alert>
+              ) : (
+                <input
+                  name="file"
+                  type="file"
+                  onChange={onHandleFileChange}
+                  style={{ display: "block", marginTop: "5px" }}
+                />
+              )}
+              {errors.file && (
+                <div style={globalStyles.errorMessage}>{errors.file}</div>
+              )}
               <div
                 style={{
-                  backgroundColor: "#f8f9fa",
-                  padding: "15px",
-                  borderRadius: "4px",
-                  border: "1px solid #dee2e6",
+                  fontSize: "12px",
+                  color: "#666",
+                  marginTop: "5px",
                 }}
               >
-                <div style={{ fontSize: "14px" }}>
-                  📄 {attachment.filename || "Unknown file"}
-                  <br />
-                  📊 Size: {formatFileSize(attachment.fileSize)}
-                  <br />
-                  📁 Type: {attachment.fileType || "Unknown"}
-                </div>
+                Maximum file size: {MAX_FILE_SIZE / (1024 * 1024)}MB
               </div>
             </div>
 
-            {/* Replace File Section */}
-            <div style={{ marginBottom: "20px" }}>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "5px",
-                  fontWeight: "600",
-                  fontSize: "14px",
-                }}
-              >
-                Replace File (Optional)
-              </label>
-
-              {selectedFile ? (
-                <div
-                  style={{
-                    backgroundColor: "#fff3cd",
-                    padding: "15px",
-                    borderRadius: "4px",
-                    border: "1px solid #ffeeba",
-                  }}
-                >
-                  <div style={{ marginBottom: "10px" }}>
-                    <strong>⚠️ New file will replace the current file:</strong>
-                  </div>
-                  <div style={{ fontSize: "14px", color: "#856404" }}>
-                    📄 {selectedFile.name}
-                    <br />
-                    📊 Size: {formatFileSize(selectedFile.size)}
-                    <br />
-                    📁 Type: {selectedFile.type || "Unknown"}
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="secondary"
-                    onClick={() => {
-                      setSelectedFile(null);
-                      document.getElementById("file-input").value = null;
-                    }}
-                    style={{ marginTop: "10px" }}
-                  >
-                    ❌ Cancel File Replacement
-                  </Button>
-                </div>
-              ) : (
-                <>
-                  <input
-                    id="file-input"
-                    name="file"
-                    type="file"
-                    onChange={handleFileChange}
-                    style={{
-                      padding: "10px",
-                      border: errors.file
-                        ? "1px solid #dc3545"
-                        : "1px solid #ddd",
-                      borderRadius: "4px",
-                      width: "100%",
-                      backgroundColor: "#fff",
-                    }}
-                  />
-                  {errors.file && (
-                    <div
-                      style={{
-                        color: theme.colors.error,
-                        fontSize: "12px",
-                        marginTop: "4px",
-                      }}
-                    >
-                      {errors.file}
-                    </div>
-                  )}
-                  <div
-                    style={{
-                      fontSize: "12px",
-                      color: "#666",
-                      marginTop: "5px",
-                    }}
-                  >
-                    Leave empty to keep the current file. Maximum file size:{" "}
-                    {MAX_FILE_SIZE / (1024 * 1024)}MB
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Action Buttons */}
             <div
               style={{
                 display: "flex",
                 justifyContent: "space-between",
+                gap: "10px",
                 marginTop: "30px",
-                paddingTop: "20px",
-                borderTop: "1px solid #e0e0e0",
               }}
             >
               <Link to={`/admin/staff/${aid}/attachment/${atid}`}>
@@ -428,10 +280,10 @@ function AdminStaffDetailAttachmentUpdatePage() {
               </Link>
               <Button
                 variant="success"
-                onClick={handleSubmit}
-                disabled={isSubmitting}
+                onClick={onSubmitClick}
+                disabled={!title}
               >
-                ✓ Save Changes
+                ✓ Save
               </Button>
             </div>
           </>
