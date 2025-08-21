@@ -1,7 +1,7 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Associate/Add/Step6Page.jsx
 
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router";
 import { useAuthManager } from "../../../../services/Services";
 import {
   UserPlusIcon,

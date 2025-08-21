@@ -267,8 +267,8 @@ function AdminAssociateDetailMorePage() {
                   subtitle="Upload a photo of the associate"
                   icon={CameraIcon}
                   path={`/admin/associate/${aid}/avatar`}
-                  bgColorClass="bg-red-600"
-                  hoverColorClass="hover:bg-red-700"
+                  bgColorClass="bg-cyan-600"
+                  hoverColorClass="hover:bg-cyan-700"
                 />
               )}
 
@@ -279,8 +279,8 @@ function AdminAssociateDetailMorePage() {
                   subtitle="Make associate visible in list and search results"
                   icon={ArchiveBoxXMarkIcon}
                   path={`/admin/associate/${aid}/unarchive`}
-                  bgColorClass="bg-green-600"
-                  hoverColorClass="hover:bg-green-700"
+                  bgColorClass="bg-cyan-600"
+                  hoverColorClass="hover:bg-cyan-700"
                 />
               ) : (
                 <ActionCard
@@ -288,8 +288,8 @@ function AdminAssociateDetailMorePage() {
                   subtitle="Make associate hidden from list and search results"
                   icon={ArchiveBoxIcon}
                   path={`/admin/associate/${aid}/archive`}
-                  bgColorClass="bg-green-600"
-                  hoverColorClass="hover:bg-green-700"
+                  bgColorClass="bg-cyan-600"
+                  hoverColorClass="hover:bg-cyan-700"
                 />
               )}
 
@@ -326,8 +326,8 @@ function AdminAssociateDetailMorePage() {
                   subtitle="Permanently delete this associate and all data"
                   icon={TrashIcon}
                   path={`/admin/associate/${aid}/permadelete`}
-                  bgColorClass="bg-red-600"
-                  hoverColorClass="hover:bg-red-700"
+                  bgColorClass="bg-cyan-600"
+                  hoverColorClass="hover:bg-cyan-700"
                 />
               )}
 
@@ -338,8 +338,8 @@ function AdminAssociateDetailMorePage() {
                   subtitle="Change or reset the associate's password"
                   icon={LockClosedIcon}
                   path={`/admin/associate/${aid}/change-password`}
-                  bgColorClass="bg-red-600"
-                  hoverColorClass="hover:bg-red-700"
+                  bgColorClass="bg-cyan-600"
+                  hoverColorClass="hover:bg-cyan-700"
                 />
               )}
 
@@ -350,8 +350,8 @@ function AdminAssociateDetailMorePage() {
                   subtitle="Enable or disable two-factor authentication"
                   icon={DevicePhoneMobileIcon}
                   path={`/admin/associate/${aid}/change-2fa`}
-                  bgColorClass="bg-gray-700"
-                  hoverColorClass="hover:bg-gray-800"
+                  bgColorClass="bg-cyan-600"
+                  hoverColorClass="hover:bg-cyan-700"
                 />
               )}
 
@@ -364,8 +364,8 @@ function AdminAssociateDetailMorePage() {
                       subtitle="Remove ban and restore access"
                       icon={CheckCircleIcon}
                       path={`/admin/associate/${aid}/unban`}
-                      bgColorClass="bg-green-600"
-                      hoverColorClass="hover:bg-green-700"
+                      bgColorClass="bg-cyan-600"
+                      hoverColorClass="hover:bg-cyan-700"
                     />
                   ) : (
                     <ActionCard
@@ -373,8 +373,8 @@ function AdminAssociateDetailMorePage() {
                       subtitle="Ban associate from accessing the system"
                       icon={NoSymbolIcon}
                       path={`/admin/associate/${aid}/ban`}
-                      bgColorClass="bg-red-600"
-                      hoverColorClass="hover:bg-red-700"
+                      bgColorClass="bg-cyan-600"
+                      hoverColorClass="hover:bg-cyan-700"
                     />
                   )}
                 </>
