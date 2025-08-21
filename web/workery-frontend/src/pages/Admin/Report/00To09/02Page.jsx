@@ -36,6 +36,7 @@ function AdminReport02Page() {
 
   // UI state
   const [errors, setErrors] = useState({});
+  const [warnings, setWarnings] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
@@ -55,6 +56,28 @@ function AdminReport02Page() {
     setToDate(today.toISOString().split("T")[0]);
     setFromDate(thirtyDaysAgo.toISOString().split("T")[0]);
   }, []);
+
+  // Check for date range warnings when dates change
+  useEffect(() => {
+    if (fromDate && toDate) {
+      const from = new Date(fromDate);
+      const to = new Date(toDate);
+      const daysDiff = Math.floor((to - from) / (1000 * 60 * 60 * 24));
+
+      if (daysDiff > 365) {
+        setWarnings((prev) => ({
+          ...prev,
+          dateRange: `Date range exceeds 1 year (${daysDiff} days). Large date ranges may take longer to process.`,
+        }));
+      } else {
+        setWarnings((prev) => {
+          const newWarnings = { ...prev };
+          delete newWarnings.dateRange;
+          return newWarnings;
+        });
+      }
+    }
+  }, [fromDate, toDate]);
 
   // Handle unauthorized access
   const onUnauthorized = () => {
@@ -347,6 +370,30 @@ function AdminReport02Page() {
                 </Alert>
               )}
 
+              {/* Warning Display for Date Range */}
+              {warnings.dateRange && (
+                <Alert
+                  type="warning"
+                  dismissible
+                  onDismiss={() =>
+                    setWarnings((prev) => {
+                      const newWarnings = { ...prev };
+                      delete newWarnings.dateRange;
+                      return newWarnings;
+                    })
+                  }
+                  className="mb-6"
+                >
+                  <div className="flex items-start">
+                    <ExclamationTriangleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">Warning</p>
+                      <p className="mt-1 text-sm">{warnings.dateRange}</p>
+                    </div>
+                  </div>
+                </Alert>
+              )}
+
               {/* Info Alert */}
               <Alert type="info" className="mb-6">
                 <div className="flex items-start">
@@ -615,6 +662,13 @@ function AdminReport02Page() {
                   <span>
                     The CSV file can be opened in Excel or Google Sheets for
                     further analysis
+                  </span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-amber-600 mr-2">•</span>
+                  <span>
+                    For best performance, keep date ranges under 1 year when
+                    possible
                   </span>
                 </li>
               </ul>
