@@ -1880,7 +1880,7 @@ function AppRouter() {
               }
             />
             <Route
-              path="/admin/incident/:oid/:oiid"
+              path="/admin/incident/:oiid"
               element={
                 <Layout>
                   <AdminOrderIncidentDetailPage />

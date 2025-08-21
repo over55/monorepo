@@ -100,7 +100,7 @@ function AdminOrderIncidentListPage() {
       key: "title",
       label: "Title",
       render: (value, row) => (
-        <Link to={`/admin/order-incident/${row.id}`}>{value}</Link>
+        <Link to={`/admin/incident/${row.id}`}>{value}</Link>
       ),
     },
     {
@@ -148,7 +148,7 @@ function AdminOrderIncidentListPage() {
       label: "Actions",
       align: "right",
       render: (value, row) => (
-        <Link to={`/admin/order-incident/${row.id}`}>
+        <Link to={`/admin/incident/${row.id}`}>
           <Button size="sm">View →</Button>
         </Link>
       ),
@@ -239,7 +239,7 @@ function AdminOrderIncidentListPage() {
             <Table
               columns={columns}
               data={listData.results}
-              onRowClick={(row) => navigate(`/admin/order-incident/${row.id}`)}
+              onRowClick={(row) => navigate(`/admin/incident/${row.id}`)}
             />
 
             {/* Pagination */}

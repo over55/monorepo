@@ -106,7 +106,7 @@ function AdminOrderIncidentDetailPage() {
 
   const breadcrumbItems = [
     { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
-    { path: "/admin/order-incidents", label: "Incidents", icon: "🔥" },
+    { path: "/admin/incidents", label: "Incidents", icon: "🔥" },
     { label: "Detail", icon: "ℹ️" },
   ];
 
@@ -367,7 +367,7 @@ function AdminOrderIncidentDetailPage() {
                 gap: "10px",
               }}
             >
-              <Link to="/admin/order-incidents">
+              <Link to="/admin/incidents">
                 <Button variant="secondary">← Back to Incidents</Button>
               </Link>
 
