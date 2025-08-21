@@ -90,7 +90,6 @@ function SettingNOCSearchPage() {
     <div
       className="min-h-screen bg-gray-50"
       style={{
-        minHeight: "100vh",
         minHeight: "100dvh",
         paddingBottom: "env(keyboard-inset-height, 0px)",
       }}

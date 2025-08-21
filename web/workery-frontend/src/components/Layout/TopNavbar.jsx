@@ -124,7 +124,6 @@ function TopNavbar({ onMenuToggle }) {
         /* Cross-platform Safe Area Fallbacks */
         paddingLeft: "max(16px, env(safe-area-inset-left))",
         paddingRight: "max(16px, env(safe-area-inset-right))",
-        paddingTop: "env(safe-area-inset-top)",
 
         /* iOS Optimizations */
         WebkitBackfaceVisibility: "hidden",
@@ -134,6 +133,7 @@ function TopNavbar({ onMenuToggle }) {
 
         /* Android Optimizations */
         // Display cutout support for Android devices with notches/punch holes
+        // This also handles iOS safe area inset top
         paddingTop:
           "max(env(safe-area-inset-top), env(titlebar-area-height, 0px))",
         // Android Chrome performance
