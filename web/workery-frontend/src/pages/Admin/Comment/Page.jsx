@@ -221,7 +221,7 @@ function AdminCommentList() {
       }
       return (
         <Link
-          to={`/admin/client/${row.customerId}/comments`}
+          to={`/admin/customer/${row.customerId}/comments`}
           className="text-blue-600 hover:text-blue-800 flex items-center"
         >
           View
