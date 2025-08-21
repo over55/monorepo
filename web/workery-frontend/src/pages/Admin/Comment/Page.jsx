@@ -21,6 +21,7 @@ import {
   UserCircleIcon,
   WrenchScrewdriverIcon,
   UserIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { useCommentManager } from "../../../services/Services";
 import { formatDateTime } from "../../../services/Helpers/DateFormatter";
@@ -43,6 +44,7 @@ const COMMENT_STATUS_FILTER_OPTIONS = [
 const BELONGS_TO_CUSTOMER = 1;
 const BELONGS_TO_ASSOCIATE = 2;
 const BELONGS_TO_ORDER = 3;
+const BELONGS_TO_ORDER_INCIDENT = 4; // Added Order Incident type
 
 function AdminCommentList() {
   const navigate = useNavigate();
@@ -194,15 +196,27 @@ function AdminCommentList() {
             <span>Order</span>
           </div>
         );
+      case BELONGS_TO_ORDER_INCIDENT:
+        return (
+          <div className="flex items-center">
+            <ExclamationTriangleIcon className="h-4 w-4 mr-1 text-amber-600" />
+            <span>Order Incident</span>
+          </div>
+        );
       default:
-        return "Unknown";
+        console.warn(`Unknown belongsTo type: ${belongsTo}`);
+        return (
+          <div className="flex items-center text-gray-500">
+            <span>Unknown ({belongsTo})</span>
+          </div>
+        );
     }
   };
 
   // Render view link based on belongs to type
   const renderViewLink = (row) => {
     if (row.belongsTo === BELONGS_TO_CUSTOMER) {
-      if (row.customerId === "000000000000000000000000") {
+      if (row.customerId === "000000000000000000000000" || !row.customerId) {
         return null;
       }
       return (
@@ -215,7 +229,7 @@ function AdminCommentList() {
         </Link>
       );
     } else if (row.belongsTo === BELONGS_TO_ASSOCIATE) {
-      if (row.associateId === "000000000000000000000000") {
+      if (row.associateId === "000000000000000000000000" || !row.associateId) {
         return null;
       }
       return (
@@ -228,6 +242,9 @@ function AdminCommentList() {
         </Link>
       );
     } else if (row.belongsTo === BELONGS_TO_ORDER) {
+      if (!row.orderWjid) {
+        return null;
+      }
       return (
         <Link
           to={`/admin/order/${row.orderWjid}/comments`}
@@ -237,7 +254,25 @@ function AdminCommentList() {
           <ChevronRightIcon className="h-4 w-4 ml-1" />
         </Link>
       );
+    } else if (row.belongsTo === BELONGS_TO_ORDER_INCIDENT) {
+      // Handle Order Incident links
+      if (!row.orderIncidentId && !row.incidentId) {
+        return null;
+      }
+      const incidentId = row.orderIncidentId || row.incidentId;
+      return (
+        <Link
+          to={`/admin/incident/${incidentId}/comments`}
+          className="text-blue-600 hover:text-blue-800 flex items-center"
+        >
+          View
+          <ChevronRightIcon className="h-4 w-4 ml-1" />
+        </Link>
+      );
     }
+
+    // For unknown types, log for debugging
+    console.warn(`Unknown belongsTo type for view link: ${row.belongsTo}`, row);
     return null;
   };
 
