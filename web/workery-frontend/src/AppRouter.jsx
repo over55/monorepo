@@ -303,6 +303,7 @@ import AdminReport17Page from "./pages/Admin/Report/10To19/17Page";
 import AdminReport19Page from "./pages/Admin/Report/10To19/19Page";
 import AdminReport20Page from "./pages/Admin/Report/20To29/20Page";
 import AdminReport21Page from "./pages/Admin/Report/20To29/21Page";
+import AdminReport22Page from "./pages/Admin/Report/20To29/22Page";
 
 ////////////////////////////////////////////////////////////////
 // Associate pages
@@ -894,7 +895,7 @@ function AppRouter() {
               path="/admin/report/22"
               element={
                 <Layout>
-                  <PlaceholderPage title="Report 22" />
+                  <AdminReport22Page />
                 </Layout>
               }
             />
