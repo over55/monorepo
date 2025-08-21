@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/OrderIncident/Create/View.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -10,7 +11,7 @@ import {
   faWrench,
   faGauge,
   faCircleInfo,
-  faArrowUpRightFromSquare
+  faArrowUpRightFromSquare,
 } from "@fortawesome/free-solid-svg-icons";
 import { useRecoilState } from "recoil";
 import { useParams } from "react-router-dom";
@@ -183,7 +184,7 @@ function AdminOrderIncidentCreate() {
     return () => {
       mounted = false;
     };
-}, []);
+  }, []);
 
   ////
   //// Component rendering.
@@ -210,10 +211,7 @@ function AdminOrderIncidentCreate() {
                 </Link>
               </li>
               <li>
-                <Link
-                  to={`/admin/incidents`}
-                  aria-current="page"
-                >
+                <Link to={`/admin/incidents`} aria-current="page">
                   <FontAwesomeIcon className="fas" icon={faFire} />
                   &nbsp;Incidents
                 </Link>
@@ -290,12 +288,27 @@ function AdminOrderIncidentCreate() {
                   placeholder="Text input"
                   value={orderId}
                   errorText={errors && errors.orderId}
-                  helpText={<>
-                      <span>Please enter the order ID # of the incident you want to record. If you do not know the number then please look it up by&nbsp;<Link className="" to={`/admin/orders/search`} target="_blank"
-                      rel="noreferrer">
-                         clicking here&nbsp;<FontAwesomeIcon className="fas" icon={faArrowUpRightFromSquare} />
-                       </Link></span>
-                  </>}
+                  helpText={
+                    <>
+                      <span>
+                        Please enter the order ID # of the incident you want to
+                        record. If you do not know the number then please look
+                        it up by&nbsp;
+                        <Link
+                          className=""
+                          to={`/admin/orders/search`}
+                          target="_blank"
+                          rel="noreferrer"
+                        >
+                          clicking here&nbsp;
+                          <FontAwesomeIcon
+                            className="fas"
+                            icon={faArrowUpRightFromSquare}
+                          />
+                        </Link>
+                      </span>
+                    </>
+                  }
                   onChange={(e) => setOrderId(e.target.value)}
                   isRequired={true}
                   maxWidth="180px"
@@ -361,7 +374,9 @@ function AdminOrderIncidentCreate() {
                   errorText={errors && errors.closingReason}
                   helpText="If this incident was resolved, please select the closing reason for this incident."
                   onChange={(e) => setClosingReason(parseInt(e.target.value))}
-                  options={ORDER_INCIDENT_CLOSING_REASON_OPTIONS_WITH_EMPTY_OPTIONS}
+                  options={
+                    ORDER_INCIDENT_CLOSING_REASON_OPTIONS_WITH_EMPTY_OPTIONS
+                  }
                 />
 
                 {closingReason === 1 && (
@@ -395,10 +410,7 @@ function AdminOrderIncidentCreate() {
                         className="button is-success is-fullwidth-mobile"
                         onClick={onSubmitClick}
                       >
-                        <FontAwesomeIcon
-                          className="fas"
-                          icon={faCheckCircle}
-                        />
+                        <FontAwesomeIcon className="fas" icon={faCheckCircle} />
                         &nbsp;Submit
                       </button>
                     </div>
