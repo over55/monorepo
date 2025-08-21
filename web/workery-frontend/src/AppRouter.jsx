@@ -284,6 +284,7 @@ import AdminCommentList from "./pages/Admin/Comment/Page";
 
 // Admin report pages.
 import AdminReportPage from "./pages/Admin/Report/Page";
+import AdminReport01Page from "./pages/Admin/Report/00To09/01Page";
 
 ////////////////////////////////////////////////////////////////
 // Associate pages
@@ -723,7 +724,7 @@ function AppRouter() {
               path="/admin/report/1"
               element={
                 <Layout>
-                  <PlaceholderPage title="Report 1" />
+                  <AdminReport01Page />
                 </Layout>
               }
             />

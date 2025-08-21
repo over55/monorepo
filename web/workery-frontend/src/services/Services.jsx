@@ -34,6 +34,7 @@ import { HowHearAboutUsItemStorage } from "./Storage/HowHearAboutUsItemStorage";
 import { SurveyStorage } from "./Storage/SurveyStorage";
 import { InvoiceGenerationStorage } from "./Storage/InvoiceGenerationStorage";
 import { StaffAddWizardStorage } from "./Storage/StaffAddWizardStorage";
+import { ReportStorage } from "./Storage/ReportStorage";
 
 // Import all API services
 import { AuthAPI } from "./API/AuthAPI";
@@ -64,6 +65,7 @@ import { AssociateAwayLogAPI } from "./API/AssociateAwayLogAPI";
 import { JobHistoryAPI } from "./API/JobHistoryAPI";
 import { OrderIncidentAPI } from "./API/OrderIncidentAPI";
 import { HowHearAboutUsItemAPI } from "./API/HowHearAboutUsItemAPI";
+import { ReportAPI } from "./API/ReportAPI";
 
 // Import all Manager services
 import { AuthManager } from "./Manager/AuthManager";
@@ -94,6 +96,7 @@ import { AssociateAwayLogManager } from "./Manager/AssociateAwayLogManager";
 import { JobHistoryManager } from "./Manager/JobHistoryManager";
 import { OrderIncidentManager } from "./Manager/OrderIncidentManager";
 import { HowHearAboutUsItemManager } from "./Manager/HowHearAboutUsItemManager";
+import { ReportManager } from "./Manager/ReportManager";
 
 /**
  * Service Definition Registry
@@ -224,6 +227,10 @@ const SERVICE_DEFINITIONS = {
     },
     staffAddWizard: {
       factory: () => new StaffAddWizardStorage(),
+      singleton: true,
+    },
+    report: {
+      factory: () => new ReportStorage(),
       singleton: true,
     },
   },
@@ -407,6 +414,12 @@ const SERVICE_DEFINITIONS = {
       dependencies: ["baseURL", "endpoints", "storage:token"],
       singleton: true,
     },
+    report: {
+      factory: (deps) =>
+        new ReportAPI(deps.baseURL, deps.endpoints, deps.tokenStorage),
+      dependencies: ["baseURL", "endpoints", "storage:token"],
+      singleton: true,
+    },
   },
 
   // Manager Services
@@ -584,6 +597,11 @@ const SERVICE_DEFINITIONS = {
           deps.howHearAboutUsItemStorage,
         ),
       dependencies: ["api:howHearAboutUsItem", "storage:howHearAboutUsItem"],
+      singleton: true,
+    },
+    report: {
+      factory: (deps) => new ReportManager(deps.reportAPI, deps.reportStorage),
+      dependencies: ["api:report", "storage:report"],
       singleton: true,
     },
   },
@@ -900,3 +918,5 @@ export function useServiceInfo() {
     isInitialized: services.isInitialized(),
   };
 }
+
+export const useReportManager = createServiceHook("manager", "report");

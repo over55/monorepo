@@ -235,6 +235,10 @@ export const API_ENDPOINTS = {
   // Job History endpoints
   JOB_HISTORY: "/job-history",
   JOB_HISTORY_DETAIL: "/job-history/{id}",
+
+  // Report endpoints
+  REPORTS: "/reports",
+  REPORT_DETAIL: "/report/{reportID}",
 };
 
 /**
