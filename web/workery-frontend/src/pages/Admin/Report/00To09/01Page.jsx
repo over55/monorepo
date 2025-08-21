@@ -4,6 +4,26 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { useReportManager } from "../../../../services/Services";
 import { ORDER_STATUS_FILTER_OPTIONS } from "../../../../constants/FieldOptions";
+import {
+  Card,
+  Button,
+  Alert,
+  Loading,
+  Breadcrumb,
+  Select,
+  Input,
+} from "../../../../components/UI";
+import {
+  HomeIcon,
+  ChartBarIcon,
+  BanknotesIcon,
+  CalendarIcon,
+  DocumentArrowDownIcon,
+  ClockIcon,
+  ExclamationTriangleIcon,
+  CheckCircleIcon,
+  InformationCircleIcon,
+} from "@heroicons/react/24/outline";
 
 function AdminReport01Page() {
   const navigate = useNavigate();
@@ -12,18 +32,28 @@ function AdminReport01Page() {
   // Form state
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
-  const [jobStatus, setJobStatus] = useState(0);
+  const [jobStatus, setJobStatus] = useState("0");
 
   // UI state
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
 
   // Load preferences on mount
   useEffect(() => {
     const preferences = reportManager.getReportPreferences();
     if (preferences?.lastDueServiceFeesReport) {
-      setJobStatus(preferences.lastDueServiceFeesReport.jobStatus || 0);
+      setJobStatus(String(preferences.lastDueServiceFeesReport.jobStatus || 0));
     }
+
+    // Set default dates (last 30 days)
+    const today = new Date();
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+    setToDate(today.toISOString().split("T")[0]);
+    setFromDate(thirtyDaysAgo.toISOString().split("T")[0]);
   }, []);
 
   // Handle unauthorized access
@@ -59,6 +89,7 @@ function AdminReport01Page() {
     // Clear errors and start submission
     setErrors({});
     setIsSubmitting(true);
+    setShowSuccess(false);
 
     try {
       // Download the report
@@ -69,13 +100,15 @@ function AdminReport01Page() {
         onUnauthorized,
       );
 
-      // Optional: Show success message or close window
-      console.log("AdminReport01Page: Report downloaded successfully");
+      // Show success message
+      setShowSuccess(true);
 
-      // If this was opened in a new window/tab, close it
-      if (window.opener) {
-        window.close();
-      }
+      // Hide success message after 5 seconds
+      setTimeout(() => {
+        setShowSuccess(false);
+      }, 5000);
+
+      console.log("AdminReport01Page: Report downloaded successfully");
     } catch (error) {
       console.error("AdminReport01Page: Error downloading report", error);
 
@@ -87,197 +120,438 @@ function AdminReport01Page() {
           general: "Failed to download report. Please try again.",
         });
       }
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  // Get recent downloads from history
+  const recentDownloads = reportManager
+    .getReportHistory()
+    .filter(
+      (item) => item.reportId === 1 || item.reportType === "Due Service Fees",
+    )
+    .slice(0, 5);
+
+  // Breadcrumb items
+  const breadcrumbItems = [
+    {
+      label: "Dashboard",
+      href: "/admin/dashboard",
+      icon: HomeIcon,
+    },
+    {
+      label: "Reports",
+      href: "/admin/reports",
+      icon: ChartBarIcon,
+    },
+    {
+      label: "Due Service Fees",
+      icon: BanknotesIcon,
+    },
+  ];
+
+  if (isLoading) {
+    return <Loading fullScreen message="Loading report settings..." />;
+  }
+
   return (
-    <div>
-      {/* Breadcrumb Navigation */}
-      <nav aria-label="breadcrumb">
-        <ol>
-          <li>
-            <Link to="/admin/dashboard">Dashboard</Link>
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-full xl:max-w-7xl">
+      {/* Breadcrumb */}
+      <nav
+        className="flex mb-4 sm:mb-6 lg:mb-8 overflow-x-auto"
+        aria-label="Breadcrumb"
+      >
+        <ol className="inline-flex items-center space-x-1 md:space-x-3 whitespace-nowrap">
+          <li className="inline-flex items-center">
+            <Link
+              to="/admin/dashboard"
+              className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600"
+            >
+              <HomeIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+              <span className="hidden sm:inline">Dashboard</span>
+              <span className="sm:hidden">Home</span>
+            </Link>
           </li>
           <li>
-            <Link to="/admin/reports">Reports</Link>
+            <div className="flex items-center">
+              <svg
+                className="w-3 h-3 text-gray-400 mx-1 flex-shrink-0"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 6 10"
+              >
+                <path
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="m1 9 4-4-4-4"
+                />
+              </svg>
+              <Link
+                to="/admin/reports"
+                className="ml-1 text-xs sm:text-sm font-medium text-gray-700 md:ml-2 hover:text-blue-600"
+              >
+                Reports
+              </Link>
+            </div>
           </li>
-          <li aria-current="page">Due Service Fees Report</li>
+          <li aria-current="page">
+            <div className="flex items-center">
+              <svg
+                className="w-3 h-3 text-gray-400 mx-1 flex-shrink-0"
+                aria-hidden="true"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 6 10"
+              >
+                <path
+                  stroke="currentColor"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="m1 9 4-4-4-4"
+                />
+              </svg>
+              <span className="ml-1 text-xs sm:text-sm font-medium text-gray-500 md:ml-2">
+                Due Service Fees
+              </span>
+            </div>
+          </li>
         </ol>
       </nav>
 
-      {/* Page Header */}
-      <h1>Due Service Fees Report</h1>
-      <hr />
-
-      {/* Report Form Container */}
-      <div>
-        <h2>Generate and Download Report</h2>
-        <p>
-          Please fill out all the required fields before submitting this form.
-        </p>
-
-        {/* Error Display */}
-        {Object.keys(errors).length > 0 && (
-          <div role="alert" aria-live="polite">
-            <h3>Error</h3>
-            {errors.general ? (
-              <p>{errors.general}</p>
-            ) : (
-              <ul>
-                {Object.entries(errors).map(([field, message]) => (
-                  <li key={field}>{message}</li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
-
-        {/* Form or Loading State */}
-        {isSubmitting ? (
-          <div>
-            <p>Generating report...</p>
-            <p>Please wait while we prepare your download.</p>
-          </div>
-        ) : (
-          <form onSubmit={handleSubmit}>
-            {/* From Date Field */}
-            <div>
-              <label htmlFor="fromDate">
-                From Date <span aria-label="required">*</span>
-              </label>
-              <input
-                type="date"
-                id="fromDate"
-                name="fromDate"
-                value={fromDate}
-                onChange={(e) => {
-                  setFromDate(e.target.value);
-                  // Clear error for this field
-                  if (errors.fromDate) {
-                    setErrors((prev) => {
-                      const newErrors = { ...prev };
-                      delete newErrors.fromDate;
-                      return newErrors;
-                    });
-                  }
-                }}
-                required
-                aria-required="true"
-                aria-invalid={!!errors.fromDate}
-                aria-describedby={
-                  errors.fromDate ? "fromDate-error" : "fromDate-help"
-                }
-              />
-              <small id="fromDate-help">Refers to assignment date</small>
-              {errors.fromDate && (
-                <span id="fromDate-error" role="alert">
-                  {errors.fromDate}
-                </span>
-              )}
-            </div>
-
-            {/* To Date Field */}
-            <div>
-              <label htmlFor="toDate">
-                To Date <span aria-label="required">*</span>
-              </label>
-              <input
-                type="date"
-                id="toDate"
-                name="toDate"
-                value={toDate}
-                onChange={(e) => {
-                  setToDate(e.target.value);
-                  // Clear error for this field
-                  if (errors.toDate) {
-                    setErrors((prev) => {
-                      const newErrors = { ...prev };
-                      delete newErrors.toDate;
-                      return newErrors;
-                    });
-                  }
-                }}
-                required
-                aria-required="true"
-                aria-invalid={!!errors.toDate}
-                aria-describedby={
-                  errors.toDate ? "toDate-error" : "toDate-help"
-                }
-              />
-              <small id="toDate-help">Refers to assignment date</small>
-              {errors.toDate && (
-                <span id="toDate-error" role="alert">
-                  {errors.toDate}
-                </span>
-              )}
-            </div>
-
-            {/* Job Status Field */}
-            <div>
-              <label htmlFor="jobStatus">Job Status</label>
-              <select
-                id="jobStatus"
-                name="jobStatus"
-                value={jobStatus}
-                onChange={(e) => {
-                  setJobStatus(e.target.value);
-                  // Clear error for this field
-                  if (errors.jobStatus) {
-                    setErrors((prev) => {
-                      const newErrors = { ...prev };
-                      delete newErrors.jobStatus;
-                      return newErrors;
-                    });
-                  }
-                }}
-                aria-describedby="jobStatus-help"
-                aria-invalid={!!errors.jobStatus}
-              >
-                {ORDER_STATUS_FILTER_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <small id="jobStatus-help">Filter by job status</small>
-              {errors.jobStatus && <span role="alert">{errors.jobStatus}</span>}
-            </div>
-
-            {/* Form Actions */}
-            <div>
-              <Link to="/admin/reports">← Back</Link>
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                aria-busy={isSubmitting}
-              >
-                {isSubmitting ? "Downloading..." : "Download"}
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* Report History Section (Optional) */}
-        <details>
-          <summary>Recent Downloads</summary>
-          <div>
-            {reportManager
-              .getReportHistory()
-              .filter(
-                (item) =>
-                  item.reportId === 1 || item.reportType === "Due Service Fees",
-              )
-              .slice(0, 5)
-              .map((item, index) => (
-                <div key={index}>
-                  <span>{item.filename}</span>
-                  <span>{new Date(item.downloadedAt).toLocaleString()}</span>
+      {/* Main Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Report Form - Takes 2 columns on large screens */}
+        <div className="lg:col-span-2">
+          <Card className="h-full">
+            {/* Card Header */}
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center">
+                <BanknotesIcon className="w-6 h-6 text-green-600 mr-3" />
+                <div>
+                  <h1 className="text-xl font-semibold text-gray-900">
+                    Due Service Fees Report
+                  </h1>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Generate a report of outstanding service fees for associates
+                  </p>
                 </div>
-              ))}
-          </div>
-        </details>
+              </div>
+            </div>
+
+            {/* Card Body */}
+            <div className="p-6">
+              {/* Success Message */}
+              {showSuccess && (
+                <Alert
+                  type="success"
+                  dismissible
+                  onDismiss={() => setShowSuccess(false)}
+                  className="mb-6 animate-fade-in"
+                >
+                  <div className="flex items-center">
+                    <CheckCircleIcon className="w-5 h-5 mr-2" />
+                    Report downloaded successfully! Check your downloads folder.
+                  </div>
+                </Alert>
+              )}
+
+              {/* Error Display */}
+              {Object.keys(errors).length > 0 && (
+                <Alert
+                  type="error"
+                  dismissible
+                  onDismiss={() => setErrors({})}
+                  className="mb-6 animate-shake"
+                >
+                  <div className="flex items-start">
+                    <ExclamationTriangleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium">
+                        There were errors with your submission:
+                      </p>
+                      {errors.general ? (
+                        <p className="mt-1">{errors.general}</p>
+                      ) : (
+                        <ul className="mt-2 list-disc list-inside space-y-1">
+                          {Object.entries(errors).map(([field, message]) => (
+                            <li key={field} className="text-sm">
+                              {message}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                </Alert>
+              )}
+
+              {/* Info Alert */}
+              <Alert type="info" className="mb-6">
+                <div className="flex items-start">
+                  <InformationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-medium">Report Information</p>
+                    <p className="mt-1 text-sm">
+                      This report will generate a CSV file containing all work
+                      orders with outstanding service fees within the specified
+                      date range. The dates refer to the assignment date of the
+                      work orders.
+                    </p>
+                  </div>
+                </div>
+              </Alert>
+
+              {/* Form */}
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Date Range Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* From Date Field */}
+                  <div>
+                    <label
+                      htmlFor="fromDate"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      From Date
+                      <span className="text-red-500 ml-1">*</span>
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <CalendarIcon className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="date"
+                        id="fromDate"
+                        name="fromDate"
+                        value={fromDate}
+                        onChange={(e) => {
+                          setFromDate(e.target.value);
+                          if (errors.fromDate) {
+                            setErrors((prev) => {
+                              const newErrors = { ...prev };
+                              delete newErrors.fromDate;
+                              return newErrors;
+                            });
+                          }
+                        }}
+                        className={`
+                          w-full pl-10 pr-3 py-2.5
+                          border rounded-lg
+                          transition-all duration-200
+                          focus:outline-none focus:ring-2 focus:ring-offset-1
+                          ${
+                            errors.fromDate
+                              ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+                              : "border-gray-300 focus:border-blue-500 focus:ring-blue-500/20"
+                          }
+                        `}
+                        required
+                      />
+                    </div>
+                    {errors.fromDate && (
+                      <p className="mt-2 text-sm text-red-600 flex items-center">
+                        <ExclamationTriangleIcon className="h-4 w-4 mr-1" />
+                        {errors.fromDate}
+                      </p>
+                    )}
+                    <p className="mt-1 text-xs text-gray-500">
+                      Start date for the report (assignment date)
+                    </p>
+                  </div>
+
+                  {/* To Date Field */}
+                  <div>
+                    <label
+                      htmlFor="toDate"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      To Date
+                      <span className="text-red-500 ml-1">*</span>
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <CalendarIcon className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="date"
+                        id="toDate"
+                        name="toDate"
+                        value={toDate}
+                        onChange={(e) => {
+                          setToDate(e.target.value);
+                          if (errors.toDate) {
+                            setErrors((prev) => {
+                              const newErrors = { ...prev };
+                              delete newErrors.toDate;
+                              return newErrors;
+                            });
+                          }
+                        }}
+                        className={`
+                          w-full pl-10 pr-3 py-2.5
+                          border rounded-lg
+                          transition-all duration-200
+                          focus:outline-none focus:ring-2 focus:ring-offset-1
+                          ${
+                            errors.toDate
+                              ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
+                              : "border-gray-300 focus:border-blue-500 focus:ring-blue-500/20"
+                          }
+                        `}
+                        required
+                      />
+                    </div>
+                    {errors.toDate && (
+                      <p className="mt-2 text-sm text-red-600 flex items-center">
+                        <ExclamationTriangleIcon className="h-4 w-4 mr-1" />
+                        {errors.toDate}
+                      </p>
+                    )}
+                    <p className="mt-1 text-xs text-gray-500">
+                      End date for the report (assignment date)
+                    </p>
+                  </div>
+                </div>
+
+                {/* Job Status Field */}
+                <Select
+                  label="Job Status Filter"
+                  value={jobStatus}
+                  onChange={(e) => {
+                    setJobStatus(e.target.value);
+                    if (errors.jobStatus) {
+                      setErrors((prev) => {
+                        const newErrors = { ...prev };
+                        delete newErrors.jobStatus;
+                        return newErrors;
+                      });
+                    }
+                  }}
+                  options={ORDER_STATUS_FILTER_OPTIONS.map((opt) => ({
+                    value: String(opt.value),
+                    label: opt.label,
+                  }))}
+                  error={errors.jobStatus}
+                  helperText="Filter the report by specific job status or select 'All' for all statuses"
+                />
+
+                {/* Form Actions */}
+                <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => navigate("/admin/reports")}
+                  >
+                    ← Back to Reports
+                  </Button>
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    disabled={isSubmitting}
+                    loading={isSubmitting}
+                    icon={DocumentArrowDownIcon}
+                  >
+                    {isSubmitting ? "Generating..." : "Download Report"}
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </Card>
+        </div>
+
+        {/* Sidebar - Recent Downloads */}
+        <div className="lg:col-span-1">
+          <Card>
+            <div className="px-6 py-4 border-b border-gray-200">
+              <div className="flex items-center">
+                <ClockIcon className="w-5 h-5 text-gray-600 mr-2" />
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Recent Downloads
+                </h2>
+              </div>
+            </div>
+            <div className="p-6">
+              {recentDownloads.length > 0 ? (
+                <div className="space-y-3">
+                  {recentDownloads.map((item, index) => (
+                    <div
+                      key={index}
+                      className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {item.filename}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-1">
+                            {new Date(item.downloadedAt).toLocaleString()}
+                          </p>
+                        </div>
+                        <DocumentArrowDownIcon className="w-4 h-4 text-gray-400 flex-shrink-0 ml-2" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <DocumentArrowDownIcon className="mx-auto h-12 w-12 text-gray-400" />
+                  <p className="mt-2 text-sm text-gray-500">
+                    No recent downloads
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Downloaded reports will appear here
+                  </p>
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* Report Tips */}
+          <Card className="mt-6">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900">
+                Report Tips
+              </h3>
+            </div>
+            <div className="p-6">
+              <ul className="space-y-3 text-sm text-gray-600">
+                <li className="flex items-start">
+                  <span className="text-blue-500 mr-2">•</span>
+                  <span>
+                    The report will be downloaded as a CSV file that can be
+                    opened in Excel or Google Sheets
+                  </span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-blue-500 mr-2">•</span>
+                  <span>
+                    Date range is based on the work order assignment date, not
+                    the completion date
+                  </span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-blue-500 mr-2">•</span>
+                  <span>
+                    Use the status filter to focus on specific types of work
+                    orders
+                  </span>
+                </li>
+                <li className="flex items-start">
+                  <span className="text-blue-500 mr-2">•</span>
+                  <span>
+                    For best results, limit date ranges to 3 months or less for
+                    large datasets
+                  </span>
+                </li>
+              </ul>
+            </div>
+          </Card>
+        </div>
       </div>
     </div>
   );
