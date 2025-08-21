@@ -93,8 +93,8 @@ function AdminReport03Page() {
 
       // Check date range is not too large (optional - e.g., max 1 year)
       const daysDiff = Math.floor((to - from) / (1000 * 60 * 60 * 24));
-      if (daysDiff > 365) {
-        newErrors.toDate = "Date range cannot exceed 1 year";
+      if (daysDiff > 365 * 2) {
+        newErrors.toDate = "Date range cannot exceed 2 year";
         hasErrors = true;
       }
     }
