@@ -269,6 +269,11 @@ import AdminStaffDetailMoreUpgradePage from "./pages/Admin/Staff/Detail/More/Upg
 import AdminSkillSetAssociateSearchCriteriaPage from "./pages/Admin/SkillSet/AssociateSearchCriteriaPage";
 import AdminSkillSetAssociateSearchResultPage from "./pages/Admin/SkillSet/AssociateSearchResultPage";
 
+// Admin incident pages.
+import AdminOrderIncidentListPage from "./pages/Admin/OrderIncident/List/Page";
+import AdminOrderIncidentDetailPage from "./pages/Admin/OrderIncident/Detail/Page";
+import AdminOrderIncidentAddPage from "./pages/Admin/OrderIncident/Add/Page";
+
 ////////////////////////////////////////////////////////////////
 // Associate pages
 ////////////////////////////////////////////////////////////////
@@ -1862,10 +1867,7 @@ function AppRouter() {
               path="/admin/incidents"
               element={
                 <Layout>
-                  <PlaceholderPage
-                    title="Incidents"
-                    description="Incident management system"
-                  />
+                  <AdminOrderIncidentListPage />
                 </Layout>
               }
             />
@@ -1873,7 +1875,7 @@ function AppRouter() {
               path="/admin/incidents/create"
               element={
                 <Layout>
-                  <PlaceholderPage title="Create Incident" />
+                  <AdminOrderIncidentAddPage />
                 </Layout>
               }
             />
@@ -1881,7 +1883,7 @@ function AppRouter() {
               path="/admin/incident/:oid/:oiid"
               element={
                 <Layout>
-                  <PlaceholderPage title="Incident Detail" />
+                  <AdminOrderIncidentDetailPage />
                 </Layout>
               }
             />
