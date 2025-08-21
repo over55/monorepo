@@ -1,9 +1,8 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/OrderIncident/Add/Page.jsx
 
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router";
+import { Link, useNavigate } from "react-router";
 import {
-  useOrderManager,
   useOrderIncidentManager,
   useAuthManager,
 } from "../../../../services/Services";
@@ -26,17 +25,12 @@ import {
 } from "../../../../constants/OrderIncident";
 
 function AdminOrderIncidentAddPage() {
-  const [searchParams] = useSearchParams();
-  const oid = searchParams.get("oid");
-  const orderManager = useOrderManager();
   const orderIncidentManager = useOrderIncidentManager();
   const authManager = useAuthManager();
   const navigate = useNavigate();
 
   // Component states
   const [errors, setErrors] = useState({});
-  const [isFetching, setFetching] = useState(false);
-  const [order, setOrder] = useState({});
   const [startDate, setStartDate] = useState("");
   const [initiator, setInitiator] = useState(0);
   const [title, setTitle] = useState("");
@@ -45,32 +39,10 @@ function AdminOrderIncidentAddPage() {
   const [closingReasonOther, setClosingReasonOther] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [orderId, setOrderId] = useState(""); // Optional order ID
 
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
-  };
-
-  // Fetch order details
-  const fetchOrderDetail = async () => {
-    if (!oid) {
-      setErrors({ general: "Order ID is required" });
-      return;
-    }
-
-    setFetching(true);
-    setErrors({});
-
-    try {
-      const orderData = await orderManager.getOrderDetail(oid, onUnauthorized);
-      setOrder(orderData);
-      console.log("AdminOrderIncidentAddPage: Order data loaded successfully");
-    } catch (error) {
-      console.error("AdminOrderIncidentAddPage: Failed to fetch order:", error);
-      setErrors(error);
-      window.scrollTo(0, 0);
-    } finally {
-      setFetching(false);
-    }
   };
 
   // Handle form submission
@@ -110,7 +82,6 @@ function AdminOrderIncidentAddPage() {
 
     // Prepare payload
     const incidentData = {
-      orderId: oid,
       initiator: initiator,
       title: title,
       description: description,
@@ -118,6 +89,11 @@ function AdminOrderIncidentAddPage() {
       closingReason: closingReason,
       closingReasonOther: closingReasonOther,
     };
+
+    // Only add orderId if provided
+    if (orderId && orderId.trim()) {
+      incidentData.orderId = orderId;
+    }
 
     console.log("onSubmitClick | payload:", incidentData);
 
@@ -160,42 +136,18 @@ function AdminOrderIncidentAddPage() {
         navigate("/login?unauthorized=true");
         return;
       }
-
-      if (oid) {
-        fetchOrderDetail();
-      }
     }
 
     return () => {
       mounted = false;
     };
-  }, [oid]);
+  }, []);
 
-  if (isFetching) {
-    return <Loading message="Loading order details..." />;
-  }
-
-  const breadcrumbItems = oid
-    ? [
-        { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
-        { path: "/admin/orders", label: "Orders", icon: "🔧" },
-        {
-          path: `/admin/order/${oid}`,
-          label: `Order #${oid}`,
-          icon: "📋",
-        },
-        {
-          path: `/admin/order-incidents/${oid}`,
-          label: "Incidents",
-          icon: "🔥",
-        },
-        { label: "New", icon: "➕" },
-      ]
-    : [
-        { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
-        { path: "/admin/order-incidents", label: "Incidents", icon: "🔥" },
-        { label: "New", icon: "➕" },
-      ];
+  const breadcrumbItems = [
+    { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
+    { path: "/admin/order-incidents", label: "Incidents", icon: "🔥" },
+    { label: "New", icon: "➕" },
+  ];
 
   // Radio button component
   const RadioButton = ({ name, value, checked, onChange, label }) => (
@@ -225,13 +177,8 @@ function AdminOrderIncidentAddPage() {
         </Alert>
       )}
 
-      {/* Archived Banner */}
-      {order && order.status === 2 && (
-        <Alert type="info">This order is archived</Alert>
-      )}
-
       {/* Page Title */}
-      <h1>🔥 Order Incident</h1>
+      <h1>🔥 Incident</h1>
       <h4>➕ New</h4>
       <hr />
 
@@ -251,22 +198,29 @@ function AdminOrderIncidentAddPage() {
           </Alert>
         )}
 
-        {oid && order && (
-          <div
-            style={{
-              marginBottom: "20px",
-              padding: "15px",
-              backgroundColor: "#f8f9fa",
-              borderRadius: "4px",
-            }}
-          >
-            <strong>Order:</strong> #{oid} - {order.customerName || "N/A"}
-          </div>
-        )}
-
         <p style={{ marginBottom: "20px" }}>
           Please fill out all the required fields before submitting this form.
         </p>
+
+        {/* Optional Order ID Field */}
+        <Input
+          label="Order ID (Optional)"
+          name="orderId"
+          placeholder="Enter order ID if this incident is related to a specific order"
+          value={orderId}
+          onChange={(e) => setOrderId(e.target.value)}
+          error={errors.orderId}
+        />
+        <div
+          style={{
+            fontSize: "12px",
+            color: "#666",
+            marginTop: "-15px",
+            marginBottom: "20px",
+          }}
+        >
+          Leave blank if this incident is not related to a specific order
+        </div>
 
         {/* Start Date Field */}
         <Input
@@ -390,15 +344,9 @@ function AdminOrderIncidentAddPage() {
             gap: "10px",
           }}
         >
-          {oid ? (
-            <Link to={`/admin/order-incidents/${oid}`}>
-              <Button variant="secondary">← Back to Incidents</Button>
-            </Link>
-          ) : (
-            <Link to="/admin/dashboard">
-              <Button variant="secondary">← Back to Dashboard</Button>
-            </Link>
-          )}
+          <Link to="/admin/order-incidents">
+            <Button variant="secondary">← Back to Incidents</Button>
+          </Link>
 
           <Button
             variant="success"

@@ -9,10 +9,12 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/relvacode/iso8601"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+
 	orderincident_c "github.com/over55/monorepo/cloud/workery-backend/app/orderincident/controller"
 	orderincident_s "github.com/over55/monorepo/cloud/workery-backend/app/orderincident/datastore"
 	"github.com/over55/monorepo/cloud/workery-backend/utils/httperror"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func (h *Handler) unmarshalCreateRequest(ctx context.Context, r *http.Request) (*orderincident_c.OrderIncidentCreateRequestIDO, error) {
@@ -44,6 +46,21 @@ func (h *Handler) unmarshalCreateRequest(ctx context.Context, r *http.Request) (
 
 	wjid, _ := strconv.ParseInt(requestData.OrderID, 10, 64)
 	requestData.FormattedOrderWJID = uint64(wjid)
+
+	// StartDate
+
+	if requestData.StartDate != "" {
+		startDateFormatted, err := iso8601.ParseString(requestData.StartDate)
+		if err != nil {
+			h.Logger.Error("iso8601 parsing error",
+				slog.Any("err", err),
+				slog.String("StartDate", requestData.StartDate),
+				slog.String("json", rawJSON.String()),
+			)
+			return nil, httperror.NewForSingleField(http.StatusBadRequest, "start_date", "payload structure is wrong")
+		}
+		requestData.StartDateFormatted = startDateFormatted
+	}
 
 	return &requestData, nil
 }

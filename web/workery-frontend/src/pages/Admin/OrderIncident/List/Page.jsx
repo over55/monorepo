@@ -1,7 +1,7 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/OrderIncident/List/Page.jsx
 
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useNavigate } from "react-router";
 import {
   useOrderIncidentManager,
   useAuthManager,
@@ -19,7 +19,6 @@ import {
 import { ORDER_INCIDENT_SORT_OPTIONS } from "../../../../constants/FieldOptions";
 
 function AdminOrderIncidentListPage() {
-  const { oid } = useParams();
   const orderIncidentManager = useOrderIncidentManager();
   const authManager = useAuthManager();
   const navigate = useNavigate();
@@ -43,7 +42,6 @@ function AdminOrderIncidentListPage() {
 
     try {
       const params = {
-        orderWjid: oid,
         sortBy: sortBy,
         page: currentPage,
         limit: pageSize,
@@ -85,7 +83,7 @@ function AdminOrderIncidentListPage() {
     return () => {
       mounted = false;
     };
-  }, [oid, sortBy, currentPage, pageSize]);
+  }, [sortBy, currentPage, pageSize]);
 
   if (isFetching) {
     return <Loading message="Loading incidents..." />;
@@ -93,12 +91,6 @@ function AdminOrderIncidentListPage() {
 
   const breadcrumbItems = [
     { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
-    { path: "/admin/orders", label: "Orders", icon: "🔧" },
-    {
-      path: `/admin/order/${oid}`,
-      label: `Order #${oid}`,
-      icon: "📋",
-    },
     { label: "Incidents", icon: "🔥" },
   ];
 
@@ -108,8 +100,34 @@ function AdminOrderIncidentListPage() {
       key: "title",
       label: "Title",
       render: (value, row) => (
-        <Link to={`/admin/incident/${row.id}`}>{value}</Link>
+        <Link to={`/admin/order-incident/${row.id}`}>{value}</Link>
       ),
+    },
+    {
+      key: "orderId",
+      label: "Order",
+      render: (value, row) =>
+        value ? (
+          <Link to={`/admin/order/${value}`}>#{value}</Link>
+        ) : (
+          <span style={{ color: "#999" }}>-</span>
+        ),
+    },
+    {
+      key: "initiator",
+      label: "Initiated By",
+      render: (value) => {
+        switch (value) {
+          case 1:
+            return "Client";
+          case 2:
+            return "Associate";
+          case 3:
+            return "Staff";
+          default:
+            return "-";
+        }
+      },
     },
     {
       key: "createdAt",
@@ -130,7 +148,7 @@ function AdminOrderIncidentListPage() {
       label: "Actions",
       align: "right",
       render: (value, row) => (
-        <Link to={`/admin/incident/${row.id}`}>
+        <Link to={`/admin/order-incident/${row.id}`}>
           <Button size="sm">View →</Button>
         </Link>
       ),
@@ -142,7 +160,7 @@ function AdminOrderIncidentListPage() {
       <Breadcrumb items={breadcrumbItems} />
 
       {/* Page Title */}
-      <h1>🔥 Order Incidents</h1>
+      <h1>🔥 Incidents</h1>
       <hr />
 
       {/* Page Menu Options */}
@@ -156,11 +174,8 @@ function AdminOrderIncidentListPage() {
               flexWrap: "wrap",
             }}
           >
-            <Link to={`/admin/incidents/create?oid=${oid}`}>
+            <Link to="/admin/incidents/create">
               <Button variant="danger">➕ Add Incident</Button>
-            </Link>
-            <Link to={`/admin/order/${oid}/more`}>
-              <Button variant="secondary">← Back to Order</Button>
             </Link>
           </div>
         </Card>
@@ -170,7 +185,7 @@ function AdminOrderIncidentListPage() {
       <Card
         title="📋 Incident List"
         actions={
-          <Link to={`/admin/order-incident/add?oid=${oid}`}>
+          <Link to="/admin/incidents/create">
             <Button variant="primary">➕ New</Button>
           </Link>
         }
@@ -263,29 +278,14 @@ function AdminOrderIncidentListPage() {
               <strong>📋 No Incidents</strong>
             </p>
             <p>
-              No incidents found for this order.{" "}
-              <Link to={`/admin/order-incident/add?oid=${oid}`}>
+              No incidents found.{" "}
+              <Link to="/admin/incidents/create">
                 <strong>Click here →</strong>
               </Link>{" "}
               to create your first incident.
             </p>
           </Alert>
         )}
-
-        {/* Action Buttons */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginTop: "30px",
-            flexWrap: "wrap",
-            gap: "10px",
-          }}
-        >
-          <Link to={`/admin/order/${oid}/more`}>
-            <Button variant="secondary">← Back to Order</Button>
-          </Link>
-        </div>
       </Card>
     </div>
   );

@@ -16,7 +16,8 @@ import (
 
 type OrderIncidentUpdateRequestIDO struct {
 	ID                 primitive.ObjectID `bson:"id" json:"id"`
-	StartDate          time.Time          `bson:"start_date" json:"start_date"`
+	StartDate          string             `bson:"start_date" json:"start_date"`
+	StartDateFormatted time.Time          `bson:"start_date" json:"-"`
 	Initiator          int8               `bson:"initiator" json:"initiator"`
 	Title              string             `bson:"title" json:"title"`
 	Description        string             `bson:"description" json:"description"`
@@ -42,7 +43,7 @@ func ValidateUpdateRequest(dirtyData *OrderIncidentUpdateRequestIDO) error {
 	if dirtyData.ClosingReason == 1 && dirtyData.ClosingReasonOther == "" {
 		e["closing_reason_other"] = "missing value"
 	}
-	if dirtyData.StartDate.IsZero() {
+	if dirtyData.StartDate == "" {
 		e["start_date"] = "missing value"
 	}
 
@@ -111,7 +112,7 @@ func (impl *OrderIncidentControllerImpl) UpdateByID(ctx context.Context, request
 
 		ou.TenantID = tid
 		ou.Initiator = requestData.Initiator
-		ou.StartDate = requestData.StartDate
+		ou.StartDate = requestData.StartDateFormatted
 		ou.Title = requestData.Title
 		ou.Description = requestData.Description
 		ou.ClosingReason = requestData.ClosingReason

@@ -19,7 +19,8 @@ type OrderIncidentCreateRequestIDO struct {
 	OrderID            string             `bson:"order_id" json:"order_id"`
 	FormattedOrderID   primitive.ObjectID `bson:"order_id"`
 	FormattedOrderWJID uint64             `bson:"order_id"`
-	StartDate          time.Time          `bson:"start_date" json:"start_date"`
+	StartDate          string             `bson:"start_date" json:"start_date"`
+	StartDateFormatted time.Time          `bson:"start_date" json:"-"`
 	Initiator          int8               `bson:"initiator" json:"initiator"`
 	Title              string             `bson:"title" json:"title"`
 	Description        string             `bson:"description" json:"description"`
@@ -52,7 +53,7 @@ func ValidateCreateRequest(dirtyData *OrderIncidentCreateRequestIDO) error {
 	if dirtyData.ClosingReason == 1 && dirtyData.ClosingReasonOther == "" {
 		e["closing_reason_other"] = "missing value"
 	}
-	if dirtyData.StartDate.IsZero() {
+	if dirtyData.StartDate == "" {
 		e["start_date"] = "missing value"
 	}
 
@@ -169,7 +170,7 @@ func (impl *OrderIncidentControllerImpl) Create(ctx context.Context, requestData
 		i.Description = requestData.Description
 		i.ClosingReason = requestData.ClosingReason
 		i.ClosingReasonOther = requestData.ClosingReasonOther
-		i.StartDate = requestData.StartDate
+		i.StartDate = requestData.StartDateFormatted
 		i.Status = orderincident_s.OrderIncidentStatusActive
 
 		// Populate the related data.

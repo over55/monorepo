@@ -3,7 +3,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import {
-  useOrderManager,
   useOrderIncidentManager,
   useAuthManager,
 } from "../../../../services/Services";
@@ -15,15 +14,11 @@ import {
   Loading,
   Breadcrumb,
   Modal,
-  Input,
   TextArea,
-  Select,
-  Table,
 } from "../../../../components/UI";
 
 function AdminOrderIncidentDetailPage() {
   const { oiid } = useParams();
-  const orderManager = useOrderManager();
   const orderIncidentManager = useOrderIncidentManager();
   const authManager = useAuthManager();
   const navigate = useNavigate();
@@ -31,7 +26,6 @@ function AdminOrderIncidentDetailPage() {
   // Component states
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
-  const [order, setOrder] = useState({});
   const [incident, setIncident] = useState(null);
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [newComment, setNewComment] = useState("");
@@ -52,15 +46,6 @@ function AdminOrderIncidentDetailPage() {
         onUnauthorized,
       );
       setIncident(incidentData);
-
-      // Fetch order details if we have the order ID
-      if (incidentData.orderId) {
-        const orderData = await orderManager.getOrderDetail(
-          incidentData.orderId,
-          onUnauthorized,
-        );
-        setOrder(orderData);
-      }
 
       console.log("AdminOrderIncidentDetailPage: Data loaded successfully");
     } catch (error) {
@@ -119,27 +104,11 @@ function AdminOrderIncidentDetailPage() {
     return <Loading message="Loading incident details..." />;
   }
 
-  const breadcrumbItems = incident?.orderId
-    ? [
-        { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
-        { path: "/admin/orders", label: "Orders", icon: "🔧" },
-        {
-          path: `/admin/order/${incident.orderId}`,
-          label: `Order #${incident.orderId}`,
-          icon: "📋",
-        },
-        {
-          path: `/admin/order-incidents/${incident.orderId}`,
-          label: "Incidents",
-          icon: "🔥",
-        },
-        { label: "Detail", icon: "ℹ️" },
-      ]
-    : [
-        { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
-        { path: "/admin/order-incidents", label: "Incidents", icon: "🔥" },
-        { label: "Detail", icon: "ℹ️" },
-      ];
+  const breadcrumbItems = [
+    { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
+    { path: "/admin/order-incidents", label: "Incidents", icon: "🔥" },
+    { label: "Detail", icon: "ℹ️" },
+  ];
 
   // Format initiator label
   const getInitiatorLabel = (initiator) => {
@@ -159,13 +128,8 @@ function AdminOrderIncidentDetailPage() {
     <div style={globalStyles.container}>
       <Breadcrumb items={breadcrumbItems} />
 
-      {/* Archived Banner */}
-      {order && order.status === 2 && (
-        <Alert type="info">This order is archived</Alert>
-      )}
-
       {/* Page Title */}
-      <h1>🔥 Order Incident</h1>
+      <h1>🔥 Incident</h1>
       <h4>ℹ️ Detail</h4>
       <hr />
 
@@ -174,11 +138,7 @@ function AdminOrderIncidentDetailPage() {
         title="📋 Incident Detail"
         actions={
           <>
-            <Button
-              variant="primary"
-              onClick={() => setShowCommentModal(true)}
-              disabled={order.status === 2}
-            >
+            <Button variant="primary" onClick={() => setShowCommentModal(true)}>
               ➕ New Comment
             </Button>
           </>
@@ -214,66 +174,6 @@ function AdminOrderIncidentDetailPage() {
                         backgroundColor: "#f5f5f5",
                       }}
                     >
-                      Order:
-                    </td>
-                    <td style={{ padding: "10px" }}>
-                      {incident.orderId ? (
-                        <Link to={`/admin/order/${incident.orderId}`}>
-                          Order #{incident.orderId}
-                        </Link>
-                      ) : (
-                        "N/A"
-                      )}
-                    </td>
-                  </tr>
-                  <tr style={{ borderBottom: "1px solid #ddd" }}>
-                    <td
-                      style={{
-                        padding: "10px",
-                        fontWeight: "600",
-                        backgroundColor: "#f5f5f5",
-                      }}
-                    >
-                      Client:
-                    </td>
-                    <td style={{ padding: "10px" }}>
-                      {order.customerId ? (
-                        <Link to={`/admin/customer/${order.customerId}`}>
-                          {order.customerName || "N/A"}
-                        </Link>
-                      ) : (
-                        "N/A"
-                      )}
-                    </td>
-                  </tr>
-                  <tr style={{ borderBottom: "1px solid #ddd" }}>
-                    <td
-                      style={{
-                        padding: "10px",
-                        fontWeight: "600",
-                        backgroundColor: "#f5f5f5",
-                      }}
-                    >
-                      Associate:
-                    </td>
-                    <td style={{ padding: "10px" }}>
-                      {order.associateId ? (
-                        <Link to={`/admin/associate/${order.associateId}`}>
-                          {order.associateName || "N/A"}
-                        </Link>
-                      ) : (
-                        "Not assigned"
-                      )}
-                    </td>
-                  </tr>
-                  <tr style={{ borderBottom: "1px solid #ddd" }}>
-                    <td
-                      style={{
-                        padding: "10px",
-                        fontWeight: "600",
-                        backgroundColor: "#f5f5f5",
-                      }}
-                    >
                       Title:
                     </td>
                     <td style={{ padding: "10px" }}>{incident.title}</td>
@@ -289,6 +189,28 @@ function AdminOrderIncidentDetailPage() {
                       Description:
                     </td>
                     <td style={{ padding: "10px" }}>{incident.description}</td>
+                  </tr>
+                  <tr style={{ borderBottom: "1px solid #ddd" }}>
+                    <td
+                      style={{
+                        padding: "10px",
+                        fontWeight: "600",
+                        backgroundColor: "#f5f5f5",
+                      }}
+                    >
+                      Related Order:
+                    </td>
+                    <td style={{ padding: "10px" }}>
+                      {incident.orderId ? (
+                        <Link to={`/admin/order/${incident.orderId}`}>
+                          Order #{incident.orderId}
+                        </Link>
+                      ) : (
+                        <span style={{ color: "#999" }}>
+                          Not linked to order
+                        </span>
+                      )}
+                    </td>
                   </tr>
                   <tr style={{ borderBottom: "1px solid #ddd" }}>
                     <td
@@ -329,7 +251,11 @@ function AdminOrderIncidentDetailPage() {
                       Status:
                     </td>
                     <td style={{ padding: "10px" }}>
-                      {incident.closingReason ? "Closed" : "Open"}
+                      {incident.closingReason ? (
+                        <span style={{ color: "green" }}>Closed</span>
+                      ) : (
+                        <span style={{ color: "orange" }}>Open</span>
+                      )}
                     </td>
                   </tr>
                   {incident.closingReason && (
@@ -441,16 +367,13 @@ function AdminOrderIncidentDetailPage() {
                 gap: "10px",
               }}
             >
-              {incident.orderId && (
-                <Link to={`/admin/order-incidents/${incident.orderId}`}>
-                  <Button variant="secondary">← Back to Incidents</Button>
-                </Link>
-              )}
+              <Link to="/admin/order-incidents">
+                <Button variant="secondary">← Back to Incidents</Button>
+              </Link>
 
               <Button
                 variant="primary"
                 onClick={() => setShowCommentModal(true)}
-                disabled={order.status === 2}
               >
                 ➕ New Comment
               </Button>
