@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import {
   useOrderIncidentManager,
+  useOrderManager,
   useAuthManager,
 } from "../../../../services/Services";
 import { theme, globalStyles } from "../../../../constants/Theme";
@@ -16,6 +17,8 @@ import {
   Input,
   TextArea,
   Select,
+  Modal,
+  Table,
 } from "../../../../components/UI";
 import { ORDER_INCIDENT_CLOSING_REASON_OPTIONS_WITH_EMPTY_OPTIONS } from "../../../../constants/FieldOptions";
 import {
@@ -23,9 +26,11 @@ import {
   ORDER_INCIDENT_INIATOR_ASSOCIATE,
   ORDER_INCIDENT_INIATOR_STAFF,
 } from "../../../../constants/OrderIncident";
+import { MagnifyingGlassIcon, XMarkIcon } from "@heroicons/react/24/outline";
 
 function AdminOrderIncidentAddPage() {
   const orderIncidentManager = useOrderIncidentManager();
+  const orderManager = useOrderManager();
   const authManager = useAuthManager();
   const navigate = useNavigate();
 
@@ -39,10 +44,69 @@ function AdminOrderIncidentAddPage() {
   const [closingReasonOther, setClosingReasonOther] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-  const [orderId, setOrderId] = useState(""); // Optional order ID
+
+  // Order selection states
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showOrderModal, setShowOrderModal] = useState(false);
+  const [orderSearchQuery, setOrderSearchQuery] = useState("");
+  const [ordersList, setOrdersList] = useState([]);
+  const [isLoadingOrders, setIsLoadingOrders] = useState(false);
+  const [orderSearchPage, setOrderSearchPage] = useState(1);
 
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
+  };
+
+  // Fetch orders for selection modal
+  const fetchOrders = async (search = "") => {
+    setIsLoadingOrders(true);
+    try {
+      const params = {
+        page: orderSearchPage,
+        limit: 10,
+        search: search,
+        sortBy: "created_at,DESC",
+      };
+
+      const data = await orderManager.getOrders(params, onUnauthorized);
+      setOrdersList(data.results || []);
+    } catch (error) {
+      console.error("Failed to fetch orders:", error);
+      setOrdersList([]);
+    } finally {
+      setIsLoadingOrders(false);
+    }
+  };
+
+  // Handle order search
+  const handleOrderSearch = (e) => {
+    const query = e.target.value;
+    setOrderSearchQuery(query);
+
+    // Debounce search
+    const timeoutId = setTimeout(() => {
+      fetchOrders(query);
+    }, 500);
+
+    return () => clearTimeout(timeoutId);
+  };
+
+  // Handle order selection
+  const handleOrderSelect = (order) => {
+    setSelectedOrder(order);
+    setShowOrderModal(false);
+    setOrderSearchQuery("");
+  };
+
+  // Remove selected order
+  const handleRemoveOrder = () => {
+    setSelectedOrder(null);
+  };
+
+  // Open order modal
+  const handleOpenOrderModal = () => {
+    setShowOrderModal(true);
+    fetchOrders();
   };
 
   // Handle form submission
@@ -90,9 +154,9 @@ function AdminOrderIncidentAddPage() {
       closingReasonOther: closingReasonOther,
     };
 
-    // Only add orderId if provided
-    if (orderId && orderId.trim()) {
-      incidentData.orderId = orderId;
+    // Add orderId if an order is selected
+    if (selectedOrder) {
+      incidentData.orderId = selectedOrder.id || selectedOrder.wjid;
     }
 
     console.log("onSubmitClick | payload:", incidentData);
@@ -166,6 +230,22 @@ function AdminOrderIncidentAddPage() {
     </label>
   );
 
+  // Format order status
+  const getOrderStatusLabel = (status) => {
+    const statusMap = {
+      1: "New",
+      2: "Declined",
+      3: "Pending",
+      4: "Cancelled",
+      5: "Ongoing",
+      6: "In Progress",
+      7: "Completed but Unpaid",
+      8: "Completed and Paid",
+      9: "Archived",
+    };
+    return statusMap[status] || "Unknown";
+  };
+
   return (
     <div style={globalStyles.container}>
       <Breadcrumb items={breadcrumbItems} />
@@ -202,24 +282,86 @@ function AdminOrderIncidentAddPage() {
           Please fill out all the required fields before submitting this form.
         </p>
 
-        {/* Optional Order ID Field */}
-        <Input
-          label="Order ID (Optional)"
-          name="orderId"
-          placeholder="Enter order ID if this incident is related to a specific order"
-          value={orderId}
-          onChange={(e) => setOrderId(e.target.value)}
-          error={errors.orderId}
-        />
-        <div
-          style={{
-            fontSize: "12px",
-            color: "#666",
-            marginTop: "-15px",
-            marginBottom: "20px",
-          }}
-        >
-          Leave blank if this incident is not related to a specific order
+        {/* Work Order Selection */}
+        <div style={{ marginBottom: "20px" }}>
+          <label style={globalStyles.label}>Work Order (Optional)</label>
+
+          {selectedOrder ? (
+            <div
+              style={{
+                padding: "15px",
+                backgroundColor: "#f8f9fa",
+                border: "1px solid #dee2e6",
+                borderRadius: "4px",
+                marginBottom: "10px",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "start",
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  <strong>
+                    Order #{selectedOrder.wjid || selectedOrder.id}
+                  </strong>
+                  <div
+                    style={{
+                      fontSize: "14px",
+                      color: "#666",
+                      marginTop: "5px",
+                    }}
+                  >
+                    <div>Customer: {selectedOrder.customerName || "N/A"}</div>
+                    <div>
+                      Associate: {selectedOrder.associateName || "Not assigned"}
+                    </div>
+                    <div>
+                      Status: {getOrderStatusLabel(selectedOrder.status)}
+                    </div>
+                    {selectedOrder.description && (
+                      <div>Description: {selectedOrder.description}</div>
+                    )}
+                  </div>
+                </div>
+                <button
+                  onClick={handleRemoveOrder}
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "#dc3545",
+                    cursor: "pointer",
+                    padding: "5px",
+                  }}
+                  title="Remove order"
+                >
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <Button
+                onClick={handleOpenOrderModal}
+                variant="outline"
+                icon={MagnifyingGlassIcon}
+              >
+                Select Work Order
+              </Button>
+              <div
+                style={{
+                  fontSize: "12px",
+                  color: "#666",
+                  marginTop: "10px",
+                }}
+              >
+                Click to search and select a work order, or leave blank if this
+                incident is not related to a specific order
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Start Date Field */}
@@ -357,6 +499,114 @@ function AdminOrderIncidentAddPage() {
           </Button>
         </div>
       </Card>
+
+      {/* Order Selection Modal */}
+      <Modal
+        isOpen={showOrderModal}
+        onClose={() => {
+          setShowOrderModal(false);
+          setOrderSearchQuery("");
+        }}
+        title="Select Work Order"
+        size="lg"
+      >
+        <div style={{ marginBottom: "20px" }}>
+          <Input
+            placeholder="Search by order ID, customer name, or description..."
+            value={orderSearchQuery}
+            onChange={handleOrderSearch}
+            icon={MagnifyingGlassIcon}
+          />
+        </div>
+
+        {isLoadingOrders ? (
+          <div style={{ textAlign: "center", padding: "40px" }}>
+            <Loading size="md" />
+          </div>
+        ) : ordersList.length > 0 ? (
+          <div style={{ maxHeight: "400px", overflowY: "auto" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+              <thead>
+                <tr style={{ borderBottom: "2px solid #dee2e6" }}>
+                  <th style={{ padding: "10px", textAlign: "left" }}>
+                    Order ID
+                  </th>
+                  <th style={{ padding: "10px", textAlign: "left" }}>
+                    Customer
+                  </th>
+                  <th style={{ padding: "10px", textAlign: "left" }}>
+                    Associate
+                  </th>
+                  <th style={{ padding: "10px", textAlign: "left" }}>Status</th>
+                  <th style={{ padding: "10px", textAlign: "center" }}>
+                    Action
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {ordersList.map((order) => (
+                  <tr
+                    key={order.id || order.wjid}
+                    style={{
+                      borderBottom: "1px solid #dee2e6",
+                      cursor: "pointer",
+                    }}
+                    onClick={() => handleOrderSelect(order)}
+                  >
+                    <td style={{ padding: "10px" }}>
+                      #{order.wjid || order.id}
+                    </td>
+                    <td style={{ padding: "10px" }}>
+                      {order.customerName || "N/A"}
+                    </td>
+                    <td style={{ padding: "10px" }}>
+                      {order.associateName || "Not assigned"}
+                    </td>
+                    <td style={{ padding: "10px" }}>
+                      {getOrderStatusLabel(order.status)}
+                    </td>
+                    <td style={{ padding: "10px", textAlign: "center" }}>
+                      <Button
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOrderSelect(order);
+                        }}
+                      >
+                        Select
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <Alert type="info">
+            {orderSearchQuery
+              ? "No orders found matching your search."
+              : "No orders available."}
+          </Alert>
+        )}
+
+        <div
+          style={{
+            marginTop: "20px",
+            display: "flex",
+            justifyContent: "flex-end",
+          }}
+        >
+          <Button
+            onClick={() => {
+              setShowOrderModal(false);
+              setOrderSearchQuery("");
+            }}
+            variant="secondary"
+          >
+            Cancel
+          </Button>
+        </div>
+      </Modal>
     </div>
   );
 }
