@@ -27,10 +27,10 @@ import {
   ClipboardDocumentListIcon,
   ChevronLeftIcon,
 } from "@heroicons/react/24/outline";
-
-// Customer type constants
-const RESIDENTIAL_CUSTOMER_TYPE_OF_ID = 2;
-const COMMERCIAL_CUSTOMER_TYPE_OF_ID = 3;
+import {
+  RESIDENTIAL_CUSTOMER_TYPE_OF_ID,
+  COMMERCIAL_CUSTOMER_TYPE_OF_ID,
+} from "../../../../constants/Customer";
 
 function AdminCustomerAddStep1PartBPage() {
   const authManager = useAuthManager();

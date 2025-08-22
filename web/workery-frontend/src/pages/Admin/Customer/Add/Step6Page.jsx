@@ -24,10 +24,10 @@ import {
   HowHearAboutUsDisplay,
   TagsDisplay,
 } from "../../../../components/Display";
-
-// Customer type constants
-const COMMERCIAL_CUSTOMER_TYPE_OF_ID = 3;
-const CLIENT_PHONE_TYPE_WORK = 1;
+import {
+  COMMERCIAL_CUSTOMER_TYPE_OF_ID,
+  CLIENT_PHONE_TYPE_WORK,
+} from "../../../../constants/Customer";
 
 // Options for display
 const CLIENT_TYPE_OPTIONS = [

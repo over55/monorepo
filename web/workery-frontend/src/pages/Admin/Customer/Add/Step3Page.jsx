@@ -19,9 +19,11 @@ import {
   CheckIcon,
   ArrowRightIcon,
 } from "@heroicons/react/24/outline";
-
-const COMMERCIAL_CUSTOMER_TYPE_OF_ID = 2;
-const CUSTOMER_PHONE_TYPE_WORK = 2;
+import {
+  CUSTOMER_PHONE_TYPE_WORK,
+  RESIDENTIAL_CUSTOMER_TYPE_OF_ID,
+  COMMERCIAL_CUSTOMER_TYPE_OF_ID,
+} from "../../../../constants/Customer";
 
 function AdminCustomerAddStep3Page() {
   const authManager = useAuthManager();

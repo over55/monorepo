@@ -20,9 +20,11 @@ import {
   UserGroupIcon,
 } from "@heroicons/react/24/outline";
 
-// Customer type constants - matching Step3Page.jsx
-const RESIDENTIAL_CUSTOMER_TYPE_OF_ID = 1;
-const COMMERCIAL_CUSTOMER_TYPE_OF_ID = 2;
+// Import customer type constants from the central constants file
+import {
+  RESIDENTIAL_CUSTOMER_TYPE_OF_ID,
+  COMMERCIAL_CUSTOMER_TYPE_OF_ID,
+} from "../../../../constants/Customer";
 
 function AdminCustomerAddStep2Page() {
   const authManager = useAuthManager();
@@ -76,6 +78,17 @@ function AdminCustomerAddStep2Page() {
         JSON.stringify(updatedCustomerData),
       );
       setCustomerData(updatedCustomerData);
+
+      console.log(
+        "Selected customer type:",
+        typeId,
+        "which maps to:",
+        typeId === RESIDENTIAL_CUSTOMER_TYPE_OF_ID
+          ? "Residential"
+          : typeId === COMMERCIAL_CUSTOMER_TYPE_OF_ID
+            ? "Commercial"
+            : "Unknown",
+      );
     } catch (error) {
       console.error("Error saving customer state:", error);
     }

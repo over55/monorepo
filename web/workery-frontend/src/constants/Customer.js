@@ -4,6 +4,12 @@ export const UNASSIGNED_CUSTOMER_TYPE_OF_ID = 1;
 export const RESIDENTIAL_CUSTOMER_TYPE_OF_ID = 2;
 export const COMMERCIAL_CUSTOMER_TYPE_OF_ID = 3;
 
+// Phone Type Constants
+export const CLIENT_PHONE_TYPE_LANDLINE = 1;
+export const CLIENT_PHONE_TYPE_MOBILE = 2;
+export const CLIENT_PHONE_TYPE_WORK = 3;
+export const CUSTOMER_PHONE_TYPE_WORK = 3;
+
 // Constants for filtering and sorting
 export const CUSTOMER_STATUS_OPTIONS = [
   { value: "", label: "All Statuses" },
@@ -30,5 +36,3 @@ export const PAGE_SIZE_OPTIONS = [
   { value: 50, label: "50 per page" },
   { value: 100, label: "100 per page" },
 ];
-
-export const CLIENT_PHONE_TYPE_WORK = 1;
