@@ -46,15 +46,13 @@ import {
   useAssociateManager,
   useAuthManager,
 } from "../../../../services/Services";
-import {
-  InsuranceRequirementsDisplay,
-  ServiceFeeDisplay,
-} from "../../../../components/Display";
+import { InsuranceRequirementsDisplay } from "../../../../components/Display";
 import {
   HowHearAboutUsDisplay,
   VehicleTypesDisplay,
   TagsDisplay,
   SkillSetsDisplay,
+  ServiceFeeDisplay,
 } from "../../../../components/business/displays";
 
 // Constants

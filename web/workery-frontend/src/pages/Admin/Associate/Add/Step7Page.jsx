@@ -22,15 +22,13 @@ import {
   ChartBarSquareIcon,
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
-import {
-  InsuranceRequirementsDisplay,
-  ServiceFeeDisplay,
-} from "../../../../components/Display";
+import { InsuranceRequirementsDisplay } from "../../../../components/Display";
 import {
   HowHearAboutUsDisplay,
   VehicleTypesDisplay,
   TagsDisplay,
   SkillSetsDisplay,
+  ServiceFeeDisplay,
 } from "../../../../components/business/displays";
 
 const COMMERCIAL_ASSOCIATE_TYPE_OF_ID = 3;
