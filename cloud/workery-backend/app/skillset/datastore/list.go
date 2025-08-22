@@ -29,7 +29,10 @@ func (impl SkillSetStorerImpl) ListByFilter(ctx context.Context, f *SkillSetPagi
 	// 	filter["created_at"] = bson.M{"$gt": f.CreatedAtGTE} // Add the cursor condition to the filter
 	// }
 	if f.SearchText != "" {
-		filter["sub_category"] = bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}
+		filter["$or"] = []bson.M{
+			{"sub_category": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+			{"category": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+		}
 	}
 
 	// impl.Logger.Debug("listing filter:",
