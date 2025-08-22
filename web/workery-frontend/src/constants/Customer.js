@@ -10,11 +10,14 @@ export const CLIENT_PHONE_TYPE_MOBILE = 2;
 export const CLIENT_PHONE_TYPE_WORK = 3;
 export const CUSTOMER_PHONE_TYPE_WORK = 3;
 
+export const CUSTOMER_STATUS_ACTIVE = 1;
+export const CUSTOMER_STATUS_INACTIVE = 2;
+
 // Constants for filtering and sorting
 export const CUSTOMER_STATUS_OPTIONS = [
   { value: "", label: "All Statuses" },
-  { value: "1", label: "Active" },
-  { value: "2", label: "Inactive" },
+  { value: String(CUSTOMER_STATUS_ACTIVE), label: "Active" },
+  { value: String(CUSTOMER_STATUS_INACTIVE), label: "Inactive" },
 ];
 
 export const CUSTOMER_TYPE_OPTIONS = [
@@ -36,3 +39,14 @@ export const PAGE_SIZE_OPTIONS = [
   { value: 50, label: "50 per page" },
   { value: 100, label: "100 per page" },
 ];
+
+// Deactivation reason constants
+export const CUSTOMER_DEACTIVATION_REASON_MAP = {
+  1: "Other",
+  2: "Blacklisted",
+  3: "Moved",
+  4: "Deceased",
+  5: "Do not contact",
+  6: "Duplicate",
+  7: "Other",
+};
