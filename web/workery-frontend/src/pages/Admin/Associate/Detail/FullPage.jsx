@@ -47,13 +47,15 @@ import {
   useAuthManager,
 } from "../../../../services/Services";
 import {
-  TagsDisplay,
   SkillSetsDisplay,
   InsuranceRequirementsDisplay,
-  HowHearAboutUsDisplay,
   ServiceFeeDisplay,
-  VehicleTypesDisplay,
 } from "../../../../components/Display";
+import {
+  HowHearAboutUsDisplay,
+  VehicleTypesDisplay,
+  TagsDisplay,
+} from "../../../../components/business/displays";
 
 // Constants
 const COMMERCIAL_ASSOCIATE_TYPE_OF_ID = 3;

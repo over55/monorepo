@@ -12,10 +12,12 @@ import {
 } from "../../../../../components/UI";
 import {
   SkillSetsDisplay,
-  TagsDisplay,
-  VehicleTypesDisplay,
   InsuranceRequirementsDisplay,
 } from "../../../../../components/Display";
+import {
+  VehicleTypesDisplay,
+  TagsDisplay,
+} from "../../../../../components/business/displays";
 import {
   CLIENT_PHONE_TYPE_OF_MAP,
   ASSOCIATE_PHONE_TYPE_OF_MAP,

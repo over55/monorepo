@@ -27,11 +27,11 @@ import {
   GlobeAltIcon,
 } from "@heroicons/react/24/outline";
 import { useStaffManager, useAuthManager } from "../../../../services/Services";
+import { SkillSetsDisplay } from "../../../../components/Display";
 import {
-  TagsDisplay,
   HowHearAboutUsDisplay,
-  SkillSetsDisplay,
-} from "../../../../components/Display";
+  TagsDisplay,
+} from "../../../../components/business/displays";
 
 // Constants
 const STAFF_TYPE_MAP = {

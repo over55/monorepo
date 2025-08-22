@@ -11,7 +11,8 @@ import {
   Loading,
   Breadcrumb,
 } from "../../../../components/UI";
-import { SkillSetsDisplay, TagsDisplay } from "../../../../components/Display";
+import { SkillSetsDisplay } from "../../../../components/Display";
+import { TagsDisplay } from "../../../../components/business/displays";
 import {
   TASK_ITEM_TYPE_ASSIGN_ASSOCIATE,
   TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_AND_CUSTOMER_AGREED_TO_MEET,

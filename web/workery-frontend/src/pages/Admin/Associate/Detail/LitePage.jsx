@@ -25,7 +25,8 @@ import {
   useAssociateManager,
   useAuthManager,
 } from "../../../../services/Services";
-import { TagsDisplay, SkillSetsDisplay } from "../../../../components/Display";
+import { SkillSetsDisplay } from "../../../../components/Display";
+import { TagsDisplay } from "../../../../components/business/displays";
 
 // Constants
 const COMMERCIAL_ASSOCIATE_TYPE_OF_ID = 3;

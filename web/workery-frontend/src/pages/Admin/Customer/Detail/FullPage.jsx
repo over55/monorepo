@@ -17,7 +17,7 @@ import {
 import {
   HowHearAboutUsDisplay,
   TagsDisplay,
-} from "../../../../components/Display";
+} from "../../../../components/business/displays";
 
 // Constants
 const COMMERCIAL_CUSTOMER_TYPE_OF_ID = 3;

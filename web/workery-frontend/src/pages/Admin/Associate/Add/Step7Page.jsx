@@ -23,13 +23,15 @@ import {
   CheckCircleIcon,
 } from "@heroicons/react/24/outline";
 import {
-  HowHearAboutUsDisplay,
   InsuranceRequirementsDisplay,
   ServiceFeeDisplay,
   SkillSetsDisplay,
-  TagsDisplay,
-  VehicleTypesDisplay,
 } from "../../../../components/Display";
+import {
+  HowHearAboutUsDisplay,
+  VehicleTypesDisplay,
+  TagsDisplay,
+} from "../../../../components/business/displays";
 
 const COMMERCIAL_ASSOCIATE_TYPE_OF_ID = 3;
 const ASSOCIATE_PHONE_TYPE_WORK = 2;

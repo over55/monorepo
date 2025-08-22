@@ -14,7 +14,7 @@ import {
   Loading,
   Breadcrumb,
 } from "../../../../components/UI";
-import { TagsDisplay } from "../../../../components/Display";
+import { TagsDisplay } from "../../../../components/business/displays";
 
 // Constants
 const COMMERCIAL_CUSTOMER_TYPE_OF_ID = 3;

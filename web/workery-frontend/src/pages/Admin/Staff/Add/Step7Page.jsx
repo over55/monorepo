@@ -22,11 +22,6 @@ import {
   UsersIcon,
 } from "@heroicons/react/24/outline";
 import {
-  TagsDisplay,
-  HowHearAboutUsDisplay,
-  VehicleTypesDisplay,
-} from "../../../../components/Display";
-import {
   GENDER_OPTIONS_WITH_EMPTY_OPTION,
   IDENTIFY_AS_OPTIONS,
 } from "../../../../constants/FieldOptions";
@@ -35,6 +30,11 @@ import {
   STAFF_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS,
   STAFF_GENDER_OTHER,
 } from "../../../../constants/Staff";
+import {
+  HowHearAboutUsDisplay,
+  VehicleTypesDisplay,
+  TagsDisplay,
+} from "../../../../components/business/displays";
 
 function AdminStaffAddStep7Page() {
   const navigate = useNavigate();

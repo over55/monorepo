@@ -23,7 +23,8 @@ import {
 import {
   HowHearAboutUsDisplay,
   TagsDisplay,
-} from "../../../../components/Display";
+} from "../../../../components/business/displays";
+
 import {
   COMMERCIAL_CUSTOMER_TYPE_OF_ID,
   CLIENT_PHONE_TYPE_WORK,

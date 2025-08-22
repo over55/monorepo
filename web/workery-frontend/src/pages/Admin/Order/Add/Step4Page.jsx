@@ -16,7 +16,8 @@ import {
   Breadcrumb,
   Modal,
 } from "../../../../components/UI";
-import { SkillSetsDisplay, TagsDisplay } from "../../../../components/Display";
+import { SkillSetsDisplay } from "../../../../components/Display";
+import { TagsDisplay } from "../../../../components/business/displays";
 
 function AdminOrderAddStep4Page() {
   const authManager = useAuthManager();

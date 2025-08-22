@@ -22,9 +22,9 @@ import {
 } from "@heroicons/react/24/outline";
 import { useStaffManager, useAuthManager } from "../../../../services/Services";
 import {
-  TagsDisplay,
   HowHearAboutUsDisplay,
-} from "../../../../components/Display";
+  TagsDisplay,
+} from "../../../../components/business/displays";
 
 // Constants
 const STAFF_TYPE_EXECUTIVE = 1;
