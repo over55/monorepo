@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useSkillSetManager } from "../../../../../services/Services";
+import { InsuranceRequirementsMultiSelect } from "../../../../../components/business/selects";
 import {
   ChartBarIcon,
   Cog6ToothIcon,
@@ -29,13 +30,13 @@ function SettingSkillSetUpdatePage() {
   const skillSetManager = useSkillSetManager();
   const navigate = useNavigate();
 
-  // Form state
+  // Form state - Note: insuranceRequirements is now an array
   const [formData, setFormData] = useState({
     category: "",
     subCategory: "",
     description: "",
     status: 1,
-    insuranceRequirement: 1,
+    insuranceRequirements: [], // Changed from single value to array
   });
 
   // Component state
@@ -49,6 +50,15 @@ function SettingSkillSetUpdatePage() {
 
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
+  };
+
+  // Helper function to compare arrays
+  const arraysEqual = (a, b) => {
+    if (!Array.isArray(a) || !Array.isArray(b)) return false;
+    if (a.length !== b.length) return false;
+    const sortedA = [...a].sort();
+    const sortedB = [...b].sort();
+    return sortedA.every((val, index) => val === sortedB[index]);
   };
 
   // Load skill set data
@@ -69,18 +79,52 @@ function SettingSkillSetUpdatePage() {
       );
 
       setOriginalSkillSet(skillSetData);
+
+      // Convert insurance requirement data to array format
+      let insuranceRequirementsArray = [];
+
+      // Handle different possible data formats from backend
+      if (skillSetData.insuranceRequirements) {
+        if (Array.isArray(skillSetData.insuranceRequirements)) {
+          insuranceRequirementsArray = skillSetData.insuranceRequirements;
+        } else if (
+          typeof skillSetData.insuranceRequirements === "number" ||
+          typeof skillSetData.insuranceRequirements === "string"
+        ) {
+          // If it's a single value, convert to array (unless it's 0 or "0" which means none)
+          const value = String(skillSetData.insuranceRequirements);
+          if (value !== "0" && value !== "") {
+            insuranceRequirementsArray = [skillSetData.insuranceRequirements];
+          }
+        }
+      } else if (skillSetData.insuranceRequirement) {
+        // Fallback to old field name if exists
+        if (Array.isArray(skillSetData.insuranceRequirement)) {
+          insuranceRequirementsArray = skillSetData.insuranceRequirement;
+        } else if (
+          typeof skillSetData.insuranceRequirement === "number" ||
+          typeof skillSetData.insuranceRequirement === "string"
+        ) {
+          const value = String(skillSetData.insuranceRequirement);
+          if (value !== "0" && value !== "1" && value !== "") {
+            insuranceRequirementsArray = [skillSetData.insuranceRequirement];
+          }
+        }
+      }
+
       setFormData({
         category: skillSetData.category || "",
         subCategory: skillSetData.subCategory || "",
         description: skillSetData.description || "",
         status: skillSetData.status || 1,
-        insuranceRequirement: skillSetData.insuranceRequirement || 1,
+        insuranceRequirements: insuranceRequirementsArray,
       });
 
       console.log("SkillSetUpdatePage: Skill set detail loaded for editing:", {
         id: skillSetData.id,
         category: skillSetData.category,
         subCategory: skillSetData.subCategory,
+        insuranceRequirements: insuranceRequirementsArray,
       });
     } catch (error) {
       console.error(
@@ -101,13 +145,40 @@ function SettingSkillSetUpdatePage() {
   // Check for changes
   useEffect(() => {
     if (originalSkillSet) {
+      // Get original insurance requirements as array for comparison
+      let originalInsuranceArray = [];
+      if (originalSkillSet.insuranceRequirements) {
+        if (Array.isArray(originalSkillSet.insuranceRequirements)) {
+          originalInsuranceArray = originalSkillSet.insuranceRequirements;
+        } else if (
+          typeof originalSkillSet.insuranceRequirements === "number" ||
+          typeof originalSkillSet.insuranceRequirements === "string"
+        ) {
+          const value = String(originalSkillSet.insuranceRequirements);
+          if (value !== "0" && value !== "") {
+            originalInsuranceArray = [originalSkillSet.insuranceRequirements];
+          }
+        }
+      } else if (originalSkillSet.insuranceRequirement) {
+        if (Array.isArray(originalSkillSet.insuranceRequirement)) {
+          originalInsuranceArray = originalSkillSet.insuranceRequirement;
+        } else if (
+          typeof originalSkillSet.insuranceRequirement === "number" ||
+          typeof originalSkillSet.insuranceRequirement === "string"
+        ) {
+          const value = String(originalSkillSet.insuranceRequirement);
+          if (value !== "0" && value !== "1" && value !== "") {
+            originalInsuranceArray = [originalSkillSet.insuranceRequirement];
+          }
+        }
+      }
+
       const hasFormChanges =
         formData.category !== (originalSkillSet.category || "") ||
         formData.subCategory !== (originalSkillSet.subCategory || "") ||
         formData.description !== (originalSkillSet.description || "") ||
         formData.status !== (originalSkillSet.status || 1) ||
-        formData.insuranceRequirement !==
-          (originalSkillSet.insuranceRequirement || 1);
+        !arraysEqual(formData.insuranceRequirements, originalInsuranceArray);
 
       setHasChanges(hasFormChanges);
     }
@@ -155,6 +226,21 @@ function SettingSkillSetUpdatePage() {
       newErrors.description = "Description must be less than 500 characters";
     }
 
+    // Validate insurance requirements (optional, but if provided should be valid)
+    if (
+      formData.insuranceRequirements &&
+      formData.insuranceRequirements.length > 0
+    ) {
+      // Check if all selected values are valid IDs
+      const invalidIds = formData.insuranceRequirements.filter(
+        (id) => !id || id === "" || id === "0",
+      );
+      if (invalidIds.length > 0) {
+        newErrors.insuranceRequirements =
+          "Invalid insurance requirements selected";
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -182,7 +268,7 @@ function SettingSkillSetUpdatePage() {
         subCategory: formData.subCategory.trim(),
         description: formData.description.trim(),
         status: formData.status,
-        insuranceRequirement: formData.insuranceRequirement,
+        insuranceRequirements: formData.insuranceRequirements, // Now sending array
       };
 
       console.log(
@@ -237,12 +323,44 @@ function SettingSkillSetUpdatePage() {
 
   const handleReset = () => {
     if (originalSkillSet) {
+      // Convert original insurance requirements to array format
+      let insuranceRequirementsArray = [];
+      if (originalSkillSet.insuranceRequirements) {
+        if (Array.isArray(originalSkillSet.insuranceRequirements)) {
+          insuranceRequirementsArray = originalSkillSet.insuranceRequirements;
+        } else if (
+          typeof originalSkillSet.insuranceRequirements === "number" ||
+          typeof originalSkillSet.insuranceRequirements === "string"
+        ) {
+          const value = String(originalSkillSet.insuranceRequirements);
+          if (value !== "0" && value !== "") {
+            insuranceRequirementsArray = [
+              originalSkillSet.insuranceRequirements,
+            ];
+          }
+        }
+      } else if (originalSkillSet.insuranceRequirement) {
+        if (Array.isArray(originalSkillSet.insuranceRequirement)) {
+          insuranceRequirementsArray = originalSkillSet.insuranceRequirement;
+        } else if (
+          typeof originalSkillSet.insuranceRequirement === "number" ||
+          typeof originalSkillSet.insuranceRequirement === "string"
+        ) {
+          const value = String(originalSkillSet.insuranceRequirement);
+          if (value !== "0" && value !== "1" && value !== "") {
+            insuranceRequirementsArray = [
+              originalSkillSet.insuranceRequirement,
+            ];
+          }
+        }
+      }
+
       setFormData({
         category: originalSkillSet.category || "",
         subCategory: originalSkillSet.subCategory || "",
         description: originalSkillSet.description || "",
         status: originalSkillSet.status || 1,
-        insuranceRequirement: originalSkillSet.insuranceRequirement || 1,
+        insuranceRequirements: insuranceRequirementsArray,
       });
       setErrors({});
       setError(null);
@@ -523,27 +641,20 @@ function SettingSkillSetUpdatePage() {
                   </select>
                 </div>
 
-                {/* Insurance Requirement Field */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Insurance Requirement
-                  </label>
-                  <select
-                    value={formData.insuranceRequirement}
-                    onChange={(e) =>
-                      handleFieldChange(
-                        "insuranceRequirement",
-                        parseInt(e.target.value),
-                      )
-                    }
-                    disabled={isSaving}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value={1}>None</option>
-                    <option value={2}>Commercial General Liability</option>
-                    <option value={3}>WSIB</option>
-                  </select>
-                </div>
+                {/* Insurance Requirements Multi-Select Field */}
+                <InsuranceRequirementsMultiSelect
+                  label="Insurance Requirements"
+                  value={formData.insuranceRequirements}
+                  onChange={(value) =>
+                    handleFieldChange("insuranceRequirements", value)
+                  }
+                  error={errors.insuranceRequirements}
+                  disabled={isSaving}
+                  required={false}
+                  placeholder="Select insurance requirements..."
+                  helperText="Select one or more insurance requirements for this skill set"
+                  onUnauthorized={onUnauthorized}
+                />
 
                 {/* Change Summary */}
                 {hasChanges && originalSkillSet && (
@@ -607,6 +718,58 @@ function SettingSkillSetUpdatePage() {
                           </div>
                         </div>
                       )}
+                      {(() => {
+                        // Get original insurance requirements for comparison
+                        let originalInsurance = [];
+                        if (
+                          originalSkillSet.insuranceRequirements &&
+                          Array.isArray(originalSkillSet.insuranceRequirements)
+                        ) {
+                          originalInsurance =
+                            originalSkillSet.insuranceRequirements;
+                        } else if (originalSkillSet.insuranceRequirement) {
+                          const value = String(
+                            originalSkillSet.insuranceRequirement,
+                          );
+                          if (value !== "0" && value !== "1" && value !== "") {
+                            originalInsurance = [
+                              originalSkillSet.insuranceRequirement,
+                            ];
+                          }
+                        }
+
+                        const insuranceChanged = !arraysEqual(
+                          formData.insuranceRequirements,
+                          originalInsurance,
+                        );
+
+                        if (insuranceChanged) {
+                          return (
+                            <div>
+                              <span className="font-medium">
+                                Insurance Requirements:
+                              </span>
+                              <div className="mt-1 grid grid-cols-2 gap-2">
+                                <div className="p-2 bg-red-50 rounded border border-red-200">
+                                  <span className="text-gray-700">
+                                    {originalInsurance.length === 0
+                                      ? "None"
+                                      : `${originalInsurance.length} selected`}
+                                  </span>
+                                </div>
+                                <div className="p-2 bg-green-50 rounded border border-green-200">
+                                  <span className="text-gray-900">
+                                    {formData.insuranceRequirements.length === 0
+                                      ? "None"
+                                      : `${formData.insuranceRequirements.length} selected`}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        }
+                        return null;
+                      })()}
                     </div>
                   </div>
                 )}
@@ -617,7 +780,8 @@ function SettingSkillSetUpdatePage() {
                     <InformationCircleIcon className="w-4 h-4 mr-1.5 flex-shrink-0 mt-0.5" />
                     <span>
                       Changes will affect all associates and jobs using this
-                      skill set.
+                      skill set. Multiple insurance requirements can be
+                      selected.
                     </span>
                   </p>
                 </div>
@@ -686,7 +850,9 @@ function SettingSkillSetUpdatePage() {
                   </li>
                   <li className="flex items-start">
                     <ShieldCheckIcon className="w-4 h-4 mr-2 text-purple-500 flex-shrink-0 mt-0.5" />
-                    <span>Review insurance requirements periodically</span>
+                    <span>
+                      Review and update insurance requirements as needed
+                    </span>
                   </li>
                   <li className="flex items-start">
                     <ClipboardDocumentListIcon className="w-4 h-4 mr-2 text-orange-500 flex-shrink-0 mt-0.5" />
@@ -755,6 +921,22 @@ function SettingSkillSetUpdatePage() {
                 </div>
               </div>
             )}
+
+            {/* Insurance Info Box */}
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-amber-900 mb-2 flex items-center">
+                <ShieldCheckIcon className="w-4 h-4 mr-2" />
+                About Insurance Requirements
+              </h3>
+              <ul className="text-xs text-amber-800 space-y-1">
+                <li>• You can add or remove multiple requirements</li>
+                <li>• Changes apply to all future assignments</li>
+                <li>• Use search to find specific insurance types</li>
+                <li>
+                  • Existing assignments retain their original requirements
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
 
