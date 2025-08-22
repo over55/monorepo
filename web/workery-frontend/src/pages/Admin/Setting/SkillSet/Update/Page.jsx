@@ -1,256 +1,227 @@
 // File Path: web/workery-frontend/src/pages/Admin/Setting/SkillSet/Update/Page.jsx
-
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router";
 import { useSkillSetManager } from "../../../../../services/Services";
-import { InsuranceRequirementsMultiSelect } from "../../../../../components/business/selects";
 import {
-  ChartBarIcon,
-  Cog6ToothIcon,
-  AcademicCapIcon,
+  WrenchScrewdriverIcon,
   ChevronRightIcon,
-  InformationCircleIcon,
+  XMarkIcon,
   PencilSquareIcon,
-  ClipboardDocumentIcon,
   ExclamationTriangleIcon,
   ArrowPathIcon,
   CheckCircleIcon,
-  XMarkIcon,
+  Cog6ToothIcon,
+  ChartBarIcon,
+  ClipboardDocumentIcon,
+  InformationCircleIcon,
   ArrowLeftIcon,
   DocumentTextIcon,
+  CalendarIcon,
+  UserIcon,
+  ClockIcon,
+  BuildingOfficeIcon,
   LightBulbIcon,
-  TagIcon,
-  ShieldCheckIcon,
-  ClipboardDocumentListIcon,
-  SparklesIcon,
+  DocumentCheckIcon,
 } from "@heroicons/react/24/outline";
+import InsuranceRequirementsMultiSelect from "../../../../../components/business/selects/InsuranceRequirementsMultiSelect";
 
 function SettingSkillSetUpdatePage() {
+  const navigate = useNavigate();
   const { id } = useParams();
   const skillSetManager = useSkillSetManager();
-  const navigate = useNavigate();
 
-  // Form state - Note: insuranceRequirements is now an array
+  // Loading and data state
+  const [isLoading, setIsLoading] = useState(true);
+  const [skillSet, setSkillSet] = useState(null);
+
+  // Form state
   const [formData, setFormData] = useState({
     category: "",
     subCategory: "",
     description: "",
-    status: 1,
-    insuranceRequirements: [], // Changed from single value to array
+    insuranceRequirements: [], // This should be an array of IDs
   });
 
-  // Component state
-  const [originalSkillSet, setOriginalSkillSet] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  // UI state
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
-  const [errors, setErrors] = useState({});
-  const [successMessage, setSuccessMessage] = useState("");
+  const [validationErrors, setValidationErrors] = useState({});
   const [hasChanges, setHasChanges] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
   };
 
-  // Helper function to compare arrays
-  const arraysEqual = (a, b) => {
-    if (!Array.isArray(a) || !Array.isArray(b)) return false;
-    if (a.length !== b.length) return false;
-    const sortedA = [...a].sort();
-    const sortedB = [...b].sort();
-    return sortedA.every((val, index) => val === sortedB[index]);
-  };
-
-  // Load skill set data
-  const loadSkillSet = async () => {
-    if (!id || typeof id !== "string" || id.trim() === "") {
-      setError("Invalid skill set ID");
-      setIsLoading(false);
-      return;
-    }
-
+  // Fetch skill set details
+  const fetchSkillSetDetail = async () => {
     try {
       setIsLoading(true);
       setError(null);
 
-      const skillSetData = await skillSetManager.getSkillSetDetail(
+      const response = await skillSetManager.getSkillSetDetail(
         id,
         onUnauthorized,
       );
 
-      setOriginalSkillSet(skillSetData);
+      setSkillSet(response);
 
-      // Convert insurance requirement data to array format
-      let insuranceRequirementsArray = [];
-
-      // Handle different possible data formats from backend
-      if (skillSetData.insuranceRequirements) {
-        if (Array.isArray(skillSetData.insuranceRequirements)) {
-          insuranceRequirementsArray = skillSetData.insuranceRequirements;
-        } else if (
-          typeof skillSetData.insuranceRequirements === "number" ||
-          typeof skillSetData.insuranceRequirements === "string"
-        ) {
-          // If it's a single value, convert to array (unless it's 0 or "0" which means none)
-          const value = String(skillSetData.insuranceRequirements);
-          if (value !== "0" && value !== "") {
-            insuranceRequirementsArray = [skillSetData.insuranceRequirements];
-          }
-        }
-      } else if (skillSetData.insuranceRequirement) {
-        // Fallback to old field name if exists
-        if (Array.isArray(skillSetData.insuranceRequirement)) {
-          insuranceRequirementsArray = skillSetData.insuranceRequirement;
-        } else if (
-          typeof skillSetData.insuranceRequirement === "number" ||
-          typeof skillSetData.insuranceRequirement === "string"
-        ) {
-          const value = String(skillSetData.insuranceRequirement);
-          if (value !== "0" && value !== "1" && value !== "") {
-            insuranceRequirementsArray = [skillSetData.insuranceRequirement];
-          }
-        }
-      }
+      // Populate form with existing data
+      // IMPORTANT: Extract just the IDs from insurance requirements
+      const insuranceRequirementIds = response.insuranceRequirements
+        ? response.insuranceRequirements.map((item) => {
+            // Handle both object format and ID format
+            if (typeof item === "object" && item !== null) {
+              return item.id || item.value;
+            }
+            return item;
+          })
+        : [];
 
       setFormData({
-        category: skillSetData.category || "",
-        subCategory: skillSetData.subCategory || "",
-        description: skillSetData.description || "",
-        status: skillSetData.status || 1,
-        insuranceRequirements: insuranceRequirementsArray,
+        category: response.category || "",
+        subCategory: response.subCategory || "",
+        description: response.description || "",
+        insuranceRequirements: insuranceRequirementIds, // Array of IDs only
       });
-
-      console.log("SkillSetUpdatePage: Skill set detail loaded for editing:", {
-        id: skillSetData.id,
-        category: skillSetData.category,
-        subCategory: skillSetData.subCategory,
-        insuranceRequirements: insuranceRequirementsArray,
-      });
-    } catch (error) {
-      console.error(
-        "SkillSetUpdatePage: Failed to fetch skill set detail:",
-        error,
-      );
-      setError(error.message || "Failed to load skill set details");
+    } catch (err) {
+      console.error("Failed to fetch skill set detail:", err);
+      setError(err.message || "Failed to load skill set details");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Effects
-  useEffect(() => {
-    loadSkillSet();
-  }, [id]);
+  // Handle form field changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
 
-  // Check for changes
-  useEffect(() => {
-    if (originalSkillSet) {
-      // Get original insurance requirements as array for comparison
-      let originalInsuranceArray = [];
-      if (originalSkillSet.insuranceRequirements) {
-        if (Array.isArray(originalSkillSet.insuranceRequirements)) {
-          originalInsuranceArray = originalSkillSet.insuranceRequirements;
-        } else if (
-          typeof originalSkillSet.insuranceRequirements === "number" ||
-          typeof originalSkillSet.insuranceRequirements === "string"
-        ) {
-          const value = String(originalSkillSet.insuranceRequirements);
-          if (value !== "0" && value !== "") {
-            originalInsuranceArray = [originalSkillSet.insuranceRequirements];
-          }
-        }
-      } else if (originalSkillSet.insuranceRequirement) {
-        if (Array.isArray(originalSkillSet.insuranceRequirement)) {
-          originalInsuranceArray = originalSkillSet.insuranceRequirement;
-        } else if (
-          typeof originalSkillSet.insuranceRequirement === "number" ||
-          typeof originalSkillSet.insuranceRequirement === "string"
-        ) {
-          const value = String(originalSkillSet.insuranceRequirement);
-          if (value !== "0" && value !== "1" && value !== "") {
-            originalInsuranceArray = [originalSkillSet.insuranceRequirement];
-          }
-        }
+    setFormData((prev) => {
+      const newData = {
+        ...prev,
+        [name]: value,
+      };
+
+      // Check if form has changes compared to original data
+      if (skillSet) {
+        const originalInsuranceRequirementIds = skillSet.insuranceRequirements
+          ? skillSet.insuranceRequirements.map((item) => {
+              if (typeof item === "object" && item !== null) {
+                return item.id || item.value;
+              }
+              return item;
+            })
+          : [];
+
+        const originalData = {
+          category: skillSet.category || "",
+          subCategory: skillSet.subCategory || "",
+          description: skillSet.description || "",
+          insuranceRequirements: originalInsuranceRequirementIds,
+        };
+
+        const hasFormChanges =
+          newData.category !== originalData.category ||
+          newData.subCategory !== originalData.subCategory ||
+          newData.description !== originalData.description ||
+          JSON.stringify(newData.insuranceRequirements.sort()) !==
+            JSON.stringify(originalData.insuranceRequirements.sort());
+
+        setHasChanges(hasFormChanges);
       }
 
-      const hasFormChanges =
-        formData.category !== (originalSkillSet.category || "") ||
-        formData.subCategory !== (originalSkillSet.subCategory || "") ||
-        formData.description !== (originalSkillSet.description || "") ||
-        formData.status !== (originalSkillSet.status || 1) ||
-        !arraysEqual(formData.insuranceRequirements, originalInsuranceArray);
+      return newData;
+    });
 
-      setHasChanges(hasFormChanges);
-    }
-  }, [formData, originalSkillSet]);
-
-  // Clear success message after 3 seconds
-  useEffect(() => {
-    if (successMessage) {
-      const timer = setTimeout(() => setSuccessMessage(""), 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [successMessage]);
-
-  const handleFieldChange = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-
-    // Clear field error when user starts typing
-    if (errors[field]) {
-      setErrors((prev) => ({
+    // Clear validation error for this field when user starts typing
+    if (validationErrors[name]) {
+      setValidationErrors((prev) => ({
         ...prev,
-        [field]: null,
+        [name]: null,
       }));
     }
   };
 
-  const validateForm = () => {
-    const newErrors = {};
+  // Handle insurance requirements change
+  const handleInsuranceRequirementsChange = (selectedIds) => {
+    setFormData((prev) => {
+      const newData = {
+        ...prev,
+        insuranceRequirements: selectedIds, // This should already be an array of IDs
+      };
 
-    if (!formData.category.trim()) {
-      newErrors.category = "Category is required";
-    } else if (formData.category.length > 127) {
-      newErrors.category = "Category must be less than 127 characters";
+      // Check if form has changes
+      if (skillSet) {
+        const originalInsuranceRequirementIds = skillSet.insuranceRequirements
+          ? skillSet.insuranceRequirements.map((item) => {
+              if (typeof item === "object" && item !== null) {
+                return item.id || item.value;
+              }
+              return item;
+            })
+          : [];
+
+        const originalData = {
+          category: skillSet.category || "",
+          subCategory: skillSet.subCategory || "",
+          description: skillSet.description || "",
+          insuranceRequirements: originalInsuranceRequirementIds,
+        };
+
+        const hasFormChanges =
+          newData.category !== originalData.category ||
+          newData.subCategory !== originalData.subCategory ||
+          newData.description !== originalData.description ||
+          JSON.stringify(newData.insuranceRequirements.sort()) !==
+            JSON.stringify(originalData.insuranceRequirements.sort());
+
+        setHasChanges(hasFormChanges);
+      }
+
+      return newData;
+    });
+
+    // Clear validation error
+    if (validationErrors.insuranceRequirements) {
+      setValidationErrors((prev) => ({
+        ...prev,
+        insuranceRequirements: null,
+      }));
+    }
+  };
+
+  // Validate form data
+  const validateForm = () => {
+    const errors = {};
+
+    if (!formData.category || !formData.category.trim()) {
+      errors.category = "Category is required";
+    } else if (formData.category.length > 100) {
+      errors.category = "Category must be less than 100 characters";
     }
 
-    if (!formData.subCategory.trim()) {
-      newErrors.subCategory = "Sub-category is required";
-    } else if (formData.subCategory.length > 127) {
-      newErrors.subCategory = "Sub-category must be less than 127 characters";
+    if (!formData.subCategory || !formData.subCategory.trim()) {
+      errors.subCategory = "Sub-category is required";
+    } else if (formData.subCategory.length > 100) {
+      errors.subCategory = "Sub-category must be less than 100 characters";
     }
 
     if (formData.description && formData.description.length > 500) {
-      newErrors.description = "Description must be less than 500 characters";
+      errors.description = "Description must be less than 500 characters";
     }
 
-    // Validate insurance requirements (optional, but if provided should be valid)
-    if (
-      formData.insuranceRequirements &&
-      formData.insuranceRequirements.length > 0
-    ) {
-      // Check if all selected values are valid IDs
-      const invalidIds = formData.insuranceRequirements.filter(
-        (id) => !id || id === "" || id === "0",
-      );
-      if (invalidIds.length > 0) {
-        newErrors.insuranceRequirements =
-          "Invalid insurance requirements selected";
-      }
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return errors;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // Handle form submission
+  const handleSubmit = async () => {
+    setError(null);
+    setValidationErrors({});
 
-    if (!validateForm()) {
+    const errors = validateForm();
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
       setError("Please correct the errors below");
-      window.scrollTo(0, 0);
       return;
     }
 
@@ -259,59 +230,50 @@ function SettingSkillSetUpdatePage() {
       return;
     }
 
-    setIsSaving(true);
-    setError(null);
-
     try {
-      const skillSetData = {
+      setIsSubmitting(true);
+
+      // Prepare data for API - ensure insurance requirements are IDs only
+      const submitData = {
         category: formData.category.trim(),
         subCategory: formData.subCategory.trim(),
-        description: formData.description.trim(),
-        status: formData.status,
-        insuranceRequirements: formData.insuranceRequirements, // Now sending array
+        description: formData.description.trim() || null,
+        insuranceRequirements: formData.insuranceRequirements.filter(
+          (id) => id,
+        ), // Filter out any null/undefined values
       };
 
-      console.log(
-        "SkillSetUpdatePage: Submitting skill set update:",
-        skillSetData,
-      );
+      await skillSetManager.updateSkillSet(id, submitData, onUnauthorized);
 
-      const updatedSkillSet = await skillSetManager.updateSkillSet(
-        id,
-        skillSetData,
-        onUnauthorized,
-      );
-
-      console.log("SkillSetUpdatePage: Skill set updated successfully");
       setSuccessMessage("Skill set updated successfully!");
-      setOriginalSkillSet(updatedSkillSet);
-      setHasChanges(false);
 
-      // Redirect to detail page after a short delay
       setTimeout(() => {
-        navigate(`/admin/settings/skill-set/${id}/detail`);
+        navigate(`/admin/settings/skill-set/${id}/detail`, {
+          state: {
+            successMessage: "Skill set updated successfully",
+          },
+        });
       }, 1500);
-    } catch (error) {
-      console.error("SkillSetUpdatePage: Failed to update skill set:", error);
+    } catch (err) {
+      console.error("Failed to update skill set:", err);
 
-      // Handle validation errors from server
-      if (typeof error === "object" && error !== null) {
-        setErrors(error);
+      if (err && typeof err === "object" && !err.message) {
+        setValidationErrors(err);
         setError("Please correct the errors below");
       } else {
-        setError(error.message || "Failed to update skill set");
+        setError(err.message || "Failed to update skill set");
       }
-      window.scrollTo(0, 0);
     } finally {
-      setIsSaving(false);
+      setIsSubmitting(false);
     }
   };
 
+  // Handle cancel
   const handleCancel = () => {
     if (hasChanges) {
       if (
         window.confirm(
-          "Are you sure you want to cancel? Any unsaved changes will be lost.",
+          "Are you sure you want to cancel? Your changes will be lost.",
         )
       ) {
         navigate(`/admin/settings/skill-set/${id}/detail`);
@@ -321,51 +283,48 @@ function SettingSkillSetUpdatePage() {
     }
   };
 
+  // Handle reset form
   const handleReset = () => {
-    if (originalSkillSet) {
-      // Convert original insurance requirements to array format
-      let insuranceRequirementsArray = [];
-      if (originalSkillSet.insuranceRequirements) {
-        if (Array.isArray(originalSkillSet.insuranceRequirements)) {
-          insuranceRequirementsArray = originalSkillSet.insuranceRequirements;
-        } else if (
-          typeof originalSkillSet.insuranceRequirements === "number" ||
-          typeof originalSkillSet.insuranceRequirements === "string"
-        ) {
-          const value = String(originalSkillSet.insuranceRequirements);
-          if (value !== "0" && value !== "") {
-            insuranceRequirementsArray = [
-              originalSkillSet.insuranceRequirements,
-            ];
-          }
-        }
-      } else if (originalSkillSet.insuranceRequirement) {
-        if (Array.isArray(originalSkillSet.insuranceRequirement)) {
-          insuranceRequirementsArray = originalSkillSet.insuranceRequirement;
-        } else if (
-          typeof originalSkillSet.insuranceRequirement === "number" ||
-          typeof originalSkillSet.insuranceRequirement === "string"
-        ) {
-          const value = String(originalSkillSet.insuranceRequirement);
-          if (value !== "0" && value !== "1" && value !== "") {
-            insuranceRequirementsArray = [
-              originalSkillSet.insuranceRequirement,
-            ];
-          }
-        }
-      }
+    if (skillSet) {
+      // Extract IDs properly when resetting
+      const insuranceRequirementIds = skillSet.insuranceRequirements
+        ? skillSet.insuranceRequirements.map((item) => {
+            if (typeof item === "object" && item !== null) {
+              return item.id || item.value;
+            }
+            return item;
+          })
+        : [];
 
       setFormData({
-        category: originalSkillSet.category || "",
-        subCategory: originalSkillSet.subCategory || "",
-        description: originalSkillSet.description || "",
-        status: originalSkillSet.status || 1,
-        insuranceRequirements: insuranceRequirementsArray,
+        category: skillSet.category || "",
+        subCategory: skillSet.subCategory || "",
+        description: skillSet.description || "",
+        insuranceRequirements: insuranceRequirementIds,
       });
-      setErrors({});
+      setValidationErrors({});
       setError(null);
+      setHasChanges(false);
     }
   };
+
+  // Load data on component mount
+  useEffect(() => {
+    if (id) {
+      fetchSkillSetDetail();
+    } else {
+      setError("Invalid skill set ID");
+      setIsLoading(false);
+    }
+  }, [id]);
+
+  // Clear success message after 3 seconds
+  useEffect(() => {
+    if (successMessage) {
+      const timer = setTimeout(() => setSuccessMessage(""), 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMessage]);
 
   // Loading state
   if (isLoading) {
@@ -379,13 +338,16 @@ function SettingSkillSetUpdatePage() {
     );
   }
 
-  // Error state
-  if (error && !originalSkillSet) {
+  // Error state (no data loaded)
+  if (error && !skillSet) {
     return (
       <div className="min-h-screen bg-gray-50 p-8">
         <div className="max-w-2xl mx-auto">
           <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg mb-4">
-            {error}
+            <div className="flex items-center">
+              <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
+              {error}
+            </div>
           </div>
           <Link
             to="/admin/settings/skill-sets"
@@ -436,7 +398,7 @@ function SettingSkillSetUpdatePage() {
                   className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
                 >
                   <span className="inline-flex items-center">
-                    <AcademicCapIcon className="w-4 h-4 mr-2" />
+                    <WrenchScrewdriverIcon className="w-4 h-4 mr-2" />
                     Skill Sets
                   </span>
                 </Link>
@@ -451,7 +413,7 @@ function SettingSkillSetUpdatePage() {
                 >
                   <span className="inline-flex items-center">
                     <ClipboardDocumentIcon className="w-4 h-4 mr-2" />
-                    Detail
+                    {skillSet?.subCategory || "Detail"}
                   </span>
                 </Link>
               </div>
@@ -471,7 +433,7 @@ function SettingSkillSetUpdatePage() {
         {/* Page Title */}
         <div className="mb-4 flex items-center justify-between">
           <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-            <PencilSquareIcon className="w-7 h-7 mr-3" />
+            <PencilSquareIcon className="w-7 h-7 mr-3 text-amber-600" />
             Edit Skill Set
           </h1>
           {hasChanges && (
@@ -514,428 +476,317 @@ function SettingSkillSetUpdatePage() {
         )}
 
         {/* Two Column Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Left Column - Edit Form */}
-          <div className="bg-white shadow-sm rounded-lg">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-                <PencilSquareIcon className="w-5 h-5 mr-2" />
-                Update Skill Set
-              </h2>
-            </div>
-
-            <form onSubmit={handleSubmit} className="p-5">
-              <div className={isSaving ? "opacity-60" : ""}>
-                {/* Category Field */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Category <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.category}
-                    onChange={(e) =>
-                      handleFieldChange("category", e.target.value)
-                    }
-                    placeholder="e.g., Electrical, Plumbing, Carpentry"
-                    disabled={isSaving}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      errors.category ? "border-red-500" : "border-gray-300"
-                    }`}
-                  />
-                  {errors.category && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.category}
-                    </p>
-                  )}
-                  <div className="mt-1 text-right">
-                    <span
-                      className={`text-xs ${formData.category.length > 100 ? "text-amber-600" : "text-gray-500"}`}
-                    >
-                      {formData.category.length}/127
-                    </span>
-                  </div>
-                </div>
-
-                {/* Sub-Category Field */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Sub-Category <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.subCategory}
-                    onChange={(e) =>
-                      handleFieldChange("subCategory", e.target.value)
-                    }
-                    placeholder="e.g., Residential Wiring, Commercial Installation"
-                    disabled={isSaving}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      errors.subCategory ? "border-red-500" : "border-gray-300"
-                    }`}
-                  />
-                  {errors.subCategory && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.subCategory}
-                    </p>
-                  )}
-                  <div className="mt-1 text-right">
-                    <span
-                      className={`text-xs ${formData.subCategory.length > 100 ? "text-amber-600" : "text-gray-500"}`}
-                    >
-                      {formData.subCategory.length}/127
-                    </span>
-                  </div>
-                </div>
-
-                {/* Description Field */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    rows={4}
-                    value={formData.description}
-                    onChange={(e) =>
-                      handleFieldChange("description", e.target.value)
-                    }
-                    placeholder="Provide additional context or requirements (optional)"
-                    maxLength={500}
-                    disabled={isSaving}
-                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none ${
-                      errors.description ? "border-red-500" : "border-gray-300"
-                    }`}
-                  />
-                  {errors.description && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.description}
-                    </p>
-                  )}
-                  <div className="mt-1 flex items-center justify-between">
-                    <p className="text-xs text-gray-500">
-                      Optional - Add any special requirements
-                    </p>
-                    <span
-                      className={`text-xs ${formData.description.length > 400 ? "text-amber-600" : "text-gray-500"}`}
-                    >
-                      {formData.description.length}/500
-                    </span>
-                  </div>
-                </div>
-
-                {/* Status Field */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Status
-                  </label>
-                  <select
-                    value={formData.status}
-                    onChange={(e) =>
-                      handleFieldChange("status", parseInt(e.target.value))
-                    }
-                    disabled={isSaving}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value={1}>Active</option>
-                    <option value={2}>Inactive</option>
-                  </select>
-                </div>
-
-                {/* Insurance Requirements Multi-Select Field */}
-                <InsuranceRequirementsMultiSelect
-                  label="Insurance Requirements"
-                  value={formData.insuranceRequirements}
-                  onChange={(value) =>
-                    handleFieldChange("insuranceRequirements", value)
-                  }
-                  error={errors.insuranceRequirements}
-                  disabled={isSaving}
-                  required={false}
-                  placeholder="Select insurance requirements..."
-                  helperText="Select one or more insurance requirements for this skill set"
-                  onUnauthorized={onUnauthorized}
-                />
-
-                {/* Change Summary */}
-                {hasChanges && originalSkillSet && (
-                  <div className="mb-4 p-3 bg-blue-50 rounded-lg">
-                    <h3 className="text-xs font-medium text-gray-900 mb-2 flex items-center">
-                      <DocumentTextIcon className="w-3 h-3 mr-1" />
-                      Change Summary
-                    </h3>
-                    <div className="space-y-2 text-xs">
-                      {formData.category !== originalSkillSet.category && (
-                        <div>
-                          <span className="font-medium">Category:</span>
-                          <div className="mt-1 grid grid-cols-2 gap-2">
-                            <div className="p-2 bg-red-50 rounded border border-red-200">
-                              <span className="text-gray-700">
-                                {originalSkillSet.category}
-                              </span>
-                            </div>
-                            <div className="p-2 bg-green-50 rounded border border-green-200">
-                              <span className="text-gray-900">
-                                {formData.category}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      {formData.subCategory !==
-                        originalSkillSet.subCategory && (
-                        <div>
-                          <span className="font-medium">Sub-Category:</span>
-                          <div className="mt-1 grid grid-cols-2 gap-2">
-                            <div className="p-2 bg-red-50 rounded border border-red-200">
-                              <span className="text-gray-700">
-                                {originalSkillSet.subCategory}
-                              </span>
-                            </div>
-                            <div className="p-2 bg-green-50 rounded border border-green-200">
-                              <span className="text-gray-900">
-                                {formData.subCategory}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      {formData.status !== originalSkillSet.status && (
-                        <div>
-                          <span className="font-medium">Status:</span>
-                          <div className="mt-1 grid grid-cols-2 gap-2">
-                            <div className="p-2 bg-red-50 rounded border border-red-200">
-                              <span className="text-gray-700">
-                                {originalSkillSet.status === 1
-                                  ? "Active"
-                                  : "Inactive"}
-                              </span>
-                            </div>
-                            <div className="p-2 bg-green-50 rounded border border-green-200">
-                              <span className="text-gray-900">
-                                {formData.status === 1 ? "Active" : "Inactive"}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                      {(() => {
-                        // Get original insurance requirements for comparison
-                        let originalInsurance = [];
-                        if (
-                          originalSkillSet.insuranceRequirements &&
-                          Array.isArray(originalSkillSet.insuranceRequirements)
-                        ) {
-                          originalInsurance =
-                            originalSkillSet.insuranceRequirements;
-                        } else if (originalSkillSet.insuranceRequirement) {
-                          const value = String(
-                            originalSkillSet.insuranceRequirement,
-                          );
-                          if (value !== "0" && value !== "1" && value !== "") {
-                            originalInsurance = [
-                              originalSkillSet.insuranceRequirement,
-                            ];
-                          }
-                        }
-
-                        const insuranceChanged = !arraysEqual(
-                          formData.insuranceRequirements,
-                          originalInsurance,
-                        );
-
-                        if (insuranceChanged) {
-                          return (
-                            <div>
-                              <span className="font-medium">
-                                Insurance Requirements:
-                              </span>
-                              <div className="mt-1 grid grid-cols-2 gap-2">
-                                <div className="p-2 bg-red-50 rounded border border-red-200">
-                                  <span className="text-gray-700">
-                                    {originalInsurance.length === 0
-                                      ? "None"
-                                      : `${originalInsurance.length} selected`}
-                                  </span>
-                                </div>
-                                <div className="p-2 bg-green-50 rounded border border-green-200">
-                                  <span className="text-gray-900">
-                                    {formData.insuranceRequirements.length === 0
-                                      ? "None"
-                                      : `${formData.insuranceRequirements.length} selected`}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        }
-                        return null;
-                      })()}
-                    </div>
-                  </div>
-                )}
-
-                {/* Info Note */}
-                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-xs text-blue-800 flex items-start">
-                    <InformationCircleIcon className="w-4 h-4 mr-1.5 flex-shrink-0 mt-0.5" />
-                    <span>
-                      Changes will affect all associates and jobs using this
-                      skill set. Multiple insurance requirements can be
-                      selected.
-                    </span>
-                  </p>
-                </div>
-
-                {/* Form Actions */}
-                <div className="flex items-center justify-between">
-                  {hasChanges ? (
-                    <button
-                      type="button"
-                      onClick={handleReset}
-                      disabled={isSaving}
-                      className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <ArrowPathIcon className="w-4 h-4 mr-1" />
-                      Reset
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handleCancel}
-                      disabled={isSaving}
-                      className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Cancel
-                    </button>
-                  )}
-                  <button
-                    type="submit"
-                    disabled={
-                      isSaving ||
-                      !formData.category.trim() ||
-                      !formData.subCategory.trim() ||
-                      !hasChanges
-                    }
-                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <CheckCircleIcon className="w-4 h-4 mr-2" />
-                    {isSaving ? "Updating..." : "Update Skill Set"}
-                  </button>
-                </div>
-              </div>
-            </form>
-          </div>
-
-          {/* Right Column - Tips & Metadata */}
-          <div className="space-y-6">
-            {/* Best Practices */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Left Column - Edit Form (2 cols wide) */}
+          <div className="lg:col-span-2">
             <div className="bg-white shadow-sm rounded-lg">
               <div className="px-6 py-4 border-b border-gray-200">
                 <h2 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <LightBulbIcon className="w-5 h-5 mr-2 text-amber-500" />
-                  Best Practices
+                  <DocumentCheckIcon className="w-5 h-5 mr-2" />
+                  Skill Set Information
                 </h2>
               </div>
-              <div className="p-5">
-                <ul className="space-y-2.5 text-sm text-gray-600">
-                  <li className="flex items-start">
-                    <TagIcon className="w-4 h-4 mr-2 text-blue-500 flex-shrink-0 mt-0.5" />
-                    <span>
-                      Keep category names consistent across related skills
-                    </span>
-                  </li>
-                  <li className="flex items-start">
-                    <DocumentTextIcon className="w-4 h-4 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
-                    <span>Update descriptions when requirements change</span>
-                  </li>
-                  <li className="flex items-start">
-                    <ShieldCheckIcon className="w-4 h-4 mr-2 text-purple-500 flex-shrink-0 mt-0.5" />
-                    <span>
-                      Review and update insurance requirements as needed
-                    </span>
-                  </li>
-                  <li className="flex items-start">
-                    <ClipboardDocumentListIcon className="w-4 h-4 mr-2 text-orange-500 flex-shrink-0 mt-0.5" />
-                    <span>
-                      Set to inactive instead of deleting if no longer needed
-                    </span>
-                  </li>
-                  <li className="flex items-start">
-                    <SparklesIcon className="w-4 h-4 mr-2 text-pink-500 flex-shrink-0 mt-0.5" />
-                    <span>
-                      Consider impact on existing assignments before changes
-                    </span>
-                  </li>
-                </ul>
+
+              <div className="p-6">
+                <div className="space-y-6">
+                  {/* Category Field */}
+                  <div>
+                    <label
+                      htmlFor="category"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Category <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="category"
+                      name="category"
+                      value={formData.category}
+                      onChange={handleInputChange}
+                      maxLength={100}
+                      placeholder="Enter category"
+                      disabled={isSubmitting}
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        validationErrors.category
+                          ? "border-red-500"
+                          : "border-gray-300"
+                      } ${isSubmitting ? "bg-gray-50 cursor-not-allowed" : ""}`}
+                    />
+                    {validationErrors.category && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {validationErrors.category}
+                      </p>
+                    )}
+                    <div className="mt-1 text-right">
+                      <span
+                        className={`text-xs ${
+                          formData.category.length > 80
+                            ? "text-amber-600"
+                            : "text-gray-500"
+                        }`}
+                      >
+                        {formData.category.length}/100 characters
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Sub-Category Field */}
+                  <div>
+                    <label
+                      htmlFor="subCategory"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Sub-Category <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      id="subCategory"
+                      name="subCategory"
+                      value={formData.subCategory}
+                      onChange={handleInputChange}
+                      maxLength={100}
+                      placeholder="Enter sub-category"
+                      disabled={isSubmitting}
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        validationErrors.subCategory
+                          ? "border-red-500"
+                          : "border-gray-300"
+                      } ${isSubmitting ? "bg-gray-50 cursor-not-allowed" : ""}`}
+                    />
+                    {validationErrors.subCategory && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {validationErrors.subCategory}
+                      </p>
+                    )}
+                    <div className="mt-1 text-right">
+                      <span
+                        className={`text-xs ${
+                          formData.subCategory.length > 80
+                            ? "text-amber-600"
+                            : "text-gray-500"
+                        }`}
+                      >
+                        {formData.subCategory.length}/100 characters
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Insurance Requirements Multi-Select */}
+                  <InsuranceRequirementsMultiSelect
+                    label="Insurance Requirements"
+                    value={formData.insuranceRequirements}
+                    onChange={handleInsuranceRequirementsChange}
+                    error={validationErrors.insuranceRequirements}
+                    disabled={isSubmitting}
+                    required={false}
+                    placeholder="Select insurance requirements..."
+                    helperText="Select all applicable insurance requirements for this skill set"
+                    onUnauthorized={onUnauthorized}
+                  />
+
+                  {/* Description Field */}
+                  <div>
+                    <label
+                      htmlFor="description"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Description{" "}
+                      <span className="text-gray-500">(optional)</span>
+                    </label>
+                    <textarea
+                      id="description"
+                      name="description"
+                      value={formData.description}
+                      onChange={handleInputChange}
+                      rows={4}
+                      maxLength={500}
+                      placeholder="Enter description (optional)"
+                      disabled={isSubmitting}
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none ${
+                        validationErrors.description
+                          ? "border-red-500"
+                          : "border-gray-300"
+                      } ${isSubmitting ? "bg-gray-50 cursor-not-allowed" : ""}`}
+                    />
+                    {validationErrors.description && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {validationErrors.description}
+                      </p>
+                    )}
+                    <div className="mt-1 text-right">
+                      <span
+                        className={`text-xs ${
+                          formData.description.length > 400
+                            ? "text-amber-600"
+                            : "text-gray-500"
+                        }`}
+                      >
+                        {formData.description.length}/500 characters
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Form Actions */}
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-lg">
+                <div className="flex items-center justify-between">
+                  <div>
+                    {hasChanges ? (
+                      <button
+                        type="button"
+                        onClick={handleReset}
+                        disabled={isSubmitting}
+                        className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <ArrowPathIcon className="w-4 h-4 mr-1.5" />
+                        Reset Changes
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleCancel}
+                        disabled={isSubmitting}
+                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Cancel
+                      </button>
+                    )}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleSubmit}
+                    disabled={isSubmitting || !hasChanges}
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <svg
+                          className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        Updating...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircleIcon className="w-4 h-4 mr-2" />
+                        Update Skill Set
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {!hasChanges && !isSubmitting && (
+                  <div className="mt-3 text-center">
+                    <p className="text-sm text-gray-500">
+                      Make changes above to enable the update button
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
+          </div>
 
-            {/* Metadata Information */}
-            {originalSkillSet && (
-              <div className="bg-gray-50 rounded-lg p-4">
-                <h3 className="text-sm font-medium text-gray-900 mb-3 flex items-center">
-                  <InformationCircleIcon className="w-4 h-4 mr-2" />
-                  Skill Set Information
-                </h3>
-                <div className="space-y-2 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Created:</span>
-                    <span className="text-gray-900">
-                      {originalSkillSet.createdAt
-                        ? new Date(originalSkillSet.createdAt).toLocaleString()
-                        : "N/A"}
-                    </span>
-                  </div>
-                  {originalSkillSet.createdByUserName && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Created By:</span>
-                      <span className="text-gray-900">
-                        {originalSkillSet.createdByUserName}
-                      </span>
+          {/* Right Column - System Info & Tips */}
+          <div className="lg:col-span-1 space-y-6">
+            {/* System Information */}
+            {skillSet && (
+              <div className="bg-white shadow-sm rounded-lg">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                    <InformationCircleIcon className="w-5 h-5 mr-2 text-blue-600" />
+                    System Information
+                  </h3>
+                </div>
+                <div className="p-6">
+                  <div className="space-y-4 text-sm">
+                    <div>
+                      <div className="flex items-center text-gray-500 mb-1">
+                        <CalendarIcon className="w-4 h-4 mr-1" />
+                        Created At
+                      </div>
+                      <p className="text-gray-900 ml-5">
+                        {skillSet.createdAt || "Not available"}
+                      </p>
                     </div>
-                  )}
-                  {originalSkillSet.modifiedAt && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Last Modified:</span>
-                      <span className="text-gray-900">
-                        {new Date(originalSkillSet.modifiedAt).toLocaleString()}
-                      </span>
+                    <div>
+                      <div className="flex items-center text-gray-500 mb-1">
+                        <UserIcon className="w-4 h-4 mr-1" />
+                        Created By
+                      </div>
+                      <p className="text-gray-900 ml-5">
+                        {skillSet.createdByUserName || "Not available"}
+                      </p>
                     </div>
-                  )}
-                  {originalSkillSet.modifiedByUserName && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-500">Modified By:</span>
-                      <span className="text-gray-900">
-                        {originalSkillSet.modifiedByUserName}
-                      </span>
+                    <div>
+                      <div className="flex items-center text-gray-500 mb-1">
+                        <ClockIcon className="w-4 h-4 mr-1" />
+                        Last Modified
+                      </div>
+                      <p className="text-gray-900 ml-5">
+                        {skillSet.modifiedAt || "Never modified"}
+                      </p>
                     </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Current Status:</span>
-                    <span
-                      className={`font-medium ${originalSkillSet.status === 1 ? "text-green-600" : "text-red-600"}`}
-                    >
-                      {originalSkillSet.status === 1 ? "Active" : "Inactive"}
-                    </span>
+                    <div>
+                      <div className="flex items-center text-gray-500 mb-1">
+                        <UserIcon className="w-4 h-4 mr-1" />
+                        Modified By
+                      </div>
+                      <p className="text-gray-900 ml-5">
+                        {skillSet.modifiedByUserName || "Not available"}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
             )}
 
-            {/* Insurance Info Box */}
-            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-              <h3 className="text-sm font-semibold text-amber-900 mb-2 flex items-center">
-                <ShieldCheckIcon className="w-4 h-4 mr-2" />
-                About Insurance Requirements
-              </h3>
-              <ul className="text-xs text-amber-800 space-y-1">
-                <li>• You can add or remove multiple requirements</li>
-                <li>• Changes apply to all future assignments</li>
-                <li>• Use search to find specific insurance types</li>
-                <li>
-                  • Existing assignments retain their original requirements
-                </li>
-              </ul>
+            {/* Guidelines */}
+            <div className="bg-white shadow-sm rounded-lg">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <LightBulbIcon className="w-5 h-5 mr-2 text-amber-500" />
+                  Guidelines
+                </h3>
+              </div>
+              <div className="p-6">
+                <ul className="space-y-3 text-sm text-gray-600">
+                  <li className="flex items-start">
+                    <DocumentTextIcon className="w-4 h-4 mr-2 text-blue-500 flex-shrink-0 mt-0.5" />
+                    <span>
+                      Use clear, descriptive categories and sub-categories
+                    </span>
+                  </li>
+                  <li className="flex items-start">
+                    <BuildingOfficeIcon className="w-4 h-4 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span>Select all relevant insurance requirements</span>
+                  </li>
+                  <li className="flex items-start">
+                    <WrenchScrewdriverIcon className="w-4 h-4 mr-2 text-purple-500 flex-shrink-0 mt-0.5" />
+                    <span>Keep skill sets specific and actionable</span>
+                  </li>
+                  <li className="flex items-start">
+                    <CheckCircleIcon className="w-4 h-4 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
+                    <span>Review changes before saving</span>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
@@ -950,16 +801,6 @@ function SettingSkillSetUpdatePage() {
             Back to Skill Set Detail
           </Link>
         </div>
-
-        {/* Loading Overlay */}
-        {isSaving && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 flex items-center space-x-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-              <span className="text-gray-700">Updating skill set...</span>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
