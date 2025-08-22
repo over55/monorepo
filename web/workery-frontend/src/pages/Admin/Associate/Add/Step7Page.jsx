@@ -25,12 +25,12 @@ import {
 import {
   InsuranceRequirementsDisplay,
   ServiceFeeDisplay,
-  SkillSetsDisplay,
 } from "../../../../components/Display";
 import {
   HowHearAboutUsDisplay,
   VehicleTypesDisplay,
   TagsDisplay,
+  SkillSetsDisplay,
 } from "../../../../components/business/displays";
 
 const COMMERCIAL_ASSOCIATE_TYPE_OF_ID = 3;

@@ -10,13 +10,11 @@ import {
   Alert,
   Loading,
 } from "../../../../../components/UI";
-import {
-  SkillSetsDisplay,
-  InsuranceRequirementsDisplay,
-} from "../../../../../components/Display";
+import { InsuranceRequirementsDisplay } from "../../../../../components/Display";
 import {
   VehicleTypesDisplay,
   TagsDisplay,
+  SkillSetsDisplay,
 } from "../../../../../components/business/displays";
 import {
   CLIENT_PHONE_TYPE_OF_MAP,

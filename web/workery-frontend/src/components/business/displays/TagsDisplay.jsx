@@ -1,4 +1,4 @@
-// File: web/workery-frontend/src/components/Display/TagsDisplay.jsx
+// File Path: monorepo/web/workery-frontend/src/components/business/displays/TagsDisplay.jsx
 
 import React, { useState, useEffect } from "react";
 import { useTagManager } from "../../../services/Services";

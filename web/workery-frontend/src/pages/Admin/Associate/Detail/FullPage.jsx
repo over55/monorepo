@@ -47,7 +47,6 @@ import {
   useAuthManager,
 } from "../../../../services/Services";
 import {
-  SkillSetsDisplay,
   InsuranceRequirementsDisplay,
   ServiceFeeDisplay,
 } from "../../../../components/Display";
@@ -55,6 +54,7 @@ import {
   HowHearAboutUsDisplay,
   VehicleTypesDisplay,
   TagsDisplay,
+  SkillSetsDisplay,
 } from "../../../../components/business/displays";
 
 // Constants

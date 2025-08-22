@@ -10,8 +10,10 @@ import {
   Alert,
   Loading,
 } from "../../../../../components/UI";
-import { SkillSetsDisplay } from "../../../../../components/Display";
-import { TagsDisplay } from "../../../../../components/business/displays";
+import {
+  TagsDisplay,
+  SkillSetsDisplay,
+} from "../../../../../components/business/displays";
 import { CLIENT_PHONE_TYPE_OF_MAP } from "../../../../../constants/FieldOptions";
 
 function AdminTaskItemAssignAssociateStep4Page() {

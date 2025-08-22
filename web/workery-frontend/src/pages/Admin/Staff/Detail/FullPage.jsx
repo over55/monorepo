@@ -27,10 +27,10 @@ import {
   GlobeAltIcon,
 } from "@heroicons/react/24/outline";
 import { useStaffManager, useAuthManager } from "../../../../services/Services";
-import { SkillSetsDisplay } from "../../../../components/Display";
 import {
   HowHearAboutUsDisplay,
   TagsDisplay,
+  SkillSetsDisplay,
 } from "../../../../components/business/displays";
 
 // Constants
