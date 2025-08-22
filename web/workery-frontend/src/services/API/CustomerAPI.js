@@ -214,11 +214,18 @@ export class CustomerAPI {
       // Convert camelCase to snake_case for API
       let decamelizedData = decamelizeKeys(customerData);
 
-      // BUGFIX: Handle the howDidYouHearAboutUs field specially (from old implementation)
+      // BUGFIX: Handle the howDidYouHearAboutUs field specially
+      // The backend expects how_did_you_hear_about_us_id as a MongoDB ObjectID string
       if (customerData.howDidYouHearAboutUsID) {
-        decamelizedData.how_did_you_hear_about_us_id =
-          customerData.howDidYouHearAboutUsID;
-        delete decamelizedData.how_did_you_hear_about_us_i_d;
+        decamelizedData.how_did_you_hear_about_us_id = String(
+          customerData.howDidYouHearAboutUsID,
+        );
+        delete decamelizedData.how_did_you_hear_about_us_i_d; // Remove the incorrectly decamelized key
+      }
+
+      // Ensure tags are strings (MongoDB ObjectIDs)
+      if (decamelizedData.tags && Array.isArray(decamelizedData.tags)) {
+        decamelizedData.tags = decamelizedData.tags.map((tag) => String(tag));
       }
 
       console.log("createCustomer: post-fix:", decamelizedData);
@@ -323,16 +330,22 @@ export class CustomerAPI {
       // Convert camelCase to snake_case for API
       let decamelizedData = decamelizeKeys(customerData);
 
-      // BUGFIX: Handle the howDidYouHearAboutUs field specially (from old implementation)
+      // BUGFIX: Handle the howDidYouHearAboutUs field specially
       if (customerData.howDidYouHearAboutUsID) {
-        decamelizedData.how_did_you_hear_about_us_id =
-          customerData.howDidYouHearAboutUsID;
-        delete decamelizedData.how_did_you_hear_about_us_i_d;
+        decamelizedData.how_did_you_hear_about_us_id = String(
+          customerData.howDidYouHearAboutUsID,
+        );
+        delete decamelizedData.how_did_you_hear_about_us_i_d; // Remove the incorrectly decamelized key
       }
 
       // BUGFIX: Ensure ID is properly set (from old implementation)
       decamelizedData.id = customerData.id || customerId;
       delete decamelizedData.i_d;
+
+      // Ensure tags are strings (MongoDB ObjectIDs)
+      if (decamelizedData.tags && Array.isArray(decamelizedData.tags)) {
+        decamelizedData.tags = decamelizedData.tags.map((tag) => String(tag));
+      }
 
       console.log("updateCustomer: post-fix:", decamelizedData);
 

@@ -28,9 +28,9 @@ import TagsMultiSelect from "../../../../components/Form/TagsMultiSelect";
 // Gender options - Reordered with "Other" as third option
 const GENDER_OPTIONS = [
   { value: 0, label: "Please select" },
-  { value: 1, label: "Male" },
-  { value: 2, label: "Female" },
-  { value: 3, label: "Other" },
+  { value: 2, label: "Male" },
+  { value: 3, label: "Female" },
+  { value: 1, label: "Other" },
 ];
 
 function AdminCustomerAddStep5Page() {
@@ -99,7 +99,7 @@ function AdminCustomerAddStep5Page() {
 
     if (gender === 0) {
       newErrors.gender = "Gender is required";
-    } else if (gender === 3 && !genderOther.trim()) {
+    } else if (gender === 1 && !genderOther.trim()) {
       // Updated to check for value 3 (Other)
       newErrors.genderOther = "Please specify the gender";
     }
@@ -438,7 +438,7 @@ function AdminCustomerAddStep5Page() {
                       </div>
 
                       {/* Updated condition to check for value 3 (Other) */}
-                      {gender === 3 && (
+                      {gender === 1 && (
                         <div>
                           <label className="block text-sm font-semibold text-gray-700 mb-2">
                             Gender (Other){" "}

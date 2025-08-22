@@ -52,7 +52,11 @@ const GENDER_OPTIONS = [
   { value: 1, label: "Other" },
   { value: 2, label: "Male" },
   { value: 3, label: "Female" },
-  { value: 4, label: "Prefer not to say" },
+  { value: 4, label: "Transgender" },
+  { value: 5, label: "Non-Binary" },
+  { value: 6, label: "Two Spirit" },
+  { value: 7, label: "Prefer not to say" },
+  { value: 8, label: "Do not know" },
 ];
 
 function AdminCustomerUpdatePage() {

@@ -137,7 +137,7 @@ function AdminCustomerAddStep6Page() {
     // Create a payload with the customer data
     const payload = { ...data };
 
-    // Clean up tags - remove any empty strings or invalid values
+    // Clean up tags - ensure they are valid MongoDB ObjectID strings
     if (payload.tags && Array.isArray(payload.tags)) {
       payload.tags = payload.tags.filter(
         (tag) =>
@@ -145,7 +145,9 @@ function AdminCustomerAddStep6Page() {
           tag !== undefined &&
           tag !== "" &&
           tag !== "0" &&
-          tag !== 0,
+          tag !== 0 &&
+          typeof tag === "string" &&
+          tag.length === 24, // MongoDB ObjectIDs are 24 characters
       );
 
       // If no valid tags remain, set to empty array
@@ -186,8 +188,21 @@ function AdminCustomerAddStep6Page() {
     if (payload.gender !== undefined && payload.gender !== 0) {
       payload.gender = parseInt(payload.gender);
     }
-    if (payload.howDidYouHearAboutUsID !== undefined) {
-      payload.howDidYouHearAboutUsID = parseInt(payload.howDidYouHearAboutUsID);
+    if (payload.genderOther === undefined) {
+      payload.genderOther = "";
+    }
+
+    // IMPORTANT: Keep howDidYouHearAboutUsID as a string (MongoDB ObjectID)
+    // DO NOT convert to integer!
+    // The backend expects this to be a MongoDB ObjectID string
+    if (payload.howDidYouHearAboutUsID) {
+      // Ensure it's a string
+      payload.howDidYouHearAboutUsID = String(payload.howDidYouHearAboutUsID);
+    }
+
+    // Remove the isHowDidYouHearAboutUsOther field if it's false
+    if (payload.isHowDidYouHearAboutUsOther === false) {
+      delete payload.isHowDidYouHearAboutUsOther;
     }
 
     // Remove empty/zero values for optional numeric fields
