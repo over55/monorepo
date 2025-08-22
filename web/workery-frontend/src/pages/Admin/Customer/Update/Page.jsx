@@ -21,10 +21,8 @@ import TagsMultiSelect from "../../../../components/Form/TagsMultiSelect";
 import {
   COMMERCIAL_CUSTOMER_TYPE_OF_ID,
   RESIDENTIAL_CUSTOMER_TYPE_OF_ID,
+  CLIENT_PHONE_TYPE_WORK,
 } from "../../../../constants/Customer";
-
-// Constants
-const CLIENT_PHONE_TYPE_WORK = 2;
 
 // Option configurations
 const CLIENT_TYPE_OPTIONS = [
