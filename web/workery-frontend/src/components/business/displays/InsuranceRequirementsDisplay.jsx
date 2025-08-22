@@ -1,28 +1,28 @@
-// File: web/workery-frontend/src/components/Display/SkillSetsDisplay.jsx
+// File Path: monorepo/web/workery-frontend/src/components/business/displays/InsuranceRequirementsDisplay.jsx
 
 import React, { useState, useEffect } from "react";
-import { useSkillSetManager } from "../../services/Services";
-import { Badge, Loading } from "../UI";
+import { useInsuranceRequirementManager } from "../../../services/Services";
+import { Badge, Loading } from "../../UI";
 
 /**
- * Display component for multiple selected skill sets
- * Fetches skill set labels from API based on the stored IDs
+ * Display component for multiple selected insurance requirements
+ * Fetches insurance requirement labels from API based on the stored IDs
  *
- * @param {Array} values - Array of skill set IDs
- * @param {string} label - Custom label (defaults to "Skill Sets")
+ * @param {Array} values - Array of insurance requirement IDs
+ * @param {string} label - Custom label (defaults to "Insurance Requirements")
  * @param {string} className - Additional CSS classes
  * @param {function} onUnauthorized - Callback for unauthorized errors
  * @param {string} variant - Badge variant for display
  */
-function SkillSetsDisplay({
+function InsuranceRequirementsDisplay({
   values = [],
-  label = "Skill Sets",
+  label = "Insurance Requirements",
   className = "",
   onUnauthorized = null,
-  variant = "primary",
+  variant = "info",
 }) {
-  const skillSetManager = useSkillSetManager();
-  const [displaySkillSets, setDisplaySkillSets] = useState([]);
+  const insuranceRequirementManager = useInsuranceRequirementManager();
+  const [displayRequirements, setDisplayRequirements] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -31,9 +31,12 @@ function SkillSetsDisplay({
 
     const fetchDisplayValues = async () => {
       // Debug logging
-      console.log("SkillSetsDisplay - values received:", values);
-      console.log("SkillSetsDisplay - values type:", typeof values);
-      console.log("SkillSetsDisplay - is array?:", Array.isArray(values));
+      console.log("InsuranceRequirementsDisplay - values received:", values);
+      console.log("InsuranceRequirementsDisplay - values type:", typeof values);
+      console.log(
+        "InsuranceRequirementsDisplay - is array?:",
+        Array.isArray(values),
+      );
 
       // Handle null, undefined, or empty cases
       if (
@@ -43,8 +46,8 @@ function SkillSetsDisplay({
         values === null ||
         values === undefined
       ) {
-        console.log("SkillSetsDisplay - No values to display");
-        setDisplaySkillSets([]);
+        console.log("InsuranceRequirementsDisplay - No values to display");
+        setDisplayRequirements([]);
         return;
       }
 
@@ -57,10 +60,13 @@ function SkillSetsDisplay({
           v !== null && v !== undefined && v !== "" && v !== 0 && v !== "0",
       );
 
-      console.log("SkillSetsDisplay - filtered values:", filteredValues);
+      console.log(
+        "InsuranceRequirementsDisplay - filtered values:",
+        filteredValues,
+      );
 
       if (filteredValues.length === 0) {
-        setDisplaySkillSets([]);
+        setDisplayRequirements([]);
         return;
       }
 
@@ -68,33 +74,35 @@ function SkillSetsDisplay({
         setIsLoading(true);
         setError(null);
 
-        // Fetch skill set options from the API/cache
+        // Fetch insurance requirement options from the API/cache
         const options =
-          await skillSetManager.getSkillSetSelectOptions(onUnauthorized);
+          await insuranceRequirementManager.getInsuranceRequirementSelectOptions(
+            onUnauthorized,
+          );
 
-        console.log("SkillSetsDisplay - fetched options:", options);
+        console.log("InsuranceRequirementsDisplay - fetched options:", options);
 
         if (mounted && options) {
           // Map the IDs to their labels
-          const mappedSkillSets = filteredValues
-            .map((skillSetId) => {
+          const mappedRequirements = filteredValues
+            .map((requirementId) => {
               // Ensure we're comparing as strings for consistency
-              const skillSetIdStr = String(skillSetId);
+              const requirementIdStr = String(requirementId);
 
               const matchingOption = options.find((opt) => {
                 // Handle both 'value' and 'id' properties
                 const optionId = String(opt.value || opt.id);
-                return optionId === skillSetIdStr;
+                return optionId === requirementIdStr;
               });
 
               console.log(
-                `SkillSetsDisplay - Mapping skill set ID ${skillSetId}:`,
+                `InsuranceRequirementsDisplay - Mapping requirement ID ${requirementId}:`,
                 matchingOption,
               );
 
               if (matchingOption) {
                 return {
-                  id: skillSetId,
+                  id: requirementId,
                   label:
                     matchingOption.label ||
                     matchingOption.text ||
@@ -102,13 +110,13 @@ function SkillSetsDisplay({
                 };
               } else {
                 // Only show unknown if we have a valid ID
-                if (skillSetIdStr && skillSetIdStr !== "undefined") {
+                if (requirementIdStr && requirementIdStr !== "undefined") {
                   console.warn(
-                    `SkillSetsDisplay - No match found for skill set ID: ${skillSetId}`,
+                    `InsuranceRequirementsDisplay - No match found for requirement ID: ${requirementId}`,
                   );
                   return {
-                    id: skillSetId,
-                    label: `Unknown (ID: ${skillSetId})`,
+                    id: requirementId,
+                    label: `Unknown (ID: ${requirementId})`,
                   };
                 }
                 return null;
@@ -116,19 +124,22 @@ function SkillSetsDisplay({
             })
             .filter(Boolean); // Remove any null values
 
-          console.log("SkillSetsDisplay - mapped skill sets:", mappedSkillSets);
-          setDisplaySkillSets(mappedSkillSets);
+          console.log(
+            "InsuranceRequirementsDisplay - mapped requirements:",
+            mappedRequirements,
+          );
+          setDisplayRequirements(mappedRequirements);
         }
       } catch (error) {
-        console.error("Error fetching skill set options:", error);
+        console.error("Error fetching insurance requirement options:", error);
         if (mounted) {
-          setError("Failed to load skill sets");
+          setError("Failed to load insurance requirements");
           // Fallback to showing IDs only if we have valid values
-          const fallbackSkillSets = filteredValues.map((id) => ({
+          const fallbackRequirements = filteredValues.map((id) => ({
             id,
             label: `ID: ${id}`,
           }));
-          setDisplaySkillSets(fallbackSkillSets);
+          setDisplayRequirements(fallbackRequirements);
         }
       } finally {
         if (mounted) {
@@ -149,7 +160,7 @@ function SkillSetsDisplay({
       <div className={`mb-4 ${className}`}>
         <p className="text-sm font-medium text-gray-700 mb-2">{label}</p>
         <div className="flex items-center">
-          <Loading size="sm" text="Loading skill sets..." />
+          <Loading size="sm" text="Loading insurance requirements..." />
         </div>
       </div>
     );
@@ -161,18 +172,20 @@ function SkillSetsDisplay({
       <div className="flex flex-wrap gap-2">
         {error ? (
           <span className="text-red-600 text-sm">{error}</span>
-        ) : displaySkillSets.length > 0 ? (
-          displaySkillSets.map((skillSet) => (
-            <Badge key={skillSet.id} variant={variant} size="md">
-              {skillSet.label}
+        ) : displayRequirements.length > 0 ? (
+          displayRequirements.map((requirement) => (
+            <Badge key={requirement.id} variant={variant} size="md">
+              {requirement.label}
             </Badge>
           ))
         ) : (
-          <span className="text-gray-400 text-sm">No skill sets selected</span>
+          <span className="text-gray-400 text-sm">
+            No insurance requirements selected
+          </span>
         )}
       </div>
     </div>
   );
 }
 
-export default SkillSetsDisplay;
+export default InsuranceRequirementsDisplay;
