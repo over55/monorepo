@@ -10,6 +10,7 @@ import (
 	s3_storage "github.com/over55/monorepo/cloud/workery-backend/adapter/storage/s3"
 	"github.com/over55/monorepo/cloud/workery-backend/adapter/templatedemailer"
 	a_c "github.com/over55/monorepo/cloud/workery-backend/app/associate/datastore"
+	ir_s "github.com/over55/monorepo/cloud/workery-backend/app/insurancerequirement/datastore"
 	o_s "github.com/over55/monorepo/cloud/workery-backend/app/order/datastore"
 	skillset_s "github.com/over55/monorepo/cloud/workery-backend/app/skillset/datastore"
 	t_s "github.com/over55/monorepo/cloud/workery-backend/app/skillset/datastore"
@@ -33,19 +34,20 @@ type SkillSetController interface {
 }
 
 type SkillSetControllerImpl struct {
-	Config           *config.Conf
-	Logger           *slog.Logger
-	UUID             uuid.Provider
-	S3               s3_storage.S3Storager
-	Password         password.Provider
-	DbClient         *mongo.Client
-	TemplatedEmailer templatedemailer.TemplatedEmailer
-	Kmutex           kmutex.Provider
-	AssociateStorer  a_c.AssociateStorer
-	UserStorer       user_s.UserStorer
-	SkillSetStorer   skillset_s.SkillSetStorer
-	OrderStorer      o_s.OrderStorer
-	TaskItemStorer   ti_s.TaskItemStorer
+	Config                     *config.Conf
+	Logger                     *slog.Logger
+	UUID                       uuid.Provider
+	S3                         s3_storage.S3Storager
+	Password                   password.Provider
+	DbClient                   *mongo.Client
+	TemplatedEmailer           templatedemailer.TemplatedEmailer
+	Kmutex                     kmutex.Provider
+	AssociateStorer            a_c.AssociateStorer
+	UserStorer                 user_s.UserStorer
+	SkillSetStorer             skillset_s.SkillSetStorer
+	InsuranceRequirementStorer ir_s.InsuranceRequirementStorer
+	OrderStorer                o_s.OrderStorer
+	TaskItemStorer             ti_s.TaskItemStorer
 }
 
 func NewController(
@@ -59,25 +61,27 @@ func NewController(
 	client *mongo.Client,
 	usr_storer user_s.UserStorer,
 	skillset_s skillset_s.SkillSetStorer,
+	ir_storer ir_s.InsuranceRequirementStorer,
 	a_ctorer a_c.AssociateStorer,
 	o_storer o_s.OrderStorer,
 	ti_storer ti_s.TaskItemStorer,
 ) SkillSetController {
 	loggerp.Debug("skillset controller initialization started...")
 	s := &SkillSetControllerImpl{
-		Config:           appCfg,
-		Logger:           loggerp,
-		UUID:             uuidp,
-		S3:               s3,
-		Password:         passwordp,
-		TemplatedEmailer: temailer,
-		Kmutex:           kmux,
-		DbClient:         client,
-		UserStorer:       usr_storer,
-		SkillSetStorer:   skillset_s,
-		AssociateStorer:  a_ctorer,
-		OrderStorer:      o_storer,
-		TaskItemStorer:   ti_storer,
+		Config:                     appCfg,
+		Logger:                     loggerp,
+		UUID:                       uuidp,
+		S3:                         s3,
+		Password:                   passwordp,
+		TemplatedEmailer:           temailer,
+		Kmutex:                     kmux,
+		DbClient:                   client,
+		UserStorer:                 usr_storer,
+		SkillSetStorer:             skillset_s,
+		InsuranceRequirementStorer: ir_storer,
+		AssociateStorer:            a_ctorer,
+		OrderStorer:                o_storer,
+		TaskItemStorer:             ti_storer,
 	}
 	s.Logger.Debug("skillset controller initialized")
 	return s

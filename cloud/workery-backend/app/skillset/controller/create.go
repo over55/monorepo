@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"log/slog"
 	"time"
 
@@ -14,17 +15,41 @@ import (
 )
 
 type SkillSetCreateRequestIDO struct {
-	Category    string `bson:"category" json:"category"`
-	SubCategory string `bson:"sub_category" json:"sub_category"`
-	Description string `bson:"description" json:"description"`
+	Category              string               `bson:"category" json:"category"`
+	SubCategory           string               `bson:"sub_category" json:"sub_category"`
+	Description           string               `bson:"description" json:"description"`
+	InsuranceRequirements []primitive.ObjectID `bson:"insurance_requirements" json:"insurance_requirements,omitempty"`
 }
 
-func (impl *SkillSetControllerImpl) userFromCreateRequest(requestData *SkillSetCreateRequestIDO) (*skillset_s.SkillSet, error) {
-	return &skillset_s.SkillSet{
+func (impl *SkillSetControllerImpl) skillSetFromCreateRequest(sessCtx mongo.SessionContext, requestData *SkillSetCreateRequestIDO) (*skillset_s.SkillSet, error) {
+	ss := &skillset_s.SkillSet{
 		Category:    requestData.Category,
 		SubCategory: requestData.SubCategory,
 		Description: requestData.Description,
-	}, nil
+	}
+
+	// Note: `InsuranceRequirements` is optional.
+	for _, insuranceRequirementID := range requestData.InsuranceRequirements {
+
+		ir, err := impl.InsuranceRequirementStorer.GetByID(sessCtx, insuranceRequirementID)
+		if err != nil {
+			impl.Logger.Error("failed getting insurance requirement",
+				slog.Any("insurance_requirement", ir.ID.Hex()),
+				slog.Any("error", err))
+			return nil, err
+		}
+		if ir == nil {
+			return nil, errors.New("insurance requirement does not exist")
+		}
+		air := &skillset_s.SkillSetInsuranceRequirement{
+			ID:          ir.ID,
+			Name:        ir.Name,
+			Description: ir.Description,
+			Status:      ir.Status,
+		}
+		ss.InsuranceRequirements = append(ss.InsuranceRequirements, air) // Append comments to associate details.
+	}
+	return ss, nil
 }
 
 func (impl *SkillSetControllerImpl) validateCreateRequest(ctx context.Context, dirtyData *SkillSetCreateRequestIDO) error {
@@ -41,6 +66,7 @@ func (impl *SkillSetControllerImpl) validateCreateRequest(ctx context.Context, d
 	if len(e) != 0 {
 		return httperror.NewForBadRequest(&e)
 	}
+	// Note: we do not validate `InsuranceRequirements` as it is optional.
 	return nil
 }
 
@@ -91,7 +117,7 @@ func (impl *SkillSetControllerImpl) Create(ctx context.Context, requestData *Ski
 		// Convert request to our domain.
 		//
 
-		m, err := impl.userFromCreateRequest(requestData)
+		m, err := impl.skillSetFromCreateRequest(sessCtx, requestData)
 		if err != nil {
 			return nil, err
 		}

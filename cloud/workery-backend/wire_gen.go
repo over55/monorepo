@@ -41,15 +41,15 @@ import (
 	datastore6 "github.com/over55/monorepo/cloud/workery-backend/app/howhear/datastore"
 	httptransport9 "github.com/over55/monorepo/cloud/workery-backend/app/howhear/httptransport"
 	controller8 "github.com/over55/monorepo/cloud/workery-backend/app/insurancerequirement/controller"
-	datastore14 "github.com/over55/monorepo/cloud/workery-backend/app/insurancerequirement/datastore"
+	datastore11 "github.com/over55/monorepo/cloud/workery-backend/app/insurancerequirement/datastore"
 	httptransport8 "github.com/over55/monorepo/cloud/workery-backend/app/insurancerequirement/httptransport"
 	controller25 "github.com/over55/monorepo/cloud/workery-backend/app/jobhistory/controller"
 	httptransport25 "github.com/over55/monorepo/cloud/workery-backend/app/jobhistory/httptransport"
 	controller7 "github.com/over55/monorepo/cloud/workery-backend/app/naics/controller"
-	datastore13 "github.com/over55/monorepo/cloud/workery-backend/app/naics/datastore"
+	datastore14 "github.com/over55/monorepo/cloud/workery-backend/app/naics/datastore"
 	httptransport7 "github.com/over55/monorepo/cloud/workery-backend/app/naics/httptransport"
 	controller6 "github.com/over55/monorepo/cloud/workery-backend/app/noc/controller"
-	datastore12 "github.com/over55/monorepo/cloud/workery-backend/app/noc/datastore"
+	datastore13 "github.com/over55/monorepo/cloud/workery-backend/app/noc/datastore"
 	httptransport6 "github.com/over55/monorepo/cloud/workery-backend/app/noc/httptransport"
 	controller17 "github.com/over55/monorepo/cloud/workery-backend/app/order/controller"
 	datastore8 "github.com/over55/monorepo/cloud/workery-backend/app/order/datastore"
@@ -81,7 +81,7 @@ import (
 	"github.com/over55/monorepo/cloud/workery-backend/app/user/datastore"
 	httptransport2 "github.com/over55/monorepo/cloud/workery-backend/app/user/httptransport"
 	controller5 "github.com/over55/monorepo/cloud/workery-backend/app/vehicletype/controller"
-	datastore11 "github.com/over55/monorepo/cloud/workery-backend/app/vehicletype/datastore"
+	datastore12 "github.com/over55/monorepo/cloud/workery-backend/app/vehicletype/datastore"
 	httptransport5 "github.com/over55/monorepo/cloud/workery-backend/app/vehicletype/httptransport"
 	"github.com/over55/monorepo/cloud/workery-backend/config"
 	"github.com/over55/monorepo/cloud/workery-backend/inputport/http"
@@ -140,18 +140,18 @@ func InitializeEvent() Application {
 	tagController := controller3.NewController(conf, slogLogger, provider, s3Storager, passwordProvider, kmutexProvider, client, templatedEmailer, userStorer, tagStorer, customerStorer, associateStorer, orderStorer, taskItemStorer)
 	handler2 := httptransport3.NewHandler(slogLogger, tagController)
 	skillSetStorer := datastore10.NewDatastore(conf, slogLogger, client)
-	skillSetController := controller4.NewController(conf, slogLogger, provider, s3Storager, passwordProvider, templatedEmailer, kmutexProvider, client, userStorer, skillSetStorer, associateStorer, orderStorer, taskItemStorer)
+	insuranceRequirementStorer := datastore11.NewDatastore(conf, slogLogger, client)
+	skillSetController := controller4.NewController(conf, slogLogger, provider, s3Storager, passwordProvider, templatedEmailer, kmutexProvider, client, userStorer, skillSetStorer, insuranceRequirementStorer, associateStorer, orderStorer, taskItemStorer)
 	handler3 := httptransport4.NewHandler(slogLogger, skillSetController)
-	vehicleTypeStorer := datastore11.NewDatastore(conf, slogLogger, client)
+	vehicleTypeStorer := datastore12.NewDatastore(conf, slogLogger, client)
 	vehicleTypeController := controller5.NewController(conf, slogLogger, provider, kmutexProvider, s3Storager, passwordProvider, client, templatedEmailer, userStorer, customerStorer, associateStorer, staffStorer, orderStorer, taskItemStorer, vehicleTypeStorer)
 	handler4 := httptransport5.NewHandler(slogLogger, vehicleTypeController)
-	nationalOccupationalClassificationStorer := datastore12.NewDatastore(conf, slogLogger, client)
+	nationalOccupationalClassificationStorer := datastore13.NewDatastore(conf, slogLogger, client)
 	nationalOccupationalClassificationController := controller6.NewController(conf, slogLogger, provider, kmutexProvider, s3Storager, passwordProvider, client, templatedEmailer, userStorer, customerStorer, associateStorer, staffStorer, orderStorer, taskItemStorer, nationalOccupationalClassificationStorer)
 	handler5 := httptransport6.NewHandler(slogLogger, nationalOccupationalClassificationController)
-	northAmericanIndustryClassificationSystemStorer := datastore13.NewDatastore(conf, slogLogger, client)
+	northAmericanIndustryClassificationSystemStorer := datastore14.NewDatastore(conf, slogLogger, client)
 	northAmericanIndustryClassificationSystemController := controller7.NewController(conf, slogLogger, provider, kmutexProvider, s3Storager, passwordProvider, client, templatedEmailer, userStorer, customerStorer, associateStorer, staffStorer, orderStorer, taskItemStorer, northAmericanIndustryClassificationSystemStorer)
 	handler6 := httptransport7.NewHandler(slogLogger, northAmericanIndustryClassificationSystemController)
-	insuranceRequirementStorer := datastore14.NewDatastore(conf, slogLogger, client)
 	insuranceRequirementController := controller8.NewController(conf, slogLogger, provider, s3Storager, kmutexProvider, passwordProvider, templatedEmailer, client, userStorer, associateStorer, orderStorer, taskItemStorer, insuranceRequirementStorer)
 	handler7 := httptransport8.NewHandler(slogLogger, insuranceRequirementController)
 	howHearAboutUsItemController := controller9.NewController(conf, slogLogger, provider, s3Storager, passwordProvider, kmutexProvider, templatedEmailer, client, userStorer, customerStorer, associateStorer, staffStorer, howHearAboutUsItemStorer)

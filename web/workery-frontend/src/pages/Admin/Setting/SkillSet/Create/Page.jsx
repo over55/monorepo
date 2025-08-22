@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useSkillSetManager } from "../../../../../services/Services";
+import { InsuranceRequirementsMultiSelect } from "../../../../../components/business/selects";
 import {
   ChartBarIcon,
   Cog6ToothIcon,
@@ -31,13 +32,13 @@ function SettingSkillSetCreatePage() {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
 
-  // Form fields
+  // Form fields - Note: insuranceRequirements is now an array
   const [formData, setFormData] = useState({
     category: "",
     subCategory: "",
     description: "",
     status: 1, // Active by default - hidden from UI but sent to API
-    insuranceRequirement: 1, // None by default
+    insuranceRequirements: [], // Changed from single value to array
   });
 
   const onUnauthorized = () => {
@@ -86,6 +87,21 @@ function SettingSkillSetCreatePage() {
       newErrors.description = "Description must be less than 500 characters";
     }
 
+    // Validate insurance requirements (optional, but if provided should be valid)
+    if (
+      formData.insuranceRequirements &&
+      formData.insuranceRequirements.length > 0
+    ) {
+      // Check if all selected values are valid IDs
+      const invalidIds = formData.insuranceRequirements.filter(
+        (id) => !id || id === "" || id === "0",
+      );
+      if (invalidIds.length > 0) {
+        newErrors.insuranceRequirements =
+          "Invalid insurance requirements selected";
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -108,7 +124,7 @@ function SettingSkillSetCreatePage() {
         subCategory: formData.subCategory.trim(),
         description: formData.description.trim(),
         status: formData.status,
-        insuranceRequirement: formData.insuranceRequirement,
+        insuranceRequirements: formData.insuranceRequirements, // Now sending array
       };
 
       console.log(
@@ -148,7 +164,8 @@ function SettingSkillSetCreatePage() {
     const hasUnsavedChanges =
       formData.category.trim() ||
       formData.subCategory.trim() ||
-      formData.description.trim();
+      formData.description.trim() ||
+      formData.insuranceRequirements.length > 0;
 
     if (hasUnsavedChanges) {
       if (
@@ -379,27 +396,20 @@ function SettingSkillSetCreatePage() {
                   </div>
                 </div>
 
-                {/* Insurance Requirement Field */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Insurance Requirement
-                  </label>
-                  <select
-                    value={formData.insuranceRequirement}
-                    onChange={(e) =>
-                      handleFieldChange(
-                        "insuranceRequirement",
-                        parseInt(e.target.value),
-                      )
-                    }
-                    disabled={isLoading}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value={1}>None</option>
-                    <option value={2}>Commercial General Liability</option>
-                    <option value={3}>WSIB</option>
-                  </select>
-                </div>
+                {/* Insurance Requirements Multi-Select Field */}
+                <InsuranceRequirementsMultiSelect
+                  label="Insurance Requirements"
+                  value={formData.insuranceRequirements}
+                  onChange={(value) =>
+                    handleFieldChange("insuranceRequirements", value)
+                  }
+                  error={errors.insuranceRequirements}
+                  disabled={isLoading}
+                  required={false}
+                  placeholder="Select insurance requirements..."
+                  helperText="Select one or more insurance requirements for this skill set"
+                  onUnauthorized={onUnauthorized}
+                />
 
                 {/* Info Note */}
                 <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -408,7 +418,8 @@ function SettingSkillSetCreatePage() {
                     <span>
                       Skill sets will be created as active and available for
                       selection when assigning to associates and job
-                      requirements.
+                      requirements. Multiple insurance requirements can be
+                      selected if needed.
                     </span>
                   </p>
                 </div>
@@ -463,7 +474,7 @@ function SettingSkillSetCreatePage() {
                   <li className="flex items-start">
                     <ShieldCheckIcon className="w-4 h-4 mr-2 text-purple-500 flex-shrink-0 mt-0.5" />
                     <span>
-                      Set appropriate insurance requirements for risk level
+                      Select all applicable insurance requirements for the skill
                     </span>
                   </li>
                   <li className="flex items-start">
@@ -513,12 +524,32 @@ function SettingSkillSetCreatePage() {
                       Insurance Requirements
                     </h3>
                     <p>
-                      Choose based on the risk level and legal requirements of
-                      the skill set.
+                      Select all insurance types required for this skill set.
+                      You can choose multiple requirements based on the risk
+                      level and legal requirements.
                     </p>
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Insurance Info Box */}
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <h3 className="text-sm font-semibold text-amber-900 mb-2 flex items-center">
+                <ShieldCheckIcon className="w-4 h-4 mr-2" />
+                About Insurance Requirements
+              </h3>
+              <ul className="text-xs text-amber-800 space-y-1">
+                <li>• Multiple requirements can be selected</li>
+                <li>
+                  • Requirements are filtered dynamically from the backend
+                </li>
+                <li>• Use the search to find specific insurance types</li>
+                <li>
+                  • Selected requirements will apply to all associates with this
+                  skill
+                </li>
+              </ul>
             </div>
           </div>
         </div>
