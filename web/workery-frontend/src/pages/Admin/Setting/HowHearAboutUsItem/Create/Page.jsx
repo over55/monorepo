@@ -30,7 +30,7 @@ function SettingHowHearAboutUsItemCreatePage() {
 
   // Form state
   const [formData, setFormData] = useState({
-    sortNumber: 0,
+    sortNumber: 1,
     text: "",
     isForAssociate: false,
     isForCustomer: false,
