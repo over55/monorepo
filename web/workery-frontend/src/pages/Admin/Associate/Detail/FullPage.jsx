@@ -190,9 +190,56 @@ function AdminAssociateDetailFullPage() {
     return extension ? `${formatted} ext. ${extension}` : formatted;
   };
 
+  // FIXED: Enhanced formatDriversLicenseClasses to handle various input types
   const formatDriversLicenseClasses = (driversLicenseClass) => {
-    if (!driversLicenseClass || driversLicenseClass.length === 0) return "-";
-    return driversLicenseClass.map((license) => license.text).join(", ");
+    // Handle null/undefined
+    if (!driversLicenseClass) return "-";
+
+    // If it's a string, return it as is
+    if (typeof driversLicenseClass === "string") {
+      return driversLicenseClass || "-";
+    }
+
+    // If it's an array
+    if (Array.isArray(driversLicenseClass)) {
+      if (driversLicenseClass.length === 0) return "-";
+
+      // Extract text from each item and join
+      return (
+        driversLicenseClass
+          .map((license) => {
+            // Handle if license is a string
+            if (typeof license === "string") return license;
+            // Handle if license is an object with text property
+            if (license && typeof license === "object") {
+              return (
+                license.text ||
+                license.label ||
+                license.name ||
+                license.value ||
+                ""
+              );
+            }
+            return "";
+          })
+          .filter(Boolean) // Remove empty strings
+          .join(", ") || "-"
+      );
+    }
+
+    // If it's a single object (not an array)
+    if (typeof driversLicenseClass === "object") {
+      return (
+        driversLicenseClass.text ||
+        driversLicenseClass.label ||
+        driversLicenseClass.name ||
+        driversLicenseClass.value ||
+        "-"
+      );
+    }
+
+    // Fallback for any other type
+    return String(driversLicenseClass) || "-";
   };
 
   const formatMultiSelect = (selectedValues, options) => {
