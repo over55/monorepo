@@ -53,17 +53,20 @@ import {
   ASSOCIATE_STATUS_IN_COUNTRY_NATURALIZED_CITIZEN,
   ASSOCIATE_STATUS_IN_COUNTRY_PROTECTED_PERSON,
   ASSOCIATE_STATUS_IN_COUNTRY_OTHER,
+  ASSOCIATE_STATUS_IN_COUNTRY_OPTIONS_WITH_EMPTY_OPTIONS,
   ASSOCIATE_MARITAL_STATUS_SINGLE,
   ASSOCIATE_MARITAL_STATUS_MARRIED,
   ASSOCIATE_MARITAL_STATUS_DIVORCED,
   ASSOCIATE_MARITAL_STATUS_WIDOWED,
   ASSOCIATE_MARITAL_STATUS_OTHER,
+  ASSOCIATE_MARITAL_STATUS_OPTIONS_WITH_EMPTY_OPTIONS,
   ASSOCIATE_EDUCATION_ELEMENTARY,
   ASSOCIATE_EDUCATION_HIGH_SCHOOL,
   ASSOCIATE_EDUCATION_COLLEGE,
   ASSOCIATE_EDUCATION_UNIVERSITY,
   ASSOCIATE_EDUCATION_POST_GRADUATE,
   ASSOCIATE_EDUCATION_OTHER,
+  ASSOCIATE_ACCOMPLISHED_EDUCATION_OPTIONS_WITH_EMPTY_OPTIONS,
 } from "../../../../constants/Associate";
 
 function AdminAssociateAddStep6Page() {
@@ -385,46 +388,6 @@ function AdminAssociateAddStep6Page() {
     },
   ];
 
-  const statusInCountryOptions = [
-    { value: 0, label: "Please select" },
-    {
-      value: ASSOCIATE_STATUS_IN_COUNTRY_CANADIAN_CITIZEN,
-      label: "Canadian Citizen",
-    },
-    {
-      value: ASSOCIATE_STATUS_IN_COUNTRY_PERMANENT_RESIDENT,
-      label: "Permanent Resident",
-    },
-    {
-      value: ASSOCIATE_STATUS_IN_COUNTRY_NATURALIZED_CITIZEN,
-      label: "Naturalized Canadian Citizen",
-    },
-    {
-      value: ASSOCIATE_STATUS_IN_COUNTRY_PROTECTED_PERSON,
-      label: "Protected Person",
-    },
-    { value: ASSOCIATE_STATUS_IN_COUNTRY_OTHER, label: "Other" },
-  ];
-
-  const maritalStatusOptions = [
-    { value: 0, label: "Please select" },
-    { value: ASSOCIATE_MARITAL_STATUS_SINGLE, label: "Single" },
-    { value: ASSOCIATE_MARITAL_STATUS_MARRIED, label: "Married" },
-    { value: ASSOCIATE_MARITAL_STATUS_DIVORCED, label: "Divorced" },
-    { value: ASSOCIATE_MARITAL_STATUS_WIDOWED, label: "Widowed" },
-    { value: ASSOCIATE_MARITAL_STATUS_OTHER, label: "Other" },
-  ];
-
-  const educationOptions = [
-    { value: 0, label: "Please select" },
-    { value: ASSOCIATE_EDUCATION_ELEMENTARY, label: "Elementary School" },
-    { value: ASSOCIATE_EDUCATION_HIGH_SCHOOL, label: "High School" },
-    { value: ASSOCIATE_EDUCATION_COLLEGE, label: "College" },
-    { value: ASSOCIATE_EDUCATION_UNIVERSITY, label: "University" },
-    { value: ASSOCIATE_EDUCATION_POST_GRADUATE, label: "Post Graduate" },
-    { value: ASSOCIATE_EDUCATION_OTHER, label: "Other" },
-  ];
-
   const countryOptions = [
     { value: "", label: "Please select" },
     { value: "Canada", label: "Canada" },
@@ -651,7 +614,7 @@ function AdminAssociateAddStep6Page() {
                               <span className="text-red-500">*</span>
                             </label>
                             <select
-                              value={String(statusInCountry)}
+                              value={statusInCountry}
                               onChange={(e) => {
                                 const value = parseInt(e.target.value, 10);
                                 setStatusInCountry(value);
@@ -668,14 +631,16 @@ function AdminAssociateAddStep6Page() {
                                   : "border-gray-300"
                               }`}
                             >
-                              {statusInCountryOptions.map((option) => (
-                                <option
-                                  key={option.value}
-                                  value={String(option.value)}
-                                >
-                                  {option.label}
-                                </option>
-                              ))}
+                              {ASSOCIATE_STATUS_IN_COUNTRY_OPTIONS_WITH_EMPTY_OPTIONS.map(
+                                (option) => (
+                                  <option
+                                    key={option.value}
+                                    value={option.value}
+                                  >
+                                    {option.label}
+                                  </option>
+                                ),
+                              )}
                             </select>
                             {errors.statusInCountry && (
                               <p className="mt-1 text-sm text-red-600">
@@ -786,7 +751,7 @@ function AdminAssociateAddStep6Page() {
                               <span className="text-red-500">*</span>
                             </label>
                             <select
-                              value={String(maritalStatus)}
+                              value={maritalStatus}
                               onChange={(e) => {
                                 const value = parseInt(e.target.value, 10);
                                 setMaritalStatus(value);
@@ -803,14 +768,16 @@ function AdminAssociateAddStep6Page() {
                                   : "border-gray-300"
                               }`}
                             >
-                              {maritalStatusOptions.map((option) => (
-                                <option
-                                  key={option.value}
-                                  value={String(option.value)}
-                                >
-                                  {option.label}
-                                </option>
-                              ))}
+                              {ASSOCIATE_MARITAL_STATUS_OPTIONS_WITH_EMPTY_OPTIONS.map(
+                                (option) => (
+                                  <option
+                                    key={option.value}
+                                    value={option.value}
+                                  >
+                                    {option.label}
+                                  </option>
+                                ),
+                              )}
                             </select>
                             {errors.maritalStatus && (
                               <p className="mt-1 text-sm text-red-600">
@@ -853,7 +820,7 @@ function AdminAssociateAddStep6Page() {
                               <span className="text-red-500">*</span>
                             </label>
                             <select
-                              value={String(accomplishedEducation)}
+                              value={accomplishedEducation}
                               onChange={(e) => {
                                 const value = parseInt(e.target.value, 10);
                                 setAccomplishedEducation(value);
@@ -873,14 +840,16 @@ function AdminAssociateAddStep6Page() {
                                   : "border-gray-300"
                               }`}
                             >
-                              {educationOptions.map((option) => (
-                                <option
-                                  key={option.value}
-                                  value={String(option.value)}
-                                >
-                                  {option.label}
-                                </option>
-                              ))}
+                              {ASSOCIATE_ACCOMPLISHED_EDUCATION_OPTIONS_WITH_EMPTY_OPTIONS.map(
+                                (option) => (
+                                  <option
+                                    key={option.value}
+                                    value={option.value}
+                                  >
+                                    {option.label}
+                                  </option>
+                                ),
+                              )}
                             </select>
                             {errors.accomplishedEducation && (
                               <p className="mt-1 text-sm text-red-600">

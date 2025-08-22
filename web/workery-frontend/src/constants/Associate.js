@@ -1,4 +1,4 @@
-// File Path: web/workery-frontend/src/constants/Associate.js
+// File Path: monorepo/web/workery-frontend/src/constants/Associate.js
 
 /**
  * Associate Constants
@@ -29,29 +29,27 @@ export const ASSOCIATE_IDENTIFY_AS_INUIT = 9;
 export const ASSOCIATE_IDENTIFY_AS_FIRST_NATIONS = 10;
 export const ASSOCIATE_IDENTIFY_AS_METIS = 11;
 
-// Status in Country Options
-export const ASSOCIATE_STATUS_IN_COUNTRY_CANADIAN_CITIZEN = "canadian_citizen";
-export const ASSOCIATE_STATUS_IN_COUNTRY_PERMANENT_RESIDENT =
-  "permanent_resident";
-export const ASSOCIATE_STATUS_IN_COUNTRY_NATURALIZED_CITIZEN =
-  "naturalized_citizen";
-export const ASSOCIATE_STATUS_IN_COUNTRY_PROTECTED_PERSON = "protected_person";
-export const ASSOCIATE_STATUS_IN_COUNTRY_OTHER = "other";
+// Status in Country Options - Fixed to use numeric values
+export const ASSOCIATE_STATUS_IN_COUNTRY_CANADIAN_CITIZEN = 1;
+export const ASSOCIATE_STATUS_IN_COUNTRY_PERMANENT_RESIDENT = 2;
+export const ASSOCIATE_STATUS_IN_COUNTRY_NATURALIZED_CITIZEN = 3;
+export const ASSOCIATE_STATUS_IN_COUNTRY_PROTECTED_PERSON = 4;
+export const ASSOCIATE_STATUS_IN_COUNTRY_OTHER = 5;
 
-// Marital Status Options
-export const ASSOCIATE_MARITAL_STATUS_SINGLE = "single";
-export const ASSOCIATE_MARITAL_STATUS_MARRIED = "married";
-export const ASSOCIATE_MARITAL_STATUS_DIVORCED = "divorced";
-export const ASSOCIATE_MARITAL_STATUS_WIDOWED = "widowed";
-export const ASSOCIATE_MARITAL_STATUS_OTHER = "other";
+// Marital Status Options - Fixed to use numeric values
+export const ASSOCIATE_MARITAL_STATUS_SINGLE = 1;
+export const ASSOCIATE_MARITAL_STATUS_MARRIED = 2;
+export const ASSOCIATE_MARITAL_STATUS_DIVORCED = 3;
+export const ASSOCIATE_MARITAL_STATUS_WIDOWED = 4;
+export const ASSOCIATE_MARITAL_STATUS_OTHER = 5;
 
-// Education Level Options
-export const ASSOCIATE_EDUCATION_ELEMENTARY = "elementary";
-export const ASSOCIATE_EDUCATION_HIGH_SCHOOL = "high_school";
-export const ASSOCIATE_EDUCATION_COLLEGE = "college";
-export const ASSOCIATE_EDUCATION_UNIVERSITY = "university";
-export const ASSOCIATE_EDUCATION_POST_GRADUATE = "post_graduate";
-export const ASSOCIATE_EDUCATION_OTHER = "other";
+// Education Level Options - Fixed to use numeric values
+export const ASSOCIATE_EDUCATION_ELEMENTARY = 1;
+export const ASSOCIATE_EDUCATION_HIGH_SCHOOL = 2;
+export const ASSOCIATE_EDUCATION_COLLEGE = 3;
+export const ASSOCIATE_EDUCATION_UNIVERSITY = 4;
+export const ASSOCIATE_EDUCATION_POST_GRADUATE = 5;
+export const ASSOCIATE_EDUCATION_OTHER = 6;
 
 export const ASSOCIATE_PHONE_TYPE_WORK = 1;
 
@@ -85,3 +83,44 @@ export const PAGE_SIZE_OPTIONS = [
 
 export const COMMERCIAL_ASSOCIATE_TYPE_OF_ID = 2;
 export const RESIDENTIAL_ASSOCIATE_TYPE_OF_ID = 1;
+
+// Add these option arrays for use in forms
+export const ASSOCIATE_STATUS_IN_COUNTRY_OPTIONS_WITH_EMPTY_OPTIONS = [
+  { value: 0, label: "Please select" },
+  {
+    value: ASSOCIATE_STATUS_IN_COUNTRY_CANADIAN_CITIZEN,
+    label: "Canadian Citizen",
+  },
+  {
+    value: ASSOCIATE_STATUS_IN_COUNTRY_PERMANENT_RESIDENT,
+    label: "Permanent Resident",
+  },
+  {
+    value: ASSOCIATE_STATUS_IN_COUNTRY_NATURALIZED_CITIZEN,
+    label: "Naturalized Canadian Citizen",
+  },
+  {
+    value: ASSOCIATE_STATUS_IN_COUNTRY_PROTECTED_PERSON,
+    label: "Protected Person",
+  },
+  { value: ASSOCIATE_STATUS_IN_COUNTRY_OTHER, label: "Other" },
+];
+
+export const ASSOCIATE_MARITAL_STATUS_OPTIONS_WITH_EMPTY_OPTIONS = [
+  { value: 0, label: "Please select" },
+  { value: ASSOCIATE_MARITAL_STATUS_SINGLE, label: "Single" },
+  { value: ASSOCIATE_MARITAL_STATUS_MARRIED, label: "Married" },
+  { value: ASSOCIATE_MARITAL_STATUS_DIVORCED, label: "Divorced" },
+  { value: ASSOCIATE_MARITAL_STATUS_WIDOWED, label: "Widowed" },
+  { value: ASSOCIATE_MARITAL_STATUS_OTHER, label: "Other" },
+];
+
+export const ASSOCIATE_ACCOMPLISHED_EDUCATION_OPTIONS_WITH_EMPTY_OPTIONS = [
+  { value: 0, label: "Please select" },
+  { value: ASSOCIATE_EDUCATION_ELEMENTARY, label: "Elementary School" },
+  { value: ASSOCIATE_EDUCATION_HIGH_SCHOOL, label: "High School" },
+  { value: ASSOCIATE_EDUCATION_COLLEGE, label: "College" },
+  { value: ASSOCIATE_EDUCATION_UNIVERSITY, label: "University" },
+  { value: ASSOCIATE_EDUCATION_POST_GRADUATE, label: "Post Graduate" },
+  { value: ASSOCIATE_EDUCATION_OTHER, label: "Other" },
+];
