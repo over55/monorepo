@@ -3,33 +3,32 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { useCustomerManager } from "../../../../services/Services";
-import { theme, globalStyles } from "../../../../constants/Theme";
 import {
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Breadcrumb,
-  Input,
-  Modal,
-} from "../../../../components/UI";
+  UserPlusIcon,
+  ChevronRightIcon,
+  XMarkIcon,
+  InformationCircleIcon,
+  ArrowLeftIcon,
+  ChartBarIcon,
+  UserGroupIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  UserIcon,
+  ExclamationCircleIcon,
+  MagnifyingGlassIcon,
+} from "@heroicons/react/24/outline";
 
 function AdminCustomerAddStep1PartAPage() {
-  const navigate = useNavigate();
   const customerManager = useCustomerManager();
+  const navigate = useNavigate();
 
-  // Form state
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-  });
-
-  // Component state
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+  // Component states
   const [errors, setErrors] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [showCancelWarning, setShowCancelWarning] = useState(false);
 
   // Clear form data on mount
@@ -38,317 +37,623 @@ function AdminCustomerAddStep1PartAPage() {
     setIsLoading(false);
   }, []);
 
-  // Create specific handlers for each field
-  const handleFieldChange = (fieldName) => (e) => {
-    const value = e.target.value;
-    setFormData((prev) => ({
-      ...prev,
-      [fieldName]: value,
-    }));
-
-    // Clear field-specific error when user starts typing
-    if (errors[fieldName]) {
-      setErrors((prev) => ({
-        ...prev,
-        [fieldName]: null,
-      }));
-    }
-  };
-
-  // Event handling
-  const onAddClientClick = () => {
-    console.log("Navigate to add client step 2");
-    navigate("/admin/customers/add/step-2");
-  };
-
+  // Event handlers
   const onSubmitClick = (e) => {
     e.preventDefault();
     console.log("onSubmitClick: Beginning...");
 
-    if (
-      !formData.firstName &&
-      !formData.lastName &&
-      !formData.email &&
-      !formData.phone
-    ) {
-      setError("Please enter at least one search criteria");
+    if (firstName === "" && lastName === "" && email === "" && phone === "") {
+      setErrors({
+        message: "Please enter at least one search value",
+      });
       return;
     }
 
-    // Navigate to search results with query parameters
+    // Clear any previous errors
+    setErrors({});
+
+    // Navigate to results page with search parameters
     const searchParams = new URLSearchParams();
-    if (formData.firstName) searchParams.append("fn", formData.firstName);
-    if (formData.lastName) searchParams.append("ln", formData.lastName);
-    if (formData.email) searchParams.append("e", formData.email);
-    if (formData.phone) searchParams.append("p", formData.phone);
+    if (firstName) searchParams.append("fn", firstName);
+    if (lastName) searchParams.append("ln", lastName);
+    if (email) searchParams.append("e", email);
+    if (phone) searchParams.append("p", phone);
 
     navigate(`/admin/customers/add/step-1-results?${searchParams.toString()}`);
   };
 
+  const onAddCustomerClick = (e) => {
+    e.preventDefault();
+    console.log("Creating new customer");
+
+    // Clear any existing customer creation state
+    sessionStorage.removeItem("WORKERY_CUSTOMER_CREATION_STATE");
+
+    // Navigate directly to step 2
+    navigate("/admin/customers/add/step-2");
+  };
+
+  // Handle cancel
   const handleCancel = () => {
-    if (
-      formData.firstName ||
-      formData.lastName ||
-      formData.email ||
-      formData.phone
-    ) {
+    const hasData = firstName || lastName || email || phone;
+    if (hasData) {
       setShowCancelWarning(true);
     } else {
       navigate("/admin/customers");
     }
   };
 
+  // Confirm cancel
+  const handleConfirmCancel = () => {
+    setShowCancelWarning(false);
+    navigate("/admin/customers");
+  };
+
   return (
-    <div style={globalStyles.container}>
-      <Breadcrumb
-        items={[
-          { path: "/admin/dashboard", label: "Dashboard", icon: "🏠" },
-          { path: "/admin/customers", label: "Customers", icon: "👥" },
-          { label: "New Customer", icon: "➕" },
-        ]}
-      />
-
-      {/* Progress Indicator */}
-      <Card>
-        <div style={{ marginBottom: "20px" }}>
-          <p
-            style={{
-              fontSize: "18px",
-              fontWeight: "600",
-              marginBottom: "10px",
-            }}
-          >
-            Step 1 of 6
-          </p>
-          <div
-            style={{
-              width: "100%",
-              height: "8px",
-              backgroundColor: "#e9ecef",
-              borderRadius: "4px",
-              overflow: "hidden",
-            }}
-          >
-            <div
-              style={{
-                width: "17%",
-                height: "100%",
-                backgroundColor: theme.colors.success,
-                transition: "width 0.3s ease",
-              }}
-            />
-          </div>
-          <p style={{ fontSize: "14px", color: "#6c757d", marginTop: "5px" }}>
-            17% Complete
-          </p>
-        </div>
-      </Card>
-
-      <Card title="🔍 Search for Existing Customer">
-        {/* Cancel Warning Modal */}
-        {showCancelWarning && (
-          <Modal
-            isOpen={showCancelWarning}
-            onClose={() => setShowCancelWarning(false)}
-            title="Are you sure?"
-          >
-            <p>
-              Your Customer record will be cancelled and your work will be lost.
-              This cannot be undone. Do you want to continue?
-            </p>
-            <div style={{ display: "flex", gap: "10px", marginTop: "20px" }}>
-              <Button
-                variant="success"
-                onClick={() => navigate("/admin/customers")}
-              >
-                Yes
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() => setShowCancelWarning(false)}
-              >
-                No
-              </Button>
-            </div>
-          </Modal>
-        )}
-
-        {/* Error Messages */}
-        {error && (
-          <Alert type="error" dismissible onDismiss={() => setError(null)}>
-            {error}
-          </Alert>
-        )}
-
-        {/* Loading Overlay */}
-        {isLoading && <Loading message="Searching..." />}
-
-        {/* Form */}
-        <form onSubmit={onSubmitClick}>
-          <div style={{ opacity: isLoading ? 0.6 : 1 }}>
-            {/* Search Fields */}
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
-                gap: "20px",
-                marginBottom: "20px",
-              }}
-            >
-              <Input
-                label="First Name"
-                value={formData.firstName}
-                onChange={handleFieldChange("firstName")}
-                error={errors.firstName}
-                placeholder="Enter first name"
-                disabled={isLoading}
-              />
-
-              <Input
-                label="Last Name"
-                value={formData.lastName}
-                onChange={handleFieldChange("lastName")}
-                error={errors.lastName}
-                placeholder="Enter last name"
-                disabled={isLoading}
-              />
-
-              <Input
-                label="Email"
-                type="email"
-                value={formData.email}
-                onChange={handleFieldChange("email")}
-                error={errors.email}
-                placeholder="Enter email address"
-                disabled={isLoading}
-              />
-
-              <Input
-                label="Phone"
-                value={formData.phone}
-                onChange={handleFieldChange("phone")}
-                error={errors.phone}
-                placeholder="Enter phone number"
-                disabled={isLoading}
-              />
-            </div>
-
-            {/* Form Info */}
-            <div
-              style={{
-                padding: "15px",
-                backgroundColor: theme.colors.infoBg,
-                borderRadius: "4px",
-                marginBottom: "20px",
-                fontSize: "14px",
-                color: "#0c5460",
-              }}
-            >
-              <strong>💡 Tip:</strong> Enter any combination of the fields above
-              to search for existing customers. If no matches are found, you can
-              proceed to add a new customer.
-            </div>
-
-            {/* Form Actions */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                flexWrap: "wrap",
-                gap: "15px",
-                paddingTop: "20px",
-                borderTop: "1px solid #eee",
-              }}
-            >
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        {/* Breadcrumb */}
+        <nav className="flex mb-4" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-wrap">
+            <li className="inline-flex items-center">
               <Link
-                to="/admin/customers"
-                style={{
-                  textDecoration: "none",
-                  color: theme.colors.secondary,
-                  fontSize: "14px",
-                }}
+                to="/admin/dashboard"
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
               >
-                ← Back to Customers
+                <ChartBarIcon className="w-4 h-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Dashboard</span>
+                <span className="sm:hidden">Dash</span>
               </Link>
-
-              <div style={{ display: "flex", gap: "10px" }}>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={handleCancel}
-                  disabled={isLoading}
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                <Link
+                  to="/admin/customers"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
                 >
-                  Cancel
-                </Button>
-                <Button type="submit" variant="primary" disabled={isLoading}>
-                  {isLoading ? "Searching..." : "🔍 Search"}
-                </Button>
+                  <span className="inline-flex items-center">
+                    <UserGroupIcon className="w-4 h-4 mr-1 sm:mr-2" />
+                    Customers
+                  </span>
+                </Link>
+              </div>
+            </li>
+            <li aria-current="page">
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
+                  <UserPlusIcon className="w-4 h-4 mr-1 sm:mr-2" />
+                  Add
+                </span>
+              </div>
+            </li>
+          </ol>
+        </nav>
+
+        {/* Page Title */}
+        <div className="mb-6">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+            <UserPlusIcon className="w-6 h-6 sm:w-7 sm:h-7 mr-2 sm:mr-3 text-blue-600" />
+            Add New Customer
+          </h1>
+        </div>
+
+        {/* Wizard Steps - Responsive Design */}
+        <div className="mb-6">
+          {/* Desktop/Laptop View (1920x1080 and above) */}
+          <div className="hidden 2xl:flex items-center justify-center">
+            <div className="flex items-center">
+              {/* Step 1 - Active */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
+                  <span className="text-white font-semibold">1</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">Search</p>
+                  <p className="text-xs text-gray-500">Check Existing</p>
+                </div>
+              </div>
+
+              {/* Connector */}
+              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+
+              {/* Step 2 - Inactive */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
+                  <span className="text-gray-600 font-semibold">2</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-500">Type</p>
+                  <p className="text-xs text-gray-400">Select Type</p>
+                </div>
+              </div>
+
+              {/* Connector */}
+              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+
+              {/* Step 3 - Inactive */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
+                  <span className="text-gray-600 font-semibold">3</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-500">Contact</p>
+                  <p className="text-xs text-gray-400">Basic Info</p>
+                </div>
+              </div>
+
+              {/* Connector */}
+              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+
+              {/* Step 4 - Inactive */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
+                  <span className="text-gray-600 font-semibold">4</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-500">Address</p>
+                  <p className="text-xs text-gray-400">Location</p>
+                </div>
+              </div>
+
+              {/* Connector */}
+              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+
+              {/* Step 5 - Inactive */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
+                  <span className="text-gray-600 font-semibold">5</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-500">Account</p>
+                  <p className="text-xs text-gray-400">Settings</p>
+                </div>
+              </div>
+
+              {/* Connector */}
+              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+
+              {/* Step 6 - Inactive */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
+                  <span className="text-gray-600 font-semibold">6</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-500">Comments</p>
+                  <p className="text-xs text-gray-400">Notes</p>
+                </div>
               </div>
             </div>
+          </div>
 
-            {/* OR Divider */}
-            <div
-              style={{
-                textAlign: "center",
-                margin: "30px 0",
-                position: "relative",
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  top: "50%",
-                  left: "0",
-                  right: "0",
-                  height: "1px",
-                  backgroundColor: "#ddd",
-                }}
-              />
-              <span
-                style={{
-                  background: "white",
-                  padding: "0 20px",
-                  fontSize: "16px",
-                  fontWeight: "600",
-                  color: "#6c757d",
-                  position: "relative",
-                }}
-              >
-                OR
-              </span>
-            </div>
+          {/* Medium Screens (1366x768 to 1919px) - Horizontal Scroll */}
+          <div className="hidden lg:block 2xl:hidden">
+            <div className="overflow-x-auto pb-2">
+              <div className="flex items-center min-w-max px-4">
+                {/* Step 1 - Active */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-9 h-9 bg-blue-600 rounded-full">
+                    <span className="text-white font-semibold text-sm">1</span>
+                  </div>
+                  <div className="ml-2">
+                    <p className="text-xs font-medium text-gray-900">Search</p>
+                    <p className="text-xs text-gray-500 hidden xl:block">
+                      Check Existing
+                    </p>
+                  </div>
+                </div>
 
-            {/* Add New Customer Button */}
-            <div style={{ textAlign: "center" }}>
-              <Button
-                type="button"
-                variant="success"
-                onClick={onAddClientClick}
-                disabled={isLoading}
-                style={{ fontSize: "16px", padding: "12px 24px" }}
-              >
-                ➕ Add New Customer
-              </Button>
+                {/* Connector */}
+                <div className="mx-1 w-8 h-0.5 bg-gray-300"></div>
+
+                {/* Step 2 */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-9 h-9 bg-gray-300 rounded-full">
+                    <span className="text-gray-600 font-semibold text-sm">
+                      2
+                    </span>
+                  </div>
+                  <div className="ml-2">
+                    <p className="text-xs font-medium text-gray-500">Type</p>
+                    <p className="text-xs text-gray-400 hidden xl:block">
+                      Select Type
+                    </p>
+                  </div>
+                </div>
+
+                {/* Connector */}
+                <div className="mx-1 w-8 h-0.5 bg-gray-300"></div>
+
+                {/* Step 3 */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-9 h-9 bg-gray-300 rounded-full">
+                    <span className="text-gray-600 font-semibold text-sm">
+                      3
+                    </span>
+                  </div>
+                  <div className="ml-2">
+                    <p className="text-xs font-medium text-gray-500">Contact</p>
+                    <p className="text-xs text-gray-400 hidden xl:block">
+                      Basic Info
+                    </p>
+                  </div>
+                </div>
+
+                {/* Connector */}
+                <div className="mx-1 w-8 h-0.5 bg-gray-300"></div>
+
+                {/* Step 4 */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-9 h-9 bg-gray-300 rounded-full">
+                    <span className="text-gray-600 font-semibold text-sm">
+                      4
+                    </span>
+                  </div>
+                  <div className="ml-2">
+                    <p className="text-xs font-medium text-gray-500">Address</p>
+                    <p className="text-xs text-gray-400 hidden xl:block">
+                      Location
+                    </p>
+                  </div>
+                </div>
+
+                {/* Connector */}
+                <div className="mx-1 w-8 h-0.5 bg-gray-300"></div>
+
+                {/* Step 5 */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-9 h-9 bg-gray-300 rounded-full">
+                    <span className="text-gray-600 font-semibold text-sm">
+                      5
+                    </span>
+                  </div>
+                  <div className="ml-2">
+                    <p className="text-xs font-medium text-gray-500">Account</p>
+                    <p className="text-xs text-gray-400 hidden xl:block">
+                      Settings
+                    </p>
+                  </div>
+                </div>
+
+                {/* Connector */}
+                <div className="mx-1 w-8 h-0.5 bg-gray-300"></div>
+
+                {/* Step 6 */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-9 h-9 bg-gray-300 rounded-full">
+                    <span className="text-gray-600 font-semibold text-sm">
+                      6
+                    </span>
+                  </div>
+                  <div className="ml-2">
+                    <p className="text-xs font-medium text-gray-500">
+                      Comments
+                    </p>
+                    <p className="text-xs text-gray-400 hidden xl:block">
+                      Notes
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </form>
-      </Card>
 
-      {/* Help Section */}
-      <Card title="💡 Search Tips" style={{ marginTop: "30px" }}>
-        <div style={{ fontSize: "14px", lineHeight: "1.6" }}>
-          <ul style={{ marginLeft: "20px" }}>
-            <li>Enter partial names to find similar matches</li>
-            <li>Use email or phone number for exact matches</li>
-            <li>Leave fields empty that you don't want to search by</li>
-            <li>Search is case-insensitive</li>
-            <li>
-              If no results are found, you can create a new customer record
-            </li>
-          </ul>
+          {/* Tablet View (md to lg screens) - Compact Horizontal Scroll */}
+          <div className="hidden md:block lg:hidden">
+            <div className="overflow-x-auto pb-2">
+              <div className="flex items-center min-w-max px-2">
+                {[
+                  { num: 1, title: "Search", active: true },
+                  { num: 2, title: "Type", active: false },
+                  { num: 3, title: "Contact", active: false },
+                  { num: 4, title: "Address", active: false },
+                  { num: 5, title: "Account", active: false },
+                  { num: 6, title: "Comments", active: false },
+                ].map((step, index) => (
+                  <React.Fragment key={step.num}>
+                    <div className="flex items-center">
+                      <div
+                        className={`flex items-center justify-center w-8 h-8 ${step.active ? "bg-blue-600" : "bg-gray-300"} rounded-full`}
+                      >
+                        <span
+                          className={`${step.active ? "text-white" : "text-gray-600"} font-semibold text-xs`}
+                        >
+                          {step.num}
+                        </span>
+                      </div>
+                      <div className="ml-2">
+                        <p
+                          className={`text-xs font-medium ${step.active ? "text-gray-900" : "text-gray-500"}`}
+                        >
+                          {step.title}
+                        </p>
+                      </div>
+                    </div>
+                    {index < 5 && (
+                      <div className="mx-1 w-6 h-0.5 bg-gray-300"></div>
+                    )}
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile View - Simplified Current Step Display */}
+          <div className="md:hidden">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full">
+                    <span className="text-white font-semibold text-sm">1</span>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-900">
+                      Step 1: Search
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Check for existing customers
+                    </p>
+                  </div>
+                </div>
+                <div className="text-xs text-gray-500">1 of 6</div>
+              </div>
+            </div>
+          </div>
         </div>
-      </Card>
+
+        {/* Error Message */}
+        {errors.message && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-3 sm:px-4 py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center text-sm">
+              <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+              <span>{errors.message}</span>
+            </span>
+            <button
+              onClick={() => setErrors({})}
+              className="text-red-600 hover:text-red-800 ml-2"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
+        {/* Main Content */}
+        <div>
+          <div>
+            <div className="bg-white shadow-sm rounded-lg">
+              <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+                <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+                  <MagnifyingGlassIcon className="w-5 h-5 mr-2" />
+                  Search for Existing Customer
+                </h2>
+              </div>
+
+              {isLoading ? (
+                <div className="p-4 sm:p-6">
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-blue-600"></div>
+                    <span className="ml-3 text-gray-600 text-sm sm:text-base">
+                      Searching...
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <form onSubmit={onSubmitClick} className="p-4 sm:p-6">
+                    <div className="space-y-4">
+                      {/* Name Fields */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label
+                            htmlFor="firstName"
+                            className="block text-sm font-medium text-gray-700 mb-2"
+                          >
+                            First Name
+                          </label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                              <UserIcon className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <input
+                              type="text"
+                              id="firstName"
+                              name="firstName"
+                              value={firstName}
+                              onChange={(e) => setFirstName(e.target.value)}
+                              placeholder="Enter first name"
+                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="lastName"
+                            className="block text-sm font-medium text-gray-700 mb-2"
+                          >
+                            Last Name
+                          </label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                              <UserIcon className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <input
+                              type="text"
+                              id="lastName"
+                              name="lastName"
+                              value={lastName}
+                              onChange={(e) => setLastName(e.target.value)}
+                              placeholder="Enter last name"
+                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Contact Fields */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label
+                            htmlFor="email"
+                            className="block text-sm font-medium text-gray-700 mb-2"
+                          >
+                            Email Address
+                          </label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                              <EnvelopeIcon className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <input
+                              type="email"
+                              id="email"
+                              name="email"
+                              value={email}
+                              onChange={(e) => setEmail(e.target.value)}
+                              placeholder="Enter email address"
+                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
+                            />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label
+                            htmlFor="phone"
+                            className="block text-sm font-medium text-gray-700 mb-2"
+                          >
+                            Phone Number
+                          </label>
+                          <div className="relative">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                              <PhoneIcon className="h-5 w-5 text-gray-400" />
+                            </div>
+                            <input
+                              type="tel"
+                              id="phone"
+                              name="phone"
+                              value={phone}
+                              onChange={(e) => setPhone(e.target.value)}
+                              placeholder="Enter phone number"
+                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Info Note */}
+                      <div className="p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                        <p className="text-xs sm:text-sm text-blue-800 flex items-start">
+                          <InformationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+                          <span>
+                            Enter at least one search criteria to check for
+                            existing customers. This helps prevent duplicate
+                            records in the system.
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Search Actions */}
+                    <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <button
+                        type="button"
+                        onClick={handleCancel}
+                        className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                        <XMarkIcon className="w-4 h-4 inline mr-2" />
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                        <MagnifyingGlassIcon className="w-4 h-4 mr-2" />
+                        Search
+                      </button>
+                    </div>
+                  </form>
+
+                  {/* OR Divider */}
+                  <div className="relative px-4 sm:px-6 py-3">
+                    <div className="absolute inset-0 flex items-center px-4 sm:px-6">
+                      <div className="w-full border-t border-gray-200"></div>
+                    </div>
+                    <div className="relative flex justify-center">
+                      <span className="px-4 bg-white text-sm font-medium text-gray-500">
+                        OR
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Add New Customer */}
+                  <div className="px-4 sm:px-6 pb-5">
+                    <div className="text-center">
+                      <p className="text-xs sm:text-sm text-gray-600 mb-4">
+                        If you're sure this is a new customer, skip the search
+                        and proceed directly to creation
+                      </p>
+                      <button
+                        onClick={onAddCustomerClick}
+                        className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                      >
+                        <UserPlusIcon className="w-5 h-5 mr-2" />
+                        Add New Customer
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Back Link */}
+        <div className="mt-6">
+          <Link
+            to="/admin/customers"
+            className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+          >
+            <ArrowLeftIcon className="w-4 h-4 mr-1" />
+            Back to Customers List
+          </Link>
+        </div>
+      </div>
+
+      {/* Cancel Confirmation Modal */}
+      {showCancelWarning && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+                <ExclamationCircleIcon className="h-5 w-5 mr-2 text-amber-600" />
+                Are you sure?
+              </h3>
+            </div>
+
+            <div className="px-4 sm:px-6 py-4">
+              <p className="text-sm text-gray-600">
+                Your Customer record will be cancelled and your work will be
+                lost. This cannot be undone. Do you want to continue?
+              </p>
+            </div>
+
+            <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row sm:justify-end gap-3">
+              <button
+                onClick={() => setShowCancelWarning(false)}
+                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 order-2 sm:order-1"
+              >
+                No, Keep Working
+              </button>
+              <button
+                onClick={handleConfirmCancel}
+                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 order-1 sm:order-2"
+              >
+                Yes, Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

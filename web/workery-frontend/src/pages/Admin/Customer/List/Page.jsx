@@ -1,81 +1,122 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Customer/List/Page.jsx
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useLocation } from "react-router";
 import {
   useCustomerManager,
   useAuthManager,
 } from "../../../../services/Services";
-import { theme, globalStyles } from "../../../../constants/Theme";
 import {
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Breadcrumb,
-  Input,
-  Select,
-  Table,
-  Modal,
-} from "../../../../components/UI";
+  UserGroupIcon,
+  PlusIcon,
+  MagnifyingGlassIcon,
+  FunnelIcon,
+  ArrowPathIcon,
+  ChevronRightIcon,
+  XMarkIcon,
+  ArchiveBoxIcon,
+  PencilSquareIcon,
+  EyeIcon,
+  ExclamationTriangleIcon,
+  ChartBarIcon,
+  ClipboardDocumentListIcon,
+  CheckCircleIcon,
+  UserIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  BuildingOfficeIcon,
+  BuildingOffice2Icon,
+  HomeIcon,
+  InformationCircleIcon,
+  Squares2X2Icon,
+  TableCellsIcon,
+  ChevronLeftIcon,
+  ShieldExclamationIcon,
+} from "@heroicons/react/24/outline";
+import { ChevronDownIcon } from "@heroicons/react/20/solid";
 
-import {
-  CUSTOMER_STATUS_OPTIONS,
-  CUSTOMER_TYPE_OPTIONS,
-  CUSTOMER_SORT_OPTIONS,
-  PAGE_SIZE_OPTIONS,
-} from "../../../../constants/Customer";
+// Constants for filtering and sorting
+const CUSTOMER_STATUS_OPTIONS = [
+  { value: "", label: "All Statuses" },
+  { value: "1", label: "Active" },
+  { value: "0", label: "Archived" },
+];
+
+const CUSTOMER_TYPE_OPTIONS = [
+  { value: "", label: "All Types" },
+  { value: "1", label: "Unassigned" },
+  { value: "2", label: "Residential" },
+  { value: "3", label: "Commercial" },
+];
+
+const CUSTOMER_SORT_OPTIONS = [
+  { value: "lexical_name,ASC", label: "Name (A → Z)" },
+  { value: "lexical_name,DESC", label: "Name (Z → A)" },
+  { value: "join_date,DESC", label: "Join Date (Newest → Oldest)" },
+  { value: "join_date,ASC", label: "Join Date (Oldest → Newest)" },
+];
+
+const PAGE_SIZE_OPTIONS = [
+  { value: 25, label: "25 per page" },
+  { value: 50, label: "50 per page" },
+  { value: 100, label: "100 per page" },
+  { value: 250, label: "250 per page" },
+];
 
 const VIEW_TYPE_TABULAR = "tabular";
 const VIEW_TYPE_GRID = "grid";
+
+// Customer type constants
+const UNASSIGNED_CUSTOMER_TYPE_OF_ID = 1;
+const RESIDENTIAL_CUSTOMER_TYPE_OF_ID = 2;
+const COMMERCIAL_CUSTOMER_TYPE_OF_ID = 3;
 
 function AdminCustomerListPage() {
   const customerManager = useCustomerManager();
   const authManager = useAuthManager();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // State management
   const [customers, setCustomers] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState("");
 
-  // Pagination state
+  // Pagination state using cursor-based approach
   const [currentCursor, setCurrentCursor] = useState("");
   const [nextCursor, setNextCursor] = useState("");
   const [hasNextPage, setHasNextPage] = useState(false);
   const [cursorHistory, setCursorHistory] = useState([]);
   const [pageSize, setPageSize] = useState(50);
 
-  // Filter and sort state
+  // Filter and search state
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [tempSearchQuery, setTempSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("1"); // Default to active
   const [typeFilter, setTypeFilter] = useState("");
   const [sortBy, setSortBy] = useState("lexical_name,ASC");
   const [viewType, setViewType] = useState(VIEW_TYPE_TABULAR);
   const [showFilters, setShowFilters] = useState(false);
 
+  // Additional customer-specific filters
+  const [joinDateGte, setJoinDateGte] = useState("");
+
   // Delete confirmation modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   // Handle unauthorized access
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
   };
 
-  // Fetch customers with current filters
+  // Fetch customers using the manager
   const fetchCustomers = useCallback(
     async (cursor = "", isNavigatingBack = false) => {
-      console.log("🔄 fetchCustomers called with:", {
-        cursor,
-        pageSize,
-        sortBy,
-        searchQuery,
-        statusFilter,
-        typeFilter,
-      });
-
       setLoading(true);
       setError(null);
 
@@ -88,61 +129,68 @@ function AdminCustomerListPage() {
           filtersMap.set("cursor", cursor);
         }
 
-        // Add page size
+        // Use the correct parameter name for page size
         filtersMap.set("page_size", pageSize.toString());
 
-        // Add sorting - the backend expects sort_field and sort_order separately
+        // Add sorting
         if (sortBy) {
           const [sortField, sortOrder] = sortBy.split(",");
           filtersMap.set("sort_field", sortField);
+          // Backend expects specific format
           filtersMap.set("sort_order", sortOrder === "DESC" ? "DESC" : "ASC");
         }
 
         // Add search
-        if (searchQuery && searchQuery.trim()) {
+        if (searchQuery.trim()) {
           filtersMap.set("search", searchQuery.trim());
         }
 
-        // Add status filter
+        // Add filters
         if (statusFilter) {
           filtersMap.set("status", statusFilter);
         }
-
-        // Add type filter
         if (typeFilter) {
           filtersMap.set("type", typeFilter);
         }
+        if (joinDateGte) {
+          const date = new Date(joinDateGte);
+          filtersMap.set("join_date_gte", date.getTime().toString());
+        }
 
-        console.log(
-          "🌐 Making API call with filters:",
-          Array.from(filtersMap.entries()),
-        );
-
-        // Use the legacy filtersMap method
+        // Use the manager method
         const response = await customerManager.getCustomersWithFiltersMap(
           filtersMap,
           onUnauthorized,
           true, // force refresh
         );
 
-        console.log("✅ API response received:", {
-          resultsCount: response.results?.length,
-          nextCursor: response.nextCursor,
-          hasNextPage: response.hasNextPage,
-          totalCount: response.count,
-        });
-
         setCustomers(response.results || []);
         setTotalCount(response.count || 0);
-        setNextCursor(response.nextCursor || "");
-        setHasNextPage(response.hasNextPage || false);
+
+        // Handle pagination response
+        if (
+          response.nextCursor !== undefined &&
+          response.nextCursor !== null &&
+          response.nextCursor !== ""
+        ) {
+          setNextCursor(response.nextCursor);
+          setHasNextPage(true);
+        } else {
+          setNextCursor("");
+          setHasNextPage(false);
+        }
+
+        // Alternative: Check if hasNextPage is explicitly set
+        if (response.hasNextPage !== undefined) {
+          setHasNextPage(response.hasNextPage);
+        }
 
         // Update current cursor if not navigating back
         if (!isNavigatingBack) {
           setCurrentCursor(cursor);
         }
       } catch (err) {
-        console.error("❌ Failed to fetch customers:", err);
+        console.error("Failed to fetch customers:", err);
         setError("Failed to load customers. Please try again.");
       } finally {
         setLoading(false);
@@ -154,106 +202,88 @@ function AdminCustomerListPage() {
       searchQuery,
       statusFilter,
       typeFilter,
+      joinDateGte,
       customerManager,
       onUnauthorized,
     ],
   );
 
-  // Initial load - fetch customers when component mounts
-  useEffect(() => {
-    console.log("🚀 Initial load - fetching customers");
+  // Handle search
+  const handleSearch = () => {
+    setSearchQuery(tempSearchQuery);
+    // Reset pagination when searching
+    setCursorHistory([]);
+    setCurrentCursor("");
+    setNextCursor("");
+    setHasNextPage(false);
     fetchCustomers("");
-  }, []); // Empty dependency array for mount only
+  };
 
-  // Re-fetch when filters, sort, or page size change
-  useEffect(() => {
-    console.log("🔄 Filters/Sort/PageSize changed - refetching");
+  const handleSearchKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
+
+  // Handle filter changes
+  const handleFilterChange = useCallback(() => {
     // Reset pagination when filters change
     setCursorHistory([]);
     setCurrentCursor("");
+    setNextCursor("");
+    setHasNextPage(false);
     fetchCustomers("");
-  }, [statusFilter, typeFilter, sortBy, pageSize]); // Watch these specific values
-
-  // Handle search submission
-  const handleSearch = (e) => {
-    e.preventDefault();
-    console.log("🔍 Search triggered:", searchQuery);
-    // Reset pagination and fetch
-    setCursorHistory([]);
-    setCurrentCursor("");
-    fetchCustomers("");
-  };
-
-  // Handle status filter change
-  const handleStatusFilterChange = (e) => {
-    const newValue = e.target.value;
-    console.log("📋 Status filter changed to:", newValue);
-    setStatusFilter(newValue);
-    // The useEffect will handle the fetch
-  };
-
-  // Handle type filter change
-  const handleTypeFilterChange = (e) => {
-    const newValue = e.target.value;
-    console.log("📋 Type filter changed to:", newValue);
-    setTypeFilter(newValue);
-    // The useEffect will handle the fetch
-  };
-
-  // Handle sort change
-  const handleSortChange = (e) => {
-    const newValue = e.target.value;
-    console.log("🔄 Sort changed to:", newValue);
-    setSortBy(newValue);
-    // The useEffect will handle the fetch
-  };
-
-  // Handle page size change
-  const handlePageSizeChange = (e) => {
-    const newValue = parseInt(e.target.value);
-    console.log("📄 Page size changed to:", newValue);
-    setPageSize(newValue);
-    // The useEffect will handle the fetch
-  };
+  }, [fetchCustomers]);
 
   // Pagination handlers
   const handleNextPage = () => {
-    console.log("🔜 handleNextPage clicked");
-
     if (hasNextPage && nextCursor) {
-      console.log("✅ Going to next page with cursor:", nextCursor);
-
       // Push current cursor to history for "Previous" functionality
       setCursorHistory((prev) => [...prev, currentCursor]);
-
       // Fetch next page
       fetchCustomers(nextCursor);
-    } else {
-      console.log("❌ No next page available");
     }
   };
 
   const handlePreviousPage = () => {
-    console.log("🔙 handlePreviousPage clicked");
-
     if (cursorHistory.length > 0) {
       // Pop the last cursor from history
       const newHistory = [...cursorHistory];
       const previousCursor = newHistory.pop();
-
-      console.log(
-        "✅ Going to previous page with cursor:",
-        previousCursor || "start",
-      );
-
       // Update history
       setCursorHistory(newHistory);
-
       // Fetch previous page
       fetchCustomers(previousCursor || "", true);
-    } else {
-      console.log("❌ Already on first page");
     }
+  };
+
+  // Handle page size change
+  const handlePageSizeChange = (e) => {
+    const newPageSize = parseInt(e.target.value);
+    setPageSize(newPageSize);
+    // Reset pagination when page size changes
+    setCursorHistory([]);
+    setCurrentCursor("");
+    setNextCursor("");
+    setHasNextPage(false);
+  };
+
+  // Effect to refetch when pageSize changes
+  useEffect(() => {
+    if (pageSize) {
+      fetchCustomers("");
+    }
+  }, [pageSize]);
+
+  // Handle sort change
+  const handleSortChange = (e) => {
+    setSortBy(e.target.value);
+    // Reset pagination when sort changes
+    setCursorHistory([]);
+    setCurrentCursor("");
+    setNextCursor("");
+    setHasNextPage(false);
+    setTimeout(() => fetchCustomers(""), 0);
   };
 
   // Handle delete customer
@@ -270,6 +300,10 @@ function AdminCustomerListPage() {
       // Reset delete state
       setShowDeleteModal(false);
       setCustomerToDelete(null);
+      setSuccessMessage("Customer archived successfully");
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err) {
       console.error("Failed to delete customer:", err);
       setError("Failed to delete customer. Please try again.");
@@ -279,550 +313,1042 @@ function AdminCustomerListPage() {
   };
 
   // Clear filters
-  const clearFilters = () => {
-    console.log("🧹 Clearing all filters");
+  const clearFilters = useCallback(() => {
     setSearchQuery("");
-    setStatusFilter("");
+    setTempSearchQuery("");
+    setStatusFilter("1");
     setTypeFilter("");
     setSortBy("lexical_name,ASC");
-    // The useEffect will handle the fetch when these change
+    setJoinDateGte("");
+    setCursorHistory([]);
+    setCurrentCursor("");
+    setNextCursor("");
+    setHasNextPage(false);
+    setShowFilters(false);
+    fetchCustomers("");
+  }, [fetchCustomers]);
+
+  // Initial data load
+  useEffect(() => {
+    fetchCustomers("");
+  }, []);
+
+  // Handle success message from navigation state
+  useEffect(() => {
+    if (location.state?.successMessage) {
+      setSuccessMessage(location.state.successMessage);
+      // Clear the state
+      window.history.replaceState({}, document.title);
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(""), 3000);
+    }
+  }, [location]);
+
+  // Format customer type for display
+  const getCustomerTypeDisplay = (type) => {
+    switch (type) {
+      case COMMERCIAL_CUSTOMER_TYPE_OF_ID:
+        return "Commercial";
+      case RESIDENTIAL_CUSTOMER_TYPE_OF_ID:
+        return "Residential";
+      case UNASSIGNED_CUSTOMER_TYPE_OF_ID:
+        return "Unassigned";
+      default:
+        return "Unknown";
+    }
   };
 
-  // Table columns for tabular view
-  const tableColumns = [
-    {
-      key: "firstName",
-      label: "First Name",
-      render: (value, customer) => (
-        <Link
-          to={`/admin/customer/${customer.id}`}
-          style={{ color: theme.colors.primary }}
-        >
-          {value}
-        </Link>
-      ),
-    },
-    {
-      key: "lastName",
-      label: "Last Name",
-      render: (value, customer) => (
-        <Link
-          to={`/admin/customer/${customer.id}`}
-          style={{ color: theme.colors.primary }}
-        >
-          {value}
-        </Link>
-      ),
-    },
-    {
-      key: "email",
-      label: "Email",
-      render: (value) => value || "-",
-    },
-    {
-      key: "phone",
-      label: "Phone",
-      render: (value) => value || "-",
-    },
-    {
-      key: "type",
-      label: "Type",
-      render: (value) => {
-        switch (value) {
-          case 2:
-            return "Residential";
-          case 3:
-            return "Commercial";
-          default:
-            return "Unassigned";
-        }
-      },
-    },
-    {
-      key: "status",
-      label: "Status",
-      render: (value, customer) => (
-        <span
-          style={{
-            color: customer.isBanned
-              ? theme.colors.danger
-              : value === 1
-                ? theme.colors.success
-                : theme.colors.secondary,
-          }}
-        >
-          {customer.isBanned ? "Banned" : value === 1 ? "Active" : "Inactive"}
-        </span>
-      ),
-    },
-    {
-      key: "actions",
-      label: "Actions",
-      render: (_, customer) => (
-        <div style={{ display: "flex", gap: "10px" }}>
-          <Link to={`/admin/customer/${customer.id}`}>
-            <Button size="sm" variant="primary">
-              View
-            </Button>
-          </Link>
-          <Button
-            size="sm"
-            variant="danger"
-            onClick={() => {
-              setCustomerToDelete(customer);
-              setShowDeleteModal(true);
-            }}
-          >
-            Delete
-          </Button>
-        </div>
-      ),
-    },
-  ];
+  // Get badge color for customer type
+  const getTypeBadgeColor = (customerType) => {
+    switch (customerType) {
+      case COMMERCIAL_CUSTOMER_TYPE_OF_ID:
+        return "bg-blue-100 text-blue-800";
+      case RESIDENTIAL_CUSTOMER_TYPE_OF_ID:
+        return "bg-green-100 text-green-800";
+      case UNASSIGNED_CUSTOMER_TYPE_OF_ID:
+        return "bg-gray-100 text-gray-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
 
-  // Breadcrumb items
-  const breadcrumbItems = [
-    { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
-    { label: "Customers", icon: "👤" },
-  ];
+  // Get status badge color
+  const getStatusBadgeColor = (customer) => {
+    if (customer.isBanned) {
+      return "bg-red-100 text-red-800";
+    }
+    return customer.status === 1
+      ? "bg-green-100 text-green-800"
+      : "bg-gray-100 text-gray-800";
+  };
 
   // Calculate pagination info
   const hasPreviousPage = cursorHistory.length > 0;
   const currentPageNumber = cursorHistory.length + 1;
 
   return (
-    <div style={globalStyles.container}>
-      {/* Breadcrumb */}
-      <Breadcrumb items={breadcrumbItems} />
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb */}
+        <nav className="flex mb-8" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+            <li className="inline-flex items-center">
+              <Link
+                to="/admin/dashboard"
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <ChartBarIcon className="w-4 h-4 mr-2" />
+                Dashboard
+              </Link>
+            </li>
+            <li aria-current="page">
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
+                  <UserGroupIcon className="w-4 h-4 mr-2" />
+                  Customers
+                </span>
+              </div>
+            </li>
+          </ol>
+        </nav>
 
-      {/* Page Header */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "20px",
-        }}
-      >
-        <h1 style={{ margin: 0 }}>👤 Customers</h1>
-        <div style={{ display: "flex", gap: "10px" }}>
-          <Link to="/admin/customers/add/step-1-search">
-            <Button variant="success">➕ Add Customer</Button>
-          </Link>
-          <Link to="/admin/customers/search">
-            <Button variant="info">🔍 Search Customers</Button>
-          </Link>
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
+            <UserGroupIcon className="w-8 h-8 mr-3 text-blue-600" />
+            Customers Management
+          </h1>
         </div>
-      </div>
 
-      {/* Main Content Card */}
-      <Card>
-        {/* Controls Section */}
-        <div style={{ marginBottom: "20px" }}>
-          {/* Search and View Controls */}
-          <div
-            style={{
-              display: "flex",
-              gap: "20px",
-              alignItems: "end",
-              marginBottom: "20px",
-              flexWrap: "wrap",
-            }}
-          >
-            {/* Search */}
-            <form
-              onSubmit={handleSearch}
-              style={{
-                display: "flex",
-                gap: "10px",
-                flex: "1",
-                minWidth: "300px",
-              }}
+        {/* Success/Error Messages */}
+        {successMessage && (
+          <div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center">
+              <CheckCircleIcon className="w-5 h-5 mr-2" />
+              {successMessage}
+            </span>
+            <button
+              onClick={() => setSuccessMessage("")}
+              className="text-green-600 hover:text-green-800"
             >
-              <Input
-                placeholder="Search customers..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ flex: 1 }}
-              />
-              <Button type="submit" variant="primary">
-                🔍 Search
-              </Button>
-            </form>
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+        )}
 
-            {/* Sort */}
-            <Select
-              value={sortBy}
-              onChange={handleSortChange}
-              options={CUSTOMER_SORT_OPTIONS}
-              style={{ minWidth: "200px" }}
-            />
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center">
+              <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
+              {error}
+            </span>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-600 hover:text-red-800"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+        )}
 
-            {/* View Type Toggle */}
-            <div style={{ display: "flex", gap: "5px" }}>
-              <Button
-                variant={viewType === VIEW_TYPE_TABULAR ? "primary" : "outline"}
-                onClick={() => setViewType(VIEW_TYPE_TABULAR)}
+        {/* Main Content Card */}
+        <div className="bg-white shadow-sm rounded-lg">
+          {/* Card Header */}
+          <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-800 flex items-center">
+              <ClipboardDocumentListIcon className="w-5 h-5 mr-2" />
+              Customer List
+            </h2>
+            <div className="flex items-center gap-2">
+              {/* View Type Toggle */}
+              <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setViewType(VIEW_TYPE_TABULAR)}
+                  className={`inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    viewType === VIEW_TYPE_TABULAR
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  <TableCellsIcon className="w-4 h-4 mr-1.5" />
+                  Table
+                </button>
+                <button
+                  onClick={() => setViewType(VIEW_TYPE_GRID)}
+                  className={`inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    viewType === VIEW_TYPE_GRID
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  <Squares2X2Icon className="w-4 h-4 mr-1.5" />
+                  Grid
+                </button>
+              </div>
+              <button
+                onClick={() => navigate("/admin/customers/search")}
+                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
-                📋 Table
-              </Button>
-              <Button
-                variant={viewType === VIEW_TYPE_GRID ? "primary" : "outline"}
-                onClick={() => setViewType(VIEW_TYPE_GRID)}
+                <MagnifyingGlassIcon className="w-5 h-5 mr-1" />
+                Advanced Search
+              </button>
+              <button
+                onClick={() => navigate("/admin/customers/add/step-1-search")}
+                className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
               >
-                ⊞ Grid
-              </Button>
+                <PlusIcon className="w-5 h-5 mr-1" />
+                Add Customer
+              </button>
             </div>
-
-            {/* Show Filters Button */}
-            <Button
-              variant={showFilters ? "info" : "outline"}
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              {showFilters ? "➖" : "➕"} Filters
-            </Button>
           </div>
 
           {/* Filters Section */}
-          {showFilters && (
-            <Card style={{ backgroundColor: theme.colors.light }}>
-              <div
-                style={{
-                  display: "flex",
-                  gap: "20px",
-                  alignItems: "end",
-                  flexWrap: "wrap",
-                }}
-              >
-                <Select
-                  label="Status"
-                  value={statusFilter}
-                  onChange={handleStatusFilterChange}
-                  options={CUSTOMER_STATUS_OPTIONS}
-                  style={{ minWidth: "150px" }}
-                />
-
-                <Select
-                  label="Type"
-                  value={typeFilter}
-                  onChange={handleTypeFilterChange}
-                  options={CUSTOMER_TYPE_OPTIONS}
-                  style={{ minWidth: "150px" }}
-                />
-
-                <Button variant="secondary" onClick={clearFilters}>
-                  🗑️ Clear Filters
-                </Button>
-              </div>
-            </Card>
-          )}
-        </div>
-
-        {/* Error Display */}
-        {error && (
-          <Alert type="error" onClose={() => setError(null)}>
-            {error}
-          </Alert>
-        )}
-
-        {/* Loading Display */}
-        {loading && <Loading message="Loading customers..." />}
-
-        {/* Results */}
-        {!loading && (
-          <>
-            {/* Results Count */}
-            <div
-              style={{ marginBottom: "20px", color: theme.colors.secondary }}
-            >
-              <div>
-                Showing <strong>{customers.length}</strong> customers
-                {totalCount > 0 && ` (Total: ${totalCount})`}
-                {searchQuery && ` (filtered by "${searchQuery}")`}
-              </div>
-
-              {/* Debug info in development */}
-              {process.env.NODE_ENV === "development" && (
-                <div
-                  style={{ fontSize: "12px", marginTop: "5px", color: "#666" }}
+          <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-medium text-gray-700 flex items-center">
+                <FunnelIcon className="w-4 h-4 mr-2" />
+                Filter & Search
+              </h3>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`text-sm font-medium flex items-center px-3 py-1 rounded-md transition-colors ${
+                    showFilters
+                      ? "text-blue-700 bg-blue-50"
+                      : "text-gray-600 hover:text-gray-800"
+                  }`}
                 >
-                  <strong>Current Filters:</strong> Status:{" "}
-                  {statusFilter || "All"} | Type: {typeFilter || "All"} | Sort:{" "}
-                  {sortBy}
-                  <br />
-                  <strong>Pagination:</strong> Page: {currentPageNumber} |
-                  Results: {customers.length} | Has next:{" "}
-                  {hasNextPage ? "Yes" : "No"}
-                </div>
-              )}
+                  {showFilters ? (
+                    <ChevronDownIcon className="w-4 h-4 mr-1" />
+                  ) : (
+                    <PlusIcon className="w-4 h-4 mr-1" />
+                  )}
+                  {showFilters ? "Hide" : "Show"} All Filters
+                </button>
+                <button
+                  onClick={clearFilters}
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center"
+                >
+                  <XMarkIcon className="w-4 h-4 mr-1" />
+                  Clear Filters
+                </button>
+                <button
+                  onClick={() => fetchCustomers(currentCursor)}
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center"
+                >
+                  <ArrowPathIcon className="w-4 h-4 mr-1" />
+                  Refresh
+                </button>
+              </div>
             </div>
 
-            {/* Customer List */}
-            {customers.length > 0 ? (
-              <>
-                {viewType === VIEW_TYPE_TABULAR ? (
-                  <Table
-                    columns={tableColumns}
-                    data={customers}
-                    onRowClick={(customer) =>
-                      navigate(`/admin/customer/${customer.id}`)
-                    }
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Search */}
+              <div className="lg:col-span-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Search
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={tempSearchQuery}
+                    onChange={(e) => setTempSearchQuery(e.target.value)}
+                    placeholder="Search customers..."
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    onKeyPress={handleSearchKeyPress}
                   />
+                  <button
+                    onClick={handleSearch}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                  >
+                    <MagnifyingGlassIcon className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Sort By */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Sort By
+                </label>
+                <div className="relative">
+                  <select
+                    value={sortBy}
+                    onChange={handleSortChange}
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                  >
+                    {CUSTOMER_SORT_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Status Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
+                <div className="relative">
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => {
+                      setStatusFilter(e.target.value);
+                      setTimeout(() => handleFilterChange(), 0);
+                    }}
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                  >
+                    {CUSTOMER_STATUS_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Type Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Type
+                </label>
+                <div className="relative">
+                  <select
+                    value={typeFilter}
+                    onChange={(e) => {
+                      setTypeFilter(e.target.value);
+                      setTimeout(() => handleFilterChange(), 0);
+                    }}
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                  >
+                    {CUSTOMER_TYPE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+            </div>
+
+            {/* Extended Filters */}
+            {showFilters && (
+              <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">
+                  Additional Filters
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Join Date (From)
+                    </label>
+                    <input
+                      type="date"
+                      value={joinDateGte}
+                      onChange={(e) => {
+                        setJoinDateGte(e.target.value);
+                        setTimeout(() => handleFilterChange(), 0);
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Items per page
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={pageSize}
+                        onChange={handlePageSizeChange}
+                        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                      >
+                        {PAGE_SIZE_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Content Section */}
+          <div className="px-6 py-4">
+            {loading && !customers.length ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <span className="ml-3 text-gray-600">Loading customers...</span>
+              </div>
+            ) : customers.length > 0 ? (
+              <>
+                {/* Results count */}
+                <div className="mb-4 text-sm text-gray-600">
+                  Showing <strong>{customers.length}</strong> customers
+                  {totalCount > 0 && ` of ${totalCount} total`}
+                  {searchQuery && ` (filtered by "${searchQuery}")`}
+                </div>
+
+                {/* List Display */}
+                {viewType === VIEW_TYPE_TABULAR ? (
+                  /* Table View */
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Name
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Phone
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Email
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Type
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {customers.map((customer) => (
+                          <tr
+                            key={customer.id}
+                            className="hover:bg-gray-50 cursor-pointer"
+                            onClick={() => {
+                              setSelectedCustomer(customer);
+                              setShowDetailModal(true);
+                            }}
+                          >
+                            <td className="px-3 py-4 text-sm">
+                              <Link
+                                to={`/admin/customer/${customer.id}`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-blue-600 hover:text-blue-800 font-medium flex items-center"
+                              >
+                                {customer.type ===
+                                COMMERCIAL_CUSTOMER_TYPE_OF_ID ? (
+                                  <>
+                                    <BuildingOffice2Icon className="w-4 h-4 mr-2" />
+                                    {customer.organizationName ||
+                                      `${customer.firstName} ${customer.lastName}`}
+                                  </>
+                                ) : (
+                                  <>
+                                    <HomeIcon className="w-4 h-4 mr-2" />
+                                    {customer.firstName} {customer.lastName}
+                                  </>
+                                )}
+                              </Link>
+                            </td>
+                            <td className="px-3 py-4 text-sm text-gray-500">
+                              {customer.phone ? (
+                                <span className="flex items-center">
+                                  <PhoneIcon className="w-4 h-4 mr-2" />
+                                  {customer.phone}
+                                </span>
+                              ) : (
+                                <span className="text-gray-400 italic">—</span>
+                              )}
+                            </td>
+                            <td className="px-3 py-4 text-sm text-gray-500">
+                              {customer.email ? (
+                                <a
+                                  href={`mailto:${customer.email}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="flex items-center hover:text-blue-600"
+                                >
+                                  <EnvelopeIcon className="w-4 h-4 mr-2" />
+                                  {customer.email}
+                                </a>
+                              ) : (
+                                <span className="text-gray-400 italic">—</span>
+                              )}
+                            </td>
+                            <td className="px-3 py-4 text-sm">
+                              <span
+                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeBadgeColor(customer.type)}`}
+                              >
+                                {getCustomerTypeDisplay(customer.type)}
+                              </span>
+                            </td>
+                            <td className="px-3 py-4 text-sm">
+                              <span
+                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeColor(customer)}`}
+                              >
+                                {customer.isBanned ? (
+                                  <>
+                                    <ShieldExclamationIcon className="w-3 h-3 mr-1" />
+                                    Banned
+                                  </>
+                                ) : customer.status === 1 ? (
+                                  "Active"
+                                ) : (
+                                  "Inactive"
+                                )}
+                              </span>
+                            </td>
+                            <td className="px-3 py-4">
+                              <div className="flex items-center justify-center">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/admin/customer/${customer.id}`);
+                                  }}
+                                  className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                                >
+                                  <EyeIcon className="w-4 h-4 mr-1.5" />
+                                  View
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 ) : (
                   /* Grid View */
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns:
-                        "repeat(auto-fill, minmax(300px, 1fr))",
-                      gap: "20px",
-                    }}
-                  >
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {customers.map((customer) => (
-                      <Card
+                      <div
                         key={customer.id}
-                        style={{
-                          backgroundColor: customer.isBanned
-                            ? theme.colors.errorBg
-                            : "white",
-                          border: customer.isBanned
-                            ? `1px solid ${theme.colors.danger}`
-                            : "1px solid #ddd",
+                        className={`bg-white border rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer ${
+                          customer.isBanned
+                            ? "border-red-300 bg-red-50"
+                            : "border-gray-200"
+                        }`}
+                        onClick={() => {
+                          setSelectedCustomer(customer);
+                          setShowDetailModal(true);
                         }}
                       >
-                        <div style={{ marginBottom: "15px" }}>
-                          <h3 style={{ margin: "0 0 5px 0" }}>
+                        <div className="mb-3">
+                          <h3 className="text-base font-semibold text-gray-900">
                             <Link
                               to={`/admin/customer/${customer.id}`}
-                              style={{
-                                color: theme.colors.primary,
-                                textDecoration: "none",
-                              }}
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-blue-600 hover:text-blue-800 flex items-start"
                             >
-                              {customer.type === 3 &&
-                              customer.organizationName ? (
-                                <>🏢 {customer.organizationName}</>
+                              {customer.type ===
+                              COMMERCIAL_CUSTOMER_TYPE_OF_ID ? (
+                                <>
+                                  <BuildingOffice2Icon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+                                  <span>
+                                    {customer.organizationName ||
+                                      `${customer.firstName} ${customer.lastName}`}
+                                  </span>
+                                </>
                               ) : (
                                 <>
-                                  🏠 {customer.firstName} {customer.lastName}
+                                  <HomeIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+                                  <span>
+                                    {customer.firstName} {customer.lastName}
+                                  </span>
                                 </>
                               )}
                             </Link>
                           </h3>
-                          {customer.isBanned && (
-                            <div
-                              style={{
-                                color: theme.colors.danger,
-                                fontSize: "14px",
-                              }}
-                            >
-                              🚫 <strong>BANNED</strong>
+                        </div>
+
+                        <div className="space-y-2 text-sm text-gray-600 mb-3">
+                          {customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID &&
+                            customer.organizationName && (
+                              <div>
+                                <strong>Contact:</strong> {customer.firstName}{" "}
+                                {customer.lastName}
+                              </div>
+                            )}
+                          {customer.email && (
+                            <div className="flex items-center">
+                              <EnvelopeIcon className="w-4 h-4 mr-2 text-gray-400" />
+                              <span className="truncate">{customer.email}</span>
+                            </div>
+                          )}
+                          {customer.phone && (
+                            <div className="flex items-center">
+                              <PhoneIcon className="w-4 h-4 mr-2 text-gray-400" />
+                              {customer.phone}
+                            </div>
+                          )}
+                          {customer.addressLine1 && (
+                            <div className="text-xs text-gray-500">
+                              {customer.addressLine1}
+                              {customer.city && `, ${customer.city}`}
+                              {customer.region && `, ${customer.region}`}
                             </div>
                           )}
                         </div>
 
-                        <div style={{ marginBottom: "15px", fontSize: "14px" }}>
-                          {customer.type === 3 && (
-                            <div>
-                              <strong>Contact:</strong> {customer.firstName}{" "}
-                              {customer.lastName}
-                            </div>
-                          )}
-                          <div>
-                            <strong>Email:</strong> {customer.email || "-"}
-                          </div>
-                          <div>
-                            <strong>Phone:</strong> {customer.phone || "-"}
-                          </div>
-                          <div>
-                            <strong>Type:</strong>{" "}
-                            {customer.type === 3
-                              ? "Commercial"
-                              : customer.type === 2
-                                ? "Residential"
-                                : "Unassigned"}
-                          </div>
-                          <div>
-                            <strong>Status:</strong>
-                            <span
-                              style={{
-                                color: customer.isBanned
-                                  ? theme.colors.danger
-                                  : customer.status === 1
-                                    ? theme.colors.success
-                                    : theme.colors.secondary,
-                              }}
-                            >
-                              {customer.isBanned
-                                ? " Banned"
-                                : customer.status === 1
-                                  ? " Active"
-                                  : " Inactive"}
-                            </span>
-                          </div>
+                        <div className="flex items-center gap-2 mb-3">
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getTypeBadgeColor(customer.type)}`}
+                          >
+                            {getCustomerTypeDisplay(customer.type)}
+                          </span>
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeColor(customer)}`}
+                          >
+                            {customer.isBanned ? (
+                              <>
+                                <ShieldExclamationIcon className="w-3 h-3 mr-1" />
+                                Banned
+                              </>
+                            ) : customer.status === 1 ? (
+                              "Active"
+                            ) : (
+                              "Inactive"
+                            )}
+                          </span>
                         </div>
 
-                        <div style={{ display: "flex", gap: "10px" }}>
-                          <Link
-                            to={`/admin/customer/${customer.id}`}
-                            style={{ flex: 1 }}
-                          >
-                            <Button fullWidth variant="primary">
-                              View Details
-                            </Button>
-                          </Link>
-                          <Button
-                            variant="danger"
-                            onClick={() => {
-                              setCustomerToDelete(customer);
-                              setShowDeleteModal(true);
-                            }}
-                          >
-                            🗑️
-                          </Button>
-                        </div>
-                      </Card>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/admin/customer/${customer.id}`);
+                          }}
+                          className="w-full inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                        >
+                          View Details
+                          <ChevronRightIcon className="w-4 h-4 ml-1" />
+                        </button>
+                      </div>
                     ))}
                   </div>
                 )}
 
-                {/* Pagination controls */}
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginTop: "30px",
-                    flexWrap: "wrap",
-                    gap: "10px",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                    }}
-                  >
-                    <span>Show:</span>
-                    <Select
-                      value={pageSize}
-                      onChange={handlePageSizeChange}
-                      options={PAGE_SIZE_OPTIONS}
-                      style={{ minWidth: "120px" }}
-                    />
-                  </div>
-
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "10px",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Button
-                      variant="secondary"
-                      disabled={!hasPreviousPage}
+                {/* Pagination */}
+                <div className="mt-6 flex items-center justify-between border-t border-gray-200 pt-4">
+                  <div className="flex-1 flex justify-between sm:hidden">
+                    <button
                       onClick={handlePreviousPage}
+                      disabled={!hasPreviousPage}
+                      className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      ← Previous
-                    </Button>
-
-                    <span style={{ padding: "0 15px", fontSize: "14px" }}>
-                      Page {currentPageNumber}
-                      {totalCount > 0 && (
-                        <span style={{ color: theme.colors.secondary }}>
-                          {" "}
-                          (Total: {totalCount} customers)
-                        </span>
-                      )}
-                    </span>
-
-                    <Button
-                      variant="secondary"
-                      disabled={!hasNextPage}
+                      Previous
+                    </button>
+                    <button
                       onClick={handleNextPage}
+                      disabled={!hasNextPage}
+                      className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Next →
-                    </Button>
+                      Next
+                    </button>
+                  </div>
+                  <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm text-gray-700">
+                        Page{" "}
+                        <span className="font-medium">{currentPageNumber}</span>
+                        {totalCount > 0 && (
+                          <>
+                            {" "}
+                            of{" "}
+                            <span className="font-medium">
+                              {Math.ceil(totalCount / pageSize)}
+                            </span>
+                          </>
+                        )}
+                        {totalCount > 0 && (
+                          <span className="ml-2 text-gray-500">
+                            ({totalCount} total customers)
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <nav
+                        className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                        aria-label="Pagination"
+                      >
+                        <button
+                          onClick={handlePreviousPage}
+                          disabled={!hasPreviousPage}
+                          className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <span className="sr-only">Previous</span>
+                          <ChevronLeftIcon
+                            className="h-5 w-5"
+                            aria-hidden="true"
+                          />
+                        </button>
+                        <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                          Page {currentPageNumber}
+                        </span>
+                        <button
+                          onClick={handleNextPage}
+                          disabled={!hasNextPage}
+                          className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <span className="sr-only">Next</span>
+                          <ChevronRightIcon
+                            className="h-5 w-5"
+                            aria-hidden="true"
+                          />
+                        </button>
+                      </nav>
+                    </div>
                   </div>
                 </div>
               </>
             ) : (
               /* No Results */
-              <div style={{ textAlign: "center", padding: "60px 20px" }}>
-                <div style={{ fontSize: "48px", marginBottom: "20px" }}>📋</div>
-                <h3>No Customers Found</h3>
-                <p
-                  style={{
-                    color: theme.colors.secondary,
-                    marginBottom: "30px",
-                  }}
-                >
-                  {searchQuery || statusFilter || typeFilter
+              <div className="text-center py-12">
+                <UserGroupIcon className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">
+                  No Customers Found
+                </h3>
+                <p className="mt-1 text-sm text-gray-500">
+                  {searchQuery ||
+                  statusFilter !== "1" ||
+                  typeFilter ||
+                  joinDateGte
                     ? "No customers match your current filters. Try adjusting your search criteria."
                     : "No customers have been added yet."}
                 </p>
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "10px",
-                    justifyContent: "center",
-                    flexWrap: "wrap",
-                  }}
-                >
-                  {(searchQuery || statusFilter || typeFilter) && (
-                    <Button variant="secondary" onClick={clearFilters}>
+                <div className="mt-6 flex justify-center gap-3">
+                  {(searchQuery ||
+                    statusFilter !== "1" ||
+                    typeFilter ||
+                    joinDateGte) && (
+                    <button
+                      onClick={clearFilters}
+                      className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200"
+                    >
                       Clear Filters
-                    </Button>
+                    </button>
                   )}
-                  <Link to="/admin/customers/add/step-1-search">
-                    <Button variant="success">➕ Add First Customer</Button>
-                  </Link>
+                  <button
+                    onClick={() =>
+                      navigate("/admin/customers/add/step-1-search")
+                    }
+                    className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700"
+                  >
+                    <PlusIcon className="w-5 h-5 mr-2" />
+                    Add First Customer
+                  </button>
                 </div>
               </div>
             )}
-          </>
+          </div>
+        </div>
+
+        {/* Detail Modal */}
+        {showDetailModal && selectedCustomer && (
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <UserIcon className="w-5 h-5 mr-2 text-blue-600" />
+                  Customer Details
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    setSelectedCustomer(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-500"
+                >
+                  <XMarkIcon className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="px-6 py-4 overflow-y-auto">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {selectedCustomer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID
+                        ? "Organization Name:"
+                        : "Full Name:"}
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded-lg text-base font-semibold text-gray-900 flex items-center">
+                      {selectedCustomer.type ===
+                      COMMERCIAL_CUSTOMER_TYPE_OF_ID ? (
+                        <>
+                          <BuildingOffice2Icon className="w-5 h-5 mr-2 text-gray-600" />
+                          {selectedCustomer.organizationName ||
+                            `${selectedCustomer.firstName} ${selectedCustomer.lastName}`}
+                        </>
+                      ) : (
+                        <>
+                          <UserIcon className="w-5 h-5 mr-2 text-gray-600" />
+                          {selectedCustomer.firstName}{" "}
+                          {selectedCustomer.lastName}
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {selectedCustomer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID &&
+                    selectedCustomer.organizationName && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Contact Person:
+                        </label>
+                        <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
+                          {selectedCustomer.firstName}{" "}
+                          {selectedCustomer.lastName}
+                        </div>
+                      </div>
+                    )}
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Email:
+                      </label>
+                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
+                        {selectedCustomer.email ? (
+                          <a
+                            href={`mailto:${selectedCustomer.email}`}
+                            className="flex items-center text-blue-600 hover:text-blue-800"
+                          >
+                            <EnvelopeIcon className="w-4 h-4 mr-2" />
+                            {selectedCustomer.email}
+                          </a>
+                        ) : (
+                          <span className="text-gray-400 italic">
+                            Not provided
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Phone:
+                      </label>
+                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
+                        {selectedCustomer.phone ? (
+                          <span className="flex items-center">
+                            <PhoneIcon className="w-4 h-4 mr-2" />
+                            {selectedCustomer.phone}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 italic">
+                            Not provided
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Type:
+                      </label>
+                      <div className="p-3 bg-gray-50 rounded-lg">
+                        <span
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getTypeBadgeColor(selectedCustomer.type)}`}
+                        >
+                          {selectedCustomer.type ===
+                          COMMERCIAL_CUSTOMER_TYPE_OF_ID ? (
+                            <BuildingOffice2Icon className="w-4 h-4 mr-1" />
+                          ) : selectedCustomer.type ===
+                            RESIDENTIAL_CUSTOMER_TYPE_OF_ID ? (
+                            <HomeIcon className="w-4 h-4 mr-1" />
+                          ) : null}
+                          {getCustomerTypeDisplay(selectedCustomer.type)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Status:
+                      </label>
+                      <div className="p-3 bg-gray-50 rounded-lg">
+                        <span
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeColor(selectedCustomer)}`}
+                        >
+                          {selectedCustomer.isBanned ? (
+                            <>
+                              <ShieldExclamationIcon className="w-4 h-4 mr-1" />
+                              Banned
+                            </>
+                          ) : selectedCustomer.status === 1 ? (
+                            "Active"
+                          ) : (
+                            "Inactive"
+                          )}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {selectedCustomer.addressLine1 && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Address:
+                      </label>
+                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
+                        {selectedCustomer.addressLine1}
+                        {selectedCustomer.city && `, ${selectedCustomer.city}`}
+                        {selectedCustomer.region &&
+                          `, ${selectedCustomer.region}`}
+                        {selectedCustomer.postalCode &&
+                          ` ${selectedCustomer.postalCode}`}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    setSelectedCustomer(null);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    navigate(`/admin/customer/${selectedCustomer.id}/edit`);
+                  }}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600"
+                >
+                  <PencilSquareIcon className="w-4 h-4 mr-1" />
+                  Edit
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    navigate(`/admin/customer/${selectedCustomer.id}`);
+                  }}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                >
+                  <EyeIcon className="w-4 h-4 mr-1" />
+                  View Full Details
+                </button>
+              </div>
+            </div>
+          </div>
         )}
-      </Card>
 
-      {/* Delete Confirmation Modal */}
-      <Modal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        title="Confirm Deletion"
-        footer={
-          <>
-            <Button
-              variant="secondary"
-              onClick={() => setShowDeleteModal(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="danger"
-              onClick={handleDeleteCustomer}
-              disabled={loading}
-            >
-              {loading ? "Deleting..." : "Delete Customer"}
-            </Button>
-          </>
-        }
-      >
-        <p>
-          Are you sure you want to delete customer{" "}
-          <strong>
-            {customerToDelete?.firstName} {customerToDelete?.lastName}
-          </strong>
-          ? This action cannot be undone.
-        </p>
-      </Modal>
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && customerToDelete && (
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-md w-full">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <ExclamationTriangleIcon className="w-5 h-5 mr-2 text-amber-600" />
+                  Archive Customer
+                </h3>
+              </div>
 
-      {/* Navigation Links */}
-      <div style={{ marginTop: "30px", textAlign: "center" }}>
-        <Link to="/admin/dashboard">
-          <Button variant="outline">← Back to Dashboard</Button>
-        </Link>
+              <div className="px-6 py-4">
+                <p className="text-sm text-gray-600 mb-4">
+                  Are you sure you want to archive this customer? They will no
+                  longer appear in active lists.
+                </p>
+
+                <div className="p-4 bg-amber-50 rounded-lg border-l-4 border-amber-500">
+                  <p className="text-sm font-medium text-gray-700 mb-1">
+                    <strong>Name:</strong>{" "}
+                    {customerToDelete.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID
+                      ? customerToDelete.organizationName ||
+                        `${customerToDelete.firstName} ${customerToDelete.lastName}`
+                      : `${customerToDelete.firstName} ${customerToDelete.lastName}`}
+                  </p>
+                  {customerToDelete.email && (
+                    <p className="text-sm text-gray-600 mt-1">
+                      <strong>Email:</strong> {customerToDelete.email}
+                    </p>
+                  )}
+                  <p className="text-sm text-gray-600 mt-1">
+                    <strong>Type:</strong>{" "}
+                    {getCustomerTypeDisplay(customerToDelete.type)}
+                  </p>
+                  {customerToDelete.isBanned && (
+                    <p className="text-sm text-red-600 mt-1 font-medium">
+                      <strong>Status:</strong> BANNED
+                    </p>
+                  )}
+                </div>
+
+                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-xs text-blue-800 flex items-start">
+                    <InformationCircleIcon className="w-4 h-4 mr-1 flex-shrink-0" />
+                    <span>
+                      <strong>Note:</strong> This action can be undone by a
+                      system administrator. The customer's data will be
+                      preserved.
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setCustomerToDelete(null);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteCustomer}
+                  disabled={loading}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <>
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Archiving...
+                    </>
+                  ) : (
+                    <>
+                      <ArchiveBoxIcon className="w-4 h-4 mr-2" />
+                      Archive Customer
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
