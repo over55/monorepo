@@ -15,12 +15,10 @@ import {
   ChartBarIcon,
   ClipboardDocumentListIcon,
   CheckCircleIcon,
-  UserIcon,
   EnvelopeIcon,
   PhoneIcon,
   BuildingOffice2Icon,
   HomeIcon,
-  InformationCircleIcon,
   Squares2X2Icon,
   TableCellsIcon,
   ChevronLeftIcon,
@@ -62,11 +60,7 @@ function SettingInactiveClientListPage() {
   // View state
   const [viewType, setViewType] = useState(VIEW_TYPE_TABULAR);
 
-  // Modal state
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [selectedClient, setSelectedClient] = useState(null);
-  const [showRestoreModal, setShowRestoreModal] = useState(false);
-  const [clientToRestore, setClientToRestore] = useState(null);
+  // No modals needed - everything is handled in the Update page
 
   // Handle unauthorized access
   const onUnauthorized = () => {
@@ -180,37 +174,7 @@ function SettingInactiveClientListPage() {
     }
   }, [pageSize]);
 
-  // Handle restore client (change status back to active)
-  const handleRestoreClient = async () => {
-    if (!clientToRestore) return;
-
-    try {
-      setLoading(true);
-
-      // Update the client to set status back to active (1)
-      await customerManager.updateCustomer(
-        clientToRestore.id,
-        { ...clientToRestore, status: 1 },
-        onUnauthorized,
-      );
-
-      // Refresh the current page
-      fetchInactiveClients(currentCursor);
-
-      // Reset restore state
-      setShowRestoreModal(false);
-      setClientToRestore(null);
-      setSuccessMessage("Client restored to active status successfully");
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccessMessage(""), 3000);
-    } catch (err) {
-      console.error("Failed to restore client:", err);
-      setError("Failed to restore client. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  // No restore handler needed - handled in Update page
 
   // Initial data load
   useEffect(() => {
@@ -490,18 +454,10 @@ function SettingInactiveClientListPage() {
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
                         {inactiveClients.map((client) => (
-                          <tr
-                            key={client.id}
-                            className="hover:bg-gray-50 cursor-pointer"
-                            onClick={() => {
-                              setSelectedClient(client);
-                              setShowDetailModal(true);
-                            }}
-                          >
+                          <tr key={client.id} className="hover:bg-gray-50">
                             <td className="px-3 py-4 text-sm">
                               <Link
                                 to={`/admin/customer/${client.id}`}
-                                onClick={(e) => e.stopPropagation()}
                                 className="text-blue-600 hover:text-blue-800 font-medium flex items-center"
                               >
                                 {client.type ===
@@ -533,7 +489,6 @@ function SettingInactiveClientListPage() {
                               {client.email ? (
                                 <a
                                   href={`mailto:${client.email}`}
-                                  onClick={(e) => e.stopPropagation()}
                                   className="flex items-center hover:text-blue-600"
                                 >
                                   <EnvelopeIcon className="w-4 h-4 mr-2" />
@@ -562,8 +517,7 @@ function SettingInactiveClientListPage() {
                             <td className="px-3 py-4">
                               <div className="flex items-center justify-center gap-2">
                                 <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
+                                  onClick={() => {
                                     navigate(`/admin/customer/${client.id}`);
                                   }}
                                   className="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-700 bg-gray-100 rounded hover:bg-gray-200 transition-colors"
@@ -571,8 +525,7 @@ function SettingInactiveClientListPage() {
                                   <EyeIcon className="w-3.5 h-3.5" />
                                 </button>
                                 <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
+                                  onClick={() => {
                                     navigate(
                                       `/admin/settings/inactive-client/${client.id}/update`,
                                     );
@@ -594,17 +547,12 @@ function SettingInactiveClientListPage() {
                     {inactiveClients.map((client) => (
                       <div
                         key={client.id}
-                        className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
-                        onClick={() => {
-                          setSelectedClient(client);
-                          setShowDetailModal(true);
-                        }}
+                        className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
                       >
                         <div className="mb-3">
                           <h3 className="text-base font-semibold text-gray-900">
                             <Link
                               to={`/admin/customer/${client.id}`}
-                              onClick={(e) => e.stopPropagation()}
                               className="text-blue-600 hover:text-blue-800 flex items-start"
                             >
                               {client.type ===
@@ -670,8 +618,7 @@ function SettingInactiveClientListPage() {
 
                         <div className="flex gap-2">
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
+                            onClick={() => {
                               navigate(`/admin/customer/${client.id}`);
                             }}
                             className="flex-1 inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
@@ -680,8 +627,7 @@ function SettingInactiveClientListPage() {
                             View
                           </button>
                           <button
-                            onClick={(e) => {
-                              e.stopPropagation();
+                            onClick={() => {
                               navigate(
                                 `/admin/settings/inactive-client/${client.id}/update`,
                               );
@@ -794,354 +740,6 @@ function SettingInactiveClientListPage() {
             )}
           </div>
         </div>
-
-        {/* Detail Modal */}
-        {showDetailModal && selectedClient && (
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <ArchiveBoxIcon className="w-5 h-5 mr-2 text-gray-600" />
-                  Inactive Client Details
-                </h3>
-                <button
-                  onClick={() => {
-                    setShowDetailModal(false);
-                    setSelectedClient(null);
-                  }}
-                  className="text-gray-400 hover:text-gray-500"
-                >
-                  <XMarkIcon className="w-6 h-6" />
-                </button>
-              </div>
-
-              <div className="px-6 py-4 overflow-y-auto">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {selectedClient.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID
-                        ? "Organization Name:"
-                        : "Full Name:"}
-                    </label>
-                    <div className="p-3 bg-gray-50 rounded-lg text-base font-semibold text-gray-900 flex items-center">
-                      {selectedClient.type ===
-                      COMMERCIAL_CUSTOMER_TYPE_OF_ID ? (
-                        <>
-                          <BuildingOffice2Icon className="w-5 h-5 mr-2 text-gray-600" />
-                          {selectedClient.organizationName ||
-                            `${selectedClient.firstName} ${selectedClient.lastName}`}
-                        </>
-                      ) : (
-                        <>
-                          <UserIcon className="w-5 h-5 mr-2 text-gray-600" />
-                          {selectedClient.firstName} {selectedClient.lastName}
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  {selectedClient.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID &&
-                    selectedClient.organizationName && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Contact Person:
-                        </label>
-                        <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
-                          {selectedClient.firstName} {selectedClient.lastName}
-                        </div>
-                      </div>
-                    )}
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Email:
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
-                        {selectedClient.email ? (
-                          <a
-                            href={`mailto:${selectedClient.email}`}
-                            className="flex items-center text-blue-600 hover:text-blue-800"
-                          >
-                            <EnvelopeIcon className="w-4 h-4 mr-2" />
-                            {selectedClient.email}
-                          </a>
-                        ) : (
-                          <span className="text-gray-400 italic">
-                            Not provided
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Phone:
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
-                        {selectedClient.phone ? (
-                          <span className="flex items-center">
-                            <PhoneIcon className="w-4 h-4 mr-2" />
-                            {selectedClient.phone}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400 italic">
-                            Not provided
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Deactivation Reason:
-                    </label>
-                    <div className="p-3 bg-amber-50 rounded-lg text-sm text-gray-700 border border-amber-200">
-                      <span className="font-medium">
-                        {getDeactivationReasonText(
-                          selectedClient.deactivationReason,
-                          selectedClient.deactivationReasonOther,
-                        )}
-                      </span>
-                      {selectedClient.deactivationReasonOther &&
-                        selectedClient.deactivationReason === 1 && (
-                          <p className="mt-1 text-xs text-gray-600">
-                            Details: {selectedClient.deactivationReasonOther}
-                          </p>
-                        )}
-                    </div>
-                  </div>
-
-                  {selectedClient.description && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Notes:
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
-                        {selectedClient.description}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Client Type:
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <span
-                          className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getTypeBadgeColor(selectedClient.type)}`}
-                        >
-                          {getCustomerTypeDisplay(selectedClient.type)}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Status:
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
-                          <ArchiveBoxIcon className="w-4 h-4 mr-1" />
-                          Inactive/Archived
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Join Date:
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
-                        {formatDate(selectedClient.joinDate)}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Last Modified:
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
-                        {formatDate(selectedClient.modifiedAt)}
-                      </div>
-                    </div>
-                  </div>
-
-                  {selectedClient.addressLine1 && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Address:
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
-                        {selectedClient.addressLine1}
-                        {selectedClient.city && `, ${selectedClient.city}`}
-                        {selectedClient.region && `, ${selectedClient.region}`}
-                        {selectedClient.postalCode &&
-                          ` ${selectedClient.postalCode}`}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
-                <button
-                  onClick={() => {
-                    setShowDetailModal(false);
-                    setSelectedClient(null);
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  Close
-                </button>
-                <button
-                  onClick={() => {
-                    setShowDetailModal(false);
-                    setClientToRestore(selectedClient);
-                    setShowRestoreModal(true);
-                  }}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700"
-                >
-                  <ArrowPathIcon className="w-4 h-4 mr-1" />
-                  Restore Client
-                </button>
-                <button
-                  onClick={() => {
-                    setShowDetailModal(false);
-                    navigate(
-                      `/admin/settings/inactive-client/${selectedClient.id}/update`,
-                    );
-                  }}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600"
-                >
-                  <PencilSquareIcon className="w-4 h-4 mr-1" />
-                  Edit
-                </button>
-                <button
-                  onClick={() => {
-                    setShowDetailModal(false);
-                    navigate(`/admin/customer/${selectedClient.id}`);
-                  }}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
-                >
-                  <EyeIcon className="w-4 h-4 mr-1" />
-                  View Full Details
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Restore Confirmation Modal */}
-        {showRestoreModal && clientToRestore && (
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-md w-full">
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <ArrowPathIcon className="w-5 h-5 mr-2 text-green-600" />
-                  Restore Client
-                </h3>
-              </div>
-
-              <div className="px-6 py-4">
-                <p className="text-sm text-gray-600 mb-4">
-                  Are you sure you want to restore this client to active status?
-                  They will be removed from the inactive list and appear in the
-                  active clients list.
-                </p>
-
-                <div className="p-4 bg-green-50 rounded-lg border-l-4 border-green-500">
-                  <p className="text-sm font-medium text-gray-700 mb-1">
-                    <strong>Name:</strong>{" "}
-                    {clientToRestore.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID
-                      ? clientToRestore.organizationName ||
-                        `${clientToRestore.firstName} ${clientToRestore.lastName}`
-                      : `${clientToRestore.firstName} ${clientToRestore.lastName}`}
-                  </p>
-                  {clientToRestore.email && (
-                    <p className="text-sm text-gray-600 mt-1">
-                      <strong>Email:</strong> {clientToRestore.email}
-                    </p>
-                  )}
-                  <p className="text-sm text-gray-600 mt-1">
-                    <strong>Type:</strong>{" "}
-                    {getCustomerTypeDisplay(clientToRestore.type)}
-                  </p>
-                  <p className="text-sm text-gray-600 mt-1">
-                    <strong>Current Reason:</strong>{" "}
-                    {getDeactivationReasonText(
-                      clientToRestore.deactivationReason,
-                      clientToRestore.deactivationReasonOther,
-                    )}
-                  </p>
-                </div>
-
-                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-xs text-blue-800 flex items-start">
-                    <InformationCircleIcon className="w-4 h-4 mr-1 flex-shrink-0" />
-                    <span>
-                      <strong>Note:</strong> This will restore the client to
-                      active status. They will be able to place orders and
-                      interact with the system normally.
-                    </span>
-                  </p>
-                </div>
-              </div>
-
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
-                <button
-                  onClick={() => {
-                    setShowRestoreModal(false);
-                    setClientToRestore(null);
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleRestoreClient}
-                  disabled={loading}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? (
-                    <>
-                      <svg
-                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      Restoring...
-                    </>
-                  ) : (
-                    <>
-                      <ArrowPathIcon className="w-4 h-4 mr-2" />
-                      Restore to Active
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
