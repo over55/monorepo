@@ -31,6 +31,7 @@ import {
   CalendarIcon,
   DocumentTextIcon,
   ChevronDownIcon,
+  PlusIcon,
 } from "@heroicons/react/24/outline";
 import {
   UNASSIGNED_CUSTOMER_TYPE_OF_ID,
@@ -42,8 +43,6 @@ import {
   PAGE_SIZE_OPTIONS,
   CUSTOMER_SORT_OPTIONS,
 } from "../../../../../constants/Customer";
-
-// Constants for filtering and sorting
 
 const VIEW_TYPE_TABULAR = "tabular";
 const VIEW_TYPE_GRID = "grid";
@@ -71,7 +70,7 @@ function SettingInactiveClientListPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [tempSearchQuery, setTempSearchQuery] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
-  const [sortBy, setSortBy] = useState("lexical_name,DESC");
+  const [sortBy, setSortBy] = useState("lexical_name,DESC"); // Default to recently modified
   const [viewType, setViewType] = useState(VIEW_TYPE_TABULAR);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -123,6 +122,7 @@ function SettingInactiveClientListPage() {
         }
 
         // IMPORTANT: Filter for inactive/archived clients only
+        // Using "0" for archived status (matching the working example)
         filtersMap.set("status", CUSTOMER_STATUS_INACTIVE);
 
         // Add type filter
@@ -138,10 +138,6 @@ function SettingInactiveClientListPage() {
         if (joinDateLte) {
           const date = new Date(joinDateLte);
           filtersMap.set("join_date_lte", date.getTime().toString());
-        }
-        if (modifiedDateLte) {
-          const date = new Date(modifiedDateLte);
-          filtersMap.set("lexical_name", date.getTime().toString());
         }
 
         // Use the manager method
@@ -535,7 +531,7 @@ function SettingInactiveClientListPage() {
                   {showFilters ? (
                     <ChevronDownIcon className="w-4 h-4 mr-1" />
                   ) : (
-                    <FunnelIcon className="w-4 h-4 mr-1" />
+                    <PlusIcon className="w-4 h-4 mr-1" />
                   )}
                   {showFilters ? "Hide" : "Show"} Advanced Filters
                 </button>
