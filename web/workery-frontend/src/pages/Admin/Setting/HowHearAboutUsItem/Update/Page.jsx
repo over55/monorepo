@@ -42,6 +42,7 @@ function SettingHowHearAboutUsItemUpdatePage() {
 
   // Form state
   const [formData, setFormData] = useState({
+    id: id,
     sortNumber: 0,
     text: "",
     isForAssociate: false,
@@ -83,6 +84,7 @@ function SettingHowHearAboutUsItemUpdatePage() {
 
       setOriginalData(result);
       setFormData({
+        id: id,
         sortNumber: result.sortNumber || 0,
         text: result.text || "",
         isForAssociate: result.isForAssociate || false,
@@ -221,6 +223,7 @@ function SettingHowHearAboutUsItemUpdatePage() {
 
       // Prepare data for API
       const submitData = {
+        id: id,
         sortNumber: formData.sortNumber,
         text: formData.text.trim(),
         isForAssociate: formData.isForAssociate,
@@ -278,6 +281,7 @@ function SettingHowHearAboutUsItemUpdatePage() {
   const handleReset = () => {
     if (originalData) {
       setFormData({
+        id: id,
         sortNumber: originalData.sortNumber || 0,
         text: originalData.text || "",
         isForAssociate: originalData.isForAssociate || false,
