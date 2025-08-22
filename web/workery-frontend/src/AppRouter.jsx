@@ -91,6 +91,7 @@ import SettingInsuranceRequirementListPage from "./pages/Admin/Setting/Insurance
 import SettingInsuranceRequirementDetailPage from "./pages/Admin/Setting/InsuranceRequirement/Detail/Page";
 import SettingInsuranceRequirementUpdatePage from "./pages/Admin/Setting/InsuranceRequirement/Update/Page";
 import SettingInactiveClientListPage from "./pages/Admin/Setting/InactiveClient/List/Page";
+import SettingInactiveClientUpdatePage from "./pages/Admin/Setting/InactiveClient/Update/Page";
 import SettingHowHearAboutUsItemCreatePage from "./pages/Admin/Setting/HowHearAboutUsItem/Create/Page";
 import SettingHowHearAboutUsItemListPage from "./pages/Admin/Setting/HowHearAboutUsItem/List/Page";
 import SettingHowHearAboutUsItemDetailPage from "./pages/Admin/Setting/HowHearAboutUsItem/Detail/Page";
@@ -2459,6 +2460,22 @@ function AppRouter() {
               element={
                 <Layout>
                   <SettingNAICSSearchResultPage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/settings/inactive-clients"
+              element={
+                <Layout>
+                  <SettingInactiveClientListPage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/settings/inactive-client/:id/update"
+              element={
+                <Layout>
+                  <SettingInactiveClientUpdatePage />
                 </Layout>
               }
             />

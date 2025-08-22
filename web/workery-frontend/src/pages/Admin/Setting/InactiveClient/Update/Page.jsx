@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
-import { useInactiveClientManager } from "../../../../../services/Services";
+// import { useInactiveClientManager } from "../../../../../services/Services";
 import { theme, globalStyles } from "../../../../../constants/Theme";
 import {
   Card,
