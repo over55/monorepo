@@ -1,5 +1,4 @@
-// File Path: src/components/UI/index.jsx
-// Complete UI Components Library using Tailwind v4 and Heroicons
+// File Path: monorepo/web/workery-frontend/src/components/UI/index.js
 
 import React from "react";
 import {
@@ -198,88 +197,6 @@ export const Select = ({
   );
 };
 
-// Button Component
-export const Button = ({
-  type = "button",
-  variant = "primary",
-  size = "md",
-  fullWidth = false,
-  disabled = false,
-  children,
-  onClick,
-  loading = false,
-  icon: Icon,
-  className = "",
-}) => {
-  const sizeClasses = {
-    sm: "px-3 py-1.5 text-sm",
-    md: "px-6 py-3 text-base",
-    lg: "px-8 py-4 text-lg",
-  };
-
-  const baseClasses = `
-    font-medium rounded-lg
-    transition-all duration-200
-    focus:outline-none focus:ring-2 focus:ring-offset-2
-    flex items-center justify-center gap-2
-    ${sizeClasses[size]}
-    ${fullWidth ? "w-full" : ""}
-    ${disabled || loading ? "cursor-not-allowed opacity-60" : "cursor-pointer"}
-    ${className}
-  `;
-
-  const variantClasses = {
-    primary: `
-      bg-blue-500 text-white
-      hover:bg-blue-600 active:bg-blue-700
-      focus:ring-blue-500
-      ${disabled || loading ? "" : "hover:shadow-lg"}
-    `,
-    secondary: `
-      bg-gray-200 text-gray-800
-      hover:bg-gray-300 active:bg-gray-400
-      focus:ring-gray-500
-    `,
-    outline: `
-      border-2 border-gray-300 text-gray-700
-      hover:border-gray-400 hover:bg-gray-50
-      focus:ring-gray-500
-    `,
-    danger: `
-      bg-red-500 text-white
-      hover:bg-red-600 active:bg-red-700
-      focus:ring-red-500
-      ${disabled || loading ? "" : "hover:shadow-lg"}
-    `,
-    success: `
-      bg-green-500 text-white
-      hover:bg-green-600 active:bg-green-700
-      focus:ring-green-500
-      ${disabled || loading ? "" : "hover:shadow-lg"}
-    `,
-    ghost: `
-      text-gray-600
-      hover:bg-gray-100 hover:text-gray-900
-      focus:ring-gray-500
-    `,
-  };
-
-  return (
-    <button
-      type={type}
-      onClick={onClick}
-      disabled={disabled || loading}
-      className={`${baseClasses} ${variantClasses[variant]}`}
-    >
-      {loading && (
-        <div className="spinner border-2 border-current border-t-transparent rounded-full w-5 h-5 animate-spin" />
-      )}
-      {Icon && !loading && <Icon className="h-5 w-5" />}
-      {children}
-    </button>
-  );
-};
-
 // Alert Component
 export const Alert = ({
   type = "info",
@@ -353,64 +270,6 @@ export const Badge = ({
     >
       {children}
     </span>
-  );
-};
-
-// Modal Component
-export const Modal = ({
-  isOpen,
-  onClose,
-  title,
-  children,
-  size = "md",
-  className = "",
-}) => {
-  if (!isOpen) return null;
-
-  const sizeClasses = {
-    sm: "max-w-md",
-    md: "max-w-lg",
-    lg: "max-w-2xl",
-    xl: "max-w-4xl",
-    full: "max-w-7xl",
-  };
-
-  return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
-      <div className="flex min-h-screen items-center justify-center p-4">
-        {/* Backdrop */}
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 transition-opacity"
-          onClick={onClose}
-        />
-
-        {/* Modal Content */}
-        <div
-          className={`
-          relative bg-white rounded-xl shadow-xl
-          w-full ${sizeClasses[size]}
-          transform transition-all animate-slide-up
-          ${className}
-        `}
-        >
-          {/* Header */}
-          {title && (
-            <div className="flex items-center justify-between p-6 border-b">
-              <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-              <button
-                onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-              >
-                <XMarkIcon className="h-6 w-6" />
-              </button>
-            </div>
-          )}
-
-          {/* Body */}
-          <div className="p-6">{children}</div>
-        </div>
-      </div>
-    </div>
   );
 };
 
@@ -926,3 +785,6 @@ export const FormSection = ({
 };
 
 export { MultiSelect } from "./MultiSelect";
+
+export { default as Modal } from "./Modal";
+export { default as Button } from "./Button";

@@ -21,6 +21,7 @@ import TwoFABackupCodeRecoveryPage from "./pages/Anonymous/TwoFA/BackupCodeRecov
 
 // Common pages
 import DashboardRedirector from "./pages/Common/DashboardRedirector";
+import LogoutRedirector from "./pages/Common/LogoutRedirector";
 
 // Error pages
 import NotFoundPage from "./pages/Common/Error/NotFoundPage";
@@ -394,15 +395,6 @@ function AppRouter() {
                 <PlaceholderPage
                   title="Reset Password"
                   description="Password reset page"
-                />
-              }
-            />
-            <Route
-              path="/logout"
-              element={
-                <PlaceholderPage
-                  title="Logout"
-                  description="You are being logged out."
                 />
               }
             />
@@ -2569,6 +2561,7 @@ function AppRouter() {
 
             {/* Common pages */}
             <Route path="/dashboard" element={<DashboardRedirector />} />
+            <Route path="/logout" element={<LogoutRedirector />} />
 
             {/* Error routes (NO LAYOUT) */}
             <Route path="/501" element={<ServerErrorPage />} />

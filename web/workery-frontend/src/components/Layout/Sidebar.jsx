@@ -375,11 +375,15 @@ function Sidebar({ isOpen, onClose, isMobile, taskItemActiveCount = 0 }) {
 
   const handleLogoutConfirm = async () => {
     try {
-      await authManager.logout();
-      navigate("/login");
+      // Close the modal first
+      setShowLogoutWarning(false);
+
+      // Navigate to the logout page which handles everything
+      navigate("/logout");
     } catch (error) {
-      console.error("Logout failed:", error);
-      navigate("/login");
+      console.error("Logout navigation failed:", error);
+      // Fallback - try direct navigation
+      window.location.href = "/logout";
     }
   };
 
@@ -996,17 +1000,17 @@ function Sidebar({ isOpen, onClose, isMobile, taskItemActiveCount = 0 }) {
         onClose={() => setShowLogoutWarning(false)}
         title="Are you sure?"
         footer={
-          <>
+          <div className="flex justify-end space-x-3">
             <Button
-              onClick={() => setShowLogoutWarning(false)}
               variant="secondary"
+              onClick={() => setShowLogoutWarning(false)}
             >
               No
             </Button>
-            <Button onClick={handleLogoutConfirm} variant="success">
+            <Button variant="success" onClick={handleLogoutConfirm}>
               Yes
             </Button>
-          </>
+          </div>
         }
       >
         <p>

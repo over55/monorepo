@@ -298,6 +298,24 @@ export class AccountManager {
   }
 
   /**
+   * Clears all cached account data
+   * Used during logout to ensure clean state
+   */
+  clearAllCachedData() {
+    try {
+      // Clear account storage cache
+      if (this.accountStorage) {
+        this.accountStorage.clearAllAccountData();
+      }
+
+      console.log("AccountManager: All cached data cleared");
+    } catch (error) {
+      console.error("AccountManager: Error clearing cached data", error);
+      // Don't throw - this is a cleanup operation
+    }
+  }
+
+  /**
    * Sets cache duration via AccountStorage
    * @param {number} durationMs - Cache duration in milliseconds
    */
