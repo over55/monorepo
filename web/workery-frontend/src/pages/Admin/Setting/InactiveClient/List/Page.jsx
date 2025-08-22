@@ -5,8 +5,6 @@ import { Link, useNavigate, useLocation } from "react-router";
 import { useCustomerManager } from "../../../../../services/Services";
 import {
   UserGroupIcon,
-  MagnifyingGlassIcon,
-  FunnelIcon,
   ArrowPathIcon,
   ChevronRightIcon,
   XMarkIcon,
@@ -26,12 +24,9 @@ import {
   Squares2X2Icon,
   TableCellsIcon,
   ChevronLeftIcon,
-  ShieldExclamationIcon,
   Cog6ToothIcon,
   CalendarIcon,
-  DocumentTextIcon,
   ChevronDownIcon,
-  PlusIcon,
 } from "@heroicons/react/24/outline";
 import {
   UNASSIGNED_CUSTOMER_TYPE_OF_ID,
@@ -39,9 +34,7 @@ import {
   COMMERCIAL_CUSTOMER_TYPE_OF_ID,
   CUSTOMER_STATUS_INACTIVE,
   CUSTOMER_DEACTIVATION_REASON_MAP,
-  CUSTOMER_TYPE_OPTIONS,
   PAGE_SIZE_OPTIONS,
-  CUSTOMER_SORT_OPTIONS,
 } from "../../../../../constants/Customer";
 
 const VIEW_TYPE_TABULAR = "tabular";
@@ -66,19 +59,8 @@ function SettingInactiveClientListPage() {
   const [cursorHistory, setCursorHistory] = useState([]);
   const [pageSize, setPageSize] = useState(50);
 
-  // Filter and search state
-  const [searchQuery, setSearchQuery] = useState("");
-  const [tempSearchQuery, setTempSearchQuery] = useState("");
-  const [typeFilter, setTypeFilter] = useState("");
-  const [sortBy, setSortBy] = useState("lexical_name,DESC"); // Default to recently modified
+  // View state
   const [viewType, setViewType] = useState(VIEW_TYPE_TABULAR);
-  const [showFilters, setShowFilters] = useState(false);
-
-  // Additional filters for inactive clients
-  const [joinDateGte, setJoinDateGte] = useState("");
-  const [joinDateLte, setJoinDateLte] = useState("");
-  const [modifiedDateGte, setModifiedDateGte] = useState("");
-  const [modifiedDateLte, setModifiedDateLte] = useState("");
 
   // Modal state
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -109,36 +91,12 @@ function SettingInactiveClientListPage() {
         // Use the correct parameter name for page size
         filtersMap.set("page_size", pageSize.toString());
 
-        // Add sorting
-        if (sortBy) {
-          const [sortField, sortOrder] = sortBy.split(",");
-          filtersMap.set("sort_field", sortField);
-          filtersMap.set("sort_order", sortOrder === "DESC" ? "DESC" : "ASC");
-        }
-
-        // Add search
-        if (searchQuery.trim()) {
-          filtersMap.set("search", searchQuery.trim());
-        }
+        // Default sort by lexical name descending
+        filtersMap.set("sort_field", "lexical_name");
+        filtersMap.set("sort_order", "DESC");
 
         // IMPORTANT: Filter for inactive/archived clients only
-        // Using "0" for archived status (matching the working example)
         filtersMap.set("status", CUSTOMER_STATUS_INACTIVE);
-
-        // Add type filter
-        if (typeFilter) {
-          filtersMap.set("type", typeFilter);
-        }
-
-        // Add date filters
-        if (joinDateGte) {
-          const date = new Date(joinDateGte);
-          filtersMap.set("join_date_gte", date.getTime().toString());
-        }
-        if (joinDateLte) {
-          const date = new Date(joinDateLte);
-          filtersMap.set("join_date_lte", date.getTime().toString());
-        }
 
         // Use the manager method
         const response = await customerManager.getCustomersWithFiltersMap(
@@ -179,46 +137,8 @@ function SettingInactiveClientListPage() {
         setLoading(false);
       }
     },
-    [
-      pageSize,
-      sortBy,
-      searchQuery,
-      typeFilter,
-      joinDateGte,
-      joinDateLte,
-      modifiedDateGte,
-      modifiedDateLte,
-      customerManager,
-      onUnauthorized,
-    ],
+    [pageSize, customerManager, onUnauthorized],
   );
-
-  // Handle search
-  const handleSearch = () => {
-    setSearchQuery(tempSearchQuery);
-    // Reset pagination when searching
-    setCursorHistory([]);
-    setCurrentCursor("");
-    setNextCursor("");
-    setHasNextPage(false);
-    fetchInactiveClients("");
-  };
-
-  const handleSearchKeyPress = (e) => {
-    if (e.key === "Enter") {
-      handleSearch();
-    }
-  };
-
-  // Handle filter changes
-  const handleFilterChange = useCallback(() => {
-    // Reset pagination when filters change
-    setCursorHistory([]);
-    setCurrentCursor("");
-    setNextCursor("");
-    setHasNextPage(false);
-    fetchInactiveClients("");
-  }, [fetchInactiveClients]);
 
   // Pagination handlers
   const handleNextPage = () => {
@@ -260,17 +180,6 @@ function SettingInactiveClientListPage() {
     }
   }, [pageSize]);
 
-  // Handle sort change
-  const handleSortChange = (e) => {
-    setSortBy(e.target.value);
-    // Reset pagination when sort changes
-    setCursorHistory([]);
-    setCurrentCursor("");
-    setNextCursor("");
-    setHasNextPage(false);
-    setTimeout(() => fetchInactiveClients(""), 0);
-  };
-
   // Handle restore client (change status back to active)
   const handleRestoreClient = async () => {
     if (!clientToRestore) return;
@@ -302,24 +211,6 @@ function SettingInactiveClientListPage() {
       setLoading(false);
     }
   };
-
-  // Clear filters
-  const clearFilters = useCallback(() => {
-    setSearchQuery("");
-    setTempSearchQuery("");
-    setTypeFilter("");
-    setSortBy("lexical_name,DESC");
-    setJoinDateGte("");
-    setJoinDateLte("");
-    setModifiedDateGte("");
-    setModifiedDateLte("");
-    setCursorHistory([]);
-    setCurrentCursor("");
-    setNextCursor("");
-    setHasNextPage(false);
-    setShowFilters(false);
-    fetchInactiveClients("");
-  }, [fetchInactiveClients]);
 
   // Initial data load
   useEffect(() => {
@@ -512,206 +403,41 @@ function SettingInactiveClientListPage() {
             </div>
           </div>
 
-          {/* Filters Section */}
+          {/* Simple Controls Section */}
           <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-gray-700 flex items-center">
-                <FunnelIcon className="w-4 h-4 mr-2" />
-                Filter & Search
-              </h3>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={`text-sm font-medium flex items-center px-3 py-1 rounded-md transition-colors ${
-                    showFilters
-                      ? "text-blue-700 bg-blue-50"
-                      : "text-gray-600 hover:text-gray-800"
-                  }`}
-                >
-                  {showFilters ? (
-                    <ChevronDownIcon className="w-4 h-4 mr-1" />
-                  ) : (
-                    <PlusIcon className="w-4 h-4 mr-1" />
-                  )}
-                  {showFilters ? "Hide" : "Show"} Advanced Filters
-                </button>
-                <button
-                  onClick={clearFilters}
-                  className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center"
-                >
-                  <XMarkIcon className="w-4 h-4 mr-1" />
-                  Clear Filters
-                </button>
-                <button
-                  onClick={() => fetchInactiveClients(currentCursor)}
-                  className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center"
-                >
-                  <ArrowPathIcon className="w-4 h-4 mr-1" />
-                  Refresh
-                </button>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                {/* Page Size */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Items per page
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={pageSize}
+                      onChange={handlePageSizeChange}
+                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                    >
+                      {PAGE_SIZE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                  </div>
+                </div>
               </div>
+
+              {/* Refresh Button */}
+              <button
+                onClick={() => fetchInactiveClients(currentCursor)}
+                className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center"
+              >
+                <ArrowPathIcon className="w-4 h-4 mr-1" />
+                Refresh
+              </button>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Search */}
-              <div className="lg:col-span-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Search
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={tempSearchQuery}
-                    onChange={(e) => setTempSearchQuery(e.target.value)}
-                    placeholder="Search inactive clients..."
-                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    onKeyPress={handleSearchKeyPress}
-                  />
-                  <button
-                    onClick={handleSearch}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
-                  >
-                    <MagnifyingGlassIcon className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Sort By */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Sort By
-                </label>
-                <div className="relative">
-                  <select
-                    value={sortBy}
-                    onChange={handleSortChange}
-                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
-                  >
-                    {CUSTOMER_SORT_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-                </div>
-              </div>
-
-              {/* Type Filter */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Client Type
-                </label>
-                <div className="relative">
-                  <select
-                    value={typeFilter}
-                    onChange={(e) => {
-                      setTypeFilter(e.target.value);
-                      setTimeout(() => handleFilterChange(), 0);
-                    }}
-                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
-                  >
-                    {CUSTOMER_TYPE_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-                </div>
-              </div>
-
-              {/* Page Size */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Items per page
-                </label>
-                <div className="relative">
-                  <select
-                    value={pageSize}
-                    onChange={handlePageSizeChange}
-                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
-                  >
-                    {PAGE_SIZE_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
-                </div>
-              </div>
-            </div>
-
-            {/* Extended Filters */}
-            {showFilters && (
-              <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
-                <h4 className="text-sm font-medium text-gray-700 mb-3">
-                  Date Range Filters
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Join Date (From)
-                    </label>
-                    <input
-                      type="date"
-                      value={joinDateGte}
-                      onChange={(e) => {
-                        setJoinDateGte(e.target.value);
-                        setTimeout(() => handleFilterChange(), 0);
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Join Date (To)
-                    </label>
-                    <input
-                      type="date"
-                      value={joinDateLte}
-                      onChange={(e) => {
-                        setJoinDateLte(e.target.value);
-                        setTimeout(() => handleFilterChange(), 0);
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Modified Date (From)
-                    </label>
-                    <input
-                      type="date"
-                      value={modifiedDateGte}
-                      onChange={(e) => {
-                        setModifiedDateGte(e.target.value);
-                        setTimeout(() => handleFilterChange(), 0);
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Modified Date (To)
-                    </label>
-                    <input
-                      type="date"
-                      value={modifiedDateLte}
-                      onChange={(e) => {
-                        setModifiedDateLte(e.target.value);
-                        setTimeout(() => handleFilterChange(), 0);
-                      }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Content Section */}
@@ -730,7 +456,6 @@ function SettingInactiveClientListPage() {
                   Showing <strong>{inactiveClients.length}</strong> inactive
                   clients
                   {totalCount > 0 && ` of ${totalCount} total`}
-                  {searchQuery && ` (filtered by "${searchQuery}")`}
                 </div>
 
                 {/* List Display */}
@@ -1054,29 +779,9 @@ function SettingInactiveClientListPage() {
                   No Inactive Clients Found
                 </h3>
                 <p className="mt-1 text-sm text-gray-500">
-                  {searchQuery ||
-                  typeFilter ||
-                  joinDateGte ||
-                  joinDateLte ||
-                  modifiedDateGte ||
-                  modifiedDateLte
-                    ? "No inactive clients match your current filters. Try adjusting your search criteria."
-                    : "No clients have been archived or deactivated yet."}
+                  No clients have been archived or deactivated yet.
                 </p>
                 <div className="mt-6 flex justify-center gap-3">
-                  {(searchQuery ||
-                    typeFilter ||
-                    joinDateGte ||
-                    joinDateLte ||
-                    modifiedDateGte ||
-                    modifiedDateLte) && (
-                    <button
-                      onClick={clearFilters}
-                      className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200"
-                    >
-                      Clear Filters
-                    </button>
-                  )}
                   <button
                     onClick={() => navigate("/admin/customers")}
                     className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700"
