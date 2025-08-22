@@ -685,11 +685,7 @@ export class TenantManager {
     }
 
     // Validate tenant ID
-    if (
-      !taxRateData.tenantId ||
-      typeof taxRateData.tenantId !== "string" ||
-      tenantId.trim() === ""
-    ) {
+    if (!taxRateData.tenantId || typeof taxRateData.tenantId !== "string") {
       errors.tenantId = "Valid tenant ID is required";
     }
 
