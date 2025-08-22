@@ -2,6 +2,7 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"log/slog"
@@ -16,11 +17,12 @@ import (
 )
 
 type SkillSetUpdateRequestIDO struct {
-	ID          primitive.ObjectID `json:"id"`
-	Category    string             `json:"category"`
-	SubCategory string             `json:"sub_category"`
-	Description string             `json:"description"`
-	Status      int8               `json:"status"`
+	ID                    primitive.ObjectID   `json:"id"`
+	Category              string               `json:"category"`
+	SubCategory           string               `json:"sub_category"`
+	Description           string               `json:"description"`
+	Status                int8                 `json:"status"`
+	InsuranceRequirements []primitive.ObjectID `bson:"insurance_requirements" json:"insurance_requirements,omitempty"`
 }
 
 func (impl *SkillSetControllerImpl) validateUpdateRequest(ctx context.Context, dirtyData *SkillSetUpdateRequestIDO) error {
@@ -40,6 +42,7 @@ func (impl *SkillSetControllerImpl) validateUpdateRequest(ctx context.Context, d
 	if dirtyData.Status == 0 {
 		e["status"] = "missing value"
 	}
+	// Note: we do not validate `InsuranceRequirements` as it is optional.
 	if len(e) != 0 {
 		return httperror.NewForBadRequest(&e)
 	}
@@ -120,6 +123,30 @@ func (impl *SkillSetControllerImpl) UpdateByID(ctx context.Context, nu *SkillSet
 		ou.SubCategory = nu.SubCategory
 		ou.Description = nu.Description
 		ou.Status = nu.Status
+
+		// Note: `InsuranceRequirements` is optional.
+		for _, insuranceRequirementID := range nu.InsuranceRequirements {
+			ir, err := impl.InsuranceRequirementStorer.GetByID(sessCtx, insuranceRequirementID)
+			if err != nil {
+				impl.Logger.Error("failed getting insurance requirement",
+					slog.Any("insurance_requirement", ir.ID.Hex()),
+					slog.Any("error", err))
+				return nil, err
+			}
+			if ir == nil {
+				return nil, errors.New("insurance requirement does not exist")
+			}
+			air := &skillset_s.SkillSetInsuranceRequirement{
+				SkillSetID:  ou.ID,
+				TenantID:    ou.TenantID,
+				ID:          ir.ID,
+				PublicID:    ir.PublicID,
+				Name:        ir.Name,
+				Description: ir.Description,
+				Status:      ir.Status,
+			}
+			ou.InsuranceRequirements = append(ou.InsuranceRequirements, air) // Append comments to skill set details.
+		}
 
 		if err := impl.SkillSetStorer.UpdateByID(sessCtx, ou); err != nil {
 			impl.Logger.Error("skillset update by id error", slog.Any("error", err))

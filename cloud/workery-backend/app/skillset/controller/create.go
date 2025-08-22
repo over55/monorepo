@@ -23,6 +23,7 @@ type SkillSetCreateRequestIDO struct {
 
 func (impl *SkillSetControllerImpl) skillSetFromCreateRequest(sessCtx mongo.SessionContext, requestData *SkillSetCreateRequestIDO) (*skillset_s.SkillSet, error) {
 	ss := &skillset_s.SkillSet{
+		ID:          primitive.NewObjectID(),
 		Category:    requestData.Category,
 		SubCategory: requestData.SubCategory,
 		Description: requestData.Description,
@@ -30,7 +31,6 @@ func (impl *SkillSetControllerImpl) skillSetFromCreateRequest(sessCtx mongo.Sess
 
 	// Note: `InsuranceRequirements` is optional.
 	for _, insuranceRequirementID := range requestData.InsuranceRequirements {
-
 		ir, err := impl.InsuranceRequirementStorer.GetByID(sessCtx, insuranceRequirementID)
 		if err != nil {
 			impl.Logger.Error("failed getting insurance requirement",
@@ -42,12 +42,15 @@ func (impl *SkillSetControllerImpl) skillSetFromCreateRequest(sessCtx mongo.Sess
 			return nil, errors.New("insurance requirement does not exist")
 		}
 		air := &skillset_s.SkillSetInsuranceRequirement{
+			SkillSetID:  ss.ID,
+			TenantID:    ir.TenantID,
 			ID:          ir.ID,
+			PublicID:    ir.PublicID,
 			Name:        ir.Name,
 			Description: ir.Description,
 			Status:      ir.Status,
 		}
-		ss.InsuranceRequirements = append(ss.InsuranceRequirements, air) // Append comments to associate details.
+		ss.InsuranceRequirements = append(ss.InsuranceRequirements, air) // Append comments to skill set details.
 	}
 	return ss, nil
 }
@@ -63,10 +66,10 @@ func (impl *SkillSetControllerImpl) validateCreateRequest(ctx context.Context, d
 	if dirtyData.Description == "" {
 		e["description"] = "missing value"
 	}
+	// Note: we do not validate `InsuranceRequirements` as it is optional.
 	if len(e) != 0 {
 		return httperror.NewForBadRequest(&e)
 	}
-	// Note: we do not validate `InsuranceRequirements` as it is optional.
 	return nil
 }
 
@@ -111,7 +114,7 @@ func (impl *SkillSetControllerImpl) Create(ctx context.Context, requestData *Ski
 	defer session.EndSession(ctx)
 
 	// Define a transaction function with a series of operations
-	transactionFunc := func(sessCtx mongo.SessionContext) (interface{}, error) {
+	transactionFunc := func(sessCtx mongo.SessionContext) (any, error) {
 
 		//
 		// Convert request to our domain.
@@ -122,9 +125,8 @@ func (impl *SkillSetControllerImpl) Create(ctx context.Context, requestData *Ski
 			return nil, err
 		}
 
-		// Add defaults.
+		// Add meta an defaults.
 		m.TenantID = orgID
-		m.ID = primitive.NewObjectID()
 		m.CreatedAt = time.Now()
 		m.CreatedByUserID = userID
 		m.CreatedByUserName = userName
