@@ -1,39 +1,89 @@
 // File: web/workery-frontend/src/components/Form/InsuranceRequirementsMultiSelect.jsx
 
-import React, { useState, useEffect } from "react";
-import { MultiSelect, Loading } from "../UI";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useInsuranceRequirementManager } from "../../services/Services";
+import {
+  XMarkIcon,
+  ChevronDownIcon,
+  CheckIcon,
+  MagnifyingGlassIcon,
+} from "@heroicons/react/24/outline";
 
 /**
- * Reusable Insurance Requirements Multi-Select Component
+ * Custom debounce hook
+ * @param {Function} callback - Function to debounce
+ * @param {number} delay - Delay in milliseconds
+ * @returns {Function} - Debounced function
+ */
+function useDebounce(callback, delay) {
+  const timeoutRef = useRef(null);
+
+  const debouncedCallback = useCallback(
+    (...args) => {
+      // Clear existing timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      // Set new timeout
+      timeoutRef.current = setTimeout(() => {
+        callback(...args);
+      }, delay);
+    },
+    [callback, delay],
+  );
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  return debouncedCallback;
+}
+
+/**
+ * InsuranceRequirementsMultiSelect Component
+ * A multi-select dropdown for selecting insurance requirements with search functionality
+ * that fetches filtered results from the backend
  *
+ * @param {string} label - Field label
  * @param {Array} value - Array of selected insurance requirement IDs
- * @param {function} onChange - Callback when value changes (receives array of IDs)
+ * @param {Function} onChange - Handler for value changes
+ * @param {string} placeholder - Placeholder text
  * @param {string} error - Error message to display
- * @param {boolean} required - Whether field is required
- * @param {boolean} disabled - Whether field is disabled
- * @param {string} className - Additional CSS classes
- * @param {string} label - Custom label (defaults to "Insurance Requirements")
- * @param {string} placeholder - Custom placeholder
+ * @param {boolean} disabled - Whether the field is disabled
+ * @param {boolean} required - Whether the field is required
  * @param {string} helperText - Helper text to display
- * @param {function} onUnauthorized - Callback for unauthorized errors
+ * @param {string} className - Additional CSS classes
+ * @param {Function} onUnauthorized - Callback for unauthorized errors
  */
 function InsuranceRequirementsMultiSelect({
+  label = "Insurance Requirements",
   value = [],
   onChange,
-  error,
-  required = false,
-  disabled = false,
-  className = "",
-  label = "Insurance Requirements",
   placeholder = "Select insurance requirements...",
+  error,
+  disabled = false,
+  required = false,
   helperText = "Select one or more insurance requirements",
+  className = "",
   onUnauthorized = null,
 }) {
   const insuranceRequirementManager = useInsuranceRequirementManager();
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [options, setOptions] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [fetchError, setFetchError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const dropdownRef = useRef(null);
+  const searchInputRef = useRef(null);
+
+  // Track if we're using search results or default options
+  const [isSearchMode, setIsSearchMode] = useState(false);
 
   // Clean the value to ensure no empty strings
   const cleanValue = (val) => {
@@ -43,100 +93,368 @@ function InsuranceRequirementsMultiSelect({
     );
   };
 
-  useEffect(() => {
-    let mounted = true;
+  // Load default options (without search)
+  const loadDefaultOptions = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      console.log("Loading default insurance requirement options");
 
-    const fetchOptions = async () => {
-      try {
-        setIsLoading(true);
-        setFetchError(null);
+      // For default options, use the select options endpoint
+      const insuranceRequirementOptions =
+        await insuranceRequirementManager.getInsuranceRequirementSelectOptions(
+          onUnauthorized,
+          false, // Don't force refresh for default options
+        );
 
-        // Fetch insurance requirement options from the API/cache
-        const insuranceRequirementOptions =
-          await insuranceRequirementManager.getInsuranceRequirementSelectOptions(
-            onUnauthorized,
-          );
+      if (insuranceRequirementOptions) {
+        // Handle both array and object response formats
+        let optionsList = [];
 
-        if (mounted) {
-          // Format options - should already be in {value, label} format
-          // Filter out any invalid options
-          const validOptions = (insuranceRequirementOptions || []).filter(
-            (opt) => opt && opt.value && opt.label,
-          );
-          setOptions(validOptions);
+        if (Array.isArray(insuranceRequirementOptions)) {
+          optionsList = insuranceRequirementOptions;
+        } else if (insuranceRequirementOptions.results) {
+          optionsList = insuranceRequirementOptions.results;
         }
-      } catch (error) {
-        console.error("Error fetching insurance requirement options:", error);
-        if (mounted) {
-          setFetchError(
-            "Failed to load insurance requirements. Please try again.",
+
+        // Transform to consistent format
+        const transformedOptions = optionsList.map((item) => ({
+          value: item.value || item.id,
+          label: item.label || item.text || item.name,
+        }));
+
+        console.log("Default options loaded:", transformedOptions);
+        setOptions(transformedOptions);
+      }
+    } catch (error) {
+      console.error(
+        "Error loading default insurance requirement options:",
+        error,
+      );
+      setOptions([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [insuranceRequirementManager, onUnauthorized]);
+
+  // Search function to be debounced
+  const performSearch = useCallback(
+    async (searchQuery) => {
+      if (!searchQuery || searchQuery.trim().length === 0) {
+        // If search is cleared, go back to default options
+        setIsSearchMode(false);
+        await loadDefaultOptions();
+        return;
+      }
+
+      setSearchLoading(true);
+      setIsSearchMode(true);
+
+      try {
+        console.log(
+          "Searching insurance requirements with query:",
+          searchQuery,
+        );
+
+        // Use getInsuranceRequirements with search parameter to get filtered results from backend
+        const searchParams = {
+          search: searchQuery.trim(),
+          page: 1,
+          limit: 100,
+          status: 1, // Active status
+        };
+
+        const searchResults =
+          await insuranceRequirementManager.getInsuranceRequirements(
+            searchParams,
+            onUnauthorized,
+            true, // Force refresh to get latest data
           );
-          // Set empty options on error
+
+        if (searchResults && searchResults.results) {
+          // Transform results to select option format
+          const transformedOptions = searchResults.results.map((item) => ({
+            value: item.id,
+            label: item.name || item.text,
+          }));
+
+          console.log("Search results:", transformedOptions);
+          setOptions(transformedOptions);
+        } else {
           setOptions([]);
         }
+      } catch (error) {
+        console.error("Error searching insurance requirements:", error);
+        setOptions([]);
       } finally {
-        if (mounted) {
-          setIsLoading(false);
-        }
+        setSearchLoading(false);
+      }
+    },
+    [insuranceRequirementManager, onUnauthorized, loadDefaultOptions],
+  );
+
+  // Debounced search function
+  const debouncedSearch = useDebounce(performSearch, 300);
+
+  // Load initial options when component mounts
+  useEffect(() => {
+    loadDefaultOptions();
+  }, [loadDefaultOptions]);
+
+  // Handle search term changes
+  useEffect(() => {
+    if (isOpen) {
+      debouncedSearch(searchTerm);
+    }
+  }, [searchTerm, isOpen, debouncedSearch]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+        // Reset search when closing
+        setSearchTerm("");
+        setIsSearchMode(false);
       }
     };
 
-    fetchOptions();
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
-    return () => {
-      mounted = false;
-    };
-  }, [onUnauthorized]);
+  // Focus search input when dropdown opens
+  useEffect(() => {
+    if (isOpen && searchInputRef.current) {
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100);
+    }
+  }, [isOpen]);
 
-  const handleChange = (newValue) => {
-    // Clean the new value before passing it to onChange
-    const cleanedValue = cleanValue(newValue);
-    onChange(cleanedValue);
+  // Get selected option labels
+  const getSelectedLabels = () => {
+    // For selected items, we need to check both current options and cached data
+    return value
+      .map((selectedValue) => {
+        const option = options.find((opt) => opt.value === selectedValue);
+        if (option) {
+          return { value: selectedValue, label: option.label };
+        }
+        // If not in current options, return with ID as label (will be resolved when options load)
+        return {
+          value: selectedValue,
+          label: `Insurance Requirement ${selectedValue}`,
+        };
+      })
+      .filter(Boolean);
   };
 
-  if (isLoading) {
-    return (
-      <div className={`mb-5 ${className}`}>
-        {label && (
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            {label}
-            {required && <span className="text-red-500 ml-1">*</span>}
-          </label>
-        )}
-        <div
-          style={{
-            padding: "10px",
-            border: "1px solid #ddd",
-            borderRadius: "8px",
-            backgroundColor: "#f9f9f9",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            minHeight: "42px",
-          }}
-        >
-          <Loading size="sm" text="Loading insurance requirements..." />
-        </div>
-      </div>
-    );
-  }
+  const selectedLabels = getSelectedLabels();
 
-  // Use cleaned value for the MultiSelect
+  // Toggle option selection
+  const toggleOption = (optionValue) => {
+    const cleanedValue = cleanValue(value);
+    if (cleanedValue.includes(optionValue)) {
+      onChange(cleanedValue.filter((v) => v !== optionValue));
+    } else {
+      onChange([...cleanedValue, optionValue]);
+    }
+  };
+
+  // Remove a selected option
+  const removeOption = (optionValue, e) => {
+    e.stopPropagation();
+    const cleanedValue = cleanValue(value);
+    onChange(cleanedValue.filter((v) => v !== optionValue));
+  };
+
+  // Clear all selections
+  const clearAll = (e) => {
+    e.stopPropagation();
+    onChange([]);
+  };
+
+  // Open dropdown handler
+  const handleDropdownClick = useCallback(() => {
+    if (!disabled) {
+      const newOpenState = !isOpen;
+      setIsOpen(newOpenState);
+      if (newOpenState) {
+        // Reset search and load default options when opening
+        setSearchTerm("");
+        setIsSearchMode(false);
+        if (options.length === 0) {
+          loadDefaultOptions();
+        }
+      }
+    }
+  }, [disabled, isOpen, options.length, loadDefaultOptions]);
+
+  // Use cleaned value for display
   const currentValue = cleanValue(value);
 
   return (
-    <MultiSelect
-      label={label}
-      options={options}
-      value={currentValue}
-      onChange={handleChange}
-      placeholder={placeholder}
-      error={error || fetchError}
-      disabled={disabled}
-      required={required}
-      helperText={helperText}
-      className={className}
-    />
+    <div className={`mb-5 ${className}`}>
+      {label && (
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          {label}
+          {required && <span className="text-red-500 ml-1">*</span>}
+        </label>
+      )}
+
+      <div className="relative" ref={dropdownRef}>
+        {/* Main Input/Display Area */}
+        <div
+          onClick={handleDropdownClick}
+          className={`
+            min-h-[42px] px-3 py-2
+            border rounded-lg
+            transition-all duration-200
+            cursor-pointer
+            flex items-center justify-between
+            ${disabled ? "bg-gray-50 cursor-not-allowed opacity-60" : "bg-white"}
+            ${error ? "border-red-500" : "border-gray-300"}
+            ${isOpen ? "ring-2 ring-blue-500 border-blue-500" : ""}
+          `}
+        >
+          <div className="flex-1 flex flex-wrap gap-1">
+            {selectedLabels.length > 0 ? (
+              selectedLabels.map((item) => (
+                <span
+                  key={item.value}
+                  className="inline-flex items-center px-2 py-1 rounded-md text-sm bg-blue-100 text-blue-800"
+                >
+                  {item.label}
+                  {!disabled && (
+                    <button
+                      onClick={(e) => removeOption(item.value, e)}
+                      className="ml-1 hover:text-blue-900"
+                      type="button"
+                    >
+                      <XMarkIcon className="h-3 w-3" />
+                    </button>
+                  )}
+                </span>
+              ))
+            ) : (
+              <span className="text-gray-400">{placeholder}</span>
+            )}
+          </div>
+
+          <div className="flex items-center ml-2">
+            {selectedLabels.length > 0 && !disabled && (
+              <button
+                onClick={clearAll}
+                className="mr-2 text-gray-400 hover:text-gray-600"
+                type="button"
+              >
+                <XMarkIcon className="h-4 w-4" />
+              </button>
+            )}
+            <ChevronDownIcon
+              className={`h-4 w-4 text-gray-400 transition-transform ${
+                isOpen ? "rotate-180" : ""
+              }`}
+            />
+          </div>
+        </div>
+
+        {/* Dropdown Menu */}
+        {isOpen && !disabled && (
+          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+            {/* Search Input */}
+            <div className="p-2 border-b border-gray-200">
+              <div className="relative">
+                <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search insurance requirements..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-9 pr-3 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  onClick={(e) => e.stopPropagation()}
+                />
+                {searchLoading && (
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
+              </div>
+              {isSearchMode && (
+                <div className="mt-1 text-xs text-gray-500">
+                  Searching: "{searchTerm}"
+                </div>
+              )}
+            </div>
+
+            {/* Options List */}
+            <div className="max-h-[200px] overflow-y-auto">
+              {isLoading ? (
+                <div className="px-3 py-4 text-center">
+                  <div className="inline-block w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                  <p className="mt-2 text-sm text-gray-500">
+                    Loading insurance requirements...
+                  </p>
+                </div>
+              ) : options.length > 0 ? (
+                options.map((option) => {
+                  const isSelected = currentValue.includes(option.value);
+                  return (
+                    <div
+                      key={option.value}
+                      onClick={() => toggleOption(option.value)}
+                      className={`
+                        px-3 py-2 cursor-pointer flex items-center justify-between
+                        hover:bg-gray-50
+                        ${isSelected ? "bg-blue-50" : ""}
+                      `}
+                    >
+                      <span
+                        className={`text-sm ${
+                          isSelected
+                            ? "text-blue-700 font-medium"
+                            : "text-gray-700"
+                        }`}
+                      >
+                        {option.label}
+                      </span>
+                      {isSelected && (
+                        <CheckIcon className="h-4 w-4 text-blue-600" />
+                      )}
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="px-3 py-4 text-center text-sm text-gray-500">
+                  {searchLoading
+                    ? "Searching..."
+                    : searchTerm
+                      ? `No insurance requirements found for "${searchTerm}"`
+                      : "No insurance requirements available"}
+                </div>
+              )}
+            </div>
+
+            {/* Results info */}
+            {!isLoading && !searchLoading && options.length > 0 && (
+              <div className="px-3 py-2 border-t border-gray-200 text-xs text-gray-500">
+                {isSearchMode
+                  ? `Found ${options.length} result${options.length !== 1 ? "s" : ""}`
+                  : `${options.length} insurance requirement${options.length !== 1 ? "s" : ""} available`}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {helperText && !error && (
+        <p className="mt-2 text-sm text-gray-500">{helperText}</p>
+      )}
+      {error && (
+        <p className="mt-2 text-sm text-red-600 flex items-center">{error}</p>
+      )}
+    </div>
   );
 }
 

@@ -3,6 +3,9 @@ package datastore
 import (
 	"context"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func (impl InsuranceRequirementStorerImpl) ListByFilter(ctx context.Context, f *InsuranceRequirementPaginationListFilter) (*InsuranceRequirementPaginationListResult, error) {
@@ -33,10 +36,13 @@ func (impl InsuranceRequirementStorerImpl) ListByFilter(ctx context.Context, f *
 		return nil, err
 	}
 
-	// // Include Full-text search
-	// if f.SearchText != "" {
-	// 	filter["$text"] = bson.M{"$search": f.SearchText}
-	// }
+	// Include Full-text search
+	if f.SearchText != "" {
+		filter["$or"] = []bson.M{
+			{"name": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+			{"description": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+		}
+	}
 
 	// Execute the query
 	cursor, err := impl.Collection.Find(ctx, filter, options)

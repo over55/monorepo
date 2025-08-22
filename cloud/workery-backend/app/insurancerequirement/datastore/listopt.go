@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -45,7 +46,10 @@ func (impl InsuranceRequirementStorerImpl) ListAsSelectOptionByFilter(ctx contex
 
 	// Full-text search
 	if f.SearchText != "" {
-		query["$text"] = bson.M{"$search": f.SearchText}
+		query["$or"] = []bson.M{
+			{"name": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+			{"description": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+		}
 	}
 
 	options.SetSort(bson.D{{f.SortField, 1}}) // Sort in ascending order based on the specified field
