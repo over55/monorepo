@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func (impl VehicleTypeStorerImpl) ListByFilter(ctx context.Context, f *VehicleTypePaginationListFilter) (*VehicleTypePaginationListResult, error) {
@@ -37,7 +38,10 @@ func (impl VehicleTypeStorerImpl) ListByFilter(ctx context.Context, f *VehicleTy
 
 	// Include Full-text search
 	if f.SearchText != "" {
-		filter["$text"] = bson.M{"$search": f.SearchText}
+		filter["$or"] = []bson.M{
+			{"name": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+			{"description": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+		}
 	}
 
 	// Execute the query
