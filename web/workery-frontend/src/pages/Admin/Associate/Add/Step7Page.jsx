@@ -36,6 +36,12 @@ const ASSOCIATE_PHONE_TYPE_WORK = 2;
 const ASSOCIATE_IS_JOB_SEEKER_YES = 1;
 const ASSOCIATE_IS_JOB_SEEKER_NO = 2;
 
+// Import the constants for "Other" values
+const ASSOCIATE_GENDER_OTHER = 1;
+const ASSOCIATE_STATUS_IN_COUNTRY_OTHER = 5;
+const ASSOCIATE_MARITAL_STATUS_OTHER = 5;
+const ASSOCIATE_EDUCATION_OTHER = 6;
+
 function AdminAssociateAddStep7Page() {
   const authManager = useAuthManager();
   const associateManager = useAssociateManager();
@@ -253,6 +259,68 @@ function AdminAssociateAddStep7Page() {
       processed.isJobSeeker = parseInt(processed.isJobSeeker);
     }
 
+    // Handle conditional "other" fields - only include them when the main field is set to "Other"
+    // and the "other" field has a value
+
+    // Gender Other
+    if (processed.gender !== ASSOCIATE_GENDER_OTHER) {
+      // If gender is not "Other", remove the genderOther field
+      delete processed.genderOther;
+    } else if (!processed.genderOther || processed.genderOther.trim() === "") {
+      // If gender is "Other" but genderOther is empty, remove it
+      delete processed.genderOther;
+    }
+
+    // Status in Country Other
+    if (processed.statusInCountry !== ASSOCIATE_STATUS_IN_COUNTRY_OTHER) {
+      // If status is not "Other", remove the statusInCountryOther field
+      delete processed.statusInCountryOther;
+    } else if (
+      !processed.statusInCountryOther ||
+      processed.statusInCountryOther.trim() === ""
+    ) {
+      // If status is "Other" but statusInCountryOther is empty, remove it
+      delete processed.statusInCountryOther;
+    }
+
+    // Marital Status Other
+    if (processed.maritalStatus !== ASSOCIATE_MARITAL_STATUS_OTHER) {
+      // If marital status is not "Other", remove the maritalStatusOther field
+      delete processed.maritalStatusOther;
+    } else if (
+      !processed.maritalStatusOther ||
+      processed.maritalStatusOther.trim() === ""
+    ) {
+      // If marital status is "Other" but maritalStatusOther is empty, remove it
+      delete processed.maritalStatusOther;
+    }
+
+    // Accomplished Education Other
+    if (processed.accomplishedEducation !== ASSOCIATE_EDUCATION_OTHER) {
+      // If education is not "Other", remove the accomplishedEducationOther field
+      delete processed.accomplishedEducationOther;
+    } else if (
+      !processed.accomplishedEducationOther ||
+      processed.accomplishedEducationOther.trim() === ""
+    ) {
+      // If education is "Other" but accomplishedEducationOther is empty, remove it
+      delete processed.accomplishedEducationOther;
+    }
+
+    // How Did You Hear About Us Other
+    if (!processed.isHowDidYouHearAboutUsOther) {
+      // If not using "Other" option, remove the howDidYouHearAboutUsOther field
+      delete processed.howDidYouHearAboutUsOther;
+      delete processed.isHowDidYouHearAboutUsOther;
+    } else if (
+      !processed.howDidYouHearAboutUsOther ||
+      processed.howDidYouHearAboutUsOther.trim() === ""
+    ) {
+      // If using "Other" but the field is empty, remove it
+      delete processed.howDidYouHearAboutUsOther;
+      delete processed.isHowDidYouHearAboutUsOther;
+    }
+
     // Remove empty/zero values for optional numeric fields to avoid sending 0 when field should be null
     if (processed.statusInCountry === 0) delete processed.statusInCountry;
     if (processed.maritalStatus === 0) delete processed.maritalStatus;
@@ -260,6 +328,17 @@ function AdminAssociateAddStep7Page() {
       delete processed.accomplishedEducation;
     if (processed.otherPhoneType === 0) delete processed.otherPhoneType;
     if (processed.organizationType === 0) delete processed.organizationType;
+
+    // Remove empty string fields to avoid sending empty strings to the backend
+    Object.keys(processed).forEach((key) => {
+      if (
+        processed[key] === "" ||
+        processed[key] === null ||
+        processed[key] === undefined
+      ) {
+        delete processed[key];
+      }
+    });
 
     return processed;
   };
