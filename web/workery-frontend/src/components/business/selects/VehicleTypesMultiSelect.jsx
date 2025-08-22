@@ -1,7 +1,7 @@
-// File: web/workery-frontend/src/components/Form/InsuranceRequirementsMultiSelect.jsx
+// File: monorepo/web/workery-frontend/src/components/business/selects/VehicleTypesMultiSelect.jsx
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { useInsuranceRequirementManager } from "../../services/Services";
+import { useVehicleTypeManager } from "../../../services/Services";
 import {
   XMarkIcon,
   ChevronDownIcon,
@@ -46,12 +46,12 @@ function useDebounce(callback, delay) {
 }
 
 /**
- * InsuranceRequirementsMultiSelect Component
- * A multi-select dropdown for selecting insurance requirements with search functionality
+ * VehicleTypesMultiSelect Component
+ * A multi-select dropdown for selecting vehicle types with search functionality
  * that fetches filtered results from the backend
  *
  * @param {string} label - Field label
- * @param {Array} value - Array of selected insurance requirement IDs
+ * @param {Array} value - Array of selected vehicle type IDs
  * @param {Function} onChange - Handler for value changes
  * @param {string} placeholder - Placeholder text
  * @param {string} error - Error message to display
@@ -61,19 +61,19 @@ function useDebounce(callback, delay) {
  * @param {string} className - Additional CSS classes
  * @param {Function} onUnauthorized - Callback for unauthorized errors
  */
-function InsuranceRequirementsMultiSelect({
-  label = "Insurance Requirements",
+function VehicleTypesMultiSelect({
+  label,
   value = [],
   onChange,
-  placeholder = "Select insurance requirements...",
+  placeholder = "Select vehicle types...",
   error,
   disabled = false,
   required = false,
-  helperText = "Select one or more insurance requirements",
+  helperText,
   className = "",
   onUnauthorized = null,
 }) {
-  const insuranceRequirementManager = useInsuranceRequirementManager();
+  const vehicleTypeManager = useVehicleTypeManager();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [options, setOptions] = useState([]);
@@ -85,35 +85,27 @@ function InsuranceRequirementsMultiSelect({
   // Track if we're using search results or default options
   const [isSearchMode, setIsSearchMode] = useState(false);
 
-  // Clean the value to ensure no empty strings
-  const cleanValue = (val) => {
-    if (!val || !Array.isArray(val)) return [];
-    return val.filter(
-      (v) => v !== null && v !== undefined && v !== "" && v !== "0" && v !== 0,
-    );
-  };
-
   // Load default options (without search)
   const loadDefaultOptions = useCallback(async () => {
     setIsLoading(true);
     try {
-      console.log("Loading default insurance requirement options");
+      console.log("Loading default vehicle type options");
 
       // For default options, use the select options endpoint
-      const insuranceRequirementOptions =
-        await insuranceRequirementManager.getInsuranceRequirementSelectOptions(
+      const vehicleTypeOptions =
+        await vehicleTypeManager.getVehicleTypeSelectOptions(
           onUnauthorized,
           false, // Don't force refresh for default options
         );
 
-      if (insuranceRequirementOptions) {
+      if (vehicleTypeOptions) {
         // Handle both array and object response formats
         let optionsList = [];
 
-        if (Array.isArray(insuranceRequirementOptions)) {
-          optionsList = insuranceRequirementOptions;
-        } else if (insuranceRequirementOptions.results) {
-          optionsList = insuranceRequirementOptions.results;
+        if (Array.isArray(vehicleTypeOptions)) {
+          optionsList = vehicleTypeOptions;
+        } else if (vehicleTypeOptions.results) {
+          optionsList = vehicleTypeOptions.results;
         }
 
         // Transform to consistent format
@@ -126,15 +118,12 @@ function InsuranceRequirementsMultiSelect({
         setOptions(transformedOptions);
       }
     } catch (error) {
-      console.error(
-        "Error loading default insurance requirement options:",
-        error,
-      );
+      console.error("Error loading default vehicle type options:", error);
       setOptions([]);
     } finally {
       setIsLoading(false);
     }
-  }, [insuranceRequirementManager, onUnauthorized]);
+  }, [vehicleTypeManager, onUnauthorized]);
 
   // Search function to be debounced
   const performSearch = useCallback(
@@ -150,12 +139,9 @@ function InsuranceRequirementsMultiSelect({
       setIsSearchMode(true);
 
       try {
-        console.log(
-          "Searching insurance requirements with query:",
-          searchQuery,
-        );
+        console.log("Searching vehicle types with query:", searchQuery);
 
-        // Use getInsuranceRequirements with search parameter to get filtered results from backend
+        // Use getVehicleTypes with search parameter to get filtered results from backend
         const searchParams = {
           search: searchQuery.trim(),
           page: 1,
@@ -163,12 +149,11 @@ function InsuranceRequirementsMultiSelect({
           status: 1, // Active status
         };
 
-        const searchResults =
-          await insuranceRequirementManager.getInsuranceRequirements(
-            searchParams,
-            onUnauthorized,
-            true, // Force refresh to get latest data
-          );
+        const searchResults = await vehicleTypeManager.getVehicleTypes(
+          searchParams,
+          onUnauthorized,
+          true, // Force refresh to get latest data
+        );
 
         if (searchResults && searchResults.results) {
           // Transform results to select option format
@@ -183,13 +168,13 @@ function InsuranceRequirementsMultiSelect({
           setOptions([]);
         }
       } catch (error) {
-        console.error("Error searching insurance requirements:", error);
+        console.error("Error searching vehicle types:", error);
         setOptions([]);
       } finally {
         setSearchLoading(false);
       }
     },
-    [insuranceRequirementManager, onUnauthorized, loadDefaultOptions],
+    [vehicleTypeManager, onUnauthorized, loadDefaultOptions],
   );
 
   // Debounced search function
@@ -241,10 +226,7 @@ function InsuranceRequirementsMultiSelect({
           return { value: selectedValue, label: option.label };
         }
         // If not in current options, return with ID as label (will be resolved when options load)
-        return {
-          value: selectedValue,
-          label: `Insurance Requirement ${selectedValue}`,
-        };
+        return { value: selectedValue, label: `Vehicle Type ${selectedValue}` };
       })
       .filter(Boolean);
   };
@@ -253,19 +235,17 @@ function InsuranceRequirementsMultiSelect({
 
   // Toggle option selection
   const toggleOption = (optionValue) => {
-    const cleanedValue = cleanValue(value);
-    if (cleanedValue.includes(optionValue)) {
-      onChange(cleanedValue.filter((v) => v !== optionValue));
+    if (value.includes(optionValue)) {
+      onChange(value.filter((v) => v !== optionValue));
     } else {
-      onChange([...cleanedValue, optionValue]);
+      onChange([...value, optionValue]);
     }
   };
 
   // Remove a selected option
   const removeOption = (optionValue, e) => {
     e.stopPropagation();
-    const cleanedValue = cleanValue(value);
-    onChange(cleanedValue.filter((v) => v !== optionValue));
+    onChange(value.filter((v) => v !== optionValue));
   };
 
   // Clear all selections
@@ -289,9 +269,6 @@ function InsuranceRequirementsMultiSelect({
       }
     }
   }, [disabled, isOpen, options.length, loadDefaultOptions]);
-
-  // Use cleaned value for display
-  const currentValue = cleanValue(value);
 
   return (
     <div className={`mb-5 ${className}`}>
@@ -369,7 +346,7 @@ function InsuranceRequirementsMultiSelect({
                 <input
                   ref={searchInputRef}
                   type="text"
-                  placeholder="Search insurance requirements..."
+                  placeholder="Search vehicle types..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-9 pr-3 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -394,12 +371,12 @@ function InsuranceRequirementsMultiSelect({
                 <div className="px-3 py-4 text-center">
                   <div className="inline-block w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                   <p className="mt-2 text-sm text-gray-500">
-                    Loading insurance requirements...
+                    Loading vehicle types...
                   </p>
                 </div>
               ) : options.length > 0 ? (
                 options.map((option) => {
-                  const isSelected = currentValue.includes(option.value);
+                  const isSelected = value.includes(option.value);
                   return (
                     <div
                       key={option.value}
@@ -430,8 +407,8 @@ function InsuranceRequirementsMultiSelect({
                   {searchLoading
                     ? "Searching..."
                     : searchTerm
-                      ? `No insurance requirements found for "${searchTerm}"`
-                      : "No insurance requirements available"}
+                      ? `No vehicle types found for "${searchTerm}"`
+                      : "No vehicle types available"}
                 </div>
               )}
             </div>
@@ -441,7 +418,7 @@ function InsuranceRequirementsMultiSelect({
               <div className="px-3 py-2 border-t border-gray-200 text-xs text-gray-500">
                 {isSearchMode
                   ? `Found ${options.length} result${options.length !== 1 ? "s" : ""}`
-                  : `${options.length} insurance requirement${options.length !== 1 ? "s" : ""} available`}
+                  : `${options.length} vehicle type${options.length !== 1 ? "s" : ""} available`}
               </div>
             )}
           </div>
@@ -458,4 +435,4 @@ function InsuranceRequirementsMultiSelect({
   );
 }
 
-export default InsuranceRequirementsMultiSelect;
+export default VehicleTypesMultiSelect;

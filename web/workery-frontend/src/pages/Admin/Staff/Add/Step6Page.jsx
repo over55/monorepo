@@ -24,7 +24,7 @@ import {
 import {
   TagsMultiSelect,
   HowHearAboutUsSelect,
-} from "../../../../components/Form";
+} from "../../../../components/business/selects";
 import {
   GENDER_OPTIONS_WITH_EMPTY_OPTION,
   IDENTIFY_AS_OPTIONS,

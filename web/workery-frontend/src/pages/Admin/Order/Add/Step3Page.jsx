@@ -20,7 +20,7 @@ import {
 import {
   SkillSetsMultiSelect,
   TagsMultiSelect,
-} from "../../../../components/Form";
+} from "../../../../components/business/selects";
 
 function AdminOrderAddStep3Page() {
   const authManager = useAuthManager();

@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useReportManager } from "../../../../services/Services";
-import { SkillSetsMultiSelect } from "../../../../components/Form";
+import { SkillSetsMultiSelect } from "../../../../components/business/selects";
 import { Card, Button, Alert, Loading } from "../../../../components/UI";
 import {
   HomeIcon,

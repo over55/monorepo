@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useReportManager } from "../../../../services/Services";
 import { Card, Button, Alert, Loading } from "../../../../components/UI";
-import { AssociateSelect } from "../../../../components/Form";
+import { AssociateSelect } from "../../../../components/business/selects";
 import {
   HomeIcon,
   ChartBarIcon,

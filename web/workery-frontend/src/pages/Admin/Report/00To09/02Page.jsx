@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { useReportManager } from "../../../../services/Services";
-import { AssociateSelect } from "../../../../components/Form";
+import { AssociateSelect } from "../../../../components/business/selects";
 import { ORDER_STATUS_FILTER_OPTIONS } from "../../../../constants/FieldOptions";
 import {
   Card,

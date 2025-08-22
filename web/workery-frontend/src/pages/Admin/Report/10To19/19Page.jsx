@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useReportManager } from "../../../../services/Services";
-import { TagsMultiSelect } from "../../../../components/Form";
+import { TagsMultiSelect } from "../../../../components/business/selects";
 import {
   Card,
   Button,

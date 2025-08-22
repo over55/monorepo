@@ -29,7 +29,7 @@ import {
 import {
   TagsMultiSelect,
   HowHearAboutUsSelect,
-} from "../../../../components/Form";
+} from "../../../../components/business/selects";
 import {
   ASSOCIATE_IS_JOB_SEEKER_YES,
   ASSOCIATE_IS_JOB_SEEKER_NO,

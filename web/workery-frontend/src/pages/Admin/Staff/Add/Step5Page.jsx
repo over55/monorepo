@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
 import { useStaffAddWizardStorage } from "../../../../services/Services";
-import { VehicleTypesMultiSelect } from "../../../../components/Form";
+import { VehicleTypesMultiSelect } from "../../../../components/business/selects";
 import {
   UserPlusIcon,
   ChevronRightIcon,

@@ -1,9 +1,9 @@
-// File: monorepo/web/workery-frontend/src/components/Form/AssociateSelect.jsx
+// File: monorepo/web/workery-frontend/src/components/business/selects/AssociateSelect.jsx
 
 import React, { useState, useEffect } from "react";
-import { Select, FormGroup, Loading } from "../UI";
-import { useAssociateManager } from "../../services/Services";
-import { ASSOCIATE_STATUS_ACTIVE } from "../../constants/Associate";
+import { Select, FormGroup, Loading } from "../../UI";
+import { useAssociateManager } from "../../../services/Services";
+import { ASSOCIATE_STATUS_ACTIVE } from "../../../constants/Associate";
 
 /**
  * Reusable Associate Select Component

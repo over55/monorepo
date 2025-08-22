@@ -12,7 +12,7 @@ import {
   ExclamationTriangleIcon,
   InformationCircleIcon,
 } from "@heroicons/react/24/outline";
-import { SkillSetsMultiSelect } from "../../../components/Form";
+import { SkillSetsMultiSelect } from "../../../components/business/selects";
 import { Card, Alert, Button, Radio } from "../../../components/UI";
 
 function AdminSkillSetAssociateSearchCriteriaPage() {

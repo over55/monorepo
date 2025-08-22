@@ -43,7 +43,7 @@ import {
   HowHearAboutUsSelect,
   SkillSetsMultiSelect,
   InsuranceRequirementsMultiSelect,
-} from "../../../../components/Form";
+} from "../../../../components/business/selects";
 import {
   STAFF_TYPE_EXECUTIVE,
   STAFF_TYPE_MANAGEMENT,

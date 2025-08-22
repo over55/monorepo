@@ -16,8 +16,8 @@ import {
   Checkbox,
   FormGroup,
 } from "../../../../components/UI";
-import HowHearAboutUsSelect from "../../../../components/Form/HowHearAboutUsSelect";
-import TagsMultiSelect from "../../../../components/Form/TagsMultiSelect";
+import HowHearAboutUsSelect from "../../../../components/business/selects/HowHearAboutUsSelect";
+import TagsMultiSelect from "../../../../components/business/selects/TagsMultiSelect";
 import {
   COMMERCIAL_CUSTOMER_TYPE_OF_ID,
   RESIDENTIAL_CUSTOMER_TYPE_OF_ID,

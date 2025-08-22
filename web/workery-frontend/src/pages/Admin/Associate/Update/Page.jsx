@@ -44,7 +44,7 @@ import {
   ServiceFeeSelect,
   TagsMultiSelect,
   HowHearAboutUsSelect,
-} from "../../../../components/Form";
+} from "../../../../components/business/selects";
 
 // Constants
 const RESIDENTIAL_ASSOCIATE_TYPE_OF_ID = 2;

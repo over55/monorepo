@@ -22,8 +22,8 @@ import {
   LockClosedIcon,
   UserGroupIcon,
 } from "@heroicons/react/24/outline";
-import HowHearAboutUsSelect from "../../../../components/Form/HowHearAboutUsSelect";
-import TagsMultiSelect from "../../../../components/Form/TagsMultiSelect";
+import HowHearAboutUsSelect from "../../../../components/business/selects/HowHearAboutUsSelect";
+import TagsMultiSelect from "../../../../components/business/selects/TagsMultiSelect";
 
 // Gender options - Reordered with "Other" as third option
 const GENDER_OPTIONS = [

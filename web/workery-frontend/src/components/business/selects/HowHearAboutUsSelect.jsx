@@ -1,38 +1,36 @@
-// File: web/workery-frontend/src/components/Form/ServiceFeeSelect.jsx
+// File: monorepo/web/workery-frontend/src/components/business/selects/HowHearAboutUsSelect.jsx
 
 import React, { useState, useEffect } from "react";
-import { Select, FormGroup, Loading } from "../UI";
-import { useServiceFeeManager } from "../../services/Services";
+import { Select, FormGroup, Loading } from "../../UI";
+import { useHowHearAboutUsItemManager } from "../../../services/Services";
 
 /**
- * Reusable Service Fee Select Component
+ * Reusable How Hear About Us Select Component
  *
- * @param {string|number} value - Current selected service fee ID
+ * @param {string} value - Current selected value
  * @param {function} onChange - Callback when value changes (receives the value)
  * @param {function} onOtherDetected - Callback when "Other" option is selected (receives boolean)
  * @param {string} error - Error message to display
  * @param {boolean} required - Whether field is required
  * @param {boolean} disabled - Whether field is disabled
  * @param {string} className - Additional CSS classes
- * @param {string} label - Custom label (defaults to "Service Fee")
+ * @param {string} label - Custom label (defaults to "How did you hear about us?")
  * @param {string} helperText - Helper text to display
  * @param {function} onUnauthorized - Callback for unauthorized errors
- * @param {string} placeholder - Custom placeholder (defaults to "Please select")
  */
-function ServiceFeeSelect({
+function HowHearAboutUsSelect({
   value,
   onChange,
   onOtherDetected,
   error,
-  required = false,
+  required = true,
   disabled = false,
   className = "",
-  label = "Service Fee",
+  label = "How did you hear about us?",
   helperText = "",
   onUnauthorized = null,
-  placeholder = "Please select",
 }) {
-  const serviceFeeManager = useServiceFeeManager();
+  const howHearManager = useHowHearAboutUsItemManager();
   const [options, setOptions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
@@ -47,50 +45,29 @@ function ServiceFeeSelect({
 
         // Fetch options from the API/cache
         const apiOptions =
-          await serviceFeeManager.getServiceFeeSelectOptions(onUnauthorized);
+          await howHearManager.getSelectOptions(onUnauthorized);
 
         if (mounted) {
-          // Format options - The API should return them in {value, label} format
-          // but we'll ensure they're formatted correctly
-          const formattedOptions = Array.isArray(apiOptions)
-            ? apiOptions
-            : apiOptions?.results || apiOptions?.data || [];
-
-          // Ensure each option has value and label properties
-          const validOptions = formattedOptions
-            .filter(
-              (opt) => opt && (opt.value !== undefined || opt.id !== undefined),
-            )
-            .map((opt) => ({
-              value: opt.value !== undefined ? opt.value : opt.id,
-              label:
-                opt.label || opt.title || opt.name || `Service Fee ${opt.id}`,
-            }));
-
-          setOptions(validOptions);
-
-          // Check if current value is "Other" option after options are loaded
-          if (value && onOtherDetected) {
-            const selectedOption = validOptions.find(
-              (opt) => String(opt.value) === String(value),
-            );
-            if (
-              selectedOption &&
-              selectedOption.label &&
-              selectedOption.label.toLowerCase() === "other"
-            ) {
-              onOtherDetected(true);
-            }
-          }
+          // Format options with empty option at the start
+          const formattedOptions = [
+            // { value: "", label: "Please select" }, // Not needed
+            ...(apiOptions || []),
+          ];
+          setOptions(formattedOptions);
         }
       } catch (error) {
-        console.error("Error fetching service fee options:", error);
+        console.error("Error fetching how hear options:", error);
         if (mounted) {
-          setFetchError(
-            "Failed to load service fee options. Please try again.",
-          );
-          // Set empty options on error
-          setOptions([]);
+          setFetchError("Failed to load options. Please try again.");
+          // Set fallback options on error
+          setOptions([
+            { value: "", label: "Please select" },
+            { value: "1", label: "Google" },
+            { value: "2", label: "Facebook" },
+            { value: "3", label: "Word of mouth" },
+            { value: "4", label: "Newspaper" },
+            { value: "5", label: "Other" },
+          ]);
         }
       } finally {
         if (mounted) {
@@ -143,7 +120,7 @@ function ServiceFeeSelect({
             minHeight: "42px",
           }}
         >
-          <Loading size="sm" text="Loading service fees..." />
+          <Loading size="sm" text="Loading options..." />
         </div>
       </FormGroup>
     );
@@ -158,11 +135,11 @@ function ServiceFeeSelect({
       error={error || fetchError}
       disabled={disabled}
       required={required}
-      placeholder={placeholder}
+      placeholder="Please select"
       helperText={helperText}
       className={className}
     />
   );
 }
 
-export default ServiceFeeSelect;
+export default HowHearAboutUsSelect;

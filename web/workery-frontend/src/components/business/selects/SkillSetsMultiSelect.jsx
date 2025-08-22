@@ -1,36 +1,36 @@
-// File: web/workery-frontend/src/components/Form/TagsMultiSelect.jsx
+// File: monorepo/web/workery-frontend/src/components/business/selects/SkillSetsMultiSelect.jsx
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { MultiSelect, Loading } from "../UI";
-import { useTagManager } from "../../services/Services";
+import { MultiSelect, Loading } from "../../UI";
+import { useSkillSetManager } from "../../../services/Services";
 
 /**
- * Reusable Tags Multi-Select Component with server-side search
+ * Reusable Skill Sets Multi-Select Component with server-side search
  *
- * @param {Array} value - Array of selected tag IDs
+ * @param {Array} value - Array of selected skill set IDs
  * @param {function} onChange - Callback when value changes (receives array of IDs)
  * @param {string} error - Error message to display
  * @param {boolean} required - Whether field is required
  * @param {boolean} disabled - Whether field is disabled
  * @param {string} className - Additional CSS classes
- * @param {string} label - Custom label (defaults to "Tags")
+ * @param {string} label - Custom label (defaults to "Skill Sets")
  * @param {string} placeholder - Custom placeholder
  * @param {string} helperText - Helper text to display
  * @param {function} onUnauthorized - Callback for unauthorized errors
  */
-function TagsMultiSelect({
+function SkillSetsMultiSelect({
   value = [],
   onChange,
   error,
   required = false,
   disabled = false,
   className = "",
-  label = "Tags",
-  placeholder = "Select tags...",
-  helperText = "Select one or more tags",
+  label = "Skill Sets",
+  placeholder = "Select skill sets...",
+  helperText = "Select one or more skill sets",
   onUnauthorized = null,
 }) {
-  const tagManager = useTagManager();
+  const skillSetManager = useSkillSetManager();
   const [options, setOptions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
@@ -65,68 +65,55 @@ function TagsMultiSelect({
           params.search = search.trim();
         }
 
-        console.log("TagsMultiSelect: Fetching options with search:", search);
+        console.log(
+          "SkillSetsMultiSelect: Fetching options with search:",
+          search,
+        );
 
-        // Use getTags method for searching, which supports server-side search
-        if (search) {
-          // When searching, use the full tags API with search parameter
-          const tagsResponse = await tagManager.getTags(
-            params,
-            onUnauthorized,
-            true, // Force refresh to get latest data
-          );
+        // Fetch skill set options from the API with search parameter
+        const skillSetResponse = await skillSetManager.getSkillSets(
+          params,
+          onUnauthorized,
+          true, // Force refresh to get latest data
+        );
 
-          if (!isMounted.current) return;
+        if (!isMounted.current) return;
 
-          // Transform the results into select options format
-          let validOptions = [];
+        // Transform the results into select options format
+        let validOptions = [];
 
-          if (tagsResponse && tagsResponse.results) {
-            validOptions = tagsResponse.results
-              .filter((item) => item && (item.id || item.value))
-              .map((item) => ({
-                value: item.id || item.value,
-                label: item.text || item.label || item.name || `Tag ${item.id}`,
-              }));
-          }
-
-          console.log(
-            `TagsMultiSelect: Loaded ${validOptions.length} options from search`,
-          );
-          setOptions(validOptions);
-        } else {
-          // When not searching, get all select options
-          const tagOptions = await tagManager.getTagSelectOptions(
-            onUnauthorized,
-            true, // Force refresh for initial load
-          );
-
-          if (!isMounted.current) return;
-
-          // Format options - should already be in {value, label} format
-          const validOptions = (tagOptions || []).filter(
-            (opt) => opt && opt.value && opt.label,
-          );
-
-          console.log(
-            `TagsMultiSelect: Loaded ${validOptions.length} default options`,
-          );
-          setOptions(validOptions);
+        if (skillSetResponse && skillSetResponse.results) {
+          validOptions = skillSetResponse.results
+            .filter((item) => item && (item.id || item.value))
+            .map((item) => ({
+              value: item.id || item.value,
+              label:
+                item.subCategory ||
+                item.label ||
+                item.text ||
+                item.name ||
+                `Skill Set ${item.id}`,
+            }));
         }
 
-        // Also ensure any selected values are included
+        console.log(
+          `SkillSetsMultiSelect: Loaded ${validOptions.length} options`,
+        );
+        setOptions(validOptions);
+
+        // Also fetch any selected values that might not be in the current search results
         if (value && value.length > 0 && !search) {
           await ensureSelectedOptionsAreLoaded();
         }
       } catch (error) {
-        console.error("Error fetching tag options:", error);
+        console.error("Error fetching skill set options:", error);
         if (isMounted.current) {
-          setFetchError("Failed to load tags. Please try again.");
+          setFetchError("Failed to load skill sets. Please try again.");
           setOptions([]);
         }
       }
     },
-    [tagManager, onUnauthorized, value],
+    [skillSetManager, onUnauthorized, value],
   );
 
   // Ensure selected options are included even if not in search results
@@ -144,12 +131,12 @@ function TagsMultiSelect({
 
       if (missingIds.length > 0) {
         console.log(
-          "TagsMultiSelect: Loading missing selected options:",
+          "SkillSetsMultiSelect: Loading missing selected options:",
           missingIds,
         );
 
         // Fetch the full list to get the missing options
-        const fullResponse = await tagManager.getTagSelectOptions(
+        const fullResponse = await skillSetManager.getSkillSetSelectOptions(
           onUnauthorized,
           true,
         );
@@ -185,7 +172,7 @@ function TagsMultiSelect({
     } catch (error) {
       console.error("Error loading selected options:", error);
     }
-  }, [value, options, tagManager, onUnauthorized]);
+  }, [value, options, skillSetManager, onUnauthorized]);
 
   // Initial load
   useEffect(() => {
@@ -263,7 +250,7 @@ function TagsMultiSelect({
             minHeight: "42px",
           }}
         >
-          <Loading size="sm" text="Loading tags..." />
+          <Loading size="sm" text="Loading skill sets..." />
         </div>
       </div>
     );
@@ -453,7 +440,7 @@ function EnhancedMultiSelect({
             <div className="p-2 border-b border-gray-200">
               <input
                 type="text"
-                placeholder="Search tags..."
+                placeholder="Search skill sets..."
                 value={searchTerm}
                 onChange={(e) => onSearch(e.target.value)}
                 className="w-full px-3 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
@@ -502,7 +489,7 @@ function EnhancedMultiSelect({
                 })
               ) : (
                 <div className="px-3 py-2 text-sm text-gray-500">
-                  {isSearching ? "Searching..." : "No tags found"}
+                  {isSearching ? "Searching..." : "No skill sets found"}
                 </div>
               )}
             </div>
@@ -520,4 +507,4 @@ function EnhancedMultiSelect({
   );
 }
 
-export default TagsMultiSelect;
+export default SkillSetsMultiSelect;

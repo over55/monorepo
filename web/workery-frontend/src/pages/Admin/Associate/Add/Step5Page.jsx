@@ -33,7 +33,7 @@ import {
   InsuranceRequirementsMultiSelect,
   VehicleTypesMultiSelect,
   ServiceFeeSelect,
-} from "../../../../components/Form";
+} from "../../../../components/business/selects";
 
 function AdminAssociateAddStep5Page() {
   const authManager = useAuthManager();
