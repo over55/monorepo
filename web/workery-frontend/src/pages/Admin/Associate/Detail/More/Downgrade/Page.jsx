@@ -78,19 +78,40 @@ function AdminAssociateDetailMoreDowngradePage() {
   }, [aid]);
 
   // Handle downgrade confirmation
-  const handleConfirmDowngrade = async () => {
+  const handleConfirmDowngrade = async (e) => {
+    // Prevent any event bubbling
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    console.log("Starting downgrade process for associate:", aid);
+
+    // Update UI state
     setShowConfirmModal(false);
     setErrors({});
     setIsDowngrading(true);
+    setSuccessMessage("");
 
     try {
+      console.log("Calling associateManager.downgradeAssociate...");
+
       // Call the manager to downgrade associate
-      await associateManager.downgradeAssociate(aid, onUnauthorized);
+      const response = await associateManager.downgradeAssociate(
+        aid,
+        onUnauthorized,
+      );
+
+      console.log("Downgrade response:", response);
 
       // Set success message
       setSuccessMessage(
         "Associate has been successfully downgraded to Residential type",
       );
+
+      // Clear any errors
+      setErrors({});
+      setIsDowngrading(false);
 
       // Navigate back after a short delay
       setTimeout(() => {
@@ -98,8 +119,45 @@ function AdminAssociateDetailMoreDowngradePage() {
       }, 2000);
     } catch (error) {
       console.error("Failed to downgrade associate:", error);
-      setErrors(error);
+
+      // Handle error properly
+      if (error && typeof error === "object") {
+        if (error.message) {
+          setErrors({ general: error.message });
+        } else if (error.detail) {
+          setErrors({ general: error.detail });
+        } else if (error.error) {
+          setErrors({ general: error.error });
+        } else {
+          setErrors({
+            general: "Failed to downgrade associate. Please try again.",
+          });
+        }
+      } else {
+        setErrors({
+          general: "An unexpected error occurred. Please try again.",
+        });
+      }
+
       setIsDowngrading(false);
+      setSuccessMessage("");
+    }
+  };
+
+  // Handle modal cancel
+  const handleModalCancel = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setShowConfirmModal(false);
+  };
+
+  // Handle modal backdrop click
+  const handleBackdropClick = (e) => {
+    // Only close if clicking the backdrop itself, not its children
+    if (e.target === e.currentTarget) {
+      setShowConfirmModal(false);
     }
   };
 
@@ -213,7 +271,8 @@ function AdminAssociateDetailMoreDowngradePage() {
         <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
           <div className="flex justify-between items-center">
             <span>
-              {errors.message ||
+              {errors.general ||
+                errors.message ||
                 errors.detail ||
                 "An error occurred. Please try again."}
             </span>
@@ -393,7 +452,11 @@ function AdminAssociateDetailMoreDowngradePage() {
 
             {!isNotBusiness && (
               <button
-                onClick={() => setShowConfirmModal(true)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowConfirmModal(true);
+                }}
                 disabled={isDowngrading}
                 className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
@@ -405,7 +468,7 @@ function AdminAssociateDetailMoreDowngradePage() {
                 ) : (
                   <>
                     <HomeIcon className="w-4 h-4 mr-2" />
-                    Confirm and Downgrade
+                    Downgrade to Residential
                   </>
                 )}
               </button>
@@ -421,16 +484,28 @@ function AdminAssociateDetailMoreDowngradePage() {
             {/* Background overlay */}
             <div
               className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-              onClick={() => setShowConfirmModal(false)}
+              onClick={handleBackdropClick}
+              aria-hidden="true"
             ></div>
 
+            {/* Center the modal */}
+            <span
+              className="hidden sm:inline-block sm:align-middle sm:h-screen"
+              aria-hidden="true"
+            >
+              &#8203;
+            </span>
+
             {/* Modal panel */}
-            <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
+            <div
+              className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
               <div className="absolute top-0 right-0 pt-4 pr-4">
                 <button
                   type="button"
                   className="bg-white rounded-md text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  onClick={() => setShowConfirmModal(false)}
+                  onClick={handleModalCancel}
                 >
                   <span className="sr-only">Close</span>
                   <XMarkIcon className="h-6 w-6" />
@@ -498,7 +573,7 @@ function AdminAssociateDetailMoreDowngradePage() {
                 <button
                   type="button"
                   className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                  onClick={() => setShowConfirmModal(false)}
+                  onClick={handleModalCancel}
                   disabled={isDowngrading}
                 >
                   Cancel
