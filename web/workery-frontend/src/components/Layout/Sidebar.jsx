@@ -513,11 +513,9 @@ function Sidebar({ isOpen, onClose, isMobile, taskItemActiveCount = 0 }) {
     const sections = [];
 
     const userRole = currentUser.role || currentUser.roleId;
-    if (
-      [EXECUTIVE_ROLE_ID, MANAGEMENT_ROLE_ID, FRONTLINE_ROLE_ID].includes(
-        userRole,
-      )
-    ) {
+
+    // Executive and Management - Full access
+    if ([EXECUTIVE_ROLE_ID, MANAGEMENT_ROLE_ID].includes(userRole)) {
       sections.push({
         label: "Staff",
         items: [
@@ -548,8 +546,31 @@ function Sidebar({ isOpen, onClose, isMobile, taskItemActiveCount = 0 }) {
       });
     }
 
+    // Frontline Staff - Limited access (no Administration section)
+    else if (userRole === FRONTLINE_ROLE_ID) {
+      sections.push({
+        label: "Staff",
+        items: [
+          { path: "/admin/dashboard", label: "Dashboard" },
+          {
+            path: "/admin/tasks",
+            label: "Tasks",
+            badge: taskItemActiveCount > 0 ? taskItemActiveCount : null,
+          },
+          { path: "/admin/customers", label: "Clients" },
+          { path: "/admin/associates", label: "Associates" },
+          { path: "/admin/orders", label: "Work Orders" },
+          { path: "/admin/skill-sets", label: "Skill Sets" },
+          { path: "/admin/incidents", label: "Incidents" },
+          { path: "/admin/job-history", label: "Job History" },
+          { path: "/admin/all-comments", label: "Comments" },
+        ],
+      });
+      // No Administration section for Frontline staff
+    }
+
     // Customer menu
-    if (userRole === CUSTOMER_ROLE_ID) {
+    else if (userRole === CUSTOMER_ROLE_ID) {
       sections.push({
         label: "Member",
         items: [
@@ -562,7 +583,7 @@ function Sidebar({ isOpen, onClose, isMobile, taskItemActiveCount = 0 }) {
     }
 
     // Associate menu
-    if (userRole === ASSOCIATE_ROLE_ID) {
+    else if (userRole === ASSOCIATE_ROLE_ID) {
       sections.push({
         label: "Associate",
         items: [
@@ -575,7 +596,7 @@ function Sidebar({ isOpen, onClose, isMobile, taskItemActiveCount = 0 }) {
     }
 
     // Job Seeker menu
-    if (userRole === ASSOCIATE_JOB_SEEKER_ROLE_ID) {
+    else if (userRole === ASSOCIATE_JOB_SEEKER_ROLE_ID) {
       sections.push({
         label: "Job Seeker",
         items: [
