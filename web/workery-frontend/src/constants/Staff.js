@@ -12,6 +12,8 @@ export const STAFF_ORGANIZATION_TYPE_GOVERNMENT = 4;
 export const STAFF_TYPE_EXECUTIVE = 1;
 export const STAFF_TYPE_MANAGEMENT = 2;
 export const STAFF_TYPE_FRONTLINE = 3;
+export const STAFF_TYPE_ASSOCIATE = 4;
+export const STAFF_TYPE_CUSTOMER = 5;
 
 export const UNASSIGNED_STAFF_TYPE_OF_ID = 1;
 export const RESIDENTIAL_STAFF_TYPE_OF_ID = 2;
