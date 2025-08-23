@@ -104,7 +104,7 @@ function AdminAssociateDetailMoreDowngradePage() {
   };
 
   // Check if already residential or not business type
-  const isNotBusiness = !associate?.organizationName || associate?.typeOf !== 3;
+  const isNotBusiness = !associate?.organizationName || associate?.type !== 3;
 
   // Render loading state
   if (isFetching && !associate) {
@@ -296,13 +296,13 @@ function AdminAssociateDetailMoreDowngradePage() {
                   Current Type
                 </dt>
                 <dd className="mt-1 text-sm">
-                  {associate?.typeOf === 1 ? (
+                  {associate?.type === 1 ? (
                     <span className="text-gray-600">Unassigned</span>
-                  ) : associate?.typeOf === 2 ? (
+                  ) : associate?.type === 2 ? (
                     <span className="text-blue-600 font-medium">
                       Residential
                     </span>
-                  ) : associate?.typeOf === 3 ? (
+                  ) : associate?.type === 3 ? (
                     <span className="text-green-600 font-medium">
                       Commercial/Business
                     </span>
