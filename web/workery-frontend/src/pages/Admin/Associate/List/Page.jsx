@@ -44,14 +44,18 @@ import { ChevronDownIcon } from "@heroicons/react/20/solid";
 const ASSOCIATE_STATUS_OPTIONS = [
   { value: "", label: "All Statuses" },
   { value: "1", label: "Active" },
-  { value: "0", label: "Archived" },
+  { value: "2", label: "Archived" },
 ];
+
+// Associate type constants
+const RESIDENTIAL_ASSOCIATE_TYPE_OF_ID = 2;
+const COMMERCIAL_ASSOCIATE_TYPE_OF_ID = 3;
 
 const ASSOCIATE_TYPE_OPTIONS = [
   { value: "", label: "All Types" },
   { value: "0", label: "All" },
-  { value: "1", label: "Residential" },
-  { value: "2", label: "Commercial" },
+  { value: String(RESIDENTIAL_ASSOCIATE_TYPE_OF_ID), label: "Residential" },
+  { value: String(COMMERCIAL_ASSOCIATE_TYPE_OF_ID), label: "Commercial" },
 ];
 
 const ASSOCIATE_SORT_OPTIONS = [
@@ -70,10 +74,6 @@ const PAGE_SIZE_OPTIONS = [
 
 const VIEW_TYPE_TABULAR = "tabular";
 const VIEW_TYPE_GRID = "grid";
-
-// Associate type constants
-const COMMERCIAL_ASSOCIATE_TYPE_OF_ID = 2;
-const RESIDENTIAL_ASSOCIATE_TYPE_OF_ID = 1;
 
 function AdminAssociateListPage() {
   const associateManager = useAssociateManager();
