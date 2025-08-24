@@ -2,15 +2,28 @@
 
 import React, { useState, useEffect } from "react";
 import { Link, Navigate, useParams } from "react-router";
+import { useAuthManager } from "../../../../../services/Services";
 import {
-  Breadcrumb,
-  Card,
-  Button,
-  Alert,
-  Loading,
-  FormGroup,
-  TextArea,
-} from "../../../../../components/UI";
+  ClipboardDocumentCheckIcon,
+  ChevronRightIcon,
+  XMarkIcon,
+  ArrowLeftIcon,
+  ChartBarIcon,
+  ClipboardDocumentListIcon,
+  ExclamationCircleIcon,
+  UserIcon,
+  CheckIcon,
+  ArrowRightIcon,
+  ChatBubbleLeftRightIcon,
+  PhoneIcon,
+  EnvelopeIcon,
+  UserGroupIcon,
+  XCircleIcon,
+  ClockIcon,
+  WrenchScrewdriverIcon,
+  MapPinIcon,
+  UsersIcon,
+} from "@heroicons/react/24/outline";
 import { STORAGE_KEYS } from "../../../../../constants/Storage";
 import {
   TASK_ASSIGN_ASSOCIATE_STATUS,
@@ -21,7 +34,7 @@ import {
 } from "../../../../../constants/Task";
 
 function AdminTaskItemAssignAssociateStep3Page() {
-  // URL Parameters
+  const authManager = useAuthManager();
   const { tid } = useParams();
 
   // Component states
@@ -34,9 +47,15 @@ function AdminTaskItemAssignAssociateStep3Page() {
   const [howWasJobAccepted, setHowWasJobAccepted] = useState(0);
   const [whyJobDeclined, setWhyJobDeclined] = useState(0);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Load associate data and form data from session storage
+  // Check authentication and load associate data
   useEffect(() => {
+    if (!authManager.isAuthenticated()) {
+      setForceURL("/login");
+      return;
+    }
+
     const storedData = sessionStorage.getItem(
       STORAGE_KEYS.WORKERY_ASSIGN_ASSOCIATE_DATA,
     );
@@ -72,10 +91,11 @@ function AdminTaskItemAssignAssociateStep3Page() {
     }
 
     setIsDataLoaded(true);
-  }, [tid]);
+  }, [authManager, tid]);
 
   // Event handling
-  const onSubmitClick = () => {
+  const onSubmitClick = (e) => {
+    e.preventDefault();
     console.log("onSubmitClick: Beginning...");
     let newErrors = {};
     let hasErrors = false;
@@ -197,285 +217,571 @@ function AdminTaskItemAssignAssociateStep3Page() {
     return <Navigate to={forceURL} />;
   }
 
-  const breadcrumbItems = [
-    { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
-    { label: "Tasks", path: "/admin/tasks", icon: "📋" },
-    { label: "Task Detail", icon: "ℹ️" },
-  ];
+  if (!associateData || !isDataLoaded) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="flex items-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+          <span className="ml-3 text-gray-600">Loading...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="container">
-      <Breadcrumb items={breadcrumbItems} />
-
-      {/* Page Title */}
-      <h1>📋 Task</h1>
-      <h4>ℹ️ Detail</h4>
-      <hr />
-
-      {/* Progress Wizard */}
-      <Card>
-        <p>
-          Step {TASK_WIZARD_STEPS.ASSIGN_ASSOCIATE.CONFIRM} of{" "}
-          {TASK_WIZARD_STEPS.ASSIGN_ASSOCIATE.TOTAL}
-        </p>
-        <progress value={TASK_PROGRESS_PERCENTAGE.STEP_3_OF_4} max="100">
-          {TASK_PROGRESS_PERCENTAGE.STEP_3_OF_4}%
-        </progress>
-      </Card>
-
-      {/* Page Content */}
-      <Card title="📋 Task Detail - Assign Associate">
-        {errors && Object.keys(errors).length > 0 && (
-          <Alert type="error">
-            {Object.entries(errors).map(([key, value]) => (
-              <div key={key}>{value}</div>
-            ))}
-          </Alert>
-        )}
-
-        {associateData && isDataLoaded && (
-          <div>
-            {/* Show notification if data was loaded from previous submission */}
-            {status !== 0 && (
-              <Alert type="info">
-                ℹ️ Your previous responses have been loaded. You can review and
-                modify them if needed.
-              </Alert>
-            )}
-
-            {/* Associate Info */}
-            <FormGroup>
-              <label>Associate</label>
-              <div>
-                <Link to={`/admin/associate/${associateData.associateID}`}>
-                  {associateData.associateName}
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        {/* Breadcrumb */}
+        <nav className="flex mb-4" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+            <li className="inline-flex items-center">
+              <Link
+                to="/admin/dashboard"
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <ChartBarIcon className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Dashboard</span>
+                <span className="sm:hidden">Home</span>
+              </Link>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to="/admin/tasks"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                >
+                  <span className="inline-flex items-center">
+                    <ClipboardDocumentListIcon className="w-4 h-4 mr-2" />
+                    Tasks
+                  </span>
                 </Link>
               </div>
-            </FormGroup>
-
-            {/* Accepted Job? */}
-            <FormGroup>
-              <label>Accepted Job? *</label>
-              <div>
-                <label>
-                  <input
-                    type="radio"
-                    name="status"
-                    value={TASK_ASSIGN_ASSOCIATE_STATUS.ACCEPTED}
-                    checked={status === TASK_ASSIGN_ASSOCIATE_STATUS.ACCEPTED}
-                    onChange={(e) =>
-                      handleStatusChange(TASK_ASSIGN_ASSOCIATE_STATUS.ACCEPTED)
-                    }
-                  />{" "}
-                  Yes
-                </label>
-                <br />
-                <label>
-                  <input
-                    type="radio"
-                    name="status"
-                    value={TASK_ASSIGN_ASSOCIATE_STATUS.DECLINED}
-                    checked={status === TASK_ASSIGN_ASSOCIATE_STATUS.DECLINED}
-                    onChange={(e) =>
-                      handleStatusChange(TASK_ASSIGN_ASSOCIATE_STATUS.DECLINED)
-                    }
-                  />{" "}
-                  No
-                </label>
+            </li>
+            <li aria-current="page">
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
+                  <ClipboardDocumentCheckIcon className="w-4 h-4 mr-2" />
+                  Task Detail
+                </span>
               </div>
-              {errors.status && (
-                <div style={{ color: "red", fontSize: "12px" }}>
-                  {errors.status}
-                </div>
-              )}
-            </FormGroup>
+            </li>
+          </ol>
+        </nav>
 
-            {/* How was job accepted */}
-            {status === TASK_ASSIGN_ASSOCIATE_STATUS.ACCEPTED && (
-              <FormGroup>
-                <label>How was this job accepted? *</label>
-                <div>
-                  <label>
-                    <input
-                      type="radio"
-                      name="howWasJobAccepted"
-                      value={TASK_HOW_JOB_ACCEPTED.PHONE}
-                      checked={
-                        howWasJobAccepted === TASK_HOW_JOB_ACCEPTED.PHONE
-                      }
-                      onChange={(e) =>
-                        handleHowAcceptedChange(TASK_HOW_JOB_ACCEPTED.PHONE)
-                      }
-                    />{" "}
-                    Phone
-                  </label>
-                  <br />
-                  <label>
-                    <input
-                      type="radio"
-                      name="howWasJobAccepted"
-                      value={TASK_HOW_JOB_ACCEPTED.TEXT}
-                      checked={howWasJobAccepted === TASK_HOW_JOB_ACCEPTED.TEXT}
-                      onChange={(e) =>
-                        handleHowAcceptedChange(TASK_HOW_JOB_ACCEPTED.TEXT)
-                      }
-                    />{" "}
-                    Text
-                  </label>
-                  <br />
-                  <label>
-                    <input
-                      type="radio"
-                      name="howWasJobAccepted"
-                      value={TASK_HOW_JOB_ACCEPTED.EMAIL}
-                      checked={
-                        howWasJobAccepted === TASK_HOW_JOB_ACCEPTED.EMAIL
-                      }
-                      onChange={(e) =>
-                        handleHowAcceptedChange(TASK_HOW_JOB_ACCEPTED.EMAIL)
-                      }
-                    />{" "}
-                    Email
-                  </label>
-                  <br />
-                  <label>
-                    <input
-                      type="radio"
-                      name="howWasJobAccepted"
-                      value={TASK_HOW_JOB_ACCEPTED.IN_PERSON}
-                      checked={
-                        howWasJobAccepted === TASK_HOW_JOB_ACCEPTED.IN_PERSON
-                      }
-                      onChange={(e) =>
-                        handleHowAcceptedChange(TASK_HOW_JOB_ACCEPTED.IN_PERSON)
-                      }
-                    />{" "}
-                    In-person confirmation
-                  </label>
-                </div>
-                {errors.howWasJobAccepted && (
-                  <div style={{ color: "red", fontSize: "12px" }}>
-                    {errors.howWasJobAccepted}
+        {/* Page Title */}
+        <div className="mb-6">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+            <ClipboardDocumentCheckIcon className="w-6 h-6 sm:w-7 sm:h-7 mr-3 text-blue-600" />
+            Task - Assign Associate
+          </h1>
+        </div>
+
+        {/* Wizard Steps - Responsive Version */}
+        <div className="mb-6">
+          <div className="flex items-center justify-center">
+            {/* Mobile/Tablet View (< 1024px) */}
+            <div className="lg:hidden w-full overflow-x-auto pb-2">
+              <div className="flex items-center min-w-max px-2">
+                {/* Step 1 - Complete */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex-shrink-0">
+                    <CheckIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
-                )}
-              </FormGroup>
-            )}
-
-            {/* Why was job declined */}
-            {status === TASK_ASSIGN_ASSOCIATE_STATUS.DECLINED && (
-              <FormGroup>
-                <label>Why was this job declined? *</label>
-                <div>
-                  <label>
-                    <input
-                      type="radio"
-                      name="whyJobDeclined"
-                      value={TASK_WHY_JOB_DECLINED.ASSOCIATE_BUSY}
-                      checked={
-                        whyJobDeclined === TASK_WHY_JOB_DECLINED.ASSOCIATE_BUSY
-                      }
-                      onChange={(e) =>
-                        handleWhyDeclinedChange(
-                          TASK_WHY_JOB_DECLINED.ASSOCIATE_BUSY,
-                        )
-                      }
-                    />{" "}
-                    Associate was busy
-                  </label>
-                  <br />
-                  <label>
-                    <input
-                      type="radio"
-                      name="whyJobDeclined"
-                      value={TASK_WHY_JOB_DECLINED.NO_SKILLS}
-                      checked={
-                        whyJobDeclined === TASK_WHY_JOB_DECLINED.NO_SKILLS
-                      }
-                      onChange={(e) =>
-                        handleWhyDeclinedChange(TASK_WHY_JOB_DECLINED.NO_SKILLS)
-                      }
-                    />{" "}
-                    Associate does not have the skills
-                  </label>
-                  <br />
-                  <label>
-                    <input
-                      type="radio"
-                      name="whyJobDeclined"
-                      value={TASK_WHY_JOB_DECLINED.NO_TRAVEL}
-                      checked={
-                        whyJobDeclined === TASK_WHY_JOB_DECLINED.NO_TRAVEL
-                      }
-                      onChange={(e) =>
-                        handleWhyDeclinedChange(TASK_WHY_JOB_DECLINED.NO_TRAVEL)
-                      }
-                    />{" "}
-                    Associate does not wish to travel to the customer's location
-                  </label>
-                  <br />
-                  <label>
-                    <input
-                      type="radio"
-                      name="whyJobDeclined"
-                      value={TASK_WHY_JOB_DECLINED.NO_WORK_WITH_CLIENT}
-                      checked={
-                        whyJobDeclined ===
-                        TASK_WHY_JOB_DECLINED.NO_WORK_WITH_CLIENT
-                      }
-                      onChange={(e) =>
-                        handleWhyDeclinedChange(
-                          TASK_WHY_JOB_DECLINED.NO_WORK_WITH_CLIENT,
-                        )
-                      }
-                    />{" "}
-                    Associate does not wish to work with this client
-                  </label>
-                </div>
-                {errors.whyJobDeclined && (
-                  <div style={{ color: "red", fontSize: "12px" }}>
-                    {errors.whyJobDeclined}
+                  <div className="ml-2 sm:ml-3">
+                    <p className="text-xs sm:text-sm font-medium text-gray-900">
+                      Search
+                    </p>
+                    <p className="text-xs text-gray-500 hidden sm:block">
+                      Find Associate
+                    </p>
                   </div>
-                )}
-              </FormGroup>
-            )}
+                </div>
 
-            {/* Predefined Comment */}
-            {status !== 0 && (
-              <TextArea
-                label="Predefined Comment"
-                value={predefinedComment}
-                disabled={true}
-                rows={3}
-              />
-            )}
+                {/* Connector */}
+                <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-green-600"></div>
 
-            {/* Additional Comment */}
-            <TextArea
-              label="Comment (Optional)"
-              placeholder="Write any additional comments here."
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              rows={5}
-            />
+                {/* Step 2 - Complete */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex-shrink-0">
+                    <CheckIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  </div>
+                  <div className="ml-2 sm:ml-3">
+                    <p className="text-xs sm:text-sm font-medium text-gray-900">
+                      Select
+                    </p>
+                    <p className="text-xs text-gray-500 hidden sm:block">
+                      Choose Associate
+                    </p>
+                  </div>
+                </div>
 
-            <div style={{ marginTop: "20px", display: "flex", gap: "10px" }}>
-              <Link to={`/admin/task/${tid}/assign-associate/step-2`}>
-                <Button variant="secondary">← Back to Step 2</Button>
-              </Link>
+                {/* Connector */}
+                <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-gray-300"></div>
 
-              <div style={{ marginLeft: "auto", display: "flex", gap: "10px" }}>
-                <Button onClick={onSubmitClick} variant="primary">
-                  Confirm & Continue →
-                </Button>
+                {/* Step 3 - Active */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-full flex-shrink-0">
+                    <span className="text-white font-semibold text-sm">3</span>
+                  </div>
+                  <div className="ml-2 sm:ml-3">
+                    <p className="text-xs sm:text-sm font-medium text-gray-900">
+                      Confirm
+                    </p>
+                    <p className="text-xs text-gray-500 hidden sm:block">
+                      Job Status
+                    </p>
+                  </div>
+                </div>
+
+                {/* Connector */}
+                <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-gray-300"></div>
+
+                {/* Step 4 - Inactive */}
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
+                    <span className="text-gray-600 font-semibold text-sm">
+                      4
+                    </span>
+                  </div>
+                  <div className="ml-2 sm:ml-3">
+                    <p className="text-xs sm:text-sm font-medium text-gray-500">
+                      Complete
+                    </p>
+                    <p className="text-xs text-gray-400 hidden sm:block">
+                      Assignment Done
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Desktop View (≥ 1024px) */}
+            <div className="hidden lg:flex items-center">
+              {/* Step 1 - Complete */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
+                  <CheckIcon className="w-6 h-6 text-white" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">Search</p>
+                  <p className="text-xs text-gray-500">Find Associate</p>
+                </div>
+              </div>
+
+              {/* Connector */}
+              <div className="mx-2 w-12 h-0.5 bg-green-600"></div>
+
+              {/* Step 2 - Complete */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
+                  <CheckIcon className="w-6 h-6 text-white" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">Select</p>
+                  <p className="text-xs text-gray-500">Choose Associate</p>
+                </div>
+              </div>
+
+              {/* Connector */}
+              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+
+              {/* Step 3 - Active */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
+                  <span className="text-white font-semibold">3</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">Confirm</p>
+                  <p className="text-xs text-gray-500">Job Status</p>
+                </div>
+              </div>
+
+              {/* Connector */}
+              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+
+              {/* Step 4 - Inactive */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
+                  <span className="text-gray-600 font-semibold">4</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-500">Complete</p>
+                  <p className="text-xs text-gray-400">Assignment Done</p>
+                </div>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Error Message */}
+        {errors && Object.keys(errors).length > 0 && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+            {Object.entries(errors).map(([key, value]) => (
+              <div key={key} className="flex items-center">
+                <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+                <span className="text-sm">{value}</span>
+              </div>
+            ))}
+          </div>
         )}
 
-        {!isDataLoaded && associateData && (
-          <Loading message="Loading form data..." />
-        )}
-      </Card>
+        {/* Main Content */}
+        <div className="bg-white shadow-sm rounded-lg">
+          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+              <ClipboardDocumentCheckIcon className="w-5 h-5 mr-2" />
+              Assignment Confirmation
+            </h2>
+          </div>
+
+          <div className="p-4 sm:p-6">
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <span className="ml-3 text-gray-600">Processing...</span>
+              </div>
+            ) : (
+              <form onSubmit={onSubmitClick} className="max-w-2xl mx-auto">
+                <div className="space-y-4">
+                  {/* Previous Data Loaded Notification */}
+                  {status !== 0 && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                      <p className="text-sm text-blue-800 flex items-center">
+                        <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+                        <span>
+                          Your previous responses have been loaded. You can
+                          review and modify them if needed.
+                        </span>
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Associate Info */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Associate
+                    </label>
+                    <div className="bg-gray-50 rounded-lg p-3">
+                      <Link
+                        to={`/admin/associate/${associateData.associateID}`}
+                        className="text-blue-600 hover:text-blue-800 font-medium flex items-center"
+                      >
+                        <UserIcon className="w-5 h-5 mr-2" />
+                        {associateData.associateName}
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Accepted Job? */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Accepted Job? <span className="text-red-500">*</span>
+                    </label>
+                    <div className="space-y-2">
+                      <label className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="status"
+                          value={TASK_ASSIGN_ASSOCIATE_STATUS.ACCEPTED}
+                          checked={
+                            status === TASK_ASSIGN_ASSOCIATE_STATUS.ACCEPTED
+                          }
+                          onChange={(e) =>
+                            handleStatusChange(
+                              TASK_ASSIGN_ASSOCIATE_STATUS.ACCEPTED,
+                            )
+                          }
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        />
+                        <span className="ml-3 flex items-center">
+                          <CheckIcon className="w-5 h-5 mr-2 text-green-600" />
+                          Yes
+                        </span>
+                      </label>
+                      <label className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="status"
+                          value={TASK_ASSIGN_ASSOCIATE_STATUS.DECLINED}
+                          checked={
+                            status === TASK_ASSIGN_ASSOCIATE_STATUS.DECLINED
+                          }
+                          onChange={(e) =>
+                            handleStatusChange(
+                              TASK_ASSIGN_ASSOCIATE_STATUS.DECLINED,
+                            )
+                          }
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        />
+                        <span className="ml-3 flex items-center">
+                          <XCircleIcon className="w-5 h-5 mr-2 text-red-600" />
+                          No
+                        </span>
+                      </label>
+                    </div>
+                    {errors.status && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors.status}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* How was job accepted */}
+                  {status === TASK_ASSIGN_ASSOCIATE_STATUS.ACCEPTED && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        How was this job accepted?{" "}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <div className="space-y-2">
+                        <label className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="howWasJobAccepted"
+                            value={TASK_HOW_JOB_ACCEPTED.PHONE}
+                            checked={
+                              howWasJobAccepted === TASK_HOW_JOB_ACCEPTED.PHONE
+                            }
+                            onChange={(e) =>
+                              handleHowAcceptedChange(
+                                TASK_HOW_JOB_ACCEPTED.PHONE,
+                              )
+                            }
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                          />
+                          <span className="ml-3 flex items-center">
+                            <PhoneIcon className="w-5 h-5 mr-2 text-gray-600" />
+                            Phone
+                          </span>
+                        </label>
+                        <label className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="howWasJobAccepted"
+                            value={TASK_HOW_JOB_ACCEPTED.TEXT}
+                            checked={
+                              howWasJobAccepted === TASK_HOW_JOB_ACCEPTED.TEXT
+                            }
+                            onChange={(e) =>
+                              handleHowAcceptedChange(
+                                TASK_HOW_JOB_ACCEPTED.TEXT,
+                              )
+                            }
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                          />
+                          <span className="ml-3 flex items-center">
+                            <ChatBubbleLeftRightIcon className="w-5 h-5 mr-2 text-gray-600" />
+                            Text
+                          </span>
+                        </label>
+                        <label className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="howWasJobAccepted"
+                            value={TASK_HOW_JOB_ACCEPTED.EMAIL}
+                            checked={
+                              howWasJobAccepted === TASK_HOW_JOB_ACCEPTED.EMAIL
+                            }
+                            onChange={(e) =>
+                              handleHowAcceptedChange(
+                                TASK_HOW_JOB_ACCEPTED.EMAIL,
+                              )
+                            }
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                          />
+                          <span className="ml-3 flex items-center">
+                            <EnvelopeIcon className="w-5 h-5 mr-2 text-gray-600" />
+                            Email
+                          </span>
+                        </label>
+                        <label className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="howWasJobAccepted"
+                            value={TASK_HOW_JOB_ACCEPTED.IN_PERSON}
+                            checked={
+                              howWasJobAccepted ===
+                              TASK_HOW_JOB_ACCEPTED.IN_PERSON
+                            }
+                            onChange={(e) =>
+                              handleHowAcceptedChange(
+                                TASK_HOW_JOB_ACCEPTED.IN_PERSON,
+                              )
+                            }
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                          />
+                          <span className="ml-3 flex items-center">
+                            <UserGroupIcon className="w-5 h-5 mr-2 text-gray-600" />
+                            In-person confirmation
+                          </span>
+                        </label>
+                      </div>
+                      {errors.howWasJobAccepted && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {errors.howWasJobAccepted}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Why was job declined */}
+                  {status === TASK_ASSIGN_ASSOCIATE_STATUS.DECLINED && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Why was this job declined?{" "}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <div className="space-y-2">
+                        <label className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="whyJobDeclined"
+                            value={TASK_WHY_JOB_DECLINED.ASSOCIATE_BUSY}
+                            checked={
+                              whyJobDeclined ===
+                              TASK_WHY_JOB_DECLINED.ASSOCIATE_BUSY
+                            }
+                            onChange={(e) =>
+                              handleWhyDeclinedChange(
+                                TASK_WHY_JOB_DECLINED.ASSOCIATE_BUSY,
+                              )
+                            }
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                          />
+                          <span className="ml-3 flex items-center">
+                            <ClockIcon className="w-5 h-5 mr-2 text-gray-600" />
+                            Associate was busy
+                          </span>
+                        </label>
+                        <label className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="whyJobDeclined"
+                            value={TASK_WHY_JOB_DECLINED.NO_SKILLS}
+                            checked={
+                              whyJobDeclined === TASK_WHY_JOB_DECLINED.NO_SKILLS
+                            }
+                            onChange={(e) =>
+                              handleWhyDeclinedChange(
+                                TASK_WHY_JOB_DECLINED.NO_SKILLS,
+                              )
+                            }
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                          />
+                          <span className="ml-3 flex items-center">
+                            <WrenchScrewdriverIcon className="w-5 h-5 mr-2 text-gray-600" />
+                            Associate does not have the skills
+                          </span>
+                        </label>
+                        <label className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="whyJobDeclined"
+                            value={TASK_WHY_JOB_DECLINED.NO_TRAVEL}
+                            checked={
+                              whyJobDeclined === TASK_WHY_JOB_DECLINED.NO_TRAVEL
+                            }
+                            onChange={(e) =>
+                              handleWhyDeclinedChange(
+                                TASK_WHY_JOB_DECLINED.NO_TRAVEL,
+                              )
+                            }
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                          />
+                          <span className="ml-3 flex items-center">
+                            <MapPinIcon className="w-5 h-5 mr-2 text-gray-600" />
+                            Associate does not wish to travel to the customer's
+                            location
+                          </span>
+                        </label>
+                        <label className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="whyJobDeclined"
+                            value={TASK_WHY_JOB_DECLINED.NO_WORK_WITH_CLIENT}
+                            checked={
+                              whyJobDeclined ===
+                              TASK_WHY_JOB_DECLINED.NO_WORK_WITH_CLIENT
+                            }
+                            onChange={(e) =>
+                              handleWhyDeclinedChange(
+                                TASK_WHY_JOB_DECLINED.NO_WORK_WITH_CLIENT,
+                              )
+                            }
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                          />
+                          <span className="ml-3 flex items-center">
+                            <UsersIcon className="w-5 h-5 mr-2 text-gray-600" />
+                            Associate does not wish to work with this client
+                          </span>
+                        </label>
+                      </div>
+                      {errors.whyJobDeclined && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {errors.whyJobDeclined}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Predefined Comment */}
+                  {status !== 0 && predefinedComment && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Predefined Comment
+                      </label>
+                      <div className="relative">
+                        <textarea
+                          value={predefinedComment}
+                          disabled={true}
+                          rows={3}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Additional Comment */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Comment (Optional)
+                    </label>
+                    <div className="relative">
+                      <textarea
+                        value={comment}
+                        onChange={(e) => setComment(e.target.value)}
+                        placeholder="Write any additional comments here."
+                        rows={5}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Form Actions */}
+                <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                  <Link
+                    to={`/admin/task/${tid}/assign-associate/step-2`}
+                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    <ArrowLeftIcon className="w-4 h-4 mr-2" />
+                    Back to Step 2
+                  </Link>
+                  <button
+                    type="submit"
+                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    Confirm & Continue
+                    <ArrowRightIcon className="w-4 h-4 ml-2" />
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

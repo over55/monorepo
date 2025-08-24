@@ -3,45 +3,47 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import {
+  ChartBarIcon,
+  UserIcon,
+  InformationCircleIcon,
+  PaperClipIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  PlusCircleIcon,
+  ArchiveBoxIcon,
+  EllipsisHorizontalIcon,
+  ClipboardDocumentListIcon,
+  ChatBubbleLeftRightIcon,
+  DocumentIcon,
+  ArrowDownTrayIcon,
+  EyeIcon,
+  DocumentTextIcon,
+  CalendarIcon,
+  ExclamationCircleIcon,
+  PencilIcon,
+  TrashIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
+import {
   useAttachmentManager,
   useCustomerManager,
   useAuthManager,
 } from "../../../../../../services/Services";
-import { theme, globalStyles } from "../../../../../../constants/Theme";
-import {
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Breadcrumb,
-  Modal,
-  Table,
-} from "../../../../../../components/UI";
 
 function AdminCustomerDetailAttachmentListPage() {
-  ////
-  //// URL Parameters.
-  ////
-
   const { cid } = useParams();
   const navigate = useNavigate();
 
-  ////
-  //// Services.
-  ////
-
+  // Services
   const attachmentManager = useAttachmentManager();
   const customerManager = useCustomerManager();
   const authManager = useAuthManager();
 
-  ////
-  //// Component states.
-  ////
-
+  // Component states
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
-  const [customer, setCustomer] = useState({});
-  const [attachments, setAttachments] = useState([]);
+  const [customer, setCustomer] = useState(null);
+  const [attachments, setAttachments] = useState(null);
   const [selectedAttachmentForDeletion, setSelectedAttachmentForDeletion] =
     useState(null);
   const [alertMessage, setAlertMessage] = useState("");
@@ -53,49 +55,57 @@ function AdminCustomerDetailAttachmentListPage() {
   const [nextCursor, setNextCursor] = useState("");
   const [currentCursor, setCurrentCursor] = useState("");
 
-  ////
-  //// Event handling.
-  ////
+  // Unauthorized callback
+  const onUnauthorized = () => {
+    navigate("/login?unauthorized=true");
+  };
 
-  const fetchAttachmentList = async (cur, limit, customerId) => {
-    setFetching(true);
-    setErrors({});
+  // Fetch data on mount and when pagination changes
+  useEffect(() => {
+    if (!authManager.isAuthenticated()) {
+      navigate("/login");
+      return;
+    }
 
+    if (cid) {
+      fetchData();
+      window.scrollTo(0, 0);
+    }
+  }, [currentCursor, pageSize, cid]);
+
+  const fetchData = async () => {
     try {
+      setFetching(true);
+
+      // Fetch customer details
+      const customerData = await customerManager.getCustomerDetail(
+        cid,
+        onUnauthorized,
+      );
+      setCustomer(customerData);
+
+      // Fetch attachments
       const params = {
-        entityType: "customer", // or whatever the backend expects
-        entityId: customerId,
-        limit: limit,
-        cursor: cur || undefined,
+        entityType: "customer",
+        entityId: cid,
+        limit: pageSize,
+        cursor: currentCursor || undefined,
       };
 
-      const response = await attachmentManager.getAttachments(
+      const attachmentsData = await attachmentManager.getAttachments(
         params,
         onUnauthorized,
       );
+      setAttachments(attachmentsData);
 
-      setAttachments(response);
-      if (response.hasNextPage) {
-        setNextCursor(response.nextCursor);
+      if (attachmentsData.hasNextPage) {
+        setNextCursor(attachmentsData.nextCursor);
       }
     } catch (error) {
-      console.error("Failed to fetch attachment list:", error);
-      setErrors(error);
+      console.error("Failed to fetch data:", error);
+      setErrors({ general: "Failed to load attachments" });
     } finally {
       setFetching(false);
-    }
-  };
-
-  const fetchCustomerDetail = async (customerId) => {
-    try {
-      const response = await customerManager.getCustomerDetail(
-        customerId,
-        onUnauthorized,
-      );
-      setCustomer(response);
-    } catch (error) {
-      console.error("Failed to fetch customer detail:", error);
-      setErrors(error);
     }
   };
 
@@ -143,10 +153,10 @@ function AdminCustomerDetailAttachmentListPage() {
       }, 3000);
 
       // Refresh the list
-      fetchAttachmentList(currentCursor, pageSize, cid);
+      fetchData();
     } catch (error) {
       console.error("Failed to delete attachment:", error);
-      setErrors(error);
+      setErrors({ general: "Failed to delete attachment" });
       setAlertMessage("Failed to delete attachment");
       setAlertType("error");
     } finally {
@@ -155,449 +165,507 @@ function AdminCustomerDetailAttachmentListPage() {
     }
   };
 
-  const onUnauthorized = () => {
-    navigate("/login?unauthorized=true");
+  const onRowClick = (attachment) => {
+    navigate(`/admin/customer/${cid}/attachment/${attachment.id}`);
   };
 
-  ////
-  //// Lifecycle.
-  ////
-
-  useEffect(() => {
-    if (!authManager.isAuthenticated()) {
-      navigate("/login");
-      return;
-    }
-
-    if (cid) {
-      fetchCustomerDetail(cid);
-      fetchAttachmentList(currentCursor, pageSize, cid);
-    }
-  }, [currentCursor, pageSize, cid]);
-
-  ////
-  //// Render helpers.
-  ////
-
-  const renderAttachmentStatusBadge = (status) => {
-    const statusStyles = {
-      1: { backgroundColor: "#28a745", color: "white" }, // Active
-      2: { backgroundColor: "#6c757d", color: "white" }, // Archived
-    };
-
-    const statusLabels = {
-      1: "Active",
-      2: "Archived",
-    };
-
-    const style = statusStyles[status] || {
-      backgroundColor: "#6c757d",
-      color: "white",
-    };
-    const label = statusLabels[status] || "Unknown";
-
-    return (
-      <span
-        style={{
-          ...style,
-          padding: "4px 8px",
-          borderRadius: "4px",
-          fontSize: "12px",
-          fontWeight: "600",
-        }}
-      >
-        {label}
-      </span>
-    );
+  // Format date helper
+  const formatDate = (dateString) => {
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleDateString();
   };
 
-  ////
-  //// Table configuration.
-  ////
+  // Get file type icon
+  const getFileTypeIcon = (fileType) => {
+    if (!fileType) return <DocumentIcon className="w-5 h-5 text-gray-400" />;
 
-  const attachmentColumns = [
-    {
-      key: "title",
-      label: "Title",
-    },
-    {
-      key: "status",
-      label: "Status",
-      render: (value) => renderAttachmentStatusBadge(value),
-    },
-    {
-      key: "createdAt",
-      label: "Created",
-    },
-    {
-      key: "filename",
-      label: "File",
-      render: (value, row) => (
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <span>{value || "Unknown file"}</span>
-          {row.objectUrl && (
-            <a
-              href={row.objectUrl}
-              target="_blank"
-              rel="noreferrer"
-              style={{
-                color: theme.colors.primary,
-                textDecoration: "none",
-                fontSize: "12px",
-              }}
-            >
-              📥 Download
-            </a>
-          )}
-        </div>
-      ),
-    },
-    {
-      key: "actions",
-      label: "Actions",
-      render: (value, row) => (
-        <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-          <Link
-            to={`/admin/customer/${cid}/attachment/${row.id}`}
-            style={{
-              color: theme.colors.primary,
-              textDecoration: "none",
-              fontSize: "12px",
-            }}
-          >
-            View
-          </Link>
-          <Link
-            to={`/admin/customer/${cid}/attachment/${row.id}/edit`}
-            style={{
-              color: theme.colors.warning,
-              textDecoration: "none",
-              fontSize: "12px",
-            }}
-          >
-            Edit
-          </Link>
-          <button
-            onClick={() => onSelectAttachmentForDeletion(row)}
-            style={{
-              background: "none",
-              border: "none",
-              color: theme.colors.danger,
-              cursor: "pointer",
-              fontSize: "12px",
-              padding: 0,
-            }}
-          >
-            🗑️ Delete
-          </button>
-        </div>
-      ),
-    },
-  ];
+    const type = fileType.toLowerCase();
+    if (type.includes("pdf")) {
+      return <DocumentTextIcon className="w-5 h-5 text-red-500" />;
+    } else if (
+      type.includes("image") ||
+      type.includes("jpg") ||
+      type.includes("png")
+    ) {
+      return <DocumentIcon className="w-5 h-5 text-blue-500" />;
+    } else {
+      return <DocumentIcon className="w-5 h-5 text-gray-400" />;
+    }
+  };
 
-  ////
-  //// Component rendering.
-  ////
-
-  const breadcrumbItems = [
-    {
-      label: "Dashboard",
-      path: "/admin/dashboard",
-      icon: "📊",
-    },
-    {
-      label: "Customers",
-      path: "/admin/customers",
-      icon: "👤",
-    },
-    {
-      label: "Detail",
-      icon: "ℹ️",
-    },
+  // Page size options
+  const pageSizeOptions = [
+    { value: 10, label: "10 per page" },
+    { value: 25, label: "25 per page" },
+    { value: 50, label: "50 per page" },
+    { value: 100, label: "100 per page" },
   ];
 
   if (!authManager.isAuthenticated()) {
-    return <Loading message="Checking authentication..." />;
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Checking authentication...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isFetching && !customer) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading attachments...</p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div style={globalStyles.container}>
-      <Breadcrumb items={breadcrumbItems} />
-
-      {/* Alert Messages */}
-      {alertMessage && (
-        <Alert type={alertType} onClose={() => setAlertMessage("")}>
-          {alertMessage}
-        </Alert>
-      )}
-
-      {/* Page banner */}
-      {customer && customer.status === 2 && (
-        <Alert type="info">This customer is archived.</Alert>
-      )}
-      {customer && customer.isBanned && (
-        <Alert type="error">This customer is banned.</Alert>
-      )}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Breadcrumb */}
+      <nav className="flex mb-6" aria-label="Breadcrumb">
+        <ol className="inline-flex items-center space-x-1 md:space-x-3">
+          <li className="inline-flex items-center">
+            <Link
+              to="/admin/dashboard"
+              className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+            >
+              <ChartBarIcon className="w-4 h-4 mr-2" />
+              Dashboard
+            </Link>
+          </li>
+          <li>
+            <div className="flex items-center">
+              <span className="mx-2 text-gray-400">/</span>
+              <Link
+                to="/admin/customers"
+                className="text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <span className="inline-flex items-center">
+                  <UserIcon className="w-4 h-4 mr-2" />
+                  Customers
+                </span>
+              </Link>
+            </div>
+          </li>
+          <li>
+            <div className="flex items-center">
+              <span className="mx-2 text-gray-400">/</span>
+              <Link
+                to={`/admin/customer/${cid}`}
+                className="text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <span className="inline-flex items-center">
+                  <ClipboardDocumentListIcon className="w-4 h-4 mr-2" />
+                  Detail
+                </span>
+              </Link>
+            </div>
+          </li>
+          <li aria-current="page">
+            <div className="flex items-center">
+              <span className="mx-2 text-gray-400">/</span>
+              <span className="text-sm font-medium text-gray-500 inline-flex items-center">
+                <PaperClipIcon className="w-4 h-4 mr-2" />
+                Attachments
+              </span>
+            </div>
+          </li>
+        </ol>
+      </nav>
 
       {/* Page Title */}
-      <div style={{ marginBottom: "20px" }}>
-        <h1
-          style={{ fontSize: "28px", fontWeight: "bold", margin: "0 0 8px 0" }}
-        >
-          👤 Customer
-        </h1>
-        <h2 style={{ fontSize: "18px", color: "#666", margin: 0 }}>
-          ℹ️ Detail
-        </h2>
+      <div className="mb-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center">
+              <UserIcon className="w-8 h-8 mr-3 text-blue-600" />
+              Customer
+            </h1>
+            <p className="mt-1 text-sm text-gray-600 flex items-center">
+              <InformationCircleIcon className="w-4 h-4 mr-1" />
+              Manage attachments and documents
+            </p>
+          </div>
+        </div>
       </div>
 
+      {/* Status Alerts */}
+      {customer && customer.status === 2 && (
+        <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg flex items-center">
+          <ArchiveBoxIcon className="w-5 h-5 mr-2" />
+          This customer is archived
+        </div>
+      )}
+      {customer && customer.isBanned && (
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center">
+          <ExclamationCircleIcon className="w-5 h-5 mr-2" />
+          This customer is banned
+        </div>
+      )}
+
+      {/* Success/Error Alerts */}
+      {alertMessage && (
+        <div
+          className={`mb-4 px-4 py-3 rounded-lg flex items-center ${
+            alertType === "success"
+              ? "bg-green-50 border border-green-200 text-green-700"
+              : "bg-red-50 border border-red-200 text-red-700"
+          }`}
+        >
+          <InformationCircleIcon className="w-5 h-5 mr-2" />
+          <span>{alertMessage}</span>
+        </div>
+      )}
+
+      {/* Error Display */}
+      {errors.general && (
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className="flex items-center">
+            <ExclamationCircleIcon className="w-5 h-5 mr-2" />
+            <span>{errors.general}</span>
+          </div>
+        </div>
+      )}
+
       {/* Delete Confirmation Modal */}
-      <Modal
-        isOpen={!!selectedAttachmentForDeletion}
-        onClose={onDeselectAttachmentForDeletion}
-        title="Are you sure?"
-        footer={
-          <>
-            <Button
+      {selectedAttachmentForDeletion && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div
+              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
               onClick={onDeselectAttachmentForDeletion}
-              variant="secondary"
-            >
-              Cancel
-            </Button>
-            <Button onClick={onDeleteConfirmButtonClick} variant="danger">
-              Confirm
-            </Button>
-          </>
-        }
-      >
-        <p>
-          You are about to <strong>delete</strong> this attachment; it will no
-          longer appear on your dashboard and will be permanently removed. This
-          action cannot be undone. Are you sure you would like to continue?
-        </p>
-      </Modal>
-
-      <Card
-        title="📄 Attachments"
-        actions={
-          customer &&
-          customer.status !== 2 && (
-            <Link to={`/admin/customer/${cid}/attachments/add`}>
-              <Button variant="success">➕ New</Button>
-            </Link>
-          )
-        }
-      >
-        {isFetching ? (
-          <Loading message="Loading attachments..." />
-        ) : (
-          <>
-            {/* Show errors if any */}
-            {Object.keys(errors).length > 0 && (
-              <Alert type="error">
-                {Object.entries(errors).map(([key, value]) => (
-                  <div key={key}>
-                    <strong>{key}:</strong>{" "}
-                    {Array.isArray(value) ? value.join(", ") : value}
+            ></div>
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen">
+              &#8203;
+            </span>
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="sm:flex sm:items-start">
+                  <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <ExclamationCircleIcon className="h-6 w-6 text-red-600" />
                   </div>
-                ))}
-              </Alert>
-            )}
-
-            {customer && (
-              <>
-                {/* Tab Navigation */}
-                <div
-                  style={{
-                    borderBottom: "1px solid #ddd",
-                    marginBottom: "20px",
-                    display: "flex",
-                    gap: "20px",
-                    flexWrap: "wrap",
-                  }}
+                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900">
+                      Are you sure?
+                    </h3>
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-500">
+                        You are about to <strong>delete</strong> this
+                        attachment; it will no longer appear on your dashboard
+                        and will be permanently removed. This action cannot be
+                        undone. Are you sure you would like to continue?
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button
+                  type="button"
+                  onClick={onDeleteConfirmButtonClick}
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
                 >
-                  <Link
-                    to={`/admin/customer/${cid}`}
-                    style={{
-                      textDecoration: "none",
-                      color: theme.colors.primary,
-                      padding: "10px 0",
-                      borderBottom: "2px solid transparent",
+                  Confirm
+                </button>
+                <button
+                  type="button"
+                  onClick={onDeselectAttachmentForDeletion}
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content */}
+      <div className="bg-white shadow-sm rounded-lg">
+        {/* Header with Title and New Button */}
+        <div className="px-6 py-5 border-b border-gray-200">
+          <div className="flex justify-between items-center flex-wrap gap-4">
+            <h2 className="text-2xl font-semibold text-gray-900 flex items-center">
+              <PaperClipIcon className="w-7 h-7 mr-2 text-blue-600" />
+              Attachments
+            </h2>
+            {customer && (
+              <Link to={`/admin/customer/${cid}/attachments/add`}>
+                <button
+                  disabled={customer.status === 2}
+                  className={`inline-flex items-center px-5 py-2.5 border rounded-lg text-base font-medium transition-colors ${
+                    customer.status === 2
+                      ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+                      : "border-transparent text-white bg-green-600 hover:bg-green-700"
+                  }`}
+                >
+                  <PlusCircleIcon className="w-5 h-5 mr-2" />
+                  New
+                </button>
+              </Link>
+            )}
+          </div>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="px-6 border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            <Link
+              to={`/admin/customer/${cid}`}
+              className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
+            >
+              Summary
+            </Link>
+            <Link
+              to={`/admin/customer/${cid}/detail`}
+              className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
+            >
+              Detail
+            </Link>
+            <Link
+              to={`/admin/customer/${cid}/orders`}
+              className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
+            >
+              Orders
+            </Link>
+            <Link
+              to={`/admin/customer/${cid}/comments`}
+              className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
+            >
+              Comments
+            </Link>
+            <div className="border-b-2 border-blue-600 py-4 px-1 text-base font-medium text-blue-600">
+              Attachments
+            </div>
+            <Link
+              to={`/admin/customer/${cid}/more`}
+              className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center"
+            >
+              More
+              <EllipsisHorizontalIcon className="w-5 h-5 ml-1" />
+            </Link>
+          </nav>
+        </div>
+
+        <div className="p-6">
+          {isFetching ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-4 text-gray-600">Loading attachments...</p>
+              </div>
+            </div>
+          ) : attachments &&
+            attachments.results &&
+            (attachments.results.length > 0 || previousCursors.length > 0) ? (
+            <>
+              {/* Attachments Table */}
+              <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg mb-6">
+                <table className="min-w-full divide-y divide-gray-300">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Title
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Created
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        File
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {attachments.results.map((attachment, index) => (
+                      <tr
+                        key={attachment.id || index}
+                        className="hover:bg-gray-50 cursor-pointer transition-colors"
+                        onClick={() => onRowClick(attachment)}
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                          {attachment.title || "Untitled"}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {attachment.status === 1 ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              Active
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                              Archived
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          <div className="flex items-center">
+                            <CalendarIcon className="w-4 h-4 mr-2 text-gray-400" />
+                            {formatDate(attachment.createdAt)}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-900">
+                              {attachment.filename ||
+                                attachment.fileName ||
+                                "Unknown file"}
+                            </span>
+                            {attachment.objectUrl && (
+                              <a
+                                href={attachment.objectUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center text-blue-600 hover:text-blue-700"
+                              >
+                                <ArrowDownTrayIcon className="w-4 h-4" />
+                              </a>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                          <div className="flex items-center justify-end gap-2">
+                            <Link
+                              to={`/admin/customer/${cid}/attachment/${attachment.id}`}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <button className="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                                <EyeIcon className="w-4 h-4 mr-1" />
+                                View
+                              </button>
+                            </Link>
+                            <Link
+                              to={`/admin/customer/${cid}/attachment/${attachment.id}/edit`}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <button className="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-xs font-medium text-white bg-yellow-600 hover:bg-yellow-700 transition-colors">
+                                <PencilIcon className="w-4 h-4 mr-1" />
+                                Edit
+                              </button>
+                            </Link>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onSelectAttachmentForDeletion(attachment);
+                              }}
+                              className="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-xs font-medium text-white bg-red-600 hover:bg-red-700 transition-colors"
+                            >
+                              <TrashIcon className="w-4 h-4 mr-1" />
+                              Delete
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination Controls */}
+              <div className="flex justify-between items-center">
+                <div className="flex items-center">
+                  <label className="mr-3 text-sm font-medium text-gray-700">
+                    Items per page:
+                  </label>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(parseInt(e.target.value));
+                      setCurrentCursor("");
+                      setPreviousCursors([]);
                     }}
+                    className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                   >
-                    Summary
-                  </Link>
-                  <Link
-                    to={`/admin/customer/${cid}/detail`}
-                    style={{
-                      textDecoration: "none",
-                      color: theme.colors.primary,
-                      padding: "10px 0",
-                      borderBottom: "2px solid transparent",
-                    }}
-                  >
-                    Detail
-                  </Link>
-                  <Link
-                    to={`/admin/customer/${cid}/orders`}
-                    style={{
-                      textDecoration: "none",
-                      color: theme.colors.primary,
-                      padding: "10px 0",
-                      borderBottom: "2px solid transparent",
-                    }}
-                  >
-                    Orders
-                  </Link>
-                  <Link
-                    to={`/admin/customer/${cid}/comments`}
-                    style={{
-                      textDecoration: "none",
-                      color: theme.colors.primary,
-                      padding: "10px 0",
-                      borderBottom: "2px solid transparent",
-                    }}
-                  >
-                    Comments
-                  </Link>
-                  <span
-                    style={{
-                      color: "#333",
-                      fontWeight: "bold",
-                      padding: "10px 0",
-                      borderBottom: `2px solid ${theme.colors.primary}`,
-                    }}
-                  >
-                    Attachments
-                  </span>
-                  <Link
-                    to={`/admin/customer/${cid}/more`}
-                    style={{
-                      textDecoration: "none",
-                      color: theme.colors.primary,
-                      padding: "10px 0",
-                      borderBottom: "2px solid transparent",
-                    }}
-                  >
-                    More...
-                  </Link>
+                    {pageSizeOptions.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
-                {attachments &&
-                attachments.results &&
-                (attachments.results.length > 0 ||
-                  previousCursors.length > 0) ? (
-                  <>
-                    {/* Attachments Table */}
-                    <Table
-                      columns={attachmentColumns}
-                      data={attachments.results || []}
-                      onRowClick={(attachment) =>
-                        navigate(
-                          `/admin/customer/${cid}/attachment/${attachment.id}`,
-                        )
-                      }
-                    />
-
-                    {/* Pagination Controls */}
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        marginTop: "20px",
-                        flexWrap: "wrap",
-                        gap: "10px",
-                      }}
+                <div className="flex gap-3">
+                  {previousCursors.length > 0 && (
+                    <button
+                      onClick={onPreviousClicked}
+                      className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
                     >
-                      <div>
-                        <label style={{ marginRight: "10px" }}>
-                          Page Size:
-                        </label>
-                        <select
-                          value={pageSize}
-                          onChange={(e) =>
-                            setPageSize(parseInt(e.target.value))
-                          }
-                          style={globalStyles.input}
-                        >
-                          <option value={25}>25</option>
-                          <option value={50}>50</option>
-                          <option value={100}>100</option>
-                          <option value={250}>250</option>
-                        </select>
-                      </div>
-                      <div style={{ display: "flex", gap: "10px" }}>
-                        {previousCursors.length > 0 && (
-                          <Button
-                            onClick={onPreviousClicked}
-                            variant="secondary"
-                          >
-                            Previous
-                          </Button>
-                        )}
-                        {attachments.hasNextPage && (
-                          <Button onClick={onNextClicked} variant="secondary">
-                            Next
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div
-                    style={{
-                      textAlign: "center",
-                      padding: "60px 20px",
-                      backgroundColor: "#f8f9fa",
-                      borderRadius: "8px",
-                    }}
-                  >
-                    <div style={{ fontSize: "48px", marginBottom: "16px" }}>
-                      📄
-                    </div>
-                    <h3 style={{ marginBottom: "8px" }}>No Attachments</h3>
-                    <p style={{ color: "#666", marginBottom: "20px" }}>
-                      No attachments found for this customer.{" "}
-                      {customer.status !== 2 && (
-                        <>
-                          <Link
-                            to={`/admin/customer/${cid}/attachments/add`}
-                            style={{ color: theme.colors.primary }}
-                          >
-                            Click here
-                          </Link>{" "}
-                          to get started creating a new attachment.
-                        </>
-                      )}
-                    </p>
-                  </div>
-                )}
-
-                {/* Bottom Navigation */}
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    marginTop: "30px",
-                    flexWrap: "wrap",
-                    gap: "10px",
-                  }}
-                >
-                  <Link to="/admin/customers">
-                    <Button variant="secondary">← Back to Customers</Button>
-                  </Link>
-                  {customer.status !== 2 && (
-                    <Link to={`/admin/customer/${cid}/attachments/add`}>
-                      <Button variant="success">➕ New</Button>
-                    </Link>
+                      <ChevronLeftIcon className="w-4 h-4 mr-2" />
+                      Previous
+                    </button>
+                  )}
+                  {attachments.hasNextPage && (
+                    <button
+                      onClick={onNextClicked}
+                      className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                    >
+                      Next
+                      <ChevronRightIcon className="w-4 h-4 ml-2" />
+                    </button>
                   )}
                 </div>
-              </>
+              </div>
+            </>
+          ) : (
+            // No attachments message
+            <div className="text-center py-16 bg-gray-50 rounded-lg">
+              <PaperClipIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No Attachments Found
+              </h3>
+              <p className="text-gray-500 mb-4">
+                No attachments have been uploaded for this customer.
+              </p>
+              {customer && customer.status !== 2 && (
+                <Link to={`/admin/customer/${cid}/attachments/add`}>
+                  <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                    <PlusCircleIcon className="w-4 h-4 mr-2" />
+                    Add First Attachment
+                  </button>
+                </Link>
+              )}
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
+            <Link to="/admin/customers">
+              <button className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                <ChevronLeftIcon className="w-5 h-5 mr-2" />
+                Back to Customers
+              </button>
+            </Link>
+            {customer && (
+              <Link to={`/admin/customer/${cid}/attachments/add`}>
+                <button
+                  disabled={customer.status === 2}
+                  className={`inline-flex items-center px-5 py-2.5 border rounded-lg text-base font-medium transition-colors ${
+                    customer.status === 2
+                      ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+                      : "border-transparent text-white bg-green-600 hover:bg-green-700"
+                  }`}
+                >
+                  <PlusCircleIcon className="w-5 h-5 mr-2" />
+                  New
+                </button>
+              </Link>
             )}
-          </>
-        )}
-      </Card>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

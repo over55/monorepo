@@ -2,15 +2,55 @@
 
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router";
-import { useOrderManager, useAuthManager } from "../../../../services/Services";
-import { theme, globalStyles } from "../../../../constants/Theme";
 import {
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Breadcrumb,
-} from "../../../../components/UI";
+  ChartBarIcon,
+  ClipboardDocumentCheckIcon,
+  InformationCircleIcon,
+  PencilSquareIcon,
+  ChevronLeftIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  MapPinIcon,
+  BuildingOfficeIcon,
+  HomeIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ArchiveBoxIcon,
+  ClipboardDocumentListIcon,
+  ChatBubbleLeftRightIcon,
+  PaperClipIcon,
+  EllipsisHorizontalIcon,
+  UserIcon,
+  BriefcaseIcon,
+  CreditCardIcon,
+  ExclamationTriangleIcon,
+  MagnifyingGlassIcon,
+  ChartPieIcon,
+  ComputerDesktopIcon,
+  CalendarIcon,
+  IdentificationIcon,
+  CurrencyDollarIcon,
+  DocumentTextIcon,
+  TruckIcon,
+  ShieldCheckIcon,
+  GlobeAltIcon,
+  AcademicCapIcon,
+  HeartIcon,
+  UserCircleIcon,
+  ClockIcon,
+  MapIcon,
+  HashtagIcon,
+  Bars3Icon,
+  WrenchScrewdriverIcon,
+  UserGroupIcon,
+  BanknotesIcon,
+  ArrowRightIcon,
+  DocumentMagnifyingGlassIcon,
+  FolderIcon,
+  CalendarDaysIcon,
+  RectangleStackIcon,
+} from "@heroicons/react/24/outline";
+import { useOrderManager, useAuthManager } from "../../../../services/Services";
 import {
   TagsDisplay,
   SkillSetsDisplay,
@@ -37,6 +77,19 @@ import {
 } from "../../../../constants/Staff";
 import { formatDateForDisplay } from "../../../../services/Helpers/DateFormatter";
 
+// Phone type mappings
+const CLIENT_PHONE_TYPE_OF_MAP = {
+  1: "Work",
+  2: "Home",
+  3: "Mobile",
+};
+
+const ASSOCIATE_PHONE_TYPE_OF_MAP = {
+  1: "Work",
+  2: "Home",
+  3: "Mobile",
+};
+
 function AdminOrderDetailFullPage() {
   const { oid } = useParams();
   const orderManager = useOrderManager();
@@ -48,6 +101,7 @@ function AdminOrderDetailFullPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Handle unauthorized access
   const onUnauthorized = () => {
@@ -56,28 +110,22 @@ function AdminOrderDetailFullPage() {
 
   // Helper function to get task update URL based on type
   const getTaskUpdateURL = (taskId, taskType) => {
-    // If taskType is not available, default to a basic pattern
     if (!taskType) {
-      // TODO: Task type should be provided by the API as order.latestPendingTaskType
       console.warn("Task type not available for task:", taskId);
-      return `/admin/task/${taskId}/assign-associate/step-1`; // Default fallback
+      return `/admin/task/${taskId}/assign-associate/step-1`;
     }
 
     switch (taskType) {
-      // Assign Associate
       case TASK_ITEM_TYPE_ASSIGN_ASSOCIATE:
         return `/admin/task/${taskId}/assign-associate/step-1`;
-      // Follow Up / Order Completion
       case TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_COMPLETE_JOB:
       case TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_AND_CUSTOMER_AGREED_TO_MEET:
       case TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_ACCEPT_JOB:
       case TASK_ITEM_TYPE_UPDATE_ONGOING_JOB:
         return `/admin/task/${taskId}/order-completion/step-1`;
-      // Survey
       case TASK_ITEM_TYPE_FOLLOW_UP_DID_CUSTOMER_REVIEW_ASSOCIATE_AFTER_JOB:
       case TASK_ITEM_TYPE_FOLLOW_UP_CUSTOMER_SURVEY:
         return `/admin/task/${taskId}/survey/step-1`;
-      // Default case for unknown types
       default:
         console.warn("Unknown task type:", taskType);
         return `/admin/task/${taskId}/assign-associate/step-1`;
@@ -89,7 +137,6 @@ function AdminOrderDetailFullPage() {
     if (!items || !Array.isArray(items)) return [];
     return items
       .map((item) => {
-        // Handle different possible structures
         if (typeof item === "number" || typeof item === "string") {
           return item;
         }
@@ -119,9 +166,7 @@ function AdminOrderDetailFullPage() {
   // Fetch current user data
   const fetchCurrentUser = async () => {
     try {
-      // This would typically come from the account manager
-      // For now, we'll use a mock user or get it from auth manager
-      setCurrentUser({ role: STAFF_TYPE_MANAGEMENT }); // Mock user
+      setCurrentUser({ role: STAFF_TYPE_MANAGEMENT });
     } catch (err) {
       console.error("Failed to fetch current user:", err);
     }
@@ -140,341 +185,330 @@ function AdminOrderDetailFullPage() {
     fetchCurrentUser();
   }, [oid]);
 
-  // Breadcrumb items
-  const breadcrumbItems = [
-    { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
-    { label: "Orders", path: "/admin/orders", icon: "🔧" },
-    { label: "Detail", icon: "ℹ️" },
-  ];
-
-  // Format phone number for display
+  // Helper functions for formatting
   const formatPhone = (phone, extension = null) => {
     if (!phone) return "-";
     const formatted = phone.replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3");
     return extension ? `${formatted} ext. ${extension}` : formatted;
   };
 
-  // Format address for display
   const formatAddress = (order) => {
     if (!order) return "-";
     const address =
       order.customerFullAddressWithoutPostalCode ||
       `${order.customerAddressLine1 || ""} ${order.customerCity || ""} ${order.customerRegion || ""}`.trim();
 
-    if (order.customerFullAddressUrl) {
-      return (
-        <a
-          href={order.customerFullAddressUrl}
-          target="_blank"
-          rel="noreferrer"
-          style={{ color: theme.colors.primary }}
-        >
-          {address} 🔗
-        </a>
-      );
-    }
     return address || "-";
   };
 
-  // Format checkbox value
-  const formatCheckbox = (value) => {
-    return value === 1 || value === true ? "✅ Yes" : "❌ No";
-  };
+  // Section Component - Improved for responsiveness
+  const DetailSection = ({ title, icon: Icon, children }) => (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-4 sm:mb-6">
+      <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-b border-gray-200 rounded-t-lg">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600 flex-shrink-0" />
+          <span className="truncate">{title}</span>
+        </h3>
+      </div>
+      <div className="p-4 sm:p-6">
+        <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          {children}
+        </dl>
+      </div>
+    </div>
+  );
 
-  // Phone type mappings
-  const CLIENT_PHONE_TYPE_OF_MAP = {
-    1: "Work",
-    2: "Home",
-    3: "Mobile",
-  };
-
-  const ASSOCIATE_PHONE_TYPE_OF_MAP = {
-    1: "Work",
-    2: "Home",
-    3: "Mobile",
-  };
+  // Detail Field Component - Improved for responsiveness
+  const DetailField = ({ label, value, fullWidth = false }) => (
+    <div className={fullWidth ? "lg:col-span-2" : ""}>
+      <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+        {label}
+      </dt>
+      <dd className="text-sm sm:text-base text-gray-900 break-words">
+        {value || "-"}
+      </dd>
+    </div>
+  );
 
   if (loading) {
     return (
-      <div style={globalStyles.container}>
-        <Loading message="Loading order details..." />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-sm sm:text-base text-gray-600">
+              Loading order details...
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div style={globalStyles.container}>
-      {/* Breadcrumb */}
-      <Breadcrumb items={breadcrumbItems} />
-
-      {/* Page Title */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "20px",
-        }}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+      {/* Responsive Breadcrumb */}
+      <nav
+        className="flex mb-4 sm:mb-6 overflow-x-auto"
+        aria-label="Breadcrumb"
       >
-        <div>
-          <h1 style={{ margin: 0 }}>🔧 Order</h1>
-          <h4 style={{ margin: "5px 0 0 0", color: theme.colors.secondary }}>
-            ℹ️ Detail
-          </h4>
+        <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
+          <li className="inline-flex items-center">
+            <Link
+              to="/admin/dashboard"
+              className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
+            >
+              <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+              <span className="hidden sm:inline">Dashboard</span>
+              <span className="sm:hidden">Dash</span>
+            </Link>
+          </li>
+          <li>
+            <div className="flex items-center">
+              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
+              <Link
+                to="/admin/orders"
+                className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
+              >
+                <span className="inline-flex items-center">
+                  <WrenchScrewdriverIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                  Orders
+                </span>
+              </Link>
+            </div>
+          </li>
+          <li aria-current="page">
+            <div className="flex items-center">
+              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
+              <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
+                <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                Detail
+              </span>
+            </div>
+          </li>
+        </ol>
+      </nav>
+
+      {/* Page Title - Responsive */}
+      <div className="mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+              <WrenchScrewdriverIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
+              Order
+            </h1>
+            <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+              <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
+              View complete order information
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Status Alerts */}
+      {/* Status Alerts - Responsive */}
       {order && order.status === ORDER_STATUS_ARCHIVED && (
-        <Alert type="info">📁 This order is archived</Alert>
+        <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center text-sm sm:text-base">
+          <ArchiveBoxIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+          This order is archived
+        </div>
       )}
 
-      {/* Error Display */}
+      {/* Error Display - Responsive */}
       {error && (
-        <Alert type="error" onClose={() => setError(null)}>
-          {error}
-        </Alert>
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base">
+          <div className="flex justify-between items-center">
+            <span className="break-words">{error}</span>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-700 hover:text-red-900 ml-2 flex-shrink-0"
+            >
+              ×
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Main Content */}
-      <Card>
-        {/* Header with Actions */}
-        {order && (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: "30px",
-              flexWrap: "wrap",
-              gap: "10px",
-            }}
-          >
-            <h3 style={{ margin: 0 }}>📋 Detail</h3>
-            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-              {order.associatePublicId !== 0 && (
-                <Link to={`/admin/order/${oid}/more/unassign`}>
-                  <Button
-                    variant="secondary"
-                    disabled={order.status === ORDER_STATUS_ARCHIVED}
-                  >
-                    👤❌ Unassign
-                  </Button>
-                </Link>
-              )}
-              <Link to={`/admin/order/${oid}/more/close`}>
-                <Button
-                  variant="danger"
-                  disabled={order.status === ORDER_STATUS_ARCHIVED}
-                >
-                  ❌ Close
-                </Button>
-              </Link>
-              <Link to={`/admin/order/${oid}/edit`}>
-                <Button
-                  variant="warning"
-                  disabled={order.status === ORDER_STATUS_ARCHIVED}
-                >
-                  ✏️ Edit
-                </Button>
-              </Link>
-              {order.latestPendingTaskId &&
-                order.latestPendingTaskId !== "000000000000000000000000" && (
-                  <Link
-                    to={getTaskUpdateURL(
-                      order.latestPendingTaskId,
-                      order.latestPendingTaskType,
-                    )}
-                  >
-                    <Button
-                      variant="primary"
-                      disabled={order.status === ORDER_STATUS_ARCHIVED}
-                    >
-                      Go to Task →
-                    </Button>
-                  </Link>
-                )}
-              {(order.status === ORDER_STATUS_COMPLETED_BUT_UNPAID ||
-                order.status === ORDER_STATUS_COMPLETED_AND_PAID) &&
-                (currentUser?.role === STAFF_TYPE_MANAGEMENT ||
-                  currentUser?.role === STAFF_TYPE_EXECUTIVE) && (
-                  <Link to={`/admin/financial/${oid}`}>
-                    <Button
-                      variant="info"
-                      disabled={order.status === ORDER_STATUS_ARCHIVED}
-                    >
-                      Go to Financials →
-                    </Button>
-                  </Link>
-                )}
-            </div>
-          </div>
-        )}
-
+      <div className="bg-white shadow-sm rounded-lg">
         {order && (
           <>
-            {/* Tab Navigation */}
-            <div
-              style={{
-                borderBottom: "2px solid #e0e0e0",
-                marginBottom: "30px",
-                display: "flex",
-                gap: "20px",
-                flexWrap: "wrap",
-              }}
-            >
-              <Link
-                to={`/admin/order/${order.wjid}`}
-                style={{
-                  padding: "10px 0",
-                  textDecoration: "none",
-                  color: theme.colors.secondary,
-                }}
-              >
-                Summary
-              </Link>
-              <div
-                style={{
-                  padding: "10px 0",
-                  borderBottom: "3px solid " + theme.colors.primary,
-                  fontWeight: "bold",
-                }}
-              >
-                Detail
+            {/* Header with Actions - Responsive */}
+            <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 flex items-center">
+                  <ClipboardDocumentListIcon className="w-5 sm:w-7 h-5 sm:h-7 mr-2 text-blue-600 flex-shrink-0" />
+                  Full Details
+                </h2>
+                <div className="flex gap-2 sm:gap-3 flex-wrap">
+                  <Link to="/admin/orders" className="flex-1 sm:flex-initial">
+                    <button className="w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                      <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
+                      Back
+                    </button>
+                  </Link>
+                  {order.associatePublicId !== 0 && (
+                    <Link to={`/admin/order/${oid}/more/unassign`}>
+                      <button
+                        disabled={order.status === ORDER_STATUS_ARCHIVED}
+                        className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
+                          order.status === ORDER_STATUS_ARCHIVED
+                            ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+                            : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
+                        }`}
+                      >
+                        <UserIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
+                        Unassign
+                      </button>
+                    </Link>
+                  )}
+                  <Link to={`/admin/order/${oid}/more/close`}>
+                    <button
+                      disabled={order.status === ORDER_STATUS_ARCHIVED}
+                      className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
+                        order.status === ORDER_STATUS_ARCHIVED
+                          ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+                          : "border-red-300 text-red-700 bg-red-50 hover:bg-red-100"
+                      }`}
+                    >
+                      <XCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
+                      Close
+                    </button>
+                  </Link>
+                  <Link to={`/admin/order/${oid}/edit`}>
+                    <button
+                      disabled={order.status === ORDER_STATUS_ARCHIVED}
+                      className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
+                        order.status === ORDER_STATUS_ARCHIVED
+                          ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+                          : "border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100"
+                      }`}
+                    >
+                      <PencilSquareIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
+                      Edit
+                    </button>
+                  </Link>
+                  {order.latestPendingTaskId &&
+                    order.latestPendingTaskId !==
+                      "000000000000000000000000" && (
+                      <Link
+                        to={getTaskUpdateURL(
+                          order.latestPendingTaskId,
+                          order.latestPendingTaskType,
+                        )}
+                      >
+                        <button
+                          disabled={order.status === ORDER_STATUS_ARCHIVED}
+                          className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
+                            order.status === ORDER_STATUS_ARCHIVED
+                              ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+                              : "border-blue-600 text-white bg-blue-600 hover:bg-blue-700"
+                          }`}
+                        >
+                          Go to Task
+                          <ArrowRightIcon className="w-4 sm:w-5 h-4 sm:h-5 ml-1 sm:ml-2" />
+                        </button>
+                      </Link>
+                    )}
+                  {(order.status === ORDER_STATUS_COMPLETED_BUT_UNPAID ||
+                    order.status === ORDER_STATUS_COMPLETED_AND_PAID) &&
+                    (currentUser?.role === STAFF_TYPE_MANAGEMENT ||
+                      currentUser?.role === STAFF_TYPE_EXECUTIVE) && (
+                      <Link to={`/admin/financial/${oid}`}>
+                        <button
+                          disabled={order.status === ORDER_STATUS_ARCHIVED}
+                          className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
+                            order.status === ORDER_STATUS_ARCHIVED
+                              ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+                              : "border-indigo-300 text-indigo-700 bg-indigo-50 hover:bg-indigo-100"
+                          }`}
+                        >
+                          Go to Financials
+                          <ArrowRightIcon className="w-4 sm:w-5 h-4 sm:h-5 ml-1 sm:ml-2" />
+                        </button>
+                      </Link>
+                    )}
+                </div>
               </div>
-              <Link
-                to={`/admin/order/${order.wjid}/activity-sheets`}
-                style={{
-                  padding: "10px 0",
-                  textDecoration: "none",
-                  color: theme.colors.secondary,
-                }}
-              >
-                Activity Sheets
-              </Link>
-              <Link
-                to={`/admin/order/${order.wjid}/tasks`}
-                style={{
-                  padding: "10px 0",
-                  textDecoration: "none",
-                  color: theme.colors.secondary,
-                }}
-              >
-                Tasks
-              </Link>
-              <Link
-                to={`/admin/order/${order.wjid}/comments`}
-                style={{
-                  padding: "10px 0",
-                  textDecoration: "none",
-                  color: theme.colors.secondary,
-                }}
-              >
-                Comments
-              </Link>
-              <Link
-                to={`/admin/order/${order.wjid}/attachments`}
-                style={{
-                  padding: "10px 0",
-                  textDecoration: "none",
-                  color: theme.colors.secondary,
-                }}
-              >
-                Attachments
-              </Link>
-              <Link
-                to={`/admin/order/${order.wjid}/more`}
-                style={{
-                  padding: "10px 0",
-                  textDecoration: "none",
-                  color: theme.colors.secondary,
-                }}
-              >
-                More ⋯
-              </Link>
             </div>
 
-            {/* Job Detail Table */}
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                marginBottom: "30px",
-              }}
-            >
-              <thead>
-                <tr
-                  style={{ backgroundColor: theme.colors.dark, color: "white" }}
-                >
-                  <th
-                    style={{
-                      padding: "12px",
-                      textAlign: "left",
-                      fontWeight: "bold",
-                    }}
-                    colSpan="2"
+            {/* Tab Navigation - Responsive with horizontal scroll on mobile */}
+            <div className="border-b border-gray-200">
+              <div className="px-4 sm:px-6">
+                <nav className="-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide">
+                  <Link
+                    to={`/admin/order/${order.wjid}`}
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
                   >
-                    Job Detail
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th
-                    style={{
-                      backgroundColor: theme.colors.light,
-                      padding: "12px",
-                      width: "30%",
-                      textAlign: "left",
-                      fontWeight: "600",
-                    }}
+                    Summary
+                  </Link>
+                  <div className="border-b-2 border-blue-600 py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-blue-600 whitespace-nowrap">
+                    Detail
+                  </div>
+                  <Link
+                    to={`/admin/order/${order.wjid}/activity-sheets`}
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
                   >
-                    Job #
-                  </th>
-                  <td style={{ padding: "12px" }}>{order.wjid || "-"}</td>
-                </tr>
-                <tr>
-                  <th
-                    style={{
-                      backgroundColor: theme.colors.light,
-                      padding: "12px",
-                      width: "30%",
-                      textAlign: "left",
-                      fontWeight: "600",
-                    }}
+                    Activity Sheets
+                  </Link>
+                  <Link
+                    to={`/admin/order/${order.wjid}/tasks`}
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
                   >
-                    Client
-                  </th>
-                  <td style={{ padding: "12px" }}>
-                    <Link
-                      to={`/admin/customer/${order.customerId}`}
-                      style={{
-                        color: theme.colors.primary,
-                        textDecoration: "none",
-                      }}
-                    >
-                      {order.customerName} 🔗
-                    </Link>
-                  </td>
-                </tr>
-                <tr>
-                  <th
-                    style={{
-                      backgroundColor: theme.colors.light,
-                      padding: "12px",
-                      width: "30%",
-                      textAlign: "left",
-                      fontWeight: "600",
-                    }}
+                    Tasks
+                  </Link>
+                  <Link
+                    to={`/admin/order/${order.wjid}/comments`}
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
                   >
-                    Client Phone Number (
-                    {CLIENT_PHONE_TYPE_OF_MAP[order.customerPhoneType]}):
-                  </th>
-                  <td style={{ padding: "12px" }}>
-                    {order.customerPhone ? (
+                    Comments
+                  </Link>
+                  <Link
+                    to={`/admin/order/${order.wjid}/attachments`}
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
+                  >
+                    Attachments
+                  </Link>
+                  <Link
+                    to={`/admin/order/${order.wjid}/more`}
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center whitespace-nowrap"
+                  >
+                    More
+                    <EllipsisHorizontalIcon className="w-4 sm:w-5 h-4 sm:h-5 ml-1" />
+                  </Link>
+                </nav>
+              </div>
+            </div>
+
+            {/* Detail Sections - Responsive */}
+            <div className="p-4 sm:p-6">
+              {/* Job Detail */}
+              <DetailSection
+                title="Job Detail"
+                icon={ClipboardDocumentCheckIcon}
+              >
+                <DetailField label="Job #" value={order.wjid} />
+                <DetailField
+                  label="Client"
+                  value={
+                    order.customerName ? (
+                      <Link
+                        to={`/admin/customer/${order.customerId}`}
+                        className="text-blue-600 hover:text-blue-700"
+                      >
+                        {order.customerName}
+                      </Link>
+                    ) : (
+                      "-"
+                    )
+                  }
+                />
+                <DetailField
+                  label={`Client Phone Number (${CLIENT_PHONE_TYPE_OF_MAP[order.customerPhoneType] || "Unknown"})`}
+                  value={
+                    order.customerPhone ? (
                       <a
                         href={`tel:${order.customerPhone}`}
-                        style={{ color: theme.colors.primary }}
+                        className="text-blue-600 hover:text-blue-700"
                       >
                         {formatPhone(
                           order.customerPhone,
@@ -485,304 +519,117 @@ function AdminOrderDetailFullPage() {
                       </a>
                     ) : (
                       "-"
-                    )}
-                  </td>
-                </tr>
-                <tr>
-                  <th
-                    style={{
-                      backgroundColor: theme.colors.light,
-                      padding: "12px",
-                      width: "30%",
-                      textAlign: "left",
-                      fontWeight: "600",
-                    }}
-                  >
-                    Client Address
-                  </th>
-                  <td style={{ padding: "12px" }}>{formatAddress(order)}</td>
-                </tr>
-                <tr>
-                  <th
-                    style={{
-                      backgroundColor: theme.colors.light,
-                      padding: "12px",
-                      width: "30%",
-                      textAlign: "left",
-                      fontWeight: "600",
-                      verticalAlign: "top",
-                    }}
-                  >
-                    Description
-                  </th>
-                  <td style={{ padding: "12px" }}>
-                    <div style={{ whiteSpace: "pre-wrap" }}>
-                      {order.description || "-"}
-                    </div>
-                  </td>
-                </tr>
-                <tr>
-                  <th
-                    style={{
-                      backgroundColor: theme.colors.light,
-                      padding: "12px",
-                      width: "30%",
-                      textAlign: "left",
-                      fontWeight: "600",
-                      verticalAlign: "top",
-                    }}
-                  >
+                    )
+                  }
+                />
+                <DetailField
+                  label="Client Address"
+                  value={
+                    order.customerFullAddressUrl ? (
+                      <a
+                        href={order.customerFullAddressUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-blue-600 hover:text-blue-700 break-words"
+                      >
+                        {formatAddress(order)}
+                      </a>
+                    ) : (
+                      formatAddress(order)
+                    )
+                  }
+                />
+                <DetailField
+                  label="Description"
+                  value={order.description}
+                  fullWidth
+                />
+                <div>
+                  <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
                     Skill Sets
-                  </th>
-                  <td style={{ padding: "12px" }}>
+                  </dt>
+                  <dd>
                     <SkillSetsDisplay
                       values={extractIds(order.skillSets)}
                       onUnauthorized={onUnauthorized}
                     />
-                  </td>
-                </tr>
-
-                {/* Associate Information (if assigned) */}
-                {order.associateId &&
-                  order.associateId !== "" &&
-                  order.associateId !== "000000000000000000000000" && (
-                    <>
-                      <tr>
-                        <th
-                          style={{
-                            backgroundColor: theme.colors.light,
-                            padding: "12px",
-                            width: "30%",
-                            textAlign: "left",
-                            fontWeight: "600",
-                          }}
-                        >
-                          Assigned Associate
-                        </th>
-                        <td style={{ padding: "12px" }}>
-                          <Link
-                            to={`/admin/associate/${order.associateId}`}
-                            style={{
-                              color: theme.colors.primary,
-                              textDecoration: "none",
-                            }}
-                          >
-                            {order.associateName} 🔗
-                          </Link>
-                        </td>
-                      </tr>
-                      <tr>
-                        <th
-                          style={{
-                            backgroundColor: theme.colors.light,
-                            padding: "12px",
-                            width: "30%",
-                            textAlign: "left",
-                            fontWeight: "600",
-                          }}
-                        >
-                          Associate Phone Number (
-                          {
-                            ASSOCIATE_PHONE_TYPE_OF_MAP[
-                              order.associatePhoneType
-                            ]
-                          }
-                          ):
-                        </th>
-                        <td style={{ padding: "12px" }}>
-                          {order.associatePhone ? (
-                            <a
-                              href={`tel:${order.associatePhone}`}
-                              style={{ color: theme.colors.primary }}
-                            >
-                              {formatPhone(
-                                order.associatePhone,
-                                order.associatePhoneType ===
-                                  ASSOCIATE_PHONE_TYPE_WORK
-                                  ? order.associatePhoneExtension
-                                  : null,
-                              )}
-                            </a>
-                          ) : (
-                            "-"
-                          )}
-                        </td>
-                      </tr>
-                      <tr>
-                        <th
-                          style={{
-                            backgroundColor: theme.colors.light,
-                            padding: "12px",
-                            width: "30%",
-                            textAlign: "left",
-                            fontWeight: "600",
-                          }}
-                        >
-                          Assignment Date
-                        </th>
-                        <td style={{ padding: "12px" }}>
-                          {formatDateForDisplay(order.assignmentDate)}
-                        </td>
-                      </tr>
-                    </>
-                  )}
-
-                <tr>
-                  <th
-                    style={{
-                      backgroundColor: theme.colors.light,
-                      padding: "12px",
-                      width: "30%",
-                      textAlign: "left",
-                      fontWeight: "600",
-                    }}
-                  >
-                    Is Home Support Service
-                  </th>
-                  <td style={{ padding: "12px" }}>
-                    {formatCheckbox(order.isHomeSupportService)}
-                  </td>
-                </tr>
-                <tr>
-                  <th
-                    style={{
-                      backgroundColor: theme.colors.light,
-                      padding: "12px",
-                      width: "30%",
-                      textAlign: "left",
-                      fontWeight: "600",
-                    }}
-                  >
-                    Is ongoing?
-                  </th>
-                  <td style={{ padding: "12px" }}>
-                    {formatCheckbox(order.isOngoing)}
-                  </td>
-                </tr>
-                <tr>
-                  <th
-                    style={{
-                      backgroundColor: theme.colors.light,
-                      padding: "12px",
-                      width: "30%",
-                      textAlign: "left",
-                      fontWeight: "600",
-                    }}
-                  >
-                    Status
-                  </th>
-                  <td style={{ padding: "12px" }}>
-                    <span
-                      style={{
-                        color:
-                          order.status === 1
-                            ? theme.colors.success
-                            : theme.colors.secondary,
-                        fontWeight: "600",
-                      }}
-                    >
-                      {order.status === 1 ? "Active" : "Archived"}
-                    </span>
-                  </td>
-                </tr>
-                <tr>
-                  <th
-                    style={{
-                      backgroundColor: theme.colors.light,
-                      padding: "12px",
-                      width: "30%",
-                      textAlign: "left",
-                      fontWeight: "600",
-                    }}
-                  >
-                    Start date
-                  </th>
-                  <td style={{ padding: "12px" }}>
-                    {formatDateForDisplay(order.startDate)}
-                  </td>
-                </tr>
-                <tr>
-                  <th
-                    style={{
-                      backgroundColor: theme.colors.light,
-                      padding: "12px",
-                      width: "30%",
-                      textAlign: "left",
-                      fontWeight: "600",
-                    }}
-                  >
-                    Completion date
-                  </th>
-                  <td style={{ padding: "12px" }}>
-                    {formatDateForDisplay(order.completionDate)}
-                  </td>
-                </tr>
-                <tr>
-                  <th
-                    style={{
-                      backgroundColor: theme.colors.light,
-                      padding: "12px",
-                      width: "30%",
-                      textAlign: "left",
-                      fontWeight: "600",
-                    }}
-                  >
-                    Hours
-                  </th>
-                  <td style={{ padding: "12px" }}>{order.hours || "-"}</td>
-                </tr>
-                <tr>
-                  <th
-                    style={{
-                      backgroundColor: theme.colors.light,
-                      padding: "12px",
-                      width: "30%",
-                      textAlign: "left",
-                      fontWeight: "600",
-                    }}
-                  >
-                    Visits
-                  </th>
-                  <td style={{ padding: "12px" }}>{order.visits || "-"}</td>
-                </tr>
-                <tr>
-                  <th
-                    style={{
-                      backgroundColor: theme.colors.light,
-                      padding: "12px",
-                      width: "30%",
-                      textAlign: "left",
-                      fontWeight: "600",
-                      verticalAlign: "top",
-                    }}
-                  >
-                    Tag(s):
-                  </th>
-                  <td style={{ padding: "12px" }}>
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+                    Tag(s)
+                  </dt>
+                  <dd>
                     <TagsDisplay
                       values={extractIds(order.tags)}
                       onUnauthorized={onUnauthorized}
                     />
-                  </td>
-                </tr>
-                <tr>
-                  <th
-                    style={{
-                      backgroundColor: theme.colors.light,
-                      padding: "12px",
-                      width: "30%",
-                      textAlign: "left",
-                      fontWeight: "600",
-                    }}
-                  >
-                    Required Task
-                  </th>
-                  <td style={{ padding: "12px" }}>
-                    {order.latestPendingTaskId &&
+                  </dd>
+                </div>
+                <DetailField
+                  label="Is Home Support Service"
+                  value={
+                    order.isHomeSupportService ? (
+                      <span className="inline-flex items-center text-green-700">
+                        <CheckCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                        Yes
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center text-red-700">
+                        <XCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                        No
+                      </span>
+                    )
+                  }
+                />
+                <DetailField
+                  label="Is ongoing?"
+                  value={
+                    order.isOngoing ? (
+                      <span className="inline-flex items-center text-green-700">
+                        <CheckCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                        Yes
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center text-red-700">
+                        <XCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                        No
+                      </span>
+                    )
+                  }
+                />
+                <DetailField
+                  label="Status"
+                  value={
+                    <span
+                      className={`inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                        order.status === 1
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {order.status === 1 ? "Active" : "Archived"}
+                    </span>
+                  }
+                />
+                <DetailField
+                  label="Start date"
+                  value={formatDateForDisplay(order.startDate)}
+                />
+                <DetailField
+                  label="Completion date"
+                  value={formatDateForDisplay(order.completionDate)}
+                />
+                <DetailField label="Hours" value={order.hours} />
+                <DetailField label="Visits" value={order.visits} />
+                <DetailField
+                  label="Required Task"
+                  value={
+                    order.latestPendingTaskId &&
                     order.latestPendingTaskId !== "000000000000000000000000" ? (
                       <div>
                         {order.latestPendingTaskDescription && (
-                          <div style={{ marginBottom: "10px" }}>
+                          <div className="mb-2 text-gray-700">
                             {order.latestPendingTaskDescription}
                           </div>
                         )}
@@ -793,268 +640,225 @@ function AdminOrderDetailFullPage() {
                               order.latestPendingTaskId,
                               order.latestPendingTaskType,
                             )}
-                            style={{
-                              color: theme.colors.primary,
-                              textDecoration: "none",
-                            }}
+                            className="text-blue-600 hover:text-blue-700"
                           >
-                            {order.latestPendingTaskTitle} 🔗
+                            {order.latestPendingTaskTitle}
                           </Link>
                         </div>
                       </div>
                     ) : (
                       "-"
-                    )}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                    )
+                  }
+                  fullWidth
+                />
+              </DetailSection>
 
-            {/* System Information Table */}
-            <table
-              style={{
-                width: "100%",
-                borderCollapse: "collapse",
-                marginBottom: "30px",
-              }}
-            >
-              <thead>
-                <tr
-                  style={{ backgroundColor: theme.colors.dark, color: "white" }}
-                >
-                  <th
-                    style={{
-                      padding: "12px",
-                      textAlign: "left",
-                      fontWeight: "bold",
-                    }}
-                    colSpan="2"
+              {/* Associate Information (if assigned) */}
+              {order.associateId &&
+                order.associateId !== "" &&
+                order.associateId !== "000000000000000000000000" && (
+                  <DetailSection
+                    title="Associate Information"
+                    icon={UserGroupIcon}
                   >
-                    System
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th
-                    style={{
-                      backgroundColor: theme.colors.light,
-                      padding: "12px",
-                      width: "30%",
-                      textAlign: "left",
-                      fontWeight: "600",
-                    }}
-                  >
-                    Created at:
-                  </th>
-                  <td style={{ padding: "12px" }}>
-                    {formatDateForDisplay(order.createdAt)}
-                  </td>
-                </tr>
-                <tr>
-                  <th
-                    style={{
-                      backgroundColor: theme.colors.light,
-                      padding: "12px",
-                      width: "30%",
-                      textAlign: "left",
-                      fontWeight: "600",
-                    }}
-                  >
-                    Created by:
-                  </th>
-                  <td style={{ padding: "12px" }}>
-                    {order.createdByUserName ? (
+                    <DetailField
+                      label="Assigned Associate"
+                      value={
+                        order.associateName ? (
+                          <Link
+                            to={`/admin/associate/${order.associateId}`}
+                            className="text-blue-600 hover:text-blue-700"
+                          >
+                            {order.associateName}
+                          </Link>
+                        ) : (
+                          "-"
+                        )
+                      }
+                    />
+                    <DetailField
+                      label={`Associate Phone Number (${ASSOCIATE_PHONE_TYPE_OF_MAP[order.associatePhoneType] || "Unknown"})`}
+                      value={
+                        order.associatePhone ? (
+                          <a
+                            href={`tel:${order.associatePhone}`}
+                            className="text-blue-600 hover:text-blue-700"
+                          >
+                            {formatPhone(
+                              order.associatePhone,
+                              order.associatePhoneType ===
+                                ASSOCIATE_PHONE_TYPE_WORK
+                                ? order.associatePhoneExtension
+                                : null,
+                            )}
+                          </a>
+                        ) : (
+                          "-"
+                        )
+                      }
+                    />
+                    <DetailField
+                      label="Assignment Date"
+                      value={formatDateForDisplay(order.assignmentDate)}
+                    />
+                  </DetailSection>
+                )}
+
+              {/* System */}
+              <DetailSection title="System" icon={ComputerDesktopIcon}>
+                <DetailField
+                  label="Created at"
+                  value={formatDateForDisplay(order.createdAt)}
+                />
+                <DetailField
+                  label="Created by"
+                  value={
+                    order.createdByUserName ? (
                       <Link
                         to={`/admin/staff/${order.createdByUserId}`}
-                        style={{
-                          color: theme.colors.primary,
-                          textDecoration: "none",
-                        }}
+                        className="text-blue-600 hover:text-blue-700"
                       >
-                        {order.createdByUserName} 🔗
+                        {order.createdByUserName}
                       </Link>
                     ) : (
                       "-"
-                    )}
-                  </td>
-                </tr>
-                <tr>
-                  <th
-                    style={{
-                      backgroundColor: theme.colors.light,
-                      padding: "12px",
-                      width: "30%",
-                      textAlign: "left",
-                      fontWeight: "600",
-                    }}
-                  >
-                    Created from:
-                  </th>
-                  <td style={{ padding: "12px" }}>
-                    {order.createdFromIpAddress ? (
+                    )
+                  }
+                />
+                <DetailField
+                  label="Created from"
+                  value={
+                    order.createdFromIpAddress ? (
                       <a
                         href={`https://whatismyipaddress.com/ip/${order.createdFromIpAddress}`}
                         target="_blank"
                         rel="noreferrer"
-                        style={{ color: theme.colors.primary }}
+                        className="text-blue-600 hover:text-blue-700 font-mono text-xs sm:text-sm break-all"
                       >
-                        {order.createdFromIpAddress} 🔗
+                        {order.createdFromIpAddress}
                       </a>
                     ) : (
                       "-"
-                    )}
-                  </td>
-                </tr>
-                <tr>
-                  <th
-                    style={{
-                      backgroundColor: theme.colors.light,
-                      padding: "12px",
-                      width: "30%",
-                      textAlign: "left",
-                      fontWeight: "600",
-                    }}
-                  >
-                    Modified at:
-                  </th>
-                  <td style={{ padding: "12px" }}>
-                    {formatDateForDisplay(order.modifiedAt)}
-                  </td>
-                </tr>
-                <tr>
-                  <th
-                    style={{
-                      backgroundColor: theme.colors.light,
-                      padding: "12px",
-                      width: "30%",
-                      textAlign: "left",
-                      fontWeight: "600",
-                    }}
-                  >
-                    Modified by:
-                  </th>
-                  <td style={{ padding: "12px" }}>
-                    {order.modifiedByUserName ? (
+                    )
+                  }
+                />
+                <DetailField
+                  label="Modified at"
+                  value={formatDateForDisplay(order.modifiedAt)}
+                />
+                <DetailField
+                  label="Modified by"
+                  value={
+                    order.modifiedByUserName ? (
                       <Link
                         to={`/admin/staff/${order.modifiedByUserId}`}
-                        style={{
-                          color: theme.colors.primary,
-                          textDecoration: "none",
-                        }}
+                        className="text-blue-600 hover:text-blue-700"
                       >
-                        {order.modifiedByUserName} 🔗
+                        {order.modifiedByUserName}
                       </Link>
                     ) : (
                       "-"
-                    )}
-                  </td>
-                </tr>
-                <tr>
-                  <th
-                    style={{
-                      backgroundColor: theme.colors.light,
-                      padding: "12px",
-                      width: "30%",
-                      textAlign: "left",
-                      fontWeight: "600",
-                    }}
-                  >
-                    Modified from:
-                  </th>
-                  <td style={{ padding: "12px" }}>
-                    {order.modifiedFromIpAddress ? (
+                    )
+                  }
+                />
+                <DetailField
+                  label="Modified from"
+                  value={
+                    order.modifiedFromIpAddress ? (
                       <a
                         href={`https://whatismyipaddress.com/ip/${order.modifiedFromIpAddress}`}
                         target="_blank"
                         rel="noreferrer"
-                        style={{ color: theme.colors.primary }}
+                        className="text-blue-600 hover:text-blue-700 font-mono text-xs sm:text-sm break-all"
                       >
-                        {order.modifiedFromIpAddress} 🔗
+                        {order.modifiedFromIpAddress}
                       </a>
                     ) : (
                       "-"
-                    )}
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+                    )
+                  }
+                />
+              </DetailSection>
 
-            {/* Action Buttons */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                marginTop: "30px",
-                flexWrap: "wrap",
-                gap: "10px",
-              }}
-            >
-              <Link to="/admin/orders">
-                <Button variant="outline">← Back to Orders</Button>
-              </Link>
+              {/* Action Buttons - Responsive */}
+              <div className="flex flex-col sm:flex-row sm:justify-between items-stretch sm:items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 gap-3">
+                <Link to="/admin/orders" className="order-2 sm:order-1">
+                  <button className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                    <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
+                    Back to Orders
+                  </button>
+                </Link>
 
-              <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-                {order.associatePublicId !== 0 && (
-                  <Link to={`/admin/order/${oid}/more/unassign`}>
-                    <Button variant="secondary" disabled={order.status === 2}>
-                      👤❌ Unassign
-                    </Button>
-                  </Link>
-                )}
-                <Link to={`/admin/order/${oid}/more/close`}>
-                  <Button variant="danger" disabled={order.status === 2}>
-                    ❌ Close
-                  </Button>
-                </Link>
-                <Link to={`/admin/order/${oid}/edit`}>
-                  <Button variant="warning" disabled={order.status === 2}>
-                    ✏️ Edit
-                  </Button>
-                </Link>
-                {order.latestPendingTaskId &&
-                  order.latestPendingTaskId !== "000000000000000000000000" && (
-                    <Link
-                      to={getTaskUpdateURL(
-                        order.latestPendingTaskId,
-                        order.latestPendingTaskType,
-                      )}
+                <div className="flex gap-2 sm:gap-3 order-1 sm:order-2 flex-wrap">
+                  {order.associatePublicId !== 0 && (
+                    <Link to={`/admin/order/${oid}/more/unassign`}>
+                      <button
+                        disabled={order.status === ORDER_STATUS_ARCHIVED}
+                        className={`w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
+                          order.status === ORDER_STATUS_ARCHIVED
+                            ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+                            : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
+                        }`}
+                      >
+                        <UserIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
+                        Unassign
+                      </button>
+                    </Link>
+                  )}
+                  <Link to={`/admin/order/${oid}/more/close`}>
+                    <button
+                      disabled={order.status === ORDER_STATUS_ARCHIVED}
+                      className={`w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
+                        order.status === ORDER_STATUS_ARCHIVED
+                          ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+                          : "border-red-300 text-red-700 bg-red-50 hover:bg-red-100"
+                      }`}
                     >
-                      <Button variant="primary" disabled={order.status === 2}>
-                        Go to Task →
-                      </Button>
-                    </Link>
-                  )}
-                {(order.status === ORDER_STATUS_COMPLETED_BUT_UNPAID ||
-                  order.status === ORDER_STATUS_COMPLETED_AND_PAID) &&
-                  (currentUser?.role === STAFF_TYPE_MANAGEMENT ||
-                    currentUser?.role === STAFF_TYPE_EXECUTIVE) && (
-                    <Link to={`/admin/financial/${oid}`}>
-                      <Button variant="info" disabled={order.status === 2}>
-                        Go to Financials →
-                      </Button>
-                    </Link>
-                  )}
+                      <XCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
+                      Close
+                    </button>
+                  </Link>
+                  <Link to={`/admin/order/${oid}/edit`}>
+                    <button
+                      disabled={order.status === ORDER_STATUS_ARCHIVED}
+                      className={`w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
+                        order.status === ORDER_STATUS_ARCHIVED
+                          ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+                          : "border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100"
+                      }`}
+                    >
+                      <PencilSquareIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
+                      Edit
+                    </button>
+                  </Link>
+                </div>
               </div>
             </div>
           </>
         )}
 
         {!order && !loading && (
-          <div style={{ textAlign: "center", padding: "60px 20px" }}>
-            <div style={{ fontSize: "48px", marginBottom: "20px" }}>❓</div>
-            <h3>Order Not Found</h3>
-            <p style={{ color: theme.colors.secondary, marginBottom: "30px" }}>
+          <div className="px-4 sm:px-6 py-8 sm:py-16 text-center">
+            <div className="inline-flex items-center justify-center w-12 sm:w-16 h-12 sm:h-16 bg-gray-100 rounded-full mb-4">
+              <WrenchScrewdriverIcon className="w-6 sm:w-8 h-6 sm:h-8 text-gray-400" />
+            </div>
+            <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
+              Order Not Found
+            </h3>
+            <p className="text-sm sm:text-base text-gray-500 mb-4 sm:mb-6">
               The order you're looking for doesn't exist or you don't have
               permission to view it.
             </p>
             <Link to="/admin/orders">
-              <Button variant="primary">← Back to Orders</Button>
+              <button className="inline-flex items-center px-3 sm:px-4 py-2 border border-transparent rounded-lg text-xs sm:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                <ChevronLeftIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
+                Back to Orders
+              </button>
             </Link>
           </div>
         )}
-      </Card>
+      </div>
     </div>
   );
 }

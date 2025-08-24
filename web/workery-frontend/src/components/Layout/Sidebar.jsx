@@ -710,7 +710,7 @@ function Sidebar({ isOpen, onClose, isMobile, taskItemActiveCount = 0 }) {
       )}
 
       {/* Sidebar */}
-      <style jsx>{`
+      <style>{`
         /* Custom scrollbar styles */
         .custom-scrollbar::-webkit-scrollbar {
           width: 6px;
@@ -800,6 +800,88 @@ function Sidebar({ isOpen, onClose, isMobile, taskItemActiveCount = 0 }) {
         /* iOS focus styles */
         .ios-focus-ring:focus-visible {
           outline: 2px solid #007aff;
+          outline-offset: 2px;
+        }
+
+        /* Android-specific optimizations */
+        .android-optimized {
+          -webkit-overflow-scrolling: touch;
+          -webkit-transform: translate3d(0, 0, 0);
+          transform: translate3d(0, 0, 0);
+          will-change: transform;
+        }
+
+        /* Android hardware acceleration */
+        .android-accelerated {
+          -webkit-transform: translateZ(0);
+          transform: translateZ(0);
+          -webkit-backface-visibility: hidden;
+          backface-visibility: hidden;
+        }
+
+        /* Android smooth scroll */
+        .android-smooth-scroll {
+          scroll-behavior: smooth;
+        }
+
+        /* Prevent Android overscroll */
+        .android-no-overscroll {
+          overscroll-behavior: none;
+        }
+
+        /* Android PWA specific */
+        .android-pwa {
+          user-select: none;
+        }
+
+        /* Android Chrome fixes */
+        .android-chrome-fix {
+          -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
+        }
+
+        /* Android navigation bar support */
+        .android-nav-bar {
+          padding-bottom: env(safe-area-inset-bottom, 24px);
+        }
+
+        /* Android keyboard active state */
+        .android-keyboard-active {
+          height: calc(var(--android-vh, 1vh) * 50) !important;
+        }
+
+        /* Android Material Design ripple effect simulation */
+        .android-ripple {
+          position: relative;
+          overflow: hidden;
+        }
+
+        .android-ripple::before {
+          content: "";
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          width: 0;
+          height: 0;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.5);
+          transform: translate(-50%, -50%);
+          transition: width 0.3s, height 0.3s;
+        }
+
+        .android-ripple:active::before {
+          width: 100%;
+          height: 100%;
+        }
+
+        /* Android touch item optimization */
+        .android-touch-item {
+          min-height: 48px;
+          touch-action: manipulation;
+        }
+
+        /* Android focus ring (Material Design) */
+        .android-focus-ring:focus-visible {
+          outline: 2px solid #1976d2;
           outline-offset: 2px;
         }
       `}</style>

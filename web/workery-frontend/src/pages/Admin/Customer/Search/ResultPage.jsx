@@ -6,17 +6,34 @@ import {
   useAuthManager,
   useCustomerManager,
 } from "../../../../services/Services";
-import { theme, globalStyles } from "../../../../constants/Theme";
 import {
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Breadcrumb,
-  Modal,
-  Select,
-  FormGroup,
-} from "../../../../components/UI";
+  MagnifyingGlassIcon,
+  UserGroupIcon,
+  ArrowLeftIcon,
+  XMarkIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ArrowsUpDownIcon,
+  ChartBarIcon,
+  AdjustmentsHorizontalIcon,
+  ExclamationTriangleIcon,
+  HomeIcon,
+  BuildingOffice2Icon,
+  PhoneIcon,
+  EnvelopeIcon,
+  MapPinIcon,
+  ArchiveBoxIcon,
+  EyeIcon,
+  CheckCircleIcon,
+  CalendarIcon,
+  FunnelIcon,
+  UserIcon,
+  ChevronDownIcon,
+  BriefcaseIcon,
+  DocumentTextIcon,
+  NoSymbolIcon,
+} from "@heroicons/react/24/outline";
+import { ExclamationTriangleIcon as ExclamationTriangleIconSolid } from "@heroicons/react/24/solid";
 
 // Constants for customer types and statuses - matching old implementation
 const RESIDENTIAL_CUSTOMER_TYPE_OF_ID = 1;
@@ -49,10 +66,10 @@ const CUSTOMER_TYPE_OF_FILTER_OPTIONS = [
 
 // Page size options
 const PAGE_SIZE_OPTIONS = [
-  { value: 10, label: "10" },
-  { value: 25, label: "25" },
-  { value: 50, label: "50" },
-  { value: 100, label: "100" },
+  { value: 10, label: "10 per page" },
+  { value: 25, label: "25 per page" },
+  { value: 50, label: "50 per page" },
+  { value: 100, label: "100 per page" },
 ];
 
 function AdminCustomerSearchResultPage() {
@@ -84,6 +101,7 @@ function AdminCustomerSearchResultPage() {
   const [typeOf, setTypeOf] = useState(0); // 0 for all types
   const [createdAtGTE, setCreatedAtGTE] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
+  const [showFilters, setShowFilters] = useState(false);
 
   // Check authentication on mount
   useEffect(() => {
@@ -203,6 +221,48 @@ function AdminCustomerSearchResultPage() {
     );
   };
 
+  // Fetch list when parameters change
+  useEffect(() => {
+    let mounted = true;
+
+    if (mounted) {
+      fetchList();
+    }
+
+    return () => {
+      mounted = false;
+    };
+  }, [
+    currentCursor,
+    pageSize,
+    sortByValue,
+    status,
+    typeOf,
+    createdAtGTE,
+    firstName,
+    lastName,
+    email,
+    phone,
+    organizationName,
+  ]);
+
+  // Handle pagination
+  const onNextClicked = (e) => {
+    console.log("onNextClicked: Going to next page");
+    const arr = [...previousCursors];
+    arr.push(currentCursor);
+    setPreviousCursors(arr);
+    setCurrentCursor(nextCursor);
+  };
+
+  const onPreviousClicked = (e) => {
+    console.log("onPreviousClicked: Going to previous page");
+    const arr = [...previousCursors];
+    const previousCursor = arr.pop();
+    setPreviousCursors(arr);
+    setCurrentCursor(previousCursor);
+  };
+
   // Archive callback handlers
   const onCustomerDeleteSuccess = (response) => {
     console.log("onCustomerDeleteSuccess: Starting...");
@@ -256,48 +316,6 @@ function AdminCustomerSearchResultPage() {
     );
   };
 
-  // Fetch list when parameters change
-  useEffect(() => {
-    let mounted = true;
-
-    if (mounted) {
-      fetchList();
-    }
-
-    return () => {
-      mounted = false;
-    };
-  }, [
-    currentCursor,
-    pageSize,
-    sortByValue,
-    status,
-    typeOf,
-    createdAtGTE,
-    firstName,
-    lastName,
-    email,
-    phone,
-    organizationName,
-  ]);
-
-  // Handle pagination
-  const onNextClicked = (e) => {
-    console.log("onNextClicked: Going to next page");
-    const arr = [...previousCursors];
-    arr.push(currentCursor);
-    setPreviousCursors(arr);
-    setCurrentCursor(nextCursor);
-  };
-
-  const onPreviousClicked = (e) => {
-    console.log("onPreviousClicked: Going to previous page");
-    const arr = [...previousCursors];
-    const previousCursor = arr.pop();
-    setPreviousCursors(arr);
-    setCurrentCursor(previousCursor);
-  };
-
   // Format phone number
   const formatPhone = (phone) => {
     if (!phone) return "-";
@@ -309,329 +327,291 @@ function AdminCustomerSearchResultPage() {
     return phone;
   };
 
-  // Breadcrumb items
-  const breadcrumbItems = [
-    { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
-    { label: "Customers", path: "/admin/customers", icon: "👤" },
-    { label: "Search", path: "/admin/customers/search", icon: "🔍" },
-    { label: "Results", icon: "📋" },
-  ];
+  // Build search criteria display
+  const searchCriteria = [];
+  if (firstName)
+    searchCriteria.push({
+      label: "First Name",
+      value: firstName,
+      icon: UserIcon,
+    });
+  if (lastName)
+    searchCriteria.push({
+      label: "Last Name",
+      value: lastName,
+      icon: UserIcon,
+    });
+  if (email)
+    searchCriteria.push({ label: "Email", value: email, icon: EnvelopeIcon });
+  if (phone)
+    searchCriteria.push({ label: "Phone", value: phone, icon: PhoneIcon });
+  if (organizationName)
+    searchCriteria.push({
+      label: "Organization",
+      value: organizationName,
+      icon: BuildingOffice2Icon,
+    });
+  searchCriteria.push({
+    label: "Status",
+    value: isActive ? "Active Only" : "All",
+    icon: CheckCircleIcon,
+  });
+
+  // Handle sort change
+  const handleSortChange = (e) => {
+    const [field, order] = e.target.value.split(",");
+    setSortByValue(e.target.value);
+  };
+
+  // Handle page size change
+  const handlePageSizeChange = (e) => {
+    setPageSize(parseInt(e.target.value));
+    setPreviousCursors([]);
+    setCurrentCursor("");
+  };
+
+  // Calculate current page info
+  const currentPage = previousCursors.length + 1;
+  const totalCount = customers?.count || 0;
+  const startRecord = (currentPage - 1) * pageSize + 1;
+  const endRecord = Math.min(
+    startRecord + (customers?.results?.length || 0) - 1,
+    totalCount,
+  );
 
   if (isFetching && !customers) {
-    return <Loading message="Loading search results..." />;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading search results...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div style={globalStyles.container}>
-      <Breadcrumb items={breadcrumbItems} />
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb */}
+        <nav className="flex mb-8" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+            <li className="inline-flex items-center">
+              <Link
+                to="/admin/dashboard"
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <ChartBarIcon className="w-4 h-4 mr-2" />
+                Dashboard
+              </Link>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to="/admin/customers"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                >
+                  Customers
+                </Link>
+              </div>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to="/admin/customers/search"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                >
+                  Search
+                </Link>
+              </div>
+            </li>
+            <li aria-current="page">
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">
+                  Results
+                </span>
+              </div>
+            </li>
+          </ol>
+        </nav>
 
-      {/* Page Title */}
-      <h1 style={{ marginBottom: "10px" }}>👤 Customers</h1>
-      <h4 style={{ marginBottom: "30px", color: "#666" }}>🔍 Search Results</h4>
-      <hr style={{ marginBottom: "30px" }} />
-
-      {/* Success/Error Messages */}
-      {successMessage && (
-        <Alert type="success" onClose={() => setSuccessMessage("")}>
-          {successMessage}
-        </Alert>
-      )}
-      {errors.message && (
-        <Alert type="error" onClose={() => setErrors({})}>
-          {errors.message}
-        </Alert>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      <Modal
-        isOpen={!!selectedCustomerForDeletion}
-        onClose={() => setSelectedCustomerForDeletion(null)}
-        title="Are you sure?"
-        footer={
-          <>
-            <Button
-              onClick={() => setSelectedCustomerForDeletion(null)}
-              variant="secondary"
+        {/* Header Section */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <div className="flex items-center">
+                <UserGroupIcon className="h-8 w-8 text-blue-600 mr-3" />
+                <h1 className="text-3xl font-bold text-gray-900">
+                  Search Results
+                </h1>
+              </div>
+              <p className="mt-2 text-lg text-gray-600 ml-11">
+                Customer search results
+              </p>
+            </div>
+            <button
+              onClick={() => navigate("/admin/customers/search")}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
             >
-              Cancel
-            </Button>
-            <Button onClick={onDeleteConfirmButtonClick} variant="danger">
-              Confirm Archive
-            </Button>
-          </>
-        }
-      >
-        <p>
-          You are about to <strong>archive</strong> this customer. It will no
-          longer appear on your dashboard. This action can be undone but you'll
-          need to contact the system administrator. Are you sure you would like
-          to continue?
-        </p>
-      </Modal>
-
-      {/* Results Card */}
-      <Card title="📋 Search Results">
-        {/* Filter Panel */}
-        <div
-          style={{
-            backgroundColor: theme.colors.light,
-            padding: "20px",
-            borderRadius: "8px",
-            marginBottom: "20px",
-          }}
-        >
-          <h5 style={{ marginBottom: "15px" }}>🔧 Filtering & Sorting</h5>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-              gap: "15px",
-            }}
-          >
-            <Select
-              label="Status"
-              value={status}
-              onChange={(e) => setStatus(parseInt(e.target.value))}
-              options={CUSTOMER_STATUS_FILTER_OPTIONS}
-            />
-
-            <Select
-              label="Type"
-              value={typeOf}
-              onChange={(e) => setTypeOf(parseInt(e.target.value))}
-              options={CUSTOMER_TYPE_OF_FILTER_OPTIONS}
-            />
-
-            <FormGroup>
-              <label style={globalStyles.label}>Created After</label>
-              <input
-                type="date"
-                value={createdAtGTE}
-                onChange={(e) => setCreatedAtGTE(e.target.value)}
-                style={globalStyles.input}
-              />
-            </FormGroup>
-
-            <Select
-              label="Sort by"
-              value={sortByValue}
-              onChange={(e) => setSortByValue(e.target.value)}
-              options={CUSTOMER_SORT_OPTIONS}
-            />
+              <ArrowLeftIcon className="h-4 w-4 mr-2" />
+              Back to Search
+            </button>
           </div>
+
+          {/* Search Criteria Display */}
+          {searchCriteria.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {searchCriteria.map((criteria, index) => {
+                const Icon = criteria.icon;
+                return (
+                  <span
+                    key={index}
+                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
+                  >
+                    <Icon className="h-4 w-4 mr-1.5" />
+                    {criteria.label}: {criteria.value}
+                  </span>
+                );
+              })}
+            </div>
+          )}
         </div>
 
-        {/* Search Criteria Summary */}
-        <div
-          style={{
-            backgroundColor: "#f0f9ff",
-            padding: "15px",
-            borderRadius: "8px",
-            marginBottom: "20px",
-          }}
-        >
-          <strong>Search Criteria:</strong>
-          <ul style={{ marginTop: "10px", marginBottom: 0 }}>
-            {firstName && <li>First Name: {firstName}</li>}
-            {lastName && <li>Last Name: {lastName}</li>}
-            {email && <li>Email: {email}</li>}
-            {phone && <li>Phone: {phone}</li>}
-            {organizationName && <li>Organization: {organizationName}</li>}
-            <li>Status: {isActive ? "Active Only" : "All"}</li>
-          </ul>
-        </div>
-
-        {/* Results Display */}
-        {isFetching ? (
-          <Loading message="Updating results..." />
-        ) : (
-          <>
-            {customers && customers.results && customers.results.length > 0 ? (
-              <>
-                {/* Results Grid */}
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns:
-                      "repeat(auto-fill, minmax(300px, 1fr))",
-                    gap: "20px",
-                    marginBottom: "20px",
-                  }}
+        {/* Success/Error Messages */}
+        {successMessage && (
+          <div className="mb-6 bg-green-50 border-l-4 border-green-400 p-4 rounded-lg">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <CheckCircleIcon className="h-5 w-5 text-green-400" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-green-800">{successMessage}</p>
+              </div>
+              <div className="ml-auto pl-3">
+                <button
+                  onClick={() => setSuccessMessage("")}
+                  className="inline-flex text-green-400 hover:text-green-500"
                 >
-                  {customers.results.map((customer) => (
-                    <div
-                      key={customer.id}
-                      style={{
-                        ...globalStyles.card,
-                        backgroundColor: customer.isBanned
-                          ? "#ffe6e6"
-                          : "#e6f4ff",
-                        cursor: "pointer",
-                        transition: "all 0.3s",
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = "translateY(-2px)";
-                        e.currentTarget.style.boxShadow =
-                          "0 4px 8px rgba(0,0,0,0.15)";
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.transform = "translateY(0)";
-                        e.currentTarget.style.boxShadow =
-                          "0 2px 4px rgba(0,0,0,0.1)";
-                      }}
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {errors.message && (
+          <div className="mb-6 bg-red-50 border-l-4 border-red-400 p-4 rounded-lg">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <ExclamationTriangleIconSolid className="h-5 w-5 text-red-400" />
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-800">{errors.message}</p>
+              </div>
+              <div className="ml-auto pl-3">
+                <button
+                  onClick={() => setErrors({})}
+                  className="inline-flex text-red-400 hover:text-red-500"
+                >
+                  <XMarkIcon className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Main Content */}
+        <div className="bg-white shadow-sm rounded-lg">
+          {/* Results Header with Filters */}
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+                  <MagnifyingGlassIcon className="h-5 w-5 mr-2 text-blue-600" />
+                  Results
+                </h2>
+                {!isFetching && customers && customers.results && (
+                  <p className="mt-1 text-sm text-gray-600">
+                    Found <span className="font-semibold">{totalCount}</span>{" "}
+                    customers
+                    {searchCriteria.length > 0 && " matching your criteria"}
+                  </p>
+                )}
+              </div>
+
+              {/* Filters and Sorting */}
+              {!isFetching &&
+                customers &&
+                customers.results &&
+                customers.results.length > 0 && (
+                  <div className="flex flex-wrap items-center gap-3">
+                    {/* Toggle Filters */}
+                    <button
+                      onClick={() => setShowFilters(!showFilters)}
+                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50"
                     >
-                      {/* Card Header */}
-                      <div style={{ marginBottom: "15px" }}>
-                        <Link
-                          to={`/admin/customer/${customer.id}`}
-                          style={{
-                            textDecoration: "none",
-                            color: theme.colors.primary,
-                            fontWeight: "bold",
-                            fontSize: "16px",
-                          }}
-                        >
-                          {customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID && (
-                            <>🏢 {customer.organizationName}</>
-                          )}
-                          {customer.type ===
-                            RESIDENTIAL_CUSTOMER_TYPE_OF_ID && (
-                            <>
-                              🏠 {customer.firstName} {customer.lastName}
-                            </>
-                          )}
-                        </Link>
-                        {customer.isBanned && (
-                          <div
-                            style={{
-                              color: theme.colors.danger,
-                              fontSize: "12px",
-                              marginTop: "5px",
-                            }}
-                          >
-                            🚫 Banned
-                          </div>
-                        )}
-                      </div>
+                      <FunnelIcon className="h-4 w-4 mr-1.5" />
+                      Filters
+                      <ChevronDownIcon
+                        className={`h-4 w-4 ml-1 transition-transform ${showFilters ? "rotate-180" : ""}`}
+                      />
+                    </button>
 
-                      {/* Card Body */}
-                      <div style={{ fontSize: "14px", lineHeight: "1.6" }}>
-                        {customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID && (
-                          <div style={{ marginBottom: "5px" }}>
-                            <strong>
-                              {customer.firstName} {customer.lastName}
-                            </strong>
-                          </div>
-                        )}
-                        <div>{customer.addressLine1 || "-"}</div>
-                        <div>
-                          {customer.city && customer.region
-                            ? `${customer.city}, ${customer.region}`
-                            : "-"}
-                        </div>
-                        <div>
-                          📞{" "}
-                          {customer.phone ? (
-                            <a
-                              href={`tel:${customer.phone}`}
-                              style={{
-                                textDecoration: "none",
-                                color: theme.colors.primary,
-                              }}
-                            >
-                              {formatPhone(customer.phone)}
-                            </a>
-                          ) : (
-                            "-"
-                          )}
-                        </div>
-                        <div>
-                          ✉️{" "}
-                          {customer.email ? (
-                            <a
-                              href={`mailto:${customer.email}`}
-                              style={{
-                                textDecoration: "none",
-                                color: theme.colors.primary,
-                              }}
-                            >
-                              {customer.email}
-                            </a>
-                          ) : (
-                            "-"
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Card Footer */}
-                      <div
-                        style={{
-                          marginTop: "15px",
-                          paddingTop: "15px",
-                          borderTop: "1px solid #ccc",
-                          display: "flex",
-                          justifyContent: "space-between",
-                        }}
+                    {/* Sort By */}
+                    <div className="flex items-center">
+                      <ArrowsUpDownIcon className="h-4 w-4 text-gray-400 mr-2" />
+                      <select
+                        value={sortByValue}
+                        onChange={handleSortChange}
+                        className="block rounded-lg border-gray-300 py-1.5 pl-3 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                       >
-                        <Link
-                          to={`/admin/customer/${customer.id}`}
-                          style={{
-                            textDecoration: "none",
-                            color: theme.colors.primary,
-                            fontWeight: "500",
-                          }}
-                        >
-                          View Details →
-                        </Link>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedCustomerForDeletion(customer);
-                          }}
-                          style={{
-                            background: "none",
-                            border: "none",
-                            color: theme.colors.danger,
-                            cursor: "pointer",
-                            fontSize: "14px",
-                          }}
-                        >
-                          Archive
-                        </button>
-                      </div>
+                        {CUSTOMER_SORT_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
                     </div>
-                  ))}
-                </div>
 
-                {/* Pagination Controls */}
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginTop: "20px",
-                    flexWrap: "wrap",
-                    gap: "10px",
-                  }}
-                >
+                    {/* Page Size */}
+                    <div className="flex items-center">
+                      <AdjustmentsHorizontalIcon className="h-4 w-4 text-gray-400 mr-2" />
+                      <select
+                        value={pageSize.toString()}
+                        onChange={handlePageSizeChange}
+                        className="block rounded-lg border-gray-300 py-1.5 pl-3 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        {PAGE_SIZE_OPTIONS.map((option) => (
+                          <option
+                            key={option.value}
+                            value={option.value.toString()}
+                          >
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
+            </div>
+
+            {/* Expandable Filters Panel */}
+            {showFilters && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label style={{ marginRight: "10px" }}>
-                      Results per page:
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Status
                     </label>
                     <select
-                      value={pageSize}
-                      onChange={(e) => {
-                        console.log("Page size changed to:", e.target.value);
-                        setPageSize(parseInt(e.target.value));
-                      }}
-                      style={{
-                        padding: "5px 10px",
-                        borderRadius: "4px",
-                        border: "1px solid #ddd",
-                      }}
+                      value={status}
+                      onChange={(e) => setStatus(parseInt(e.target.value))}
+                      className="w-full rounded-lg border-gray-300 py-2 pl-3 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     >
-                      {PAGE_SIZE_OPTIONS.map((option) => (
+                      {CUSTOMER_STATUS_FILTER_OPTIONS.map((option) => (
                         <option key={option.value} value={option.value}>
                           {option.label}
                         </option>
@@ -639,69 +619,393 @@ function AdminCustomerSearchResultPage() {
                     </select>
                   </div>
 
-                  <div style={{ display: "flex", gap: "10px" }}>
-                    {previousCursors.length > 0 && (
-                      <Button onClick={onPreviousClicked} variant="secondary">
-                        ← Previous
-                      </Button>
-                    )}
-                    {customers.hasNextPage && (
-                      <Button onClick={onNextClicked} variant="secondary">
-                        Next →
-                      </Button>
-                    )}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Type
+                    </label>
+                    <select
+                      value={typeOf}
+                      onChange={(e) => setTypeOf(parseInt(e.target.value))}
+                      className="w-full rounded-lg border-gray-300 py-2 pl-3 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      {CUSTOMER_TYPE_OF_FILTER_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Created After
+                    </label>
+                    <input
+                      type="date"
+                      value={createdAtGTE}
+                      onChange={(e) => setCreatedAtGTE(e.target.value)}
+                      className="w-full rounded-lg border-gray-300 py-2 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
                   </div>
                 </div>
+              </div>
+            )}
+          </div>
+
+          {/* Results Content */}
+          <div className="p-6">
+            {isFetching ? (
+              <div className="flex flex-col items-center justify-center py-16">
+                <svg
+                  className="animate-spin h-10 w-10 text-blue-600 mb-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                <p className="text-gray-600">Updating results...</p>
+              </div>
+            ) : customers &&
+              customers.results &&
+              customers.results.length > 0 ? (
+              <>
+                {/* Results Grid */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                  {customers.results.map((customer) => (
+                    <div
+                      key={customer.id}
+                      className={`bg-white border ${customer.isBanned ? "border-red-200" : "border-gray-200"} rounded-lg hover:shadow-lg transition-shadow`}
+                    >
+                      {/* Card Header */}
+                      <div
+                        className={`p-4 border-b ${customer.isBanned ? "border-red-100 bg-red-50" : "border-gray-100"}`}
+                      >
+                        <Link
+                          to={`/admin/customer/${customer.id}`}
+                          className="flex items-start text-blue-600 hover:text-blue-800 font-semibold"
+                        >
+                          {customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID ? (
+                            <>
+                              <BuildingOffice2Icon className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+                              <span>
+                                {customer.organizationName ||
+                                  `${customer.firstName} ${customer.lastName}`}
+                              </span>
+                            </>
+                          ) : (
+                            <>
+                              <HomeIcon className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+                              <span>
+                                {customer.firstName} {customer.lastName}
+                              </span>
+                            </>
+                          )}
+                        </Link>
+                        {customer.isBanned && (
+                          <div className="flex items-center mt-2 text-red-600 text-sm">
+                            <NoSymbolIcon className="h-4 w-4 mr-1" />
+                            Banned
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Card Body */}
+                      <div className="p-4 space-y-2 text-sm">
+                        {customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID && (
+                          <div className="font-medium text-gray-900">
+                            {customer.firstName} {customer.lastName}
+                          </div>
+                        )}
+
+                        {customer.addressLine1 && (
+                          <div className="flex items-start text-gray-600">
+                            <MapPinIcon className="h-4 w-4 mr-2 text-gray-400 flex-shrink-0 mt-0.5" />
+                            <div>
+                              <div>{customer.addressLine1}</div>
+                              {(customer.city || customer.region) && (
+                                <div>
+                                  {customer.city && customer.region
+                                    ? `${customer.city}, ${customer.region}`
+                                    : customer.city || customer.region}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {customer.phone && (
+                          <div className="flex items-center text-gray-600">
+                            <PhoneIcon className="h-4 w-4 mr-2 text-gray-400" />
+                            <a
+                              href={`tel:${customer.phone}`}
+                              className="text-blue-600 hover:text-blue-800"
+                            >
+                              {formatPhone(customer.phone)}
+                            </a>
+                          </div>
+                        )}
+
+                        {customer.email && (
+                          <div className="flex items-center text-gray-600">
+                            <EnvelopeIcon className="h-4 w-4 mr-2 text-gray-400" />
+                            <a
+                              href={`mailto:${customer.email}`}
+                              className="text-blue-600 hover:text-blue-800 truncate"
+                            >
+                              {customer.email}
+                            </a>
+                          </div>
+                        )}
+
+                        {/* Customer Type Badge */}
+                        <div className="pt-2">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID
+                                ? "bg-blue-100 text-blue-800"
+                                : "bg-green-100 text-green-800"
+                            }`}
+                          >
+                            {customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID
+                              ? "Commercial"
+                              : "Residential"}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Card Footer */}
+                      <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
+                        <Link
+                          to={`/admin/customer/${customer.id}`}
+                          className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800"
+                        >
+                          <EyeIcon className="h-4 w-4 mr-1" />
+                          View Details
+                        </Link>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedCustomerForDeletion(customer);
+                          }}
+                          className="inline-flex items-center text-sm font-medium text-red-600 hover:text-red-800"
+                        >
+                          <ArchiveBoxIcon className="h-4 w-4 mr-1" />
+                          Archive
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Pagination Footer */}
+                {(previousCursors.length > 0 || customers.hasNextPage) && (
+                  <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200">
+                    <div className="flex-1 flex justify-between sm:hidden">
+                      <button
+                        onClick={onPreviousClicked}
+                        disabled={previousCursors.length === 0}
+                        className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Previous
+                      </button>
+                      <button
+                        onClick={onNextClicked}
+                        disabled={!customers.hasNextPage}
+                        className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Next
+                      </button>
+                    </div>
+                    <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                      <div>
+                        <p className="text-sm text-gray-700">
+                          Showing{" "}
+                          <span className="font-medium">{startRecord}</span> to{" "}
+                          <span className="font-medium">{endRecord}</span> of{" "}
+                          <span className="font-medium">{totalCount}</span>{" "}
+                          results
+                        </p>
+                      </div>
+                      <div>
+                        <nav
+                          className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                          aria-label="Pagination"
+                        >
+                          <button
+                            onClick={onPreviousClicked}
+                            disabled={previousCursors.length === 0}
+                            className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <span className="sr-only">Previous</span>
+                            <ChevronLeftIcon
+                              className="h-5 w-5"
+                              aria-hidden="true"
+                            />
+                          </button>
+
+                          {/* Page Numbers */}
+                          <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                            Page {currentPage}
+                          </span>
+
+                          <button
+                            onClick={onNextClicked}
+                            disabled={!customers.hasNextPage}
+                            className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <span className="sr-only">Next</span>
+                            <ChevronRightIcon
+                              className="h-5 w-5"
+                              aria-hidden="true"
+                            />
+                          </button>
+                        </nav>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </>
             ) : (
-              <div
-                style={{
-                  textAlign: "center",
-                  padding: "40px",
-                  backgroundColor: theme.colors.light,
-                  borderRadius: "8px",
-                }}
-              >
-                <h3>📋 No Customers Found</h3>
-                <p style={{ marginTop: "10px", color: "#666" }}>
-                  No customers found matching your search criteria.
+              <div className="text-center py-16 px-4">
+                <UserGroupIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  No Customers Found
+                </h3>
+                <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                  No customers match your search criteria. Try adjusting your
+                  search terms or filters.
                 </p>
                 <Link
                   to="/admin/customers/search"
-                  style={{
-                    display: "inline-block",
-                    marginTop: "20px",
-                    color: theme.colors.primary,
-                    textDecoration: "none",
-                    fontWeight: "500",
-                  }}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                 >
-                  ← Search Again
+                  <ArrowLeftIcon className="h-4 w-4 mr-2" />
+                  Try New Search
                 </Link>
               </div>
             )}
-          </>
-        )}
-
-        {/* Action Buttons */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginTop: "30px",
-            paddingTop: "20px",
-            borderTop: "1px solid #e0e0e0",
-          }}
-        >
-          <Link to="/admin/customers/search" style={{ textDecoration: "none" }}>
-            <Button variant="secondary">← Search Again</Button>
-          </Link>
-
-          <Link to="/admin/customers" style={{ textDecoration: "none" }}>
-            <Button variant="outline">Back to Customers</Button>
-          </Link>
+          </div>
         </div>
-      </Card>
+
+        {/* Bottom Action Buttons */}
+        <div className="mt-6 flex flex-col sm:flex-row justify-between gap-4">
+          <button
+            onClick={() => navigate("/admin/customers/search")}
+            className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            <ArrowLeftIcon className="h-4 w-4 mr-2" />
+            Search Again
+          </button>
+          <button
+            onClick={() => navigate("/admin/customers")}
+            className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          >
+            Back to Customers
+          </button>
+        </div>
+      </div>
+
+      {/* Delete Confirmation Modal */}
+      {selectedCustomerForDeletion && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                <ExclamationTriangleIcon className="h-5 w-5 mr-2 text-amber-600" />
+                Archive Customer
+              </h3>
+            </div>
+
+            <div className="px-6 py-4">
+              <p className="text-sm text-gray-600 mb-4">
+                You are about to <strong>archive</strong> this customer. It will
+                no longer appear on your dashboard. This action can be undone
+                but you'll need to contact the system administrator. Are you
+                sure you would like to continue?
+              </p>
+
+              <div className="p-4 bg-amber-50 rounded-lg border-l-4 border-amber-500">
+                <p className="text-sm font-medium text-gray-700">
+                  <strong>Name:</strong>{" "}
+                  {selectedCustomerForDeletion.type ===
+                  COMMERCIAL_CUSTOMER_TYPE_OF_ID
+                    ? selectedCustomerForDeletion.organizationName ||
+                      `${selectedCustomerForDeletion.firstName} ${selectedCustomerForDeletion.lastName}`
+                    : `${selectedCustomerForDeletion.firstName} ${selectedCustomerForDeletion.lastName}`}
+                </p>
+                {selectedCustomerForDeletion.email && (
+                  <p className="text-sm text-gray-600 mt-1">
+                    <strong>Email:</strong> {selectedCustomerForDeletion.email}
+                  </p>
+                )}
+                {selectedCustomerForDeletion.isBanned && (
+                  <p className="text-sm text-red-600 mt-1">
+                    <strong>Status:</strong> This customer is currently banned
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+              <button
+                onClick={() => setSelectedCustomerForDeletion(null)}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={onDeleteConfirmButtonClick}
+                disabled={isFetching}
+                className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isFetching ? (
+                  <>
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Archiving...
+                  </>
+                ) : (
+                  <>
+                    <ArchiveBoxIcon className="h-4 w-4 mr-2" />
+                    Confirm Archive
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

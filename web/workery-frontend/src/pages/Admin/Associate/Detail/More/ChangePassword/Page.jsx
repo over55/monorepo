@@ -16,6 +16,7 @@ import {
   ExclamationCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useAssociateManager } from "../../../../../../services/Services";
+import axios from "axios";
 
 function AdminAssociateDetailMoreChangePasswordPage() {
   // URL Parameters
@@ -36,6 +37,7 @@ function AdminAssociateDetailMoreChangePasswordPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [modalJustOpened, setModalJustOpened] = useState(false);
 
   // Unauthorized callback
   const onUnauthorized = () => {
@@ -100,10 +102,22 @@ function AdminAssociateDetailMoreChangePasswordPage() {
   };
 
   // Handle form submission
-  const handleSubmit = async () => {
-    setShowConfirmModal(false);
+  const handleSubmit = async (e) => {
+    // Prevent any default behavior
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
 
-    if (!validateForm()) {
+    // Don't proceed if already submitting
+    if (isSubmitting) {
+      return;
+    }
+
+    // Validate the form
+    const isValid = validateForm();
+
+    if (!isValid) {
       return;
     }
 
@@ -118,11 +132,51 @@ function AdminAssociateDetailMoreChangePasswordPage() {
         password_repeated: passwordRepeated,
       };
 
-      // Call the manager to change password
-      await associateManager.changeAssociatePassword(
-        passwordData,
-        onUnauthorized,
-      );
+      // Get access token - try common keys
+      let accessToken =
+        localStorage.getItem("WORKERY_ACCESS_TOKEN") ||
+        localStorage.getItem("WORKERY_TENANT_ACCESS_TOKEN") ||
+        localStorage.getItem("access_token") ||
+        localStorage.getItem("accessToken");
+
+      if (!accessToken) {
+        // Try to find any key containing 'token'
+        const tokenKey = Object.keys(localStorage).find(
+          (key) =>
+            key.toLowerCase().includes("token") &&
+            !key.toLowerCase().includes("refresh") &&
+            !key.toLowerCase().includes("timestamp"),
+        );
+
+        if (tokenKey) {
+          accessToken = localStorage.getItem(tokenKey);
+        }
+      }
+
+      if (!accessToken) {
+        throw new Error("No access token found. Please login again.");
+      }
+
+      // Build the API URL
+      const apiBaseUrl =
+        process.env.NODE_ENV === "development"
+          ? "http://127.0.0.1:8000"
+          : window.location.origin;
+
+      const endpoint = "/api/v1/associates/operations/change-password";
+      const fullUrl = `${apiBaseUrl}${endpoint}`;
+
+      // Make the API call
+      const response = await axios.post(fullUrl, passwordData, {
+        headers: {
+          Authorization: `JWT ${accessToken}`,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+      });
+
+      // Close modal after successful submission
+      setShowConfirmModal(false);
 
       // Set success message
       setSuccessMessage("Password has been successfully changed");
@@ -136,16 +190,73 @@ function AdminAssociateDetailMoreChangePasswordPage() {
         navigate(`/admin/associate/${aid}/more`);
       }, 2000);
     } catch (error) {
-      console.error("Failed to change password:", error);
-      setErrors(error);
+      console.error("Password change failed:", error);
+
+      // Handle different error types
+      let errorMessage = "An unknown error occurred";
+
+      if (error.response) {
+        if (error.response.status === 404) {
+          errorMessage = "API endpoint not found. Please contact support.";
+        } else if (error.response.status === 401) {
+          errorMessage = "Unauthorized. Please login again.";
+          setTimeout(() => {
+            navigate("/login?unauthorized=true");
+          }, 2000);
+        } else if (error.response.status === 403) {
+          errorMessage = "You don't have permission to change this password.";
+        } else if (error.response.data?.message) {
+          errorMessage = error.response.data.message;
+        } else if (error.response.data?.detail) {
+          errorMessage = error.response.data.detail;
+        }
+      } else if (error.request) {
+        errorMessage = "No response from server. Please check your connection.";
+      } else {
+        errorMessage = error.message || errorMessage;
+      }
+
+      // Set error to display in modal
+      setErrors({ message: errorMessage });
+    } finally {
       setIsSubmitting(false);
     }
   };
 
   // Handle confirm button click
-  const handleConfirmClick = () => {
+  const handleConfirmClick = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
     if (validateForm()) {
+      setModalJustOpened(true);
       setShowConfirmModal(true);
+      // Clear the flag after a short delay
+      setTimeout(() => {
+        setModalJustOpened(false);
+      }, 500);
+    }
+  };
+
+  // Handle modal background click
+  const handleBackgroundClick = (e) => {
+    // Don't close if modal just opened or if submitting
+    if (modalJustOpened || isSubmitting) {
+      return;
+    }
+    setShowConfirmModal(false);
+  };
+
+  // Handle modal cancel
+  const handleModalCancel = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (!isSubmitting) {
+      setShowConfirmModal(false);
     }
   };
 
@@ -420,6 +531,7 @@ function AdminAssociateDetailMoreChangePasswordPage() {
           <div className="flex flex-col sm:flex-row justify-between gap-3 mt-6">
             <Link to={`/admin/associate/${aid}/more`}>
               <button
+                type="button"
                 className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 disabled={isSubmitting}
               >
@@ -429,7 +541,12 @@ function AdminAssociateDetailMoreChangePasswordPage() {
             </Link>
 
             <button
-              onClick={handleConfirmClick}
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleConfirmClick(e);
+              }}
               className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={isSubmitting || !password || !passwordRepeated}
             >
@@ -452,11 +569,10 @@ function AdminAssociateDetailMoreChangePasswordPage() {
           <div className="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
             {/* Background overlay */}
             <div
-              className="fixed inset-0 transition-opacity"
-              onClick={() => setShowConfirmModal(false)}
-            >
-              <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-            </div>
+              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              onClick={handleBackgroundClick}
+              aria-hidden="true"
+            />
 
             {/* Modal panel */}
             <span
@@ -466,7 +582,10 @@ function AdminAssociateDetailMoreChangePasswordPage() {
               &#8203;
             </span>
 
-            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+            <div
+              className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full relative"
+              onClick={(e) => e.stopPropagation()}
+            >
               {/* Modal Header */}
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                 <div className="sm:flex sm:items-start">
@@ -497,6 +616,18 @@ function AdminAssociateDetailMoreChangePasswordPage() {
                       <p className="mt-3 text-sm text-gray-500">
                         Do you want to proceed with changing the password?
                       </p>
+
+                      {/* Show any errors in the modal */}
+                      {errors && (errors.message || errors.detail) && (
+                        <div className="mt-3 bg-red-50 border border-red-200 rounded-lg p-3">
+                          <p className="text-sm text-red-700">
+                            <strong>Error:</strong>{" "}
+                            {errors.message ||
+                              errors.detail ||
+                              "Failed to change password"}
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -508,15 +639,41 @@ function AdminAssociateDetailMoreChangePasswordPage() {
                   type="button"
                   onClick={handleSubmit}
                   disabled={isSubmitting}
-                  className="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
-                  {isSubmitting ? "Changing..." : "Yes, Change Password"}
+                  {isSubmitting ? (
+                    <>
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Changing Password...
+                    </>
+                  ) : (
+                    "Yes, Change Password"
+                  )}
                 </button>
                 <button
                   type="button"
-                  onClick={() => setShowConfirmModal(false)}
+                  onClick={handleModalCancel}
                   disabled={isSubmitting}
-                  className="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                 >
                   Cancel
                 </button>

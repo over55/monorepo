@@ -58,7 +58,6 @@ function AdminReportPage() {
       path: "/admin/report/1",
       category: "Financial",
       icon: BanknotesIcon,
-      color: "green",
     },
     {
       id: 2,
@@ -67,7 +66,6 @@ function AdminReportPage() {
       path: "/admin/report/2",
       category: "Associates",
       icon: UserIcon,
-      color: "blue",
     },
     {
       id: 3,
@@ -76,7 +74,6 @@ function AdminReportPage() {
       path: "/admin/report/3",
       category: "Financial",
       icon: CreditCardIcon,
-      color: "green",
     },
     {
       id: 4,
@@ -85,7 +82,6 @@ function AdminReportPage() {
       path: "/admin/report/4",
       category: "Orders",
       icon: XCircleIcon,
-      color: "red",
     },
     {
       id: 5,
@@ -94,7 +90,6 @@ function AdminReportPage() {
       path: "/admin/report/5",
       category: "Associates",
       icon: ShieldCheckIcon,
-      color: "blue",
     },
     {
       id: 6,
@@ -103,7 +98,6 @@ function AdminReportPage() {
       path: "/admin/report/6",
       category: "Associates",
       icon: ShieldCheckIcon,
-      color: "blue",
     },
     {
       id: 7,
@@ -112,7 +106,6 @@ function AdminReportPage() {
       path: "/admin/report/7",
       category: "Associates",
       icon: CakeIcon,
-      color: "blue",
     },
     {
       id: 8,
@@ -121,7 +114,6 @@ function AdminReportPage() {
       path: "/admin/report/8",
       category: "Associates",
       icon: WrenchIcon,
-      color: "blue",
     },
     {
       id: 9,
@@ -130,7 +122,6 @@ function AdminReportPage() {
       path: "/admin/report/9",
       category: "Clients",
       icon: UserGroupIcon,
-      color: "purple",
     },
     {
       id: 10,
@@ -139,7 +130,6 @@ function AdminReportPage() {
       path: "/admin/report/10",
       category: "Orders",
       icon: HomeIcon,
-      color: "amber",
     },
     {
       id: 11,
@@ -148,7 +138,6 @@ function AdminReportPage() {
       path: "/admin/report/11",
       category: "Orders",
       icon: BuildingOfficeIcon,
-      color: "amber",
     },
     {
       id: 12,
@@ -157,7 +146,6 @@ function AdminReportPage() {
       path: "/admin/report/12",
       category: "System",
       icon: BriefcaseIcon,
-      color: "gray",
     },
     {
       id: 13,
@@ -166,7 +154,6 @@ function AdminReportPage() {
       path: "/admin/report/13",
       category: "Orders",
       icon: TagIcon,
-      color: "amber",
     },
     {
       id: 15,
@@ -175,7 +162,6 @@ function AdminReportPage() {
       path: "/admin/report/15",
       category: "Associates",
       icon: CalendarDaysIcon,
-      color: "blue",
     },
     {
       id: 16,
@@ -184,7 +170,6 @@ function AdminReportPage() {
       path: "/admin/report/16",
       category: "Marketing",
       icon: GlobeAltIcon,
-      color: "indigo",
     },
     {
       id: 17,
@@ -193,7 +178,6 @@ function AdminReportPage() {
       path: "/admin/report/17",
       category: "Marketing",
       icon: GlobeAltIcon,
-      color: "indigo",
     },
     {
       id: 19,
@@ -202,7 +186,6 @@ function AdminReportPage() {
       path: "/admin/report/19",
       category: "Orders",
       icon: CalendarIcon,
-      color: "amber",
     },
     {
       id: 22,
@@ -211,7 +194,6 @@ function AdminReportPage() {
       path: "/admin/report/22",
       category: "Orders",
       icon: CalendarIcon,
-      color: "amber",
     },
     {
       id: 20,
@@ -220,7 +202,6 @@ function AdminReportPage() {
       path: "/admin/report/20",
       category: "Financial",
       icon: CreditCardIcon,
-      color: "green",
     },
     {
       id: 21,
@@ -229,7 +210,6 @@ function AdminReportPage() {
       path: "/admin/report/21",
       category: "Marketing",
       icon: EnvelopeIcon,
-      color: "indigo",
     },
   ];
 
@@ -297,20 +277,6 @@ function AdminReportPage() {
       mounted = false;
     };
   }, []);
-
-  // Get color classes for cards
-  const getColorClasses = (color) => {
-    const colorMap = {
-      green: "from-green-600 to-green-700",
-      blue: "from-blue-600 to-blue-700",
-      red: "from-red-600 to-red-700",
-      amber: "from-amber-600 to-amber-700",
-      purple: "from-purple-600 to-purple-700",
-      indigo: "from-indigo-600 to-indigo-700",
-      gray: "from-gray-600 to-gray-700",
-    };
-    return colorMap[color] || "from-slate-600 to-slate-700";
-  };
 
   // Breadcrumb items
   const breadcrumbItems = [
@@ -444,7 +410,7 @@ function AdminReportPage() {
         {/* Reports Grid */}
         <div className="p-4 sm:p-6">
           {filteredReports.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 xl:gap-6">
               {filteredReports.map((report) => {
                 const IconComponent = report.icon;
                 return (
@@ -452,21 +418,19 @@ function AdminReportPage() {
                     key={report.id}
                     className="group bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex flex-col"
                   >
-                    {/* Icon Header */}
-                    <div
-                      className={`bg-gradient-to-br ${getColorClasses(report.color)} p-4 sm:p-6 text-white flex justify-center`}
-                    >
-                      <IconComponent className="w-10 h-10 sm:w-12 sm:h-12" />
+                    {/* Icon Header - Using Settings page styling */}
+                    <div className="bg-gradient-to-br from-slate-600 to-slate-700 p-4 sm:p-6 lg:p-8 text-white flex justify-center">
+                      <IconComponent className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 xl:w-16 xl:h-16" />
                     </div>
 
-                    {/* Content */}
+                    {/* Content - Using Settings page styling */}
                     <div className="p-3 sm:p-4 flex-grow flex flex-col">
                       <div className="mb-1">
                         <span className="inline-block px-2 py-1 text-xs font-medium bg-gray-100 text-gray-600 rounded">
                           {report.category}
                         </span>
                       </div>
-                      <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-1.5 sm:mb-2 line-clamp-2">
+                      <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 mb-1.5 sm:mb-2 min-h-[40px] sm:min-h-[48px] lg:min-h-[56px] line-clamp-2">
                         {report.title}
                       </h3>
                       <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 mb-3 sm:mb-4">
@@ -474,11 +438,11 @@ function AdminReportPage() {
                       </p>
                     </div>
 
-                    {/* Footer Button */}
+                    {/* Footer Button - Using Settings page styling */}
                     <div className="border-t border-gray-200">
                       <Link
                         to={report.path}
-                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-blue-600 text-white flex items-center justify-center gap-1.5 sm:gap-2 hover:bg-blue-700 transition-colors duration-200 font-medium text-xs sm:text-sm group-hover:bg-blue-700"
+                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-blue-600 text-white flex items-center justify-center gap-1.5 sm:gap-2 hover:bg-blue-700 transition-colors duration-200 font-medium text-xs sm:text-sm"
                       >
                         View Report
                         <ArrowRightIcon className="w-3 h-3 sm:w-4 sm:h-4" />

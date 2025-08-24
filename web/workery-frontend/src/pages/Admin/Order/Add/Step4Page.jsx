@@ -7,15 +7,21 @@ import {
   useOrderCreationStorage,
   useOrderManager,
 } from "../../../../services/Services";
-import { theme, globalStyles } from "../../../../constants/Theme";
 import {
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Breadcrumb,
-  Modal,
-} from "../../../../components/UI";
+  ChevronRightIcon,
+  ArrowLeftIcon,
+  CheckIcon,
+  ChartBarIcon,
+  WrenchScrewdriverIcon,
+  PlusIcon,
+  ExclamationCircleIcon,
+  PencilSquareIcon,
+  UserIcon,
+  ClipboardDocumentIcon,
+  CalendarIcon,
+  CheckCircleIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 import {
   TagsDisplay,
   SkillSetsDisplay,
@@ -28,7 +34,7 @@ function AdminOrderAddStep4Page() {
   const navigate = useNavigate();
 
   const [errors, setErrors] = useState({});
-  const [isFetching, setFetching] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [showCancelWarning, setShowCancelWarning] = useState(false);
 
   // Get existing order state
@@ -41,7 +47,7 @@ function AdminOrderAddStep4Page() {
   const onSubmitClick = async (e) => {
     e.preventDefault();
     console.log("onSubmitClick: Beginning...");
-    setFetching(true);
+    setIsLoading(true);
     setErrors({});
 
     try {
@@ -68,13 +74,15 @@ function AdminOrderAddStep4Page() {
       orderCreationStorage.clearOrderCreation();
 
       // Redirect to the order detail page
-      navigate(`/admin/order/${response.wjid || response.id}`);
+      navigate(`/admin/order/${response.wjid || response.id}`, {
+        state: { successMessage: "Order created successfully!" },
+      });
     } catch (error) {
       console.error("Failed to create order:", error);
       setErrors(error);
       window.scrollTo(0, 0);
     } finally {
-      setFetching(false);
+      setIsLoading(false);
     }
   };
 
@@ -100,15 +108,7 @@ function AdminOrderAddStep4Page() {
     return () => {
       mounted = false;
     };
-  }, []);
-
-  if (isFetching) {
-    return <Loading message="Submitting order..." />;
-  }
-
-  if (!orderData) {
-    return <Loading message="Loading order data..." />;
-  }
+  }, [authManager, navigate, orderData]);
 
   // Format date for display
   const formatDate = (dateString) => {
@@ -121,262 +121,410 @@ function AdminOrderAddStep4Page() {
     }
   };
 
+  const handleCancelClick = () => {
+    setShowCancelWarning(true);
+  };
+
+  const handleConfirmCancel = () => {
+    orderCreationStorage.clearOrderCreation();
+    navigate("/admin/orders");
+  };
+
+  if (!orderData) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <span className="ml-3 text-gray-600">Loading order data...</span>
+      </div>
+    );
+  }
+
   return (
-    <div style={globalStyles.container}>
-      <Breadcrumb
-        items={[
-          { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
-          { label: "Orders", path: "/admin/orders", icon: "🔧" },
-          { label: "New", icon: "➕" },
-        ]}
-      />
-
-      <h1>Orders</h1>
-      <h4>New Order</h4>
-      <hr />
-
-      {/* Progress Wizard */}
-      <Card title="Step 4 of 4" style={{ backgroundColor: "#d4edda" }}>
-        <progress value="100" max="100" style={{ width: "100%" }}>
-          100%
-        </progress>
-      </Card>
-
-      <br />
-
-      {/* Cancel Warning Modal */}
-      <Modal
-        isOpen={showCancelWarning}
-        onClose={() => setShowCancelWarning(false)}
-        title="Are you sure?"
-        footer={
-          <>
-            <Button
-              onClick={() => setShowCancelWarning(false)}
-              variant="secondary"
-            >
-              No
-            </Button>
-            <Button
-              onClick={() => {
-                orderCreationStorage.clearOrderCreation();
-                navigate("/admin/orders");
-              }}
-              variant="success"
-            >
-              Yes
-            </Button>
-          </>
-        }
-      >
-        <p>
-          Your Order record will be cancelled and your work will be lost. This
-          cannot be undone. Do you want to continue?
-        </p>
-      </Modal>
-
-      {/* Review */}
-      <Card title="📝 Review">
-        <p style={{ color: "#666", marginBottom: "20px" }}>
-          Please review the following order summary table before submitting this
-          order into the system.
-        </p>
-
-        {errors.message && <Alert type="error">{errors.message}</Alert>}
-        {errors.detail && <Alert type="error">{errors.detail}</Alert>}
-
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
-          <thead>
-            <tr style={{ backgroundColor: "#333", color: "white" }}>
-              <th colSpan="2" style={{ padding: "10px", textAlign: "left" }}>
-                Summary
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <th
-                style={{
-                  width: "30%",
-                  padding: "10px",
-                  backgroundColor: "#f5f5f5",
-                  textAlign: "left",
-                  borderBottom: "1px solid #ddd",
-                }}
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        {/* Breadcrumb */}
+        <nav className="flex mb-4" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+            <li className="inline-flex items-center">
+              <Link
+                to="/admin/dashboard"
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
               >
-                Customer:
-              </th>
-              <td style={{ padding: "10px", borderBottom: "1px solid #ddd" }}>
+                <ChartBarIcon className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Dashboard</span>
+              </Link>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
                 <Link
-                  to={`/admin/customer/${orderData.customerId}`}
-                  target="_blank"
-                  style={{ color: theme.colors.primary }}
+                  to="/admin/orders"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
                 >
-                  {orderData.customerFirstName} {orderData.customerLastName}
+                  <span className="inline-flex items-center">
+                    <WrenchScrewdriverIcon className="w-4 h-4 mr-2" />
+                    <span className="hidden sm:inline">Orders</span>
+                  </span>
                 </Link>
-              </td>
-            </tr>
-            <tr>
-              <th
-                style={{
-                  padding: "10px",
-                  backgroundColor: "#f5f5f5",
-                  textAlign: "left",
-                  borderBottom: "1px solid #ddd",
-                }}
-              >
-                Start Date:
-              </th>
-              <td style={{ padding: "10px", borderBottom: "1px solid #ddd" }}>
-                {formatDate(orderData.startDate)}
-              </td>
-            </tr>
-            <tr>
-              <th
-                style={{
-                  padding: "10px",
-                  backgroundColor: "#f5f5f5",
-                  textAlign: "left",
-                  borderBottom: "1px solid #ddd",
-                }}
-              >
-                Is Ongoing:
-              </th>
-              <td style={{ padding: "10px", borderBottom: "1px solid #ddd" }}>
-                {orderData.isOngoing === 1 ? (
-                  <span style={{ color: "green" }}>✓ Yes</span>
-                ) : (
-                  <span style={{ color: "red" }}>✗ No</span>
-                )}
-              </td>
-            </tr>
-            <tr>
-              <th
-                style={{
-                  padding: "10px",
-                  backgroundColor: "#f5f5f5",
-                  textAlign: "left",
-                  borderBottom: "1px solid #ddd",
-                }}
-              >
-                Is Home Support Service:
-              </th>
-              <td style={{ padding: "10px", borderBottom: "1px solid #ddd" }}>
-                {orderData.isHomeSupportService === 1 ? (
-                  <span style={{ color: "green" }}>✓ Yes</span>
-                ) : (
-                  <span style={{ color: "red" }}>✗ No</span>
-                )}
-              </td>
-            </tr>
-            <tr>
-              <th
-                style={{
-                  padding: "10px",
-                  backgroundColor: "#f5f5f5",
-                  textAlign: "left",
-                  borderBottom: "1px solid #ddd",
-                  verticalAlign: "top",
-                }}
-              >
-                Description:
-              </th>
-              <td style={{ padding: "10px", borderBottom: "1px solid #ddd" }}>
-                <div style={{ whiteSpace: "pre-wrap" }}>
-                  {orderData.description || "-"}
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <th
-                style={{
-                  padding: "10px",
-                  backgroundColor: "#f5f5f5",
-                  textAlign: "left",
-                  borderBottom: "1px solid #ddd",
-                  verticalAlign: "top",
-                }}
-              >
-                Skill Sets:
-              </th>
-              <td style={{ padding: "10px", borderBottom: "1px solid #ddd" }}>
-                {orderData.skillSets && orderData.skillSets.length > 0 ? (
-                  <SkillSetsDisplay
-                    values={orderData.skillSets}
-                    onUnauthorized={onUnauthorized}
-                  />
-                ) : (
-                  <span style={{ color: "#999" }}>No skill sets selected</span>
-                )}
-              </td>
-            </tr>
-            <tr>
-              <th
-                style={{
-                  padding: "10px",
-                  backgroundColor: "#f5f5f5",
-                  textAlign: "left",
-                  borderBottom: "1px solid #ddd",
-                  verticalAlign: "top",
-                }}
-              >
-                Additional Comment:
-              </th>
-              <td style={{ padding: "10px", borderBottom: "1px solid #ddd" }}>
-                <div style={{ whiteSpace: "pre-wrap" }}>
-                  {orderData.additionalComment || "-"}
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <th
-                style={{
-                  padding: "10px",
-                  backgroundColor: "#f5f5f5",
-                  textAlign: "left",
-                  borderBottom: "1px solid #ddd",
-                  verticalAlign: "top",
-                }}
-              >
-                Tags:
-              </th>
-              <td style={{ padding: "10px", borderBottom: "1px solid #ddd" }}>
-                {orderData.tags && orderData.tags.length > 0 ? (
-                  <TagsDisplay
-                    values={orderData.tags}
-                    onUnauthorized={onUnauthorized}
-                  />
-                ) : (
-                  <span style={{ color: "#999" }}>No tags selected</span>
-                )}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+              </div>
+            </li>
+            <li aria-current="page">
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
+                  <PlusIcon className="w-4 h-4 mr-2" />
+                  Add
+                </span>
+              </div>
+            </li>
+          </ol>
+        </nav>
 
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginTop: "30px",
-            paddingTop: "20px",
-            borderTop: "2px solid #eee",
-          }}
-        >
-          <Link to="/admin/orders/add/step-3">
-            <Button type="button" variant="secondary">
-              ← Back
-            </Button>
-          </Link>
-          <Button
-            onClick={onSubmitClick}
-            variant="success"
-            disabled={isFetching}
-          >
-            {isFetching ? "Submitting..." : "✓ Submit Order"}
-          </Button>
+        {/* Page Title */}
+        <div className="mb-6">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+            <PlusIcon className="w-6 sm:w-7 h-6 sm:h-7 mr-2 sm:mr-3 text-blue-600" />
+            Add New Order
+          </h1>
         </div>
-      </Card>
+
+        {/* Wizard Steps - Responsive Design */}
+        <div className="mb-6">
+          {/* Desktop/Tablet View (768px and up) */}
+          <div className="hidden md:flex items-center justify-center overflow-x-auto">
+            <div className="flex items-center">
+              {/* Steps 1-3 Complete */}
+              {[1, 2, 3].map((step, index) => (
+                <React.Fragment key={step}>
+                  <div className="flex items-center">
+                    <div className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-green-600 rounded-full">
+                      <CheckIcon className="w-4 h-4 lg:w-6 lg:h-6 text-white" />
+                    </div>
+                    <div className="ml-2 lg:ml-3">
+                      <p className="text-xs lg:text-sm font-medium text-gray-900">
+                        {step === 1 && "Search"}
+                        {step === 2 && "Customer"}
+                        {step === 3 && "Details"}
+                      </p>
+                      <p className="text-xs text-gray-500 hidden xl:block">
+                        Complete
+                      </p>
+                    </div>
+                  </div>
+                  {index < 3 && (
+                    <div className="mx-1 lg:mx-2 w-8 lg:w-12 h-0.5 bg-green-600"></div>
+                  )}
+                </React.Fragment>
+              ))}
+
+              {/* Step 4 - Active */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-blue-600 rounded-full">
+                  <span className="text-white font-semibold text-sm lg:text-base">
+                    4
+                  </span>
+                </div>
+                <div className="ml-2 lg:ml-3">
+                  <p className="text-xs lg:text-sm font-medium text-gray-900">
+                    Review
+                  </p>
+                  <p className="text-xs text-gray-500 hidden xl:block">
+                    Submit
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Mobile View (below 768px) */}
+          <div className="md:hidden">
+            <div className="flex items-center justify-between px-4">
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
+                  <span className="text-white font-semibold">4</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">
+                    Step 4 of 4
+                  </p>
+                  <p className="text-xs text-gray-500">Review & Submit</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-gray-500">Progress</p>
+                <div className="flex items-center mt-1">
+                  <div className="flex">
+                    {[1, 2, 3].map((step) => (
+                      <div
+                        key={step}
+                        className="w-2 h-2 bg-green-600 rounded-full mr-1"
+                      ></div>
+                    ))}
+                    <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Cancel Warning Modal */}
+        {showCancelWarning && (
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+              <div className="mt-3">
+                <div className="flex items-center mb-4">
+                  <ExclamationCircleIcon className="w-6 h-6 text-yellow-500 mr-2" />
+                  <h3 className="text-lg font-medium text-gray-900">
+                    Are you sure?
+                  </h3>
+                </div>
+                <p className="text-sm text-gray-500 mb-4">
+                  Your Order record will be cancelled and your work will be
+                  lost. This cannot be undone. Do you want to continue?
+                </p>
+                <div className="flex justify-end space-x-3">
+                  <button
+                    onClick={() => setShowCancelWarning(false)}
+                    className="px-4 py-2 bg-gray-300 text-gray-800 text-sm font-medium rounded-md hover:bg-gray-400"
+                  >
+                    No
+                  </button>
+                  <button
+                    onClick={handleConfirmCancel}
+                    className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700"
+                  >
+                    Yes
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Main Content */}
+        <div className="bg-white shadow-sm rounded-lg">
+          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+              <CheckCircleIcon className="w-5 h-5 mr-2" />
+              Review and Submit
+            </h2>
+          </div>
+
+          <div className="p-4 sm:p-6">
+            <p className="text-sm sm:text-base text-gray-600 mb-6">
+              Please review the following order summary before submitting this
+              order into the system. If everything looks correct, click the
+              <strong> Submit</strong> button to create the new order.
+            </p>
+
+            {errors.message && (
+              <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center">
+                <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+                <span className="text-sm sm:text-base">{errors.message}</span>
+              </div>
+            )}
+            {errors.detail && (
+              <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center">
+                <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+                <span className="text-sm sm:text-base">{errors.detail}</span>
+              </div>
+            )}
+
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <span className="ml-3 text-gray-600">Creating order...</span>
+              </div>
+            ) : (
+              <div className="max-w-3xl mx-auto">
+                <div className="space-y-6 sm:space-y-8">
+                  {/* Customer Information Section */}
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
+                        <UserIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600" />
+                        Customer Information
+                      </h3>
+                      <Link
+                        to="/admin/orders/add/step-2"
+                        className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
+                      >
+                        <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                        Edit
+                      </Link>
+                    </div>
+
+                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Customer:
+                          </span>
+                          <p className="text-xs sm:text-sm text-gray-900">
+                            <Link
+                              to={`/admin/customer/${orderData.customerId}`}
+                              target="_blank"
+                              className="text-blue-600 hover:text-blue-800"
+                            >
+                              {orderData.customerFirstName}{" "}
+                              {orderData.customerLastName}
+                            </Link>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Order Details Section */}
+                  <div className="pt-6 border-t">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
+                        <ClipboardDocumentIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-purple-600" />
+                        Order Details
+                      </h3>
+                      <Link
+                        to="/admin/orders/add/step-3"
+                        className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
+                      >
+                        <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                        Edit
+                      </Link>
+                    </div>
+
+                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-3">
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Start Date:
+                          </span>
+                          <p className="text-xs sm:text-sm text-gray-900 flex items-center">
+                            <CalendarIcon className="w-4 h-4 mr-1 text-gray-400" />
+                            {formatDate(orderData.startDate)}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Is Ongoing:
+                          </span>
+                          <p className="text-xs sm:text-sm">
+                            {orderData.isOngoing === 1 ? (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <CheckIcon className="w-3 h-3 mr-1" />
+                                Yes
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                <XMarkIcon className="w-3 h-3 mr-1" />
+                                No
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Is Home Support Service:
+                          </span>
+                          <p className="text-xs sm:text-sm">
+                            {orderData.isHomeSupportService === 1 ? (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <CheckIcon className="w-3 h-3 mr-1" />
+                                Yes
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                <XMarkIcon className="w-3 h-3 mr-1" />
+                                No
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                      </div>
+
+                      {orderData.description && (
+                        <div className="mt-3">
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Description:
+                          </span>
+                          <div className="mt-1 text-xs sm:text-sm text-gray-900 bg-white p-3 rounded border border-gray-200">
+                            <p className="whitespace-pre-wrap">
+                              {orderData.description}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Skill Sets Display */}
+                      {orderData.skillSets &&
+                        orderData.skillSets.length > 0 && (
+                          <div className="mt-3">
+                            <SkillSetsDisplay
+                              values={orderData.skillSets}
+                              label="Skill Sets"
+                              variant="primary"
+                              onUnauthorized={onUnauthorized}
+                            />
+                          </div>
+                        )}
+
+                      {orderData.additionalComment && (
+                        <div className="mt-3">
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Additional Comments:
+                          </span>
+                          <div className="mt-1 text-xs sm:text-sm text-gray-900 bg-white p-3 rounded border border-gray-200">
+                            <p className="whitespace-pre-wrap">
+                              {orderData.additionalComment}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Tags Display */}
+                      {orderData.tags && orderData.tags.length > 0 && (
+                        <div className="mt-3">
+                          <TagsDisplay
+                            values={orderData.tags}
+                            label="Tags"
+                            variant="success"
+                            onUnauthorized={onUnauthorized}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Form Actions */}
+                <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={handleCancelClick}
+                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    <XMarkIcon className="w-4 h-4 mr-2" />
+                    Cancel
+                  </button>
+                  <Link
+                    to="/admin/orders/add/step-3"
+                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    <ArrowLeftIcon className="w-4 h-4 mr-2" />
+                    Back
+                  </Link>
+                  <button
+                    onClick={onSubmitClick}
+                    disabled={isLoading}
+                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+                  >
+                    <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
+                    {isLoading ? "Submitting..." : "Submit Order"}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,22 +1,24 @@
 // File Path: web/workery-frontend/src/pages/Admin/Customer/Detail/More/Ban/Page.jsx
 
 import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
+import {
+  ChartBarIcon,
+  UserIcon,
+  ChevronLeftIcon,
+  ExclamationTriangleIcon,
+  ShieldExclamationIcon,
+  XMarkIcon,
+  InformationCircleIcon,
+  EllipsisHorizontalIcon,
+  NoSymbolIcon,
+  CheckCircleIcon,
+  ExclamationCircleIcon,
+} from "@heroicons/react/24/outline";
 import {
   useCustomerManager,
   useAuthManager,
 } from "../../../../../../services/Services";
-import { theme, globalStyles } from "../../../../../../constants/Theme";
-import {
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Breadcrumb,
-  Modal,
-  Input,
-  Select,
-} from "../../../../../../components/UI";
 
 // Banning reason options (based on typical customer ban reasons)
 const CUSTOMER_BANNING_REASON_OPTIONS = [
@@ -31,27 +33,33 @@ const CUSTOMER_BANNING_REASON_OPTIONS = [
 ];
 
 function AdminCustomerDetailMoreBanPage() {
+  // URL Parameters
   const { cid } = useParams();
+
+  // Navigation
   const navigate = useNavigate();
+
+  // Services
   const customerManager = useCustomerManager();
   const authManager = useAuthManager();
 
-  const [customer, setCustomer] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // Component states
   const [errors, setErrors] = useState({});
+  const [isFetching, setFetching] = useState(false);
+  const [customer, setCustomer] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
-
-  // Form fields
   const [banningReason, setBanningReason] = useState("");
   const [banningReasonOther, setBanningReasonOther] = useState("");
+  const [isBanning, setIsBanning] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
+  // Unauthorized callback
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
   };
 
-  // Fetch customer details
+  // Load customer details
   useEffect(() => {
     let mounted = true;
 
@@ -61,26 +69,33 @@ function AdminCustomerDetailMoreBanPage() {
         return;
       }
 
-      try {
-        setIsLoading(true);
-        setErrors({});
+      console.log("Fetching customer with ID:", cid);
+      setFetching(true);
+      setErrors({});
 
-        // Using callback-based approach similar to old code structure
+      try {
+        // Using callback-based approach for consistency with existing customer manager
         await customerManager.getCustomerDetailWithCallbacks(
           cid,
           (customerData) => {
+            console.log("Customer data received:", customerData);
             if (mounted) {
               setCustomer(customerData);
+              setIsInitialized(true);
             }
           },
           (error) => {
+            console.error("Failed to fetch customer:", error);
             if (mounted) {
-              setErrors(error);
+              setErrors(
+                error || { message: "Failed to load customer details" },
+              );
+              setIsInitialized(true);
             }
           },
           () => {
             if (mounted) {
-              setIsLoading(false);
+              setFetching(false);
             }
           },
           onUnauthorized,
@@ -88,8 +103,9 @@ function AdminCustomerDetailMoreBanPage() {
       } catch (error) {
         console.error("Failed to fetch customer:", error);
         if (mounted) {
-          setErrors({ general: "Failed to load customer information" });
-          setIsLoading(false);
+          setErrors({ message: "Failed to load customer information" });
+          setFetching(false);
+          setIsInitialized(true);
         }
       }
     };
@@ -97,8 +113,9 @@ function AdminCustomerDetailMoreBanPage() {
     if (cid) {
       fetchCustomer();
     } else {
-      setErrors({ general: "Customer ID is required" });
-      setIsLoading(false);
+      console.error("No customer ID provided");
+      setErrors({ message: "No customer ID provided" });
+      setIsInitialized(true);
     }
 
     return () => {
@@ -106,264 +123,532 @@ function AdminCustomerDetailMoreBanPage() {
     };
   }, [cid, customerManager, authManager, navigate]);
 
-  // Handle form validation
-  const validateForm = () => {
-    const newErrors = {};
-
+  // Handle ban confirmation
+  const handleConfirmBan = async () => {
+    // Validate reason
     if (!banningReason) {
-      newErrors.banningReason = "Please select a banning reason";
+      setErrors({ banningReason: "Please select a banning reason" });
+      return;
     }
 
     if (parseInt(banningReason) === 1 && !banningReasonOther.trim()) {
-      newErrors.banningReasonOther = "Please specify the banning reason";
+      setErrors({ banningReasonOther: "Please specify the banning reason" });
+      return;
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+    setShowConfirmModal(false);
+    setErrors({});
+    setIsBanning(true);
 
-  // Handle ban customer
-  const handleBanCustomer = async () => {
     try {
-      setIsSubmitting(true);
-      setErrors({});
-
       const banData = {
         customer_id: cid,
         banning_reason: parseInt(banningReason),
         banning_reason_other: banningReasonOther.trim(),
       };
 
+      console.log("Ban data:", banData);
+
       // Using callback-based approach for consistency
       await customerManager.banCustomerWithCallbacks(
         banData,
         (response) => {
           // Success callback
-          setSuccessMessage("Customer banned successfully");
+          setSuccessMessage("Customer has been successfully banned");
 
-          // Show success message briefly then redirect
+          // Navigate to customer more page after a short delay
           setTimeout(() => {
             navigate(`/admin/customer/${cid}/more`);
           }, 2000);
-
-          setShowConfirmModal(false);
         },
         (error) => {
           // Error callback
           console.error("Failed to ban customer:", error);
-          setErrors(error);
-          setShowConfirmModal(false);
+          setErrors(error || { message: "Failed to ban customer" });
         },
         () => {
           // Done callback
-          setIsSubmitting(false);
+          setIsBanning(false);
         },
         onUnauthorized,
       );
     } catch (error) {
       console.error("Failed to ban customer:", error);
-      setErrors({ general: "Failed to ban customer" });
-      setIsSubmitting(false);
+      setErrors({ message: "Failed to ban customer" });
+      setIsBanning(false);
     }
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
-    if (validateForm()) {
-      setShowConfirmModal(true);
-    }
+  // Format phone number for display
+  const formatPhone = (phone) => {
+    if (!phone) return "N/A";
+    return phone.replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3");
   };
 
-  if (isLoading) {
-    return (
-      <div style={globalStyles.container}>
-        <Loading message="Loading customer information..." />
-      </div>
-    );
-  }
+  // Check if already banned
+  const isAlreadyBanned = customer?.status === 100 || customer?.isBanned;
 
-  if (!customer && !isLoading) {
+  // Render loading state
+  if (isFetching) {
     return (
-      <div style={globalStyles.container}>
-        <Alert type="error">{errors.general || "Customer not found"}</Alert>
-        <div style={{ marginTop: "20px" }}>
-          <Button
-            onClick={() => navigate("/admin/customers")}
-            variant="outline"
-          >
-            ← Back to Customers
-          </Button>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading customer details...</p>
+          </div>
         </div>
       </div>
     );
   }
 
-  const breadcrumbItems = [
-    { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
-    { label: "Customers", path: "/admin/customers", icon: "👤" },
-    { label: "Detail (More)", path: `/admin/customer/${cid}/more`, icon: "ℹ️" },
-    { label: "Ban", icon: "🚫" },
-  ];
+  // Render error state
+  if (isInitialized && !customer && Object.keys(errors).length > 0) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className="flex">
+            <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+            <div>
+              {errors.message ||
+                errors.detail ||
+                "Failed to load customer details. Please try again."}
+            </div>
+          </div>
+        </div>
+        <div className="mt-6">
+          <Link to={`/admin/customer/${cid}/more`}>
+            <button className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+              <ChevronLeftIcon className="w-4 h-4 mr-2" />
+              Back to More
+            </button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render main content until we have customer data
+  if (!customer) {
+    return null;
+  }
 
   return (
-    <div style={globalStyles.container}>
-      <Breadcrumb items={breadcrumbItems} />
-
-      {/* Page banners */}
-      {customer?.status === 2 && (
-        <Alert type="info">Customer is archived</Alert>
-      )}
-      {customer?.isBanned && (
-        <Alert type="error">Customer is already banned</Alert>
-      )}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Breadcrumb */}
+      <nav className="flex mb-6" aria-label="Breadcrumb">
+        <ol className="inline-flex items-center space-x-1 md:space-x-3">
+          <li className="inline-flex items-center">
+            <Link
+              to="/admin/dashboard"
+              className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+            >
+              <ChartBarIcon className="w-4 h-4 mr-2" />
+              Dashboard
+            </Link>
+          </li>
+          <li>
+            <div className="flex items-center">
+              <span className="mx-2 text-gray-400">/</span>
+              <Link
+                to="/admin/customers"
+                className="text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <span className="inline-flex items-center">
+                  <UserIcon className="w-4 h-4 mr-2" />
+                  Customers
+                </span>
+              </Link>
+            </div>
+          </li>
+          <li>
+            <div className="flex items-center">
+              <span className="mx-2 text-gray-400">/</span>
+              <Link
+                to={`/admin/customer/${cid}`}
+                className="text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <span className="inline-flex items-center">
+                  <InformationCircleIcon className="w-4 h-4 mr-2" />
+                  Detail
+                </span>
+              </Link>
+            </div>
+          </li>
+          <li>
+            <div className="flex items-center">
+              <span className="mx-2 text-gray-400">/</span>
+              <Link
+                to={`/admin/customer/${cid}/more`}
+                className="text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <span className="inline-flex items-center">
+                  <EllipsisHorizontalIcon className="w-4 h-4 mr-2" />
+                  More
+                </span>
+              </Link>
+            </div>
+          </li>
+          <li aria-current="page">
+            <div className="flex items-center">
+              <span className="mx-2 text-gray-400">/</span>
+              <span className="text-sm font-medium text-gray-500 inline-flex items-center">
+                <NoSymbolIcon className="w-4 h-4 mr-2" />
+                Ban
+              </span>
+            </div>
+          </li>
+        </ol>
+      </nav>
 
       {/* Page Title */}
-      <h1 style={{ fontSize: "28px", marginBottom: "10px" }}>👤 Customer</h1>
-      <h2 style={{ fontSize: "20px", color: "#666", marginBottom: "30px" }}>
-        ℹ️ Detail (More)
-      </h2>
+      <div className="mb-6">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center">
+          <UserIcon className="w-6 h-6 md:w-8 md:h-8 mr-3 text-blue-600" />
+          Customer: {customer.firstName} {customer.lastName}
+        </h1>
+        <p className="mt-1 text-sm text-gray-600 flex items-center">
+          <ShieldExclamationIcon className="w-4 h-4 mr-1" />
+          Ban Customer
+        </p>
+      </div>
 
-      {/* Success message */}
-      {successMessage && <Alert type="success">{successMessage}</Alert>}
+      {/* Success Message */}
+      {successMessage && (
+        <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center">
+          <CheckCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+          {successMessage}
+        </div>
+      )}
 
-      <Card title="🚫 Ban Customer">
-        {/* Error display */}
-        {Object.keys(errors).length > 0 && (
-          <Alert type="error">
-            <ul style={{ margin: 0, paddingLeft: "20px" }}>
-              {Object.entries(errors).map(([field, message]) => (
-                <li key={field}>
-                  {field === "general" ? message : `${field}: ${message}`}
-                </li>
-              ))}
-            </ul>
-          </Alert>
+      {/* Error Messages */}
+      {errors &&
+        (errors.banningReason ||
+          errors.banningReasonOther ||
+          errors.message) && (
+          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            <div className="flex">
+              <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+              <div>
+                {errors.banningReason ||
+                  errors.banningReasonOther ||
+                  errors.message}
+              </div>
+            </div>
+          </div>
         )}
 
-        {/* Warning message */}
-        <Alert type="warning" style={{ marginBottom: "30px" }}>
-          <h4 style={{ margin: "0 0 10px 0" }}>⚠️ Warning</h4>
-          <p style={{ margin: 0 }}>
-            You are about to <strong>ban</strong> this customer from our system.
-            This means the customer will still appear in search results but will
-            have the
-            <em> banned banner displayed</em>. Are you sure you want to
-            continue?
-          </p>
-        </Alert>
+      {/* Main Content Card */}
+      <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+        <div className="p-6">
+          {/* Warning Message */}
+          <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6 mb-6">
+            <div className="flex items-start">
+              <ExclamationTriangleIcon className="w-6 h-6 text-red-600 mt-1 mr-3 flex-shrink-0" />
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-red-900 mb-3">
+                  Ban Customer - Severe Action Warning
+                </h3>
+                <p className="text-red-800 mb-3">
+                  You are about to <strong>permanently ban</strong> this
+                  customer. This means:
+                </p>
+                <ul className="space-y-2 text-red-700 ml-4">
+                  <li className="flex items-start">
+                    <span className="text-red-500 mr-2">•</span>
+                    The customer will be <strong>immediately</strong> logged out
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-500 mr-2">•</span>
+                    They will <strong>not</strong> be able to log in again
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-500 mr-2">•</span>
+                    All access to the system will be{" "}
+                    <strong>permanently revoked</strong>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-500 mr-2">•</span>
+                    The customer will not be able to place or manage any work
+                    orders
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-500 mr-2">•</span>
+                    The customer will still appear in search results with a{" "}
+                    <strong>banned banner displayed</strong>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-red-500 mr-2">•</span>
+                    This action is <strong>irreversible</strong> without system
+                    administrator intervention
+                  </li>
+                </ul>
+                <p className="mt-4 font-semibold text-red-900">
+                  This action should only be taken for serious violations or
+                  security concerns.
+                </p>
+              </div>
+            </div>
+          </div>
 
-        <form onSubmit={handleSubmit}>
-          {/* Banning Reason */}
-          <Select
-            label="Banning Reason"
-            name="banningReason"
-            value={banningReason}
-            onChange={(e) => setBanningReason(e.target.value)}
-            options={CUSTOMER_BANNING_REASON_OPTIONS}
-            error={errors.banningReason}
-            required
-          />
+          {/* Customer Information */}
+          <div className="bg-gray-50 rounded-lg p-6 mb-6">
+            <h4 className="text-lg font-semibold text-gray-900 mb-4">
+              Customer Information:
+            </h4>
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Name:</dt>
+                <dd className="mt-1 text-sm text-gray-900">
+                  {customer.firstName} {customer.lastName}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Email:</dt>
+                <dd className="mt-1 text-sm text-gray-900">{customer.email}</dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500">Phone:</dt>
+                <dd className="mt-1 text-sm text-gray-900">
+                  {formatPhone(customer.phone)}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-sm font-medium text-gray-500">
+                  Current Status:
+                </dt>
+                <dd className="mt-1 text-sm">
+                  {isAlreadyBanned ? (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                      <NoSymbolIcon className="w-4 h-4 mr-1" />
+                      Banned
+                    </span>
+                  ) : customer.status === 1 ? (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      Active
+                    </span>
+                  ) : customer.status === 2 ? (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                      Archived
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                      Unknown
+                    </span>
+                  )}
+                </dd>
+              </div>
+              {customer.typeOf && (
+                <div>
+                  <dt className="text-sm font-medium text-gray-500">Type:</dt>
+                  <dd className="mt-1 text-sm text-gray-900">
+                    {customer.typeOf === 1
+                      ? "Residential"
+                      : customer.typeOf === 2
+                        ? "Commercial"
+                        : "Unknown"}
+                  </dd>
+                </div>
+              )}
+            </dl>
+          </div>
 
-          {/* Other Reason Text Field (shown when "Other" is selected) */}
-          {parseInt(banningReason) === 1 && (
-            <Input
-              label="Banning Reason (Other)"
-              name="banningReasonOther"
-              value={banningReasonOther}
-              onChange={(e) => setBanningReasonOther(e.target.value)}
-              placeholder="Please write a short reason"
-              error={errors.banningReasonOther}
-              required
-            />
+          {/* Ban Reason Form */}
+          {!isAlreadyBanned && (
+            <>
+              {/* Banning Reason Dropdown */}
+              <div className="mb-4">
+                <label
+                  htmlFor="banningReason"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
+                  Banning Reason <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="banningReason"
+                  name="banningReason"
+                  value={banningReason}
+                  onChange={(e) => {
+                    setBanningReason(e.target.value);
+                    setErrors({}); // Clear errors when selecting
+                  }}
+                  disabled={isBanning}
+                  className={`block w-full rounded-lg border ${
+                    errors.banningReason ? "border-red-300" : "border-gray-300"
+                  } px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed`}
+                >
+                  {CUSTOMER_BANNING_REASON_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Other Reason Text Field */}
+              {parseInt(banningReason) === 1 && (
+                <div className="mb-6">
+                  <label
+                    htmlFor="banningReasonOther"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Banning Reason (Other){" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    id="banningReasonOther"
+                    name="banningReasonOther"
+                    rows={5}
+                    value={banningReasonOther}
+                    onChange={(e) => {
+                      setBanningReasonOther(e.target.value);
+                      setErrors({}); // Clear errors when typing
+                    }}
+                    disabled={isBanning}
+                    className={`block w-full rounded-lg border ${
+                      errors.banningReasonOther
+                        ? "border-red-300"
+                        : "border-gray-300"
+                    } px-3 py-2 shadow-sm focus:border-blue-500 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed`}
+                    placeholder="Please provide a detailed reason for banning this customer..."
+                    maxLength={500}
+                  />
+                  <p className="mt-2 text-sm text-gray-500">
+                    This reason will be recorded in the system logs and may be
+                    reviewed by administrators.
+                  </p>
+                </div>
+              )}
+            </>
           )}
 
-          {/* Action buttons */}
-          <div
-            style={{
-              display: "flex",
-              gap: "15px",
-              flexWrap: "wrap",
-              paddingTop: "30px",
-              borderTop: "1px solid #eee",
-            }}
-          >
-            <Button
-              onClick={() => navigate(`/admin/customer/${cid}/more`)}
-              variant="secondary"
-              style={{ minWidth: "200px" }}
-            >
-              ← Back to Detail
-            </Button>
-            <Button
-              type="submit"
-              variant="danger"
-              disabled={isSubmitting}
-              style={{ minWidth: "200px" }}
-            >
-              {isSubmitting ? "Processing..." : "Confirm and Ban"}
-            </Button>
-          </div>
-        </form>
-      </Card>
+          {/* Already Banned Message */}
+          {isAlreadyBanned && (
+            <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg flex items-center">
+              <InformationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+              This customer is already banned. No further action is needed.
+            </div>
+          )}
 
-      {/* Confirmation Modal */}
-      <Modal
-        isOpen={showConfirmModal}
-        onClose={() => !isSubmitting && setShowConfirmModal(false)}
-        title="Confirm Ban"
-        footer={
-          <>
-            <Button
-              onClick={() => setShowConfirmModal(false)}
-              variant="secondary"
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleBanCustomer}
-              variant="danger"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Banning..." : "Ban Customer"}
-            </Button>
-          </>
-        }
-      >
-        <div style={{ padding: "10px 0" }}>
-          <p style={{ margin: "0 0 15px 0", fontSize: "16px" }}>
-            Are you absolutely sure you want to <strong>ban</strong> this
-            customer?
-          </p>
-          <div
-            style={{
-              backgroundColor: "#f8f9fa",
-              padding: "15px",
-              borderRadius: "4px",
-              marginBottom: "15px",
-            }}
-          >
-            <p style={{ margin: "0 0 10px 0", fontWeight: "bold" }}>
-              Banning Reason:{" "}
-              {
-                CUSTOMER_BANNING_REASON_OPTIONS.find(
-                  (opt) => opt.value == banningReason,
-                )?.label
-              }
-            </p>
-            {parseInt(banningReason) === 1 && banningReasonOther && (
-              <p style={{ margin: 0, fontStyle: "italic" }}>
-                Additional Details: {banningReasonOther}
-              </p>
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t border-gray-200">
+            <Link to={`/admin/customer/${cid}/more`}>
+              <button
+                disabled={isBanning}
+                className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:bg-gray-100 disabled:cursor-not-allowed"
+              >
+                <ChevronLeftIcon className="w-4 h-4 mr-2" />
+                Back to More
+              </button>
+            </Link>
+
+            {!isAlreadyBanned && (
+              <button
+                onClick={() => setShowConfirmModal(true)}
+                disabled={isBanning || !banningReason}
+                className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                <NoSymbolIcon className="w-4 h-4 mr-2" />
+                {isBanning ? "Processing..." : "Proceed with Ban"}
+              </button>
             )}
           </div>
-          <p style={{ margin: 0, color: "#666", fontSize: "14px" }}>
-            This will mark the customer as banned and display a warning banner
-            on their profile.
-          </p>
         </div>
-      </Modal>
+      </div>
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+            {/* Backdrop */}
+            <div
+              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              onClick={() => setShowConfirmModal(false)}
+            ></div>
+
+            {/* Modal Content */}
+            <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+              <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                <div className="sm:flex sm:items-start">
+                  <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <ExclamationTriangleIcon
+                      className="h-6 w-6 text-red-600"
+                      aria-hidden="true"
+                    />
+                  </div>
+                  <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                    <h3 className="text-lg font-semibold leading-6 text-gray-900">
+                      Final Ban Confirmation
+                    </h3>
+                    <div className="mt-2">
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+                        <p className="text-sm text-red-800 font-semibold">
+                          ⚠️ THIS ACTION CANNOT BE UNDONE
+                        </p>
+                      </div>
+
+                      <p className="text-sm text-gray-500 mb-3">
+                        You are about to permanently ban:
+                      </p>
+
+                      <p className="text-sm font-semibold text-gray-900 mb-3">
+                        {customer.firstName} {customer.lastName} (
+                        {customer.email})
+                      </p>
+
+                      <div className="bg-gray-50 rounded-lg p-3 mb-3">
+                        <p className="text-sm font-medium text-gray-700 mb-1">
+                          Ban Reason:
+                        </p>
+                        <p className="text-sm text-gray-600 font-semibold">
+                          {
+                            CUSTOMER_BANNING_REASON_OPTIONS.find(
+                              (opt) => opt.value == banningReason,
+                            )?.label
+                          }
+                        </p>
+                        {parseInt(banningReason) === 1 &&
+                          banningReasonOther && (
+                            <p className="text-sm text-gray-600 italic mt-1">
+                              Details: {banningReasonOther}
+                            </p>
+                          )}
+                      </div>
+
+                      <p className="text-sm text-gray-500 mb-3">
+                        This will immediately revoke all access and log the
+                        customer out of the system.
+                      </p>
+
+                      <p className="text-sm font-semibold text-red-600">
+                        Are you absolutely certain you want to proceed?
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                <button
+                  type="button"
+                  onClick={handleConfirmBan}
+                  disabled={isBanning}
+                  className="inline-flex w-full justify-center rounded-lg bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-700 sm:ml-3 sm:w-auto disabled:bg-gray-300 disabled:cursor-not-allowed"
+                >
+                  {isBanning ? "Banning..." : "Yes, Ban Customer"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmModal(false)}
+                  disabled={isBanning}
+                  className="mt-3 inline-flex w-full justify-center rounded-lg bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto disabled:bg-gray-100 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

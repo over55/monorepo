@@ -417,7 +417,7 @@ function Layout({ children }) {
 
       {/* iOS and Android specific styles */}
       {(isIOS || isAndroid) && (
-        <style jsx>{`
+        <style>{`
           /* iOS Optimizations */
           .ios-layout {
             -webkit-user-select: none;

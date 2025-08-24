@@ -1,5 +1,5 @@
 // File Path: src/pages/Anonymous/Login/Page.jsx
-// Enhanced Login Page with Modern UI/UX Features (No OAuth) - Responsive Fix
+// Enhanced Login Page with Modern UI/UX Features (No OAuth) - Desktop Fix
 
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
@@ -352,6 +352,28 @@ function LoginPage() {
     <div>
       <style>
         {`
+          /* Desktop-specific fixes */
+          @media (min-width: 1024px) {
+            .desktop-button-fix {
+              display: inline-flex !important;
+              align-items: center !important;
+              justify-content: center !important;
+              gap: 0.5rem !important;
+              white-space: nowrap !important;
+            }
+
+            .desktop-form-width {
+              width: 100%;
+              max-width: 24rem; /* 384px */
+            }
+          }
+
+          @media (min-width: 1920px) {
+            .desktop-form-width {
+              max-width: 28rem; /* 448px */
+            }
+          }
+
           /* iOS-specific styles */
           .ios-scroll-fix {
             -webkit-overflow-scrolling: touch;
@@ -537,20 +559,20 @@ function LoginPage() {
         </div>
 
         <div className="relative z-10 min-h-screen flex items-center justify-center p-4 sm:p-6 lg:p-8">
-          <div className="w-full max-w-sm sm:max-w-md lg:max-w-lg xl:max-w-md">
-            <div className="text-center mb-4 sm:mb-6 lg:mb-4 xl:mb-8 animate-fade-in ios-no-select android-no-select">
-              <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 lg:w-18 lg:h-18 xl:w-20 xl:h-20 bg-white rounded-2xl shadow-lg">
+          <div className="w-full max-w-sm sm:max-w-md desktop-form-width">
+            <div className="text-center mb-6 sm:mb-8 animate-fade-in ios-no-select android-no-select">
+              <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-white rounded-2xl shadow-lg">
                 <img
                   src="/img/workery-logo.jpeg"
                   alt="Workery"
-                  className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 xl:w-16 xl:h-16 object-contain"
+                  className="w-12 h-12 sm:w-16 sm:h-16 object-contain"
                 />
               </div>
             </div>
 
-            <Card className="backdrop-blur-sm bg-white/95 shadow-2xl animate-slide-up p-4 sm:p-6 lg:p-5 xl:p-8">
+            <Card className="backdrop-blur-sm bg-white/95 shadow-2xl animate-slide-up p-6 sm:p-8">
               {isUnauthorized === "true" && (
-                <Alert type="warning" dismissible className="mb-4 sm:mb-6">
+                <Alert type="warning" dismissible className="mb-6">
                   <div>
                     <strong className="font-semibold">Session Expired</strong>
                     <p className="mt-1">Please sign in again to continue</p>
@@ -563,7 +585,7 @@ function LoginPage() {
                   type="error"
                   dismissible
                   onDismiss={() => setErrors({})}
-                  className="mb-4 sm:mb-6"
+                  className="mb-6"
                 >
                   {errors.auth}
                 </Alert>
@@ -572,12 +594,12 @@ function LoginPage() {
               <form
                 id="login-form"
                 onSubmit={handleSubmit}
-                className="space-y-3 sm:space-y-4 lg:space-y-3 xl:space-y-6 ios-keyboard-adjust android-keyboard-adjust mobile-keyboard-adjust"
+                className="space-y-5 ios-keyboard-adjust android-keyboard-adjust mobile-keyboard-adjust"
               >
                 <div
                   className={`transition-all duration-200 ${focusedField === "email" ? "scale-[1.02]" : ""}`}
                 >
-                  <label className="block text-sm sm:text-base font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Email Address
                     <span className="text-red-500 ml-1">*</span>
                   </label>
@@ -607,8 +629,8 @@ function LoginPage() {
                       spellCheck="false"
                       inputMode="email"
                       className={`
-                        w-full pl-10 pr-4 py-3 sm:py-4 lg:py-3 xl:py-4
-                        text-base sm:text-lg
+                        w-full pl-10 pr-4 py-3
+                        text-base
                         border rounded-lg
                         transition-all duration-200
                         placeholder:text-gray-400
@@ -634,7 +656,7 @@ function LoginPage() {
                 <div
                   className={`transition-all duration-200 ${focusedField === "password" ? "scale-[1.02]" : ""}`}
                 >
-                  <label className="block text-sm sm:text-base font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Password
                     <span className="text-red-500 ml-1">*</span>
                   </label>
@@ -662,8 +684,8 @@ function LoginPage() {
                       autoCorrect="off"
                       spellCheck="false"
                       className={`
-                        w-full pl-10 pr-12 py-3 sm:py-4 lg:py-3 xl:py-4
-                        text-base sm:text-lg
+                        w-full pl-10 pr-12 py-3
+                        text-base
                         border rounded-lg
                         transition-all duration-200
                         placeholder:text-gray-400
@@ -698,18 +720,18 @@ function LoginPage() {
                   )}
                 </div>
 
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+                <div className="flex items-center justify-between">
                   <Checkbox
                     label="Remember me"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
                     disabled={loading}
-                    className="text-sm sm:text-base"
+                    className="text-sm"
                   />
 
                   <Link
                     to="/forgot-password"
-                    className="text-sm sm:text-base text-blue-600 hover:text-blue-700 hover:underline transition-colors touch-manipulation android-touch-target mobile-touch-target"
+                    className="text-sm text-blue-600 hover:text-blue-700 hover:underline transition-colors touch-manipulation android-touch-target mobile-touch-target"
                   >
                     Forgot password?
                   </Link>
@@ -721,20 +743,20 @@ function LoginPage() {
                   fullWidth
                   disabled={loading}
                   loading={loading}
-                  className="group py-3 sm:py-4 lg:py-3 xl:py-4 text-base sm:text-lg touch-manipulation android-ripple android-touch-target mobile-touch-target"
+                  className="group py-3 text-base touch-manipulation android-ripple android-touch-target mobile-touch-target desktop-button-fix"
                 >
                   {!loading && (
-                    <React.Fragment>
-                      Sign In
-                      <ArrowRightIcon className="h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:translate-x-1" />
-                    </React.Fragment>
+                    <span className="inline-flex items-center justify-center gap-2">
+                      <span>Sign In</span>
+                      <ArrowRightIcon className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                    </span>
                   )}
                   {loading && "Signing in..."}
                 </Button>
               </form>
 
-              <div className="mt-4 sm:mt-6 lg:mt-4 xl:mt-8 pt-3 sm:pt-4 lg:pt-3 xl:pt-6 border-t border-gray-200 text-center">
-                <p className="text-sm sm:text-base text-gray-600">
+              <div className="mt-6 pt-6 border-t border-gray-200 text-center">
+                <p className="text-sm text-gray-600">
                   Don't have an account?{" "}
                   <Link
                     to="/register"
@@ -746,8 +768,8 @@ function LoginPage() {
               </div>
             </Card>
 
-            <div className="text-center mt-4 sm:mt-6 lg:mt-4 xl:mt-8 px-4">
-              <p className="text-xs sm:text-sm text-gray-500">
+            <div className="text-center mt-8 px-4">
+              <p className="text-xs text-gray-500">
                 © 2024 Over 55 (London) Inc. All rights reserved.
               </p>
               <div className="mt-2 space-x-4">

@@ -1,21 +1,40 @@
 // File Path: web/workery-frontend/src/pages/Admin/Order/List/Page.jsx
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useLocation } from "react-router";
 import { useOrderManager, useAuthManager } from "../../../../services/Services";
-import { theme, globalStyles } from "../../../../constants/Theme";
 import { formatDateForDisplay } from "../../../../services/Helpers/DateFormatter";
 import {
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Breadcrumb,
-  Input,
-  Select,
-  Table,
-  Modal,
-} from "../../../../components/UI";
+  ClipboardDocumentListIcon,
+  PlusIcon,
+  MagnifyingGlassIcon,
+  FunnelIcon,
+  ArrowPathIcon,
+  ChevronRightIcon,
+  XMarkIcon,
+  ArchiveBoxIcon,
+  PencilSquareIcon,
+  EyeIcon,
+  ExclamationTriangleIcon,
+  ChartBarIcon,
+  CheckCircleIcon,
+  UserIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  BuildingOfficeIcon,
+  BuildingOffice2Icon,
+  CalendarDaysIcon,
+  HomeIcon,
+  InformationCircleIcon,
+  Squares2X2Icon,
+  TableCellsIcon,
+  ChevronLeftIcon,
+  WrenchScrewdriverIcon,
+  ClockIcon,
+  CurrencyDollarIcon,
+  BriefcaseIcon,
+} from "@heroicons/react/24/outline";
+import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import {
   ORDER_STATUS_NEW,
   ORDER_STATUS_DECLINED,
@@ -30,7 +49,7 @@ import {
   ORDER_TYPE_COMMERCIAL,
 } from "../../../../constants/Order";
 
-// We define ORDER_STATUS_OPTIONS locally to ensure it is correct
+// Constants for filtering and sorting
 const ORDER_STATUS_OPTIONS = [
   { value: "", label: "All Statuses" },
   { value: String(ORDER_STATUS_NEW), label: "New" },
@@ -57,12 +76,12 @@ const ORDER_TYPE_OPTIONS = [
 ];
 
 const ORDER_SORT_OPTIONS = [
-  { value: "created_at,DESC", label: "Newest First" },
-  { value: "created_at,ASC", label: "Oldest First" },
-  { value: "start_date,DESC", label: "Start Date (Newest)" },
-  { value: "start_date,ASC", label: "Start Date (Oldest)" },
-  { value: "customer_name,ASC", label: "Customer Name (A-Z)" },
-  { value: "customer_name,DESC", label: "Customer Name (Z-A)" },
+  { value: "created_at,DESC", label: "Date Created (Newest → Oldest)" },
+  { value: "created_at,ASC", label: "Date Created (Oldest → Newest)" },
+  { value: "start_date,DESC", label: "Start Date (Newest → Oldest)" },
+  { value: "start_date,ASC", label: "Start Date (Oldest → Newest)" },
+  { value: "customer_name,ASC", label: "Customer Name (A → Z)" },
+  { value: "customer_name,DESC", label: "Customer Name (Z → A)" },
 ];
 
 const PAGE_SIZE_OPTIONS = [
@@ -79,12 +98,14 @@ function AdminOrderListPage() {
   const orderManager = useOrderManager();
   const authManager = useAuthManager();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // State management
   const [orders, setOrders] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState("");
 
   // Pagination state using cursor-based approach
   const [currentCursor, setCurrentCursor] = useState("");
@@ -95,6 +116,7 @@ function AdminOrderListPage() {
 
   // Filter and search state
   const [searchQuery, setSearchQuery] = useState("");
+  const [tempSearchQuery, setTempSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [sortBy, setSortBy] = useState("created_at,DESC");
@@ -110,6 +132,8 @@ function AdminOrderListPage() {
   // Delete confirmation modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState(null);
 
   // Use refs to track the latest filter values to avoid stale closures
   const filtersRef = useRef({
@@ -154,20 +178,11 @@ function AdminOrderListPage() {
     navigate("/login?unauthorized=true");
   };
 
-  // Fetch orders using the new manager - now uses refs for filter values
+  // Fetch orders using the manager
   const fetchOrders = useCallback(
     async (cursor = "", isNavigatingBack = false) => {
       // Get the latest filter values from refs
       const currentFilters = filtersRef.current;
-
-      console.log(
-        "🔄 fetchOrders called with cursor:",
-        cursor,
-        "pageSize:",
-        currentFilters.pageSize,
-        "filters:",
-        currentFilters,
-      );
 
       setLoading(true);
       setError(null);
@@ -225,24 +240,12 @@ function AdminOrderListPage() {
           filtersMap.set("completion_date_lte", date.getTime().toString());
         }
 
-        console.log(
-          "🌐 Making API call with filters:",
-          Array.from(filtersMap.entries()),
-        );
-
         // Use the manager method - always force refresh to avoid cache issues
         const response = await orderManager.getOrdersWithFiltersMap(
           filtersMap,
           onUnauthorized,
           true, // Always force refresh
         );
-
-        console.log("✅ API response received:", {
-          resultsCount: response.results?.length,
-          nextCursor: response.nextCursor,
-          hasNextPage: response.hasNextPage,
-          totalCount: response.count,
-        });
 
         setOrders(response.results || []);
         setTotalCount(response.count || 0);
@@ -270,8 +273,8 @@ function AdminOrderListPage() {
           setCurrentCursor(cursor);
         }
       } catch (err) {
-        console.error("❌ Failed to fetch orders:", err);
-        setError("Failed to load orders. Please try again.");
+        console.error("Failed to fetch orders:", err);
+        setError("Failed to load work orders. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -280,9 +283,8 @@ function AdminOrderListPage() {
   );
 
   // Handle search
-  const handleSearch = (e) => {
-    e.preventDefault();
-    console.log("🔍 Search triggered:", searchQuery);
+  const handleSearch = () => {
+    setSearchQuery(tempSearchQuery);
     // Reset pagination when searching
     setCursorHistory([]);
     setCurrentCursor("");
@@ -291,9 +293,14 @@ function AdminOrderListPage() {
     fetchOrders("");
   };
 
-  // Immediate filter application function
-  const applyFilters = useCallback(() => {
-    console.log("🔄 Applying filters - resetting pagination");
+  const handleSearchKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  };
+
+  // Handle filter changes
+  const handleFilterChange = useCallback(() => {
     // Reset pagination when filters change
     setCursorHistory([]);
     setCurrentCursor("");
@@ -306,83 +313,53 @@ function AdminOrderListPage() {
 
   // Pagination handlers
   const handleNextPage = () => {
-    console.log(
-      "🔜 handleNextPage clicked, nextCursor:",
-      nextCursor,
-      "hasNextPage:",
-      hasNextPage,
-    );
-
     if (hasNextPage && nextCursor) {
-      console.log("✅ Going to next page with cursor:", nextCursor);
-
       // Push current cursor to history for "Previous" functionality
       setCursorHistory((prev) => [...prev, currentCursor]);
-
       // Fetch next page
       fetchOrders(nextCursor);
-    } else {
-      console.log("❌ No next page available");
     }
   };
 
   const handlePreviousPage = () => {
-    console.log("🔙 handlePreviousPage clicked");
-
     if (cursorHistory.length > 0) {
       // Pop the last cursor from history
       const newHistory = [...cursorHistory];
       const previousCursor = newHistory.pop();
-
-      console.log(
-        "✅ Going to previous page with cursor:",
-        previousCursor || "start",
-      );
-
       // Update history
       setCursorHistory(newHistory);
-
       // Fetch previous page
       fetchOrders(previousCursor || "", true);
-    } else {
-      console.log("❌ Already on first page");
     }
   };
 
   // Handle page size change
   const handlePageSizeChange = (e) => {
     const newPageSize = parseInt(e.target.value);
-    console.log("📏 Page size changing from", pageSize, "to", newPageSize);
     setPageSize(newPageSize);
-    // Apply filters immediately after state update
-    setTimeout(() => applyFilters(), 0);
+    // Reset pagination when page size changes
+    setCursorHistory([]);
+    setCurrentCursor("");
+    setNextCursor("");
+    setHasNextPage(false);
   };
+
+  // Effect to refetch when pageSize changes
+  useEffect(() => {
+    if (pageSize) {
+      fetchOrders("");
+    }
+  }, [pageSize]);
 
   // Handle sort change
   const handleSortChange = (e) => {
     setSortBy(e.target.value);
-    // Apply filters immediately after state update
-    setTimeout(() => applyFilters(), 0);
-  };
-
-  // Handle status filter change
-  const handleStatusFilterChange = (e) => {
-    console.log("🧿 Status change -->", e.target.value);
-    setStatusFilter(e.target.value);
-    // Apply filters immediately after state update
-    setTimeout(() => applyFilters(), 0);
-  };
-
-  // Handle type filter change
-  const handleTypeFilterChange = (e) => {
-    setTypeFilter(e.target.value);
-    setTimeout(() => applyFilters(), 0);
-  };
-
-  // Handle date filter changes
-  const handleDateFilterChange = (setter) => (e) => {
-    setter(e.target.value);
-    setTimeout(() => applyFilters(), 0);
+    // Reset pagination when sort changes
+    setCursorHistory([]);
+    setCurrentCursor("");
+    setNextCursor("");
+    setHasNextPage(false);
+    setTimeout(() => fetchOrders(""), 0);
   };
 
   // Handle delete order
@@ -399,9 +376,13 @@ function AdminOrderListPage() {
       // Reset delete state
       setShowDeleteModal(false);
       setOrderToDelete(null);
+      setSuccessMessage("Work order archived successfully");
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(""), 3000);
     } catch (err) {
       console.error("Failed to delete order:", err);
-      setError("Failed to delete order. Please try again.");
+      setError("Failed to archive work order. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -409,8 +390,8 @@ function AdminOrderListPage() {
 
   // Clear filters
   const clearFilters = useCallback(() => {
-    console.log("🧹 clearFilters called");
     setSearchQuery("");
+    setTempSearchQuery("");
     setStatusFilter("");
     setTypeFilter("");
     setSortBy("created_at,DESC");
@@ -425,62 +406,84 @@ function AdminOrderListPage() {
     setShowFilters(false);
     // Clear cache and fetch fresh data
     orderManager.clearOrdersCache();
-    setTimeout(() => fetchOrders(""), 0);
+    fetchOrders("");
   }, [fetchOrders, orderManager]);
 
-  // Initial data load - only on mount
+  // Initial data load
   useEffect(() => {
-    console.log("🚀 Initial mount - loading first page");
     fetchOrders("");
-  }, []); // Empty dependency array for initial load only
+  }, []);
+
+  // Handle success message from navigation state
+  useEffect(() => {
+    if (location.state?.successMessage) {
+      setSuccessMessage(location.state.successMessage);
+      // Clear the state
+      window.history.replaceState({}, document.title);
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(""), 3000);
+    }
+  }, [location]);
 
   // Format order status for display
   const getOrderStatusDisplay = (status) => {
-    // Convert string to number if needed
     const statusNum =
       typeof status === "string" ? parseInt(status, 10) : status;
 
-    const statusMap = {
-      [ORDER_STATUS_NEW]: { label: "New", color: theme.colors.info },
-      [ORDER_STATUS_DECLINED]: {
-        label: "Declined",
-        color: theme.colors.danger,
-      },
-      [ORDER_STATUS_PENDING]: { label: "Pending", color: theme.colors.warning },
-      [ORDER_STATUS_CANCELLED]: {
-        label: "Cancelled",
-        color: theme.colors.secondary,
-      },
-      [ORDER_STATUS_ONGOING]: { label: "Ongoing", color: theme.colors.primary },
-      [ORDER_STATUS_IN_PROGRESS]: {
-        label: "In Progress",
-        color: theme.colors.primary,
-      },
-      [ORDER_STATUS_COMPLETED_BUT_UNPAID]: {
-        label: "Completed (Unpaid)",
-        color: theme.colors.warning,
-      },
-      [ORDER_STATUS_COMPLETED_AND_PAID]: {
-        label: "Completed (Paid)",
-        color: theme.colors.success,
-      },
-      [ORDER_STATUS_ARCHIVED]: {
-        label: "Archived",
-        color: theme.colors.secondary,
-      },
-    };
+    switch (statusNum) {
+      case ORDER_STATUS_NEW:
+        return "New";
+      case ORDER_STATUS_DECLINED:
+        return "Declined";
+      case ORDER_STATUS_PENDING:
+        return "Pending";
+      case ORDER_STATUS_CANCELLED:
+        return "Cancelled";
+      case ORDER_STATUS_ONGOING:
+        return "Ongoing";
+      case ORDER_STATUS_IN_PROGRESS:
+        return "In Progress";
+      case ORDER_STATUS_COMPLETED_BUT_UNPAID:
+        return "Completed (Unpaid)";
+      case ORDER_STATUS_COMPLETED_AND_PAID:
+        return "Completed (Paid)";
+      case ORDER_STATUS_ARCHIVED:
+        return "Archived";
+      default:
+        return "Unknown";
+    }
+  };
 
-    return (
-      statusMap[statusNum] || {
-        label: "Unknown",
-        color: theme.colors.secondary,
-      }
-    );
+  // Get badge color for status
+  const getStatusBadgeColor = (status) => {
+    const statusNum =
+      typeof status === "string" ? parseInt(status, 10) : status;
+
+    switch (statusNum) {
+      case ORDER_STATUS_NEW:
+        return "bg-blue-100 text-blue-800";
+      case ORDER_STATUS_DECLINED:
+        return "bg-red-100 text-red-800";
+      case ORDER_STATUS_PENDING:
+        return "bg-yellow-100 text-yellow-800";
+      case ORDER_STATUS_CANCELLED:
+        return "bg-gray-100 text-gray-800";
+      case ORDER_STATUS_ONGOING:
+      case ORDER_STATUS_IN_PROGRESS:
+        return "bg-indigo-100 text-indigo-800";
+      case ORDER_STATUS_COMPLETED_BUT_UNPAID:
+        return "bg-orange-100 text-orange-800";
+      case ORDER_STATUS_COMPLETED_AND_PAID:
+        return "bg-green-100 text-green-800";
+      case ORDER_STATUS_ARCHIVED:
+        return "bg-gray-100 text-gray-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
   };
 
   // Format order type for display
   const getOrderTypeDisplay = (type) => {
-    // Convert string to number if needed for comparison with numeric constants
     const typeNum = typeof type === "string" ? parseInt(type, 10) : type;
 
     switch (typeNum) {
@@ -493,481 +496,685 @@ function AdminOrderListPage() {
     }
   };
 
-  // Table columns for tabular view
-  const tableColumns = [
-    {
-      key: "id",
-      label: "Order #",
-      render: (value, order) => (
-        <Link
-          to={`/admin/order/${order.wjid || order.id}`}
-          style={{ color: theme.colors.primary }}
-        >
-          {order.wjid || `#${order.id}`}
-        </Link>
-      ),
-    },
-    {
-      key: "customerName",
-      label: "Customer",
-      render: (value, order) => (
-        <Link
-          to={`/admin/customer/${order.customerId}`}
-          style={{ color: theme.colors.primary }}
-        >
-          {value || "N/A"}
-        </Link>
-      ),
-    },
-    {
-      key: "associateName",
-      label: "Associate",
-      render: (value, order) =>
-        order.associateId ? (
-          <Link
-            to={`/admin/associate/${order.associateId}`}
-            style={{ color: theme.colors.primary }}
-          >
-            {value || "N/A"}
-          </Link>
-        ) : (
-          <span style={{ color: theme.colors.secondary }}>Unassigned</span>
-        ),
-    },
-    {
-      key: "type",
-      label: "Type",
-      render: (value) => getOrderTypeDisplay(value),
-    },
-    {
-      key: "status",
-      label: "Status",
-      render: (value) => {
-        const statusInfo = getOrderStatusDisplay(value);
-        return (
-          <span
-            style={{
-              color: statusInfo.color,
-              fontWeight: "600",
-            }}
-          >
-            {statusInfo.label}
-          </span>
-        );
-      },
-    },
-    {
-      key: "startDate",
-      label: "Start Date",
-      render: (value) => formatDateForDisplay(value),
-    },
-    {
-      key: "completionDate",
-      label: "Completion",
-      render: (value) => formatDateForDisplay(value),
-    },
-    {
-      key: "actions",
-      label: "Actions",
-      render: (_, order) => (
-        <div style={{ display: "flex", gap: "10px" }}>
-          <Link to={`/admin/order/${order.wjid || order.id}`}>
-            <Button size="sm" variant="primary">
-              View
-            </Button>
-          </Link>
-        </div>
-      ),
-    },
-  ];
+  // Get badge color for order type
+  const getTypeBadgeColor = (orderType) => {
+    const typeNum =
+      typeof orderType === "string" ? parseInt(orderType, 10) : orderType;
 
-  // Breadcrumb items
-  const breadcrumbItems = [
-    { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
-    { label: "Work Orders", icon: "🔧" },
-  ];
+    switch (typeNum) {
+      case ORDER_TYPE_COMMERCIAL:
+        return "bg-blue-100 text-blue-800";
+      case ORDER_TYPE_RESIDENTIAL:
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
 
   // Calculate pagination info
   const hasPreviousPage = cursorHistory.length > 0;
   const currentPageNumber = cursorHistory.length + 1;
 
   return (
-    <div style={globalStyles.container}>
-      {/* Breadcrumb */}
-      <Breadcrumb items={breadcrumbItems} />
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Breadcrumb */}
+        <nav className="flex mb-8" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+            <li className="inline-flex items-center">
+              <Link
+                to="/admin/dashboard"
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <ChartBarIcon className="w-4 h-4 mr-2" />
+                Dashboard
+              </Link>
+            </li>
+            <li aria-current="page">
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
+                  <ClipboardDocumentListIcon className="w-4 h-4 mr-2" />
+                  Work Orders
+                </span>
+              </div>
+            </li>
+          </ol>
+        </nav>
 
-      {/* Page Header */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: "20px",
-        }}
-      >
-        <h1 style={{ margin: 0 }}>🔧 Work Orders</h1>
-        <div style={{ display: "flex", gap: "10px" }}>
-          <Link to="/admin/orders/add/step-1-search">
-            <Button variant="success">➕ Add Order</Button>
-          </Link>
-          <Link to="/admin/orders/search">
-            <Button variant="info">🔍 Search Orders</Button>
-          </Link>
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
+            <ClipboardDocumentListIcon className="w-8 h-8 mr-3 text-blue-600" />
+            Work Orders Management
+          </h1>
         </div>
-      </div>
 
-      {/* Main Content Card */}
-      <Card>
-        {/* Controls Section */}
-        <div style={{ marginBottom: "20px" }}>
-          {/* Search and View Controls */}
-          <div
-            style={{
-              display: "flex",
-              gap: "20px",
-              alignItems: "end",
-              marginBottom: "20px",
-              flexWrap: "wrap",
-            }}
-          >
-            {/* Search */}
-            <form
-              onSubmit={handleSearch}
-              style={{
-                display: "flex",
-                gap: "10px",
-                flex: "1",
-                minWidth: "300px",
-              }}
+        {/* Success/Error Messages */}
+        {successMessage && (
+          <div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center">
+              <CheckCircleIcon className="w-5 h-5 mr-2" />
+              {successMessage}
+            </span>
+            <button
+              onClick={() => setSuccessMessage("")}
+              className="text-green-600 hover:text-green-800"
             >
-              <Input
-                placeholder="Search orders..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                style={{ flex: 1 }}
-              />
-              <Button type="submit" variant="primary">
-                🔍 Search
-              </Button>
-            </form>
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+        )}
 
-            {/* Sort */}
-            <Select
-              value={sortBy}
-              onChange={handleSortChange}
-              options={ORDER_SORT_OPTIONS}
-              style={{ minWidth: "200px" }}
-            />
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center">
+              <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
+              {error}
+            </span>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-600 hover:text-red-800"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+        )}
 
-            {/* View Type Toggle */}
-            <div style={{ display: "flex", gap: "5px" }}>
-              <Button
-                variant={viewType === VIEW_TYPE_TABULAR ? "primary" : "outline"}
-                onClick={() => setViewType(VIEW_TYPE_TABULAR)}
+        {/* Main Content Card */}
+        <div className="bg-white shadow-sm rounded-lg">
+          {/* Card Header */}
+          <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-gray-800 flex items-center">
+              <ClipboardDocumentListIcon className="w-5 h-5 mr-2" />
+              Order List
+            </h2>
+            <div className="flex items-center gap-2">
+              {/* View Type Toggle */}
+              <div className="flex items-center bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setViewType(VIEW_TYPE_TABULAR)}
+                  className={`inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    viewType === VIEW_TYPE_TABULAR
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  <TableCellsIcon className="w-4 h-4 mr-1.5" />
+                  Table
+                </button>
+                <button
+                  onClick={() => setViewType(VIEW_TYPE_GRID)}
+                  className={`inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                    viewType === VIEW_TYPE_GRID
+                      ? "bg-white text-gray-900 shadow-sm"
+                      : "text-gray-500 hover:text-gray-700"
+                  }`}
+                >
+                  <Squares2X2Icon className="w-4 h-4 mr-1.5" />
+                  Grid
+                </button>
+              </div>
+              <button
+                onClick={() => navigate("/admin/orders/search")}
+                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
-                📋 Table
-              </Button>
-              <Button
-                variant={viewType === VIEW_TYPE_GRID ? "primary" : "outline"}
-                onClick={() => setViewType(VIEW_TYPE_GRID)}
+                <MagnifyingGlassIcon className="w-5 h-5 mr-1" />
+                Advanced Search
+              </button>
+              <button
+                onClick={() => navigate("/admin/orders/add/step-1-search")}
+                className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
               >
-                ⊞ Grid
-              </Button>
+                <PlusIcon className="w-5 h-5 mr-1" />
+                Add Order
+              </button>
             </div>
-
-            {/* Show Filters Button */}
-            <Button
-              variant={showFilters ? "info" : "outline"}
-              onClick={() => setShowFilters(!showFilters)}
-            >
-              {showFilters ? "➖" : "➕"} See All Filters
-            </Button>
           </div>
 
           {/* Filters Section */}
-          {showFilters && (
-            <Card style={{ backgroundColor: theme.colors.light }}>
-              <h3>🔍 Filtering</h3>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
-                  gap: "20px",
-                  marginBottom: "20px",
-                }}
-              >
-                <Select
-                  label="Status"
-                  value={statusFilter}
-                  onChange={handleStatusFilterChange}
-                  options={ORDER_STATUS_OPTIONS}
-                />
-
-                <Select
-                  label="Type"
-                  value={typeFilter}
-                  onChange={handleTypeFilterChange}
-                  options={ORDER_TYPE_OPTIONS}
-                />
-
-                <Input
-                  label="Start Date (From)"
-                  type="date"
-                  value={startDateGte}
-                  onChange={handleDateFilterChange(setStartDateGte)}
-                />
-
-                <Input
-                  label="Start Date (To)"
-                  type="date"
-                  value={startDateLte}
-                  onChange={handleDateFilterChange(setStartDateLte)}
-                />
-
-                <Input
-                  label="Completion Date (From)"
-                  type="date"
-                  value={completionDateGte}
-                  onChange={handleDateFilterChange(setCompletionDateGte)}
-                />
-
-                <Input
-                  label="Completion Date (To)"
-                  type="date"
-                  value={completionDateLte}
-                  onChange={handleDateFilterChange(setCompletionDateLte)}
-                />
-              </div>
-
-              <Button variant="secondary" onClick={clearFilters}>
-                🗑️ Clear All Filters
-              </Button>
-            </Card>
-          )}
-        </div>
-
-        {/* Error Display */}
-        {error && (
-          <Alert type="error" onClose={() => setError(null)}>
-            {error}
-          </Alert>
-        )}
-
-        {/* Loading Display */}
-        {loading && <Loading message="Loading orders..." />}
-
-        {/* Results */}
-        {!loading && (
-          <>
-            {/* Results Count */}
-            <div
-              style={{ marginBottom: "20px", color: theme.colors.secondary }}
-            >
-              <div>
-                Showing <strong>{orders.length}</strong> orders
-                {totalCount > 0 && ` (Total: ${totalCount})`}
-                {searchQuery && ` (filtered by "${searchQuery}")`}
+          <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-medium text-gray-700 flex items-center">
+                <FunnelIcon className="w-4 h-4 mr-2" />
+                Filter & Search
+              </h3>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className={`text-sm font-medium flex items-center px-3 py-1 rounded-md transition-colors ${
+                    showFilters
+                      ? "text-blue-700 bg-blue-50"
+                      : "text-gray-600 hover:text-gray-800"
+                  }`}
+                >
+                  {showFilters ? (
+                    <ChevronDownIcon className="w-4 h-4 mr-1" />
+                  ) : (
+                    <PlusIcon className="w-4 h-4 mr-1" />
+                  )}
+                  {showFilters ? "Hide" : "Show"} All Filters
+                </button>
+                <button
+                  onClick={clearFilters}
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center"
+                >
+                  <XMarkIcon className="w-4 h-4 mr-1" />
+                  Clear Filters
+                </button>
+                <button
+                  onClick={() => fetchOrders(currentCursor)}
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center"
+                >
+                  <ArrowPathIcon className="w-4 h-4 mr-1" />
+                  Refresh
+                </button>
               </div>
             </div>
 
-            {/* Order List */}
-            {orders.length > 0 ? (
-              <>
-                {viewType === VIEW_TYPE_TABULAR ? (
-                  <Table
-                    columns={tableColumns}
-                    data={orders}
-                    onRowClick={(order) =>
-                      navigate(`/admin/order/${order.wjid || order.id}`)
-                    }
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Search */}
+              <div className="lg:col-span-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Search
+                </label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={tempSearchQuery}
+                    onChange={(e) => setTempSearchQuery(e.target.value)}
+                    placeholder="Search orders..."
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    onKeyPress={handleSearchKeyPress}
                   />
-                ) : (
-                  /* Grid View */
-                  <div
-                    style={{
-                      display: "grid",
-                      gridTemplateColumns:
-                        "repeat(auto-fill, minmax(300px, 1fr))",
-                      gap: "20px",
-                    }}
+                  <button
+                    onClick={handleSearch}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
                   >
-                    {orders.map((order) => {
-                      const statusInfo = getOrderStatusDisplay(order.status);
-                      return (
-                        <Card
-                          key={order.id}
-                          style={{
-                            backgroundColor: "white",
-                            border: "1px solid #ddd",
-                          }}
-                        >
-                          <div style={{ marginBottom: "15px" }}>
-                            <h3 style={{ margin: "0 0 5px 0" }}>
-                              <Link
-                                to={`/admin/order/${order.wjid || order.id}`}
-                                style={{
-                                  color: theme.colors.primary,
-                                  textDecoration: "none",
-                                }}
-                              >
-                                Order {order.wjid || `#${order.id}`}
-                              </Link>
-                            </h3>
-                            <span
-                              style={{
-                                color: statusInfo.color,
-                                fontWeight: "600",
-                                fontSize: "14px",
-                              }}
-                            >
-                              {statusInfo.label}
-                            </span>
-                          </div>
+                    <MagnifyingGlassIcon className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
 
-                          <div
-                            style={{ marginBottom: "15px", fontSize: "14px" }}
-                          >
-                            <div>
-                              <strong>Customer:</strong>{" "}
-                              <Link
-                                to={`/admin/customer/${order.customerId}`}
-                                style={{ color: theme.colors.primary }}
-                              >
-                                {order.customerName || "N/A"}
-                              </Link>
-                            </div>
-                            <div>
-                              <strong>Associate:</strong>{" "}
-                              {order.associateId ? (
-                                <Link
-                                  to={`/admin/associate/${order.associateId}`}
-                                  style={{ color: theme.colors.primary }}
-                                >
-                                  {order.associateName || "N/A"}
-                                </Link>
-                              ) : (
-                                <span style={{ color: theme.colors.secondary }}>
-                                  Unassigned
-                                </span>
-                              )}
-                            </div>
-                            <div>
-                              <strong>Type:</strong>{" "}
-                              {getOrderTypeDisplay(order.type)}
-                            </div>
-                            <div>
-                              <strong>Start Date:</strong>{" "}
-                              {formatDateForDisplay(order.startDate)}
-                            </div>
-                            {order.completionDate && (
-                              <div>
-                                <strong>Completion:</strong>{" "}
-                                {formatDateForDisplay(order.completionDate)}
-                              </div>
-                            )}
-                            {order.description && (
-                              <div
-                                style={{
-                                  marginTop: "10px",
-                                  color: theme.colors.secondary,
-                                  fontSize: "13px",
-                                }}
-                              >
-                                {order.description.substring(0, 100)}
-                                {order.description.length > 100 && "..."}
-                              </div>
-                            )}
-                          </div>
-
-                          <div style={{ display: "flex", gap: "10px" }}>
-                            <Link
-                              to={`/admin/order/${order.wjid || order.id}`}
-                              style={{ flex: 1 }}
-                            >
-                              <Button fullWidth variant="primary">
-                                View Details →
-                              </Button>
-                            </Link>
-                          </div>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* Pagination controls */}
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginTop: "30px",
-                    flexWrap: "wrap",
-                    gap: "10px",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                    }}
+              {/* Sort By */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Sort By
+                </label>
+                <div className="relative">
+                  <select
+                    value={sortBy}
+                    onChange={handleSortChange}
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
                   >
-                    <span>Show:</span>
-                    <Select
-                      value={pageSize}
-                      onChange={handlePageSizeChange}
-                      options={PAGE_SIZE_OPTIONS}
-                      style={{ minWidth: "120px" }}
+                    {ORDER_SORT_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Status Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
+                <div className="relative">
+                  <select
+                    value={statusFilter}
+                    onChange={(e) => {
+                      setStatusFilter(e.target.value);
+                      setTimeout(() => handleFilterChange(), 0);
+                    }}
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                  >
+                    {ORDER_STATUS_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Type Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Type
+                </label>
+                <div className="relative">
+                  <select
+                    value={typeFilter}
+                    onChange={(e) => {
+                      setTypeFilter(e.target.value);
+                      setTimeout(() => handleFilterChange(), 0);
+                    }}
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                  >
+                    {ORDER_TYPE_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+            </div>
+
+            {/* Extended Filters */}
+            {showFilters && (
+              <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
+                <h4 className="text-sm font-medium text-gray-700 mb-3">
+                  Additional Filters
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Start Date (From)
+                    </label>
+                    <input
+                      type="date"
+                      value={startDateGte}
+                      onChange={(e) => {
+                        setStartDateGte(e.target.value);
+                        setTimeout(() => handleFilterChange(), 0);
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
 
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "10px",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Button
-                      variant="secondary"
-                      disabled={!hasPreviousPage}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Start Date (To)
+                    </label>
+                    <input
+                      type="date"
+                      value={startDateLte}
+                      onChange={(e) => {
+                        setStartDateLte(e.target.value);
+                        setTimeout(() => handleFilterChange(), 0);
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Items per page
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={pageSize}
+                        onChange={handlePageSizeChange}
+                        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                      >
+                        {PAGE_SIZE_OPTIONS.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                      <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Completion Date (From)
+                    </label>
+                    <input
+                      type="date"
+                      value={completionDateGte}
+                      onChange={(e) => {
+                        setCompletionDateGte(e.target.value);
+                        setTimeout(() => handleFilterChange(), 0);
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Completion Date (To)
+                    </label>
+                    <input
+                      type="date"
+                      value={completionDateLte}
+                      onChange={(e) => {
+                        setCompletionDateLte(e.target.value);
+                        setTimeout(() => handleFilterChange(), 0);
+                      }}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Content Section */}
+          <div className="px-6 py-4">
+            {loading && !orders.length ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <span className="ml-3 text-gray-600">
+                  Loading work orders...
+                </span>
+              </div>
+            ) : orders.length > 0 ? (
+              <>
+                {/* Results count */}
+                <div className="mb-4 text-sm text-gray-600">
+                  Showing <strong>{orders.length}</strong> orders
+                  {totalCount > 0 && ` of ${totalCount} total`}
+                  {searchQuery && ` (filtered by "${searchQuery}")`}
+                </div>
+
+                {/* List Display */}
+                {viewType === VIEW_TYPE_TABULAR ? (
+                  /* Table View */
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Order #
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Customer
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Associate
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Type
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Start Date
+                          </th>
+                          <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {orders.map((order) => (
+                          <tr
+                            key={order.id}
+                            className="hover:bg-gray-50 cursor-pointer"
+                            onClick={() => {
+                              setSelectedOrder(order);
+                              setShowDetailModal(true);
+                            }}
+                          >
+                            <td className="px-3 py-4 text-sm">
+                              <Link
+                                to={`/admin/order/${order.wjid || order.id}`}
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-blue-600 hover:text-blue-800 font-medium flex items-center"
+                              >
+                                <ClipboardDocumentListIcon className="w-4 h-4 mr-2" />
+                                {order.wjid || `#${order.id}`}
+                              </Link>
+                            </td>
+                            <td className="px-3 py-4 text-sm text-gray-500">
+                              {order.customerName ? (
+                                <Link
+                                  to={`/admin/customer/${order.customerId}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="flex items-center hover:text-blue-600"
+                                >
+                                  {order.type === ORDER_TYPE_COMMERCIAL ? (
+                                    <BuildingOffice2Icon className="w-4 h-4 mr-2" />
+                                  ) : (
+                                    <HomeIcon className="w-4 h-4 mr-2" />
+                                  )}
+                                  {order.customerName}
+                                </Link>
+                              ) : (
+                                <span className="text-gray-400 italic">—</span>
+                              )}
+                            </td>
+                            <td className="px-3 py-4 text-sm text-gray-500">
+                              {order.associateName ? (
+                                <Link
+                                  to={`/admin/associate/${order.associateId}`}
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="flex items-center hover:text-blue-600"
+                                >
+                                  <WrenchScrewdriverIcon className="w-4 h-4 mr-2" />
+                                  {order.associateName}
+                                </Link>
+                              ) : (
+                                <span className="text-gray-400 italic">
+                                  Unassigned
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-3 py-4 text-sm">
+                              <span
+                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeBadgeColor(order.type)}`}
+                              >
+                                {getOrderTypeDisplay(order.type)}
+                              </span>
+                            </td>
+                            <td className="px-3 py-4 text-sm">
+                              <span
+                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeColor(order.status)}`}
+                              >
+                                {getOrderStatusDisplay(order.status)}
+                              </span>
+                            </td>
+                            <td className="px-3 py-4 text-sm text-gray-500">
+                              {order.startDate ? (
+                                <span className="flex items-center">
+                                  <CalendarDaysIcon className="w-4 h-4 mr-2" />
+                                  {formatDateForDisplay(order.startDate)}
+                                </span>
+                              ) : (
+                                <span className="text-gray-400 italic">—</span>
+                              )}
+                            </td>
+                            <td className="px-3 py-4">
+                              <div className="flex items-center justify-center">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(
+                                      `/admin/order/${order.wjid || order.id}`,
+                                    );
+                                  }}
+                                  className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                                >
+                                  <EyeIcon className="w-4 h-4 mr-1.5" />
+                                  View
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  /* Grid View */
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {orders.map((order) => (
+                      <div
+                        key={order.id}
+                        className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                        onClick={() => {
+                          setSelectedOrder(order);
+                          setShowDetailModal(true);
+                        }}
+                      >
+                        <div className="mb-3">
+                          <h3 className="text-base font-semibold text-gray-900">
+                            <Link
+                              to={`/admin/order/${order.wjid || order.id}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-blue-600 hover:text-blue-800 flex items-start"
+                            >
+                              <ClipboardDocumentListIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+                              <span>Order {order.wjid || `#${order.id}`}</span>
+                            </Link>
+                          </h3>
+                        </div>
+
+                        <div className="space-y-2 text-sm text-gray-600 mb-3">
+                          {order.customerName && (
+                            <div className="flex items-center">
+                              <UserIcon className="w-4 h-4 mr-2 text-gray-400" />
+                              <span className="truncate">
+                                {order.customerName}
+                              </span>
+                            </div>
+                          )}
+                          {order.associateName && (
+                            <div className="flex items-center">
+                              <WrenchScrewdriverIcon className="w-4 h-4 mr-2 text-gray-400" />
+                              <span className="truncate">
+                                {order.associateName}
+                              </span>
+                            </div>
+                          )}
+                          {order.startDate && (
+                            <div className="flex items-center">
+                              <CalendarDaysIcon className="w-4 h-4 mr-2 text-gray-400" />
+                              {formatDateForDisplay(order.startDate)}
+                            </div>
+                          )}
+                          {order.description && (
+                            <div className="text-xs text-gray-500">
+                              {order.description.substring(0, 100)}
+                              {order.description.length > 100 && "..."}
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2 mb-3">
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getTypeBadgeColor(order.type)}`}
+                          >
+                            {order.type === ORDER_TYPE_COMMERCIAL ? (
+                              <BuildingOffice2Icon className="w-3 h-3 mr-1" />
+                            ) : (
+                              <HomeIcon className="w-3 h-3 mr-1" />
+                            )}
+                            {getOrderTypeDisplay(order.type)}
+                          </span>
+                          <span
+                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeColor(order.status)}`}
+                          >
+                            {getOrderStatusDisplay(order.status)}
+                          </span>
+                        </div>
+
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/admin/order/${order.wjid || order.id}`);
+                          }}
+                          className="w-full inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                        >
+                          View Details
+                          <ChevronRightIcon className="w-4 h-4 ml-1" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Pagination */}
+                <div className="mt-6 flex items-center justify-between border-t border-gray-200 pt-4">
+                  <div className="flex-1 flex justify-between sm:hidden">
+                    <button
                       onClick={handlePreviousPage}
+                      disabled={!hasPreviousPage}
+                      className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      ← Previous
-                    </Button>
-
-                    <span style={{ padding: "0 15px", fontSize: "14px" }}>
-                      Page {currentPageNumber}
-                      {totalCount > 0 && (
-                        <span style={{ color: theme.colors.secondary }}>
-                          {" "}
-                          (Total: {totalCount} orders)
-                        </span>
-                      )}
-                    </span>
-
-                    <Button
-                      variant="secondary"
-                      disabled={!hasNextPage}
+                      Previous
+                    </button>
+                    <button
                       onClick={handleNextPage}
+                      disabled={!hasNextPage}
+                      className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Next →
-                    </Button>
+                      Next
+                    </button>
+                  </div>
+                  <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm text-gray-700">
+                        Page{" "}
+                        <span className="font-medium">{currentPageNumber}</span>
+                        {totalCount > 0 && (
+                          <>
+                            {" "}
+                            of{" "}
+                            <span className="font-medium">
+                              {Math.ceil(totalCount / pageSize)}
+                            </span>
+                          </>
+                        )}
+                        {totalCount > 0 && (
+                          <span className="ml-2 text-gray-500">
+                            ({totalCount} total orders)
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    <div>
+                      <nav
+                        className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
+                        aria-label="Pagination"
+                      >
+                        <button
+                          onClick={handlePreviousPage}
+                          disabled={!hasPreviousPage}
+                          className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <span className="sr-only">Previous</span>
+                          <ChevronLeftIcon
+                            className="h-5 w-5"
+                            aria-hidden="true"
+                          />
+                        </button>
+                        <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                          Page {currentPageNumber}
+                        </span>
+                        <button
+                          onClick={handleNextPage}
+                          disabled={!hasNextPage}
+                          className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <span className="sr-only">Next</span>
+                          <ChevronRightIcon
+                            className="h-5 w-5"
+                            aria-hidden="true"
+                          />
+                        </button>
+                      </nav>
+                    </div>
                   </div>
                 </div>
               </>
             ) : (
               /* No Results */
-              <div style={{ textAlign: "center", padding: "60px 20px" }}>
-                <div style={{ fontSize: "48px", marginBottom: "20px" }}>📋</div>
-                <h3>No Orders Found</h3>
-                <p
-                  style={{
-                    color: theme.colors.secondary,
-                    marginBottom: "30px",
-                  }}
-                >
+              <div className="text-center py-12">
+                <ClipboardDocumentListIcon className="mx-auto h-12 w-12 text-gray-400" />
+                <h3 className="mt-2 text-sm font-medium text-gray-900">
+                  No Work Orders Found
+                </h3>
+                <p className="mt-1 text-sm text-gray-500">
                   {searchQuery ||
                   statusFilter ||
                   typeFilter ||
@@ -976,16 +1183,9 @@ function AdminOrderListPage() {
                   completionDateGte ||
                   completionDateLte
                     ? "No orders match your current filters. Try adjusting your search criteria."
-                    : "No orders have been created yet."}
+                    : "No work orders have been created yet."}
                 </p>
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "10px",
-                    justifyContent: "center",
-                    flexWrap: "wrap",
-                  }}
-                >
+                <div className="mt-6 flex justify-center gap-3">
                   {(searchQuery ||
                     statusFilter ||
                     typeFilter ||
@@ -993,56 +1193,317 @@ function AdminOrderListPage() {
                     startDateLte ||
                     completionDateGte ||
                     completionDateLte) && (
-                    <Button variant="secondary" onClick={clearFilters}>
+                    <button
+                      onClick={clearFilters}
+                      className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200"
+                    >
                       Clear Filters
-                    </Button>
+                    </button>
                   )}
-                  <Link to="/admin/orders/add/step-1-search">
-                    <Button variant="success">➕ Add First Order</Button>
-                  </Link>
+                  <button
+                    onClick={() => navigate("/admin/orders/add/step-1-search")}
+                    className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700"
+                  >
+                    <PlusIcon className="w-5 h-5 mr-2" />
+                    Add First Order
+                  </button>
                 </div>
               </div>
             )}
-          </>
+          </div>
+        </div>
+
+        {/* Detail Modal */}
+        {showDetailModal && selectedOrder && (
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <ClipboardDocumentListIcon className="w-5 h-5 mr-2 text-blue-600" />
+                  Order Details
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    setSelectedOrder(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-500"
+                >
+                  <XMarkIcon className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="px-6 py-4 overflow-y-auto">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Order Number:
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded-lg text-base font-semibold text-gray-900 flex items-center">
+                      <ClipboardDocumentListIcon className="w-5 h-5 mr-2 text-gray-600" />
+                      {selectedOrder.wjid || `#${selectedOrder.id}`}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Customer:
+                      </label>
+                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
+                        {selectedOrder.customerName ? (
+                          <Link
+                            to={`/admin/customer/${selectedOrder.customerId}`}
+                            className="flex items-center text-blue-600 hover:text-blue-800"
+                          >
+                            <UserIcon className="w-4 h-4 mr-2" />
+                            {selectedOrder.customerName}
+                          </Link>
+                        ) : (
+                          <span className="text-gray-400 italic">
+                            Not assigned
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Associate:
+                      </label>
+                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
+                        {selectedOrder.associateName ? (
+                          <Link
+                            to={`/admin/associate/${selectedOrder.associateId}`}
+                            className="flex items-center text-blue-600 hover:text-blue-800"
+                          >
+                            <WrenchScrewdriverIcon className="w-4 h-4 mr-2" />
+                            {selectedOrder.associateName}
+                          </Link>
+                        ) : (
+                          <span className="text-gray-400 italic">
+                            Unassigned
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Status:
+                      </label>
+                      <div className="p-3 bg-gray-50 rounded-lg">
+                        <span
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeColor(selectedOrder.status)}`}
+                        >
+                          {getOrderStatusDisplay(selectedOrder.status)}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Type:
+                      </label>
+                      <div className="p-3 bg-gray-50 rounded-lg">
+                        <span
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getTypeBadgeColor(selectedOrder.type)}`}
+                        >
+                          {selectedOrder.type === ORDER_TYPE_COMMERCIAL ? (
+                            <BuildingOffice2Icon className="w-4 h-4 mr-1" />
+                          ) : (
+                            <HomeIcon className="w-4 h-4 mr-1" />
+                          )}
+                          {getOrderTypeDisplay(selectedOrder.type)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Start Date:
+                      </label>
+                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
+                        {selectedOrder.startDate ? (
+                          <span className="flex items-center">
+                            <CalendarDaysIcon className="w-4 h-4 mr-2" />
+                            {formatDateForDisplay(selectedOrder.startDate)}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 italic">Not set</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Completion Date:
+                      </label>
+                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
+                        {selectedOrder.completionDate ? (
+                          <span className="flex items-center">
+                            <CalendarDaysIcon className="w-4 h-4 mr-2" />
+                            {formatDateForDisplay(selectedOrder.completionDate)}
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 italic">
+                            Not completed
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {selectedOrder.description && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Description:
+                      </label>
+                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
+                        {selectedOrder.description}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    setSelectedOrder(null);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    navigate(
+                      `/admin/order/${selectedOrder.wjid || selectedOrder.id}/edit`,
+                    );
+                  }}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600"
+                >
+                  <PencilSquareIcon className="w-4 h-4 mr-1" />
+                  Edit
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    navigate(
+                      `/admin/order/${selectedOrder.wjid || selectedOrder.id}`,
+                    );
+                  }}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                >
+                  <EyeIcon className="w-4 h-4 mr-1" />
+                  View Full Details
+                </button>
+              </div>
+            </div>
+          </div>
         )}
-      </Card>
 
-      {/* Delete Confirmation Modal */}
-      <Modal
-        isOpen={showDeleteModal}
-        onClose={() => setShowDeleteModal(false)}
-        title="Confirm Deletion"
-        footer={
-          <>
-            <Button
-              variant="secondary"
-              onClick={() => setShowDeleteModal(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="danger"
-              onClick={handleDeleteOrder}
-              disabled={loading}
-            >
-              {loading ? "Archiving..." : "Archive Order"}
-            </Button>
-          </>
-        }
-      >
-        <p>
-          Are you sure you want to archive order{" "}
-          <strong>{orderToDelete?.wjid || `#${orderToDelete?.id}`}</strong>?
-          This action will archive the order and it will no longer appear on
-          your dashboard.
-        </p>
-      </Modal>
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && orderToDelete && (
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-md w-full">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <ExclamationTriangleIcon className="w-5 h-5 mr-2 text-amber-600" />
+                  Archive Work Order
+                </h3>
+              </div>
 
-      {/* Navigation Links */}
-      <div style={{ marginTop: "30px", textAlign: "center" }}>
-        <Link to="/admin/dashboard">
-          <Button variant="outline">← Back to Dashboard</Button>
-        </Link>
+              <div className="px-6 py-4">
+                <p className="text-sm text-gray-600 mb-4">
+                  Are you sure you want to archive this work order? It will no
+                  longer appear in active lists.
+                </p>
+
+                <div className="p-4 bg-amber-50 rounded-lg border-l-4 border-amber-500">
+                  <p className="text-sm font-medium text-gray-700 mb-1">
+                    <strong>Order:</strong>{" "}
+                    {orderToDelete.wjid || `#${orderToDelete.id}`}
+                  </p>
+                  {orderToDelete.customerName && (
+                    <p className="text-sm text-gray-600 mt-1">
+                      <strong>Customer:</strong> {orderToDelete.customerName}
+                    </p>
+                  )}
+                  <p className="text-sm text-gray-600 mt-1">
+                    <strong>Status:</strong>{" "}
+                    {getOrderStatusDisplay(orderToDelete.status)}
+                  </p>
+                </div>
+
+                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-xs text-blue-800 flex items-start">
+                    <InformationCircleIcon className="w-4 h-4 mr-1 flex-shrink-0" />
+                    <span>
+                      <strong>Note:</strong> This action can be undone by a
+                      system administrator. The order data will be preserved.
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                    setOrderToDelete(null);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteOrder}
+                  disabled={loading}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? (
+                    <>
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Archiving...
+                    </>
+                  ) : (
+                    <>
+                      <ArchiveBoxIcon className="w-4 h-4 mr-2" />
+                      Archive Order
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
