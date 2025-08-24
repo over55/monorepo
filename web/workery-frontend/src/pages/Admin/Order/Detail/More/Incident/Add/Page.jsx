@@ -3,21 +3,26 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import {
+  ChartBarIcon,
+  WrenchScrewdriverIcon,
+  FireIcon,
+  ChevronLeftIcon,
+  PlusCircleIcon,
+  ClipboardDocumentListIcon,
+  CheckCircleIcon,
+  ExclamationCircleIcon,
+  XMarkIcon,
+  InformationCircleIcon,
+  ArchiveBoxIcon,
+  UserGroupIcon,
+  UserIcon,
+  BriefcaseIcon,
+} from "@heroicons/react/24/outline";
+import {
   useOrderManager,
   useOrderIncidentManager,
   useAuthManager,
 } from "../../../../../../../services/Services";
-import { theme, globalStyles } from "../../../../../../../constants/Theme";
-import {
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Breadcrumb,
-  Input,
-  TextArea,
-  Select,
-} from "../../../../../../../components/UI";
 import { ORDER_INCIDENT_CLOSING_REASON_OPTIONS_WITH_EMPTY_OPTIONS } from "../../../../../../../constants/FieldOptions";
 import {
   ORDER_INCIDENT_INIATOR_CLIENT,
@@ -43,7 +48,8 @@ function AdminOrderDetailMoreIncidentAddPage() {
   const [closingReason, setClosingReason] = useState(0);
   const [closingReasonOther, setClosingReasonOther] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertStatus, setAlertStatus] = useState("");
 
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
@@ -65,7 +71,7 @@ function AdminOrderDetailMoreIncidentAddPage() {
         "AdminOrderDetailMoreIncidentAddPage: Failed to fetch order:",
         error,
       );
-      setErrors(error);
+      setErrors({ general: "Failed to load order details" });
       window.scrollTo(0, 0);
     } finally {
       setFetching(false);
@@ -134,7 +140,8 @@ function AdminOrderDetailMoreIncidentAddPage() {
       );
 
       // Show success message
-      setShowSuccessMessage(true);
+      setAlertMessage("Incident created successfully");
+      setAlertStatus("success");
 
       // Redirect after 2 seconds
       setTimeout(() => {
@@ -146,6 +153,8 @@ function AdminOrderDetailMoreIncidentAddPage() {
         error,
       );
       setErrors(error);
+      setAlertMessage("Failed to create incident");
+      setAlertStatus("error");
       window.scrollTo(0, 0);
       setIsSubmitting(false);
     }
@@ -170,219 +179,437 @@ function AdminOrderDetailMoreIncidentAddPage() {
     };
   }, [oid]);
 
-  if (isFetching) {
-    return <Loading message="Loading order details..." />;
-  }
-
-  const breadcrumbItems = [
-    { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
-    { path: "/admin/orders", label: "Orders", icon: "🔧" },
-    {
-      path: `/admin/order/${oid}/more`,
-      label: `Order #${oid} (More)`,
-      icon: "ℹ️",
-    },
-    {
-      path: `/admin/order/${oid}/more/incidents`,
-      label: "Incidents",
-      icon: "🔥",
-    },
-    { label: "New", icon: "➕" },
-  ];
-
-  // Radio button component
-  const RadioButton = ({ name, value, checked, onChange, label }) => (
-    <label
-      style={{ display: "block", marginBottom: "10px", cursor: "pointer" }}
-    >
-      <input
-        type="radio"
-        name={name}
-        value={value}
-        checked={checked}
-        onChange={onChange}
-        style={{ marginRight: "8px" }}
-      />
-      {label}
-    </label>
-  );
-
   return (
-    <div style={globalStyles.container}>
-      <Breadcrumb items={breadcrumbItems} />
-
-      {/* Success Message */}
-      {showSuccessMessage && (
-        <Alert type="success">
-          Incident created successfully! Redirecting...
-        </Alert>
-      )}
-
-      {/* Archived Banner */}
-      {order && order.status === 2 && (
-        <Alert type="info">This order is archived</Alert>
-      )}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Breadcrumb */}
+      <nav className="flex mb-6" aria-label="Breadcrumb">
+        <ol className="inline-flex items-center space-x-1 md:space-x-3">
+          <li className="inline-flex items-center">
+            <Link
+              to="/admin/dashboard"
+              className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+            >
+              <ChartBarIcon className="w-4 h-4 mr-2" />
+              Dashboard
+            </Link>
+          </li>
+          <li>
+            <div className="flex items-center">
+              <span className="mx-2 text-gray-400">/</span>
+              <Link
+                to="/admin/orders"
+                className="text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <span className="inline-flex items-center">
+                  <WrenchScrewdriverIcon className="w-4 h-4 mr-2" />
+                  Orders
+                </span>
+              </Link>
+            </div>
+          </li>
+          <li>
+            <div className="flex items-center">
+              <span className="mx-2 text-gray-400">/</span>
+              <Link
+                to={`/admin/order/${oid}/more`}
+                className="text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <span className="inline-flex items-center">
+                  <InformationCircleIcon className="w-4 h-4 mr-2" />
+                  Order #{oid} (More)
+                </span>
+              </Link>
+            </div>
+          </li>
+          <li>
+            <div className="flex items-center">
+              <span className="mx-2 text-gray-400">/</span>
+              <Link
+                to={`/admin/order/${oid}/more/incidents`}
+                className="text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <span className="inline-flex items-center">
+                  <FireIcon className="w-4 h-4 mr-2" />
+                  Incidents
+                </span>
+              </Link>
+            </div>
+          </li>
+          <li aria-current="page">
+            <div className="flex items-center">
+              <span className="mx-2 text-gray-400">/</span>
+              <span className="text-sm font-medium text-gray-500 inline-flex items-center">
+                <PlusCircleIcon className="w-4 h-4 mr-2" />
+                Add
+              </span>
+            </div>
+          </li>
+        </ol>
+      </nav>
 
       {/* Page Title */}
-      <h1>🔥 Incident</h1>
-      <h4>➕ New</h4>
-      <hr />
+      <div className="mb-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center">
+              <FireIcon className="w-8 h-8 mr-3 text-orange-600" />
+              Order - Add Incident
+            </h1>
+            <p className="mt-1 text-sm text-gray-600 flex items-center">
+              <InformationCircleIcon className="w-4 h-4 mr-1" />
+              Report and document incidents related to this order
+            </p>
+          </div>
+        </div>
+      </div>
 
-      {/* Page Content */}
-      <Card title="➕ New Incident">
-        {/* Error Display */}
-        {errors && Object.keys(errors).length > 0 && (
-          <Alert type="error" onClose={() => setErrors({})}>
-            <div>
-              <strong>There were errors with your submission:</strong>
-              <ul style={{ margin: "10px 0 0 20px" }}>
-                {Object.entries(errors).map(([key, value]) => (
-                  <li key={key}>{value}</li>
-                ))}
-              </ul>
-            </div>
-          </Alert>
-        )}
+      {/* Status Alerts */}
+      {order && order.status === 2 && (
+        <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg flex items-center">
+          <ArchiveBoxIcon className="w-5 h-5 mr-2" />
+          This order is archived
+        </div>
+      )}
 
-        <p style={{ marginBottom: "20px" }}>
-          Please fill out all the required fields before submitting this form.
-        </p>
-
-        {/* Start Date Field */}
-        <Input
-          label="Start Date"
-          name="startDate"
-          type="date"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-          error={errors.startDate}
-          required
-        />
+      {/* Alert Messages */}
+      {alertMessage && (
         <div
-          style={{
-            fontSize: "12px",
-            color: "#666",
-            marginTop: "-15px",
-            marginBottom: "20px",
-          }}
+          className={`mb-4 px-4 py-3 rounded-lg flex items-center justify-between ${
+            alertStatus === "success"
+              ? "bg-green-50 border border-green-200 text-green-700"
+              : "bg-red-50 border border-red-200 text-red-700"
+          }`}
         >
-          Please enter the date this incident began
+          <div className="flex items-center">
+            {alertStatus === "success" ? (
+              <CheckCircleIcon className="w-5 h-5 mr-2" />
+            ) : (
+              <ExclamationCircleIcon className="w-5 h-5 mr-2" />
+            )}
+            <span>{alertMessage}</span>
+          </div>
+          <button
+            onClick={() => {
+              setAlertMessage("");
+              setAlertStatus("");
+            }}
+            className="ml-4 hover:bg-white hover:bg-opacity-20 rounded p-1"
+          >
+            <XMarkIcon className="w-5 h-5" />
+          </button>
+        </div>
+      )}
+
+      {/* Main Content Card */}
+      <div className="bg-white shadow-sm rounded-lg">
+        <div className="px-6 py-5 border-b border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+            <PlusCircleIcon className="w-6 h-6 mr-2 text-orange-600" />
+            New Incident
+          </h2>
         </div>
 
-        {/* Initiator Radio Field */}
-        <div style={{ marginBottom: "20px" }}>
-          <label style={globalStyles.label}>
-            Who initiated this incident? <span style={{ color: "red" }}>*</span>
-          </label>
-          <RadioButton
-            name="initiator"
-            value={ORDER_INCIDENT_INIATOR_CLIENT}
-            checked={initiator === ORDER_INCIDENT_INIATOR_CLIENT}
-            onChange={(e) => setInitiator(parseInt(e.target.value))}
-            label="Client"
-          />
-          <RadioButton
-            name="initiator"
-            value={ORDER_INCIDENT_INIATOR_ASSOCIATE}
-            checked={initiator === ORDER_INCIDENT_INIATOR_ASSOCIATE}
-            onChange={(e) => setInitiator(parseInt(e.target.value))}
-            label="Associate"
-          />
-          <RadioButton
-            name="initiator"
-            value={ORDER_INCIDENT_INIATOR_STAFF}
-            checked={initiator === ORDER_INCIDENT_INIATOR_STAFF}
-            onChange={(e) => setInitiator(parseInt(e.target.value))}
-            label="Staff"
-          />
-          {errors.initiator && (
-            <div style={globalStyles.errorMessage}>{errors.initiator}</div>
+        <div className="p-6">
+          {isFetching ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-orange-600 mx-auto"></div>
+                <p className="mt-4 text-gray-600">Loading order details...</p>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Error Display */}
+              {errors.general && (
+                <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                  <div className="flex items-center">
+                    <ExclamationCircleIcon className="w-5 h-5 mr-2" />
+                    <span>{errors.general}</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Form Validation Errors */}
+              {errors && Object.keys(errors).length > 0 && !errors.general && (
+                <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                  <div className="flex items-start">
+                    <ExclamationCircleIcon className="w-5 h-5 mr-2 mt-0.5" />
+                    <div>
+                      <p className="font-medium">
+                        There were errors with your submission:
+                      </p>
+                      <ul className="mt-2 list-disc list-inside space-y-1">
+                        {Object.entries(errors).map(([key, value]) => (
+                          <li key={key} className="text-sm">
+                            {value}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <p className="mb-6 text-gray-600">
+                Please fill out all the required fields before submitting this
+                form.
+              </p>
+
+              {/* Form */}
+              <div className="space-y-6">
+                {/* Start Date Input */}
+                <div>
+                  <label
+                    htmlFor="startDate"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Start Date <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    id="startDate"
+                    name="startDate"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm ${
+                      errors.startDate
+                        ? "border-red-300 text-red-900"
+                        : "border-gray-300"
+                    }`}
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    Please enter the date this incident began
+                  </p>
+                  {errors.startDate && (
+                    <p className="mt-2 text-sm text-red-600">
+                      {errors.startDate}
+                    </p>
+                  )}
+                </div>
+
+                {/* Initiator Radio Field */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                    Who initiated this incident?{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <div className="space-y-3">
+                    <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                      <input
+                        type="radio"
+                        name="initiator"
+                        value={ORDER_INCIDENT_INIATOR_CLIENT}
+                        checked={initiator === ORDER_INCIDENT_INIATOR_CLIENT}
+                        onChange={(e) => setInitiator(parseInt(e.target.value))}
+                        className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300"
+                      />
+                      <span className="ml-3 flex items-center">
+                        <UserIcon className="w-5 h-5 mr-2 text-gray-500" />
+                        <span className="text-sm font-medium text-gray-900">
+                          Client
+                        </span>
+                      </span>
+                    </label>
+                    <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                      <input
+                        type="radio"
+                        name="initiator"
+                        value={ORDER_INCIDENT_INIATOR_ASSOCIATE}
+                        checked={initiator === ORDER_INCIDENT_INIATOR_ASSOCIATE}
+                        onChange={(e) => setInitiator(parseInt(e.target.value))}
+                        className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300"
+                      />
+                      <span className="ml-3 flex items-center">
+                        <UserGroupIcon className="w-5 h-5 mr-2 text-gray-500" />
+                        <span className="text-sm font-medium text-gray-900">
+                          Associate
+                        </span>
+                      </span>
+                    </label>
+                    <label className="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                      <input
+                        type="radio"
+                        name="initiator"
+                        value={ORDER_INCIDENT_INIATOR_STAFF}
+                        checked={initiator === ORDER_INCIDENT_INIATOR_STAFF}
+                        onChange={(e) => setInitiator(parseInt(e.target.value))}
+                        className="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300"
+                      />
+                      <span className="ml-3 flex items-center">
+                        <BriefcaseIcon className="w-5 h-5 mr-2 text-gray-500" />
+                        <span className="text-sm font-medium text-gray-900">
+                          Staff
+                        </span>
+                      </span>
+                    </label>
+                  </div>
+                  {errors.initiator && (
+                    <p className="mt-2 text-sm text-red-600">
+                      {errors.initiator}
+                    </p>
+                  )}
+                </div>
+
+                {/* Title Input */}
+                <div>
+                  <label
+                    htmlFor="title"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Title <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="title"
+                    name="title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Enter incident title"
+                    className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm ${
+                      errors.title
+                        ? "border-red-300 text-red-900 placeholder-red-300"
+                        : "border-gray-300"
+                    }`}
+                  />
+                  {errors.title && (
+                    <p className="mt-2 text-sm text-red-600">{errors.title}</p>
+                  )}
+                </div>
+
+                {/* Description TextArea */}
+                <div>
+                  <label
+                    htmlFor="description"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Description <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    id="description"
+                    name="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="Describe the incident"
+                    rows={5}
+                    maxLength={1000}
+                    className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm ${
+                      errors.description
+                        ? "border-red-300 text-red-900 placeholder-red-300"
+                        : "border-gray-300"
+                    }`}
+                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    {description.length}/1000 characters
+                  </p>
+                  {errors.description && (
+                    <p className="mt-2 text-sm text-red-600">
+                      {errors.description}
+                    </p>
+                  )}
+                </div>
+
+                {/* Closing Reason Select */}
+                <div>
+                  <label
+                    htmlFor="closingReason"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
+                    Closing Reason (Optional)
+                  </label>
+                  <select
+                    id="closingReason"
+                    name="closingReason"
+                    value={closingReason}
+                    onChange={(e) => setClosingReason(parseInt(e.target.value))}
+                    className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm ${
+                      errors.closingReason
+                        ? "border-red-300 text-red-900"
+                        : "border-gray-300"
+                    }`}
+                  >
+                    {ORDER_INCIDENT_CLOSING_REASON_OPTIONS_WITH_EMPTY_OPTIONS.map(
+                      (option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ),
+                    )}
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">
+                    If this incident was resolved, please select the closing
+                    reason for this incident
+                  </p>
+                  {errors.closingReason && (
+                    <p className="mt-2 text-sm text-red-600">
+                      {errors.closingReason}
+                    </p>
+                  )}
+                </div>
+
+                {/* Closing Reason Other Field */}
+                {closingReason === 1 && (
+                  <div>
+                    <label
+                      htmlFor="closingReasonOther"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Reason (Other) <span className="text-red-500">*</span>
+                    </label>
+                    <textarea
+                      id="closingReasonOther"
+                      name="closingReasonOther"
+                      value={closingReasonOther}
+                      onChange={(e) => setClosingReasonOther(e.target.value)}
+                      placeholder="Please specify the reason"
+                      rows={5}
+                      maxLength={500}
+                      className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm ${
+                        errors.closingReasonOther
+                          ? "border-red-300 text-red-900 placeholder-red-300"
+                          : "border-gray-300"
+                      }`}
+                    />
+                    <p className="mt-1 text-xs text-gray-500">
+                      {closingReasonOther.length}/500 characters
+                    </p>
+                    {errors.closingReasonOther && (
+                      <p className="mt-2 text-sm text-red-600">
+                        {errors.closingReasonOther}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex justify-between items-center pt-6 border-t border-gray-200">
+                  <Link to={`/admin/order/${oid}/more/incidents`}>
+                    <button
+                      type="button"
+                      className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                    >
+                      <ChevronLeftIcon className="w-5 h-5 mr-2" />
+                      Back to Incidents
+                    </button>
+                  </Link>
+                  <button
+                    type="button"
+                    onClick={onSubmitClick}
+                    disabled={isSubmitting}
+                    className={`inline-flex items-center px-5 py-2.5 border rounded-lg text-base font-medium transition-colors ${
+                      isSubmitting
+                        ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+                        : "border-transparent text-white bg-green-600 hover:bg-green-700"
+                    }`}
+                  >
+                    <CheckCircleIcon className="w-5 h-5 mr-2" />
+                    {isSubmitting ? "Submitting..." : "Submit"}
+                  </button>
+                </div>
+              </div>
+            </>
           )}
         </div>
-
-        {/* Title Field */}
-        <Input
-          label="Title"
-          name="title"
-          placeholder="Enter incident title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          error={errors.title}
-          required
-        />
-
-        {/* Description Field */}
-        <TextArea
-          label="Description"
-          name="description"
-          placeholder="Describe the incident"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          error={errors.description}
-          required
-          rows={5}
-          maxLength={1000}
-        />
-
-        {/* Closing Reason Field (Optional) */}
-        <Select
-          label="Closing Reason (Optional)"
-          name="closingReason"
-          value={closingReason}
-          onChange={(e) => setClosingReason(parseInt(e.target.value))}
-          options={ORDER_INCIDENT_CLOSING_REASON_OPTIONS_WITH_EMPTY_OPTIONS}
-          error={errors.closingReason}
-        />
-        <div
-          style={{
-            fontSize: "12px",
-            color: "#666",
-            marginTop: "-15px",
-            marginBottom: "20px",
-          }}
-        >
-          If this incident was resolved, please select the closing reason for
-          this incident
-        </div>
-
-        {/* Closing Reason Other Field */}
-        {closingReason === 1 && (
-          <TextArea
-            label="Reason (Other)"
-            name="closingReasonOther"
-            placeholder="Please specify the reason"
-            value={closingReasonOther}
-            onChange={(e) => setClosingReasonOther(e.target.value)}
-            error={errors.closingReasonOther}
-            required
-            rows={5}
-            maxLength={500}
-          />
-        )}
-
-        {/* Action Buttons */}
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            marginTop: "30px",
-            flexWrap: "wrap",
-            gap: "10px",
-          }}
-        >
-          <Link to={`/admin/order/${oid}/more/incidents`}>
-            <Button variant="secondary">← Back to Incidents</Button>
-          </Link>
-
-          <Button
-            variant="success"
-            onClick={onSubmitClick}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Submitting..." : "✓ Submit"}
-          </Button>
-        </div>
-      </Card>
+      </div>
     </div>
   );
 }

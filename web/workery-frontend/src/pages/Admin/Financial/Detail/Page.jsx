@@ -2,14 +2,30 @@
 
 import React, { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router";
-import { useOrderManager } from "../../../../services/Services";
 import {
-  Card,
-  Alert,
-  Loading,
-  Breadcrumb,
-  Button,
-} from "../../../../components/UI";
+  ChartBarIcon,
+  CreditCardIcon,
+  InformationCircleIcon,
+  PencilSquareIcon,
+  ChevronLeftIcon,
+  DocumentTextIcon,
+  CalendarIcon,
+  UserGroupIcon,
+  UserIcon,
+  CurrencyDollarIcon,
+  BanknotesIcon,
+  ReceiptPercentIcon,
+  ClipboardDocumentListIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ArchiveBoxIcon,
+  EllipsisHorizontalIcon,
+  HashtagIcon,
+  ClockIcon,
+  CalculatorIcon,
+  BuildingOfficeIcon,
+} from "@heroicons/react/24/outline";
+import { useOrderManager } from "../../../../services/Services";
 import { DateTime } from "luxon";
 import { ORDER_INVOICE_PAYMENT_METHODS_OPTIONS } from "../../../../constants/FieldOptions";
 import { ORDER_STATUS_ARCHIVED } from "../../../../constants/Order";
@@ -23,9 +39,10 @@ function AdminFinancialDetailPage() {
   const orderManager = useOrderManager();
 
   // Component states
-  const [errors, setErrors] = useState({});
-  const [isFetching, setFetching] = useState(false);
   const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Handle unauthorized access
   const onUnauthorized = () => {
@@ -33,63 +50,38 @@ function AdminFinancialDetailPage() {
   };
 
   // Fetch order details
+  const fetchOrderDetails = async () => {
+    if (!oid) {
+      setError("Order ID is required");
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const orderData = await orderManager.getOrderDetail(oid, onUnauthorized);
+      setOrder(orderData);
+    } catch (err) {
+      console.error("Failed to fetch order details:", err);
+      setError("Failed to load financial details. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial data load
   useEffect(() => {
-    let mounted = true;
-
-    const fetchOrderDetails = async () => {
-      if (!oid) {
-        setErrors({ general: "Order ID is required" });
-        return;
-      }
-
-      setFetching(true);
-      setErrors({});
-
-      try {
-        // Use the new OrderManager to fetch order details
-        const orderData = await orderManager.getOrderDetail(
-          oid,
-          onUnauthorized,
-        );
-
-        if (mounted) {
-          setOrder(orderData);
-        }
-      } catch (error) {
-        console.error("Failed to fetch order details:", error);
-        if (mounted) {
-          if (typeof error === "object" && error !== null) {
-            setErrors(error);
-          } else {
-            setErrors({
-              general: "Failed to load order details. Please try again.",
-            });
-          }
-        }
-      } finally {
-        if (mounted) {
-          setFetching(false);
-        }
-      }
-    };
-
-    fetchOrderDetails();
-
-    // Scroll to top when component mounts
     window.scrollTo(0, 0);
-
-    return () => {
-      mounted = false;
-    };
+    fetchOrderDetails();
   }, [oid]);
 
-  // Format currency
+  // Helper functions
   const formatCurrency = (amount) => {
     if (amount === null || amount === undefined) return "-";
     return `$${parseFloat(amount).toFixed(2)}`;
   };
 
-  // Format date
   const formatDate = (dateString) => {
     if (!dateString) return "-";
     try {
@@ -99,7 +91,15 @@ function AdminFinancialDetailPage() {
     }
   };
 
-  // Get payment methods display
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "-";
+    try {
+      return DateTime.fromISO(dateString).toLocaleString(DateTime.DATETIME_MED);
+    } catch (error) {
+      return dateString;
+    }
+  };
+
   const getPaymentMethodsDisplay = (paymentMethods) => {
     if (!paymentMethods || !Array.isArray(paymentMethods)) return "-";
 
@@ -118,461 +118,417 @@ function AdminFinancialDetailPage() {
     return order && order.status === ORDER_STATUS_ARCHIVED;
   };
 
-  // Check if customer ID is valid (not empty or default MongoDB ObjectId)
+  // Check if customer ID is valid
   const hasValidCustomer = () => {
     const EMPTY_OBJECT_ID = "000000000000000000000000";
     return order && order.customerId && order.customerId !== EMPTY_OBJECT_ID;
   };
 
-  // Check if associate ID is valid (not empty or default MongoDB ObjectId)
+  // Check if associate ID is valid
   const hasValidAssociate = () => {
     const EMPTY_OBJECT_ID = "000000000000000000000000";
     return order && order.associateId && order.associateId !== EMPTY_OBJECT_ID;
   };
 
-  // Render error messages
-  const renderErrors = () => {
-    if (!errors || Object.keys(errors).length === 0) return null;
+  // Section Component
+  const DetailSection = ({ title, icon: Icon, children }) => (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-4 sm:mb-6">
+      <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-b border-gray-200 rounded-t-lg">
+        <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600 flex-shrink-0" />
+          <span className="truncate">{title}</span>
+        </h3>
+      </div>
+      <div className="p-4 sm:p-6">
+        <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          {children}
+        </dl>
+      </div>
+    </div>
+  );
 
-    return (
-      <Alert type="error">
-        <h4>Error</h4>
-        {errors.general && <p>{errors.general}</p>}
-        {Object.keys(errors).map((key) => {
-          if (key !== "general") {
-            return <p key={key}>{`${key}: ${errors[key]}`}</p>;
-          }
-          return null;
-        })}
-      </Alert>
-    );
-  };
+  // Detail Field Component
+  const DetailField = ({
+    label,
+    value,
+    fullWidth = false,
+    highlight = false,
+  }) => (
+    <div className={fullWidth ? "lg:col-span-2" : ""}>
+      <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+        {label}
+      </dt>
+      <dd
+        className={`text-sm sm:text-base ${highlight ? "font-semibold text-gray-900" : "text-gray-900"} break-words`}
+      >
+        {value || "-"}
+      </dd>
+    </div>
+  );
 
-  // Loading state
-  if (isFetching) {
+  if (loading) {
     return (
-      <div>
-        <Breadcrumb
-          items={[
-            { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
-            { path: "/admin/financials", label: "Financials", icon: "💳" },
-            { label: `Order #${oid}`, icon: "📄" },
-          ]}
-        />
-        <Loading message="Loading financial details..." />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-sm sm:text-base text-gray-600">
+              Loading financial details...
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div>
-      {/* Breadcrumb */}
-      <Breadcrumb
-        items={[
-          { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
-          { path: "/admin/financials", label: "Financials", icon: "💳" },
-          { label: `Order #${oid}`, icon: "📄" },
-        ]}
-      />
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+      {/* Responsive Breadcrumb */}
+      <nav
+        className="flex mb-4 sm:mb-6 overflow-x-auto"
+        aria-label="Breadcrumb"
+      >
+        <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
+          <li className="inline-flex items-center">
+            <Link
+              to="/admin/dashboard"
+              className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
+            >
+              <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+              <span className="hidden sm:inline">Dashboard</span>
+              <span className="sm:hidden">Dash</span>
+            </Link>
+          </li>
+          <li>
+            <div className="flex items-center">
+              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
+              <Link
+                to="/admin/financials"
+                className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
+              >
+                <span className="inline-flex items-center">
+                  <CreditCardIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                  Financials
+                </span>
+              </Link>
+            </div>
+          </li>
+          <li aria-current="page">
+            <div className="flex items-center">
+              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
+              <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
+                <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                Detail
+              </span>
+            </div>
+          </li>
+        </ol>
+      </nav>
 
-      {/* Page banner for archived orders */}
-      {isOrderArchived() && <Alert type="info">This order is archived.</Alert>}
+      {/* Page Title - Responsive */}
+      <div className="mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+              <CreditCardIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
+              Financials
+            </h1>
+            <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+              <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
+              View complete financial information for order #
+              {order?.wjid || order?.id || oid}
+            </p>
+          </div>
+        </div>
+      </div>
 
-      {/* Page Title */}
-      <h1>💳 Financials</h1>
-      <h4>📄 Detail</h4>
-      <hr />
+      {/* Status Alerts - Responsive */}
+      {order && isOrderArchived() && (
+        <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center text-sm sm:text-base">
+          <ArchiveBoxIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+          This order is archived
+        </div>
+      )}
 
-      {/* Error display */}
-      {renderErrors()}
+      {/* Error Display - Responsive */}
+      {error && (
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base">
+          <div className="flex justify-between items-center">
+            <span className="break-words">{error}</span>
+            <button
+              onClick={() => setError(null)}
+              className="text-red-700 hover:text-red-900 ml-2 flex-shrink-0"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
-      {order && (
-        <Card
-          title="Financial Detail"
-          actions={
-            <Link to={`/admin/financial/${oid}/edit`}>
-              <Button variant="warning" disabled={isOrderArchived()}>
-                ✏️ Edit
-              </Button>
-            </Link>
-          }
-        >
-          {/* Tab Navigation */}
-          <div>
-            <ul
-              style={{
-                display: "flex",
-                listStyle: "none",
-                padding: 0,
-                borderBottom: "1px solid #ddd",
-              }}
-            >
-              <li
-                style={{
-                  marginRight: "20px",
-                  paddingBottom: "10px",
-                  borderBottom: "2px solid #007bff",
-                }}
-              >
-                <strong>Detail</strong>
-              </li>
-              <li style={{ marginRight: "20px", paddingBottom: "10px" }}>
-                <Link to={`/admin/financial/${oid}/invoice`}>Invoice</Link>
-              </li>
-              <li style={{ paddingBottom: "10px" }}>
-                <Link to={`/admin/financial/${oid}/more`}>More ⋯</Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Financial Information Table */}
-          <table
-            style={{
-              width: "100%",
-              borderCollapse: "collapse",
-              marginTop: "20px",
-            }}
-          >
-            <thead>
-              <tr style={{ backgroundColor: "#000", color: "#fff" }}>
-                <th colSpan="2" style={{ padding: "10px", textAlign: "left" }}>
-                  Financial Information
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <th
-                  style={{
-                    width: "30%",
-                    padding: "10px",
-                    backgroundColor: "#f8f9fa",
-                    textAlign: "left",
-                  }}
-                >
-                  Order #
-                </th>
-                <td style={{ padding: "10px" }}>
-                  <Link to={`/admin/order/${order.wjid || order.id}`}>
-                    {order.wjid || order.id}
+      <div className="bg-white shadow-sm rounded-lg">
+        {order && (
+          <>
+            {/* Header with Actions - Responsive */}
+            <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 flex items-center">
+                  <ClipboardDocumentListIcon className="w-5 sm:w-7 h-5 sm:h-7 mr-2 text-blue-600 flex-shrink-0" />
+                  Financial Detail
+                </h2>
+                <div className="flex gap-2 sm:gap-3">
+                  <Link
+                    to="/admin/financials"
+                    className="flex-1 sm:flex-initial"
+                  >
+                    <button className="w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                      <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
+                      Back
+                    </button>
                   </Link>
-                </td>
-              </tr>
-
-              <tr>
-                <th
-                  style={{
-                    padding: "10px",
-                    backgroundColor: "#f8f9fa",
-                    textAlign: "left",
-                  }}
-                >
-                  Order Assignment Date
-                </th>
-                <td style={{ padding: "10px" }}>
-                  {formatDate(order.assignmentDate)}
-                </td>
-              </tr>
-
-              <tr>
-                <th
-                  style={{
-                    padding: "10px",
-                    backgroundColor: "#f8f9fa",
-                    textAlign: "left",
-                  }}
-                >
-                  Order Start Date
-                </th>
-                <td style={{ padding: "10px" }}>
-                  {formatDate(order.startDate)}
-                </td>
-              </tr>
-
-              <tr>
-                <th
-                  style={{
-                    padding: "10px",
-                    backgroundColor: "#f8f9fa",
-                    textAlign: "left",
-                  }}
-                >
-                  Order Completion Date
-                </th>
-                <td style={{ padding: "10px" }}>
-                  {formatDate(order.completionDate)}
-                </td>
-              </tr>
-
-              {hasValidCustomer() && (
-                <tr>
-                  <th
-                    style={{
-                      padding: "10px",
-                      backgroundColor: "#f8f9fa",
-                      textAlign: "left",
-                    }}
+                  <Link
+                    to={`/admin/financial/${oid}/edit`}
+                    className="flex-1 sm:flex-initial"
                   >
-                    Customer
-                  </th>
-                  <td style={{ padding: "10px" }}>
-                    <Link to={`/admin/customer/${order.customerId}`}>
-                      {order.customerName || "View Customer"}
-                    </Link>
-                  </td>
-                </tr>
-              )}
+                    <button
+                      disabled={isOrderArchived()}
+                      className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
+                        isOrderArchived()
+                          ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+                          : "border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100"
+                      }`}
+                    >
+                      <PencilSquareIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
+                      Edit
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            </div>
 
-              {hasValidAssociate() && (
-                <tr>
-                  <th
-                    style={{
-                      padding: "10px",
-                      backgroundColor: "#f8f9fa",
-                      textAlign: "left",
-                    }}
+            {/* Tab Navigation - Responsive with horizontal scroll on mobile */}
+            <div className="border-b border-gray-200">
+              <div className="px-4 sm:px-6">
+                <nav className="-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide">
+                  <div className="border-b-2 border-blue-600 py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-blue-600 whitespace-nowrap">
+                    Detail
+                  </div>
+                  <Link
+                    to={`/admin/financial/${oid}/invoice`}
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
                   >
-                    Associate
-                  </th>
-                  <td style={{ padding: "10px" }}>
-                    <Link to={`/admin/associate/${order.associateId}`}>
-                      {order.associateName || "View Associate"}
+                    Invoice
+                  </Link>
+                  <Link
+                    to={`/admin/financial/${oid}/more`}
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center whitespace-nowrap"
+                  >
+                    More
+                    <EllipsisHorizontalIcon className="w-4 sm:w-5 h-4 sm:h-5 ml-1" />
+                  </Link>
+                </nav>
+              </div>
+            </div>
+
+            {/* Detail Sections - Responsive */}
+            <div className="p-4 sm:p-6">
+              {/* Order Information */}
+              <DetailSection
+                title="Order Information"
+                icon={ClipboardDocumentListIcon}
+              >
+                <DetailField
+                  label="Order #"
+                  value={
+                    <Link
+                      to={`/admin/order/${order.wjid || order.id}`}
+                      className="text-blue-600 hover:text-blue-700"
+                    >
+                      {order.wjid || order.id}
                     </Link>
-                  </td>
-                </tr>
-              )}
+                  }
+                />
+                <DetailField label="# of Visits" value={order.visits} />
 
-              <tr>
-                <th
-                  style={{
-                    padding: "10px",
-                    backgroundColor: "#f8f9fa",
-                    textAlign: "left",
-                  }}
-                >
-                  Invoice Date
-                </th>
-                <td style={{ padding: "10px" }}>
-                  {formatDate(order.invoiceDate)}
-                </td>
-              </tr>
+                {hasValidCustomer() && (
+                  <DetailField
+                    label="Customer"
+                    value={
+                      <Link
+                        to={`/admin/customer/${order.customerId}`}
+                        className="text-blue-600 hover:text-blue-700"
+                      >
+                        {order.customerName || "View Customer"}
+                      </Link>
+                    }
+                  />
+                )}
 
-              <tr>
-                <th
-                  style={{
-                    padding: "10px",
-                    backgroundColor: "#f8f9fa",
-                    textAlign: "left",
-                  }}
-                >
-                  Invoice ID(s) #
-                </th>
-                <td style={{ padding: "10px" }}>{order.invoiceIds || "-"}</td>
-              </tr>
+                {hasValidAssociate() && (
+                  <DetailField
+                    label="Associate"
+                    value={
+                      <Link
+                        to={`/admin/associate/${order.associateId}`}
+                        className="text-blue-600 hover:text-blue-700"
+                      >
+                        {order.associateName || "View Associate"}
+                      </Link>
+                    }
+                  />
+                )}
+              </DetailSection>
 
-              <tr>
-                <th
-                  style={{
-                    padding: "10px",
-                    backgroundColor: "#f8f9fa",
-                    textAlign: "left",
-                  }}
-                >
-                  Invoice Quote
-                </th>
-                <td style={{ padding: "10px" }}>
-                  {formatCurrency(order.invoiceQuoteAmount)}
-                </td>
-              </tr>
+              {/* Important Dates */}
+              <DetailSection title="Important Dates" icon={CalendarIcon}>
+                <DetailField
+                  label="Order Assignment Date"
+                  value={formatDate(order.assignmentDate)}
+                />
+                <DetailField
+                  label="Order Start Date"
+                  value={formatDate(order.startDate)}
+                />
+                <DetailField
+                  label="Order Completion Date"
+                  value={formatDate(order.completionDate)}
+                />
+                <DetailField
+                  label="Invoice Date"
+                  value={formatDate(order.invoiceDate)}
+                />
+                <DetailField
+                  label="Invoice Service Fee Payment Date"
+                  value={formatDate(order.invoiceServiceFeePaymentDate)}
+                />
+              </DetailSection>
 
-              <tr>
-                <th
-                  style={{
-                    padding: "10px",
-                    backgroundColor: "#f8f9fa",
-                    textAlign: "left",
-                  }}
-                >
-                  Invoice Labour
-                </th>
-                <td style={{ padding: "10px" }}>
-                  {formatCurrency(order.invoiceLabourAmount)}
-                </td>
-              </tr>
+              {/* Invoice Details */}
+              <DetailSection title="Invoice Details" icon={DocumentTextIcon}>
+                <DetailField label="Invoice ID(s) #" value={order.invoiceIds} />
+                <DetailField
+                  label="Invoice Quote"
+                  value={formatCurrency(order.invoiceQuoteAmount)}
+                />
+                <DetailField
+                  label="Invoice Labour"
+                  value={formatCurrency(order.invoiceLabourAmount)}
+                />
+                <DetailField
+                  label="Invoice Material"
+                  value={formatCurrency(order.invoiceMaterialAmount)}
+                />
+                <DetailField
+                  label="Invoice Tax"
+                  value={
+                    <>
+                      {formatCurrency(order.invoiceTaxAmount)}
+                      {order.invoiceIsCustomTaxAmount && (
+                        <span className="ml-2 text-xs sm:text-sm text-gray-600">
+                          (Custom value was set)
+                        </span>
+                      )}
+                    </>
+                  }
+                />
+                {order.associateTaxId && (
+                  <DetailField
+                    label="Invoice HST #"
+                    value={order.associateTaxId}
+                  />
+                )}
+                <DetailField
+                  label="Invoice Total"
+                  value={formatCurrency(order.invoiceTotalAmount)}
+                  highlight={true}
+                />
+              </DetailSection>
 
-              <tr>
-                <th
-                  style={{
-                    padding: "10px",
-                    backgroundColor: "#f8f9fa",
-                    textAlign: "left",
-                  }}
-                >
-                  Invoice Material
-                </th>
-                <td style={{ padding: "10px" }}>
-                  {formatCurrency(order.invoiceMaterialAmount)}
-                </td>
-              </tr>
-
-              <tr>
-                <th
-                  style={{
-                    padding: "10px",
-                    backgroundColor: "#f8f9fa",
-                    textAlign: "left",
-                  }}
-                >
-                  Invoice Tax
-                </th>
-                <td style={{ padding: "10px" }}>
-                  {formatCurrency(order.invoiceTaxAmount)}
-                  {order.invoiceIsCustomTaxAmount && (
-                    <span> (ℹ️ Note: Custom value was set)</span>
+              {/* Payment Information */}
+              <DetailSection title="Payment Information" icon={CreditCardIcon}>
+                <DetailField
+                  label="Invoice Service Fee"
+                  value={formatCurrency(order.invoiceServiceFeeAmount)}
+                />
+                <DetailField
+                  label="Payment Method(s)"
+                  value={getPaymentMethodsDisplay(order.paymentMethods)}
+                />
+                <DetailField
+                  label="Actual Service Fee Amount Paid"
+                  value={formatCurrency(
+                    order.invoiceActualServiceFeeAmountPaid,
                   )}
-                </td>
-              </tr>
+                />
+                <DetailField
+                  label="Account Balance"
+                  value={
+                    <span
+                      className={`font-semibold ${
+                        order.invoiceBalanceOwingAmount > 0
+                          ? "text-red-600"
+                          : "text-green-600"
+                      }`}
+                    >
+                      {formatCurrency(order.invoiceBalanceOwingAmount)}
+                    </span>
+                  }
+                />
+              </DetailSection>
 
-              {order.associateTaxId && (
-                <tr>
-                  <th
-                    style={{
-                      padding: "10px",
-                      backgroundColor: "#f8f9fa",
-                      textAlign: "left",
-                    }}
+              {/* Action Buttons - Responsive */}
+              <div className="flex flex-col sm:flex-row sm:justify-between items-stretch sm:items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 gap-3">
+                <Link to="/admin/financials" className="order-2 sm:order-1">
+                  <button className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                    <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
+                    Back to Financials
+                  </button>
+                </Link>
+
+                <div className="flex gap-2 sm:gap-3 order-1 sm:order-2">
+                  <Link
+                    to={`/admin/financial/${oid}/edit`}
+                    className="flex-1 sm:flex-initial"
                   >
-                    Invoice HST #
-                  </th>
-                  <td style={{ padding: "10px" }}>{order.associateTaxId}</td>
-                </tr>
-              )}
+                    <button
+                      disabled={isOrderArchived()}
+                      className={`w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
+                        isOrderArchived()
+                          ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+                          : "border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100"
+                      }`}
+                    >
+                      <PencilSquareIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
+                      Edit
+                    </button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </>
+        )}
 
-              <tr>
-                <th
-                  style={{
-                    padding: "10px",
-                    backgroundColor: "#f8f9fa",
-                    textAlign: "left",
-                  }}
-                >
-                  Invoice Total
-                </th>
-                <td style={{ padding: "10px" }}>
-                  {formatCurrency(order.invoiceTotalAmount)}
-                </td>
-              </tr>
-
-              <tr>
-                <th
-                  style={{
-                    padding: "10px",
-                    backgroundColor: "#f8f9fa",
-                    textAlign: "left",
-                  }}
-                >
-                  Invoice Service Fee
-                </th>
-                <td style={{ padding: "10px" }}>
-                  {formatCurrency(order.invoiceServiceFeeAmount)}
-                </td>
-              </tr>
-
-              <tr>
-                <th
-                  style={{
-                    padding: "10px",
-                    backgroundColor: "#f8f9fa",
-                    textAlign: "left",
-                  }}
-                >
-                  Invoice Service Fee Payment Date
-                </th>
-                <td style={{ padding: "10px" }}>
-                  {formatDate(order.invoiceServiceFeePaymentDate)}
-                </td>
-              </tr>
-
-              <tr>
-                <th
-                  style={{
-                    padding: "10px",
-                    backgroundColor: "#f8f9fa",
-                    textAlign: "left",
-                  }}
-                >
-                  Payment Method(s)
-                </th>
-                <td style={{ padding: "10px" }}>
-                  {getPaymentMethodsDisplay(order.paymentMethods)}
-                </td>
-              </tr>
-
-              <tr>
-                <th
-                  style={{
-                    padding: "10px",
-                    backgroundColor: "#f8f9fa",
-                    textAlign: "left",
-                  }}
-                >
-                  Actual Service Fee Amount Paid
-                </th>
-                <td style={{ padding: "10px" }}>
-                  {formatCurrency(order.invoiceActualServiceFeeAmountPaid)}
-                </td>
-              </tr>
-
-              <tr>
-                <th
-                  style={{
-                    padding: "10px",
-                    backgroundColor: "#f8f9fa",
-                    textAlign: "left",
-                  }}
-                >
-                  Account Balance
-                </th>
-                <td style={{ padding: "10px" }}>
-                  {formatCurrency(order.invoiceBalanceOwingAmount)}
-                </td>
-              </tr>
-
-              <tr>
-                <th
-                  style={{
-                    padding: "10px",
-                    backgroundColor: "#f8f9fa",
-                    textAlign: "left",
-                  }}
-                >
-                  # of Visits
-                </th>
-                <td style={{ padding: "10px" }}>{order.visits || "-"}</td>
-              </tr>
-            </tbody>
-          </table>
-
-          {/* Action Buttons */}
-          <div
-            style={{
-              marginTop: "30px",
-              display: "flex",
-              justifyContent: "space-between",
-            }}
-          >
+        {!order && !loading && (
+          <div className="px-4 sm:px-6 py-8 sm:py-16 text-center">
+            <div className="inline-flex items-center justify-center w-12 sm:w-16 h-12 sm:h-16 bg-gray-100 rounded-full mb-4">
+              <CreditCardIcon className="w-6 sm:w-8 h-6 sm:h-8 text-gray-400" />
+            </div>
+            <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
+              Financial Record Not Found
+            </h3>
+            <p className="text-sm sm:text-base text-gray-500 mb-4 sm:mb-6">
+              The financial record you're looking for doesn't exist or you don't
+              have permission to view it.
+            </p>
             <Link to="/admin/financials">
-              <Button variant="secondary">← Back to Financials</Button>
-            </Link>
-            <Link to={`/admin/financial/${oid}/edit`}>
-              <Button variant="warning" disabled={isOrderArchived()}>
-                ✏️ Edit
-              </Button>
+              <button className="inline-flex items-center px-3 sm:px-4 py-2 border border-transparent rounded-lg text-xs sm:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                <ChevronLeftIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
+                Back to Financials
+              </button>
             </Link>
           </div>
-        </Card>
-      )}
+        )}
+      </div>
     </div>
   );
 }

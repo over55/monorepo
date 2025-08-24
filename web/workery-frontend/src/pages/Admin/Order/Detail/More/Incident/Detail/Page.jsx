@@ -15,10 +15,7 @@ import {
   Loading,
   Breadcrumb,
   Modal,
-  Input,
   TextArea,
-  Select,
-  Table,
 } from "../../../../../../../components/UI";
 
 function AdminOrderDetailMoreIncidentDetailPage() {
@@ -35,6 +32,8 @@ function AdminOrderDetailMoreIncidentDetailPage() {
   const [incident, setIncident] = useState(null);
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [newComment, setNewComment] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertStatus, setAlertStatus] = useState("");
 
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
@@ -46,15 +45,13 @@ function AdminOrderDetailMoreIncidentDetailPage() {
     setErrors({});
 
     try {
-      // Fetch order details
-      const orderData = await orderManager.getOrderDetail(oid, onUnauthorized);
-      setOrder(orderData);
+      // Fetch both order and incident details
+      const [orderData, incidentData] = await Promise.all([
+        orderManager.getOrderDetail(oid, onUnauthorized),
+        orderIncidentManager.getOrderIncidentDetail(oiid, onUnauthorized),
+      ]);
 
-      // Fetch incident details
-      const incidentData = await orderIncidentManager.getOrderIncidentDetail(
-        oiid,
-        onUnauthorized,
-      );
+      setOrder(orderData);
       setIncident(incidentData);
 
       console.log(
@@ -65,7 +62,7 @@ function AdminOrderDetailMoreIncidentDetailPage() {
         "AdminOrderDetailMoreIncidentDetailPage: Failed to fetch data:",
         error,
       );
-      setErrors(error);
+      setErrors({ general: "Failed to load incident details" });
       window.scrollTo(0, 0);
     } finally {
       setFetching(false);
@@ -75,10 +72,13 @@ function AdminOrderDetailMoreIncidentDetailPage() {
   // Handle add comment
   const handleAddComment = async () => {
     if (!newComment.trim()) {
+      setAlertMessage("Please enter a comment");
+      setAlertStatus("error");
       return;
     }
 
     try {
+      setFetching(true);
       await orderIncidentManager.createOrderIncidentComment(
         oiid,
         newComment,
@@ -86,10 +86,16 @@ function AdminOrderDetailMoreIncidentDetailPage() {
       );
       setNewComment("");
       setShowCommentModal(false);
+      setAlertMessage("Comment added successfully");
+      setAlertStatus("success");
       // Refresh data
       fetchData();
     } catch (error) {
       console.error("Failed to add comment:", error);
+      setAlertMessage("Failed to add comment");
+      setAlertStatus("error");
+    } finally {
+      setFetching(false);
     }
   };
 
@@ -112,10 +118,7 @@ function AdminOrderDetailMoreIncidentDetailPage() {
     };
   }, [oid, oiid]);
 
-  if (isFetching) {
-    return <Loading message="Loading incident details..." />;
-  }
-
+  // Breadcrumb items
   const breadcrumbItems = [
     { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
     { path: "/admin/orders", label: "Orders", icon: "🔧" },
@@ -131,6 +134,20 @@ function AdminOrderDetailMoreIncidentDetailPage() {
     },
     { label: "Detail", icon: "ℹ️" },
   ];
+
+  // Data display row component
+  const DataRow = ({ label, value, isLink = false, linkPath = "" }) => (
+    <div style={{ marginBottom: "15px" }}>
+      <strong>{label}:</strong>{" "}
+      {isLink && linkPath ? (
+        <Link to={linkPath} style={{ color: theme.colors.primary }}>
+          {value || "N/A"}
+        </Link>
+      ) : (
+        value || "N/A"
+      )}
+    </div>
+  );
 
   // Format initiator label
   const getInitiatorLabel = (initiator) => {
@@ -155,274 +172,203 @@ function AdminOrderDetailMoreIncidentDetailPage() {
         <Alert type="info">This order is archived</Alert>
       )}
 
-      {/* Page Title */}
-      <h1>🔥 Incident</h1>
-      <h4>ℹ️ Detail</h4>
-      <hr />
+      {alertMessage && (
+        <Alert
+          type={alertStatus}
+          onClose={() => {
+            setAlertMessage("");
+            setAlertStatus("");
+          }}
+        >
+          {alertMessage}
+        </Alert>
+      )}
 
-      {/* Page Content */}
+      <h1>🔧 Order - Incident Detail</h1>
+
+      {/* Summary Card */}
       <Card
-        title="📋 Detail"
+        title="📋 Summary"
         actions={
-          <>
-            <Button
-              variant="primary"
-              onClick={() => setShowCommentModal(true)}
-              disabled={order.status === 2}
-            >
-              ➕ New Comment
-            </Button>
-          </>
-        }
-      >
-        {/* Error Display */}
-        {errors && Object.keys(errors).length > 0 && (
-          <Alert type="error" onClose={() => setErrors({})}>
-            <div>
-              <strong>There were errors:</strong>
-              <ul style={{ margin: "10px 0 0 20px" }}>
-                {Object.entries(errors).map(([key, value]) => (
-                  <li key={key}>{value}</li>
-                ))}
-              </ul>
-            </div>
-          </Alert>
-        )}
-
-        {incident && (
-          <>
-            {/* Summary Table */}
-            <div style={{ marginBottom: "30px" }}>
-              <h3 style={{ marginBottom: "15px" }}>Summary</h3>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <tbody>
-                  <tr style={{ borderBottom: "1px solid #ddd" }}>
-                    <td
-                      style={{
-                        padding: "10px",
-                        fontWeight: "600",
-                        width: "30%",
-                        backgroundColor: "#f5f5f5",
-                      }}
-                    >
-                      Client:
-                    </td>
-                    <td style={{ padding: "10px" }}>
-                      <Link to={`/admin/customer/${order.customerId}`}>
-                        {order.customerName || "N/A"}
-                      </Link>
-                    </td>
-                  </tr>
-                  <tr style={{ borderBottom: "1px solid #ddd" }}>
-                    <td
-                      style={{
-                        padding: "10px",
-                        fontWeight: "600",
-                        backgroundColor: "#f5f5f5",
-                      }}
-                    >
-                      Associate:
-                    </td>
-                    <td style={{ padding: "10px" }}>
-                      {order.associateId ? (
-                        <Link to={`/admin/associate/${order.associateId}`}>
-                          {order.associateName || "N/A"}
-                        </Link>
-                      ) : (
-                        "Not assigned"
-                      )}
-                    </td>
-                  </tr>
-                  <tr style={{ borderBottom: "1px solid #ddd" }}>
-                    <td
-                      style={{
-                        padding: "10px",
-                        fontWeight: "600",
-                        backgroundColor: "#f5f5f5",
-                      }}
-                    >
-                      Title:
-                    </td>
-                    <td style={{ padding: "10px" }}>{incident.title}</td>
-                  </tr>
-                  <tr style={{ borderBottom: "1px solid #ddd" }}>
-                    <td
-                      style={{
-                        padding: "10px",
-                        fontWeight: "600",
-                        backgroundColor: "#f5f5f5",
-                      }}
-                    >
-                      Description:
-                    </td>
-                    <td style={{ padding: "10px" }}>{incident.description}</td>
-                  </tr>
-                  <tr style={{ borderBottom: "1px solid #ddd" }}>
-                    <td
-                      style={{
-                        padding: "10px",
-                        fontWeight: "600",
-                        backgroundColor: "#f5f5f5",
-                      }}
-                    >
-                      Initiated By:
-                    </td>
-                    <td style={{ padding: "10px" }}>
-                      {getInitiatorLabel(incident.initiator)}
-                    </td>
-                  </tr>
-                  <tr style={{ borderBottom: "1px solid #ddd" }}>
-                    <td
-                      style={{
-                        padding: "10px",
-                        fontWeight: "600",
-                        backgroundColor: "#f5f5f5",
-                      }}
-                    >
-                      Start Date:
-                    </td>
-                    <td style={{ padding: "10px" }}>
-                      {incident.startDate || "N/A"}
-                    </td>
-                  </tr>
-                  <tr style={{ borderBottom: "1px solid #ddd" }}>
-                    <td
-                      style={{
-                        padding: "10px",
-                        fontWeight: "600",
-                        backgroundColor: "#f5f5f5",
-                      }}
-                    >
-                      Status:
-                    </td>
-                    <td style={{ padding: "10px" }}>
-                      {incident.closingReason ? "Closed" : "Open"}
-                    </td>
-                  </tr>
-                  {incident.closingReason && (
-                    <tr style={{ borderBottom: "1px solid #ddd" }}>
-                      <td
-                        style={{
-                          padding: "10px",
-                          fontWeight: "600",
-                          backgroundColor: "#f5f5f5",
-                        }}
-                      >
-                        Closing Reason:
-                      </td>
-                      <td style={{ padding: "10px" }}>
-                        {incident.closingReasonLabel ||
-                          incident.closingReasonOther ||
-                          "N/A"}
-                      </td>
-                    </tr>
-                  )}
-                  <tr style={{ borderBottom: "1px solid #ddd" }}>
-                    <td
-                      style={{
-                        padding: "10px",
-                        fontWeight: "600",
-                        backgroundColor: "#f5f5f5",
-                      }}
-                    >
-                      Created At:
-                    </td>
-                    <td style={{ padding: "10px" }}>
-                      {incident.createdAt || "N/A"}
-                    </td>
-                  </tr>
-                  <tr style={{ borderBottom: "1px solid #ddd" }}>
-                    <td
-                      style={{
-                        padding: "10px",
-                        fontWeight: "600",
-                        backgroundColor: "#f5f5f5",
-                      }}
-                    >
-                      Created By:
-                    </td>
-                    <td style={{ padding: "10px" }}>
-                      {incident.createdByUserName || "N/A"}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            {/* Feed Section */}
-            <div>
-              <h3 style={{ marginBottom: "15px" }}>Feed</h3>
-              {incident.feed && incident.feed.length > 0 ? (
-                <div>
-                  {incident.feed.map((item, index) => (
-                    <div key={index} style={{ marginBottom: "20px" }}>
-                      <div
-                        style={{
-                          fontSize: "12px",
-                          color: "#666",
-                          marginBottom: "5px",
-                          textAlign: "right",
-                        }}
-                      >
-                        {item.createdByUserName} at {item.createdAt}
-                      </div>
-                      {item.filetype ? (
-                        // Attachment
-                        <Alert type="info">
-                          <a
-                            href={item.objectUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            📎 {item.filename || "Download Attachment"}
-                          </a>
-                        </Alert>
-                      ) : (
-                        // Comment
-                        <div
-                          style={{
-                            padding: "15px",
-                            backgroundColor: "#f8f9fa",
-                            borderRadius: "4px",
-                            border: "1px solid #dee2e6",
-                          }}
-                        >
-                          {item.content}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p style={{ color: "#666" }}>No comments or attachments yet.</p>
-              )}
-            </div>
-
-            {/* Action Buttons */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginTop: "30px",
-                flexWrap: "wrap",
-                gap: "10px",
-              }}
-            >
-              <Link to={`/admin/order/${oid}/more/incidents`}>
-                <Button variant="secondary">← Back to Incidents</Button>
-              </Link>
-
+          incident && (
+            <>
               <Button
                 variant="primary"
+                size="sm"
                 onClick={() => setShowCommentModal(true)}
                 disabled={order.status === 2}
               >
                 ➕ New Comment
               </Button>
-            </div>
+              {incident.closingReason ? null : (
+                <Link to={`/admin/order/${oid}/more/incident/${oiid}/close`}>
+                  <Button variant="warning" size="sm">
+                    🔒 Close
+                  </Button>
+                </Link>
+              )}
+            </>
+          )
+        }
+      >
+        {isFetching ? (
+          <Loading message="Loading incident details..." />
+        ) : (
+          <>
+            {errors.general && <Alert type="error">{errors.general}</Alert>}
+
+            {incident && (
+              <>
+                <DataRow
+                  label="Client"
+                  value={order.customerName}
+                  isLink={true}
+                  linkPath={`/admin/customer/${order.customerId}`}
+                />
+                <DataRow
+                  label="Associate"
+                  value={
+                    order.associateId
+                      ? order.associateName || "N/A"
+                      : "Not assigned"
+                  }
+                  isLink={!!order.associateId}
+                  linkPath={`/admin/associate/${order.associateId}`}
+                />
+                <DataRow label="Title" value={incident.title} />
+                <DataRow label="Description" value={incident.description} />
+                <DataRow
+                  label="Initiated By"
+                  value={getInitiatorLabel(incident.initiator)}
+                />
+                <DataRow label="Start Date" value={incident.startDate} />
+                <DataRow
+                  label="Status"
+                  value={incident.closingReason ? "Closed" : "Open"}
+                />
+                {incident.closingReason && (
+                  <DataRow
+                    label="Closing Reason"
+                    value={
+                      incident.closingReasonLabel || incident.closingReasonOther
+                    }
+                  />
+                )}
+                <DataRow label="Created At" value={incident.createdAt} />
+                <DataRow
+                  label="Created By"
+                  value={incident.createdByUserName}
+                />
+              </>
+            )}
           </>
         )}
       </Card>
+
+      {/* Feed Card */}
+      {incident && (
+        <Card title="💬 Feed" style={{ marginTop: "20px" }}>
+          {incident.feed && incident.feed.length > 0 ? (
+            <div>
+              {incident.feed.map((item, index) => (
+                <div
+                  key={index}
+                  style={{
+                    marginBottom: "20px",
+                    paddingBottom: "20px",
+                    borderBottom:
+                      index < incident.feed.length - 1
+                        ? "1px solid #e0e0e0"
+                        : "none",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: "12px",
+                      color: "#666",
+                      marginBottom: "8px",
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <span style={{ fontWeight: "600" }}>
+                      {item.createdByUserName}
+                    </span>
+                    <span>{item.createdAt}</span>
+                  </div>
+                  {item.filetype ? (
+                    // Attachment
+                    <div
+                      style={{
+                        padding: "12px",
+                        backgroundColor: "#e3f2fd",
+                        borderRadius: "4px",
+                        border: "1px solid #90caf9",
+                      }}
+                    >
+                      <a
+                        href={item.objectUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        style={{
+                          color: theme.colors.primary,
+                          textDecoration: "none",
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "8px",
+                        }}
+                      >
+                        📎 {item.filename || "Download Attachment"}
+                      </a>
+                    </div>
+                  ) : (
+                    // Comment
+                    <div
+                      style={{
+                        padding: "15px",
+                        backgroundColor: "#f8f9fa",
+                        borderRadius: "4px",
+                        border: "1px solid #dee2e6",
+                        whiteSpace: "pre-wrap",
+                      }}
+                    >
+                      {item.content}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p style={{ color: "#666", textAlign: "center", padding: "20px" }}>
+              No comments or attachments yet.
+            </p>
+          )}
+
+          {/* Action buttons at bottom of feed */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              gap: "10px",
+              marginTop: "30px",
+              paddingTop: "20px",
+              borderTop: "1px solid #e0e0e0",
+            }}
+          >
+            <Link to={`/admin/order/${oid}/more/incidents`}>
+              <Button variant="secondary">← Back to Incidents</Button>
+            </Link>
+            <Button
+              variant="primary"
+              onClick={() => setShowCommentModal(true)}
+              disabled={order.status === 2}
+            >
+              ➕ Add Comment
+            </Button>
+          </div>
+        </Card>
+      )}
 
       {/* Comment Modal */}
       <Modal
@@ -455,6 +401,7 @@ function AdminOrderDetailMoreIncidentDetailPage() {
           onChange={(e) => setNewComment(e.target.value)}
           rows={7}
           placeholder="Enter your comment here"
+          required
         />
       </Modal>
     </div>

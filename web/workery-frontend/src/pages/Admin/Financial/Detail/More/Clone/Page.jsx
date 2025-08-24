@@ -1,16 +1,21 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Admin/Financial/Detail/More/Clone/Page.jsx
+// File Path: web/workery-frontend/src/pages/Admin/Financial/Detail/More/Clone/Page.jsx
 
 import React, { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router";
 import { useOrderManager } from "../../../../../../services/Services";
-import {
-  Card,
-  Alert,
-  Loading,
-  Breadcrumb,
-  Button,
-} from "../../../../../../components/UI";
 import { ORDER_STATUS_ARCHIVED } from "../../../../../../constants/Order";
+import {
+  ChartBarIcon,
+  CreditCardIcon,
+  InformationCircleIcon,
+  ChevronLeftIcon,
+  DocumentDuplicateIcon,
+  ExclamationTriangleIcon,
+  CheckCircleIcon,
+  XMarkIcon,
+  EllipsisHorizontalIcon,
+  DocumentTextIcon,
+} from "@heroicons/react/24/outline";
 
 function AdminFinancialDetailMoreClonePage() {
   // URL Parameters
@@ -26,7 +31,7 @@ function AdminFinancialDetailMoreClonePage() {
   const [order, setOrder] = useState(null);
   const [isCloning, setIsCloning] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-  const [showErrorMessage, setShowErrorMessage] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   // Handle unauthorized access
   const onUnauthorized = () => {
@@ -83,12 +88,12 @@ function AdminFinancialDetailMoreClonePage() {
     };
   }, [oid]);
 
-  // Handle clone operation
-  const onCloneClick = async () => {
+  // Handle clone confirmation
+  const handleConfirmClone = async () => {
+    setShowConfirmModal(false);
     setIsCloning(true);
     setErrors({});
     setShowSuccessMessage(false);
-    setShowErrorMessage(false);
 
     try {
       const clonedOrder = await orderManager.cloneOrder(oid, onUnauthorized);
@@ -120,14 +125,6 @@ function AdminFinancialDetailMoreClonePage() {
         });
       }
 
-      // Show error message
-      setShowErrorMessage(true);
-
-      // Clear error message after 2 seconds
-      setTimeout(() => {
-        setShowErrorMessage(false);
-      }, 2000);
-
       // Scroll to top to show error
       window.scrollTo(0, 0);
     } finally {
@@ -140,162 +137,328 @@ function AdminFinancialDetailMoreClonePage() {
     return order && order.status === ORDER_STATUS_ARCHIVED;
   };
 
-  // Render error messages
-  const renderErrors = () => {
-    if (!errors || Object.keys(errors).length === 0) return null;
-
-    return (
-      <Alert type="error">
-        <h4>Error</h4>
-        {errors.general && <p>{errors.general}</p>}
-        {Object.keys(errors).map((key) => {
-          if (key !== "general") {
-            return <p key={key}>{`${key}: ${errors[key]}`}</p>;
-          }
-          return null;
-        })}
-      </Alert>
-    );
+  // Get status display
+  const getStatusDisplay = (status) => {
+    if (status === ORDER_STATUS_ARCHIVED) {
+      return <span className="text-amber-600 font-medium">Archived</span>;
+    }
+    return <span className="text-green-600 font-medium">Active</span>;
   };
 
-  // Loading state
-  if (isFetching) {
+  // Render loading state
+  if (isFetching && !order) {
     return (
-      <div>
-        <Breadcrumb
-          items={[
-            { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
-            { path: "/admin/financials", label: "Financials", icon: "💳" },
-            {
-              path: `/admin/financial/${oid}`,
-              label: `Order #${oid}`,
-              icon: "📄",
-            },
-            { path: `/admin/financial/${oid}/more`, label: "More", icon: "⋯" },
-            { label: "Clone", icon: "🔄" },
-          ]}
-        />
-        <Loading message="Loading order details..." />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading order details...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Breadcrumb */}
-      <Breadcrumb
-        items={[
-          { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
-          { path: "/admin/financials", label: "Financials", icon: "💳" },
-          {
-            path: `/admin/financial/${oid}`,
-            label: `Order #${oid}`,
-            icon: "📄",
-          },
-          { path: `/admin/financial/${oid}/more`, label: "More", icon: "⋯" },
-          { label: "Clone", icon: "🔄" },
-        ]}
-      />
-
-      {/* Success/Error Messages */}
-      {showSuccessMessage && (
-        <Alert type="success">
-          Clone was successful! Redirecting to the new order...
-        </Alert>
-      )}
-      {showErrorMessage && (
-        <Alert type="error">Failed to clone order. Please try again.</Alert>
-      )}
-
-      {/* Page banner for archived orders */}
-      {isOrderArchived() && <Alert type="info">This order is archived.</Alert>}
+      <nav className="flex mb-6" aria-label="Breadcrumb">
+        <ol className="inline-flex items-center space-x-1 md:space-x-3">
+          <li className="inline-flex items-center">
+            <Link
+              to="/admin/dashboard"
+              className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+            >
+              <ChartBarIcon className="w-4 h-4 mr-2" />
+              Dashboard
+            </Link>
+          </li>
+          <li>
+            <div className="flex items-center">
+              <span className="mx-2 text-gray-400">/</span>
+              <Link
+                to="/admin/financials"
+                className="text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <span className="inline-flex items-center">
+                  <CreditCardIcon className="w-4 h-4 mr-2" />
+                  Financials
+                </span>
+              </Link>
+            </div>
+          </li>
+          <li>
+            <div className="flex items-center">
+              <span className="mx-2 text-gray-400">/</span>
+              <Link
+                to={`/admin/financial/${oid}`}
+                className="text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <span className="inline-flex items-center">
+                  <InformationCircleIcon className="w-4 h-4 mr-2" />
+                  Order #{oid}
+                </span>
+              </Link>
+            </div>
+          </li>
+          <li>
+            <div className="flex items-center">
+              <span className="mx-2 text-gray-400">/</span>
+              <Link
+                to={`/admin/financial/${oid}/more`}
+                className="text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <span className="inline-flex items-center">
+                  <EllipsisHorizontalIcon className="w-4 h-4 mr-2" />
+                  More
+                </span>
+              </Link>
+            </div>
+          </li>
+          <li aria-current="page">
+            <div className="flex items-center">
+              <span className="mx-2 text-gray-400">/</span>
+              <span className="text-sm font-medium text-gray-500 inline-flex items-center">
+                <DocumentDuplicateIcon className="w-4 h-4 mr-2" />
+                Clone
+              </span>
+            </div>
+          </li>
+        </ol>
+      </nav>
 
       {/* Page Title */}
-      <h1>💳 Financials</h1>
-      <h4>📄 Detail</h4>
-      <hr />
+      <div className="mb-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center">
+              <CreditCardIcon className="w-6 h-6 md:w-8 md:h-8 mr-3 text-blue-600" />
+              Financial Order #{oid}
+            </h1>
+            <p className="mt-1 text-sm text-gray-600 flex items-center">
+              <DocumentDuplicateIcon className="w-4 h-4 mr-1" />
+              Clone Work Order
+            </p>
+          </div>
+        </div>
+      </div>
 
-      {/* Error display */}
-      {renderErrors()}
+      {/* Success Message */}
+      {showSuccessMessage && (
+        <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center">
+          <CheckCircleIcon className="w-5 h-5 mr-2" />
+          Clone was successful! Redirecting to the new order...
+        </div>
+      )}
+
+      {/* Error Messages */}
+      {errors && Object.keys(errors).length > 0 && (
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className="flex justify-between items-center">
+            <span className="flex items-center">
+              <XMarkIcon className="w-5 h-5 mr-2" />
+              {errors.general ||
+                errors.detail ||
+                "An error occurred. Please try again."}
+            </span>
+            <button
+              onClick={() => setErrors({})}
+              className="text-red-700 hover:text-red-900"
+            >
+              <XMarkIcon className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Archived Order Alert */}
+      {isOrderArchived() && (
+        <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg flex items-center">
+          <InformationCircleIcon className="w-5 h-5 mr-2" />
+          This order is archived and cannot be cloned.
+        </div>
+      )}
 
       {/* Main Content */}
-      {order && (
-        <Card title="🔄 Clone Order">
-          {isCloning ? (
-            <Loading message="Cloning order..." />
-          ) : (
-            <div>
-              {/* Warning/Information Section */}
-              <div
-                style={{
-                  backgroundColor: "#f8f9fa",
-                  padding: "20px",
-                  borderRadius: "4px",
-                  marginBottom: "30px",
-                  border: "1px solid #dee2e6",
-                }}
-              >
-                <h3>📢 Important Information</h3>
-                <p>
-                  <strong>Warning:</strong> You are about to clone work order #
-                  {oid}. Cloning will perform the following actions:
+      <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+        <div className="p-6">
+          {/* Warning Message */}
+          <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-6">
+            <div className="flex items-start">
+              <ExclamationTriangleIcon className="w-6 h-6 text-amber-600 mt-1 mr-3 flex-shrink-0" />
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-amber-900 mb-2">
+                  Clone Work Order - Important Information
+                </h3>
+                <p className="text-amber-800 mb-3">
+                  You are about to <strong>clone</strong> work order #{oid}.
+                  This operation will:
                 </p>
-                <ul>
-                  <li>
-                    A single new work order will be created in the system.
+                <ul className="space-y-2 text-amber-700 ml-4">
+                  <li className="flex items-start">
+                    <span className="inline-block w-2 h-2 bg-amber-600 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
+                    Create a single new work order in the system
                   </li>
-                  <li>
-                    All data from work order #{oid} will be copied into the new
-                    work order. Pending tasks from the original work order will
-                    NOT be copied to the cloned work order.
+                  <li className="flex items-start">
+                    <span className="inline-block w-2 h-2 bg-amber-600 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
+                    Copy all data from work order #{oid} to the new order
+                    (pending tasks will NOT be copied)
                   </li>
-                  <li>
-                    The state of the cloned work order will be set to{" "}
-                    <strong>completed but unpaid</strong>.
+                  <li className="flex items-start">
+                    <span className="inline-block w-2 h-2 bg-amber-600 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
+                    Set the cloned order's state to{" "}
+                    <strong>completed but unpaid</strong>
                   </li>
-                  <li>
-                    You will be responsible for making any necessary edits to
-                    the cloned order afterwards.
+                  <li className="flex items-start">
+                    <span className="inline-block w-2 h-2 bg-amber-600 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
+                    Allow you to make any necessary edits to the cloned order
+                    afterwards
                   </li>
                 </ul>
-                <p>
-                  Please review this information carefully before proceeding
-                  with the clone operation.
+                <p className="mt-4 font-semibold text-amber-900">
+                  Please review this information carefully before proceeding.
                 </p>
               </div>
+            </div>
+          </div>
 
-              {/* Action Buttons */}
-              <div
-                style={{
-                  display: "flex",
-                  gap: "10px",
-                  justifyContent: "space-between",
-                }}
-              >
-                <div>
-                  <Link to={`/admin/financial/${oid}/more`}>
-                    <Button variant="secondary">✕ Cancel</Button>
-                  </Link>
+          {/* Order Information */}
+          {order && (
+            <div className="bg-gray-50 rounded-lg p-6 mb-6">
+              <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                <DocumentTextIcon className="w-5 h-5 mr-2 text-gray-600" />
+                Order Information
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center">
+                  <span className="font-medium text-gray-700 mr-2">
+                    Order ID:
+                  </span>
+                  <span className="text-gray-900">#{oid}</span>
                 </div>
-                <div>
-                  <Button
-                    variant="success"
-                    onClick={onCloneClick}
-                    disabled={isOrderArchived()}
-                  >
-                    ✓ Clone Order
-                  </Button>
+                <div className="flex items-center">
+                  <span className="font-medium text-gray-700 mr-2">
+                    Status:
+                  </span>
+                  {getStatusDisplay(order.status)}
                 </div>
+                {order.customerName && (
+                  <div className="flex items-center">
+                    <span className="font-medium text-gray-700 mr-2">
+                      Customer:
+                    </span>
+                    <span className="text-gray-900">{order.customerName}</span>
+                  </div>
+                )}
+                {order.totalAmount && (
+                  <div className="flex items-center">
+                    <span className="font-medium text-gray-700 mr-2">
+                      Amount:
+                    </span>
+                    <span className="text-gray-900">${order.totalAmount}</span>
+                  </div>
+                )}
               </div>
-
-              {isOrderArchived() && (
-                <p style={{ marginTop: "10px", color: "#6c757d" }}>
-                  <em>Note: Archived orders cannot be cloned.</em>
-                </p>
-              )}
             </div>
           )}
-        </Card>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row justify-between gap-4">
+            <Link to={`/admin/financial/${oid}/more`}>
+              <button
+                disabled={isCloning}
+                className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <ChevronLeftIcon className="w-4 h-4 mr-2" />
+                Back to More
+              </button>
+            </Link>
+
+            <button
+              onClick={() => setShowConfirmModal(true)}
+              disabled={isCloning || isOrderArchived()}
+              className={`w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
+                isOrderArchived()
+                  ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
+                  : "border-green-300 text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              }`}
+            >
+              <DocumentDuplicateIcon className="w-4 h-4 mr-2" />
+              {isCloning
+                ? "Cloning..."
+                : isOrderArchived()
+                  ? "Cannot Clone Archived Order"
+                  : "Confirm and Clone"}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Confirmation Modal */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            {/* Background overlay */}
+            <div
+              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              onClick={() => setShowConfirmModal(false)}
+            ></div>
+
+            {/* Modal panel */}
+            <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+              <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                <div className="sm:flex sm:items-start">
+                  <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <DocumentDuplicateIcon
+                      className="h-6 w-6 text-green-600"
+                      aria-hidden="true"
+                    />
+                  </div>
+                  <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                    <h3 className="text-lg font-semibold leading-6 text-gray-900">
+                      Confirm Clone Operation
+                    </h3>
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-500">
+                        <strong>Final Confirmation</strong>
+                      </p>
+                      <p className="mt-2 text-sm text-gray-500">
+                        You are about to clone work order{" "}
+                        <strong>#{oid}</strong>.
+                      </p>
+                      <p className="mt-2 text-sm text-gray-500">
+                        This will create a new work order with all data copied
+                        from the original, set to "completed but unpaid" status.
+                        Pending tasks will not be copied.
+                      </p>
+                      <p className="mt-3 text-sm font-medium text-green-600">
+                        Do you want to proceed with the clone operation?
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                <button
+                  type="button"
+                  onClick={handleConfirmClone}
+                  disabled={isCloning}
+                  className="inline-flex w-full justify-center rounded-md bg-green-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-green-500 sm:ml-3 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isCloning ? "Cloning..." : "Yes, Clone Order"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmModal(false)}
+                  disabled={isCloning}
+                  className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

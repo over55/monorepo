@@ -4,15 +4,22 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router";
 import { useOrderManager } from "../../../../../../services/Services";
 import { InvoiceGenerationStorage } from "../../../../../../services/Storage/InvoiceGenerationStorage";
-import Layout from "../../../../../../components/Layout/Layout";
-import {
-  Breadcrumb,
-  Card,
-  Button,
-  Alert,
-  Loading,
-} from "../../../../../../components/UI";
 import { ORDER_INVOICE_PAYMENT_METHODS_OPTIONS } from "../../../../../../constants/FieldOptions";
+import {
+  ChevronRightIcon,
+  ArrowLeftIcon,
+  CheckIcon,
+  ChartBarIcon,
+  CurrencyDollarIcon,
+  DocumentTextIcon,
+  CheckCircleIcon,
+  ExclamationCircleIcon,
+  PencilSquareIcon,
+  UserIcon,
+  ClipboardDocumentListIcon,
+  BanknotesIcon,
+  PencilIcon,
+} from "@heroicons/react/24/outline";
 
 function AdminFinancialGenerateInvoiceStep4Page() {
   const { oid } = useParams();
@@ -233,348 +240,628 @@ function AdminFinancialGenerateInvoiceStep4Page() {
       .join(", ");
   };
 
-  const breadcrumbItems = [
-    { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
-    { label: "Financials", path: "/admin/financials", icon: "💳" },
-    {
-      label: `Order #${oid} (Invoice)`,
-      path: `/admin/financial/${oid}/invoice`,
-      icon: "📄",
-    },
-    { label: "Generate Invoice", icon: "➕" },
-  ];
+  // Get all non-empty line items for display
+  const getActiveLineItems = () => {
+    const lineItems = [];
+    for (let i = 1; i <= 15; i++) {
+      const lineNum = i.toString().padStart(2, "0");
+      const quantity = invoiceData[`line${lineNum}Quantity`];
+      if (quantity && parseInt(quantity) > 0) {
+        lineItems.push({
+          number: lineNum,
+          quantity: invoiceData[`line${lineNum}Quantity`],
+          description: invoiceData[`line${lineNum}Description`],
+          unitPrice: invoiceData[`line${lineNum}UnitPrice`],
+          amount: invoiceData[`line${lineNum}Amount`],
+        });
+      }
+    }
+    return lineItems;
+  };
 
   if (isFetching) {
     return (
-      <Layout>
-        <Loading message="Loading order details..." />
-      </Layout>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <span className="ml-3 text-gray-600">Loading order details...</span>
+      </div>
     );
   }
 
-  return (
-    <Layout>
-      <Breadcrumb items={breadcrumbItems} />
-
-      <h1>Financials</h1>
-      <h4>Generate Invoice - Step 4 of 4</h4>
-
-      {/* Progress Bar */}
-      <div style={{ marginBottom: "20px" }}>
-        <progress
-          value="100"
-          max="100"
-          style={{ width: "100%", backgroundColor: "#d4edda" }}
-        >
-          100%
-        </progress>
+  if (!invoiceData) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <span className="ml-3 text-gray-600">Loading...</span>
       </div>
+    );
+  }
 
-      <Card title="Review Invoice Details">
-        {errors.general && <Alert type="error">{errors.general}</Alert>}
-        {Object.keys(errors).length > 0 &&
-          Object.keys(errors).some((key) => key !== "general") && (
-            <Alert type="error">
-              Please correct the following errors:
-              <ul>
-                {Object.entries(errors).map(
-                  ([key, value]) =>
-                    key !== "general" && <li key={key}>{value}</li>,
-                )}
-              </ul>
-            </Alert>
-          )}
+  const activeLineItems = getActiveLineItems();
 
-        <p style={{ marginBottom: "20px" }}>
-          Please carefully review the following invoice details and if you are
-          ready click the <strong>Submit</strong> button to complete.
-        </p>
-
-        {order && invoiceData && (
-          <div>
-            {/* Step 1 Summary */}
-            <div style={{ marginBottom: "30px" }}>
-              <h3>
-                Step 1 - Header Information
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        {/* Breadcrumb */}
+        <nav className="flex mb-4" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+            <li className="inline-flex items-center">
+              <Link
+                to="/admin/dashboard"
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <ChartBarIcon className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Dashboard</span>
+              </Link>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
                 <Link
-                  to={`/admin/financial/${oid}/invoice/generate/step-1`}
-                  style={{ marginLeft: "10px", fontSize: "14px" }}
+                  to="/admin/financials"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
                 >
-                  ✏️ Edit
+                  <span className="inline-flex items-center">
+                    <CurrencyDollarIcon className="w-4 h-4 mr-2" />
+                    <span className="hidden sm:inline">Financials</span>
+                  </span>
                 </Link>
-              </h3>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <tbody>
-                  <tr>
-                    <td style={{ padding: "5px", fontWeight: "bold" }}>
-                      Invoice ID #:
-                    </td>
-                    <td>{invoiceData.invoiceId}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "5px", fontWeight: "bold" }}>
-                      Invoice Date:
-                    </td>
-                    <td>{invoiceData.invoiceDate}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "5px", fontWeight: "bold" }}>
-                      Associate Name:
-                    </td>
-                    <td>{invoiceData.associateName}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "5px", fontWeight: "bold" }}>
-                      Associate Phone:
-                    </td>
-                    <td>{invoiceData.associatePhone}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "5px", fontWeight: "bold" }}>
-                      Associate Tax ID:
-                    </td>
-                    <td>{invoiceData.associateTaxId || "-"}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "5px", fontWeight: "bold" }}>
-                      Client Name:
-                    </td>
-                    <td>{invoiceData.customerName}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "5px", fontWeight: "bold" }}>
-                      Client Address:
-                    </td>
-                    <td>{invoiceData.customerAddress}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "5px", fontWeight: "bold" }}>
-                      Client Phone:
-                    </td>
-                    <td>{invoiceData.customerPhone}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "5px", fontWeight: "bold" }}>
-                      Client Email:
-                    </td>
-                    <td>{invoiceData.customerEmail || "-"}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            {/* Step 2 Summary - Only show line 01 for brevity */}
-            <div style={{ marginBottom: "30px" }}>
-              <h3>
-                Step 2 - Line Items
+              </div>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
                 <Link
-                  to={`/admin/financial/${oid}/invoice/generate/step-2`}
-                  style={{ marginLeft: "10px", fontSize: "14px" }}
+                  to={`/admin/financial/${oid}/invoice`}
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
                 >
-                  ✏️ Edit
+                  <span className="inline-flex items-center">
+                    <DocumentTextIcon className="w-4 h-4 mr-2" />
+                    <span className="hidden sm:inline">
+                      Order #{oid} (Invoice)
+                    </span>
+                  </span>
                 </Link>
-              </h3>
-              {invoiceData.line01Quantity > 0 && (
-                <div>
-                  <h4>Line 01</h4>
-                  <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                    <tbody>
-                      <tr>
-                        <td style={{ padding: "5px", fontWeight: "bold" }}>
-                          Quantity:
-                        </td>
-                        <td>{invoiceData.line01Quantity}</td>
-                      </tr>
-                      <tr>
-                        <td style={{ padding: "5px", fontWeight: "bold" }}>
-                          Description:
-                        </td>
-                        <td>{invoiceData.line01Description}</td>
-                      </tr>
-                      <tr>
-                        <td style={{ padding: "5px", fontWeight: "bold" }}>
-                          Unit Price:
-                        </td>
-                        <td>{formatCurrency(invoiceData.line01UnitPrice)}</td>
-                      </tr>
-                      <tr>
-                        <td style={{ padding: "5px", fontWeight: "bold" }}>
-                          Amount:
-                        </td>
-                        <td>{formatCurrency(invoiceData.line01Amount)}</td>
-                      </tr>
-                    </tbody>
-                  </table>
+              </div>
+            </li>
+            <li aria-current="page">
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
+                  <PencilIcon className="w-4 h-4 mr-2" />
+                  Generate Invoice
+                </span>
+              </div>
+            </li>
+          </ol>
+        </nav>
+
+        {/* Page Title */}
+        <div className="mb-6">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+            <CurrencyDollarIcon className="w-6 sm:w-7 h-6 sm:h-7 mr-2 sm:mr-3 text-blue-600" />
+            Financials
+          </h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">
+            Generate Invoice - Step 4 of 4
+          </p>
+        </div>
+
+        {/* Wizard Steps - Responsive Design */}
+        <div className="mb-6">
+          {/* Desktop/Tablet View (768px and up) */}
+          <div className="hidden md:flex items-center justify-center overflow-x-auto">
+            <div className="flex items-center">
+              {/* Steps 1-3 Complete */}
+              {[1, 2, 3].map((step, index) => (
+                <React.Fragment key={step}>
+                  <div className="flex items-center">
+                    <div className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-green-600 rounded-full">
+                      <CheckIcon className="w-4 h-4 lg:w-6 lg:h-6 text-white" />
+                    </div>
+                    <div className="ml-2 lg:ml-3">
+                      <p className="text-xs lg:text-sm font-medium text-gray-900">
+                        {step === 1 && "Header"}
+                        {step === 2 && "Line Items"}
+                        {step === 3 && "Financial"}
+                      </p>
+                      <p className="text-xs text-gray-500 hidden xl:block">
+                        Complete
+                      </p>
+                    </div>
+                  </div>
+                  {index < 3 && (
+                    <div className="mx-1 lg:mx-2 w-8 lg:w-12 h-0.5 bg-green-600"></div>
+                  )}
+                </React.Fragment>
+              ))}
+
+              {/* Step 4 - Active */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-blue-600 rounded-full">
+                  <span className="text-white font-semibold text-sm lg:text-base">
+                    4
+                  </span>
                 </div>
-              )}
-              {/* Add indication if there are more line items */}
-              {invoiceData.line02Quantity > 0 && (
-                <p style={{ fontStyle: "italic", marginTop: "10px" }}>
-                  ...and additional line items (click Edit to review all)
-                </p>
-              )}
-            </div>
-
-            {/* Step 3 Summary */}
-            <div style={{ marginBottom: "30px" }}>
-              <h3>
-                Step 3 - Financial Details & Signatures
-                <Link
-                  to={`/admin/financial/${oid}/invoice/generate/step-3`}
-                  style={{ marginLeft: "10px", fontSize: "14px" }}
-                >
-                  ✏️ Edit
-                </Link>
-              </h3>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <tbody>
-                  <tr>
-                    <td style={{ padding: "5px", fontWeight: "bold" }}>
-                      Labour Amount:
-                    </td>
-                    <td>{formatCurrency(invoiceData.invoiceLabourAmount)}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "5px", fontWeight: "bold" }}>
-                      Material Amount:
-                    </td>
-                    <td>{formatCurrency(invoiceData.invoiceMaterialAmount)}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "5px", fontWeight: "bold" }}>
-                      Other Costs:
-                    </td>
-                    <td>
-                      {formatCurrency(invoiceData.invoiceOtherCostsAmount)}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "5px", fontWeight: "bold" }}>
-                      Sub-Total:
-                    </td>
-                    <td>
-                      {formatCurrency(
-                        (parseFloat(invoiceData.invoiceLabourAmount) || 0) +
-                          (parseFloat(invoiceData.invoiceMaterialAmount) || 0) +
-                          (parseFloat(invoiceData.invoiceOtherCostsAmount) ||
-                            0),
-                      )}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "5px", fontWeight: "bold" }}>Tax:</td>
-                    <td>{formatCurrency(invoiceData.invoiceTaxAmount)}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "5px", fontWeight: "bold" }}>
-                      Total:
-                    </td>
-                    <td>{formatCurrency(invoiceData.invoiceTotalAmount)}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "5px", fontWeight: "bold" }}>
-                      Deposit:
-                    </td>
-                    <td>{formatCurrency(invoiceData.invoiceDepositAmount)}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "5px", fontWeight: "bold" }}>
-                      Amount Due:
-                    </td>
-                    <td>{formatCurrency(invoiceData.invoiceAmountDue)}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "5px", fontWeight: "bold" }}>
-                      Quote Valid For:
-                    </td>
-                    <td>{invoiceData.invoiceQuoteDays} days</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "5px", fontWeight: "bold" }}>
-                      Date of Quote Approval:
-                    </td>
-                    <td>{invoiceData.invoiceQuoteDate}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "5px", fontWeight: "bold" }}>
-                      Customer Approval:
-                    </td>
-                    <td>{invoiceData.invoiceCustomersApproval}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "5px", fontWeight: "bold" }}>
-                      Line 01 Notes:
-                    </td>
-                    <td>{invoiceData.line01Notes || "-"}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "5px", fontWeight: "bold" }}>
-                      Line 02 Notes:
-                    </td>
-                    <td>{invoiceData.line02Notes || "-"}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "5px", fontWeight: "bold" }}>
-                      Date Client Paid:
-                    </td>
-                    <td>{invoiceData.dateClientPaidInvoice}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "5px", fontWeight: "bold" }}>
-                      Payment Methods:
-                    </td>
-                    <td>
-                      {getPaymentMethodLabels(invoiceData.paymentMethods)}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "5px", fontWeight: "bold" }}>
-                      Client Signature:
-                    </td>
-                    <td>{invoiceData.clientSignature}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "5px", fontWeight: "bold" }}>
-                      Associate Sign Date:
-                    </td>
-                    <td>{invoiceData.associateSignDate}</td>
-                  </tr>
-                  <tr>
-                    <td style={{ padding: "5px", fontWeight: "bold" }}>
-                      Associate Signature:
-                    </td>
-                    <td>{invoiceData.associateSignature}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginTop: "30px",
-              }}
-            >
-              <Button
-                onClick={handleBack}
-                variant="secondary"
-                disabled={isSubmitting}
-              >
-                ← Back to Step 3
-              </Button>
-              <Button
-                onClick={handleSubmit}
-                variant="success"
-                disabled={isSubmitting}
-              >
-                {isSubmitting ? "Submitting..." : "✓ Submit"}
-              </Button>
+                <div className="ml-2 lg:ml-3">
+                  <p className="text-xs lg:text-sm font-medium text-gray-900">
+                    Review
+                  </p>
+                  <p className="text-xs text-gray-500 hidden xl:block">
+                    Submit
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-        )}
-      </Card>
-    </Layout>
+
+          {/* Mobile View (below 768px) */}
+          <div className="md:hidden">
+            <div className="flex items-center justify-between px-4">
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
+                  <span className="text-white font-semibold">4</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">
+                    Step 4 of 4
+                  </p>
+                  <p className="text-xs text-gray-500">Review & Submit</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-gray-500">Progress</p>
+                <div className="flex items-center mt-1">
+                  <div className="flex">
+                    {[1, 2, 3].map((step) => (
+                      <div
+                        key={step}
+                        className="w-2 h-2 bg-green-600 rounded-full mr-1"
+                      ></div>
+                    ))}
+                    <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="bg-white shadow-sm rounded-lg">
+          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+              <CheckCircleIcon className="w-5 h-5 mr-2" />
+              Review Invoice Details
+            </h2>
+          </div>
+
+          <div className="p-4 sm:p-6">
+            <p className="text-sm sm:text-base text-gray-600 mb-6">
+              Please carefully review the following invoice details and if you
+              are ready click the <strong>Submit</strong> button to complete.
+            </p>
+
+            {errors.general && (
+              <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center">
+                <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+                <span className="text-sm sm:text-base">{errors.general}</span>
+              </div>
+            )}
+
+            {Object.keys(errors).length > 0 &&
+              Object.keys(errors).some((key) => key !== "general") && (
+                <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+                  <div className="flex items-start">
+                    <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium mb-2">
+                        Please correct the following errors:
+                      </p>
+                      <ul className="list-disc list-inside space-y-1">
+                        {Object.entries(errors).map(
+                          ([key, value]) =>
+                            key !== "general" && (
+                              <li key={key} className="text-sm">
+                                {value}
+                              </li>
+                            ),
+                        )}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+            {isSubmitting ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <span className="ml-3 text-gray-600">
+                  Generating invoice...
+                </span>
+              </div>
+            ) : (
+              <div className="max-w-3xl mx-auto">
+                <div className="space-y-6 sm:space-y-8">
+                  {/* Header Information Section */}
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
+                        <UserIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600" />
+                        Step 1 - Header Information
+                      </h3>
+                      <Link
+                        to={`/admin/financial/${oid}/invoice/generate/step-1`}
+                        className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
+                      >
+                        <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                        Edit
+                      </Link>
+                    </div>
+
+                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Invoice ID #:
+                          </span>
+                          <p className="text-xs sm:text-sm text-gray-900">
+                            {invoiceData.invoiceId}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Invoice Date:
+                          </span>
+                          <p className="text-xs sm:text-sm text-gray-900">
+                            {invoiceData.invoiceDate}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Associate Name:
+                          </span>
+                          <p className="text-xs sm:text-sm text-gray-900">
+                            {invoiceData.associateName}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Associate Phone:
+                          </span>
+                          <p className="text-xs sm:text-sm text-gray-900">
+                            {invoiceData.associatePhone}
+                          </p>
+                        </div>
+                        {invoiceData.associateTaxId && (
+                          <div>
+                            <span className="text-xs sm:text-sm font-medium text-gray-500">
+                              Associate Tax ID:
+                            </span>
+                            <p className="text-xs sm:text-sm text-gray-900">
+                              {invoiceData.associateTaxId}
+                            </p>
+                          </div>
+                        )}
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Client Name:
+                          </span>
+                          <p className="text-xs sm:text-sm text-gray-900">
+                            {invoiceData.customerName}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Client Address:
+                          </span>
+                          <p className="text-xs sm:text-sm text-gray-900">
+                            {invoiceData.customerAddress}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Client Phone:
+                          </span>
+                          <p className="text-xs sm:text-sm text-gray-900">
+                            {invoiceData.customerPhone}
+                          </p>
+                        </div>
+                        {invoiceData.customerEmail && (
+                          <div>
+                            <span className="text-xs sm:text-sm font-medium text-gray-500">
+                              Client Email:
+                            </span>
+                            <p className="text-xs sm:text-sm text-gray-900 break-all">
+                              {invoiceData.customerEmail}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Line Items Section */}
+                  <div className="pt-6 border-t">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
+                        <ClipboardDocumentListIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-green-600" />
+                        Step 2 - Line Items
+                      </h3>
+                      <Link
+                        to={`/admin/financial/${oid}/invoice/generate/step-2`}
+                        className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
+                      >
+                        <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                        Edit
+                      </Link>
+                    </div>
+
+                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                      {activeLineItems.length > 0 ? (
+                        <div className="space-y-4">
+                          {activeLineItems.map((item, index) => (
+                            <div
+                              key={item.number}
+                              className={`${
+                                index > 0 ? "pt-4 border-t border-gray-200" : ""
+                              }`}
+                            >
+                              <p className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                                Line {item.number}
+                              </p>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
+                                <div>
+                                  <span className="text-xs sm:text-sm font-medium text-gray-500">
+                                    Quantity:
+                                  </span>
+                                  <p className="text-xs sm:text-sm text-gray-900">
+                                    {item.quantity}
+                                  </p>
+                                </div>
+                                <div>
+                                  <span className="text-xs sm:text-sm font-medium text-gray-500">
+                                    Unit Price:
+                                  </span>
+                                  <p className="text-xs sm:text-sm text-gray-900">
+                                    {formatCurrency(item.unitPrice)}
+                                  </p>
+                                </div>
+                                <div>
+                                  <span className="text-xs sm:text-sm font-medium text-gray-500">
+                                    Description:
+                                  </span>
+                                  <p className="text-xs sm:text-sm text-gray-900">
+                                    {item.description}
+                                  </p>
+                                </div>
+                                <div>
+                                  <span className="text-xs sm:text-sm font-medium text-gray-500">
+                                    Amount:
+                                  </span>
+                                  <p className="text-xs sm:text-sm text-gray-900">
+                                    {formatCurrency(item.amount)}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-xs sm:text-sm text-gray-500">
+                          No line items added
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Financial Details & Signatures Section */}
+                  <div className="pt-6 border-t">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
+                        <BanknotesIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-purple-600" />
+                        Step 3 - Financial Details & Signatures
+                      </h3>
+                      <Link
+                        to={`/admin/financial/${oid}/invoice/generate/step-3`}
+                        className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
+                      >
+                        <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                        Edit
+                      </Link>
+                    </div>
+
+                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Labour Amount:
+                          </span>
+                          <p className="text-xs sm:text-sm text-gray-900">
+                            {formatCurrency(invoiceData.invoiceLabourAmount)}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Material Amount:
+                          </span>
+                          <p className="text-xs sm:text-sm text-gray-900">
+                            {formatCurrency(invoiceData.invoiceMaterialAmount)}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Other Costs:
+                          </span>
+                          <p className="text-xs sm:text-sm text-gray-900">
+                            {formatCurrency(
+                              invoiceData.invoiceOtherCostsAmount,
+                            )}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Sub-Total:
+                          </span>
+                          <p className="text-xs sm:text-sm text-gray-900 font-semibold">
+                            {formatCurrency(
+                              (parseFloat(invoiceData.invoiceLabourAmount) ||
+                                0) +
+                                (parseFloat(
+                                  invoiceData.invoiceMaterialAmount,
+                                ) || 0) +
+                                (parseFloat(
+                                  invoiceData.invoiceOtherCostsAmount,
+                                ) || 0),
+                            )}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Tax:
+                          </span>
+                          <p className="text-xs sm:text-sm text-gray-900">
+                            {formatCurrency(invoiceData.invoiceTaxAmount)}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Total:
+                          </span>
+                          <p className="text-xs sm:text-sm text-gray-900 font-bold text-green-600">
+                            {formatCurrency(invoiceData.invoiceTotalAmount)}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Deposit:
+                          </span>
+                          <p className="text-xs sm:text-sm text-gray-900">
+                            {formatCurrency(invoiceData.invoiceDepositAmount)}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Amount Due:
+                          </span>
+                          <p className="text-xs sm:text-sm text-gray-900 font-bold text-red-600">
+                            {formatCurrency(invoiceData.invoiceAmountDue)}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Quote Valid For:
+                          </span>
+                          <p className="text-xs sm:text-sm text-gray-900">
+                            {invoiceData.invoiceQuoteDays} days
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Date of Quote Approval:
+                          </span>
+                          <p className="text-xs sm:text-sm text-gray-900">
+                            {invoiceData.invoiceQuoteDate}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Customer Approval:
+                          </span>
+                          <p className="text-xs sm:text-sm text-gray-900">
+                            {invoiceData.invoiceCustomersApproval}
+                          </p>
+                        </div>
+                        {invoiceData.line01Notes && (
+                          <div>
+                            <span className="text-xs sm:text-sm font-medium text-gray-500">
+                              Line 01 Notes:
+                            </span>
+                            <p className="text-xs sm:text-sm text-gray-900">
+                              {invoiceData.line01Notes}
+                            </p>
+                          </div>
+                        )}
+                        {invoiceData.line02Notes && (
+                          <div>
+                            <span className="text-xs sm:text-sm font-medium text-gray-500">
+                              Line 02 Notes:
+                            </span>
+                            <p className="text-xs sm:text-sm text-gray-900">
+                              {invoiceData.line02Notes}
+                            </p>
+                          </div>
+                        )}
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Date Client Paid:
+                          </span>
+                          <p className="text-xs sm:text-sm text-gray-900">
+                            {invoiceData.dateClientPaidInvoice}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Payment Methods:
+                          </span>
+                          <p className="text-xs sm:text-sm text-gray-900">
+                            {getPaymentMethodLabels(invoiceData.paymentMethods)}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Client Signature:
+                          </span>
+                          <p className="text-xs sm:text-sm text-gray-900">
+                            {invoiceData.clientSignature}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Associate Sign Date:
+                          </span>
+                          <p className="text-xs sm:text-sm text-gray-900">
+                            {invoiceData.associateSignDate}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Associate Signature:
+                          </span>
+                          <p className="text-xs sm:text-sm text-gray-900">
+                            {invoiceData.associateSignature}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Form Actions */}
+                <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={handleBack}
+                    disabled={isSubmitting}
+                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    <ArrowLeftIcon className="w-4 h-4 mr-2" />
+                    Back to Step 3
+                  </button>
+                  <button
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
+                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+                  >
+                    <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
+                    Submit
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }
 

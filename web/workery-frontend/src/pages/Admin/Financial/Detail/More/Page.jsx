@@ -1,16 +1,21 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Admin/Financial/Detail/More/Page.jsx
+// File Path: web/workery-frontend/src/pages/Admin/Financial/Detail/More/Page.jsx
 
 import React, { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router";
 import { useOrderManager } from "../../../../../services/Services";
-import {
-  Card,
-  Alert,
-  Loading,
-  Breadcrumb,
-  Button,
-} from "../../../../../components/UI";
 import { ORDER_STATUS_ARCHIVED } from "../../../../../constants/Order";
+import {
+  ChartBarIcon,
+  CurrencyDollarIcon,
+  InformationCircleIcon,
+  ChevronLeftIcon,
+  ArchiveBoxIcon,
+  EllipsisHorizontalIcon,
+  DocumentTextIcon,
+  DocumentDuplicateIcon,
+  ExclamationTriangleIcon,
+  DocumentIcon,
+} from "@heroicons/react/24/outline";
 
 function AdminFinancialDetailMorePage() {
   // URL Parameters
@@ -85,144 +90,244 @@ function AdminFinancialDetailMorePage() {
     return order && order.status === ORDER_STATUS_ARCHIVED;
   };
 
-  // Render error messages
-  const renderErrors = () => {
-    if (!errors || Object.keys(errors).length === 0) return null;
+  // Action card component
+  const ActionCard = ({
+    title,
+    subtitle,
+    icon: Icon,
+    path,
+    bgColorClass,
+    hoverColorClass,
+    disabled = false,
+  }) => {
+    const content = (
+      <div
+        className={`
+          p-6 rounded-lg text-white text-center transition-all duration-200
+          min-h-[180px] flex flex-col justify-center items-center
+          ${disabled ? "bg-gray-400 cursor-not-allowed opacity-60" : `${bgColorClass} ${hoverColorClass} hover:shadow-lg hover:-translate-y-1 cursor-pointer`}
+        `}
+      >
+        <Icon
+          className={`w-12 h-12 mb-3 mx-auto ${disabled ? "text-gray-200" : "text-white"}`}
+        />
+        <h3 className="text-lg font-bold mb-2">{title}</h3>
+        <p className="text-sm opacity-90">{subtitle}</p>
+      </div>
+    );
+
+    if (disabled) {
+      return content;
+    }
 
     return (
-      <Alert type="error">
-        <h4>Error</h4>
-        {errors.general && <p>{errors.general}</p>}
-        {Object.keys(errors).map((key) => {
-          if (key !== "general") {
-            return <p key={key}>{`${key}: ${errors[key]}`}</p>;
-          }
-          return null;
-        })}
-      </Alert>
+      <Link to={path} className="block">
+        {content}
+      </Link>
     );
   };
 
   // Loading state
   if (isFetching) {
     return (
-      <div>
-        <Breadcrumb
-          items={[
-            { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
-            { path: "/admin/financials", label: "Financials", icon: "💳" },
-            {
-              path: `/admin/financial/${oid}`,
-              label: `Order #${oid}`,
-              icon: "📄",
-            },
-            { label: "More", icon: "⋯" },
-          ]}
-        />
-        <Loading message="Loading order details..." />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading order details...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Breadcrumb */}
-      <Breadcrumb
-        items={[
-          { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
-          { path: "/admin/financials", label: "Financials", icon: "💳" },
-          {
-            path: `/admin/financial/${oid}`,
-            label: `Order #${oid}`,
-            icon: "📄",
-          },
-          { label: "More", icon: "⋯" },
-        ]}
-      />
-
-      {/* Page banner for archived orders */}
-      {isOrderArchived() && <Alert type="info">This order is archived.</Alert>}
+      <nav className="flex mb-6" aria-label="Breadcrumb">
+        <ol className="inline-flex items-center space-x-1 md:space-x-3">
+          <li className="inline-flex items-center">
+            <Link
+              to="/admin/dashboard"
+              className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+            >
+              <ChartBarIcon className="w-4 h-4 mr-2" />
+              Dashboard
+            </Link>
+          </li>
+          <li>
+            <div className="flex items-center">
+              <span className="mx-2 text-gray-400">/</span>
+              <Link
+                to="/admin/financials"
+                className="text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <span className="inline-flex items-center">
+                  <CurrencyDollarIcon className="w-4 h-4 mr-2" />
+                  Financials
+                </span>
+              </Link>
+            </div>
+          </li>
+          <li>
+            <div className="flex items-center">
+              <span className="mx-2 text-gray-400">/</span>
+              <Link
+                to={`/admin/financial/${oid}`}
+                className="text-sm font-medium text-gray-700 hover:text-blue-600"
+              >
+                <span className="inline-flex items-center">
+                  <DocumentIcon className="w-4 h-4 mr-2" />
+                  Order #{oid}
+                </span>
+              </Link>
+            </div>
+          </li>
+          <li aria-current="page">
+            <div className="flex items-center">
+              <span className="mx-2 text-gray-400">/</span>
+              <span className="text-sm font-medium text-gray-500 inline-flex items-center">
+                <EllipsisHorizontalIcon className="w-4 h-4 mr-2" />
+                More
+              </span>
+            </div>
+          </li>
+        </ol>
+      </nav>
 
       {/* Page Title */}
-      <h1>💳 Financials</h1>
-      <h4>📄 Detail</h4>
-      <hr />
+      <div className="mb-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 flex items-center">
+              <CurrencyDollarIcon className="w-8 h-8 mr-3 text-blue-600" />
+              Financials
+            </h1>
+            <p className="mt-1 text-sm text-gray-600 flex items-center">
+              <InformationCircleIcon className="w-4 h-4 mr-1" />
+              Additional actions and settings for order #{oid}
+            </p>
+          </div>
+        </div>
+      </div>
 
-      {/* Error display */}
-      {renderErrors()}
+      {/* Status Alerts */}
+      {isOrderArchived() && (
+        <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg flex items-center">
+          <ArchiveBoxIcon className="w-5 h-5 mr-2" />
+          This order is archived
+        </div>
+      )}
+
+      {/* Error Display */}
+      {errors && Object.keys(errors).length > 0 && (
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          <div className="flex items-start">
+            <ExclamationTriangleIcon className="w-5 h-5 mr-2 mt-0.5" />
+            <div>
+              {errors.general && <p>{errors.general}</p>}
+              {Object.keys(errors).map((key) => {
+                if (key !== "general") {
+                  return <p key={key}>{`${key}: ${errors[key]}`}</p>;
+                }
+                return null;
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
-      {order && (
-        <Card title="More Actions">
-          {/* Tab Navigation */}
-          <div style={{ marginBottom: "20px" }}>
-            <ul
-              style={{
-                display: "flex",
-                listStyle: "none",
-                padding: 0,
-                borderBottom: "1px solid #ddd",
-              }}
+      <div className="bg-white shadow-sm rounded-lg">
+        {/* Header */}
+        <div className="px-6 py-5 border-b border-gray-200">
+          <h2 className="text-2xl font-semibold text-gray-900 flex items-center">
+            <EllipsisHorizontalIcon className="w-7 h-7 mr-2 text-blue-600" />
+            More Actions
+          </h2>
+        </div>
+
+        {/* Tab Navigation */}
+        <div className="px-6 border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8">
+            <Link
+              to={`/admin/financial/${oid}`}
+              className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
-              <li style={{ marginRight: "20px", paddingBottom: "10px" }}>
-                <Link to={`/admin/financial/${oid}`}>Detail</Link>
-              </li>
-              <li style={{ marginRight: "20px", paddingBottom: "10px" }}>
-                <Link to={`/admin/financial/${oid}/invoice`}>Invoice</Link>
-              </li>
-              <li
-                style={{
-                  paddingBottom: "10px",
-                  borderBottom: "2px solid #007bff",
-                }}
-              >
-                <strong>More ⋯</strong>
-              </li>
-            </ul>
-          </div>
-
-          {/* Action Options */}
-          <div>
-            <h3>Available Actions</h3>
-
-            {/* Clone Action */}
-            <div
-              style={{
-                marginBottom: "20px",
-                padding: "20px",
-                border: "1px solid #ddd",
-                borderRadius: "4px",
-              }}
-            >
-              <h4>🔄 Clone Order</h4>
-              <p>Create a duplicate of this order</p>
-              <Link to={`/admin/financial/${oid}/more/clone`}>
-                <Button variant="primary">Proceed to Clone</Button>
-              </Link>
-            </div>
-
-            {/* Future actions can be added here */}
-            {/* Example structure:
-            <div style={{ marginBottom: "20px", padding: "20px", border: "1px solid #ddd", borderRadius: "4px" }}>
-              <h4>📧 Email Invoice</h4>
-              <p>Send invoice to customer via email</p>
-              <Link to={`/admin/financial/${oid}/more/email`}>
-                <Button variant="primary">
-                  Send Email
-                </Button>
-              </Link>
-            </div>
-            */}
-          </div>
-
-          {/* Action Buttons */}
-          <div style={{ marginTop: "30px" }}>
-            <Link to="/admin/financials">
-              <Button variant="secondary">← Back to Financials</Button>
+              Detail
             </Link>
+            <Link
+              to={`/admin/financial/${oid}/invoice`}
+              className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
+            >
+              Invoice
+            </Link>
+            <div className="border-b-2 border-blue-600 py-4 px-1 text-base font-medium text-blue-600 inline-flex items-center">
+              More
+              <EllipsisHorizontalIcon className="w-5 h-5 ml-1" />
+            </div>
+          </nav>
+        </div>
+
+        {order && (
+          <div className="p-6">
+            {/* Action Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+              {/* Clone Order Action */}
+              <ActionCard
+                title="Clone Order"
+                subtitle="Create a duplicate of this order"
+                icon={DocumentDuplicateIcon}
+                path={`/admin/financial/${oid}/more/clone`}
+                bgColorClass="bg-cyan-600"
+                hoverColorClass="hover:bg-cyan-700"
+              />
+
+              {/* Future actions can be added here as ActionCard components */}
+              {/* Example:
+              <ActionCard
+                title="Email Invoice"
+                subtitle="Send invoice to customer via email"
+                icon={EnvelopeIcon}
+                path={`/admin/financial/${oid}/more/email`}
+                bgColorClass="bg-cyan-600"
+                hoverColorClass="hover:bg-cyan-700"
+              />
+              <ActionCard
+                title="Export PDF"
+                subtitle="Download order details as PDF"
+                icon={DocumentArrowDownIcon}
+                path={`/admin/financial/${oid}/more/export`}
+                bgColorClass="bg-cyan-600"
+                hoverColorClass="hover:bg-cyan-700"
+              />
+              */}
+            </div>
+
+            {/* Information Alert */}
+            <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg mb-8">
+              <div className="flex items-start">
+                <InformationCircleIcon className="w-5 h-5 mr-2 mt-0.5" />
+                <div>
+                  <strong>Note:</strong> Use these actions to manage and process
+                  your financial orders. Some actions may require additional
+                  permissions or may not be available for archived orders.
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Navigation */}
+            <div className="flex justify-start pt-6 border-t border-gray-200">
+              <Link to="/admin/financials">
+                <button className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                  <ChevronLeftIcon className="w-5 h-5 mr-2" />
+                  Back to Financials
+                </button>
+              </Link>
+            </div>
           </div>
-        </Card>
-      )}
+        )}
+      </div>
     </div>
   );
 }

@@ -7,13 +7,21 @@ import {
   useSurveyStorage,
 } from "../../../../../services/Services";
 import {
-  Breadcrumb,
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Badge,
-} from "../../../../../components/UI";
+  ChartBarIcon,
+  ChevronRightIcon,
+  ArrowLeftIcon,
+  CheckIcon,
+  CheckCircleIcon,
+  ClipboardDocumentListIcon,
+  ExclamationCircleIcon,
+  PencilSquareIcon,
+  DocumentTextIcon,
+  UserIcon,
+  BriefcaseIcon,
+  ChatBubbleBottomCenterTextIcon,
+  CalendarIcon,
+  DocumentCheckIcon,
+} from "@heroicons/react/24/outline";
 
 const TASK_ITEM_NO_SURVEY_CONDUCTED_REASON_OPTIONS = [
   { value: 0, label: "Please select" },
@@ -129,480 +137,469 @@ export default function AdminTaskItemSurveyStep3Page() {
     return option ? option.label : "";
   };
 
-  const renderResponseIcon = (value) => {
+  const renderResponseBadge = (value) => {
     if (value === 1) {
-      return <Badge variant="success">✓ Yes</Badge>;
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+          <CheckIcon className="w-3 h-3 mr-1" />
+          Yes
+        </span>
+      );
     } else if (value === 2) {
-      return <Badge variant="error">✗ No</Badge>;
+      return (
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+          <svg
+            className="w-3 h-3 mr-1"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M6 18L18 6M6 6l12 12"
+            />
+          </svg>
+          No
+        </span>
+      );
     }
-    return "-";
+    return <span className="text-gray-500">-</span>;
   };
-
-  const breadcrumbItems = [
-    { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
-    { label: "Tasks", path: "/admin/tasks", icon: "📋" },
-    { label: "Task Detail", icon: "ℹ️" },
-  ];
 
   if (isFetching) {
     return (
-      <div className="container">
-        <Breadcrumb items={breadcrumbItems} />
-        <Card>
-          <Loading message="Loading task details..." />
-        </Card>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <span className="ml-3 text-gray-600">Loading task details...</span>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container">
-      <Breadcrumb items={breadcrumbItems} />
-
-      {/* Page Title */}
-      <h1>📋 Task Survey</h1>
-      <h4>✅ Review & Submit</h4>
-      <hr />
-
-      {/* Progress */}
-      <Card style={{ backgroundColor: "#d4edda" }}>
-        <p>Step 3 of 3</p>
-        <progress value="100" max="100">
-          100%
-        </progress>
-      </Card>
-
-      {/* Page Content */}
-      <Card title="📋 Task Detail - Survey">
-        {/* Errors */}
-        {errors && Object.keys(errors).length > 0 && (
-          <Alert type="error">
-            <h4>Error submitting survey:</h4>
-            <ul>
-              {Object.entries(errors).map(([key, value]) => (
-                <li key={key}>
-                  {key}: {value}
-                </li>
-              ))}
-            </ul>
-          </Alert>
-        )}
-
-        {task && (
-          <>
-            {/* Task Details Table */}
-            <div style={{ marginBottom: "30px" }}>
-              <h3 style={{ marginBottom: "20px" }}>📄 Task Information</h3>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr style={{ backgroundColor: "#f8f9fa" }}>
-                    <th
-                      colSpan="2"
-                      style={{
-                        padding: "10px",
-                        textAlign: "left",
-                        borderBottom: "2px solid #dee2e6",
-                      }}
-                    >
-                      Task Detail
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td
-                      style={{
-                        width: "30%",
-                        padding: "10px",
-                        borderBottom: "1px solid #dee2e6",
-                        fontWeight: "600",
-                      }}
-                    >
-                      Type
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px",
-                        borderBottom: "1px solid #dee2e6",
-                      }}
-                    >
-                      Order Completion
-                    </td>
-                  </tr>
-                  <tr>
-                    <td
-                      style={{
-                        padding: "10px",
-                        borderBottom: "1px solid #dee2e6",
-                        fontWeight: "600",
-                      }}
-                    >
-                      Description
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px",
-                        borderBottom: "1px solid #dee2e6",
-                      }}
-                    >
-                      {task.description}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td
-                      style={{
-                        padding: "10px",
-                        borderBottom: "1px solid #dee2e6",
-                        fontWeight: "600",
-                      }}
-                    >
-                      Job #
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px",
-                        borderBottom: "1px solid #dee2e6",
-                      }}
-                    >
-                      <Link to={`/admin/order/${task.orderWjid}`}>
-                        {task.orderWjid}
-                      </Link>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td
-                      style={{
-                        padding: "10px",
-                        borderBottom: "1px solid #dee2e6",
-                        fontWeight: "600",
-                      }}
-                    >
-                      Job Start Date
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px",
-                        borderBottom: "1px solid #dee2e6",
-                      }}
-                    >
-                      {task.orderStartDate
-                        ? new Date(task.orderStartDate).toLocaleDateString()
-                        : "-"}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td
-                      style={{
-                        padding: "10px",
-                        borderBottom: "1px solid #dee2e6",
-                        fontWeight: "600",
-                      }}
-                    >
-                      Job Description
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px",
-                        borderBottom: "1px solid #dee2e6",
-                      }}
-                    >
-                      {task.orderDescription || "-"}
-                    </td>
-                  </tr>
-                  <tr>
-                    <td
-                      style={{
-                        padding: "10px",
-                        borderBottom: "1px solid #dee2e6",
-                        fontWeight: "600",
-                      }}
-                    >
-                      Client Name
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px",
-                        borderBottom: "1px solid #dee2e6",
-                      }}
-                    >
-                      <Link to={`/admin/customer/${task.customerId}`}>
-                        {task.customerName}
-                      </Link>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td
-                      style={{
-                        padding: "10px",
-                        borderBottom: "1px solid #dee2e6",
-                        fontWeight: "600",
-                      }}
-                    >
-                      Associate
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px",
-                        borderBottom: "1px solid #dee2e6",
-                      }}
-                    >
-                      <Link to={`/admin/associate/${task.associateId}`}>
-                        {task.associateName}
-                      </Link>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            {/* Survey Submission Table */}
-            <div>
-              <h3 style={{ marginBottom: "20px" }}>📝 Survey Submission</h3>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <thead>
-                  <tr style={{ backgroundColor: "#f8f9fa" }}>
-                    <th
-                      colSpan="2"
-                      style={{
-                        padding: "10px",
-                        textAlign: "left",
-                        borderBottom: "2px solid #dee2e6",
-                      }}
-                    >
-                      Form Submission
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td
-                      style={{
-                        width: "30%",
-                        padding: "10px",
-                        borderBottom: "1px solid #dee2e6",
-                        fontWeight: "600",
-                      }}
-                    >
-                      Was there a survey conducted?
-                    </td>
-                    <td
-                      style={{
-                        padding: "10px",
-                        borderBottom: "1px solid #dee2e6",
-                      }}
-                    >
-                      {renderResponseIcon(formData.wasSurveyConducted)}
-                    </td>
-                  </tr>
-                  {formData.wasSurveyConducted === 1 && (
-                    <>
-                      <tr>
-                        <td
-                          style={{
-                            padding: "10px",
-                            borderBottom: "1px solid #dee2e6",
-                            fontWeight: "600",
-                          }}
-                        >
-                          Was the quality of the work satisfactory?
-                        </td>
-                        <td
-                          style={{
-                            padding: "10px",
-                            borderBottom: "1px solid #dee2e6",
-                          }}
-                        >
-                          {renderResponseIcon(formData.wasJobSatisfactory)}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td
-                          style={{
-                            padding: "10px",
-                            borderBottom: "1px solid #dee2e6",
-                            fontWeight: "600",
-                          }}
-                        >
-                          Was the work completed on time and on budget?
-                        </td>
-                        <td
-                          style={{
-                            padding: "10px",
-                            borderBottom: "1px solid #dee2e6",
-                          }}
-                        >
-                          {renderResponseIcon(
-                            formData.wasJobFinishedOnTimeAndOnBudget,
-                          )}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td
-                          style={{
-                            padding: "10px",
-                            borderBottom: "1px solid #dee2e6",
-                            fontWeight: "600",
-                          }}
-                        >
-                          Was the Associate Member punctual?
-                        </td>
-                        <td
-                          style={{
-                            padding: "10px",
-                            borderBottom: "1px solid #dee2e6",
-                          }}
-                        >
-                          {renderResponseIcon(formData.wasAssociatePunctual)}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td
-                          style={{
-                            padding: "10px",
-                            borderBottom: "1px solid #dee2e6",
-                            fontWeight: "600",
-                          }}
-                        >
-                          Was the Associate Member professional?
-                        </td>
-                        <td
-                          style={{
-                            padding: "10px",
-                            borderBottom: "1px solid #dee2e6",
-                          }}
-                        >
-                          {renderResponseIcon(
-                            formData.wasAssociateProfessional,
-                          )}
-                        </td>
-                      </tr>
-                      <tr>
-                        <td
-                          style={{
-                            padding: "10px",
-                            borderBottom: "1px solid #dee2e6",
-                            fontWeight: "600",
-                          }}
-                        >
-                          Would you refer Over55 to a friend or family member?
-                        </td>
-                        <td
-                          style={{
-                            padding: "10px",
-                            borderBottom: "1px solid #dee2e6",
-                          }}
-                        >
-                          {renderResponseIcon(
-                            formData.wouldCustomerReferOurOrganization,
-                          )}
-                        </td>
-                      </tr>
-                    </>
-                  )}
-                  {formData.wasSurveyConducted === 2 && (
-                    <>
-                      <tr>
-                        <td
-                          style={{
-                            padding: "10px",
-                            borderBottom: "1px solid #dee2e6",
-                            fontWeight: "600",
-                          }}
-                        >
-                          Why was the survey not conducted?
-                        </td>
-                        <td
-                          style={{
-                            padding: "10px",
-                            borderBottom: "1px solid #dee2e6",
-                          }}
-                        >
-                          <Badge variant="warning">
-                            {getReasonLabel(formData.noSurveyConductedReason)}
-                          </Badge>
-                        </td>
-                      </tr>
-                      {formData.noSurveyConductedReason === 1 && (
-                        <tr>
-                          <td
-                            style={{
-                              padding: "10px",
-                              borderBottom: "1px solid #dee2e6",
-                              fontWeight: "600",
-                            }}
-                          >
-                            Other Reason
-                          </td>
-                          <td
-                            style={{
-                              padding: "10px",
-                              borderBottom: "1px solid #dee2e6",
-                            }}
-                          >
-                            {formData.noSurveyConductedReasonOther}
-                          </td>
-                        </tr>
-                      )}
-                      <tr>
-                        <td
-                          style={{
-                            padding: "10px",
-                            borderBottom: "1px solid #dee2e6",
-                            fontWeight: "600",
-                            verticalAlign: "top",
-                          }}
-                        >
-                          Comment
-                        </td>
-                        <td
-                          style={{
-                            padding: "10px",
-                            borderBottom: "1px solid #dee2e6",
-                          }}
-                        >
-                          <div
-                            style={{
-                              backgroundColor: "#f8f9fa",
-                              padding: "10px",
-                              borderRadius: "4px",
-                              whiteSpace: "pre-wrap",
-                            }}
-                          >
-                            {formData.comment || "-"}
-                          </div>
-                        </td>
-                      </tr>
-                    </>
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Action Buttons */}
-            <div
-              style={{
-                marginTop: "30px",
-                display: "flex",
-                justifyContent: "space-between",
-                paddingTop: "20px",
-                borderTop: "1px solid #dee2e6",
-              }}
-            >
-              <Link to={`/admin/task/${tid}/survey/step-2`}>
-                <Button variant="secondary">← Back to Step 2</Button>
-              </Link>
-              <Button
-                onClick={onSubmitClick}
-                variant="success"
-                disabled={isSubmitting}
-                loading={isSubmitting}
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        {/* Breadcrumb */}
+        <nav className="flex mb-4" aria-label="Breadcrumb">
+          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+            <li className="inline-flex items-center">
+              <Link
+                to="/admin/dashboard"
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
               >
-                {isSubmitting ? "Submitting..." : "✓ Save & Submit"}
-              </Button>
+                <ChartBarIcon className="w-4 h-4 mr-2" />
+                <span className="hidden sm:inline">Dashboard</span>
+              </Link>
+            </li>
+            <li>
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <Link
+                  to="/admin/tasks"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                >
+                  <span className="inline-flex items-center">
+                    <ClipboardDocumentListIcon className="w-4 h-4 mr-2" />
+                    <span className="hidden sm:inline">Tasks</span>
+                  </span>
+                </Link>
+              </div>
+            </li>
+            <li aria-current="page">
+              <div className="flex items-center">
+                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
+                  <DocumentCheckIcon className="w-4 h-4 mr-2" />
+                  Survey
+                </span>
+              </div>
+            </li>
+          </ol>
+        </nav>
+
+        {/* Page Title */}
+        <div className="mb-6">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+            <ClipboardDocumentListIcon className="w-6 sm:w-7 h-6 sm:h-7 mr-2 sm:mr-3 text-blue-600" />
+            Task Survey
+          </h1>
+        </div>
+
+        {/* Wizard Steps - Responsive Design */}
+        <div className="mb-6">
+          {/* Desktop/Tablet View (768px and up) */}
+          <div className="hidden md:flex items-center justify-center overflow-x-auto">
+            <div className="flex items-center">
+              {/* Step 1 - Complete */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-green-600 rounded-full">
+                  <CheckIcon className="w-4 h-4 lg:w-6 lg:h-6 text-white" />
+                </div>
+                <div className="ml-2 lg:ml-3">
+                  <p className="text-xs lg:text-sm font-medium text-gray-900">
+                    Survey
+                  </p>
+                  <p className="text-xs text-gray-500 hidden xl:block">
+                    Complete
+                  </p>
+                </div>
+              </div>
+              <div className="mx-1 lg:mx-2 w-8 lg:w-12 h-0.5 bg-green-600"></div>
+
+              {/* Step 2 - Complete */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-green-600 rounded-full">
+                  <CheckIcon className="w-4 h-4 lg:w-6 lg:h-6 text-white" />
+                </div>
+                <div className="ml-2 lg:ml-3">
+                  <p className="text-xs lg:text-sm font-medium text-gray-900">
+                    Details
+                  </p>
+                  <p className="text-xs text-gray-500 hidden xl:block">
+                    Complete
+                  </p>
+                </div>
+              </div>
+              <div className="mx-1 lg:mx-2 w-8 lg:w-12 h-0.5 bg-gray-300"></div>
+
+              {/* Step 3 - Active */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-blue-600 rounded-full">
+                  <span className="text-white font-semibold text-sm lg:text-base">
+                    3
+                  </span>
+                </div>
+                <div className="ml-2 lg:ml-3">
+                  <p className="text-xs lg:text-sm font-medium text-gray-900">
+                    Review
+                  </p>
+                  <p className="text-xs text-gray-500 hidden xl:block">
+                    Submit
+                  </p>
+                </div>
+              </div>
             </div>
-          </>
-        )}
-      </Card>
+          </div>
+
+          {/* Mobile View (below 768px) */}
+          <div className="md:hidden">
+            <div className="flex items-center justify-between px-4">
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
+                  <span className="text-white font-semibold">3</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">
+                    Step 3 of 3
+                  </p>
+                  <p className="text-xs text-gray-500">Review & Submit</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-gray-500">Progress</p>
+                <div className="flex items-center mt-1">
+                  <div className="flex">
+                    <div className="w-2 h-2 bg-green-600 rounded-full mr-1"></div>
+                    <div className="w-2 h-2 bg-green-600 rounded-full mr-1"></div>
+                    <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="bg-white shadow-sm rounded-lg">
+          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+              <CheckCircleIcon className="w-5 h-5 mr-2" />
+              Review and Submit
+            </h2>
+          </div>
+
+          <div className="p-4 sm:p-6">
+            <p className="text-sm sm:text-base text-gray-600 mb-6">
+              Please carefully review the following survey details. If
+              everything looks correct, click the <strong>Submit</strong> button
+              to save the survey.
+            </p>
+
+            {errors && errors.message && (
+              <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center">
+                <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+                <span className="text-sm sm:text-base">{errors.message}</span>
+              </div>
+            )}
+
+            {isSubmitting ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <span className="ml-3 text-gray-600">Submitting survey...</span>
+              </div>
+            ) : (
+              task && (
+                <div className="max-w-3xl mx-auto">
+                  <div className="space-y-6 sm:space-y-8">
+                    {/* Task Information Section */}
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
+                          <DocumentTextIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600" />
+                          Task Information
+                        </h3>
+                      </div>
+
+                      <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-2">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
+                          <div>
+                            <span className="text-xs sm:text-sm font-medium text-gray-500">
+                              Type:
+                            </span>
+                            <p className="text-xs sm:text-sm text-gray-900">
+                              Order Completion
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-xs sm:text-sm font-medium text-gray-500">
+                              Job #:
+                            </span>
+                            <p className="text-xs sm:text-sm text-gray-900">
+                              <Link
+                                to={`/admin/order/${task.orderWjid}`}
+                                className="text-blue-600 hover:text-blue-800"
+                              >
+                                {task.orderWjid}
+                              </Link>
+                            </p>
+                          </div>
+                          <div className="col-span-1 sm:col-span-2">
+                            <span className="text-xs sm:text-sm font-medium text-gray-500">
+                              Description:
+                            </span>
+                            <p className="text-xs sm:text-sm text-gray-900">
+                              {task.description}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-xs sm:text-sm font-medium text-gray-500">
+                              Job Start Date:
+                            </span>
+                            <p className="text-xs sm:text-sm text-gray-900">
+                              {task.orderStartDate
+                                ? new Date(
+                                    task.orderStartDate,
+                                  ).toLocaleDateString()
+                                : "-"}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-xs sm:text-sm font-medium text-gray-500">
+                              Client Name:
+                            </span>
+                            <p className="text-xs sm:text-sm text-gray-900">
+                              <Link
+                                to={`/admin/customer/${task.customerId}`}
+                                className="text-blue-600 hover:text-blue-800"
+                              >
+                                {task.customerName}
+                              </Link>
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-xs sm:text-sm font-medium text-gray-500">
+                              Associate:
+                            </span>
+                            <p className="text-xs sm:text-sm text-gray-900">
+                              <Link
+                                to={`/admin/associate/${task.associateId}`}
+                                className="text-blue-600 hover:text-blue-800"
+                              >
+                                {task.associateName}
+                              </Link>
+                            </p>
+                          </div>
+                          {task.orderDescription && (
+                            <div className="col-span-1 sm:col-span-2">
+                              <span className="text-xs sm:text-sm font-medium text-gray-500">
+                                Job Description:
+                              </span>
+                              <p className="text-xs sm:text-sm text-gray-900">
+                                {task.orderDescription}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Survey Submission Section */}
+                    <div className="pt-6 border-t">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
+                          <ChatBubbleBottomCenterTextIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-green-600" />
+                          Survey Submission
+                        </h3>
+                        <Link
+                          to={`/admin/task/${tid}/survey/step-2`}
+                          className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
+                        >
+                          <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                          Edit
+                        </Link>
+                      </div>
+
+                      <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-3">
+                        <div className="grid grid-cols-1 gap-y-3">
+                          <div>
+                            <span className="text-xs sm:text-sm font-medium text-gray-500">
+                              Was there a survey conducted?
+                            </span>
+                            <div className="mt-1">
+                              {renderResponseBadge(formData.wasSurveyConducted)}
+                            </div>
+                          </div>
+
+                          {formData.wasSurveyConducted === 1 && (
+                            <>
+                              <div className="mt-3 pt-3 border-t border-gray-200">
+                                <p className="text-xs sm:text-sm font-semibold text-gray-700 mb-3">
+                                  Survey Responses
+                                </p>
+                                <div className="space-y-3">
+                                  <div className="flex justify-between items-start">
+                                    <span className="text-xs sm:text-sm text-gray-600">
+                                      Was the quality of the work satisfactory?
+                                    </span>
+                                    <div className="ml-4">
+                                      {renderResponseBadge(
+                                        formData.wasJobSatisfactory,
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex justify-between items-start">
+                                    <span className="text-xs sm:text-sm text-gray-600">
+                                      Was the work completed on time and on
+                                      budget?
+                                    </span>
+                                    <div className="ml-4">
+                                      {renderResponseBadge(
+                                        formData.wasJobFinishedOnTimeAndOnBudget,
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex justify-between items-start">
+                                    <span className="text-xs sm:text-sm text-gray-600">
+                                      Was the Associate Member punctual?
+                                    </span>
+                                    <div className="ml-4">
+                                      {renderResponseBadge(
+                                        formData.wasAssociatePunctual,
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex justify-between items-start">
+                                    <span className="text-xs sm:text-sm text-gray-600">
+                                      Was the Associate Member professional?
+                                    </span>
+                                    <div className="ml-4">
+                                      {renderResponseBadge(
+                                        formData.wasAssociateProfessional,
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex justify-between items-start">
+                                    <span className="text-xs sm:text-sm text-gray-600">
+                                      Would you refer Over55 to a friend or
+                                      family member?
+                                    </span>
+                                    <div className="ml-4">
+                                      {renderResponseBadge(
+                                        formData.wouldCustomerReferOurOrganization,
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </>
+                          )}
+
+                          {formData.wasSurveyConducted === 2 && (
+                            <>
+                              <div className="mt-3 pt-3 border-t border-gray-200">
+                                <div>
+                                  <span className="text-xs sm:text-sm font-medium text-gray-500">
+                                    Why was the survey not conducted?
+                                  </span>
+                                  <div className="mt-1">
+                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                      {getReasonLabel(
+                                        formData.noSurveyConductedReason,
+                                      )}
+                                    </span>
+                                  </div>
+                                </div>
+
+                                {formData.noSurveyConductedReason === 1 && (
+                                  <div className="mt-3">
+                                    <span className="text-xs sm:text-sm font-medium text-gray-500">
+                                      Other Reason:
+                                    </span>
+                                    <p className="text-xs sm:text-sm text-gray-900 mt-1">
+                                      {formData.noSurveyConductedReasonOther}
+                                    </p>
+                                  </div>
+                                )}
+
+                                {formData.comment && (
+                                  <div className="mt-3">
+                                    <span className="text-xs sm:text-sm font-medium text-gray-500">
+                                      Comment:
+                                    </span>
+                                    <div className="mt-1 bg-white p-3 rounded-md border border-gray-200">
+                                      <p className="text-xs sm:text-sm text-gray-900 whitespace-pre-wrap">
+                                        {formData.comment}
+                                      </p>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Form Actions */}
+                  <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3">
+                    <Link
+                      to={`/admin/task/${tid}/survey/step-2`}
+                      className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                    >
+                      <ArrowLeftIcon className="w-4 h-4 mr-2" />
+                      Back
+                    </Link>
+                    <button
+                      onClick={onSubmitClick}
+                      disabled={isSubmitting}
+                      className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+                    >
+                      <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
+                      Submit Survey
+                    </button>
+                  </div>
+                </div>
+              )
+            )}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
