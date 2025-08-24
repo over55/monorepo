@@ -1,29 +1,6 @@
 // File Path: web/workery-frontend/src/components/Layout/Sidebar.jsx
 // Enhanced Responsive Sidebar Component with iOS and Android Optimizations
-//
-// iOS Optimizations Include:
-// - Safe area support for devices with notch/home indicator
-// - iOS Safari viewport height fixes
-// - Hardware acceleration for smooth animations
-// - iOS keyboard handling and viewport adjustments
-// - Touch interaction improvements (tap highlight, callout prevention)
-// - iOS-specific scrolling behavior (-webkit-overflow-scrolling: touch)
-// - Gesture prevention (zoom, pinch) for better UX
-// - iOS focus ring styling for accessibility
-// - Body scroll prevention when sidebar is open
-//
-// Android Optimizations Include:
-// - Android device and version detection
-// - Chrome address bar hiding compensation
-// - Android keyboard handling with smooth transitions
-// - Android back button integration for sidebar navigation
-// - Material Design ripple effects and touch feedback
-// - Android navigation bar and status bar awareness
-// - PWA (Progressive Web App) specific optimizations
-// - Overscroll behavior control for better UX
-// - Android-specific viewport handling (--android-vh)
-// - Material Design focus ring styling (#1976D2)
-// - Hardware acceleration optimized for Android Chrome
+// UPDATED: Removed header section - hamburger menu now controlled from TopNavbar only
 
 import React, { useState, useEffect, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
@@ -58,11 +35,16 @@ import {
   DocumentTextIcon,
   BriefcaseIcon,
   StarIcon,
-  Bars3Icon,
-  XMarkIcon,
 } from "@heroicons/react/24/outline";
 
-function Sidebar({ isOpen, onClose, isMobile, taskItemActiveCount = 0 }) {
+function Sidebar({
+  isOpen,
+  onClose,
+  isMobile,
+  taskItemActiveCount = 0,
+  sidebarCollapsed,
+  onCollapseToggle,
+}) {
   const authManager = useAuthManager();
   const accountManager = useAccountManager();
   const navigate = useNavigate();
@@ -71,7 +53,6 @@ function Sidebar({ isOpen, onClose, isMobile, taskItemActiveCount = 0 }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [showLogoutWarning, setShowLogoutWarning] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [screenSize, setScreenSize] = useState({
     width: typeof window !== "undefined" ? window.innerWidth : 1024,
     height: typeof window !== "undefined" ? window.innerHeight : 768,
@@ -352,17 +333,6 @@ function Sidebar({ isOpen, onClose, isMobile, taskItemActiveCount = 0 }) {
     }
   }, [isIOS, isAndroid, shouldShowMobileLayout, isOpen]);
 
-  // Auto-collapse on small laptops to save space
-  useEffect(() => {
-    if (isSmallLaptop && !shouldShowMobileLayout) {
-      const savedState = localStorage.getItem("sidebarCollapsed");
-      if (savedState === null) {
-        setIsCollapsed(true);
-        localStorage.setItem("sidebarCollapsed", "true");
-      }
-    }
-  }, [isSmallLaptop, shouldShowMobileLayout]);
-
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
   };
@@ -386,25 +356,6 @@ function Sidebar({ isOpen, onClose, isMobile, taskItemActiveCount = 0 }) {
       window.location.href = "/logout";
     }
   };
-
-  const toggleCollapse = () => {
-    if (shouldShowMobileLayout) {
-      onClose();
-    } else {
-      const newCollapsedState = !isCollapsed;
-      setIsCollapsed(newCollapsedState);
-      localStorage.setItem("sidebarCollapsed", newCollapsedState.toString());
-      window.dispatchEvent(new Event("sidebarCollapsedChanged"));
-    }
-  };
-
-  // Load collapsed state from localStorage on mount
-  useEffect(() => {
-    const savedState = localStorage.getItem("sidebarCollapsed");
-    if (savedState === "true" && !shouldShowMobileLayout) {
-      setIsCollapsed(true);
-    }
-  }, [shouldShowMobileLayout]);
 
   useEffect(() => {
     let mounted = true;
@@ -662,32 +613,32 @@ function Sidebar({ isOpen, onClose, isMobile, taskItemActiveCount = 0 }) {
     }
 
     if (isSmallLaptop) {
-      const width = isCollapsed ? "w-16" : "w-52";
+      const width = sidebarCollapsed ? "w-16" : "w-52";
       return `${baseClasses} ${width} z-[1000] translate-x-0`;
     }
 
     // Desktop
-    const width = isCollapsed ? "w-16" : "w-64";
+    const width = sidebarCollapsed ? "w-16" : "w-64";
     return `${baseClasses} ${width} z-[1000] translate-x-0`;
   };
 
   // Responsive padding and spacing
   const getContentPadding = () => {
-    if (isMobileDevice) return "px-4 py-3";
-    if (isTablet) return "px-3 py-2";
-    if (isCollapsed && !shouldShowMobileLayout) return "px-2";
-    return "px-3 py-2";
+    if (isMobileDevice) return "px-4 py-4";
+    if (isTablet) return "px-3 py-3";
+    if (sidebarCollapsed && !shouldShowMobileLayout) return "px-2 py-3";
+    return "px-3 py-3";
   };
 
   const getItemPadding = () => {
     if (isMobileDevice) return "px-4 py-2.5";
     if (isTablet) return "px-3 py-2";
-    if (isCollapsed && !shouldShowMobileLayout)
+    if (sidebarCollapsed && !shouldShowMobileLayout)
       return "px-2 py-2 justify-center";
     return "px-3 py-2";
   };
 
-  const shouldShowLabels = !isCollapsed || shouldShowMobileLayout;
+  const shouldShowLabels = !sidebarCollapsed || shouldShowMobileLayout;
   const shouldShowBadges = shouldShowLabels;
 
   return (
@@ -887,40 +838,7 @@ function Sidebar({ isOpen, onClose, isMobile, taskItemActiveCount = 0 }) {
       `}</style>
 
       <div className={getSidebarClasses()}>
-        {/* Header with collapse button */}
-        <div className="sticky top-0 bg-gray-900 z-10 border-b border-gray-700 mb-3">
-          <div className={`${isMobileDevice ? "p-3" : "p-2"}`}>
-            <button
-              onClick={toggleCollapse}
-              className={`
-                ${isMobileDevice ? "p-2" : "p-1.5"}
-                rounded hover:bg-gray-800 transition-colors w-full flex
-                ${isMobileDevice ? "justify-between items-center" : "justify-center"}
-                sidebar-item
-                ${isIOS ? "ios-focus-ring" : ""}
-                ${isAndroid ? "android-focus-ring android-ripple android-touch-item" : ""}
-              `}
-              title={
-                shouldShowMobileLayout
-                  ? "Close menu"
-                  : isCollapsed
-                    ? "Expand sidebar"
-                    : "Collapse sidebar"
-              }
-            >
-              {isMobileDevice ? (
-                <>
-                  <span className="text-white font-medium">Menu</span>
-                  <XMarkIcon className="h-6 w-6 text-white" />
-                </>
-              ) : (
-                <Bars3Icon className="h-5 w-5 text-white" />
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Menu Content */}
+        {/* Menu Content - Now starts immediately without header */}
         <div className={getContentPadding()}>
           {/* Menu Sections */}
           {menuSections.map((section, index) => (

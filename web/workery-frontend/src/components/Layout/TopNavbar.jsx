@@ -1,36 +1,23 @@
 // File Path: web/workery-frontend/src/components/Layout/TopNavbar.jsx
-// Modernized TopNavbar Component with Enhanced Responsive Design
+// Enhanced TopNavbar Component with Combined Mobile Menu and Desktop Collapse Controls
+// Uses hamburger icon for both mobile menu and desktop sidebar collapse
 
 import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { useAuthManager, useAccountManager } from "../../services/Services";
 import { getRoleRedirectPath } from "../../constants/Roles";
-import { Bars3Icon } from "@heroicons/react/24/outline";
+import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
 
-/*
- * iOS & Android Cross-Platform Optimizations:
- *
- * iOS Optimizations:
- * - Safe area inset handling for devices with notches (iPhone X+)
- * - Hardware acceleration with transform-gpu and will-change
- * - Disabled text selection and touch callouts on UI elements
- * - Tap highlight color removal for cleaner interactions
- * - Font smoothing optimizations for crisp text rendering
- * - Backface visibility optimizations for better performance
- * - Active states with scale feedback for better touch response
- *
- * Android Optimizations:
- * - Material Design ripple effects and touch feedback
- * - Android Chrome performance optimizations
- * - Display cutout (notch/punch hole) handling
- * - Android font rendering optimizations
- * - WebView and Chrome mobile optimizations
- * - Android accessibility improvements
- * - System navigation bar handling
- * - Hardware acceleration for Android browsers
- */
-
-function TopNavbar({ onMenuToggle }) {
+function TopNavbar({
+  onMenuToggle,
+  isMobile,
+  isTablet,
+  isIOS,
+  isAndroid,
+  isSidebarOpen,
+  sidebarCollapsed,
+  onCollapseToggle,
+}) {
   const authManager = useAuthManager();
   const accountManager = useAccountManager();
   const navigate = useNavigate();
@@ -42,6 +29,10 @@ function TopNavbar({ onMenuToggle }) {
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
   };
+
+  // Determine if we're on mobile/small tablet
+  const shouldShowMobileMenu =
+    isMobile || (isTablet && window.innerWidth < 768);
 
   useEffect(() => {
     let mounted = true;
@@ -74,7 +65,7 @@ function TopNavbar({ onMenuToggle }) {
     return () => {
       mounted = false;
     };
-  }, [location.pathname]); // Re-fetch when route changes
+  }, [location.pathname]);
 
   // Paths where navbar should not be shown
   const hiddenPaths = [
@@ -102,6 +93,52 @@ function TopNavbar({ onMenuToggle }) {
 
   const getDashboardPath = () => {
     return getRoleRedirectPath(currentUser.roleId) || "/dashboard";
+  };
+
+  // Handle button click - different behavior for mobile vs desktop
+  const handleMenuButtonClick = () => {
+    if (shouldShowMobileMenu) {
+      onMenuToggle(); // Toggle mobile menu open/close
+    } else {
+      onCollapseToggle(); // Toggle desktop sidebar collapse
+    }
+  };
+
+  // Determine which icon to show
+  const getMenuIcon = () => {
+    if (shouldShowMobileMenu) {
+      // Mobile: Show X when open, hamburger when closed
+      return isSidebarOpen ? (
+        <XMarkIcon className="h-6 w-6 transition-transform duration-150" />
+      ) : (
+        <Bars3Icon className="h-6 w-6 transition-transform duration-150" />
+      );
+    } else {
+      // Desktop: Always show hamburger icon for collapse/expand
+      return (
+        <Bars3Icon className="h-5 w-5 transition-transform duration-150" />
+      );
+    }
+  };
+
+  // Get button title based on state
+  const getButtonTitle = () => {
+    if (shouldShowMobileMenu) {
+      return isSidebarOpen ? "Close menu" : "Open menu";
+    } else {
+      return sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar";
+    }
+  };
+
+  // Get button aria-label
+  const getButtonAriaLabel = () => {
+    if (shouldShowMobileMenu) {
+      return isSidebarOpen ? "Close navigation menu" : "Open navigation menu";
+    } else {
+      return sidebarCollapsed
+        ? "Expand sidebar navigation"
+        : "Collapse sidebar navigation";
+    }
   };
 
   return (
@@ -132,66 +169,64 @@ function TopNavbar({ onMenuToggle }) {
         perspective: 1000,
 
         /* Android Optimizations */
-        // Display cutout support for Android devices with notches/punch holes
-        // This also handles iOS safe area inset top
         paddingTop:
           "max(env(safe-area-inset-top), env(titlebar-area-height, 0px))",
-        // Android Chrome performance
         contain: "layout style paint",
-        // Android font rendering
         textRendering: "optimizeLegibility",
         fontFeatureSettings: '"liga", "kern"',
-        // Android hardware acceleration
         transform: "translateZ(0)",
-        // Android touch optimization
         touchAction: "manipulation",
-        // Android WebView optimization
         WebkitTransform: "translateZ(0)",
       }}
     >
       {/* Left Section */}
       <div className="flex items-center flex-1 min-w-0">
-        {/* Mobile hamburger - shows on mobile and small tablets */}
+        {/* Menu Control Button - Shows for both mobile and desktop */}
         <button
-          onClick={onMenuToggle}
-          className="md:hidden p-2 ml-2 rounded-md hover:bg-white/10 active:bg-white/20
-                     transition-colors duration-200 touch-manipulation
-                     flex items-center justify-center min-w-[44px] min-h-[44px]
-                     /* Cross-platform Touch Optimizations */
-                     select-none [-webkit-touch-callout:none] [-webkit-user-select:none]
-                     [-webkit-tap-highlight-color:transparent] focus:bg-white/10
-                     /* iOS Optimizations */
-                     will-change-transform transform-gpu active:scale-95
-                     /* Android Material Design */
-                     relative overflow-hidden
-                     before:absolute before:inset-0 before:bg-white/20 before:rounded-md
-                     before:scale-0 before:transition-transform before:duration-300
-                     active:before:scale-100"
-          title="Open menu"
-          aria-label="Open navigation menu"
+          onClick={handleMenuButtonClick}
+          className={`
+            p-2 ml-2 rounded-md hover:bg-white/10 active:bg-white/20
+            transition-all duration-200 touch-manipulation
+            flex items-center justify-center min-w-[44px] min-h-[44px]
+            /* Cross-platform Touch Optimizations */
+            select-none [-webkit-touch-callout:none] [-webkit-user-select:none]
+            [-webkit-tap-highlight-color:transparent] focus:bg-white/10
+            /* iOS Optimizations */
+            will-change-transform transform-gpu active:scale-95
+            /* Android Material Design */
+            relative overflow-hidden
+            before:absolute before:inset-0 before:bg-white/20 before:rounded-md
+            before:scale-0 before:transition-transform before:duration-300
+            active:before:scale-100
+            ${shouldShowMobileMenu ? "" : "hidden lg:flex"}
+          `}
+          title={getButtonTitle()}
+          aria-label={getButtonAriaLabel()}
           style={{
             /* iOS Optimizations */
             WebkitBackfaceVisibility: "hidden",
             backfaceVisibility: "hidden",
 
             /* Android Optimizations */
-            // Material Design ripple effect support
             outline: "none",
-            // Android Chrome performance
             contain: "layout style paint",
-            // Touch optimization for Android
             touchAction: "manipulation",
-            // Android hardware acceleration
             transform: "translateZ(0)",
-            // Android WebView optimization
             WebkitTransform: "translateZ(0)",
           }}
         >
-          <Bars3Icon className="h-6 w-6 transition-transform duration-150 relative z-10" />
+          {getMenuIcon()}
         </button>
 
         {/* Logo Container - responsive positioning */}
-        <div className="flex-1 flex justify-center md:justify-start md:ml-4 lg:ml-[280px] xl:ml-[300px]">
+        <div
+          className={`
+          flex-1 flex justify-center
+          ${shouldShowMobileMenu ? "" : "lg:justify-start lg:ml-4"}
+          ${!shouldShowMobileMenu && !sidebarCollapsed ? "lg:ml-[280px] xl:ml-[300px]" : ""}
+          ${!shouldShowMobileMenu && sidebarCollapsed ? "lg:ml-[100px] xl:ml-[120px]" : ""}
+        `}
+        >
           <Link
             to={getDashboardPath()}
             className="inline-block py-2 focus:outline-none focus:ring-2 focus:ring-white/50 rounded
@@ -211,11 +246,8 @@ function TopNavbar({ onMenuToggle }) {
               backfaceVisibility: "hidden",
 
               /* Android Optimizations */
-              // Touch optimization
               touchAction: "manipulation",
-              // Android Chrome performance
               contain: "layout style paint",
-              // Hardware acceleration
               transform: "translateZ(0)",
               WebkitTransform: "translateZ(0)",
             }}
@@ -237,12 +269,9 @@ function TopNavbar({ onMenuToggle }) {
                 backfaceVisibility: "hidden",
 
                 /* Android Optimizations */
-                // Image rendering optimization for Android
                 imageRendering: "crisp-edges",
-                // Android hardware acceleration
                 transform: "translateZ(0)",
                 WebkitTransform: "translateZ(0)",
-                // Android performance
                 contain: "layout style paint",
               }}
             />
@@ -250,7 +279,7 @@ function TopNavbar({ onMenuToggle }) {
         </div>
 
         {/* Spacer for mobile to balance hamburger menu */}
-        <div className="md:hidden w-[52px]" />
+        {shouldShowMobileMenu && <div className="w-[52px]" />}
       </div>
 
       {/* Right Section - User Welcome */}
@@ -267,7 +296,6 @@ function TopNavbar({ onMenuToggle }) {
             /* Android Text Optimizations */
             textRendering: "optimizeLegibility",
             fontFeatureSettings: '"liga", "kern"',
-            // Android performance
             contain: "layout style paint",
           }}
         >

@@ -1,5 +1,5 @@
 // File Path: web/workery-frontend/src/components/Layout/Layout.jsx
-// Enhanced Responsive Layout Component with Tailwind v4
+// Enhanced Responsive Layout Component with Unified Menu Controls
 
 import React, { useState, useEffect } from "react";
 import TopNavbar from "./TopNavbar";
@@ -255,6 +255,14 @@ function Layout({ children }) {
     setIsSidebarOpen(false);
   };
 
+  // Handle collapse toggle for desktop view
+  const handleCollapseToggle = () => {
+    const newCollapsedState = !sidebarCollapsed;
+    setSidebarCollapsed(newCollapsedState);
+    localStorage.setItem("sidebarCollapsed", newCollapsedState.toString());
+    window.dispatchEvent(new Event("sidebarCollapsedChanged"));
+  };
+
   // Calculate sidebar margins based on device type and state
   const getSidebarMargin = () => {
     if (isMobile) return "";
@@ -305,22 +313,26 @@ function Layout({ children }) {
         }),
       }}
     >
-      {/* Top Navigation Bar - iOS and Android Safe Area Aware */}
+      {/* Top Navigation Bar - Enhanced with collapse controls */}
       <TopNavbar
         onMenuToggle={handleMenuToggle}
         isMobile={isMobile}
         isTablet={isTablet}
         isIOS={isIOS}
         isAndroid={isAndroid}
+        isSidebarOpen={isSidebarOpen}
+        sidebarCollapsed={sidebarCollapsed}
+        onCollapseToggle={handleCollapseToggle}
       />
 
-      {/* Sidebar - iOS and Android optimized */}
+      {/* Sidebar - Simplified without header */}
       <Sidebar
         isOpen={isSidebarOpen}
         onClose={handleSidebarClose}
         isMobile={isMobile}
         isTablet={isTablet}
         sidebarCollapsed={sidebarCollapsed}
+        onCollapseToggle={handleCollapseToggle}
         isIOS={isIOS}
         isAndroid={isAndroid}
       />
