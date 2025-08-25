@@ -116,16 +116,21 @@ export class JobHistoryAPI {
         onUnauthorizedCallback,
       );
 
-      // Build URL with filters map (matching old implementation exactly)
+      // Build URL with filters map
       let aURL = this.endpoints.JOB_HISTORY;
+      let firstParam = true;
+
       filtersMap.forEach((value, key) => {
         let decamelizedkey = decamelize(key);
-        if (aURL.indexOf("?") > -1) {
-          aURL += "&" + decamelizedkey + "=" + encodeURIComponent(value);
-        } else {
+        if (firstParam) {
           aURL += "?" + decamelizedkey + "=" + encodeURIComponent(value);
+          firstParam = false;
+        } else {
+          aURL += "&" + decamelizedkey + "=" + encodeURIComponent(value);
         }
       });
+
+      console.log("JobHistoryAPI: Fetching from URL:", aURL);
 
       // Make the API call
       const response = await authenticatedAxios.get(aURL);
@@ -133,16 +138,34 @@ export class JobHistoryAPI {
       // Convert response from snake_case to camelCase
       const data = camelizeKeys(response.data);
 
-      // Process date formatting for results (matching old implementation)
-      if (
-        data.results !== undefined &&
-        data.results !== null &&
-        data.results.length > 0
-      ) {
-        data.results.forEach((item, index) => {
-          item.createdAt = DateTime.fromISO(item.createdAt).toLocaleString(
-            DateTime.DATETIME_MED,
-          );
+      // Process date formatting for results
+      if (data.userJobHistory && Array.isArray(data.userJobHistory)) {
+        data.userJobHistory.forEach((item) => {
+          if (item.modifiedAt) {
+            item.modifiedAt = DateTime.fromISO(item.modifiedAt).toLocaleString(
+              DateTime.DATETIME_MED,
+            );
+          }
+          if (item.createdAt) {
+            item.createdAt = DateTime.fromISO(item.createdAt).toLocaleString(
+              DateTime.DATETIME_MED,
+            );
+          }
+        });
+      }
+
+      if (data.teamJobHistory && Array.isArray(data.teamJobHistory)) {
+        data.teamJobHistory.forEach((item) => {
+          if (item.modifiedAt) {
+            item.modifiedAt = DateTime.fromISO(item.modifiedAt).toLocaleString(
+              DateTime.DATETIME_MED,
+            );
+          }
+          if (item.createdAt) {
+            item.createdAt = DateTime.fromISO(item.createdAt).toLocaleString(
+              DateTime.DATETIME_MED,
+            );
+          }
         });
       }
 
