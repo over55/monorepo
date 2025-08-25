@@ -106,8 +106,6 @@ function AdminCustomerListPage() {
   // Delete confirmation modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [customerToDelete, setCustomerToDelete] = useState(null);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   // Handle unauthorized access
   const onUnauthorized = () => {
@@ -731,10 +729,9 @@ function AdminCustomerListPage() {
                           <tr
                             key={customer.id}
                             className="hover:bg-gray-50 cursor-pointer"
-                            onClick={() => {
-                              setSelectedCustomer(customer);
-                              setShowDetailModal(true);
-                            }}
+                            onClick={() =>
+                              navigate(`/admin/customer/${customer.id}`)
+                            }
                           >
                             <td className="px-3 py-4 text-sm">
                               <Link
@@ -834,10 +831,9 @@ function AdminCustomerListPage() {
                             ? "border-red-300 bg-red-50"
                             : "border-gray-200"
                         }`}
-                        onClick={() => {
-                          setSelectedCustomer(customer);
-                          setShowDetailModal(true);
-                        }}
+                        onClick={() =>
+                          navigate(`/admin/customer/${customer.id}`)
+                        }
                       >
                         <div className="mb-3">
                           <h3 className="text-base font-semibold text-gray-900">
@@ -1048,203 +1044,6 @@ function AdminCustomerListPage() {
             )}
           </div>
         </div>
-
-        {/* Detail Modal */}
-        {showDetailModal && selectedCustomer && (
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <UserIcon className="w-5 h-5 mr-2 text-blue-600" />
-                  Customer Details
-                </h3>
-                <button
-                  onClick={() => {
-                    setShowDetailModal(false);
-                    setSelectedCustomer(null);
-                  }}
-                  className="text-gray-400 hover:text-gray-500"
-                >
-                  <XMarkIcon className="w-6 h-6" />
-                </button>
-              </div>
-
-              <div className="px-6 py-4 overflow-y-auto">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      {selectedCustomer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID
-                        ? "Organization Name:"
-                        : "Full Name:"}
-                    </label>
-                    <div className="p-3 bg-gray-50 rounded-lg text-base font-semibold text-gray-900 flex items-center">
-                      {selectedCustomer.type ===
-                      COMMERCIAL_CUSTOMER_TYPE_OF_ID ? (
-                        <>
-                          <BuildingOffice2Icon className="w-5 h-5 mr-2 text-gray-600" />
-                          {selectedCustomer.organizationName ||
-                            `${selectedCustomer.firstName} ${selectedCustomer.lastName}`}
-                        </>
-                      ) : (
-                        <>
-                          <UserIcon className="w-5 h-5 mr-2 text-gray-600" />
-                          {selectedCustomer.firstName}{" "}
-                          {selectedCustomer.lastName}
-                        </>
-                      )}
-                    </div>
-                  </div>
-
-                  {selectedCustomer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID &&
-                    selectedCustomer.organizationName && (
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Contact Person:
-                        </label>
-                        <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
-                          {selectedCustomer.firstName}{" "}
-                          {selectedCustomer.lastName}
-                        </div>
-                      </div>
-                    )}
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Email:
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
-                        {selectedCustomer.email ? (
-                          <a
-                            href={`mailto:${selectedCustomer.email}`}
-                            className="flex items-center text-blue-600 hover:text-blue-800"
-                          >
-                            <EnvelopeIcon className="w-4 h-4 mr-2" />
-                            {selectedCustomer.email}
-                          </a>
-                        ) : (
-                          <span className="text-gray-400 italic">
-                            Not provided
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Phone:
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
-                        {selectedCustomer.phone ? (
-                          <span className="flex items-center">
-                            <PhoneIcon className="w-4 h-4 mr-2" />
-                            {selectedCustomer.phone}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400 italic">
-                            Not provided
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Type:
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <span
-                          className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getTypeBadgeColor(selectedCustomer.type)}`}
-                        >
-                          {selectedCustomer.type ===
-                          COMMERCIAL_CUSTOMER_TYPE_OF_ID ? (
-                            <BuildingOffice2Icon className="w-4 h-4 mr-1" />
-                          ) : selectedCustomer.type ===
-                            RESIDENTIAL_CUSTOMER_TYPE_OF_ID ? (
-                            <HomeIcon className="w-4 h-4 mr-1" />
-                          ) : null}
-                          {getCustomerTypeDisplay(selectedCustomer.type)}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Status:
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <span
-                          className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeColor(selectedCustomer)}`}
-                        >
-                          {selectedCustomer.isBanned ? (
-                            <>
-                              <ShieldExclamationIcon className="w-4 h-4 mr-1" />
-                              Banned
-                            </>
-                          ) : selectedCustomer.status === 1 ? (
-                            "Active"
-                          ) : (
-                            "Inactive"
-                          )}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {selectedCustomer.addressLine1 && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Address:
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
-                        {selectedCustomer.addressLine1}
-                        {selectedCustomer.city && `, ${selectedCustomer.city}`}
-                        {selectedCustomer.region &&
-                          `, ${selectedCustomer.region}`}
-                        {selectedCustomer.postalCode &&
-                          ` ${selectedCustomer.postalCode}`}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
-                <button
-                  onClick={() => {
-                    setShowDetailModal(false);
-                    setSelectedCustomer(null);
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  Close
-                </button>
-                <button
-                  onClick={() => {
-                    setShowDetailModal(false);
-                    navigate(`/admin/customer/${selectedCustomer.id}/edit`);
-                  }}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600"
-                >
-                  <PencilSquareIcon className="w-4 h-4 mr-1" />
-                  Edit
-                </button>
-                <button
-                  onClick={() => {
-                    setShowDetailModal(false);
-                    navigate(`/admin/customer/${selectedCustomer.id}`);
-                  }}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
-                >
-                  <EyeIcon className="w-4 h-4 mr-1" />
-                  View Full Details
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Delete Confirmation Modal */}
         {showDeleteModal && customerToDelete && (
