@@ -1,5 +1,5 @@
 // File Path: web/workery-frontend/src/pages/Admin/Setting/HowHearAboutUsItem/List/Page.jsx
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useNavigate, useLocation } from "react-router";
 import { useHowHearAboutUsItemManager } from "../../../../../services/Services";
 import {
@@ -64,57 +64,83 @@ function SettingHowHearAboutUsItemListPage() {
     navigate("/login?unauthorized=true");
   };
 
-  // Fetch how hear about us items
-  const fetchItems = async (params = {}) => {
-    // Prevent double loading
-    if (isLoadingRef.current && !params.forceRefresh) {
-      return;
-    }
-
-    try {
-      isLoadingRef.current = true;
-      setIsLoading(true);
-      setError(null);
-
-      const queryParams = {
-        page: currentPage,
-        limit: pageSize,
-        sortBy,
-        sortOrder,
-        search: searchTerm,
-        ...params,
-      };
-
-      if (status) {
-        queryParams.status = status;
+  // Fetch how hear about us items - using useCallback to memoize
+  const fetchItems = useCallback(
+    async (overrideParams = {}) => {
+      // Prevent double loading
+      if (isLoadingRef.current && !overrideParams.forceRefresh) {
+        return;
       }
 
-      if (roleFilter) {
-        queryParams.role = roleFilter;
+      try {
+        isLoadingRef.current = true;
+        setIsLoading(true);
+        setError(null);
+
+        const queryParams = {
+          page: currentPage,
+          limit: pageSize,
+          sortBy,
+          sortOrder,
+          search: searchTerm,
+          ...overrideParams,
+        };
+
+        // Apply status filter - convert to number if needed
+        if (status !== "") {
+          queryParams.status = parseInt(status, 10);
+        }
+
+        // Apply role filter
+        if (roleFilter !== "") {
+          // Convert role filter to the appropriate API parameter
+          if (roleFilter === "associate") {
+            queryParams.isForAssociate = true;
+          } else if (roleFilter === "customer") {
+            queryParams.isForCustomer = true;
+          } else if (roleFilter === "staff") {
+            queryParams.isForStaff = true;
+          }
+        }
+
+        const response = await howHearAboutUsItemManager.getList(
+          queryParams,
+          onUnauthorized,
+          overrideParams.forceRefresh || false,
+        );
+
+        setItems(response.results || []);
+        setTotalCount(response.count || 0);
+        setHasNextPage(response.hasNextPage || false);
+
+        console.log("HowHearAboutUsItemListPage: Items fetched successfully:", {
+          count: response.results ? response.results.length : 0,
+          totalCount: response.count,
+          queryParams,
+        });
+      } catch (err) {
+        console.error(
+          "HowHearAboutUsItemListPage: Failed to fetch items:",
+          err,
+        );
+        setError(err.message || "Failed to load items");
+      } finally {
+        setIsLoading(false);
+        isLoadingRef.current = false;
       }
-
-      const response = await howHearAboutUsItemManager.getList(
-        queryParams,
-        onUnauthorized,
-        params.forceRefresh || false,
-      );
-
-      setItems(response.results || []);
-      setTotalCount(response.count || 0);
-      setHasNextPage(response.hasNextPage || false);
-
-      console.log("HowHearAboutUsItemListPage: Items fetched successfully:", {
-        count: response.results ? response.results.length : 0,
-        totalCount: response.count,
-      });
-    } catch (err) {
-      console.error("HowHearAboutUsItemListPage: Failed to fetch items:", err);
-      setError(err.message || "Failed to load items");
-    } finally {
-      setIsLoading(false);
-      isLoadingRef.current = false;
-    }
-  };
+    },
+    [
+      currentPage,
+      pageSize,
+      sortBy,
+      sortOrder,
+      searchTerm,
+      status,
+      roleFilter,
+      howHearAboutUsItemManager,
+      onUnauthorized,
+    ],
+  );
 
   // Handle search
   const handleSearch = () => {
@@ -164,11 +190,32 @@ function SettingHowHearAboutUsItemListPage() {
     setSortBy("sortNumber");
     setSortOrder("ASC");
     setCurrentPage(1);
+  };
 
-    // Force refresh with cleared values
-    setTimeout(() => {
-      fetchItems({ forceRefresh: true });
-    }, 0);
+  // Handle status change
+  const handleStatusChange = (value) => {
+    setStatus(value);
+    setCurrentPage(1);
+  };
+
+  // Handle role filter change
+  const handleRoleFilterChange = (value) => {
+    setRoleFilter(value);
+    setCurrentPage(1);
+  };
+
+  // Handle sort change
+  const handleSortChange = (value) => {
+    const [field, order] = value.split(",");
+    setSortBy(field);
+    setSortOrder(order);
+    setCurrentPage(1);
+  };
+
+  // Handle page size change
+  const handlePageSizeChange = (value) => {
+    setPageSize(parseInt(value, 10));
+    setCurrentPage(1);
   };
 
   // Get status badge
@@ -231,15 +278,7 @@ function SettingHowHearAboutUsItemListPage() {
   // Load data on component mount and when dependencies change
   useEffect(() => {
     fetchItems();
-  }, [
-    currentPage,
-    pageSize,
-    searchTerm,
-    status,
-    roleFilter,
-    sortBy,
-    sortOrder,
-  ]);
+  }, [fetchItems]);
 
   // Handle success message from navigation state
   useEffect(() => {
@@ -421,10 +460,7 @@ function SettingHowHearAboutUsItemListPage() {
                 <div className="relative">
                   <select
                     value={status}
-                    onChange={(e) => {
-                      setStatus(e.target.value);
-                      setCurrentPage(1);
-                    }}
+                    onChange={(e) => handleStatusChange(e.target.value)}
                     className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
                   >
                     <option value="">All Statuses</option>
@@ -443,10 +479,7 @@ function SettingHowHearAboutUsItemListPage() {
                 <div className="relative">
                   <select
                     value={roleFilter}
-                    onChange={(e) => {
-                      setRoleFilter(e.target.value);
-                      setCurrentPage(1);
-                    }}
+                    onChange={(e) => handleRoleFilterChange(e.target.value)}
                     className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
                   >
                     <option value="">All Roles</option>
@@ -466,12 +499,7 @@ function SettingHowHearAboutUsItemListPage() {
                 <div className="relative">
                   <select
                     value={`${sortBy},${sortOrder}`}
-                    onChange={(e) => {
-                      const [field, order] = e.target.value.split(",");
-                      setSortBy(field);
-                      setSortOrder(order);
-                      setCurrentPage(1);
-                    }}
+                    onChange={(e) => handleSortChange(e.target.value)}
                     className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
                   >
                     <option value="sortNumber,ASC">
@@ -501,10 +529,7 @@ function SettingHowHearAboutUsItemListPage() {
                 <div className="relative">
                   <select
                     value={pageSize}
-                    onChange={(e) => {
-                      setPageSize(parseInt(e.target.value));
-                      setCurrentPage(1);
-                    }}
+                    onChange={(e) => handlePageSizeChange(e.target.value)}
                     className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
                   >
                     <option value={10}>10 per page</option>
