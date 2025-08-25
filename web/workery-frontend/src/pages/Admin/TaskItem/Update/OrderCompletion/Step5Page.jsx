@@ -87,6 +87,40 @@ function AdminTaskItemOrderCompletionStep5Page() {
       setIsSubmitting(true);
       setErrors({});
 
+      // Validate required fields before submission
+      if (
+        formData.hasInputtedFinancials === 1 &&
+        formData.paymentStatus === ORDER_STATUS_COMPLETED_AND_PAID
+      ) {
+        const validationErrors = {};
+
+        // Check required fields for PAID status
+        if (
+          !formData.invoiceServiceFeeAmount ||
+          parseFloat(formData.invoiceServiceFeeAmount) === 0
+        ) {
+          validationErrors.invoiceServiceFeeAmount =
+            "Service fee amount is required when payment is complete";
+        }
+        if (!formData.invoiceServiceFeePaymentDate) {
+          validationErrors.invoiceServiceFeePaymentDate =
+            "Service fee payment date is required when payment is complete";
+        }
+        if (
+          !formData.invoiceActualServiceFeeAmountPaid ||
+          parseFloat(formData.invoiceActualServiceFeeAmountPaid) === 0
+        ) {
+          validationErrors.invoiceActualServiceFeeAmountPaid =
+            "Actual service fee paid amount is required when payment is complete";
+        }
+
+        if (Object.keys(validationErrors).length > 0) {
+          setErrors(validationErrors);
+          window.scrollTo(0, 0);
+          return;
+        }
+      }
+
       // Prepare payload for API - using snake_case as expected by backend
       const payload = {
         task_id: tid,
@@ -109,6 +143,34 @@ function AdminTaskItemOrderCompletionStep5Page() {
 
       // Add financial fields if applicable - using both snake_case and camelCase
       if (formData.hasInputtedFinancials === 1) {
+        // For COMPLETED_AND_PAID status, ensure service fee fields are properly set
+        const serviceFeeAmount = parseFloat(
+          formData.invoiceServiceFeeAmount || 0,
+        );
+        const actualServiceFeePaid = parseFloat(
+          formData.invoiceActualServiceFeeAmountPaid || 0,
+        );
+
+        // If payment is complete but service fee fields are missing, use calculated values
+        const effectiveServiceFeeAmount =
+          formData.paymentStatus === ORDER_STATUS_COMPLETED_AND_PAID &&
+          serviceFeeAmount === 0
+            ? parseFloat(formData.invoiceLabourAmount || 0) *
+              (parseFloat(formData.invoiceServiceFeePercentage || 0) / 100)
+            : serviceFeeAmount;
+
+        const effectiveActualServiceFeePaid =
+          formData.paymentStatus === ORDER_STATUS_COMPLETED_AND_PAID &&
+          actualServiceFeePaid === 0
+            ? effectiveServiceFeeAmount // Default to the calculated service fee amount if not specified
+            : actualServiceFeePaid;
+
+        const effectiveServiceFeePaymentDate =
+          formData.paymentStatus === ORDER_STATUS_COMPLETED_AND_PAID &&
+          !formData.invoiceServiceFeePaymentDate
+            ? formData.invoiceDate || new Date() // Default to invoice date or today if not specified
+            : formData.invoiceServiceFeePaymentDate;
+
         Object.assign(payload, {
           invoice_paid_to: formData.invoicePaidTo,
           payment_status: formData.paymentStatus,
@@ -148,25 +210,16 @@ function AdminTaskItemOrderCompletionStep5Page() {
           invoice_service_fee_percentage: parseFloat(
             formData.invoiceServiceFeePercentage || 0,
           ),
-          invoice_service_fee_amount: parseFloat(
-            formData.invoiceServiceFeeAmount || 0,
-          ),
-          invoiceServiceFeeAmount: parseFloat(
-            formData.invoiceServiceFeeAmount || 0,
-          ), // Include camelCase version
-          invoice_service_fee_payment_date:
-            formData.invoiceServiceFeePaymentDate
-              ? new Date(formData.invoiceServiceFeePaymentDate).toISOString()
-              : null,
-          invoiceServiceFeePaymentDate: formData.invoiceServiceFeePaymentDate
-            ? new Date(formData.invoiceServiceFeePaymentDate).toISOString()
+          invoice_service_fee_amount: effectiveServiceFeeAmount,
+          invoiceServiceFeeAmount: effectiveServiceFeeAmount, // Include camelCase version
+          invoice_service_fee_payment_date: effectiveServiceFeePaymentDate
+            ? new Date(effectiveServiceFeePaymentDate).toISOString()
+            : null,
+          invoiceServiceFeePaymentDate: effectiveServiceFeePaymentDate
+            ? new Date(effectiveServiceFeePaymentDate).toISOString()
             : null, // Include camelCase version
-          invoice_actual_service_fee_amount_paid: parseFloat(
-            formData.invoiceActualServiceFeeAmountPaid || 0,
-          ),
-          invoiceActualServiceFeeAmountPaid: parseFloat(
-            formData.invoiceActualServiceFeeAmountPaid || 0,
-          ), // Include camelCase version
+          invoice_actual_service_fee_amount_paid: effectiveActualServiceFeePaid,
+          invoiceActualServiceFeeAmountPaid: effectiveActualServiceFeePaid, // Include camelCase version
           invoice_balance_owing_amount: parseFloat(
             formData.invoiceBalanceOwingAmount || 0,
           ),

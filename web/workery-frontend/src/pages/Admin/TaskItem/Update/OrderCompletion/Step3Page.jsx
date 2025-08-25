@@ -294,11 +294,28 @@ function AdminTaskItemOrderCompletionStep3Page() {
       if (!paymentStatus) {
         newErrors.paymentStatus = "Please select payment status";
       }
-      if (
-        paymentStatus === ORDER_STATUS_COMPLETED_AND_PAID &&
-        !completionDate
-      ) {
-        newErrors.completionDate = "Completion date is required";
+      if (paymentStatus === ORDER_STATUS_COMPLETED_AND_PAID) {
+        if (!invoiceServiceFeeID) {
+          newErrors.invoiceServiceFeeID = "Service fee is required";
+        }
+        if (
+          !invoiceServiceFeeAmount ||
+          parseFloat(invoiceServiceFeeAmount) === 0
+        ) {
+          newErrors.invoiceServiceFeeAmount =
+            "Service fee amount is required when payment is complete";
+        }
+        if (!invoiceServiceFeePaymentDate) {
+          newErrors.invoiceServiceFeePaymentDate =
+            "Service fee payment date is required when payment is complete";
+        }
+        if (
+          !invoiceActualServiceFeeAmountPaid ||
+          parseFloat(invoiceActualServiceFeeAmountPaid) === 0
+        ) {
+          newErrors.invoiceActualServiceFeeAmountPaid =
+            "Actual service fee paid amount is required when payment is complete";
+        }
       }
       if (!invoiceDate) {
         newErrors.invoiceDate = "Invoice date is required";
