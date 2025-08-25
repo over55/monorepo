@@ -1,3 +1,4 @@
+// monorepo/web/workery-frontend/src/pages/Admin/Setting/Bulletin/Detail/Page.jsx
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { useBulletinManager } from "../../../../../services/Services";
