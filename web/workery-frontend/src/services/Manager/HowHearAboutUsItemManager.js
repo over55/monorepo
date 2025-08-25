@@ -3,6 +3,7 @@
 /**
  * Manager service for How Hear About Us Item operations
  * Combines API and Storage functionality with business logic
+ * Supports cursor-based pagination
  */
 export class HowHearAboutUsItemManager {
   constructor(api, storage) {
@@ -11,23 +12,45 @@ export class HowHearAboutUsItemManager {
   }
 
   /**
-   * Get list of How Hear About Us Items with caching
+   * Get list of How Hear About Us Items with caching and cursor-based pagination
    */
   async getList(params = {}, onUnauthorized = null, forceRefresh = false) {
     try {
+      // Normalize parameters for cursor-based pagination
+      const normalizedParams = {
+        cursor: params.cursor || "",
+        pageSize: params.pageSize || 25,
+        sortField: params.sortField || "sort_number",
+        sortOrder: params.sortOrder || 1,
+        status: params.status,
+        search: params.search || params.searchText || "",
+      };
+
       // Check cache first unless force refresh
       if (!forceRefresh) {
-        const cachedData = this.storage.getList(params);
+        const cachedData = this.storage.getList(normalizedParams);
         if (cachedData) {
+          console.log(
+            "Manager: Returning cached data for cursor:",
+            normalizedParams.cursor,
+          );
           return cachedData;
         }
       }
 
+      console.log("Manager: Fetching from API with params:", normalizedParams);
+
       // Fetch from API
-      const data = await this.api.getList(params, onUnauthorized);
+      const data = await this.api.getList(normalizedParams, onUnauthorized);
 
       // Cache the result
-      this.storage.setList(params, data);
+      this.storage.setList(normalizedParams, data);
+
+      console.log("Manager: Data fetched and cached:", {
+        resultsCount: data.results?.length,
+        hasNextPage: data.hasNextPage,
+        nextCursor: data.nextCursor,
+      });
 
       return data;
     } catch (error) {
@@ -149,12 +172,16 @@ export class HowHearAboutUsItemManager {
   }
 
   /**
-   * Search How Hear About Us Items
+   * Search How Hear About Us Items with cursor-based pagination
    */
   async search(searchQuery, additionalParams = {}, onUnauthorized = null) {
     try {
       const params = {
         search: searchQuery,
+        cursor: additionalParams.cursor || "",
+        pageSize: additionalParams.pageSize || 25,
+        sortField: additionalParams.sortField || "sort_number",
+        sortOrder: additionalParams.sortOrder || 1,
         ...additionalParams,
       };
 
@@ -166,7 +193,7 @@ export class HowHearAboutUsItemManager {
   }
 
   /**
-   * Get filtered items by role
+   * Get filtered items by role with cursor-based pagination
    */
   async getByRole(role, params = {}, onUnauthorized = null) {
     try {
@@ -180,6 +207,37 @@ export class HowHearAboutUsItemManager {
       console.error("HowHearAboutUsItemManager.getByRole error:", error);
       throw error;
     }
+  }
+
+  /**
+   * Navigate to next page using cursor
+   */
+  async getNextPage(currentCursor, params = {}, onUnauthorized = null) {
+    try {
+      const nextParams = {
+        ...params,
+        cursor: currentCursor,
+      };
+
+      return await this.getList(nextParams, onUnauthorized, false);
+    } catch (error) {
+      console.error("HowHearAboutUsItemManager.getNextPage error:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Store cursor history for navigation
+   */
+  storeCursorHistory(key, cursors) {
+    this.storage.setCursorHistory(key, cursors);
+  }
+
+  /**
+   * Get cursor history for navigation
+   */
+  getCursorHistory(key) {
+    return this.storage.getCursorHistory(key) || [];
   }
 
   /**
@@ -243,16 +301,16 @@ export class HowHearAboutUsItemManager {
   }
 
   /**
-   * Get default sort options
+   * Get default sort options with proper backend format
    */
   getDefaultSortOptions() {
     return [
-      { value: "sort_number,ASC", label: "Sort Number (Low to High)" },
-      { value: "sort_number,DESC", label: "Sort Number (High to Low)" },
-      { value: "text,ASC", label: "Text (A to Z)" },
-      { value: "text,DESC", label: "Text (Z to A)" },
-      { value: "created_at,ASC", label: "Created Date (Oldest First)" },
-      { value: "created_at,DESC", label: "Created Date (Newest First)" },
+      { value: "sort_number,1", label: "Sort Number (Low to High)" },
+      { value: "sort_number,-1", label: "Sort Number (High to Low)" },
+      { value: "text,1", label: "Text (A to Z)" },
+      { value: "text,-1", label: "Text (Z to A)" },
+      { value: "created_at,1", label: "Created Date (Oldest First)" },
+      { value: "created_at,-1", label: "Created Date (Newest First)" },
     ];
   }
 
@@ -263,7 +321,7 @@ export class HowHearAboutUsItemManager {
     return [
       { value: "", label: "All Statuses" },
       { value: "1", label: "Active" },
-      { value: "0", label: "Inactive" },
+      { value: "2", label: "Archived" },
     ];
   }
 

@@ -46,11 +46,16 @@ function SettingHowHearAboutUsItemListPage() {
   const [tempSearchTerm, setTempSearchTerm] = useState("");
   const [status, setStatus] = useState("");
   const [roleFilter, setRoleFilter] = useState("");
-  const [sortBy, setSortBy] = useState("sortNumber");
-  const [sortOrder, setSortOrder] = useState("ASC");
-  const [currentPage, setCurrentPage] = useState(1);
+  const [sortField, setSortField] = useState("sort_number"); // Use snake_case for backend
+  const [sortOrder, setSortOrder] = useState(1); // Use number: 1 for ASC, -1 for DESC
   const [pageSize, setPageSize] = useState(25);
+
+  // Cursor-based pagination state
+  const [currentCursor, setCurrentCursor] = useState("");
+  const [nextCursor, setNextCursor] = useState("");
   const [hasNextPage, setHasNextPage] = useState(false);
+  const [cursorStack, setCursorStack] = useState([""]); // Stack to track cursor history
+  const [currentPageIndex, setCurrentPageIndex] = useState(0); // Track which "page" we're on
 
   // Delete confirmation modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -66,9 +71,9 @@ function SettingHowHearAboutUsItemListPage() {
 
   // Fetch how hear about us items - using useCallback to memoize
   const fetchItems = useCallback(
-    async (overrideParams = {}) => {
+    async (cursor = currentCursor, resetStack = false) => {
       // Prevent double loading
-      if (isLoadingRef.current && !overrideParams.forceRefresh) {
+      if (isLoadingRef.current) {
         return;
       }
 
@@ -78,45 +83,60 @@ function SettingHowHearAboutUsItemListPage() {
         setError(null);
 
         const queryParams = {
-          page: currentPage,
-          limit: pageSize,
-          sortBy,
-          sortOrder,
-          search: searchTerm,
-          ...overrideParams,
+          cursor: cursor,
+          pageSize: pageSize,
+          sortField: sortField,
+          sortOrder: sortOrder,
         };
 
-        // Apply status filter - convert to number if needed
+        // Add search if present
+        if (searchTerm) {
+          queryParams.search = searchTerm;
+        }
+
+        // Apply status filter
         if (status !== "") {
           queryParams.status = parseInt(status, 10);
         }
 
-        // Apply role filter
-        if (roleFilter !== "") {
-          // Convert role filter to the appropriate API parameter
-          if (roleFilter === "associate") {
-            queryParams.isForAssociate = true;
-          } else if (roleFilter === "customer") {
-            queryParams.isForCustomer = true;
-          } else if (roleFilter === "staff") {
-            queryParams.isForStaff = true;
-          }
-        }
+        console.log("Fetching with params:", queryParams);
 
         const response = await howHearAboutUsItemManager.getList(
           queryParams,
           onUnauthorized,
-          overrideParams.forceRefresh || false,
+          true, // Force refresh
         );
 
-        setItems(response.results || []);
+        let filteredResults = response.results || [];
+
+        // Apply role filter on frontend since backend doesn't support it
+        if (roleFilter !== "") {
+          filteredResults = filteredResults.filter((item) => {
+            if (roleFilter === "associate") return item.isForAssociate;
+            if (roleFilter === "customer") return item.isForCustomer;
+            if (roleFilter === "staff") return item.isForStaff;
+            return true;
+          });
+        }
+
+        setItems(filteredResults);
         setTotalCount(response.count || 0);
         setHasNextPage(response.hasNextPage || false);
+        setNextCursor(response.nextCursor || "");
+        setCurrentCursor(cursor);
+
+        // If this is a reset (new search/filter), reset the cursor stack
+        if (resetStack) {
+          setCursorStack([cursor]);
+          setCurrentPageIndex(0);
+        }
 
         console.log("HowHearAboutUsItemListPage: Items fetched successfully:", {
-          count: response.results ? response.results.length : 0,
+          count: filteredResults.length,
           totalCount: response.count,
-          queryParams,
+          hasNextPage: response.hasNextPage,
+          nextCursor: response.nextCursor,
+          currentPageIndex,
         });
       } catch (err) {
         console.error(
@@ -130,22 +150,24 @@ function SettingHowHearAboutUsItemListPage() {
       }
     },
     [
-      currentPage,
       pageSize,
-      sortBy,
+      sortField,
       sortOrder,
       searchTerm,
       status,
       roleFilter,
       howHearAboutUsItemManager,
-      onUnauthorized,
+      currentPageIndex,
     ],
   );
 
   // Handle search
   const handleSearch = () => {
     setSearchTerm(tempSearchTerm);
-    setCurrentPage(1);
+    setCurrentCursor("");
+    setCursorStack([""]);
+    setCurrentPageIndex(0);
+    fetchItems("", true);
   };
 
   // Handle delete
@@ -168,8 +190,8 @@ function SettingHowHearAboutUsItemListPage() {
       setShowDeleteModal(false);
       setSelectedItem(null);
 
-      // Refresh the list
-      await fetchItems({ forceRefresh: true });
+      // Refresh the current page
+      await fetchItems(currentCursor);
 
       // Clear success message after 3 seconds
       setTimeout(() => setSuccessMessage(""), 3000);
@@ -187,35 +209,69 @@ function SettingHowHearAboutUsItemListPage() {
     setTempSearchTerm("");
     setStatus("");
     setRoleFilter("");
-    setSortBy("sortNumber");
-    setSortOrder("ASC");
-    setCurrentPage(1);
+    setSortField("sort_number");
+    setSortOrder(1);
+    setCurrentCursor("");
+    setCursorStack([""]);
+    setCurrentPageIndex(0);
+    setPageSize(25);
   };
 
   // Handle status change
   const handleStatusChange = (value) => {
     setStatus(value);
-    setCurrentPage(1);
+    setCurrentCursor("");
+    setCursorStack([""]);
+    setCurrentPageIndex(0);
   };
 
   // Handle role filter change
   const handleRoleFilterChange = (value) => {
     setRoleFilter(value);
-    setCurrentPage(1);
+    setCurrentCursor("");
+    setCursorStack([""]);
+    setCurrentPageIndex(0);
   };
 
   // Handle sort change
   const handleSortChange = (value) => {
     const [field, order] = value.split(",");
-    setSortBy(field);
-    setSortOrder(order);
-    setCurrentPage(1);
+    setSortField(field);
+    setSortOrder(parseInt(order, 10));
+    setCurrentCursor("");
+    setCursorStack([""]);
+    setCurrentPageIndex(0);
   };
 
   // Handle page size change
   const handlePageSizeChange = (value) => {
     setPageSize(parseInt(value, 10));
-    setCurrentPage(1);
+    setCurrentCursor("");
+    setCursorStack([""]);
+    setCurrentPageIndex(0);
+  };
+
+  // Handle Next Page
+  const handleNextPage = () => {
+    if (hasNextPage && nextCursor) {
+      const newPageIndex = currentPageIndex + 1;
+      const newStack = [...cursorStack.slice(0, newPageIndex), nextCursor];
+
+      setCursorStack(newStack);
+      setCurrentPageIndex(newPageIndex);
+      fetchItems(nextCursor);
+    }
+  };
+
+  // Handle Previous Page
+  const handlePreviousPage = () => {
+    if (currentPageIndex > 0) {
+      const newPageIndex = currentPageIndex - 1;
+      const previousCursor = cursorStack[newPageIndex];
+
+      setCurrentPageIndex(newPageIndex);
+      fetchItems(previousCursor);
+    }
   };
 
   // Get status badge
@@ -227,7 +283,7 @@ function SettingHowHearAboutUsItemListPage() {
           isActive ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"
         }`}
       >
-        {isActive ? "Active" : "Inactive"}
+        {isActive ? "Active" : "Archived"}
       </span>
     );
   };
@@ -275,10 +331,10 @@ function SettingHowHearAboutUsItemListPage() {
     );
   };
 
-  // Load data on component mount and when dependencies change
+  // Initial load and when filters change
   useEffect(() => {
-    fetchItems();
-  }, [fetchItems]);
+    fetchItems("", true);
+  }, [status, roleFilter, sortField, sortOrder, pageSize, searchTerm]);
 
   // Handle success message from navigation state
   useEffect(() => {
@@ -298,11 +354,6 @@ function SettingHowHearAboutUsItemListPage() {
       return () => clearTimeout(timer);
     }
   }, [successMessage]);
-
-  // Pagination calculations
-  const totalPages = Math.ceil(totalCount / pageSize);
-  const startRecord = (currentPage - 1) * pageSize + 1;
-  const endRecord = Math.min(currentPage * pageSize, totalCount);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -419,7 +470,7 @@ function SettingHowHearAboutUsItemListPage() {
                   Clear Filters
                 </button>
                 <button
-                  onClick={() => fetchItems({ forceRefresh: true })}
+                  onClick={() => fetchItems(currentCursor)}
                   className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center"
                 >
                   <ArrowPathIcon className="w-4 h-4 mr-1" />
@@ -465,7 +516,7 @@ function SettingHowHearAboutUsItemListPage() {
                   >
                     <option value="">All Statuses</option>
                     <option value="1">Active</option>
-                    <option value="2">Inactive</option>
+                    <option value="2">Archived</option>
                   </select>
                   <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
                 </div>
@@ -475,6 +526,9 @@ function SettingHowHearAboutUsItemListPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Role
+                  <span className="text-xs text-gray-500 ml-1">
+                    (Frontend filter)
+                  </span>
                 </label>
                 <div className="relative">
                   <select
@@ -498,24 +552,20 @@ function SettingHowHearAboutUsItemListPage() {
                 </label>
                 <div className="relative">
                   <select
-                    value={`${sortBy},${sortOrder}`}
+                    value={`${sortField},${sortOrder}`}
                     onChange={(e) => handleSortChange(e.target.value)}
                     className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
                   >
-                    <option value="sortNumber,ASC">
+                    <option value="sort_number,1">
                       Sort Number (Low to High)
                     </option>
-                    <option value="sortNumber,DESC">
+                    <option value="sort_number,-1">
                       Sort Number (High to Low)
                     </option>
-                    <option value="text,ASC">Text (A-Z)</option>
-                    <option value="text,DESC">Text (Z-A)</option>
-                    <option value="created_at,DESC">
-                      Created Date (Newest)
-                    </option>
-                    <option value="created_at,ASC">
-                      Created Date (Oldest)
-                    </option>
+                    <option value="text,1">Text (A-Z)</option>
+                    <option value="text,-1">Text (Z-A)</option>
+                    <option value="created_at,-1">Created Date (Newest)</option>
+                    <option value="created_at,1">Created Date (Oldest)</option>
                   </select>
                   <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
                 </div>
@@ -554,7 +604,20 @@ function SettingHowHearAboutUsItemListPage() {
               <>
                 {/* Results count */}
                 <div className="mb-4 text-sm text-gray-600">
-                  Showing {startRecord}-{endRecord} of {totalCount} items
+                  <div className="flex items-center justify-between">
+                    <div>
+                      Showing {items.length} items
+                      {totalCount > 0 && ` of ${totalCount} total`}
+                      {roleFilter && (
+                        <span className="ml-2 text-amber-600">
+                          (Filtered by role on frontend)
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-gray-500">
+                      Page {currentPageIndex + 1}
+                    </div>
+                  </div>
                 </div>
 
                 {/* Table */}
@@ -678,32 +741,36 @@ function SettingHowHearAboutUsItemListPage() {
                 </div>
 
                 {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="mt-6 flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-700">
-                        Page {currentPage} of {totalPages}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => setCurrentPage(currentPage - 1)}
-                        disabled={currentPage === 1}
-                        className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        ← Previous
-                      </button>
-                      <button
-                        onClick={() => setCurrentPage(currentPage + 1)}
-                        disabled={!hasNextPage}
-                        className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        Next →
-                      </button>
-                    </div>
+                <div className="mt-6 flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-sm text-gray-700">
+                      {hasNextPage ? (
+                        <span>More results available</span>
+                      ) : currentPageIndex === 0 ? (
+                        <span>Showing all results</span>
+                      ) : (
+                        <span>End of results</span>
+                      )}
+                    </span>
                   </div>
-                )}
+
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={handlePreviousPage}
+                      disabled={currentPageIndex === 0}
+                      className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      ← Previous
+                    </button>
+                    <button
+                      onClick={handleNextPage}
+                      disabled={!hasNextPage}
+                      className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next →
+                    </button>
+                  </div>
+                </div>
               </>
             ) : (
               <div className="text-center py-12">
@@ -732,7 +799,7 @@ function SettingHowHearAboutUsItemListPage() {
           </div>
         </div>
 
-        {/* Detail Modal */}
+        {/* Detail Modal and Delete Modal remain the same */}
         {showDetailModal && selectedItem && (
           <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
@@ -933,7 +1000,7 @@ function SettingHowHearAboutUsItemListPage() {
           </div>
         )}
 
-        {/* Delete Confirmation Modal */}
+        {/* Delete Confirmation Modal remains the same */}
         {showDeleteModal && selectedItem && (
           <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-lg max-w-md w-full">

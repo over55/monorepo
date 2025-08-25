@@ -41,15 +41,41 @@ export class HowHearAboutUsItemAPI {
   async getList(queryParams = {}, onUnauthorized = null) {
     const axios = this._createAxiosInstance(onUnauthorized);
 
-    // Convert query params to snake_case for API
-    const snakeCaseParams = decamelizeKeys(queryParams);
+    // Map frontend params to backend expected params
+    const backendParams = {
+      cursor: queryParams.cursor || "",
+      page_size: queryParams.pageSize || queryParams.page_size || 25,
+      sort_field:
+        queryParams.sortField || queryParams.sort_field || "sort_number",
+      sort_order: queryParams.sortOrder || queryParams.sort_order || 1,
+    };
+
+    // Add search if present
+    if (queryParams.search || queryParams.searchText) {
+      backendParams.search_text = queryParams.search || queryParams.searchText;
+    }
+
+    // Add status filter if present
+    if (queryParams.status !== undefined && queryParams.status !== "") {
+      backendParams.status = parseInt(queryParams.status, 10);
+    }
+
+    console.log("API: Sending params to backend:", backendParams);
 
     const response = await axios.get("/how-hear-about-us-items", {
-      params: snakeCaseParams,
+      params: backendParams,
     });
 
     // Convert response to camelCase
-    return camelizeKeys(response.data);
+    const camelizedData = camelizeKeys(response.data);
+
+    console.log("API: Received response:", {
+      resultsCount: camelizedData.results?.length,
+      hasNextPage: camelizedData.hasNextPage,
+      nextCursor: camelizedData.nextCursor,
+    });
+
+    return camelizedData;
   }
 
   /**
