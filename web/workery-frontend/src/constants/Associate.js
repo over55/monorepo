@@ -29,7 +29,7 @@ export const ASSOCIATE_IDENTIFY_AS_INUIT = 9;
 export const ASSOCIATE_IDENTIFY_AS_FIRST_NATIONS = 10;
 export const ASSOCIATE_IDENTIFY_AS_METIS = 11;
 
-// Status in Country Options - Fixed to use numeric values
+// Status in Country Options - These match backend correctly
 export const ASSOCIATE_STATUS_IN_COUNTRY_OTHER = 1;
 export const ASSOCIATE_STATUS_IN_COUNTRY_CANADIAN_CITIZEN = 2;
 export const ASSOCIATE_STATUS_IN_COUNTRY_PERMANENT_RESIDENT = 3;
@@ -37,20 +37,29 @@ export const ASSOCIATE_STATUS_IN_COUNTRY_NATURALIZED_CITIZEN = 4;
 export const ASSOCIATE_STATUS_IN_COUNTRY_PROTECTED_PERSON = 5;
 export const ASSOCIATE_STATUS_IN_COUNTRY_PREFER_NOT_TO_SAY = 6;
 
-// Marital Status Options - Fixed to use numeric values
-export const ASSOCIATE_MARITAL_STATUS_SINGLE = 1;
+// Marital Status Options - FIXED to match backend
+export const ASSOCIATE_MARITAL_STATUS_OTHER = 1;
 export const ASSOCIATE_MARITAL_STATUS_MARRIED = 2;
-export const ASSOCIATE_MARITAL_STATUS_DIVORCED = 3;
-export const ASSOCIATE_MARITAL_STATUS_WIDOWED = 4;
-export const ASSOCIATE_MARITAL_STATUS_OTHER = 5;
+export const ASSOCIATE_MARITAL_STATUS_COMMON_LAW = 3;
+export const ASSOCIATE_MARITAL_STATUS_DIVORCED = 4;
+export const ASSOCIATE_MARITAL_STATUS_SEPARATED = 5;
+export const ASSOCIATE_MARITAL_STATUS_WIDOWED = 6;
+export const ASSOCIATE_MARITAL_STATUS_SINGLE = 7;
+export const ASSOCIATE_MARITAL_STATUS_PREFER_NOT_TO_SAY = 8;
 
-// Education Level Options - Fixed to use numeric values
-export const ASSOCIATE_EDUCATION_ELEMENTARY = 1;
-export const ASSOCIATE_EDUCATION_HIGH_SCHOOL = 2;
-export const ASSOCIATE_EDUCATION_COLLEGE = 3;
-export const ASSOCIATE_EDUCATION_UNIVERSITY = 4;
-export const ASSOCIATE_EDUCATION_POST_GRADUATE = 5;
-export const ASSOCIATE_EDUCATION_OTHER = 6;
+// Education Level Options - FIXED to match backend
+export const ASSOCIATE_EDUCATION_OTHER = 1;
+export const ASSOCIATE_EDUCATION_GRADE_0_TO_8 = 2;
+export const ASSOCIATE_EDUCATION_GRADE_9 = 3;
+export const ASSOCIATE_EDUCATION_GRADE_10 = 4;
+export const ASSOCIATE_EDUCATION_GRADE_11 = 5;
+export const ASSOCIATE_EDUCATION_GRADE_12_OR_EQUIVALENT = 6;
+export const ASSOCIATE_EDUCATION_OAC = 7;
+export const ASSOCIATE_EDUCATION_CERTIFICATE_OF_APPRENTICESHIP = 8;
+export const ASSOCIATE_EDUCATION_JOURNEYPERSON = 9;
+export const ASSOCIATE_EDUCATION_CERTIFICATE_OR_DIPLOMA = 10;
+export const ASSOCIATE_EDUCATION_BACHELORS_DEGREE = 11;
+export const ASSOCIATE_EDUCATION_POST_GRADUATE = 12;
 
 export const ASSOCIATE_PHONE_TYPE_WORK = 1;
 
@@ -105,23 +114,48 @@ export const ASSOCIATE_STATUS_IN_COUNTRY_OPTIONS_WITH_EMPTY_OPTIONS = [
     label: "Protected Person",
   },
   { value: ASSOCIATE_STATUS_IN_COUNTRY_OTHER, label: "Other" },
+  {
+    value: ASSOCIATE_STATUS_IN_COUNTRY_PREFER_NOT_TO_SAY,
+    label: "Prefer not to say",
+  },
 ];
 
 export const ASSOCIATE_MARITAL_STATUS_OPTIONS_WITH_EMPTY_OPTIONS = [
   { value: 0, label: "Please select" },
-  { value: ASSOCIATE_MARITAL_STATUS_SINGLE, label: "Single" },
   { value: ASSOCIATE_MARITAL_STATUS_MARRIED, label: "Married" },
+  { value: ASSOCIATE_MARITAL_STATUS_COMMON_LAW, label: "Common Law" },
   { value: ASSOCIATE_MARITAL_STATUS_DIVORCED, label: "Divorced" },
+  { value: ASSOCIATE_MARITAL_STATUS_SEPARATED, label: "Separated" },
   { value: ASSOCIATE_MARITAL_STATUS_WIDOWED, label: "Widowed" },
+  { value: ASSOCIATE_MARITAL_STATUS_SINGLE, label: "Single" },
+  {
+    value: ASSOCIATE_MARITAL_STATUS_PREFER_NOT_TO_SAY,
+    label: "Prefer not to say",
+  },
   { value: ASSOCIATE_MARITAL_STATUS_OTHER, label: "Other" },
 ];
 
 export const ASSOCIATE_ACCOMPLISHED_EDUCATION_OPTIONS_WITH_EMPTY_OPTIONS = [
   { value: 0, label: "Please select" },
-  { value: ASSOCIATE_EDUCATION_ELEMENTARY, label: "Elementary School" },
-  { value: ASSOCIATE_EDUCATION_HIGH_SCHOOL, label: "High School" },
-  { value: ASSOCIATE_EDUCATION_COLLEGE, label: "College" },
-  { value: ASSOCIATE_EDUCATION_UNIVERSITY, label: "University" },
+  { value: ASSOCIATE_EDUCATION_GRADE_0_TO_8, label: "Grade 0-8" },
+  { value: ASSOCIATE_EDUCATION_GRADE_9, label: "Grade 9" },
+  { value: ASSOCIATE_EDUCATION_GRADE_10, label: "Grade 10" },
+  { value: ASSOCIATE_EDUCATION_GRADE_11, label: "Grade 11" },
+  {
+    value: ASSOCIATE_EDUCATION_GRADE_12_OR_EQUIVALENT,
+    label: "Grade 12 (or equivalent)",
+  },
+  { value: ASSOCIATE_EDUCATION_OAC, label: "OAC" },
+  {
+    value: ASSOCIATE_EDUCATION_CERTIFICATE_OF_APPRENTICESHIP,
+    label: "Certificate of Apprenticeship",
+  },
+  { value: ASSOCIATE_EDUCATION_JOURNEYPERSON, label: "Journeyperson" },
+  {
+    value: ASSOCIATE_EDUCATION_CERTIFICATE_OR_DIPLOMA,
+    label: "Certificate/Diploma",
+  },
+  { value: ASSOCIATE_EDUCATION_BACHELORS_DEGREE, label: "Bachelor's Degree" },
   { value: ASSOCIATE_EDUCATION_POST_GRADUATE, label: "Post Graduate" },
   { value: ASSOCIATE_EDUCATION_OTHER, label: "Other" },
 ];

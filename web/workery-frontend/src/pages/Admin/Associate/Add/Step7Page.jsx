@@ -30,17 +30,20 @@ import {
   ServiceFeeDisplay,
   InsuranceRequirementsDisplay,
 } from "../../../../components/business/displays";
+import {
+  ASSOCIATE_IS_JOB_SEEKER_YES,
+  ASSOCIATE_IS_JOB_SEEKER_NO,
+  ASSOCIATE_GENDER_OTHER,
+  ASSOCIATE_STATUS_IN_COUNTRY_OTHER,
+  ASSOCIATE_STATUS_IN_COUNTRY_PERMANENT_RESIDENT,
+  ASSOCIATE_STATUS_IN_COUNTRY_NATURALIZED_CITIZEN,
+  ASSOCIATE_STATUS_IN_COUNTRY_PROTECTED_PERSON,
+  ASSOCIATE_MARITAL_STATUS_OTHER,
+  ASSOCIATE_EDUCATION_OTHER,
+} from "../../../../constants/Associate";
 
 const COMMERCIAL_ASSOCIATE_TYPE_OF_ID = 3;
 const ASSOCIATE_PHONE_TYPE_WORK = 2;
-const ASSOCIATE_IS_JOB_SEEKER_YES = 1;
-const ASSOCIATE_IS_JOB_SEEKER_NO = 2;
-
-// Import the constants for "Other" values
-const ASSOCIATE_GENDER_OTHER = 1;
-const ASSOCIATE_STATUS_IN_COUNTRY_OTHER = 5;
-const ASSOCIATE_MARITAL_STATUS_OTHER = 5;
-const ASSOCIATE_EDUCATION_OTHER = 6;
 
 function AdminAssociateAddStep7Page() {
   const authManager = useAuthManager();
@@ -259,16 +262,15 @@ function AdminAssociateAddStep7Page() {
       processed.isJobSeeker = parseInt(processed.isJobSeeker);
     }
 
-    // Handle conditional "other" fields - only include them when the main field is set to "Other"
-    // and the "other" field has a value
+    // Handle conditional "other" fields - only remove them if they're empty or if the main field is not "Other"
 
     // Gender Other
     if (processed.gender !== ASSOCIATE_GENDER_OTHER) {
       // If gender is not "Other", remove the genderOther field
       delete processed.genderOther;
     } else if (!processed.genderOther || processed.genderOther.trim() === "") {
-      // If gender is "Other" but genderOther is empty, remove it
-      delete processed.genderOther;
+      // If gender is "Other" but genderOther is empty, set a default value instead of deleting
+      processed.genderOther = "Not specified";
     }
 
     // Status in Country Other
@@ -279,11 +281,11 @@ function AdminAssociateAddStep7Page() {
       !processed.statusInCountryOther ||
       processed.statusInCountryOther.trim() === ""
     ) {
-      // If status is "Other" but statusInCountryOther is empty, remove it
-      delete processed.statusInCountryOther;
+      // If status is "Other" but statusInCountryOther is empty, set a default value
+      processed.statusInCountryOther = "Not specified";
     }
 
-    // Marital Status Other
+    // Marital Status Other - FIXED: Keep the field with a value if marital status is "Other"
     if (processed.maritalStatus !== ASSOCIATE_MARITAL_STATUS_OTHER) {
       // If marital status is not "Other", remove the maritalStatusOther field
       delete processed.maritalStatusOther;
@@ -291,8 +293,8 @@ function AdminAssociateAddStep7Page() {
       !processed.maritalStatusOther ||
       processed.maritalStatusOther.trim() === ""
     ) {
-      // If marital status is "Other" but maritalStatusOther is empty, remove it
-      delete processed.maritalStatusOther;
+      // If marital status is "Other" but maritalStatusOther is empty, set a default value
+      processed.maritalStatusOther = "Not specified";
     }
 
     // Accomplished Education Other
@@ -303,8 +305,8 @@ function AdminAssociateAddStep7Page() {
       !processed.accomplishedEducationOther ||
       processed.accomplishedEducationOther.trim() === ""
     ) {
-      // If education is "Other" but accomplishedEducationOther is empty, remove it
-      delete processed.accomplishedEducationOther;
+      // If education is "Other" but accomplishedEducationOther is empty, set a default value
+      processed.accomplishedEducationOther = "Not specified";
     }
 
     // How Did You Hear About Us Other
@@ -316,9 +318,8 @@ function AdminAssociateAddStep7Page() {
       !processed.howDidYouHearAboutUsOther ||
       processed.howDidYouHearAboutUsOther.trim() === ""
     ) {
-      // If using "Other" but the field is empty, remove it
-      delete processed.howDidYouHearAboutUsOther;
-      delete processed.isHowDidYouHearAboutUsOther;
+      // If using "Other" but the field is empty, set a default value
+      processed.howDidYouHearAboutUsOther = "Not specified";
     }
 
     // Remove empty/zero values for optional numeric fields to avoid sending 0 when field should be null
