@@ -18,6 +18,7 @@ import {
   EllipsisHorizontalIcon,
   ChatBubbleLeftRightIcon,
   PaperClipIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { useCustomerManager } from "../../../../services/Services";
 import {
@@ -29,7 +30,7 @@ import {
   RESIDENTIAL_CUSTOMER_TYPE_OF_ID,
   CLIENT_PHONE_TYPE_WORK,
 } from "../../../../constants/Customer";
-import { DateInput } from "../../../../components/UI";
+import { DateInput, Input, Select, Checkbox } from "../../../../components/UI";
 
 // Option configurations
 const CLIENT_TYPE_OPTIONS = [
@@ -85,6 +86,27 @@ const LANGUAGE_OPTIONS = [
   { value: "English", label: "English" },
   { value: "French", label: "French" },
 ];
+
+// Helper function to format errors for display
+const formatErrorsForAlert = (errors) => {
+  if (!errors || typeof errors !== "object") {
+    return null;
+  }
+
+  const errorList = [];
+  for (const [field, message] of Object.entries(errors)) {
+    if (message && field !== "general") {
+      // Humanize field names
+      const fieldName = field
+        .replace(/([A-Z])/g, " $1")
+        .replace(/^./, (str) => str.toUpperCase())
+        .trim();
+      errorList.push(`• ${fieldName}: ${message}`);
+    }
+  }
+
+  return errorList.length > 0 ? errorList : null;
+};
 
 function AdminCustomerUpdatePage() {
   const { cid } = useParams();
@@ -379,14 +401,29 @@ function AdminCustomerUpdatePage() {
     e.preventDefault();
     console.log("onSubmitClick: Beginning...");
 
+    // Clear previous alert
+    setAlert(null);
+
     // Validate form
     const formErrors = validateForm();
     if (Object.keys(formErrors).length > 0) {
       setErrors(formErrors);
-      setAlert({
-        type: "error",
-        message: "Please correct the errors below before submitting.",
-      });
+
+      // Create detailed error alert
+      const errorList = formatErrorsForAlert(formErrors);
+      if (errorList) {
+        setAlert({
+          type: "error",
+          message: "Please correct the following errors:",
+          details: errorList,
+        });
+      } else {
+        setAlert({
+          type: "error",
+          message: "Please correct the errors in the form before submitting.",
+        });
+      }
+
       window.scrollTo(0, 0);
       return;
     }
@@ -471,12 +508,52 @@ function AdminCustomerUpdatePage() {
       }, 2000);
     } catch (error) {
       console.error("Failed to update customer:", error);
-      setErrors(error || {});
-      setAlert({
-        type: "error",
-        message:
-          "Failed to update customer. Please check the form and try again.",
-      });
+
+      // Handle different error formats
+      if (error && typeof error === "object") {
+        // Check if it's validation errors from the backend
+        const hasFieldErrors = Object.keys(error).some(
+          (key) => key !== "message" && key !== "general" && key !== "detail",
+        );
+
+        if (hasFieldErrors) {
+          setErrors(error);
+          const errorList = formatErrorsForAlert(error);
+
+          if (errorList) {
+            setAlert({
+              type: "error",
+              message:
+                error.general ||
+                "Failed to update customer. Please correct the following errors:",
+              details: errorList,
+            });
+          } else {
+            setAlert({
+              type: "error",
+              message:
+                error.general ||
+                error.message ||
+                "Failed to update customer. Please check the form and try again.",
+            });
+          }
+        } else {
+          // Single error message
+          setAlert({
+            type: "error",
+            message:
+              error.message ||
+              error.detail ||
+              "Failed to update customer. Please try again.",
+          });
+        }
+      } else {
+        setAlert({
+          type: "error",
+          message: "An unexpected error occurred. Please try again.",
+        });
+      }
+
       window.scrollTo(0, 0);
     } finally {
       setIsSaving(false);
@@ -586,18 +663,29 @@ function AdminCustomerUpdatePage() {
               : "bg-red-50 border border-red-200 text-red-700"
           }`}
         >
-          <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              {alert.type === "success" ? (
-                <CheckCircleIcon className="w-5 h-5 mr-2" />
-              ) : (
-                <XCircleIcon className="w-5 h-5 mr-2" />
-              )}
-              <span>{alert.message}</span>
+          <div className="flex justify-between">
+            <div className="flex-1">
+              <div className="flex items-start">
+                {alert.type === "success" ? (
+                  <CheckCircleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+                ) : (
+                  <ExclamationTriangleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+                )}
+                <div className="flex-1">
+                  <span className="font-medium">{alert.message}</span>
+                  {alert.details && alert.details.length > 0 && (
+                    <div className="mt-2 text-sm">
+                      {alert.details.map((detail, index) => (
+                        <div key={index}>{detail}</div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
             <button
               onClick={() => setAlert(null)}
-              className="text-current hover:opacity-70"
+              className="text-current hover:opacity-70 ml-4"
             >
               ×
             </button>
@@ -687,28 +775,16 @@ function AdminCustomerUpdatePage() {
             </div>
             <div className="p-6">
               <div className="max-w-xl">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Customer Type <span className="text-red-500">*</span>
-                </label>
-                <select
+                <Select
+                  label="Customer Type"
                   value={customerData.type}
                   onChange={(e) =>
                     handleInputChange("type", parseInt(e.target.value))
                   }
-                  className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                    errors.type ? "border-red-300" : "border-gray-300"
-                  }`}
+                  options={CLIENT_TYPE_OPTIONS}
+                  error={errors.type}
                   required
-                >
-                  {CLIENT_TYPE_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                {errors.type && (
-                  <p className="mt-1 text-sm text-red-600">{errors.type}</p>
-                )}
+                />
               </div>
             </div>
           </div>
@@ -725,250 +801,148 @@ function AdminCustomerUpdatePage() {
               {/* Organization fields for commercial customers */}
               {customerData.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Organization Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={customerData.organizationName}
-                      onChange={(e) =>
-                        handleInputChange("organizationName", e.target.value)
-                      }
-                      className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                        errors.organizationName
-                          ? "border-red-300"
-                          : "border-gray-300"
-                      }`}
-                      required
-                    />
-                    {errors.organizationName && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {errors.organizationName}
-                      </p>
-                    )}
-                  </div>
+                  <Input
+                    label="Organization Name"
+                    value={customerData.organizationName}
+                    onChange={(e) =>
+                      handleInputChange("organizationName", e.target.value)
+                    }
+                    error={errors.organizationName}
+                    required
+                  />
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Organization Type
-                    </label>
-                    <select
-                      value={customerData.organizationType}
-                      onChange={(e) =>
-                        handleInputChange(
-                          "organizationType",
-                          parseInt(e.target.value),
-                        )
-                      }
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      {CLIENT_ORGANIZATION_TYPE_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <Select
+                    label="Organization Type"
+                    value={customerData.organizationType}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "organizationType",
+                        parseInt(e.target.value),
+                      )
+                    }
+                    options={CLIENT_ORGANIZATION_TYPE_OPTIONS}
+                    error={errors.organizationType}
+                  />
                 </div>
               )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    First Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={customerData.firstName}
-                    onChange={(e) =>
-                      handleInputChange("firstName", e.target.value)
-                    }
-                    className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                      errors.firstName ? "border-red-300" : "border-gray-300"
-                    }`}
-                    required
-                  />
-                  {errors.firstName && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.firstName}
-                    </p>
-                  )}
-                </div>
+                <Input
+                  label="First Name"
+                  value={customerData.firstName}
+                  onChange={(e) =>
+                    handleInputChange("firstName", e.target.value)
+                  }
+                  error={errors.firstName}
+                  required
+                />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Last Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={customerData.lastName}
-                    onChange={(e) =>
-                      handleInputChange("lastName", e.target.value)
-                    }
-                    className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                      errors.lastName ? "border-red-300" : "border-gray-300"
-                    }`}
-                    required
-                  />
-                  {errors.lastName && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.lastName}
-                    </p>
-                  )}
-                </div>
+                <Input
+                  label="Last Name"
+                  value={customerData.lastName}
+                  onChange={(e) =>
+                    handleInputChange("lastName", e.target.value)
+                  }
+                  error={errors.lastName}
+                  required
+                />
               </div>
 
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Email
-                </label>
-                <input
+                <Input
+                  label="Email"
                   type="email"
                   value={customerData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Optional - a temporary email will be generated if not provided"
+                  error={errors.email}
+                  helperText="Optional - a temporary email will be generated if not provided"
                 />
-                <p className="mt-1 text-sm text-gray-500">
-                  Optional field if not set then workery will generate a
-                  temporary email.
-                </p>
               </div>
 
               <div className="mb-6">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={customerData.isOkToEmail}
-                    onChange={() => handleCheckboxChange("isOkToEmail")}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">
-                    I agree to receive electronic email
-                  </span>
-                </label>
+                <Checkbox
+                  label="I agree to receive electronic email"
+                  checked={customerData.isOkToEmail}
+                  onChange={() => handleCheckboxChange("isOkToEmail")}
+                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    value={customerData.phone}
-                    onChange={(e) => handleInputChange("phone", e.target.value)}
-                    className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                      errors.phone ? "border-red-300" : "border-gray-300"
-                    }`}
-                    required
-                  />
-                  {errors.phone && (
-                    <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
-                  )}
-                </div>
+                <Input
+                  label="Phone"
+                  type="tel"
+                  value={customerData.phone}
+                  onChange={(e) => handleInputChange("phone", e.target.value)}
+                  error={errors.phone}
+                  required
+                />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone Type
-                  </label>
-                  <select
-                    value={customerData.phoneType}
-                    onChange={(e) =>
-                      handleInputChange("phoneType", parseInt(e.target.value))
-                    }
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    {CLIENT_PHONE_TYPE_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <Select
+                  label="Phone Type"
+                  value={customerData.phoneType}
+                  onChange={(e) =>
+                    handleInputChange("phoneType", parseInt(e.target.value))
+                  }
+                  options={CLIENT_PHONE_TYPE_OPTIONS}
+                  error={errors.phoneType}
+                />
               </div>
 
               {customerData.phoneType == CLIENT_PHONE_TYPE_WORK && (
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone Extension
-                  </label>
-                  <input
-                    type="text"
+                  <Input
+                    label="Phone Extension"
                     value={customerData.phoneExtension}
                     onChange={(e) =>
                       handleInputChange("phoneExtension", e.target.value)
                     }
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    error={errors.phoneExtension}
                   />
                 </div>
               )}
 
               <div className="mb-6">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={customerData.isOkToText}
-                    onChange={() => handleCheckboxChange("isOkToText")}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">
-                    I agree to receive texts to my phone
-                  </span>
-                </label>
+                <Checkbox
+                  label="I agree to receive texts to my phone"
+                  checked={customerData.isOkToText}
+                  onChange={() => handleCheckboxChange("isOkToText")}
+                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Other Phone (Optional)
-                  </label>
-                  <input
-                    type="tel"
-                    value={customerData.otherPhone}
-                    onChange={(e) =>
-                      handleInputChange("otherPhone", e.target.value)
-                    }
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
+                <Input
+                  label="Other Phone (Optional)"
+                  type="tel"
+                  value={customerData.otherPhone}
+                  onChange={(e) =>
+                    handleInputChange("otherPhone", e.target.value)
+                  }
+                  error={errors.otherPhone}
+                />
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Other Phone Type
-                  </label>
-                  <select
-                    value={customerData.otherPhoneType}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "otherPhoneType",
-                        parseInt(e.target.value),
-                      )
-                    }
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    {CLIENT_PHONE_TYPE_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <Select
+                  label="Other Phone Type"
+                  value={customerData.otherPhoneType}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "otherPhoneType",
+                      parseInt(e.target.value),
+                    )
+                  }
+                  options={CLIENT_PHONE_TYPE_OPTIONS}
+                  error={errors.otherPhoneType}
+                />
               </div>
 
               {customerData.otherPhoneType == CLIENT_PHONE_TYPE_WORK && (
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Other Phone Extension
-                  </label>
-                  <input
-                    type="text"
+                  <Input
+                    label="Other Phone Extension"
                     value={customerData.otherPhoneExtension}
                     onChange={(e) =>
                       handleInputChange("otherPhoneExtension", e.target.value)
                     }
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    error={errors.otherPhoneExtension}
                   />
                 </div>
               )}
@@ -985,17 +959,11 @@ function AdminCustomerUpdatePage() {
             </div>
             <div className="p-6">
               <div className="mb-6">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={customerData.hasShippingAddress}
-                    onChange={() => handleCheckboxChange("hasShippingAddress")}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">
-                    Has shipping address different than billing address
-                  </span>
-                </label>
+                <Checkbox
+                  label="Has shipping address different than billing address"
+                  checked={customerData.hasShippingAddress}
+                  onChange={() => handleCheckboxChange("hasShippingAddress")}
+                />
               </div>
 
               <div
@@ -1010,139 +978,65 @@ function AdminCustomerUpdatePage() {
                   )}
 
                   <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Country <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={customerData.country}
-                        onChange={(e) =>
-                          handleInputChange("country", e.target.value)
-                        }
-                        className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                          errors.country ? "border-red-300" : "border-gray-300"
-                        }`}
-                        required
-                      />
-                      {errors.country && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {errors.country}
-                        </p>
-                      )}
-                    </div>
+                    <Input
+                      label="Country"
+                      value={customerData.country}
+                      onChange={(e) =>
+                        handleInputChange("country", e.target.value)
+                      }
+                      error={errors.country}
+                      required
+                    />
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Province/Territory{" "}
-                        <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        value={customerData.region}
-                        onChange={(e) =>
-                          handleInputChange("region", e.target.value)
-                        }
-                        className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                          errors.region ? "border-red-300" : "border-gray-300"
-                        }`}
-                        required
-                      >
-                        {REGION_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                      {errors.region && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {errors.region}
-                        </p>
-                      )}
-                    </div>
+                    <Select
+                      label="Province/Territory"
+                      value={customerData.region}
+                      onChange={(e) =>
+                        handleInputChange("region", e.target.value)
+                      }
+                      options={REGION_OPTIONS}
+                      error={errors.region}
+                      required
+                    />
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        City <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={customerData.city}
-                        onChange={(e) =>
-                          handleInputChange("city", e.target.value)
-                        }
-                        className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                          errors.city ? "border-red-300" : "border-gray-300"
-                        }`}
-                        required
-                      />
-                      {errors.city && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {errors.city}
-                        </p>
-                      )}
-                    </div>
+                    <Input
+                      label="City"
+                      value={customerData.city}
+                      onChange={(e) =>
+                        handleInputChange("city", e.target.value)
+                      }
+                      error={errors.city}
+                      required
+                    />
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Address Line 1 <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={customerData.addressLine1}
-                        onChange={(e) =>
-                          handleInputChange("addressLine1", e.target.value)
-                        }
-                        className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                          errors.addressLine1
-                            ? "border-red-300"
-                            : "border-gray-300"
-                        }`}
-                        required
-                      />
-                      {errors.addressLine1 && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {errors.addressLine1}
-                        </p>
-                      )}
-                    </div>
+                    <Input
+                      label="Address Line 1"
+                      value={customerData.addressLine1}
+                      onChange={(e) =>
+                        handleInputChange("addressLine1", e.target.value)
+                      }
+                      error={errors.addressLine1}
+                      required
+                    />
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Address Line 2 (Optional)
-                      </label>
-                      <input
-                        type="text"
-                        value={customerData.addressLine2}
-                        onChange={(e) =>
-                          handleInputChange("addressLine2", e.target.value)
-                        }
-                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
+                    <Input
+                      label="Address Line 2 (Optional)"
+                      value={customerData.addressLine2}
+                      onChange={(e) =>
+                        handleInputChange("addressLine2", e.target.value)
+                      }
+                      error={errors.addressLine2}
+                    />
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Postal Code <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={customerData.postalCode}
-                        onChange={(e) =>
-                          handleInputChange("postalCode", e.target.value)
-                        }
-                        className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                          errors.postalCode
-                            ? "border-red-300"
-                            : "border-gray-300"
-                        }`}
-                        required
-                      />
-                      {errors.postalCode && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {errors.postalCode}
-                        </p>
-                      )}
-                    </div>
+                    <Input
+                      label="Postal Code"
+                      value={customerData.postalCode}
+                      onChange={(e) =>
+                        handleInputChange("postalCode", e.target.value)
+                      }
+                      error={errors.postalCode}
+                      required
+                    />
                   </div>
                 </div>
 
@@ -1154,204 +1048,97 @@ function AdminCustomerUpdatePage() {
                     </h4>
 
                     <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Name <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={customerData.shippingName}
-                          onChange={(e) =>
-                            handleInputChange("shippingName", e.target.value)
-                          }
-                          className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                            errors.shippingName
-                              ? "border-red-300"
-                              : "border-gray-300"
-                          }`}
-                          placeholder="The name to contact for this shipping address"
-                          required
-                        />
-                        {errors.shippingName && (
-                          <p className="mt-1 text-sm text-red-600">
-                            {errors.shippingName}
-                          </p>
-                        )}
-                      </div>
+                      <Input
+                        label="Name"
+                        value={customerData.shippingName}
+                        onChange={(e) =>
+                          handleInputChange("shippingName", e.target.value)
+                        }
+                        placeholder="The name to contact for this shipping address"
+                        error={errors.shippingName}
+                        required
+                      />
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Phone <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="tel"
-                          value={customerData.shippingPhone}
-                          onChange={(e) =>
-                            handleInputChange("shippingPhone", e.target.value)
-                          }
-                          className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                            errors.shippingPhone
-                              ? "border-red-300"
-                              : "border-gray-300"
-                          }`}
-                          placeholder="The contact phone number for this shipping address"
-                          required
-                        />
-                        {errors.shippingPhone && (
-                          <p className="mt-1 text-sm text-red-600">
-                            {errors.shippingPhone}
-                          </p>
-                        )}
-                      </div>
+                      <Input
+                        label="Phone"
+                        type="tel"
+                        value={customerData.shippingPhone}
+                        onChange={(e) =>
+                          handleInputChange("shippingPhone", e.target.value)
+                        }
+                        placeholder="The contact phone number for this shipping address"
+                        error={errors.shippingPhone}
+                        required
+                      />
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Country <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={customerData.shippingCountry}
-                          onChange={(e) =>
-                            handleInputChange("shippingCountry", e.target.value)
-                          }
-                          className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                            errors.shippingCountry
-                              ? "border-red-300"
-                              : "border-gray-300"
-                          }`}
-                          required
-                        />
-                        {errors.shippingCountry && (
-                          <p className="mt-1 text-sm text-red-600">
-                            {errors.shippingCountry}
-                          </p>
-                        )}
-                      </div>
+                      <Input
+                        label="Country"
+                        value={customerData.shippingCountry}
+                        onChange={(e) =>
+                          handleInputChange("shippingCountry", e.target.value)
+                        }
+                        error={errors.shippingCountry}
+                        required
+                      />
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Province/Territory{" "}
-                          <span className="text-red-500">*</span>
-                        </label>
-                        <select
-                          value={customerData.shippingRegion}
-                          onChange={(e) =>
-                            handleInputChange("shippingRegion", e.target.value)
-                          }
-                          className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                            errors.shippingRegion
-                              ? "border-red-300"
-                              : "border-gray-300"
-                          }`}
-                          required
-                        >
-                          {REGION_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                        {errors.shippingRegion && (
-                          <p className="mt-1 text-sm text-red-600">
-                            {errors.shippingRegion}
-                          </p>
-                        )}
-                      </div>
+                      <Select
+                        label="Province/Territory"
+                        value={customerData.shippingRegion}
+                        onChange={(e) =>
+                          handleInputChange("shippingRegion", e.target.value)
+                        }
+                        options={REGION_OPTIONS}
+                        error={errors.shippingRegion}
+                        required
+                      />
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          City <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={customerData.shippingCity}
-                          onChange={(e) =>
-                            handleInputChange("shippingCity", e.target.value)
-                          }
-                          className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                            errors.shippingCity
-                              ? "border-red-300"
-                              : "border-gray-300"
-                          }`}
-                          required
-                        />
-                        {errors.shippingCity && (
-                          <p className="mt-1 text-sm text-red-600">
-                            {errors.shippingCity}
-                          </p>
-                        )}
-                      </div>
+                      <Input
+                        label="City"
+                        value={customerData.shippingCity}
+                        onChange={(e) =>
+                          handleInputChange("shippingCity", e.target.value)
+                        }
+                        error={errors.shippingCity}
+                        required
+                      />
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Address Line 1 <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={customerData.shippingAddressLine1}
-                          onChange={(e) =>
-                            handleInputChange(
-                              "shippingAddressLine1",
-                              e.target.value,
-                            )
-                          }
-                          className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                            errors.shippingAddressLine1
-                              ? "border-red-300"
-                              : "border-gray-300"
-                          }`}
-                          required
-                        />
-                        {errors.shippingAddressLine1 && (
-                          <p className="mt-1 text-sm text-red-600">
-                            {errors.shippingAddressLine1}
-                          </p>
-                        )}
-                      </div>
+                      <Input
+                        label="Address Line 1"
+                        value={customerData.shippingAddressLine1}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "shippingAddressLine1",
+                            e.target.value,
+                          )
+                        }
+                        error={errors.shippingAddressLine1}
+                        required
+                      />
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Address Line 2 (Optional)
-                        </label>
-                        <input
-                          type="text"
-                          value={customerData.shippingAddressLine2}
-                          onChange={(e) =>
-                            handleInputChange(
-                              "shippingAddressLine2",
-                              e.target.value,
-                            )
-                          }
-                          className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
+                      <Input
+                        label="Address Line 2 (Optional)"
+                        value={customerData.shippingAddressLine2}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "shippingAddressLine2",
+                            e.target.value,
+                          )
+                        }
+                        error={errors.shippingAddressLine2}
+                      />
 
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Postal Code <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={customerData.shippingPostalCode}
-                          onChange={(e) =>
-                            handleInputChange(
-                              "shippingPostalCode",
-                              e.target.value,
-                            )
-                          }
-                          className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                            errors.shippingPostalCode
-                              ? "border-red-300"
-                              : "border-gray-300"
-                          }`}
-                          required
-                        />
-                        {errors.shippingPostalCode && (
-                          <p className="mt-1 text-sm text-red-600">
-                            {errors.shippingPostalCode}
-                          </p>
-                        )}
-                      </div>
+                      <Input
+                        label="Postal Code"
+                        value={customerData.shippingPostalCode}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "shippingPostalCode",
+                            e.target.value,
+                          )
+                        }
+                        error={errors.shippingPostalCode}
+                        required
+                      />
                     </div>
                   </div>
                 )}
@@ -1390,109 +1177,63 @@ function AdminCustomerUpdatePage() {
                 />
 
                 {customerData.isHowDidYouHearAboutUsOther && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      How did you hear about us? (Other){" "}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={customerData.howDidYouHearAboutUsOther}
-                      onChange={(e) =>
-                        handleInputChange(
-                          "howDidYouHearAboutUsOther",
-                          e.target.value,
-                        )
-                      }
-                      className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                        errors.howDidYouHearAboutUsOther
-                          ? "border-red-300"
-                          : "border-gray-300"
-                      }`}
-                      required
-                    />
-                    {errors.howDidYouHearAboutUsOther && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {errors.howDidYouHearAboutUsOther}
-                      </p>
-                    )}
-                  </div>
+                  <Input
+                    label="How did you hear about us? (Other)"
+                    value={customerData.howDidYouHearAboutUsOther}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "howDidYouHearAboutUsOther",
+                        e.target.value,
+                      )
+                    }
+                    error={errors.howDidYouHearAboutUsOther}
+                    required
+                  />
                 )}
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Gender
-                    </label>
-                    <select
-                      value={customerData.gender}
-                      onChange={(e) =>
-                        handleInputChange("gender", parseInt(e.target.value))
-                      }
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      {GENDER_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                  <Select
+                    label="Gender"
+                    value={customerData.gender}
+                    onChange={(e) =>
+                      handleInputChange("gender", parseInt(e.target.value))
+                    }
+                    options={GENDER_OPTIONS}
+                    error={errors.gender}
+                  />
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Birth Date (Optional)
-                    </label>
-                    <DateInput
-                      value={customerData.birthDate}
-                      onChange={(value) =>
-                        handleInputChange("birthDate", value)
-                      }
-                      max={new Date().toISOString().split("T")[0]}
-                      error={errors.birthDate}
-                      disabled={false}
-                      required={false}
-                    />
-                  </div>
-                </div>
-
-                {customerData.gender === 1 && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Gender (Other) <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={customerData.genderOther}
-                      onChange={(e) =>
-                        handleInputChange("genderOther", e.target.value)
-                      }
-                      className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                        errors.genderOther
-                          ? "border-red-300"
-                          : "border-gray-300"
-                      }`}
-                      required
-                    />
-                    {errors.genderOther && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {errors.genderOther}
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                <div>
                   <DateInput
-                    label="Join Date (Optional)"
-                    value={customerData.joinDate}
-                    onChange={(value) => handleInputChange("joinDate", value)}
-                    error={errors.joinDate}
-                    helperText="This indicates when the user joined the workery"
+                    label="Birth Date (Optional)"
+                    value={customerData.birthDate}
+                    onChange={(value) => handleInputChange("birthDate", value)}
+                    max={new Date().toISOString().split("T")[0]}
+                    error={errors.birthDate}
                     disabled={false}
                     required={false}
                   />
                 </div>
+
+                {customerData.gender === 1 && (
+                  <Input
+                    label="Gender (Other)"
+                    value={customerData.genderOther}
+                    onChange={(e) =>
+                      handleInputChange("genderOther", e.target.value)
+                    }
+                    error={errors.genderOther}
+                    required
+                  />
+                )}
+
+                <DateInput
+                  label="Join Date (Optional)"
+                  value={customerData.joinDate}
+                  onChange={(value) => handleInputChange("joinDate", value)}
+                  error={errors.joinDate}
+                  helperText="This indicates when the user joined the workery"
+                  disabled={false}
+                  required={false}
+                />
               </div>
             </div>
           </div>
@@ -1507,22 +1248,15 @@ function AdminCustomerUpdatePage() {
             </div>
             <div className="p-6">
               <div className="max-w-xl">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Preferred Language
-                </label>
-                <select
+                <Select
+                  label="Preferred Language"
                   value={customerData.preferredLanguage}
                   onChange={(e) =>
                     handleInputChange("preferredLanguage", e.target.value)
                   }
-                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                >
-                  {LANGUAGE_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                  options={LANGUAGE_OPTIONS}
+                  error={errors.preferredLanguage}
+                />
               </div>
             </div>
           </div>
