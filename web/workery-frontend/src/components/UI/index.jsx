@@ -19,6 +19,9 @@ export { default as Card, Panel, Box } from "./Card/Card";
 // Checkbox Component
 export { default as Checkbox, CheckBox } from "./Checkbox/Checkbox";
 
+// Date Component
+export { default as DateInput, Date } from "./Date/Date";
+
 // Divider Component
 export { default as Divider } from "./Divider/Divider";
 

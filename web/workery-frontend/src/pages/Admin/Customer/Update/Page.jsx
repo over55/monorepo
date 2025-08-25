@@ -29,6 +29,7 @@ import {
   RESIDENTIAL_CUSTOMER_TYPE_OF_ID,
   CLIENT_PHONE_TYPE_WORK,
 } from "../../../../constants/Customer";
+import { DateInput } from "../../../../components/UI";
 
 // Option configurations
 const CLIENT_TYPE_OPTIONS = [
@@ -1442,14 +1443,15 @@ function AdminCustomerUpdatePage() {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Birth Date (Optional)
                     </label>
-                    <input
-                      type="date"
+                    <DateInput
                       value={customerData.birthDate}
-                      onChange={(e) =>
-                        handleInputChange("birthDate", e.target.value)
+                      onChange={(value) =>
+                        handleInputChange("birthDate", value)
                       }
                       max={new Date().toISOString().split("T")[0]}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                      error={errors.birthDate}
+                      disabled={false}
+                      required={false}
                     />
                   </div>
                 </div>
@@ -1481,20 +1483,15 @@ function AdminCustomerUpdatePage() {
                 )}
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Join Date (Optional)
-                  </label>
-                  <input
-                    type="date"
+                  <DateInput
+                    label="Join Date (Optional)"
                     value={customerData.joinDate}
-                    onChange={(e) =>
-                      handleInputChange("joinDate", e.target.value)
-                    }
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    onChange={(value) => handleInputChange("joinDate", value)}
+                    error={errors.joinDate}
+                    helperText="This indicates when the user joined the workery"
+                    disabled={false}
+                    required={false}
                   />
-                  <p className="mt-1 text-sm text-gray-500">
-                    This indicates when the user joined the workery
-                  </p>
                 </div>
               </div>
             </div>
