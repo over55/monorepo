@@ -36,6 +36,7 @@ function AdminOrderAddStep4Page() {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [showCancelWarning, setShowCancelWarning] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   // Get existing order state
   const orderData = orderCreationStorage.getOrderCreation();
@@ -70,6 +71,8 @@ function AdminOrderAddStep4Page() {
 
       console.log("Order created successfully:", response);
 
+      setIsSubmitted(true);
+
       // Clear the order creation state
       orderCreationStorage.clearOrderCreation();
 
@@ -97,6 +100,10 @@ function AdminOrderAddStep4Page() {
         return;
       }
 
+      if (isSubmitted) {
+        return;
+      }
+
       // Check if we have order state
       if (!orderData || !orderData.customerId) {
         // No customer selected, redirect to step 1
@@ -108,7 +115,7 @@ function AdminOrderAddStep4Page() {
     return () => {
       mounted = false;
     };
-  }, [authManager, navigate, orderData]);
+  }, [authManager, navigate, orderData, isSubmitted]);
 
   // Format date for display
   const formatDate = (dateString) => {
