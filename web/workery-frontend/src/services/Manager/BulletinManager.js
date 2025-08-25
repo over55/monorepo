@@ -709,10 +709,33 @@ export class BulletinManager {
       }
     }
 
-    // Validate filters
-    if (params.status && typeof params.status === "string") {
-      validatedParams.status = params.status;
+    // FIX: Validate status filter - accept both string and number
+    if (
+      params.status !== undefined &&
+      params.status !== null &&
+      params.status !== ""
+    ) {
+      // Convert to string if it's a number, or keep as string
+      validatedParams.status = String(params.status);
     }
+
+    // Add any other custom filters
+    const customFilterKeys = Object.keys(params).filter(
+      (key) =>
+        !["page", "limit", "search", "sortBy", "sortOrder", "status"].includes(
+          key,
+        ),
+    );
+
+    customFilterKeys.forEach((key) => {
+      if (
+        params[key] !== undefined &&
+        params[key] !== null &&
+        params[key] !== ""
+      ) {
+        validatedParams[key] = params[key];
+      }
+    });
 
     return validatedParams;
   }
