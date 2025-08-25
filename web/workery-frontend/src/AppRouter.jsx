@@ -178,6 +178,7 @@ import AdminOrderSearchCriteriaPage from "./pages/Admin/Order/Search/CriteriaPag
 import AdminOrderSearchResultPage from "./pages/Admin/Order/Search/ResultPage";
 import AdminOrderAddStep1PartAPage from "./pages/Admin/Order/Add/Step1PartAPage";
 import AdminOrderAddStep1PartBPage from "./pages/Admin/Order/Add/Step1PartBPage";
+import AdminOrderAddStep2FromLaunchpadPage from "./pages/Admin/Order/Add/Step2FromLaunchpadPage";
 import AdminOrderAddStep2Page from "./pages/Admin/Order/Add/Step2Page";
 import AdminOrderAddStep3Page from "./pages/Admin/Order/Add/Step3Page";
 import AdminOrderAddStep4Page from "./pages/Admin/Order/Add/Step4Page";
@@ -1672,7 +1673,7 @@ function AppRouter() {
               path="/admin/orders/add/step-2-from-launchpad"
               element={
                 <Layout>
-                  <AdminOrderAddStep2Page />
+                  <AdminOrderAddStep2FromLaunchpadPage />
                 </Layout>
               }
             />
