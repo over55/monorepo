@@ -2,7 +2,10 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router";
-import { useAssociateAwayLogManager } from "../../../../../services/Services";
+import {
+  useAssociateAwayLogManager,
+  useAssociateManager,
+} from "../../../../../services/Services";
 import {
   CalendarDaysIcon,
   PlusIcon,
@@ -22,10 +25,12 @@ import {
   ClockIcon,
   CheckCircleIcon,
   ArrowPathIcon,
+  ShieldExclamationIcon,
+  DocumentCheckIcon,
 } from "@heroicons/react/24/outline";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 
-// Constants
+// Constants - Updated to match backend
 const SORT_OPTIONS = [
   { value: "created_at,DESC", label: "Created At (Newest)" },
   { value: "created_at,ASC", label: "Created At (Oldest)" },
@@ -39,16 +44,22 @@ const STATUS_FILTER_OPTIONS = [
   { value: "2", label: "Archived" },
 ];
 
+// Updated reason map to include expired documents
 const REASON_MAP = {
   1: "Other",
   2: "Going on vacation",
   3: "Personal reasons",
   4: "Commercial insurance expired",
-  5: "Policy check expired",
+  5: "Police check expired",
 };
+
+// Constants for reason codes
+const REASON_COMMERCIAL_INSURANCE_EXPIRED = 4;
+const REASON_POLICE_CHECK_EXPIRED = 5;
 
 function SettingAssociateAwayLogListPage() {
   const associateAwayLogManager = useAssociateAwayLogManager();
+  const associateManager = useAssociateManager();
   const navigate = useNavigate();
   const isLoadingRef = useRef(false);
 
@@ -57,6 +68,13 @@ function SettingAssociateAwayLogListPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+
+  // Associates with expired documents
+  const [associatesWithExpiredDocs, setAssociatesWithExpiredDocs] = useState(
+    [],
+  );
+  const [checkingExpiredDocs, setCheckingExpiredDocs] = useState(false);
+  const [showExpiredDocsModal, setShowExpiredDocsModal] = useState(false);
 
   // Filter and pagination state
   const [searchText, setSearchText] = useState("");
@@ -79,6 +97,181 @@ function SettingAssociateAwayLogListPage() {
   // Handle unauthorized access
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
+  };
+
+  // Check for associates with expired insurance/police checks
+  const checkForExpiredDocuments = async () => {
+    try {
+      setCheckingExpiredDocs(true);
+
+      // Get all active associates
+      const associatesResponse = await associateManager.getAssociates(
+        {
+          status: 1, // Active associates only
+          limit: 1000, // Get a large batch
+        },
+        onUnauthorized,
+        true, // Force refresh
+      );
+
+      if (!associatesResponse || !associatesResponse.results) {
+        return;
+      }
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const expiredAssociates = [];
+
+      // Check each associate for expired documents
+      for (const associate of associatesResponse.results) {
+        const expiredReasons = [];
+
+        // Check commercial insurance expiry
+        if (associate.commercialInsuranceExpiryDate) {
+          const expiryDate = new Date(associate.commercialInsuranceExpiryDate);
+          if (expiryDate < today) {
+            expiredReasons.push({
+              type: "insurance",
+              reason: REASON_COMMERCIAL_INSURANCE_EXPIRED,
+              expiryDate: associate.commercialInsuranceExpiryDate,
+            });
+          }
+        }
+
+        // Check police check expiry
+        if (associate.policeCheckDate) {
+          const policeCheckDate = new Date(associate.policeCheckDate);
+          // Police checks typically expire after 3 years
+          const expiryDate = new Date(policeCheckDate);
+          expiryDate.setFullYear(expiryDate.getFullYear() + 3);
+
+          if (expiryDate < today) {
+            expiredReasons.push({
+              type: "police",
+              reason: REASON_POLICE_CHECK_EXPIRED,
+              expiryDate: expiryDate.toISOString(),
+            });
+          }
+        }
+
+        if (expiredReasons.length > 0) {
+          // Check if this associate already has an active away log for these reasons
+          const hasExistingAwayLog = associateAwayLogs.some(
+            (log) =>
+              log.associateId === associate.id &&
+              log.status === 1 && // Active
+              expiredReasons.some((er) => er.reason === log.reason),
+          );
+
+          if (!hasExistingAwayLog) {
+            expiredAssociates.push({
+              associate,
+              expiredReasons,
+            });
+          }
+        }
+      }
+
+      setAssociatesWithExpiredDocs(expiredAssociates);
+
+      // Show notification if there are associates with expired docs
+      if (expiredAssociates.length > 0) {
+        setError(
+          `Found ${expiredAssociates.length} associate(s) with expired documents not on away list`,
+        );
+        setShowExpiredDocsModal(true);
+      }
+    } catch (err) {
+      console.error("Failed to check for expired documents:", err);
+    } finally {
+      setCheckingExpiredDocs(false);
+    }
+  };
+
+  // Create away log for expired document
+  const createAwayLogForExpiredDoc = async (
+    associateId,
+    associateName,
+    reason,
+    expiryDate,
+  ) => {
+    try {
+      setLoading(true);
+
+      const awayLogData = {
+        associateId: associateId,
+        associateName: associateName,
+        reason: reason,
+        reasonOther: reason === 1 ? "Expired document" : "",
+        untilFurtherNotice: 1, // Yes - until further notice
+        startDate: expiryDate || new Date().toISOString(),
+        status: 1, // Active
+      };
+
+      await associateAwayLogManager.createAssociateAwayLog(
+        awayLogData,
+        onUnauthorized,
+      );
+
+      setSuccess(`Away log created for ${associateName}`);
+
+      // Refresh the list
+      await fetchAssociateAwayLogs(true);
+
+      // Re-check for expired documents
+      await checkForExpiredDocuments();
+    } catch (err) {
+      console.error("Failed to create away log:", err);
+      setError(err.message || "Failed to create away log");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Create away logs for all expired documents
+  const createAllAwayLogsForExpiredDocs = async () => {
+    if (!associatesWithExpiredDocs || associatesWithExpiredDocs.length === 0) {
+      return;
+    }
+
+    setLoading(true);
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (const item of associatesWithExpiredDocs) {
+      for (const expiredReason of item.expiredReasons) {
+        try {
+          await createAwayLogForExpiredDoc(
+            item.associate.id,
+            item.associate.name,
+            expiredReason.reason,
+            expiredReason.expiryDate,
+          );
+          successCount++;
+        } catch (err) {
+          errorCount++;
+          console.error(
+            `Failed to create away log for ${item.associate.name}:`,
+            err,
+          );
+        }
+      }
+    }
+
+    if (successCount > 0) {
+      setSuccess(`Created ${successCount} away log(s) for expired documents`);
+    }
+
+    if (errorCount > 0) {
+      setError(`Failed to create ${errorCount} away log(s)`);
+    }
+
+    setShowExpiredDocsModal(false);
+    setLoading(false);
+
+    // Refresh the list
+    await fetchAssociateAwayLogs(true);
   };
 
   // Fetch associate away logs
@@ -111,6 +304,9 @@ function SettingAssociateAwayLogListPage() {
       setAssociateAwayLogs(response.results || []);
       setTotalCount(response.count || 0);
       setHasNextPage(response.hasNextPage || false);
+
+      // After fetching away logs, check for expired documents
+      await checkForExpiredDocuments();
     } catch (err) {
       console.error("Failed to fetch associate away logs:", err);
       setError(err.message || "Failed to load associate away logs");
@@ -297,6 +493,27 @@ function SettingAssociateAwayLogListPage() {
           </div>
         )}
 
+        {/* Expired Documents Warning */}
+        {associatesWithExpiredDocs.length > 0 && !showExpiredDocsModal && (
+          <div className="mb-4 sm:mb-6 bg-amber-50 border border-amber-200 text-amber-800 px-3 py-2 sm:px-4 sm:py-3 rounded-lg">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center text-sm sm:text-base">
+                <ShieldExclamationIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 flex-shrink-0" />
+                <span>
+                  {associatesWithExpiredDocs.length} associate(s) have expired
+                  documents but are not on the away list
+                </span>
+              </span>
+              <button
+                onClick={() => setShowExpiredDocsModal(true)}
+                className="ml-2 px-3 py-1 bg-amber-600 text-white text-xs sm:text-sm rounded hover:bg-amber-700"
+              >
+                View & Fix
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Main Card */}
         <div className="bg-white shadow-sm rounded-lg">
           {/* Card Header - Responsive */}
@@ -305,16 +522,31 @@ function SettingAssociateAwayLogListPage() {
               <ClipboardDocumentListIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
               List
             </h2>
-            <button
-              onClick={() =>
-                navigate("/admin/settings/associate-away-log/create")
-              }
-              className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 bg-emerald-500 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors"
-            >
-              <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-0.5 sm:mr-1" />
-              <span className="hidden sm:inline">New</span>
-              <span className="sm:hidden">Add</span>
-            </button>
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => checkForExpiredDocuments()}
+                disabled={checkingExpiredDocs}
+                className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 bg-amber-500 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-colors disabled:opacity-50"
+              >
+                {checkingExpiredDocs ? (
+                  <ArrowPathIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-0.5 sm:mr-1 animate-spin" />
+                ) : (
+                  <DocumentCheckIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-0.5 sm:mr-1" />
+                )}
+                <span className="hidden sm:inline">Check Expired Docs</span>
+                <span className="sm:hidden">Check</span>
+              </button>
+              <button
+                onClick={() =>
+                  navigate("/admin/settings/associate-away-log/create")
+                }
+                className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 bg-emerald-500 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors"
+              >
+                <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-0.5 sm:mr-1" />
+                <span className="hidden sm:inline">New</span>
+                <span className="sm:hidden">Add</span>
+              </button>
+            </div>
           </div>
 
           {/* Filters Section - Responsive */}
@@ -485,9 +717,17 @@ function SettingAssociateAwayLogListPage() {
                             </Link>
                           </td>
                           <td className="px-3 py-4 text-sm text-gray-900">
-                            {awayLog.reason === 1
-                              ? awayLog.reasonOther || "Other"
-                              : REASON_MAP[awayLog.reason] || "Unknown"}
+                            <div className="flex items-center">
+                              {(awayLog.reason ===
+                                REASON_COMMERCIAL_INSURANCE_EXPIRED ||
+                                awayLog.reason ===
+                                  REASON_POLICE_CHECK_EXPIRED) && (
+                                <ShieldExclamationIcon className="w-4 h-4 mr-1 text-amber-500" />
+                              )}
+                              {awayLog.reason === 1
+                                ? awayLog.reasonOther || "Other"
+                                : REASON_MAP[awayLog.reason] || "Unknown"}
+                            </div>
                           </td>
                           <td className="px-3 py-4 text-sm text-gray-500">
                             <span className="flex items-center">
@@ -569,7 +809,13 @@ function SettingAssociateAwayLogListPage() {
                           <span className="text-gray-500 w-20 flex-shrink-0">
                             Reason:
                           </span>
-                          <span className="text-gray-900">
+                          <span className="text-gray-900 flex items-center">
+                            {(awayLog.reason ===
+                              REASON_COMMERCIAL_INSURANCE_EXPIRED ||
+                              awayLog.reason ===
+                                REASON_POLICE_CHECK_EXPIRED) && (
+                              <ShieldExclamationIcon className="w-3 h-3 mr-1 text-amber-500" />
+                            )}
                             {awayLog.reason === 1
                               ? awayLog.reasonOther || "Other"
                               : REASON_MAP[awayLog.reason] || "Unknown"}
@@ -692,6 +938,108 @@ function SettingAssociateAwayLogListPage() {
           </div>
         </div>
 
+        {/* Expired Documents Modal */}
+        {showExpiredDocsModal && associatesWithExpiredDocs.length > 0 && (
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden">
+              <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+                  <ShieldExclamationIcon className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-amber-500" />
+                  Associates with Expired Documents
+                </h3>
+                <button
+                  onClick={() => setShowExpiredDocsModal(false)}
+                  className="text-gray-400 hover:text-gray-500 p-1"
+                >
+                  <XMarkIcon className="w-5 h-5 sm:w-6 sm:h-6" />
+                </button>
+              </div>
+
+              <div className="px-4 py-4 sm:px-6 overflow-y-auto max-h-[60vh]">
+                <p className="text-sm text-gray-600 mb-4">
+                  The following associates have expired insurance or police
+                  checks but are not on the away list. You can automatically
+                  create away logs for them.
+                </p>
+
+                <div className="space-y-3">
+                  {associatesWithExpiredDocs.map((item) => (
+                    <div
+                      key={item.associate.id}
+                      className="border border-gray-200 rounded-lg p-4"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <Link
+                            to={`/admin/associate/${item.associate.id}`}
+                            className="text-blue-600 hover:text-blue-800 font-medium flex items-center text-sm"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                          >
+                            <UserIcon className="w-4 h-4 mr-1" />
+                            {item.associate.name}
+                          </Link>
+
+                          <div className="mt-2 space-y-1">
+                            {item.expiredReasons.map((reason, idx) => (
+                              <div
+                                key={idx}
+                                className="text-xs text-gray-600 flex items-center"
+                              >
+                                <ShieldExclamationIcon className="w-3 h-3 mr-1 text-amber-500" />
+                                <span className="font-medium">
+                                  {reason.type === "insurance"
+                                    ? "Insurance"
+                                    : "Police Check"}
+                                </span>
+                                <span className="ml-1">
+                                  expired on {formatDate(reason.expiryDate)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            item.expiredReasons.forEach((reason) => {
+                              createAwayLogForExpiredDoc(
+                                item.associate.id,
+                                item.associate.name,
+                                reason.reason,
+                                reason.expiryDate,
+                              );
+                            });
+                          }}
+                          className="ml-4 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                        >
+                          Create Away Log
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="px-4 py-3 sm:px-6 sm:py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-3">
+                <button
+                  onClick={() => setShowExpiredDocsModal(false)}
+                  className="w-full sm:w-auto px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={createAllAwayLogsForExpiredDocs}
+                  disabled={loading}
+                  className="w-full sm:w-auto px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 disabled:opacity-50"
+                >
+                  Create All Away Logs ({associatesWithExpiredDocs.length})
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Detail Modal - Responsive */}
         {showDetailModal && selectedAwayLog && (
           <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
@@ -734,18 +1082,26 @@ function SettingAssociateAwayLogListPage() {
                       Reason:
                     </label>
                     <div className="p-3 bg-gray-50 rounded-lg text-xs sm:text-sm text-gray-900">
-                      {selectedAwayLog.reason === 1 ? (
-                        <>
-                          {REASON_MAP[1]}
-                          {selectedAwayLog.reasonOther && (
-                            <span className="block mt-1 italic">
-                              "{selectedAwayLog.reasonOther}"
-                            </span>
-                          )}
-                        </>
-                      ) : (
-                        REASON_MAP[selectedAwayLog.reason] || "Unknown"
-                      )}
+                      <div className="flex items-center">
+                        {(selectedAwayLog.reason ===
+                          REASON_COMMERCIAL_INSURANCE_EXPIRED ||
+                          selectedAwayLog.reason ===
+                            REASON_POLICE_CHECK_EXPIRED) && (
+                          <ShieldExclamationIcon className="w-4 h-4 mr-1 text-amber-500" />
+                        )}
+                        {selectedAwayLog.reason === 1 ? (
+                          <>
+                            {REASON_MAP[1]}
+                            {selectedAwayLog.reasonOther && (
+                              <span className="block mt-1 italic">
+                                "{selectedAwayLog.reasonOther}"
+                              </span>
+                            )}
+                          </>
+                        ) : (
+                          REASON_MAP[selectedAwayLog.reason] || "Unknown"
+                        )}
+                      </div>
                     </div>
                   </div>
 
