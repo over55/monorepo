@@ -359,7 +359,9 @@ func (port *httpInputPort) HandleRequests(w http.ResponseWriter, r *http.Request
 		port.Order.OperationPostpone(w, r)
 	case n == 5 && p[1] == "v1" && p[2] == "orders" && p[3] == "operation" && p[4] == "close" && r.Method == http.MethodPost:
 		port.Order.OperationClose(w, r)
-	case n == 5 && p[1] == "v1" && p[2] == "orders" && p[3] == "operation" && p[4] == "generate-invoice" && r.Method == http.MethodPost:
+	case n == 5 && p[1] == "v1" && p[2] == "orders" && p[3] == "operation" && p[4] == "generate-invoice" && r.Method == http.MethodPost: // Deprecated.
+		port.Order.OperationGenerateInvoice(w, r)
+	case n == 5 && p[1] == "v1" && p[2] == "orders" && p[3] == "operation" && p[4] == "invoice" && r.Method == http.MethodPost:
 		port.Order.OperationGenerateInvoice(w, r)
 	case n == 5 && p[1] == "v1" && p[2] == "orders" && p[3] == "operation" && p[4] == "clone" && r.Method == http.MethodPost:
 		port.Order.OperationClone(w, r)
