@@ -132,10 +132,11 @@ function AdminOrderIncidentListPage() {
         params.createdDateLte = createdDateLte;
       }
 
-      // Use the manager method
+      // Use the manager method with forceRefresh to bypass cache for filter changes
       const response = await orderIncidentManager.getOrderIncidents(
         params,
         onUnauthorized,
+        false, // Don't force refresh for normal pagination
       );
 
       setIncidents(response.results || []);
@@ -172,11 +173,6 @@ function AdminOrderIncidentListPage() {
     }
   };
 
-  // Handle filter changes
-  const handleFilterChange = useCallback(() => {
-    setCurrentPage(1);
-  }, []);
-
   // Pagination handlers
   const handleNextPage = () => {
     if (hasNextPage) {
@@ -203,6 +199,31 @@ function AdminOrderIncidentListPage() {
     setCurrentPage(1);
   };
 
+  // Handle status filter change
+  const handleStatusFilterChange = (e) => {
+    const newStatus = e.target.value;
+    setStatusFilter(newStatus);
+    setCurrentPage(1);
+  };
+
+  // Handle initiator filter change
+  const handleInitiatorFilterChange = (e) => {
+    const newInitiator = e.target.value;
+    setInitiatorFilter(newInitiator);
+    setCurrentPage(1);
+  };
+
+  // Handle date filter changes
+  const handleCreatedDateGteChange = (e) => {
+    setCreatedDateGte(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleCreatedDateLteChange = (e) => {
+    setCreatedDateLte(e.target.value);
+    setCurrentPage(1);
+  };
+
   // Clear filters
   const clearFilters = useCallback(() => {
     setSearchQuery("");
@@ -216,10 +237,19 @@ function AdminOrderIncidentListPage() {
     setShowFilters(false);
   }, []);
 
-  // Initial data load and reload on parameter changes
+  // Trigger fetch when relevant parameters change
   useEffect(() => {
     fetchIncidents();
-  }, [fetchIncidents]);
+  }, [
+    currentPage,
+    pageSize,
+    sortBy,
+    searchQuery,
+    statusFilter,
+    initiatorFilter,
+    createdDateGte,
+    createdDateLte,
+  ]);
 
   // Check authentication on mount
   useEffect(() => {
@@ -490,10 +520,7 @@ function AdminOrderIncidentListPage() {
                 <div className="relative">
                   <select
                     value={statusFilter}
-                    onChange={(e) => {
-                      setStatusFilter(e.target.value);
-                      handleFilterChange();
-                    }}
+                    onChange={handleStatusFilterChange}
                     className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
                   >
                     {INCIDENT_STATUS_OPTIONS.map((option) => (
@@ -514,10 +541,7 @@ function AdminOrderIncidentListPage() {
                 <div className="relative">
                   <select
                     value={initiatorFilter}
-                    onChange={(e) => {
-                      setInitiatorFilter(e.target.value);
-                      handleFilterChange();
-                    }}
+                    onChange={handleInitiatorFilterChange}
                     className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
                   >
                     {INITIATOR_OPTIONS.map((option) => (
@@ -545,10 +569,7 @@ function AdminOrderIncidentListPage() {
                     <input
                       type="date"
                       value={createdDateGte}
-                      onChange={(e) => {
-                        setCreatedDateGte(e.target.value);
-                        handleFilterChange();
-                      }}
+                      onChange={handleCreatedDateGteChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
@@ -560,10 +581,7 @@ function AdminOrderIncidentListPage() {
                     <input
                       type="date"
                       value={createdDateLte}
-                      onChange={(e) => {
-                        setCreatedDateLte(e.target.value);
-                        handleFilterChange();
-                      }}
+                      onChange={handleCreatedDateLteChange}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
@@ -592,7 +610,7 @@ function AdminOrderIncidentListPage() {
             )}
           </div>
 
-          {/* Content Section */}
+          {/* Content Section - Rest of the component remains the same */}
           <div className="px-6 py-4">
             {loading && !incidents.length ? (
               <div className="flex items-center justify-center py-12">
