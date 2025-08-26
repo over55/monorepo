@@ -546,12 +546,8 @@ function AdminFinancialUpdatePage() {
 
     // Build update data for the financial record
     const updateData = {
-      // Required base fields
-      amount: parseFloat(invoiceTotalAmount) || 0,
-      type: financial.type || "invoice", // Add this - uses existing type or defaults to 'invoice'
-
       // Status update
-      status: parseInt(paymentStatus),
+      payment_status: parseInt(paymentStatus),
 
       // Financial fields
       invoicePaidTo: parseInt(invoicePaidTo),
