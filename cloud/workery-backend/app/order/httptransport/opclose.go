@@ -1,9 +1,12 @@
 package httptransport
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"io"
 	"log"
+	"log/slog"
 	"net/http"
 
 	c_c "github.com/over55/monorepo/cloud/workery-backend/app/order/controller"
@@ -17,17 +20,23 @@ type OrderOperationCloseRequest struct {
 	Content string             `bson:"content" json:"content"`
 }
 
-func UnmarshalOperationCloseRequest(ctx context.Context, r *http.Request) (*c_c.OrderOperationCloseRequest, error) {
+func (h *Handler) unmarshalOperationCloseRequest(ctx context.Context, r *http.Request) (*c_c.OrderOperationCloseRequest, error) {
 	// Initialize our array which will store all the results from the remote server.
 	var requestData c_c.OrderOperationCloseRequest
 
 	defer r.Body.Close()
 
+	var rawJSON bytes.Buffer
+	teeReader := io.TeeReader(r.Body, &rawJSON) // TeeReader allows you to read the JSON and capture it
+
 	// Read the JSON string and convert it into our golang stuct else we need
 	// to send a `400 Bad Request` errror message back to the client,
-	err := json.NewDecoder(r.Body).Decode(&requestData) // [1]
+	err := json.NewDecoder(teeReader).Decode(&requestData) // [1]
 	if err != nil {
-		log.Println("UnmarshalOperationCloseRequest | NewDecoder/Decode | err:", err)
+		h.Logger.Error("decoding error",
+			slog.Any("err", err),
+			slog.String("json", rawJSON.String()),
+		)
 		return nil, httperror.NewForSingleField(http.StatusBadRequest, "non_field_error", "payload structure is wrong")
 	}
 
@@ -37,7 +46,7 @@ func UnmarshalOperationCloseRequest(ctx context.Context, r *http.Request) (*c_c.
 func (h *Handler) OperationClose(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	reqData, err := UnmarshalOperationCloseRequest(ctx, r)
+	reqData, err := h.unmarshalOperationCloseRequest(ctx, r)
 	if err != nil {
 		log.Println("OperationClose | UnmarshalOperationCloseRequest | err:", err)
 		httperror.ResponseError(w, err)
