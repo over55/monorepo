@@ -340,7 +340,6 @@ function AdminStaffAddStep6Page() {
                       onChange={setTags}
                       error={errors.tags}
                       required={false}
-                      helperText="Select tags to categorize this staff member"
                       onUnauthorized={onUnauthorized}
                     />
                   </div>
@@ -393,17 +392,12 @@ function AdminStaffAddStep6Page() {
                 <div className="space-y-4">
                   {/* How did you hear about us */}
                   <div>
-                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
-                      How did you hear about us?{" "}
-                      <span className="text-red-500">*</span>
-                    </label>
                     <HowHearAboutUsSelect
                       value={howDidYouHearAboutUsID}
                       onChange={handleHowHearChange}
                       onOtherDetected={handleHowHearOtherDetected}
                       error={errors.howDidYouHearAboutUsID}
                       required={true}
-                      helperText="Tell us how you discovered our organization"
                       onUnauthorized={onUnauthorized}
                     />
                   </div>

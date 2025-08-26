@@ -1,4 +1,4 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Admin/Financial/Detail/Invoice/Generate/Step3Page.jsx
+// File Path: web/workery-frontend/src/pages/Admin/Financial/Detail/Invoice/Generate/Step3Page.jsx
 
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router";
@@ -20,6 +20,11 @@ import {
   PencilSquareIcon,
   BanknotesIcon,
   ClipboardDocumentCheckIcon,
+  ChevronLeftIcon,
+  DocumentPlusIcon,
+  InformationCircleIcon,
+  CreditCardIcon as PaymentIcon,
+  UserIcon,
 } from "@heroicons/react/24/outline";
 import {
   ORDER_INVOICE_PAYMENT_METHODS_OPTIONS,
@@ -36,6 +41,7 @@ function AdminFinancialGenerateInvoiceStep3Page() {
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
   const [order, setOrder] = useState(null);
+  const [showCancelWarning, setShowCancelWarning] = useState(false);
 
   // Form state
   const [invoiceLabourAmount, setInvoiceLabourAmount] = useState(0);
@@ -61,6 +67,21 @@ function AdminFinancialGenerateInvoiceStep3Page() {
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
   };
+
+  // Section Component with Dark Header
+  const DetailSection = ({ title, icon: Icon, children }) => (
+    <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
+      <div className="px-4 sm:px-6 py-3 sm:py-4">
+        <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
+          <span className="truncate">{title}</span>
+        </h3>
+      </div>
+      <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
+        {children}
+      </div>
+    </div>
+  );
 
   // Load order details and existing data
   useEffect(() => {
@@ -250,12 +271,24 @@ function AdminFinancialGenerateInvoiceStep3Page() {
     navigate(`/admin/financial/${oid}/invoice/generate/step-4`);
   };
 
+  const handleCancel = () => {
+    setShowCancelWarning(true);
+  };
+
+  const handleConfirmCancel = () => {
+    invoiceStorage.clearInvoiceGenerationData();
+    setShowCancelWarning(false);
+    navigate(`/admin/financial/${oid}/invoice`);
+  };
+
   if (isFetching || !order) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="flex items-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <span className="ml-3 text-gray-600">Loading order details...</span>
+          <span className="ml-3 text-sm sm:text-base text-gray-600">
+            Loading order details...
+          </span>
         </div>
       </div>
     );
@@ -263,29 +296,32 @@ function AdminFinancialGenerateInvoiceStep3Page() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {/* Breadcrumb */}
-        <nav className="flex mb-4" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* Responsive Breadcrumb */}
+        <nav
+          className="flex mb-4 sm:mb-6 overflow-x-auto"
+          aria-label="Breadcrumb"
+        >
+          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
             <li className="inline-flex items-center">
               <Link
                 to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+                className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
               >
-                <ChartBarIcon className="w-4 h-4 mr-2" />
+                <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                 <span className="hidden sm:inline">Dashboard</span>
-                <span className="sm:hidden">Home</span>
+                <span className="sm:hidden">Dash</span>
               </Link>
             </li>
             <li>
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="mx-1 sm:mx-2 text-gray-400">/</span>
                 <Link
                   to="/admin/financials"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                  className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
                 >
                   <span className="inline-flex items-center">
-                    <CreditCardIcon className="w-4 h-4 mr-2" />
+                    <CreditCardIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                     Financials
                   </span>
                 </Link>
@@ -293,23 +329,23 @@ function AdminFinancialGenerateInvoiceStep3Page() {
             </li>
             <li>
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="mx-1 sm:mx-2 text-gray-400">/</span>
                 <Link
                   to={`/admin/financial/${oid}/invoice`}
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                  className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
                 >
                   <span className="inline-flex items-center">
-                    <DocumentTextIcon className="w-4 h-4 mr-2" />
-                    Order #{oid} (Invoice)
+                    <DocumentTextIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                    Order #{oid}
                   </span>
                 </Link>
               </div>
             </li>
             <li aria-current="page">
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
-                  <DocumentCheckIcon className="w-4 h-4 mr-2" />
+                <span className="mx-1 sm:mx-2 text-gray-400">/</span>
+                <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
+                  <DocumentPlusIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                   Generate Invoice
                 </span>
               </div>
@@ -317,122 +353,69 @@ function AdminFinancialGenerateInvoiceStep3Page() {
           </ol>
         </nav>
 
-        {/* Page Title */}
-        <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
-            <DocumentCheckIcon className="w-6 h-6 sm:w-7 sm:h-7 mr-3 text-blue-600" />
-            Generate Invoice - Step 3 of 4
-          </h1>
+        {/* Page Title - Responsive */}
+        <div className="mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+                <DocumentPlusIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
+                Generate Invoice
+              </h1>
+              <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+                <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
+                Step 3 of 4 - Financial Details & Signatures
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Wizard Steps - Responsive Version */}
-        <div className="mb-6">
-          <div className="flex items-center justify-center">
-            {/* Mobile/Tablet View (< 1024px) */}
-            <div className="lg:hidden w-full overflow-x-auto pb-2">
-              <div className="flex items-center min-w-max px-2">
-                {/* Step 1 - Complete */}
+        {/* Wizard Steps - Improved Responsive Design */}
+        <div className="mb-4 sm:mb-6">
+          {/* Mobile View */}
+          <div className="md:hidden">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex-shrink-0">
-                    <CheckIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                  </div>
-                  <div className="ml-2 sm:ml-3">
-                    <p className="text-xs sm:text-sm font-medium text-gray-900">
-                      Review
-                    </p>
-                    <p className="text-xs text-gray-500 hidden sm:block">
-                      Complete
-                    </p>
-                  </div>
-                </div>
-
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-green-600"></div>
-
-                {/* Step 2 - Complete */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex-shrink-0">
-                    <CheckIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                  </div>
-                  <div className="ml-2 sm:ml-3">
-                    <p className="text-xs sm:text-sm font-medium text-gray-900">
-                      Services
-                    </p>
-                    <p className="text-xs text-gray-500 hidden sm:block">
-                      Complete
-                    </p>
-                  </div>
-                </div>
-
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-gray-300"></div>
-
-                {/* Step 3 - Active */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-full flex-shrink-0">
+                  <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full">
                     <span className="text-white font-semibold text-sm">3</span>
                   </div>
-                  <div className="ml-2 sm:ml-3">
-                    <p className="text-xs sm:text-sm font-medium text-gray-900">
-                      Financials
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-900">
+                      Step 3: Financials
                     </p>
-                    <p className="text-xs text-gray-500 hidden sm:block">
-                      Details & Sign
-                    </p>
-                  </div>
-                </div>
-
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-gray-300"></div>
-
-                {/* Step 4 - Inactive */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
-                    <span className="text-gray-600 font-semibold text-sm">
-                      4
-                    </span>
-                  </div>
-                  <div className="ml-2 sm:ml-3">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">
-                      Confirm
-                    </p>
-                    <p className="text-xs text-gray-400 hidden sm:block">
-                      Review & Submit
+                    <p className="text-xs text-gray-500">
+                      Details & Signatures
                     </p>
                   </div>
                 </div>
+                <div className="text-xs text-gray-500">3 of 4</div>
               </div>
             </div>
+          </div>
 
-            {/* Desktop View (≥ 1024px) */}
-            <div className="hidden lg:flex items-center">
-              {/* Step 1 - Complete */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
-                  <CheckIcon className="w-6 h-6 text-white" />
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">Review</p>
-                  <p className="text-xs text-gray-500">Complete</p>
-                </div>
-              </div>
-
-              {/* Connector */}
-              <div className="mx-2 w-12 h-0.5 bg-green-600"></div>
-
-              {/* Step 2 - Complete */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
-                  <CheckIcon className="w-6 h-6 text-white" />
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">Services</p>
-                  <p className="text-xs text-gray-500">Complete</p>
-                </div>
-              </div>
-
-              {/* Connector */}
-              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+          {/* Tablet/Desktop View */}
+          <div className="hidden md:flex items-center justify-center overflow-x-auto pb-2">
+            <div className="flex items-center min-w-max">
+              {/* Steps 1-2 Complete */}
+              {[1, 2].map((step, index) => (
+                <React.Fragment key={step}>
+                  <div className="flex items-center">
+                    <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
+                      <CheckIcon className="w-5 h-5 text-white" />
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-gray-900">
+                        {step === 1 && "Header Info"}
+                        {step === 2 && "Line Items"}
+                      </p>
+                      <p className="text-xs text-gray-500">Complete</p>
+                    </div>
+                  </div>
+                  {index < 2 && (
+                    <div className="mx-2 w-16 h-0.5 bg-green-600"></div>
+                  )}
+                </React.Fragment>
+              ))}
 
               {/* Step 3 - Active */}
               <div className="flex items-center">
@@ -441,14 +424,14 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                 </div>
                 <div className="ml-3">
                   <p className="text-sm font-medium text-gray-900">
-                    Financials
+                    Footer Info
                   </p>
-                  <p className="text-xs text-gray-500">Details & Signatures</p>
+                  <p className="text-xs text-gray-500">Details & Sign</p>
                 </div>
               </div>
 
               {/* Connector */}
-              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+              <div className="mx-2 w-16 h-0.5 bg-gray-300"></div>
 
               {/* Step 4 - Inactive */}
               <div className="flex items-center">
@@ -456,49 +439,45 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                   <span className="text-gray-600 font-semibold">4</span>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-500">Confirm</p>
-                  <p className="text-xs text-gray-400">Review & Submit</p>
+                  <p className="text-sm font-medium text-gray-500">Review</p>
+                  <p className="text-xs text-gray-400">Confirm</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Error Message */}
+        {/* Error Message - Responsive */}
         {errors.general && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
+          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center justify-between text-sm sm:text-base">
             <span className="flex items-center">
-              <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-              <span className="text-sm">{errors.general}</span>
+              <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+              <span className="break-words">{errors.general}</span>
             </span>
             <button
               onClick={() => setErrors({})}
-              className="text-red-600 hover:text-red-800 ml-2"
+              className="text-red-700 hover:text-red-900 ml-2 flex-shrink-0"
             >
-              <XMarkIcon className="w-5 h-5" />
+              <XMarkIcon className="w-4 sm:w-5 h-4 sm:h-5" />
             </button>
           </div>
         )}
 
         {/* Main Content */}
         <div className="bg-white shadow-sm rounded-lg">
-          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-              <CurrencyDollarIcon className="w-5 h-5 mr-2" />
+          {/* Header with Dark Background */}
+          <div className="bg-gray-700 rounded-t-lg px-4 sm:px-6 py-4 sm:py-5">
+            <h2 className="text-xl sm:text-2xl font-semibold text-white flex items-center">
+              <CurrencyDollarIcon className="w-5 sm:w-7 h-5 sm:h-7 mr-2 flex-shrink-0" />
               Financial Details & Signatures
             </h2>
           </div>
 
           <div className="p-4 sm:p-6">
-            <form onSubmit={handleNext} className="max-w-3xl mx-auto">
+            <form onSubmit={handleNext} className="max-w-4xl mx-auto">
               {/* Financial Summary Section */}
-              <div className="mb-8">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <BanknotesIcon className="w-5 h-5 mr-2" />
-                  Financial Summary
-                </h3>
-
-                <div className="bg-gray-50 rounded-lg p-4 space-y-4">
+              <DetailSection title="Financial Summary" icon={BanknotesIcon}>
+                <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -506,14 +485,14 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
+                          <CurrencyDollarIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                         </div>
                         <input
                           type="number"
                           step="0.01"
                           value={invoiceLabourAmount}
                           disabled
-                          className="w-full pl-10 pr-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-600"
+                          className="w-full pl-10 pr-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-600 text-sm sm:text-base"
                         />
                       </div>
                     </div>
@@ -524,14 +503,14 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
+                          <CurrencyDollarIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                         </div>
                         <input
                           type="number"
                           step="0.01"
                           value={invoiceMaterialAmount}
                           disabled
-                          className="w-full pl-10 pr-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-600"
+                          className="w-full pl-10 pr-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-600 text-sm sm:text-base"
                         />
                       </div>
                     </div>
@@ -542,14 +521,14 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
+                          <CurrencyDollarIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                         </div>
                         <input
                           type="number"
                           step="0.01"
                           value={invoiceOtherCostsAmount}
                           disabled
-                          className="w-full pl-10 pr-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-600"
+                          className="w-full pl-10 pr-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-600 text-sm sm:text-base"
                         />
                       </div>
                     </div>
@@ -565,14 +544,14 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
+                          <CurrencyDollarIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                         </div>
                         <input
                           type="number"
                           step="0.01"
                           value={invoiceTaxAmount}
                           disabled
-                          className="w-full pl-10 pr-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-600"
+                          className="w-full pl-10 pr-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-600 text-sm sm:text-base"
                         />
                       </div>
                     </div>
@@ -585,14 +564,14 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
+                          <CurrencyDollarIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                         </div>
                         <input
                           type="number"
                           step="0.01"
                           value={invoiceTotalAmount}
                           disabled
-                          className="w-full pl-10 pr-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-600 font-semibold"
+                          className="w-full pl-10 pr-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-900 font-semibold text-sm sm:text-base"
                         />
                       </div>
                     </div>
@@ -603,14 +582,14 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
+                          <CurrencyDollarIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                         </div>
                         <input
                           type="number"
                           step="0.01"
                           value={invoiceDepositAmount}
                           disabled
-                          className="w-full pl-10 pr-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-600"
+                          className="w-full pl-10 pr-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-600 text-sm sm:text-base"
                         />
                       </div>
                     </div>
@@ -621,28 +600,26 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <CurrencyDollarIcon className="h-5 w-5 text-blue-600" />
+                          <CurrencyDollarIcon className="h-4 sm:h-5 w-4 sm:w-5 text-blue-600" />
                         </div>
                         <input
                           type="number"
                           step="0.01"
                           value={invoiceAmountDue}
                           disabled
-                          className="w-full pl-10 pr-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-blue-900 font-semibold"
+                          className="w-full pl-10 pr-3 py-2 bg-blue-50 border border-blue-200 rounded-lg text-blue-900 font-semibold text-sm sm:text-base"
                         />
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
+              </DetailSection>
 
               {/* Quote & Payment Details Section */}
-              <div className="mb-8">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <DocumentTextIcon className="w-5 h-5 mr-2" />
-                  Quote & Payment Details
-                </h3>
-
+              <DetailSection
+                title="Quote & Payment Details"
+                icon={DocumentTextIcon}
+              >
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
@@ -651,7 +628,7 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <CalendarIcon className="h-5 w-5 text-gray-400" />
+                          <CalendarIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                         </div>
                         <select
                           value={invoiceQuoteDays}
@@ -660,7 +637,7 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                             errors.invoiceQuoteDays
                               ? "border-red-500"
                               : "border-gray-300"
-                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white`}
+                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white text-sm sm:text-base`}
                         >
                           {ORDER_INVOICE_QUOTE_VALIDITY_OPTIONS.map((opt) => (
                             <option key={opt.value} value={opt.value}>
@@ -670,7 +647,7 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                         </select>
                       </div>
                       {errors.invoiceQuoteDays && (
-                        <p className="mt-1 text-sm text-red-600">
+                        <p className="mt-1 text-xs text-red-600">
                           {errors.invoiceQuoteDays}
                         </p>
                       )}
@@ -682,13 +659,13 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <DocumentTextIcon className="h-5 w-5 text-gray-400" />
+                          <DocumentTextIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                         </div>
                         <input
                           type="text"
                           value={associateTaxId}
                           disabled
-                          className="w-full pl-10 pr-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-600"
+                          className="w-full pl-10 pr-3 py-2 bg-gray-100 border border-gray-300 rounded-lg text-gray-600 text-sm sm:text-base"
                         />
                       </div>
                     </div>
@@ -700,7 +677,7 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <CalendarIcon className="h-5 w-5 text-gray-400" />
+                          <CalendarIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                         </div>
                         <input
                           type="date"
@@ -710,11 +687,11 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                             errors.invoiceQuoteDate
                               ? "border-red-500"
                               : "border-gray-300"
-                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base`}
                         />
                       </div>
                       {errors.invoiceQuoteDate && (
-                        <p className="mt-1 text-sm text-red-600">
+                        <p className="mt-1 text-xs text-red-600">
                           {errors.invoiceQuoteDate}
                         </p>
                       )}
@@ -727,7 +704,7 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <CalendarIcon className="h-5 w-5 text-gray-400" />
+                          <CalendarIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                         </div>
                         <input
                           type="date"
@@ -739,11 +716,11 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                             errors.dateClientPaidInvoice
                               ? "border-red-500"
                               : "border-gray-300"
-                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base`}
                         />
                       </div>
                       {errors.dateClientPaidInvoice && (
-                        <p className="mt-1 text-sm text-red-600">
+                        <p className="mt-1 text-xs text-red-600">
                           {errors.dateClientPaidInvoice}
                         </p>
                       )}
@@ -800,7 +777,7 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                       </label>
                     </div>
                     {errors.invoiceCustomersApproval && (
-                      <p className="mt-1 text-sm text-red-600">
+                      <p className="mt-1 text-xs text-red-600">
                         {errors.invoiceCustomersApproval}
                       </p>
                     )}
@@ -836,16 +813,14 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Line 01 - Notes or Extras (Optional)
                     </label>
-                    <div className="relative">
-                      <textarea
-                        value={line01Notes}
-                        onChange={(e) => setLine01Notes(e.target.value)}
-                        maxLength="638"
-                        rows="3"
-                        placeholder="Enter additional notes or extras..."
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
+                    <textarea
+                      value={line01Notes}
+                      onChange={(e) => setLine01Notes(e.target.value)}
+                      maxLength="638"
+                      rows="3"
+                      placeholder="Enter additional notes or extras..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
+                    />
                     <p className="mt-1 text-xs text-gray-500">
                       {line01Notes.length}/638 characters
                     </p>
@@ -855,33 +830,26 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Line 02 - Notes or Extras (Optional)
                     </label>
-                    <div className="relative">
-                      <textarea
-                        value={line02Notes}
-                        onChange={(e) => setLine02Notes(e.target.value)}
-                        maxLength="638"
-                        rows="3"
-                        placeholder="Enter additional notes or extras..."
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
+                    <textarea
+                      value={line02Notes}
+                      onChange={(e) => setLine02Notes(e.target.value)}
+                      maxLength="638"
+                      rows="3"
+                      placeholder="Enter additional notes or extras..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
+                    />
                     <p className="mt-1 text-xs text-gray-500">
                       {line02Notes.length}/638 characters
                     </p>
                   </div>
                 </div>
-              </div>
+              </DetailSection>
 
               {/* Signatures Section */}
-              <div className="mb-8">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <PencilSquareIcon className="w-5 h-5 mr-2" />
-                  Signatures
-                </h3>
-
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                  <p className="text-sm text-blue-800 flex items-center">
-                    <ClipboardDocumentCheckIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+              <DetailSection title="Signatures" icon={PencilSquareIcon}>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 mb-4">
+                  <p className="text-xs sm:text-sm text-blue-800 flex items-center">
+                    <ClipboardDocumentCheckIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
                     <span>
                       Both client and associate signatures are required to
                       complete the invoice
@@ -897,7 +865,7 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <PencilSquareIcon className="h-5 w-5 text-gray-400" />
+                        <UserIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                       </div>
                       <input
                         type="text"
@@ -908,7 +876,7 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                           errors.clientSignature
                             ? "border-red-500"
                             : "border-gray-300"
-                        } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                        } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base`}
                       />
                     </div>
                     <p className="mt-1 text-xs text-gray-500">
@@ -916,7 +884,7 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                       signing, please write their full name
                     </p>
                     {errors.clientSignature && (
-                      <p className="mt-1 text-sm text-red-600">
+                      <p className="mt-1 text-xs text-red-600">
                         {errors.clientSignature}
                       </p>
                     )}
@@ -930,7 +898,7 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <CalendarIcon className="h-5 w-5 text-gray-400" />
+                          <CalendarIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                         </div>
                         <input
                           type="date"
@@ -940,11 +908,11 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                             errors.associateSignDate
                               ? "border-red-500"
                               : "border-gray-300"
-                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base`}
                         />
                       </div>
                       {errors.associateSignDate && (
-                        <p className="mt-1 text-sm text-red-600">
+                        <p className="mt-1 text-xs text-red-600">
                           {errors.associateSignDate}
                         </p>
                       )}
@@ -957,7 +925,7 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <PencilSquareIcon className="h-5 w-5 text-gray-400" />
+                          <UserIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                         </div>
                         <input
                           type="text"
@@ -970,7 +938,7 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                             errors.associateSignature
                               ? "border-red-500"
                               : "border-gray-300"
-                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base`}
                         />
                       </div>
                       <p className="mt-1 text-xs text-gray-500">
@@ -978,36 +946,95 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                         name
                       </p>
                       {errors.associateSignature && (
-                        <p className="mt-1 text-sm text-red-600">
+                        <p className="mt-1 text-xs text-red-600">
                           {errors.associateSignature}
                         </p>
                       )}
                     </div>
                   </div>
                 </div>
-              </div>
+              </DetailSection>
 
-              {/* Form Actions */}
-              <div className="mt-6 flex flex-col sm:flex-row gap-3">
+              {/* Form Actions - Responsive */}
+              <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 gap-3">
                 <Link
                   to={`/admin/financial/${oid}/invoice/generate/step-2`}
-                  className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="order-2 sm:order-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  <ArrowLeftIcon className="w-4 h-4 mr-2" />
+                  <ChevronLeftIcon className="w-4 h-4 mr-2" />
                   Back
                 </Link>
-                <button
-                  type="submit"
-                  className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Save & Next
-                  <ArrowRightIcon className="w-4 h-4 ml-2" />
-                </button>
+
+                <div className="flex gap-3 order-1 sm:order-2">
+                  <button
+                    type="button"
+                    onClick={handleCancel}
+                    className="flex-1 sm:flex-initial inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                  >
+                    <XMarkIcon className="w-4 h-4 mr-2" />
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    className="flex-1 sm:flex-initial inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                  >
+                    Save & Next
+                    <ArrowRightIcon className="w-4 h-4 ml-2" />
+                  </button>
+                </div>
               </div>
             </form>
           </div>
         </div>
+
+        {/* Back Link */}
+        <div className="mt-6">
+          <Link
+            to={`/admin/financial/${oid}/invoice`}
+            className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
+          >
+            <ChevronLeftIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+            Back to Invoice
+          </Link>
+        </div>
       </div>
+
+      {/* Cancel Confirmation Modal */}
+      {showCancelWarning && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+                <ExclamationCircleIcon className="h-5 w-5 mr-2 text-amber-600" />
+                Are you sure?
+              </h3>
+            </div>
+
+            <div className="px-4 sm:px-6 py-4">
+              <p className="text-sm text-gray-600">
+                Your invoice generation will be cancelled and your work will be
+                lost. This cannot be undone. Do you want to continue?
+              </p>
+            </div>
+
+            <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row justify-end gap-3">
+              <button
+                onClick={() => setShowCancelWarning(false)}
+                className="order-2 sm:order-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 w-full sm:w-auto transition-colors"
+              >
+                No, Keep Working
+              </button>
+              <button
+                onClick={handleConfirmCancel}
+                className="order-1 sm:order-2 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 w-full sm:w-auto transition-colors"
+              >
+                Yes, Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

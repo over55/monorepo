@@ -2,7 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
-import { useStaffAddWizardStorage } from "../../../../services/Services";
+import {
+  useStaffAddWizardStorage,
+  useStaffManager,
+} from "../../../../services/Services";
 import {
   UserPlusIcon,
   ChevronRightIcon,
@@ -11,6 +14,7 @@ import {
   ChartBarIcon,
   UserIcon,
   ExclamationCircleIcon,
+  ExclamationTriangleIcon,
   EnvelopeIcon,
   PhoneIcon,
   IdentificationIcon,
@@ -39,11 +43,13 @@ const DetailSection = ({ title, icon: Icon, children }) => (
 function AdminStaffAddStep3Page() {
   const navigate = useNavigate();
   const wizardStorage = useStaffAddWizardStorage();
+  const staffManager = useStaffManager();
   const wizardState = wizardStorage.getWizardState();
 
   // Component states
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
 
   // Form data
   const [email, setEmail] = useState(wizardState.email || "");
@@ -70,9 +76,113 @@ function AdminStaffAddStep3Page() {
     window.scrollTo(0, 0);
   }, []);
 
-  const onSubmitClick = (e) => {
+  const onUnauthorized = () => {
+    navigate("/login?unauthorized=true");
+  };
+
+  // Check if email is unique by querying existing staff
+  const checkEmailUniqueness = async (emailToCheck) => {
+    if (!emailToCheck || !emailToCheck.trim()) {
+      return { isUnique: true };
+    }
+
+    try {
+      setIsCheckingEmail(true);
+
+      // Try using filtersMap with email filter - this might be more accurate
+      const filtersMap = new Map();
+      filtersMap.set("email", emailToCheck.trim());
+
+      console.log("Checking email uniqueness with filtersMap:", emailToCheck);
+
+      const response = await staffManager.getStaffWithFiltersMap(
+        filtersMap,
+        onUnauthorized,
+        true, // force refresh to ensure we get latest data
+      );
+
+      console.log("Email check response:", response);
+
+      // Check if we found any exact matches
+      if (response && response.results && response.results.length > 0) {
+        // Double-check for exact match (case-insensitive)
+        const exactMatch = response.results.find(
+          (staff) =>
+            staff.email &&
+            staff.email.toLowerCase() === emailToCheck.toLowerCase().trim(),
+        );
+
+        if (exactMatch) {
+          console.log("Found duplicate email:", exactMatch.email);
+          return {
+            isUnique: false,
+            message:
+              "This email address is already in use by another staff member",
+          };
+        }
+      }
+
+      // If the email filter didn't work, fall back to search with broader results
+      // This is less accurate but better than nothing
+      if (!response || response.results === undefined) {
+        console.log(
+          "Email filter may not be supported, trying search approach",
+        );
+
+        const searchParams = {
+          search: emailToCheck.trim(),
+          limit: 100, // Get more results to ensure we check thoroughly
+        };
+
+        const searchResponse = await staffManager.getStaff(
+          searchParams,
+          onUnauthorized,
+          true,
+        );
+
+        if (
+          searchResponse &&
+          searchResponse.results &&
+          searchResponse.results.length > 0
+        ) {
+          // Look for exact email match in search results
+          const exactMatch = searchResponse.results.find(
+            (staff) =>
+              staff.email &&
+              staff.email.toLowerCase() === emailToCheck.toLowerCase().trim(),
+          );
+
+          if (exactMatch) {
+            console.log("Found duplicate email via search:", exactMatch.email);
+            return {
+              isUnique: false,
+              message:
+                "This email address is already in use by another staff member",
+            };
+          }
+        }
+      }
+
+      console.log("Email appears to be unique");
+      return { isUnique: true };
+    } catch (error) {
+      console.error("Error checking email uniqueness:", error);
+      // If we can't verify, let the user proceed but warn them
+      // The backend will catch any duplicates
+      return {
+        isUnique: true,
+        warning:
+          "Could not validate email uniqueness at this time. The system will verify when you submit.",
+      };
+    } finally {
+      setIsCheckingEmail(false);
+    }
+  };
+
+  const onSubmitClick = async (e) => {
     e.preventDefault();
     setErrors({});
+    setIsLoading(true);
 
     let newErrors = {};
     let hasErrors = false;
@@ -104,8 +214,28 @@ function AdminStaffAddStep3Page() {
 
     if (hasErrors) {
       setErrors(newErrors);
+      setIsLoading(false);
       window.scrollTo(0, 0);
       return;
+    }
+
+    // Check email uniqueness - ALWAYS check, even if it seems unique
+    console.log("Checking email uniqueness for:", email);
+    const emailCheck = await checkEmailUniqueness(email);
+    console.log("Email check result:", emailCheck);
+
+    if (!emailCheck.isUnique) {
+      newErrors.email = emailCheck.message;
+      setErrors(newErrors);
+      setIsLoading(false);
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    // Show warning if validation couldn't be completed
+    if (emailCheck.warning) {
+      console.warn("Email validation warning:", emailCheck.warning);
+      // Still allow proceeding, but the backend will catch duplicates
     }
 
     // Save to wizard storage
@@ -123,7 +253,42 @@ function AdminStaffAddStep3Page() {
       isOkToEmail,
     });
 
+    setIsLoading(false);
     navigate("/admin/staff/add/step-4");
+  };
+
+  // Debounced email validation on blur
+  const handleEmailBlur = async () => {
+    if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      console.log("Email blur validation triggered for:", email);
+      const emailCheck = await checkEmailUniqueness(email);
+
+      if (!emailCheck.isUnique) {
+        setErrors((prev) => ({
+          ...prev,
+          email: emailCheck.message,
+        }));
+      } else if (emailCheck.warning) {
+        // Show warning but don't block
+        setErrors((prev) => ({
+          ...prev,
+          emailWarning: emailCheck.warning,
+        }));
+      } else {
+        // Clear email error if it exists and email is unique
+        setErrors((prev) => {
+          const newErrors = { ...prev };
+          if (
+            newErrors.email ===
+            "This email address is already in use by another staff member"
+          ) {
+            delete newErrors.email;
+          }
+          delete newErrors.emailWarning;
+          return newErrors;
+        });
+      }
+    }
   };
 
   return (
@@ -285,7 +450,7 @@ function AdminStaffAddStep3Page() {
           <div className="bg-white shadow-sm rounded-lg p-8">
             <div className="flex items-center justify-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-              <span className="ml-3 text-gray-600">Submitting...</span>
+              <span className="ml-3 text-gray-600">Validating...</span>
             </div>
           </div>
         ) : (
@@ -363,16 +528,47 @@ function AdminStaffAddStep3Page() {
                       <input
                         type="email"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          // Clear email error when user types
+                          if (errors.email || errors.emailWarning) {
+                            setErrors((prev) => {
+                              const newErrors = { ...prev };
+                              delete newErrors.email;
+                              delete newErrors.emailWarning;
+                              return newErrors;
+                            });
+                          }
+                        }}
+                        onBlur={handleEmailBlur}
                         placeholder="Enter email address"
-                        className={`w-full pl-10 pr-3 py-2 border ${
-                          errors.email ? "border-red-500" : "border-gray-300"
-                        } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base`}
+                        disabled={isCheckingEmail}
+                        className={`w-full pl-10 pr-10 py-2 border ${
+                          errors.email
+                            ? "border-red-500"
+                            : errors.emailWarning
+                              ? "border-yellow-500"
+                              : "border-gray-300"
+                        } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base ${
+                          isCheckingEmail ? "bg-gray-50" : ""
+                        }`}
                       />
+                      {isCheckingEmail && (
+                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                        </div>
+                      )}
                     </div>
                     {errors.email && (
-                      <p className="mt-1 text-xs sm:text-sm text-red-600">
+                      <p className="mt-1 text-xs sm:text-sm text-red-600 font-semibold">
+                        <ExclamationCircleIcon className="inline w-4 h-4 mr-1" />
                         {errors.email}
+                      </p>
+                    )}
+                    {errors.emailWarning && !errors.email && (
+                      <p className="mt-1 text-xs sm:text-sm text-yellow-600">
+                        <ExclamationTriangleIcon className="inline w-4 h-4 mr-1" />
+                        {errors.emailWarning}
                       </p>
                     )}
                   </div>
@@ -584,9 +780,10 @@ function AdminStaffAddStep3Page() {
               </Link>
               <button
                 type="submit"
-                className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 order-1 sm:order-2"
+                disabled={isLoading || isCheckingEmail}
+                className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 order-1 sm:order-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Next
+                {isLoading ? "Validating..." : "Next"}
                 <ArrowRightIcon className="w-4 h-4 ml-2" />
               </button>
             </div>

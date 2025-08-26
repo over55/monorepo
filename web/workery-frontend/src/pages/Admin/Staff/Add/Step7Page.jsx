@@ -23,6 +23,7 @@ import {
   InformationCircleIcon,
   PhoneIcon,
   TruckIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import {
   GENDER_OPTIONS_WITH_EMPTY_OPTION,
@@ -52,21 +53,34 @@ const DetailField = ({ label, value, fullWidth = false }) => (
 );
 
 // DetailSection Component with Dark Header
-const DetailSection = ({ title, icon: Icon, children, editLink }) => (
-  <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
+const DetailSection = ({
+  title,
+  icon: Icon,
+  children,
+  editLink,
+  hasError = false,
+}) => (
+  <div
+    className={`bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6 ${hasError ? "ring-2 ring-red-500" : ""}`}
+  >
     <div className="px-4 sm:px-6 py-3 sm:py-4">
       <div className="flex items-center justify-between">
         <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
-          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
+          <Icon
+            className={`w-4 sm:w-5 h-4 sm:h-5 mr-2 ${hasError ? "text-red-300" : "text-blue-300"} flex-shrink-0`}
+          />
           <span className="truncate">{title}</span>
+          {hasError && (
+            <ExclamationTriangleIcon className="w-4 sm:w-5 h-4 sm:h-5 ml-2 text-red-300" />
+          )}
         </h3>
         {editLink && (
           <Link
             to={editLink}
-            className="inline-flex items-center text-xs sm:text-sm text-blue-300 hover:text-blue-200"
+            className={`inline-flex items-center text-xs sm:text-sm ${hasError ? "text-red-300 hover:text-red-200" : "text-blue-300 hover:text-blue-200"}`}
           >
             <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-            Edit
+            {hasError ? "Fix" : "Edit"}
           </Link>
         )}
       </div>
@@ -87,6 +101,7 @@ function AdminStaffAddStep7Page() {
   const wizardState = wizardStorage.getWizardState();
 
   const [errors, setErrors] = useState({});
+  const [fieldErrors, setFieldErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const onUnauthorized = () => {
@@ -97,10 +112,49 @@ function AdminStaffAddStep7Page() {
     window.scrollTo(0, 0);
   }, []);
 
+  // Map backend field errors to sections for highlighting
+  const getSectionWithError = (fieldName) => {
+    const contactFields = [
+      "email",
+      "firstName",
+      "lastName",
+      "phone",
+      "phoneType",
+    ];
+    const addressFields = [
+      "addressLine1",
+      "city",
+      "region",
+      "postalCode",
+      "country",
+    ];
+    const accountFields = [
+      "password",
+      "passwordRepeated",
+      "preferredLanguage",
+      "vehicleTypes",
+    ];
+    const metricsFields = [
+      "tags",
+      "howDidYouHearAboutUsID",
+      "gender",
+      "birthDate",
+      "joinDate",
+    ];
+
+    if (contactFields.includes(fieldName)) return "contact";
+    if (addressFields.includes(fieldName)) return "address";
+    if (accountFields.includes(fieldName)) return "account";
+    if (metricsFields.includes(fieldName)) return "metrics";
+
+    return null;
+  };
+
   const onSubmitClick = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setErrors({});
+    setFieldErrors({});
 
     try {
       // Prepare the payload
@@ -118,7 +172,97 @@ function AdminStaffAddStep7Page() {
       });
     } catch (error) {
       console.error("Error creating staff:", error);
-      setErrors(error);
+
+      // Handle different error formats
+      let errorDetails = {};
+      let generalError = null;
+
+      if (error && typeof error === "object") {
+        // Check for field-specific errors
+        const errorFields = Object.keys(error);
+        const knownFields = [
+          "email",
+          "firstName",
+          "lastName",
+          "phone",
+          "phoneType",
+          "addressLine1",
+          "city",
+          "region",
+          "postalCode",
+          "country",
+          "password",
+          "passwordRepeated",
+          "preferredLanguage",
+          "vehicleTypes",
+          "tags",
+          "howDidYouHearAboutUsID",
+          "gender",
+          "birthDate",
+          "joinDate",
+        ];
+
+        // Extract field errors
+        errorFields.forEach((field) => {
+          if (knownFields.includes(field)) {
+            errorDetails[field] = Array.isArray(error[field])
+              ? error[field].join(", ")
+              : error[field];
+          }
+        });
+
+        // Check for general error message
+        if (error.message) {
+          generalError = error.message;
+        } else if (error.detail) {
+          generalError = error.detail;
+        } else if (error.error) {
+          generalError = error.error;
+        } else if (Object.keys(errorDetails).length === 0) {
+          // If no field errors were found, treat entire error as general
+          generalError =
+            typeof error === "string"
+              ? error
+              : "An error occurred while creating the staff member. Please review your information and try again.";
+        }
+      } else if (typeof error === "string") {
+        generalError = error;
+      } else {
+        generalError = "An unexpected error occurred. Please try again.";
+      }
+
+      setFieldErrors(errorDetails);
+
+      // Set general error only if we have one and no field errors
+      if (generalError && Object.keys(errorDetails).length === 0) {
+        setErrors({ message: generalError });
+      } else if (Object.keys(errorDetails).length > 0) {
+        // Create a helpful message when there are field errors
+        const errorSections = new Set();
+        Object.keys(errorDetails).forEach((field) => {
+          const section = getSectionWithError(field);
+          if (section) errorSections.add(section);
+        });
+
+        const sectionNames = {
+          contact: "Contact Information",
+          address: "Address Information",
+          account: "Account Information",
+          metrics: "Metrics Information",
+        };
+
+        const sectionsWithErrors = Array.from(errorSections)
+          .map((s) => sectionNames[s])
+          .filter(Boolean);
+
+        const errorMessage =
+          sectionsWithErrors.length > 0
+            ? `Please fix the errors in the following sections: ${sectionsWithErrors.join(", ")}`
+            : "Please fix the validation errors below";
+
+        setErrors({ message: errorMessage });
+      }
+
       window.scrollTo(0, 0);
     } finally {
       setIsSubmitting(false);
@@ -167,6 +311,35 @@ function AdminStaffAddStep7Page() {
         .filter(Boolean);
     }
     return [];
+  };
+
+  // Check if a section has errors
+  const sectionHasErrors = (section) => {
+    const fieldsInSection = {
+      contact: ["email", "firstName", "lastName", "phone", "phoneType"],
+      address: ["addressLine1", "city", "region", "postalCode", "country"],
+      shipping: [
+        "shippingAddressLine1",
+        "shippingCity",
+        "shippingRegion",
+        "shippingPostalCode",
+      ],
+      account: [
+        "password",
+        "passwordRepeated",
+        "preferredLanguage",
+        "vehicleTypes",
+      ],
+      metrics: [
+        "tags",
+        "howDidYouHearAboutUsID",
+        "gender",
+        "birthDate",
+        "joinDate",
+      ],
+    };
+
+    return fieldsInSection[section]?.some((field) => fieldErrors[field]);
   };
 
   if (!wizardState) {
@@ -276,13 +449,14 @@ function AdminStaffAddStep7Page() {
                       <p className="text-xs text-gray-500">Complete</p>
                     </div>
                   </div>
-                  {index < 6 && (
+                  {index < 5 && (
                     <div className="mx-2 w-12 h-0.5 bg-green-600"></div>
                   )}
                 </React.Fragment>
               ))}
 
               {/* Step 7 - Active */}
+              <div className="mx-2 w-12 h-0.5 bg-green-600"></div>
               <div className="flex items-center">
                 <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
                   <span className="text-white font-semibold">7</span>
@@ -311,13 +485,27 @@ function AdminStaffAddStep7Page() {
         {/* Error Message */}
         {errors.message && (
           <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base">
-            <div className="flex justify-between items-center">
-              <span className="flex items-center break-words">
-                <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
-                {errors.message}
-              </span>
+            <div className="flex justify-between items-start">
+              <div className="flex items-start">
+                <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold">{errors.message}</p>
+                  {Object.keys(fieldErrors).length > 0 && (
+                    <ul className="mt-2 list-disc list-inside text-xs sm:text-sm">
+                      {Object.entries(fieldErrors).map(([field, error]) => (
+                        <li key={field}>
+                          <strong>{field}:</strong> {error}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
               <button
-                onClick={() => setErrors({})}
+                onClick={() => {
+                  setErrors({});
+                  setFieldErrors({});
+                }}
                 className="text-red-700 hover:text-red-900 ml-2 flex-shrink-0"
               >
                 ×
@@ -343,18 +531,51 @@ function AdminStaffAddStep7Page() {
               title="Contact Information"
               icon={UserIcon}
               editLink="/admin/staff/add/step-3"
+              hasError={sectionHasErrors("contact")}
             >
+              {fieldErrors.type && (
+                <div className="lg:col-span-2 bg-red-50 border border-red-200 rounded p-2">
+                  <p className="text-red-700 text-sm">{fieldErrors.type}</p>
+                </div>
+              )}
               <DetailField
                 label="Type"
                 value={formatStaffType(wizardState.type)}
               />
               <DetailField label="First Name" value={wizardState.firstName} />
+              {fieldErrors.firstName && (
+                <div className="lg:col-span-2 bg-red-50 border border-red-200 rounded p-2">
+                  <p className="text-red-700 text-sm">
+                    {fieldErrors.firstName}
+                  </p>
+                </div>
+              )}
               <DetailField label="Last Name" value={wizardState.lastName} />
+              {fieldErrors.lastName && (
+                <div className="lg:col-span-2 bg-red-50 border border-red-200 rounded p-2">
+                  <p className="text-red-700 text-sm">{fieldErrors.lastName}</p>
+                </div>
+              )}
               <DetailField label="Email" value={wizardState.email} />
+              {fieldErrors.email && (
+                <div className="lg:col-span-2 bg-red-50 border border-red-200 rounded p-2">
+                  <p className="text-red-700 text-sm font-semibold">
+                    <ExclamationTriangleIcon className="inline w-4 h-4 mr-1" />
+                    {fieldErrors.email}
+                  </p>
+                </div>
+              )}
               <DetailField
                 label="Phone"
                 value={`${wizardState.phone} (${formatPhoneType(wizardState.phoneType)})`}
               />
+              {(fieldErrors.phone || fieldErrors.phoneType) && (
+                <div className="lg:col-span-2 bg-red-50 border border-red-200 rounded p-2">
+                  <p className="text-red-700 text-sm">
+                    {fieldErrors.phone || fieldErrors.phoneType}
+                  </p>
+                </div>
+              )}
               <DetailField
                 label="OK to Email"
                 value={wizardState.isOkToEmail ? "Yes" : "No"}
@@ -377,8 +598,16 @@ function AdminStaffAddStep7Page() {
               title="Address Information"
               icon={MapPinIcon}
               editLink="/admin/staff/add/step-4"
+              hasError={sectionHasErrors("address")}
             >
               <DetailField label="Address" value={wizardState.addressLine1} />
+              {fieldErrors.addressLine1 && (
+                <div className="lg:col-span-2 bg-red-50 border border-red-200 rounded p-2">
+                  <p className="text-red-700 text-sm">
+                    {fieldErrors.addressLine1}
+                  </p>
+                </div>
+              )}
               {wizardState.addressLine2 && (
                 <DetailField
                   label="Address Line 2"
@@ -386,12 +615,34 @@ function AdminStaffAddStep7Page() {
                 />
               )}
               <DetailField label="City" value={wizardState.city} />
+              {fieldErrors.city && (
+                <div className="lg:col-span-2 bg-red-50 border border-red-200 rounded p-2">
+                  <p className="text-red-700 text-sm">{fieldErrors.city}</p>
+                </div>
+              )}
               <DetailField
                 label="Province/Territory"
                 value={wizardState.region}
               />
+              {fieldErrors.region && (
+                <div className="lg:col-span-2 bg-red-50 border border-red-200 rounded p-2">
+                  <p className="text-red-700 text-sm">{fieldErrors.region}</p>
+                </div>
+              )}
               <DetailField label="Postal Code" value={wizardState.postalCode} />
+              {fieldErrors.postalCode && (
+                <div className="lg:col-span-2 bg-red-50 border border-red-200 rounded p-2">
+                  <p className="text-red-700 text-sm">
+                    {fieldErrors.postalCode}
+                  </p>
+                </div>
+              )}
               <DetailField label="Country" value={wizardState.country} />
+              {fieldErrors.country && (
+                <div className="lg:col-span-2 bg-red-50 border border-red-200 rounded p-2">
+                  <p className="text-red-700 text-sm">{fieldErrors.country}</p>
+                </div>
+              )}
             </DetailSection>
 
             {/* Shipping Address Section (if applicable) */}
@@ -400,6 +651,7 @@ function AdminStaffAddStep7Page() {
                 title="Shipping Address"
                 icon={TruckIcon}
                 editLink="/admin/staff/add/step-4"
+                hasError={sectionHasErrors("shipping")}
               >
                 <DetailField label="Name" value={wizardState.shippingName} />
                 <DetailField label="Phone" value={wizardState.shippingPhone} />
@@ -434,7 +686,25 @@ function AdminStaffAddStep7Page() {
               title="Account Information"
               icon={ClipboardDocumentIcon}
               editLink="/admin/staff/add/step-5"
+              hasError={sectionHasErrors("account")}
             >
+              {fieldErrors.password && (
+                <div className="lg:col-span-2 bg-red-50 border border-red-200 rounded p-2">
+                  <p className="text-red-700 text-sm font-semibold">
+                    <ExclamationTriangleIcon className="inline w-4 h-4 mr-1" />
+                    Password: {fieldErrors.password}
+                  </p>
+                </div>
+              )}
+              {fieldErrors.passwordRepeated && (
+                <div className="lg:col-span-2 bg-red-50 border border-red-200 rounded p-2">
+                  <p className="text-red-700 text-sm font-semibold">
+                    <ExclamationTriangleIcon className="inline w-4 h-4 mr-1" />
+                    Password Confirmation: {fieldErrors.passwordRepeated}
+                  </p>
+                </div>
+              )}
+
               {wizardState.vehicleTypes &&
                 wizardState.vehicleTypes.length > 0 && (
                   <div className="lg:col-span-2 mb-2">
@@ -470,6 +740,13 @@ function AdminStaffAddStep7Page() {
                 label="Preferred Language"
                 value={wizardState.preferredLanguage}
               />
+              {fieldErrors.preferredLanguage && (
+                <div className="lg:col-span-2 bg-red-50 border border-red-200 rounded p-2">
+                  <p className="text-red-700 text-sm">
+                    {fieldErrors.preferredLanguage}
+                  </p>
+                </div>
+              )}
 
               {/* Emergency Contact */}
               {wizardState.emergencyContactName && (
@@ -506,6 +783,7 @@ function AdminStaffAddStep7Page() {
               title="Metrics Information"
               icon={ChartBarSquareIcon}
               editLink="/admin/staff/add/step-6"
+              hasError={sectionHasErrors("metrics")}
             >
               {wizardState.identifyAs && wizardState.identifyAs.length > 0 && (
                 <DetailField
@@ -590,7 +868,7 @@ function AdminStaffAddStep7Page() {
                 className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 order-1 sm:order-2"
               >
                 <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
-                Submit
+                {isSubmitting ? "Submitting..." : "Submit"}
               </button>
             </div>
           </div>
