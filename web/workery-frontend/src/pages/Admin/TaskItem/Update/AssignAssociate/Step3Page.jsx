@@ -33,6 +33,22 @@ import {
   TASK_WHY_JOB_DECLINED,
 } from "../../../../../constants/Task";
 
+// Section Component - Using dark header pattern
+// Moved outside main component to prevent recreation on each render
+const DetailSection = ({ title, icon: Icon, children }) => (
+  <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
+    <div className="px-4 sm:px-6 py-3 sm:py-4">
+      <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+        <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
+        <span className="truncate">{title}</span>
+      </h3>
+    </div>
+    <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
+      {children}
+    </div>
+  </div>
+);
+
 function AdminTaskItemAssignAssociateStep3Page() {
   const authManager = useAuthManager();
   const { tid } = useParams();
@@ -211,21 +227,6 @@ function AdminTaskItemAssignAssociateStep3Page() {
       );
     }
   };
-
-  // Section Component - Using dark header pattern
-  const DetailSection = ({ title, icon: Icon, children }) => (
-    <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
-      <div className="px-4 sm:px-6 py-3 sm:py-4">
-        <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
-          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
-          <span className="truncate">{title}</span>
-        </h3>
-      </div>
-      <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
-        {children}
-      </div>
-    </div>
-  );
 
   // Component rendering
   if (forceURL !== "") {
@@ -414,7 +415,7 @@ function AdminTaskItemAssignAssociateStep3Page() {
           </div>
         )}
 
-        {/* Main Content */}
+        {/* Main Content - REMOVED max-w-3xl constraint from form */}
         <div className="bg-white shadow-sm rounded-lg">
           <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200">
             <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 flex items-center">
@@ -432,7 +433,7 @@ function AdminTaskItemAssignAssociateStep3Page() {
                 </span>
               </div>
             ) : (
-              <form onSubmit={onSubmitClick} className="max-w-3xl mx-auto">
+              <form onSubmit={onSubmitClick}>
                 {/* Associate Information Section */}
                 <DetailSection title="Selected Associate" icon={UserIcon}>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">

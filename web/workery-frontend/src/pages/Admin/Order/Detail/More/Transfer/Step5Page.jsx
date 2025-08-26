@@ -8,19 +8,61 @@ import {
   useTransferOperationStorage,
 } from "../../../../../../services/Services";
 import {
-  ChartBarIcon,
+  ArrowsRightLeftIcon,
   ChevronRightIcon,
-  WrenchScrewdriverIcon,
-  ClipboardDocumentIcon,
+  XMarkIcon,
+  InformationCircleIcon,
   ArrowLeftIcon,
-  CheckCircleIcon,
-  CheckIcon,
+  ChartBarIcon,
+  UserIcon,
+  EnvelopeIcon,
+  PhoneIcon,
   ExclamationCircleIcon,
+  MagnifyingGlassIcon,
+  ClipboardDocumentIcon,
+  EllipsisHorizontalIcon,
+  AdjustmentsHorizontalIcon,
+  ArrowRightIcon,
+  UserGroupIcon,
+  WrenchScrewdriverIcon,
+  DocumentCheckIcon,
+  CheckIcon,
+  CheckCircleIcon,
   PencilSquareIcon,
   ArrowPathIcon,
-  InformationCircleIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
+
+// Section Component with Dark Header Pattern - Matching Step1Page
+const DetailSection = ({
+  title,
+  icon: Icon,
+  children,
+  description,
+  actions,
+}) => (
+  <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
+    <div className="px-4 sm:px-6 py-3 sm:py-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+            <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
+            <span className="truncate">{title}</span>
+          </h3>
+          {description && (
+            <p className="mt-1 text-xs sm:text-sm text-gray-300">
+              {description}
+            </p>
+          )}
+        </div>
+        {actions && <div>{actions}</div>}
+      </div>
+    </div>
+    <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
+      {children}
+    </div>
+  </div>
+);
 
 // Order Status Constants
 const ORDER_STATUS_ARCHIVED = 2;
@@ -39,6 +81,7 @@ function AdminOrderDetailMoreTransferStep5Page() {
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
   const [transferOperation, setTransferOperation] = useState(null);
+  const [showCancelWarning, setShowCancelWarning] = useState(false);
 
   // Handle unauthorized access
   const onUnauthorized = () => {
@@ -136,6 +179,27 @@ function AdminOrderDetailMoreTransferStep5Page() {
     }
   };
 
+  // Handle cancel
+  const handleCancel = () => {
+    const hasData =
+      transferOperation &&
+      (transferOperation.pickedClientID || transferOperation.pickedAssociateID);
+
+    if (hasData) {
+      setShowCancelWarning(true);
+    } else {
+      navigate(`/admin/order/${oid}/more`);
+    }
+  };
+
+  // Confirm cancel
+  const handleConfirmCancel = () => {
+    setShowCancelWarning(false);
+    // Clear transfer operation storage
+    transferOperationStorage.clearTransferOperation();
+    navigate(`/admin/order/${oid}/more`);
+  };
+
   const hasSelection =
     transferOperation &&
     (transferOperation.pickedClientID || transferOperation.pickedAssociateID);
@@ -151,63 +215,72 @@ function AdminOrderDetailMoreTransferStep5Page() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {/* Breadcrumb */}
-        <nav className="flex mb-4" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* Responsive Breadcrumb - Updated to match Step1Page */}
+        <nav
+          className="flex mb-4 sm:mb-6 overflow-x-auto"
+          aria-label="Breadcrumb"
+        >
+          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
             <li className="inline-flex items-center">
               <Link
                 to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+                className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
               >
-                <ChartBarIcon className="w-4 h-4 mr-2" />
+                <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                 <span className="hidden sm:inline">Dashboard</span>
+                <span className="sm:hidden">Dash</span>
               </Link>
             </li>
             <li>
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <ChevronRightIcon className="w-3 sm:w-4 h-3 sm:h-4 text-gray-400 mx-1 sm:mx-2" />
                 <Link
                   to="/admin/orders"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                  className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
                 >
                   <span className="inline-flex items-center">
-                    <WrenchScrewdriverIcon className="w-4 h-4 mr-2" />
+                    <WrenchScrewdriverIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                     <span className="hidden sm:inline">Orders</span>
+                    <span className="sm:hidden">Orders</span>
                   </span>
                 </Link>
               </div>
             </li>
             <li>
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <ChevronRightIcon className="w-3 sm:w-4 h-3 sm:h-4 text-gray-400 mx-1 sm:mx-2" />
                 <Link
                   to={`/admin/order/${oid}`}
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                  className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
                 >
                   <span className="inline-flex items-center">
-                    <ClipboardDocumentIcon className="w-4 h-4 mr-2" />
-                    Order #{oid}
+                    <ClipboardDocumentIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                    <span className="hidden sm:inline">Order #{oid}</span>
+                    <span className="sm:hidden">#{oid}</span>
                   </span>
                 </Link>
               </div>
             </li>
             <li>
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <ChevronRightIcon className="w-3 sm:w-4 h-3 sm:h-4 text-gray-400 mx-1 sm:mx-2" />
                 <Link
                   to={`/admin/order/${oid}/more`}
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                  className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
                 >
-                  More
+                  <span className="inline-flex items-center">
+                    <EllipsisHorizontalIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                    More
+                  </span>
                 </Link>
               </div>
             </li>
             <li aria-current="page">
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
-                  <ArrowPathIcon className="w-4 h-4 mr-2" />
+                <ChevronRightIcon className="w-3 sm:w-4 h-3 sm:h-4 text-gray-400 mx-1 sm:mx-2" />
+                <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
+                  <ArrowsRightLeftIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                   Transfer
                 </span>
               </div>
@@ -215,79 +288,75 @@ function AdminOrderDetailMoreTransferStep5Page() {
           </ol>
         </nav>
 
-        {/* Page Title */}
-        <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
-            <WrenchScrewdriverIcon className="w-6 sm:w-7 h-6 sm:h-7 mr-2 sm:mr-3 text-blue-600" />
-            Order Transfer
+        {/* Page Title - Responsive */}
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center">
+            <ArrowsRightLeftIcon className="w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
+            Transfer Order
           </h1>
-          <p className="text-sm text-gray-600 mt-1">
-            Transfer order to another client or associate
+          <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+            <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
+            Review and confirm the transfer details
           </p>
         </div>
 
-        {/* Status Alert */}
-        {order && order.status === ORDER_STATUS_ARCHIVED && (
-          <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg flex items-center">
-            <InformationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-            <span className="text-sm sm:text-base">This order is archived</span>
-          </div>
-        )}
-
-        {/* Wizard Steps - Responsive Design */}
-        <div className="mb-6">
-          {/* Desktop/Tablet View (768px and up) */}
-          <div className="hidden md:flex items-center justify-center overflow-x-auto">
-            <div className="flex items-center">
-              {/* Steps 1-4 Complete */}
-              {[1, 2, 3, 4].map((step, index) => (
-                <React.Fragment key={step}>
-                  <div className="flex items-center">
-                    <div className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-green-600 rounded-full">
-                      <CheckIcon className="w-4 h-4 lg:w-6 lg:h-6 text-white" />
-                    </div>
-                    <div className="ml-2 lg:ml-3">
-                      <p className="text-xs lg:text-sm font-medium text-gray-900">
-                        {step === 1 && "Choose"}
-                        {step === 2 && "Search"}
-                        {step === 3 && "Pick"}
-                        {step === 4 && "Confirm"}
-                      </p>
-                      <p className="text-xs text-gray-500 hidden xl:block">
-                        Complete
-                      </p>
-                    </div>
-                  </div>
-                  {index < 4 && (
-                    <div className="mx-1 lg:mx-2 w-8 lg:w-12 h-0.5 bg-green-600"></div>
-                  )}
-                </React.Fragment>
-              ))}
-
-              {/* Step 5 - Active */}
+        {/* Wizard Steps - Mobile First (Updated to match Step1Page) */}
+        <div className="mb-4 sm:mb-6">
+          {/* Mobile View */}
+          <div className="md:hidden bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div className="flex items-center justify-between">
               <div className="flex items-center">
                 <div
-                  className={`flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 ${hasSelection ? "bg-blue-600" : "bg-orange-600"} rounded-full`}
+                  className={`flex items-center justify-center w-8 h-8 ${hasSelection ? "bg-blue-600" : "bg-orange-600"} rounded-full`}
                 >
-                  <span className="text-white font-semibold text-sm lg:text-base">
-                    5
-                  </span>
+                  <span className="text-white font-semibold text-sm">5</span>
                 </div>
-                <div className="ml-2 lg:ml-3">
-                  <p className="text-xs lg:text-sm font-medium text-gray-900">
-                    Review
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">
+                    Step 5: Confirm
                   </p>
-                  <p className="text-xs text-gray-500 hidden xl:block">
-                    Submit
-                  </p>
+                  <p className="text-xs text-gray-500">Review Transfer</p>
                 </div>
+              </div>
+              <div className="text-xs text-gray-500">5 of 5</div>
+            </div>
+            <div className="mt-2">
+              <div className="bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-blue-600 h-2 rounded-full"
+                  style={{ width: "100%" }}
+                ></div>
               </div>
             </div>
           </div>
 
-          {/* Mobile View (below 768px) */}
-          <div className="md:hidden">
-            <div className="flex items-center justify-between px-4">
+          {/* Desktop View */}
+          <div className="hidden md:flex items-center justify-center overflow-x-auto">
+            <div className="flex items-center min-w-max">
+              {/* Steps 1-4 - Complete */}
+              {[
+                { num: 1, title: "Search Client", subtitle: "Find Customer" },
+                { num: 2, title: "Pick Client", subtitle: "Select Result" },
+                { num: 3, title: "Search Associate", subtitle: "Find Worker" },
+                { num: 4, title: "Pick Associate", subtitle: "Select Worker" },
+              ].map((step) => (
+                <React.Fragment key={step.num}>
+                  <div className="flex items-center">
+                    <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
+                      <CheckIcon className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-gray-900">
+                        {step.title}
+                      </p>
+                      <p className="text-xs text-gray-500">{step.subtitle}</p>
+                    </div>
+                  </div>
+                  <div className="mx-2 w-12 h-0.5 bg-green-600"></div>
+                </React.Fragment>
+              ))}
+
+              {/* Step 5 - Active */}
               <div className="flex items-center">
                 <div
                   className={`flex items-center justify-center w-10 h-10 ${hasSelection ? "bg-blue-600" : "bg-orange-600"} rounded-full`}
@@ -295,187 +364,231 @@ function AdminOrderDetailMoreTransferStep5Page() {
                   <span className="text-white font-semibold">5</span>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">
-                    Step 5 of 5
-                  </p>
-                  <p className="text-xs text-gray-500">Review & Submit</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-gray-500">Progress</p>
-                <div className="flex items-center mt-1">
-                  <div className="flex">
-                    {[1, 2, 3, 4].map((step) => (
-                      <div
-                        key={step}
-                        className="w-2 h-2 bg-green-600 rounded-full mr-1"
-                      ></div>
-                    ))}
-                    <div
-                      className={`w-2 h-2 ${hasSelection ? "bg-blue-600" : "bg-orange-600"} rounded-full`}
-                    ></div>
-                  </div>
+                  <p className="text-sm font-medium text-gray-900">Confirm</p>
+                  <p className="text-xs text-gray-500">Review Transfer</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="bg-white shadow-sm rounded-lg">
-          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-              <CheckCircleIcon className="w-5 h-5 mr-2" />
-              Review Transfer Details
-            </h2>
+        {/* Status Alert */}
+        {order && order.status === ORDER_STATUS_ARCHIVED && (
+          <div className="mb-4 sm:mb-6 bg-blue-50 border border-blue-200 text-blue-800 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center">
+            <InformationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+            <span className="text-xs sm:text-sm">This order is archived</span>
           </div>
+        )}
 
-          <div className="p-4 sm:p-6">
-            {/* Success Message */}
-            {successMessage && (
-              <div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center">
-                <CheckCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-                <span className="text-sm sm:text-base">{successMessage}</span>
-              </div>
-            )}
+        {/* Error Messages */}
+        {(errors.general || errors.fetch) && (
+          <div className="mb-4 sm:mb-6 bg-red-50 border border-red-200 text-red-800 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center text-xs sm:text-sm">
+              <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+              <span>{errors.general || errors.fetch}</span>
+            </span>
+            <button
+              onClick={() => setErrors({})}
+              className="text-red-600 hover:text-red-800 ml-2 flex-shrink-0"
+            >
+              <XMarkIcon className="w-4 sm:w-5 h-4 sm:h-5" />
+            </button>
+          </div>
+        )}
 
-            {/* Error Display */}
-            {errors.general && (
-              <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center">
-                <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-                <span className="text-sm sm:text-base">{errors.general}</span>
-              </div>
-            )}
+        {/* Success Message */}
+        {successMessage && (
+          <div className="mb-4 sm:mb-6 bg-green-50 border border-green-200 text-green-800 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center">
+            <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+            <span className="text-xs sm:text-sm">{successMessage}</span>
+          </div>
+        )}
 
-            {errors.fetch && (
-              <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center">
-                <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-                <span className="text-sm sm:text-base">{errors.fetch}</span>
-              </div>
-            )}
-
+        {/* Main Content */}
+        {submitting ? (
+          <div className="bg-white shadow-sm rounded-lg p-8">
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <span className="ml-3 text-gray-600">Processing transfer...</span>
+            </div>
+          </div>
+        ) : (
+          <>
             {!hasSelection ? (
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-6">
-                <div className="flex items-start">
-                  <ExclamationTriangleIcon className="w-6 h-6 text-amber-600 mt-1 flex-shrink-0" />
-                  <div className="ml-3">
-                    <h3 className="text-lg font-semibold text-amber-900">
-                      No Transfer Selection
+              <DetailSection
+                title="No Transfer Selection"
+                icon={ExclamationTriangleIcon}
+                description="Nothing to transfer"
+              >
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 sm:p-6">
+                  <p className="text-sm sm:text-base text-amber-700">
+                    Please go back to the beginning and select either a customer
+                    or associate to transfer this job to.
+                  </p>
+                  <Link
+                    to={`/admin/order/${oid}/more/transfer/step-1`}
+                    className="inline-flex items-center mt-4 px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500"
+                  >
+                    <ArrowPathIcon className="w-4 h-4 mr-2" />
+                    Start Over
+                  </Link>
+                </div>
+              </DetailSection>
+            ) : (
+              <DetailSection
+                title="Review Transfer Details"
+                icon={CheckCircleIcon}
+                description="Please carefully review the following transfer details"
+                actions={
+                  <Link
+                    to={`/admin/order/${oid}/more/transfer/step-4`}
+                    className="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium text-gray-300 bg-gray-600 hover:bg-gray-500 rounded-lg transition-colors"
+                  >
+                    <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-1.5" />
+                    <span className="hidden sm:inline">Edit</span>
+                    <span className="sm:hidden">Edit</span>
+                  </Link>
+                }
+              >
+                <div className="space-y-4 sm:space-y-6">
+                  {/* Transfer Information Box */}
+                  <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-4 sm:p-6">
+                    <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-4 flex items-center">
+                      <ArrowsRightLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 text-blue-600" />
+                      Transfer Information
                     </h3>
-                    <p className="text-sm text-amber-700 mt-2">
-                      Nothing to transfer. Please go back to the beginning and
-                      select either a customer or associate to transfer this job
-                      to.
+
+                    <div className="space-y-3">
+                      {order && (
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Order Number:
+                          </span>
+                          <p className="text-sm sm:text-base font-semibold text-gray-900 mt-1">
+                            #{order.wjid}
+                          </p>
+                        </div>
+                      )}
+
+                      {transferOperation.pickedClientID && (
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Transfer to Client:
+                          </span>
+                          <p className="text-sm sm:text-base font-semibold text-blue-600 mt-1">
+                            {transferOperation.pickedClientName}
+                          </p>
+                        </div>
+                      )}
+
+                      {transferOperation.pickedAssociateID && (
+                        <div>
+                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                            Transfer to Associate:
+                          </span>
+                          <p className="text-sm sm:text-base font-semibold text-green-600 mt-1">
+                            {transferOperation.pickedAssociateName}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Info Note */}
+                  <div className="p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-xs sm:text-sm text-blue-800 flex items-start">
+                      <InformationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 mt-0.5" />
+                      <span>
+                        If everything looks correct, click the Submit Transfer
+                        button to complete the transfer operation.
+                      </span>
                     </p>
-                    <Link
-                      to={`/admin/order/${oid}/more/transfer/step-1`}
-                      className="inline-flex items-center mt-4 px-4 py-2 text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500"
-                    >
-                      <ArrowPathIcon className="w-4 h-4 mr-2" />
-                      Start Over
-                    </Link>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <>
-                <p className="text-sm sm:text-base text-gray-600 mb-6">
-                  Please carefully review the following transfer details. If
-                  everything looks correct, click the{" "}
-                  <strong>Submit Transfer</strong> button to complete the
-                  transfer operation.
-                </p>
-
-                {submitting ? (
-                  <div className="flex items-center justify-center py-8">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                    <span className="ml-3 text-gray-600">
-                      Processing transfer...
-                    </span>
-                  </div>
-                ) : (
-                  <div className="max-w-3xl mx-auto">
-                    <div className="space-y-6 sm:space-y-8">
-                      {/* Transfer Details Section */}
-                      <div>
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
-                            <ArrowPathIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600" />
-                            Transfer Information
-                          </h3>
-                          <Link
-                            to={`/admin/order/${oid}/more/transfer/step-4`}
-                            className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
-                          >
-                            <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                            Edit
-                          </Link>
-                        </div>
-
-                        <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-2">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-3">
-                            {order && (
-                              <div className="sm:col-span-2">
-                                <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                  Order Number:
-                                </span>
-                                <p className="text-sm sm:text-base font-semibold text-gray-900">
-                                  #{order.wjid}
-                                </p>
-                              </div>
-                            )}
-
-                            {transferOperation.pickedClientID && (
-                              <div className="sm:col-span-2">
-                                <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                  Transfer to Client:
-                                </span>
-                                <p className="text-sm sm:text-base font-semibold text-blue-600">
-                                  {transferOperation.pickedClientName}
-                                </p>
-                              </div>
-                            )}
-
-                            {transferOperation.pickedAssociateID && (
-                              <div className="sm:col-span-2">
-                                <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                  Transfer to Associate:
-                                </span>
-                                <p className="text-sm sm:text-base font-semibold text-green-600">
-                                  {transferOperation.pickedAssociateName}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Form Actions */}
-                    <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3">
-                      <Link
-                        to={`/admin/order/${oid}/more/transfer/step-4`}
-                        className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
-                      >
-                        <ArrowLeftIcon className="w-4 h-4 mr-2" />
-                        Back
-                      </Link>
-                      <button
-                        onClick={handleSubmit}
-                        disabled={submitting}
-                        className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
-                      >
-                        <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
-                        Submit Transfer
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </>
+              </DetailSection>
             )}
-          </div>
+
+            {/* Form Actions */}
+            {hasSelection && (
+              <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3">
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  className="flex-1 sm:flex-initial inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <XMarkIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
+                  Cancel
+                </button>
+                <div className="flex flex-col sm:flex-row gap-3 flex-1 sm:flex-initial sm:ml-auto">
+                  <Link
+                    to={`/admin/order/${oid}/more/transfer/step-4`}
+                    className="inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <ArrowLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
+                    Back
+                  </Link>
+                  <button
+                    onClick={handleSubmit}
+                    disabled={submitting}
+                    className="inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+                  >
+                    <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
+                    Submit Transfer
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Back Link */}
+        <div className="mt-6 sm:mt-8">
+          <Link
+            to={`/admin/order/${oid}/more`}
+            className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800 transition-colors"
+          >
+            <ArrowLeftIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+            Back to More Options
+          </Link>
         </div>
       </div>
+
+      {/* Cancel Confirmation Modal */}
+      {showCancelWarning && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full shadow-xl">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
+                <ExclamationCircleIcon className="h-5 sm:h-6 w-5 sm:w-6 mr-2 text-amber-600 flex-shrink-0" />
+                Are you sure?
+              </h3>
+            </div>
+
+            <div className="px-4 sm:px-6 py-4">
+              <p className="text-sm sm:text-base text-gray-600">
+                Your transfer operation will be cancelled and your transfer
+                details will be lost. This cannot be undone. Do you want to
+                continue?
+              </p>
+            </div>
+
+            <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-lg flex flex-col sm:flex-row sm:justify-end gap-3">
+              <button
+                onClick={() => setShowCancelWarning(false)}
+                className="w-full sm:w-auto px-4 py-2 text-sm sm:text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors order-2 sm:order-1"
+              >
+                No, Keep Working
+              </button>
+              <button
+                onClick={handleConfirmCancel}
+                className="w-full sm:w-auto px-4 py-2 text-sm sm:text-base font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors order-1 sm:order-2"
+              >
+                Yes, Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -24,6 +24,24 @@ import {
 const COMMERCIAL_ASSOCIATE_TYPE_OF_ID = 3;
 const ASSOCIATE_PHONE_TYPE_WORK = 2;
 
+// Section Component with Dark Header Pattern - Moved outside to prevent re-creation
+const DetailSection = ({ title, icon: Icon, children, description }) => (
+  <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
+    <div className="px-4 sm:px-6 py-3 sm:py-4">
+      <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+        <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
+        <span className="truncate">{title}</span>
+      </h3>
+      {description && (
+        <p className="mt-1 text-xs sm:text-sm text-gray-300">{description}</p>
+      )}
+    </div>
+    <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
+      {children}
+    </div>
+  </div>
+);
+
 function AdminAssociateAddStep3Page() {
   const authManager = useAuthManager();
   const navigate = useNavigate();
@@ -149,7 +167,11 @@ function AdminAssociateAddStep3Page() {
     }
 
     // Save to session storage
+    // FIXED: Spread existing state FIRST, then override with new values
     const associateState = {
+      // Keep any existing data from previous steps
+      ...getExistingState(),
+      // Then override with current form values
       type: associateType,
       organizationName,
       organizationType,
@@ -164,8 +186,6 @@ function AdminAssociateAddStep3Page() {
       otherPhoneExtension,
       isOkToText,
       isOkToEmail,
-      // Keep any existing data from previous steps
-      ...getExistingState(),
     };
 
     try {
@@ -201,24 +221,6 @@ function AdminAssociateAddStep3Page() {
       </div>
     );
   }
-
-  // Section Component with Dark Header Pattern
-  const DetailSection = ({ title, icon: Icon, children, description }) => (
-    <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
-      <div className="px-4 sm:px-6 py-3 sm:py-4">
-        <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
-          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
-          <span className="truncate">{title}</span>
-        </h3>
-        {description && (
-          <p className="mt-1 text-xs sm:text-sm text-gray-300">{description}</p>
-        )}
-      </div>
-      <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
-        {children}
-      </div>
-    </div>
-  );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -374,7 +376,7 @@ function AdminAssociateAddStep3Page() {
           </div>
         )}
 
-        {/* Main Form */}
+        {/* Main Form - UPDATED: Removed max-w-3xl mx-auto constraint */}
         {isLoading ? (
           <div className="bg-white shadow-sm rounded-lg p-8">
             <div className="flex items-center justify-center">
@@ -383,7 +385,7 @@ function AdminAssociateAddStep3Page() {
             </div>
           </div>
         ) : (
-          <form onSubmit={onSubmitClick} className="max-w-3xl mx-auto">
+          <form onSubmit={onSubmitClick}>
             <div className="space-y-0">
               {/* Commercial Associate Section */}
               {associateType === COMMERCIAL_ASSOCIATE_TYPE_OF_ID && (

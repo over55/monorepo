@@ -287,7 +287,7 @@ function AdminCustomerAddStep2Page() {
                       Residential
                     </h3>
                     <p className="text-sm sm:text-base text-gray-600 text-center mb-4">
-                      Individual customers for personal residence or property
+                      Individual customers
                     </p>
                     <button className="w-full inline-flex items-center justify-center px-3 sm:px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors">
                       Select Residential

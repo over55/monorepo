@@ -21,6 +21,10 @@ import {
   ClipboardDocumentIcon,
   ChartBarSquareIcon,
   CheckCircleIcon,
+  InformationCircleIcon,
+  HomeIcon,
+  TruckIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import {
   HowHearAboutUsDisplay,
@@ -45,6 +49,53 @@ import {
 const COMMERCIAL_ASSOCIATE_TYPE_OF_ID = 3;
 const ASSOCIATE_PHONE_TYPE_WORK = 2;
 
+// Section Component with Dark Header Pattern - Updated with error handling
+const DetailSection = ({
+  title,
+  icon: Icon,
+  children,
+  description,
+  onEdit,
+  hasError = false,
+}) => (
+  <div
+    className={`bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6 ${hasError ? "ring-2 ring-red-500" : ""}`}
+  >
+    <div className="px-4 sm:px-6 py-3 sm:py-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+            <Icon
+              className={`w-4 sm:w-5 h-4 sm:h-5 mr-2 ${hasError ? "text-red-300" : "text-blue-300"} flex-shrink-0`}
+            />
+            <span className="truncate">{title}</span>
+            {hasError && (
+              <ExclamationTriangleIcon className="w-4 sm:w-5 h-4 sm:h-5 ml-2 text-red-300" />
+            )}
+          </h3>
+          {description && (
+            <p className="mt-1 text-xs sm:text-sm text-gray-300">
+              {description}
+            </p>
+          )}
+        </div>
+        {onEdit && (
+          <button
+            onClick={onEdit}
+            className={`inline-flex items-center text-xs sm:text-sm ${hasError ? "text-red-300 hover:text-red-200" : "text-blue-300 hover:text-blue-100"} transition-colors`}
+          >
+            <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+            {hasError ? "Fix" : "Edit"}
+          </button>
+        )}
+      </div>
+    </div>
+    <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
+      {children}
+    </div>
+  </div>
+);
+
 function AdminAssociateAddStep7Page() {
   const authManager = useAuthManager();
   const associateManager = useAssociateManager();
@@ -52,6 +103,7 @@ function AdminAssociateAddStep7Page() {
 
   // Component states
   const [errors, setErrors] = useState({});
+  const [fieldErrors, setFieldErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [associateData, setAssociateData] = useState(null);
 
@@ -83,9 +135,118 @@ function AdminAssociateAddStep7Page() {
     }
   };
 
+  // Map backend field errors to sections for highlighting
+  const getSectionWithError = (fieldName) => {
+    const contactFields = [
+      "email",
+      "firstName",
+      "lastName",
+      "phone",
+      "phoneType",
+      "organizationName",
+      "organizationType",
+    ];
+    const addressFields = [
+      "addressLine1",
+      "city",
+      "region",
+      "postalCode",
+      "country",
+    ];
+    const shippingFields = [
+      "shippingAddressLine1",
+      "shippingCity",
+      "shippingRegion",
+      "shippingPostalCode",
+      "shippingCountry",
+      "shippingName",
+      "shippingPhone",
+    ];
+    const accountFields = [
+      "skillSets",
+      "insuranceRequirements",
+      "vehicleTypes",
+      "serviceFeeId",
+      "hourlySalaryDesired",
+      "duesDate",
+      "policeCheck",
+      "commercialInsuranceExpiryDate",
+      "preferredLanguage",
+    ];
+    const metricsFields = [
+      "tags",
+      "howDidYouHearAboutUsID",
+      "gender",
+      "birthDate",
+      "joinDate",
+      "isJobSeeker",
+      "statusInCountry",
+      "maritalStatus",
+      "accomplishedEducation",
+    ];
+
+    if (contactFields.includes(fieldName)) return "contact";
+    if (addressFields.includes(fieldName)) return "address";
+    if (shippingFields.includes(fieldName)) return "shipping";
+    if (accountFields.includes(fieldName)) return "account";
+    if (metricsFields.includes(fieldName)) return "metrics";
+
+    return null;
+  };
+
+  // Check if a section has errors
+  const sectionHasErrors = (section) => {
+    const fieldsInSection = {
+      contact: [
+        "email",
+        "firstName",
+        "lastName",
+        "phone",
+        "phoneType",
+        "organizationName",
+        "organizationType",
+      ],
+      address: ["addressLine1", "city", "region", "postalCode", "country"],
+      shipping: [
+        "shippingAddressLine1",
+        "shippingCity",
+        "shippingRegion",
+        "shippingPostalCode",
+        "shippingCountry",
+        "shippingName",
+        "shippingPhone",
+      ],
+      account: [
+        "skillSets",
+        "insuranceRequirements",
+        "vehicleTypes",
+        "serviceFeeId",
+        "hourlySalaryDesired",
+        "duesDate",
+        "policeCheck",
+        "commercialInsuranceExpiryDate",
+        "preferredLanguage",
+      ],
+      metrics: [
+        "tags",
+        "howDidYouHearAboutUsID",
+        "gender",
+        "birthDate",
+        "joinDate",
+        "isJobSeeker",
+        "statusInCountry",
+        "maritalStatus",
+        "accomplishedEducation",
+      ],
+    };
+
+    return fieldsInSection[section]?.some((field) => fieldErrors[field]);
+  };
+
   const onSubmitClick = async (e) => {
     e.preventDefault();
     setErrors({});
+    setFieldErrors({});
     setIsLoading(true);
 
     try {
@@ -115,7 +276,114 @@ function AdminAssociateAddStep7Page() {
       });
     } catch (error) {
       console.error("Failed to create associate:", error);
-      setErrors(error);
+
+      // Handle different error formats
+      let errorDetails = {};
+      let generalError = null;
+
+      if (error && typeof error === "object") {
+        // Check for field-specific errors
+        const errorFields = Object.keys(error);
+        const knownFields = [
+          "email",
+          "firstName",
+          "lastName",
+          "phone",
+          "phoneType",
+          "addressLine1",
+          "city",
+          "region",
+          "postalCode",
+          "country",
+          "shippingAddressLine1",
+          "shippingCity",
+          "shippingRegion",
+          "shippingPostalCode",
+          "shippingCountry",
+          "shippingName",
+          "shippingPhone",
+          "skillSets",
+          "insuranceRequirements",
+          "vehicleTypes",
+          "serviceFeeId",
+          "hourlySalaryDesired",
+          "duesDate",
+          "policeCheck",
+          "commercialInsuranceExpiryDate",
+          "preferredLanguage",
+          "tags",
+          "howDidYouHearAboutUsID",
+          "gender",
+          "birthDate",
+          "joinDate",
+          "isJobSeeker",
+          "organizationName",
+          "organizationType",
+        ];
+
+        // Extract field errors
+        errorFields.forEach((field) => {
+          if (knownFields.includes(field)) {
+            errorDetails[field] = Array.isArray(error[field])
+              ? error[field].join(", ")
+              : error[field];
+          }
+        });
+
+        // Check for general error message
+        if (error.message) {
+          generalError = error.message;
+        } else if (error.detail) {
+          generalError = error.detail;
+        } else if (error.error) {
+          generalError = error.error;
+        } else if (Object.keys(errorDetails).length === 0) {
+          // If no field errors were found, treat entire error as general
+          generalError =
+            typeof error === "string"
+              ? error
+              : "An error occurred while creating the associate. Please review your information and try again.";
+        }
+      } else if (typeof error === "string") {
+        generalError = error;
+      } else {
+        generalError = "An unexpected error occurred. Please try again.";
+      }
+
+      setFieldErrors(errorDetails);
+
+      // Set general error only if we have one and no field errors
+      if (generalError && Object.keys(errorDetails).length === 0) {
+        setErrors({ general: generalError });
+      } else if (Object.keys(errorDetails).length > 0) {
+        // Create a helpful message when there are field errors
+        const errorSections = new Set();
+        Object.keys(errorDetails).forEach((field) => {
+          const section = getSectionWithError(field);
+          if (section) errorSections.add(section);
+        });
+
+        const sectionNames = {
+          contact: "Contact Information",
+          address: "Address Information",
+          shipping: "Shipping Address",
+          account: "Account Information",
+          metrics: "Metrics Information",
+        };
+
+        const sectionsWithErrors = Array.from(errorSections)
+          .map((s) => sectionNames[s])
+          .filter(Boolean);
+
+        const errorMessage =
+          sectionsWithErrors.length > 0
+            ? `Please fix the errors in the following sections: ${sectionsWithErrors.join(", ")}`
+            : "Please fix the validation errors below";
+
+        setErrors({ general: errorMessage });
+      }
+
+      window.scrollTo(0, 0);
     } finally {
       setIsLoading(false);
     }
@@ -266,59 +534,49 @@ function AdminAssociateAddStep7Page() {
 
     // Gender Other
     if (processed.gender !== ASSOCIATE_GENDER_OTHER) {
-      // If gender is not "Other", remove the genderOther field
       delete processed.genderOther;
     } else if (!processed.genderOther || processed.genderOther.trim() === "") {
-      // If gender is "Other" but genderOther is empty, set a default value instead of deleting
       processed.genderOther = "Not specified";
     }
 
     // Status in Country Other
     if (processed.statusInCountry !== ASSOCIATE_STATUS_IN_COUNTRY_OTHER) {
-      // If status is not "Other", remove the statusInCountryOther field
       delete processed.statusInCountryOther;
     } else if (
       !processed.statusInCountryOther ||
       processed.statusInCountryOther.trim() === ""
     ) {
-      // If status is "Other" but statusInCountryOther is empty, set a default value
       processed.statusInCountryOther = "Not specified";
     }
 
-    // Marital Status Other - FIXED: Keep the field with a value if marital status is "Other"
+    // Marital Status Other
     if (processed.maritalStatus !== ASSOCIATE_MARITAL_STATUS_OTHER) {
-      // If marital status is not "Other", remove the maritalStatusOther field
       delete processed.maritalStatusOther;
     } else if (
       !processed.maritalStatusOther ||
       processed.maritalStatusOther.trim() === ""
     ) {
-      // If marital status is "Other" but maritalStatusOther is empty, set a default value
       processed.maritalStatusOther = "Not specified";
     }
 
     // Accomplished Education Other
     if (processed.accomplishedEducation !== ASSOCIATE_EDUCATION_OTHER) {
-      // If education is not "Other", remove the accomplishedEducationOther field
       delete processed.accomplishedEducationOther;
     } else if (
       !processed.accomplishedEducationOther ||
       processed.accomplishedEducationOther.trim() === ""
     ) {
-      // If education is "Other" but accomplishedEducationOther is empty, set a default value
       processed.accomplishedEducationOther = "Not specified";
     }
 
     // How Did You Hear About Us Other
     if (!processed.isHowDidYouHearAboutUsOther) {
-      // If not using "Other" option, remove the howDidYouHearAboutUsOther field
       delete processed.howDidYouHearAboutUsOther;
       delete processed.isHowDidYouHearAboutUsOther;
     } else if (
       !processed.howDidYouHearAboutUsOther ||
       processed.howDidYouHearAboutUsOther.trim() === ""
     ) {
-      // If using "Other" but the field is empty, set a default value
       processed.howDidYouHearAboutUsOther = "Not specified";
     }
 
@@ -405,38 +663,43 @@ function AdminAssociateAddStep7Page() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {/* Breadcrumb */}
-        <nav className="flex mb-4" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* Responsive Breadcrumb */}
+        <nav
+          className="flex mb-4 sm:mb-6 overflow-x-auto"
+          aria-label="Breadcrumb"
+        >
+          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
             <li className="inline-flex items-center">
               <Link
                 to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+                className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
               >
-                <ChartBarIcon className="w-4 h-4 mr-2" />
+                <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                 <span className="hidden sm:inline">Dashboard</span>
+                <span className="sm:hidden">Dash</span>
               </Link>
             </li>
             <li>
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <ChevronRightIcon className="w-3 sm:w-4 h-3 sm:h-4 text-gray-400 mx-1 sm:mx-2" />
                 <Link
                   to="/admin/associates"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                  className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
                 >
                   <span className="inline-flex items-center">
-                    <WrenchScrewdriverIcon className="w-4 h-4 mr-2" />
+                    <WrenchScrewdriverIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                     <span className="hidden sm:inline">Associates</span>
+                    <span className="sm:hidden">Assoc</span>
                   </span>
                 </Link>
               </div>
             </li>
             <li aria-current="page">
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
-                  <UserPlusIcon className="w-4 h-4 mr-2" />
+                <ChevronRightIcon className="w-3 sm:w-4 h-3 sm:h-4 text-gray-400 mx-1 sm:mx-2" />
+                <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
+                  <UserPlusIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                   Add
                 </span>
               </div>
@@ -444,727 +707,904 @@ function AdminAssociateAddStep7Page() {
           </ol>
         </nav>
 
-        {/* Page Title */}
-        <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
-            <UserPlusIcon className="w-6 sm:w-7 h-6 sm:h-7 mr-2 sm:mr-3 text-blue-600" />
+        {/* Page Title - Responsive */}
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center">
+            <UserPlusIcon className="w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
             Add New Associate
           </h1>
+          <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+            <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
+            Review and submit the new associate information
+          </p>
         </div>
 
-        {/* Wizard Steps - Responsive Design */}
-        <div className="mb-6">
-          {/* Desktop/Tablet View (768px and up) */}
-          <div className="hidden md:flex items-center justify-center overflow-x-auto">
-            <div className="flex items-center">
-              {/* Steps 1-6 Complete */}
-              {[1, 2, 3, 4, 5, 6].map((step, index) => (
-                <React.Fragment key={step}>
-                  <div className="flex items-center">
-                    <div className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-green-600 rounded-full">
-                      <CheckIcon className="w-4 h-4 lg:w-6 lg:h-6 text-white" />
-                    </div>
-                    <div className="ml-2 lg:ml-3">
-                      <p className="text-xs lg:text-sm font-medium text-gray-900">
-                        {step === 1 && "Search"}
-                        {step === 2 && "Type"}
-                        {step === 3 && "Contact"}
-                        {step === 4 && "Address"}
-                        {step === 5 && "Account"}
-                        {step === 6 && "Metrics"}
-                      </p>
-                      <p className="text-xs text-gray-500 hidden xl:block">
-                        Complete
-                      </p>
-                    </div>
-                  </div>
-                  {index < 6 && (
-                    <div className="mx-1 lg:mx-2 w-8 lg:w-12 h-0.5 bg-green-600"></div>
-                  )}
-                </React.Fragment>
-              ))}
-
-              {/* Step 7 - Active */}
+        {/* Wizard Steps - Mobile First */}
+        <div className="mb-4 sm:mb-6">
+          {/* Mobile View */}
+          <div className="md:hidden bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <div className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-blue-600 rounded-full">
-                  <span className="text-white font-semibold text-sm lg:text-base">
-                    7
-                  </span>
+                <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full">
+                  <span className="text-white font-semibold text-sm">7</span>
                 </div>
-                <div className="ml-2 lg:ml-3">
-                  <p className="text-xs lg:text-sm font-medium text-gray-900">
-                    Review
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">
+                    Step 7: Review
                   </p>
-                  <p className="text-xs text-gray-500 hidden xl:block">
-                    Submit
-                  </p>
+                  <p className="text-xs text-gray-500">Submit Associate</p>
                 </div>
+              </div>
+              <div className="text-xs text-gray-500">7 of 7</div>
+            </div>
+            <div className="mt-2">
+              <div className="bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-blue-600 h-2 rounded-full"
+                  style={{ width: "100%" }}
+                ></div>
               </div>
             </div>
           </div>
 
-          {/* Mobile View (below 768px) */}
-          <div className="md:hidden">
-            <div className="flex items-center justify-between px-4">
+          {/* Desktop View */}
+          <div className="hidden md:flex items-center justify-center overflow-x-auto">
+            <div className="flex items-center min-w-max">
+              {/* Steps 1-6 Complete */}
+              {[
+                { num: 1, title: "Search", subtitle: "Complete" },
+                { num: 2, title: "Type", subtitle: "Complete" },
+                { num: 3, title: "Contact", subtitle: "Complete" },
+                { num: 4, title: "Address", subtitle: "Complete" },
+                { num: 5, title: "Account", subtitle: "Complete" },
+                { num: 6, title: "Metrics", subtitle: "Complete" },
+              ].map((step, index) => (
+                <React.Fragment key={step.num}>
+                  <div className="flex items-center">
+                    <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
+                      <CheckIcon className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-gray-900">
+                        {step.title}
+                      </p>
+                      <p className="text-xs text-gray-500">{step.subtitle}</p>
+                    </div>
+                  </div>
+                  {index < 5 && (
+                    <div className="mx-2 w-12 h-0.5 bg-green-600"></div>
+                  )}
+                </React.Fragment>
+              ))}
+
+              <div className="mx-2 w-12 h-0.5 bg-green-600"></div>
+
+              {/* Step 7 - Active */}
               <div className="flex items-center">
                 <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
                   <span className="text-white font-semibold">7</span>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">
-                    Step 7 of 7
-                  </p>
-                  <p className="text-xs text-gray-500">Review & Submit</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-gray-500">Progress</p>
-                <div className="flex items-center mt-1">
-                  <div className="flex">
-                    {[1, 2, 3, 4, 5, 6].map((step) => (
-                      <div
-                        key={step}
-                        className="w-2 h-2 bg-green-600 rounded-full mr-1"
-                      ></div>
-                    ))}
-                    <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                  </div>
+                  <p className="text-sm font-medium text-gray-900">Review</p>
+                  <p className="text-xs text-gray-500">Submit</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
+        {/* Error Message - Enhanced with field errors */}
+        {errors.general && (
+          <div className="mb-4 sm:mb-6 bg-red-50 border border-red-200 text-red-800 px-3 sm:px-4 py-2 sm:py-3 rounded-lg">
+            <div className="flex items-start justify-between">
+              <div className="flex items-start">
+                <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-sm sm:text-base">
+                    {errors.general}
+                  </p>
+                  {Object.keys(fieldErrors).length > 0 && (
+                    <ul className="mt-2 list-disc list-inside text-xs sm:text-sm">
+                      {Object.entries(fieldErrors).map(([field, error]) => (
+                        <li key={field}>
+                          <strong className="capitalize">
+                            {field.replace(/([A-Z])/g, " $1").trim()}:
+                          </strong>{" "}
+                          {error}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setErrors({});
+                  setFieldErrors({});
+                }}
+                className="text-red-600 hover:text-red-800 ml-2 flex-shrink-0"
+              >
+                <XMarkIcon className="w-4 sm:w-5 h-4 sm:h-5" />
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Main Content */}
-        <div className="bg-white shadow-sm rounded-lg">
-          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-              <CheckCircleIcon className="w-5 h-5 mr-2" />
-              Review and Submit
-            </h2>
+        {isLoading ? (
+          <div className="bg-white shadow-sm rounded-lg p-8">
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <span className="ml-3 text-gray-600">Creating associate...</span>
+            </div>
           </div>
+        ) : (
+          <div>
+            {/* Review Header Card */}
+            <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-4 sm:p-6 mb-4 sm:mb-6">
+              <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center mb-2">
+                <CheckCircleIcon className="w-5 h-5 mr-2 text-blue-600" />
+                Review and Submit
+              </h2>
+              <p className="text-xs sm:text-sm text-gray-600">
+                Please carefully review the following associate details. If
+                everything looks correct, click the <strong>Submit</strong>{" "}
+                button to create the new associate.
+              </p>
+            </div>
 
-          <div className="p-4 sm:p-6">
-            <p className="text-sm sm:text-base text-gray-600 mb-6">
-              Please carefully review the following associate details. If
-              everything looks correct, click the <strong>Submit</strong> button
-              to create the new associate.
-            </p>
-
-            {errors.message && (
-              <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center">
-                <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-                <span className="text-sm sm:text-base">{errors.message}</span>
-              </div>
-            )}
-
-            {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                <span className="ml-3 text-gray-600">
-                  Creating associate...
-                </span>
-              </div>
-            ) : (
-              <div className="max-w-3xl mx-auto">
-                <div className="space-y-6 sm:space-y-8">
-                  {/* Contact Information Section */}
+            {/* Contact Information Section */}
+            <DetailSection
+              title="Contact Information"
+              icon={UserIcon}
+              description="Basic contact details and preferences"
+              onEdit={() => navigate("/admin/associates/add/step-3")}
+              hasError={sectionHasErrors("contact")}
+            >
+              <div className="space-y-4">
+                {/* Type and Organization Info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
-                        <UserIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600" />
-                        Contact Information
-                      </h3>
-                      <Link
-                        to="/admin/associates/add/step-3"
-                        className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                        Edit
-                      </Link>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-2">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Type:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {getTypeLabel(associateData.type)}
-                          </p>
-                        </div>
-
-                        {associateData.type ===
-                          COMMERCIAL_ASSOCIATE_TYPE_OF_ID && (
-                          <>
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Organization Name:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {associateData.organizationName}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Organization Type:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {associateData.organizationType}
-                              </p>
-                            </div>
-                          </>
-                        )}
-
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            First Name:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {associateData.firstName}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Last Name:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {associateData.lastName}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Email:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900 break-all">
-                            {associateData.email}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Phone:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {associateData.phone} (
-                            {getPhoneTypeLabel(associateData.phoneType)})
-                          </p>
-                        </div>
-
-                        {associateData.phoneType ===
-                          ASSOCIATE_PHONE_TYPE_WORK &&
-                          associateData.phoneExtension && (
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Phone Extension:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {associateData.phoneExtension}
-                              </p>
-                            </div>
-                          )}
-
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            OK to Email:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {associateData.isOkToEmail ? "Yes" : "No"}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            OK to Text:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {associateData.isOkToText ? "Yes" : "No"}
-                          </p>
-                        </div>
-
-                        {associateData.otherPhone && (
-                          <div>
-                            <span className="text-xs sm:text-sm font-medium text-gray-500">
-                              Other Phone:
-                            </span>
-                            <p className="text-xs sm:text-sm text-gray-900">
-                              {associateData.otherPhone} (
-                              {getPhoneTypeLabel(associateData.otherPhoneType)})
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                      Type
+                    </span>
+                    <p className="text-sm sm:text-base text-gray-900">
+                      {getTypeLabel(associateData.type)}
+                    </p>
                   </div>
 
-                  {/* Address Information Section */}
-                  <div className="pt-6 border-t">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
-                        <MapPinIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-green-600" />
-                        Address Information
-                      </h3>
-                      <Link
-                        to="/admin/associates/add/step-4"
-                        className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                        Edit
-                      </Link>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-2">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Address:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {associateData.addressLine1}
+                  {associateData.type === COMMERCIAL_ASSOCIATE_TYPE_OF_ID && (
+                    <>
+                      <div>
+                        <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                          Organization Name
+                        </span>
+                        <p className="text-sm sm:text-base text-gray-900">
+                          {associateData.organizationName}
+                        </p>
+                        {fieldErrors.organizationName && (
+                          <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                            {fieldErrors.organizationName}
                           </p>
-                        </div>
-                        {associateData.addressLine2 && (
-                          <div>
-                            <span className="text-xs sm:text-sm font-medium text-gray-500">
-                              Address Line 2:
-                            </span>
-                            <p className="text-xs sm:text-sm text-gray-900">
-                              {associateData.addressLine2}
-                            </p>
-                          </div>
                         )}
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            City:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {associateData.city}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Province/Territory:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {associateData.region}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Postal Code:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {associateData.postalCode}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Country:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {associateData.country}
-                          </p>
-                        </div>
                       </div>
-
-                      {associateData.hasShippingAddress && (
-                        <div className="mt-4 pt-4 border-t border-gray-200">
-                          <p className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">
-                            Shipping Address
+                      <div>
+                        <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                          Organization Type
+                        </span>
+                        <p className="text-sm sm:text-base text-gray-900">
+                          {associateData.organizationType}
+                        </p>
+                        {fieldErrors.organizationType && (
+                          <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                            {fieldErrors.organizationType}
                           </p>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Name:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {associateData.shippingName}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Phone:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {associateData.shippingPhone}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Address:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {associateData.shippingAddressLine1}
-                              </p>
-                            </div>
-                            {associateData.shippingAddressLine2 && (
-                              <div>
-                                <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                  Address Line 2:
-                                </span>
-                                <p className="text-xs sm:text-sm text-gray-900">
-                                  {associateData.shippingAddressLine2}
-                                </p>
-                              </div>
-                            )}
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                City:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {associateData.shippingCity}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Province/Territory:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {associateData.shippingRegion}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Postal Code:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {associateData.shippingPostalCode}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Country:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {associateData.shippingCountry}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Account Information Section */}
-                  <div className="pt-6 border-t">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
-                        <ClipboardDocumentIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-purple-600" />
-                        Account Information
-                      </h3>
-                      <Link
-                        to="/admin/associates/add/step-5"
-                        className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                        Edit
-                      </Link>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-3">
-                      {/* Skill Sets Display */}
-                      {associateData.skillSets && (
-                        <div className="mb-2">
-                          <SkillSetsDisplay
-                            values={parseArrayValue(associateData.skillSets)}
-                            label="Skill Sets"
-                            variant="primary"
-                          />
-                        </div>
-                      )}
-
-                      {/* Insurance Requirements Display */}
-                      {associateData.insuranceRequirements && (
-                        <div className="mb-2">
-                          <InsuranceRequirementsDisplay
-                            values={parseArrayValue(
-                              associateData.insuranceRequirements,
-                            )}
-                            label="Insurance Requirements"
-                            variant="info"
-                          />
-                        </div>
-                      )}
-
-                      {/* Vehicle Types Display */}
-                      {associateData.vehicleTypes &&
-                        associateData.vehicleTypes.length > 0 && (
-                          <div className="mb-2">
-                            <VehicleTypesDisplay
-                              values={parseArrayValue(
-                                associateData.vehicleTypes,
-                              )}
-                              label="Vehicle Types"
-                              variant="warning"
-                            />
-                          </div>
                         )}
-
-                      {/* Service Fee Display */}
-                      {associateData.serviceFeeId && (
-                        <div className="mb-2">
-                          <ServiceFeeDisplay
-                            value={associateData.serviceFeeId}
-                            label="Service Fee"
-                            showAmount={true}
-                          />
-                        </div>
-                      )}
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
-                        {associateData.hourlySalaryDesired && (
-                          <div>
-                            <span className="text-xs sm:text-sm font-medium text-gray-500">
-                              Hourly Rate:
-                            </span>
-                            <p className="text-xs sm:text-sm text-gray-900">
-                              ${associateData.hourlySalaryDesired}/hr
-                            </p>
-                          </div>
-                        )}
-
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Member Dues Date:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {associateData.duesDate}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Police Check Expiry:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {associateData.policeCheck}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Commercial Insurance Expiry:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {associateData.commercialInsuranceExpiryDate}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Preferred Language:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {associateData.preferredLanguage}
-                          </p>
-                        </div>
                       </div>
-
-                      {associateData.emergencyContactName && (
-                        <div className="mt-4 pt-4 border-t border-gray-200">
-                          <p className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">
-                            Emergency Contact
-                          </p>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Name:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {associateData.emergencyContactName}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Relationship:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {associateData.emergencyContactRelationship}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Phone:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {associateData.emergencyContactTelephone}
-                              </p>
-                            </div>
-                            {associateData.emergencyContactAlternativeTelephone && (
-                              <div>
-                                <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                  Alternative Phone:
-                                </span>
-                                <p className="text-xs sm:text-sm text-gray-900">
-                                  {
-                                    associateData.emergencyContactAlternativeTelephone
-                                  }
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Metrics Information Section */}
-                  <div className="pt-6 border-t">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
-                        <ChartBarSquareIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-orange-600" />
-                        Metrics Information
-                      </h3>
-                      <Link
-                        to="/admin/associates/add/step-6"
-                        className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                        Edit
-                      </Link>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-3">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Is Job Seeker:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {associateData.isJobSeeker ===
-                            ASSOCIATE_IS_JOB_SEEKER_YES
-                              ? "Yes"
-                              : "No"}
-                          </p>
-                        </div>
-
-                        {associateData.isJobSeeker ===
-                          ASSOCIATE_IS_JOB_SEEKER_YES && (
-                          <>
-                            {associateData.statusInCountry && (
-                              <div>
-                                <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                  Status in Country:
-                                </span>
-                                <p className="text-xs sm:text-sm text-gray-900">
-                                  {associateData.statusInCountry}
-                                </p>
-                              </div>
-                            )}
-                            {associateData.maritalStatus && (
-                              <div>
-                                <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                  Marital Status:
-                                </span>
-                                <p className="text-xs sm:text-sm text-gray-900">
-                                  {associateData.maritalStatus}
-                                </p>
-                              </div>
-                            )}
-                            {associateData.accomplishedEducation && (
-                              <div>
-                                <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                  Education Level:
-                                </span>
-                                <p className="text-xs sm:text-sm text-gray-900">
-                                  {associateData.accomplishedEducation}
-                                </p>
-                              </div>
-                            )}
-                          </>
-                        )}
-
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Gender:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {getGenderLabel(associateData.gender)}
-                          </p>
-                        </div>
-                        {associateData.gender === 1 && (
-                          <div>
-                            <span className="text-xs sm:text-sm font-medium text-gray-500">
-                              Gender (Other):
-                            </span>
-                            <p className="text-xs sm:text-sm text-gray-900">
-                              {associateData.genderOther}
-                            </p>
-                          </div>
-                        )}
-
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Birth Date:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {associateData.birthDate}
-                          </p>
-                        </div>
-
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Join Date:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {associateData.joinDate}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* How Heard About Us Display */}
-                      {associateData.howDidYouHearAboutUsID && (
-                        <div className="mt-3">
-                          <HowHearAboutUsDisplay
-                            value={associateData.howDidYouHearAboutUsID}
-                            label="How did you hear about us?"
-                          />
-                        </div>
-                      )}
-
-                      {/* Tags Display */}
-                      {associateData.tags && associateData.tags.length > 0 && (
-                        <div className="mt-3">
-                          <TagsDisplay
-                            values={parseArrayValue(associateData.tags)}
-                            label="Tags"
-                            variant="success"
-                          />
-                        </div>
-                      )}
-
-                      {associateData.additionalComment && (
-                        <div className="mt-3">
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Additional Comments:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900 mt-1">
-                            {associateData.additionalComment}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                    </>
+                  )}
                 </div>
 
-                {/* Form Actions */}
-                <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3">
-                  <Link
-                    to="/admin/associates/add/step-6"
-                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-                  >
-                    <ArrowLeftIcon className="w-4 h-4 mr-2" />
-                    Back
-                  </Link>
-                  <button
-                    onClick={onSubmitClick}
-                    disabled={isLoading}
-                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
-                  >
-                    <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
-                    Submit
-                  </button>
+                {/* Name and Contact Info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                  <div>
+                    <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                      First Name
+                    </span>
+                    <p className="text-sm sm:text-base text-gray-900">
+                      {associateData.firstName}
+                    </p>
+                    {fieldErrors.firstName && (
+                      <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                        {fieldErrors.firstName}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                      Last Name
+                    </span>
+                    <p className="text-sm sm:text-base text-gray-900">
+                      {associateData.lastName}
+                    </p>
+                    {fieldErrors.lastName && (
+                      <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                        {fieldErrors.lastName}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                      Email
+                    </span>
+                    <p className="text-sm sm:text-base text-gray-900 break-all">
+                      {associateData.email}
+                    </p>
+                    {fieldErrors.email && (
+                      <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-2 rounded font-semibold">
+                        <ExclamationTriangleIcon className="inline w-4 h-4 mr-1" />
+                        {fieldErrors.email}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                      Phone
+                    </span>
+                    <p className="text-sm sm:text-base text-gray-900">
+                      {associateData.phone} (
+                      {getPhoneTypeLabel(associateData.phoneType)})
+                    </p>
+                    {(fieldErrors.phone || fieldErrors.phoneType) && (
+                      <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                        {fieldErrors.phone || fieldErrors.phoneType}
+                      </p>
+                    )}
+                  </div>
+
+                  {associateData.phoneType === ASSOCIATE_PHONE_TYPE_WORK &&
+                    associateData.phoneExtension && (
+                      <div>
+                        <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                          Phone Extension
+                        </span>
+                        <p className="text-sm sm:text-base text-gray-900">
+                          {associateData.phoneExtension}
+                        </p>
+                      </div>
+                    )}
+
+                  <div>
+                    <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                      OK to Email
+                    </span>
+                    <p className="text-sm sm:text-base text-gray-900">
+                      {associateData.isOkToEmail ? "Yes" : "No"}
+                    </p>
+                  </div>
+                  <div>
+                    <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                      OK to Text
+                    </span>
+                    <p className="text-sm sm:text-base text-gray-900">
+                      {associateData.isOkToText ? "Yes" : "No"}
+                    </p>
+                  </div>
+
+                  {associateData.otherPhone && (
+                    <div>
+                      <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                        Other Phone
+                      </span>
+                      <p className="text-sm sm:text-base text-gray-900">
+                        {associateData.otherPhone} (
+                        {getPhoneTypeLabel(associateData.otherPhoneType)})
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
+            </DetailSection>
+
+            {/* Address Information Section */}
+            <DetailSection
+              title={
+                associateData.hasShippingAddress
+                  ? "Billing Address"
+                  : "Address Information"
+              }
+              icon={associateData.hasShippingAddress ? HomeIcon : MapPinIcon}
+              description={
+                associateData.hasShippingAddress
+                  ? "Primary billing address"
+                  : "Primary address for the associate"
+              }
+              onEdit={() => navigate("/admin/associates/add/step-4")}
+              hasError={sectionHasErrors("address")}
+            >
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                  <div>
+                    <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                      Address
+                    </span>
+                    <p className="text-sm sm:text-base text-gray-900">
+                      {associateData.addressLine1}
+                    </p>
+                    {fieldErrors.addressLine1 && (
+                      <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                        {fieldErrors.addressLine1}
+                      </p>
+                    )}
+                  </div>
+                  {associateData.addressLine2 && (
+                    <div>
+                      <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                        Address Line 2
+                      </span>
+                      <p className="text-sm sm:text-base text-gray-900">
+                        {associateData.addressLine2}
+                      </p>
+                    </div>
+                  )}
+                  <div>
+                    <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                      City
+                    </span>
+                    <p className="text-sm sm:text-base text-gray-900">
+                      {associateData.city}
+                    </p>
+                    {fieldErrors.city && (
+                      <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                        {fieldErrors.city}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                      Province/Territory
+                    </span>
+                    <p className="text-sm sm:text-base text-gray-900">
+                      {associateData.region}
+                    </p>
+                    {fieldErrors.region && (
+                      <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                        {fieldErrors.region}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                      Postal Code
+                    </span>
+                    <p className="text-sm sm:text-base text-gray-900">
+                      {associateData.postalCode}
+                    </p>
+                    {fieldErrors.postalCode && (
+                      <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                        {fieldErrors.postalCode}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                      Country
+                    </span>
+                    <p className="text-sm sm:text-base text-gray-900">
+                      {associateData.country}
+                    </p>
+                    {fieldErrors.country && (
+                      <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                        {fieldErrors.country}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </DetailSection>
+
+            {/* Shipping Address Section (if applicable) */}
+            {associateData.hasShippingAddress && (
+              <DetailSection
+                title="Shipping Address"
+                icon={TruckIcon}
+                description="Where materials and packages should be delivered"
+                hasError={sectionHasErrors("shipping")}
+              >
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                    <div>
+                      <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                        Contact Name
+                      </span>
+                      <p className="text-sm sm:text-base text-gray-900">
+                        {associateData.shippingName}
+                      </p>
+                      {fieldErrors.shippingName && (
+                        <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                          {fieldErrors.shippingName}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                        Phone
+                      </span>
+                      <p className="text-sm sm:text-base text-gray-900">
+                        {associateData.shippingPhone}
+                      </p>
+                      {fieldErrors.shippingPhone && (
+                        <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                          {fieldErrors.shippingPhone}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                        Address
+                      </span>
+                      <p className="text-sm sm:text-base text-gray-900">
+                        {associateData.shippingAddressLine1}
+                      </p>
+                      {fieldErrors.shippingAddressLine1 && (
+                        <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                          {fieldErrors.shippingAddressLine1}
+                        </p>
+                      )}
+                    </div>
+                    {associateData.shippingAddressLine2 && (
+                      <div>
+                        <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                          Address Line 2
+                        </span>
+                        <p className="text-sm sm:text-base text-gray-900">
+                          {associateData.shippingAddressLine2}
+                        </p>
+                      </div>
+                    )}
+                    <div>
+                      <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                        City
+                      </span>
+                      <p className="text-sm sm:text-base text-gray-900">
+                        {associateData.shippingCity}
+                      </p>
+                      {fieldErrors.shippingCity && (
+                        <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                          {fieldErrors.shippingCity}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                        Province/Territory
+                      </span>
+                      <p className="text-sm sm:text-base text-gray-900">
+                        {associateData.shippingRegion}
+                      </p>
+                      {fieldErrors.shippingRegion && (
+                        <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                          {fieldErrors.shippingRegion}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                        Postal Code
+                      </span>
+                      <p className="text-sm sm:text-base text-gray-900">
+                        {associateData.shippingPostalCode}
+                      </p>
+                      {fieldErrors.shippingPostalCode && (
+                        <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                          {fieldErrors.shippingPostalCode}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                        Country
+                      </span>
+                      <p className="text-sm sm:text-base text-gray-900">
+                        {associateData.shippingCountry}
+                      </p>
+                      {fieldErrors.shippingCountry && (
+                        <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                          {fieldErrors.shippingCountry}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </DetailSection>
             )}
+
+            {/* Account Information Section */}
+            <DetailSection
+              title="Account Information"
+              icon={ClipboardDocumentIcon}
+              description="Skills, insurance, and service details"
+              onEdit={() => navigate("/admin/associates/add/step-5")}
+              hasError={sectionHasErrors("account")}
+            >
+              <div className="space-y-4">
+                {/* Display Components */}
+                {associateData.skillSets && (
+                  <div>
+                    <SkillSetsDisplay
+                      values={parseArrayValue(associateData.skillSets)}
+                      label="Skill Sets"
+                      variant="primary"
+                    />
+                    {fieldErrors.skillSets && (
+                      <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                        {fieldErrors.skillSets}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {associateData.insuranceRequirements && (
+                  <div>
+                    <InsuranceRequirementsDisplay
+                      values={parseArrayValue(
+                        associateData.insuranceRequirements,
+                      )}
+                      label="Insurance Requirements"
+                      variant="info"
+                    />
+                    {fieldErrors.insuranceRequirements && (
+                      <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                        {fieldErrors.insuranceRequirements}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {associateData.vehicleTypes &&
+                  associateData.vehicleTypes.length > 0 && (
+                    <div>
+                      <VehicleTypesDisplay
+                        values={parseArrayValue(associateData.vehicleTypes)}
+                        label="Vehicle Types"
+                        variant="warning"
+                      />
+                      {fieldErrors.vehicleTypes && (
+                        <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                          {fieldErrors.vehicleTypes}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                {associateData.serviceFeeId && (
+                  <div>
+                    <ServiceFeeDisplay
+                      value={associateData.serviceFeeId}
+                      label="Service Fee"
+                      showAmount={true}
+                    />
+                    {fieldErrors.serviceFeeId && (
+                      <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                        {fieldErrors.serviceFeeId}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                  {associateData.hourlySalaryDesired && (
+                    <div>
+                      <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                        Hourly Rate
+                      </span>
+                      <p className="text-sm sm:text-base text-gray-900">
+                        ${associateData.hourlySalaryDesired}/hr
+                      </p>
+                      {fieldErrors.hourlySalaryDesired && (
+                        <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                          {fieldErrors.hourlySalaryDesired}
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  <div>
+                    <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                      Member Dues Date
+                    </span>
+                    <p className="text-sm sm:text-base text-gray-900">
+                      {associateData.duesDate}
+                    </p>
+                    {fieldErrors.duesDate && (
+                      <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                        {fieldErrors.duesDate}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                      Police Check Expiry
+                    </span>
+                    <p className="text-sm sm:text-base text-gray-900">
+                      {associateData.policeCheck}
+                    </p>
+                    {fieldErrors.policeCheck && (
+                      <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                        {fieldErrors.policeCheck}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                      Commercial Insurance Expiry
+                    </span>
+                    <p className="text-sm sm:text-base text-gray-900">
+                      {associateData.commercialInsuranceExpiryDate}
+                    </p>
+                    {fieldErrors.commercialInsuranceExpiryDate && (
+                      <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                        {fieldErrors.commercialInsuranceExpiryDate}
+                      </p>
+                    )}
+                  </div>
+                  <div>
+                    <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                      Preferred Language
+                    </span>
+                    <p className="text-sm sm:text-base text-gray-900">
+                      {associateData.preferredLanguage}
+                    </p>
+                    {fieldErrors.preferredLanguage && (
+                      <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                        {fieldErrors.preferredLanguage}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {associateData.emergencyContactName && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <p className="text-sm sm:text-base font-semibold text-gray-700 mb-3">
+                      Emergency Contact
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                      <div>
+                        <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                          Name
+                        </span>
+                        <p className="text-sm sm:text-base text-gray-900">
+                          {associateData.emergencyContactName}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                          Relationship
+                        </span>
+                        <p className="text-sm sm:text-base text-gray-900">
+                          {associateData.emergencyContactRelationship}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                          Phone
+                        </span>
+                        <p className="text-sm sm:text-base text-gray-900">
+                          {associateData.emergencyContactTelephone}
+                        </p>
+                      </div>
+                      {associateData.emergencyContactAlternativeTelephone && (
+                        <div>
+                          <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                            Alternative Phone
+                          </span>
+                          <p className="text-sm sm:text-base text-gray-900">
+                            {associateData.emergencyContactAlternativeTelephone}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </DetailSection>
+
+            {/* Metrics Information Section */}
+            <DetailSection
+              title="Metrics Information"
+              icon={ChartBarSquareIcon}
+              description="Demographics and performance metrics"
+              onEdit={() => navigate("/admin/associates/add/step-6")}
+              hasError={sectionHasErrors("metrics")}
+            >
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                  <div>
+                    <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                      Is Job Seeker
+                    </span>
+                    <p className="text-sm sm:text-base text-gray-900">
+                      {associateData.isJobSeeker === ASSOCIATE_IS_JOB_SEEKER_YES
+                        ? "Yes"
+                        : "No"}
+                    </p>
+                    {fieldErrors.isJobSeeker && (
+                      <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                        {fieldErrors.isJobSeeker}
+                      </p>
+                    )}
+                  </div>
+
+                  {associateData.isJobSeeker ===
+                    ASSOCIATE_IS_JOB_SEEKER_YES && (
+                    <>
+                      {associateData.statusInCountry && (
+                        <div>
+                          <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                            Status in Country
+                          </span>
+                          <p className="text-sm sm:text-base text-gray-900">
+                            {associateData.statusInCountry}
+                          </p>
+                          {fieldErrors.statusInCountry && (
+                            <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                              {fieldErrors.statusInCountry}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                      {associateData.maritalStatus && (
+                        <div>
+                          <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                            Marital Status
+                          </span>
+                          <p className="text-sm sm:text-base text-gray-900">
+                            {associateData.maritalStatus}
+                          </p>
+                          {fieldErrors.maritalStatus && (
+                            <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                              {fieldErrors.maritalStatus}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                      {associateData.accomplishedEducation && (
+                        <div>
+                          <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                            Education Level
+                          </span>
+                          <p className="text-sm sm:text-base text-gray-900">
+                            {associateData.accomplishedEducation}
+                          </p>
+                          {fieldErrors.accomplishedEducation && (
+                            <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                              {fieldErrors.accomplishedEducation}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  )}
+
+                  <div>
+                    <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                      Gender
+                    </span>
+                    <p className="text-sm sm:text-base text-gray-900">
+                      {getGenderLabel(associateData.gender)}
+                    </p>
+                    {fieldErrors.gender && (
+                      <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                        {fieldErrors.gender}
+                      </p>
+                    )}
+                  </div>
+                  {associateData.gender === 1 && (
+                    <div>
+                      <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                        Gender (Other)
+                      </span>
+                      <p className="text-sm sm:text-base text-gray-900">
+                        {associateData.genderOther}
+                      </p>
+                    </div>
+                  )}
+
+                  <div>
+                    <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                      Birth Date
+                    </span>
+                    <p className="text-sm sm:text-base text-gray-900">
+                      {associateData.birthDate}
+                    </p>
+                    {fieldErrors.birthDate && (
+                      <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                        {fieldErrors.birthDate}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                      Join Date
+                    </span>
+                    <p className="text-sm sm:text-base text-gray-900">
+                      {associateData.joinDate}
+                    </p>
+                    {fieldErrors.joinDate && (
+                      <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                        {fieldErrors.joinDate}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* How Heard About Us Display */}
+                {associateData.howDidYouHearAboutUsID && (
+                  <div className="mt-4">
+                    <HowHearAboutUsDisplay
+                      value={associateData.howDidYouHearAboutUsID}
+                      label="How did you hear about us?"
+                    />
+                    {fieldErrors.howDidYouHearAboutUsID && (
+                      <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                        {fieldErrors.howDidYouHearAboutUsID}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {/* Tags Display */}
+                {associateData.tags && associateData.tags.length > 0 && (
+                  <div className="mt-4">
+                    <TagsDisplay
+                      values={parseArrayValue(associateData.tags)}
+                      label="Tags"
+                      variant="success"
+                    />
+                    {fieldErrors.tags && (
+                      <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">
+                        {fieldErrors.tags}
+                      </p>
+                    )}
+                  </div>
+                )}
+
+                {associateData.additionalComment && (
+                  <div className="mt-4">
+                    <span className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                      Additional Comments
+                    </span>
+                    <p className="text-sm sm:text-base text-gray-900">
+                      {associateData.additionalComment}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </DetailSection>
+
+            {/* Form Actions */}
+            <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3">
+              <Link to="/admin/associates/add/step-6" className="flex-1">
+                <button
+                  type="button"
+                  className="w-full inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <ArrowLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
+                  Back
+                </button>
+              </Link>
+              <button
+                onClick={onSubmitClick}
+                disabled={isLoading}
+                className="flex-1 inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
+                {isLoading ? "Submitting..." : "Submit Associate"}
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

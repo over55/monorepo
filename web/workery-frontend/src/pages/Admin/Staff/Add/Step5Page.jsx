@@ -102,10 +102,9 @@ function AdminStaffAddStep5Page() {
   const [preferredLanguage, setPreferredLanguage] = useState(
     wizardState.preferredLanguage || LANGUAGE_ENGLISH,
   );
-  const [password, setPassword] = useState(wizardState.password || "");
-  const [passwordRepeated, setPasswordRepeated] = useState(
-    wizardState.passwordRepeated || "",
-  );
+  // Initialize passwords as empty for new staff creation
+  const [password, setPassword] = useState("");
+  const [passwordRepeated, setPasswordRepeated] = useState("");
 
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
@@ -456,7 +455,7 @@ function AdminStaffAddStep5Page() {
           </div>
         )}
 
-        {/* Main Content */}
+        {/* Main Content - Removed max-w-4xl to match parent width */}
         {isLoading ? (
           <div className="bg-white shadow-sm rounded-lg p-8">
             <div className="flex items-center justify-center">
@@ -465,7 +464,7 @@ function AdminStaffAddStep5Page() {
             </div>
           </div>
         ) : (
-          <form onSubmit={onSubmitClick} className="max-w-4xl mx-auto">
+          <form onSubmit={onSubmitClick}>
             <div className="space-y-0">
               {/* Insurance & Financial Section */}
               <DetailSection

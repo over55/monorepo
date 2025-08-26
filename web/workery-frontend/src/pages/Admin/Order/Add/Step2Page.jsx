@@ -18,6 +18,11 @@ import {
   HomeModernIcon,
   CalendarIcon,
   ArrowRightIcon,
+  ChevronLeftIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  QuestionMarkCircleIcon,
+  BriefcaseIcon,
 } from "@heroicons/react/24/outline";
 
 function AdminOrderAddStep2Page() {
@@ -95,6 +100,24 @@ function AdminOrderAddStep2Page() {
     navigate("/admin/orders/add/step-1-search");
   };
 
+  // Section Component - Matching Customer Detail styling
+  const FormSection = ({ title, icon: Icon, children, description }) => (
+    <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
+      <div className="px-4 sm:px-6 py-3 sm:py-4">
+        <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
+          <span className="truncate">{title}</span>
+        </h3>
+        {description && (
+          <p className="mt-1 text-xs sm:text-sm text-gray-300">{description}</p>
+        )}
+      </div>
+      <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
+        {children}
+      </div>
+    </div>
+  );
+
   useEffect(() => {
     let mounted = true;
 
@@ -121,217 +144,233 @@ function AdminOrderAddStep2Page() {
 
   if (isFetching) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-sm sm:text-base text-gray-600">
+              Loading...
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {/* Breadcrumb */}
-        <nav className="flex mb-4" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3">
-            <li className="inline-flex items-center">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+      {/* Responsive Breadcrumb */}
+      <nav
+        className="flex mb-4 sm:mb-6 overflow-x-auto"
+        aria-label="Breadcrumb"
+      >
+        <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
+          <li className="inline-flex items-center">
+            <Link
+              to="/admin/dashboard"
+              className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
+            >
+              <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+              <span className="hidden sm:inline">Dashboard</span>
+              <span className="sm:hidden">Dash</span>
+            </Link>
+          </li>
+          <li>
+            <div className="flex items-center">
+              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
               <Link
-                to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+                to="/admin/orders"
+                className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
               >
-                <ChartBarIcon className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Dashboard</span>
-                <span className="sm:hidden">Dash</span>
-              </Link>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <Link
-                  to="/admin/orders"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
-                >
-                  <span className="inline-flex items-center">
-                    <WrenchIcon className="w-4 h-4 mr-2" />
-                    Orders
-                  </span>
-                </Link>
-              </div>
-            </li>
-            <li aria-current="page">
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
-                  <PlusIcon className="w-4 h-4 mr-2" />
-                  Add
+                <span className="inline-flex items-center">
+                  <WrenchIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                  Orders
                 </span>
-              </div>
-            </li>
-          </ol>
-        </nav>
+              </Link>
+            </div>
+          </li>
+          <li aria-current="page">
+            <div className="flex items-center">
+              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
+              <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
+                <PlusIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                Add
+              </span>
+            </div>
+          </li>
+        </ol>
+      </nav>
 
-        {/* Page Title */}
-        <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
-            <PlusIcon className="w-6 h-6 sm:w-7 sm:h-7 mr-2 sm:mr-3 text-blue-600" />
-            Add New Order
-          </h1>
+      {/* Page Title - Responsive */}
+      <div className="mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+              <WrenchIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
+              Add New Order
+            </h1>
+            <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+              <PlusIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
+              Create a new work order for customer
+            </p>
+          </div>
         </div>
+      </div>
 
-        {/* Wizard Steps - Responsive Design */}
-        <div className="mb-6">
-          <div className="overflow-x-auto">
-            <div className="flex items-center justify-start xl:justify-center min-w-max px-2">
+      {/* Wizard Steps - Responsive Design */}
+      <div className="mb-4 sm:mb-6 bg-white shadow-sm rounded-lg p-4">
+        <div className="overflow-x-auto">
+          <div className="flex items-center justify-start xl:justify-center min-w-max px-2">
+            <div className="flex items-center">
+              {/* Step 1 - Complete */}
               <div className="flex items-center">
-                {/* Step 1 - Complete */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex-shrink-0">
-                    <svg
-                      className="w-4 h-4 sm:w-6 sm:h-6 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                  </div>
-                  <div className="ml-2 sm:ml-3 hidden md:block">
-                    <p className="text-xs sm:text-sm font-medium text-gray-900">
-                      Search Customer
-                    </p>
-                    <p className="text-xs text-gray-500 hidden lg:block">
-                      Complete
-                    </p>
-                  </div>
-                  <div className="ml-2 sm:ml-3 md:hidden">
-                    <p className="text-xs font-medium text-gray-900">1</p>
-                  </div>
+                <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex-shrink-0">
+                  <CheckCircleIcon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                 </div>
-
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-6 sm:w-8 lg:w-12 h-0.5 bg-gray-300"></div>
-
-                {/* Step 2 - Active */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-full flex-shrink-0">
-                    <span className="text-white font-semibold text-sm sm:text-base">
-                      2
-                    </span>
-                  </div>
-                  <div className="ml-2 sm:ml-3 hidden md:block">
-                    <p className="text-xs sm:text-sm font-medium text-gray-900">
-                      Job Type
-                    </p>
-                    <p className="text-xs text-gray-500 hidden lg:block">
-                      Configure Job
-                    </p>
-                  </div>
-                  <div className="ml-2 sm:ml-3 md:hidden">
-                    <p className="text-xs font-medium text-gray-900">Type</p>
-                  </div>
+                <div className="ml-2 sm:ml-3 hidden md:block">
+                  <p className="text-xs sm:text-sm font-medium text-gray-900">
+                    Search Customer
+                  </p>
+                  <p className="text-xs text-gray-500 hidden lg:block">
+                    Complete
+                  </p>
                 </div>
-
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-6 sm:w-8 lg:w-12 h-0.5 bg-gray-300"></div>
-
-                {/* Step 3 - Inactive */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
-                    <span className="text-gray-600 font-semibold text-sm sm:text-base">
-                      3
-                    </span>
-                  </div>
-                  <div className="ml-2 sm:ml-3 hidden md:block">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">
-                      Services
-                    </p>
-                    <p className="text-xs text-gray-400 hidden lg:block">
-                      Select Services
-                    </p>
-                  </div>
-                  <div className="ml-2 sm:ml-3 md:hidden">
-                    <p className="text-xs font-medium text-gray-500">3</p>
-                  </div>
+                <div className="ml-2 sm:ml-3 md:hidden">
+                  <p className="text-xs font-medium text-gray-900">Customer</p>
                 </div>
+              </div>
 
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-6 sm:w-8 lg:w-12 h-0.5 bg-gray-300"></div>
+              {/* Connector */}
+              <div className="mx-1 sm:mx-2 w-6 sm:w-8 lg:w-12 h-0.5 bg-gray-300"></div>
 
-                {/* Step 4 - Inactive */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
-                    <span className="text-gray-600 font-semibold text-sm sm:text-base">
-                      4
-                    </span>
-                  </div>
-                  <div className="ml-2 sm:ml-3 hidden md:block">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">
-                      Review
-                    </p>
-                    <p className="text-xs text-gray-400 hidden lg:block">
-                      Confirm Details
-                    </p>
-                  </div>
-                  <div className="ml-2 sm:ml-3 md:hidden">
-                    <p className="text-xs font-medium text-gray-500">4</p>
-                  </div>
+              {/* Step 2 - Active */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-full flex-shrink-0">
+                  <span className="text-white font-semibold text-sm sm:text-base">
+                    2
+                  </span>
+                </div>
+                <div className="ml-2 sm:ml-3 hidden md:block">
+                  <p className="text-xs sm:text-sm font-medium text-gray-900">
+                    Job Type
+                  </p>
+                  <p className="text-xs text-blue-600 hidden lg:block">
+                    Configure Job
+                  </p>
+                </div>
+                <div className="ml-2 sm:ml-3 md:hidden">
+                  <p className="text-xs font-medium text-blue-600">Type</p>
+                </div>
+              </div>
+
+              {/* Connector */}
+              <div className="mx-1 sm:mx-2 w-6 sm:w-8 lg:w-12 h-0.5 bg-gray-300"></div>
+
+              {/* Step 3 - Inactive */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
+                  <span className="text-gray-600 font-semibold text-sm sm:text-base">
+                    3
+                  </span>
+                </div>
+                <div className="ml-2 sm:ml-3 hidden md:block">
+                  <p className="text-xs sm:text-sm font-medium text-gray-500">
+                    Services
+                  </p>
+                  <p className="text-xs text-gray-400 hidden lg:block">
+                    Select Services
+                  </p>
+                </div>
+                <div className="ml-2 sm:ml-3 md:hidden">
+                  <p className="text-xs font-medium text-gray-500">Services</p>
+                </div>
+              </div>
+
+              {/* Connector */}
+              <div className="mx-1 sm:mx-2 w-6 sm:w-8 lg:w-12 h-0.5 bg-gray-300"></div>
+
+              {/* Step 4 - Inactive */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
+                  <span className="text-gray-600 font-semibold text-sm sm:text-base">
+                    4
+                  </span>
+                </div>
+                <div className="ml-2 sm:ml-3 hidden md:block">
+                  <p className="text-xs sm:text-sm font-medium text-gray-500">
+                    Review
+                  </p>
+                  <p className="text-xs text-gray-400 hidden lg:block">
+                    Confirm Details
+                  </p>
+                </div>
+                <div className="ml-2 sm:ml-3 md:hidden">
+                  <p className="text-xs font-medium text-gray-500">Review</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Error Message */}
-        {errors.message && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
-            <span className="flex items-center">
-              <ExclamationCircleIcon className="w-5 h-5 mr-2" />
-              <span className="text-sm sm:text-base">{errors.message}</span>
+      {/* Error Message - Responsive */}
+      {(errors.message || errors.isOngoing || errors.isHomeSupportService) && (
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base">
+          <div className="flex justify-between items-center">
+            <span className="flex items-center break-words">
+              <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+              {errors.message ||
+                errors.isOngoing ||
+                errors.isHomeSupportService}
             </span>
             <button
               onClick={() => setErrors({})}
-              className="text-red-600 hover:text-red-800"
+              className="text-red-700 hover:text-red-900 ml-2 flex-shrink-0"
+              aria-label="Close error message"
             >
-              <XMarkIcon className="w-5 h-5" />
+              <XMarkIcon className="w-4 sm:w-5 h-4 sm:h-5" />
             </button>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Main Content */}
-        <div className="bg-white shadow-sm rounded-lg">
-          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-              <ClockIcon className="w-5 h-5 mr-2" />
+      {/* Main Content */}
+      <div className="bg-white shadow-sm rounded-lg">
+        {/* Header with Dark Background */}
+        <div className="bg-gray-700 rounded-t-lg px-4 sm:px-6 py-4 sm:py-5">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+            <h2 className="text-xl sm:text-2xl font-semibold text-white flex items-center">
+              <ClockIcon className="w-5 sm:w-7 h-5 sm:h-7 mr-2 text-blue-300 flex-shrink-0" />
               Job Type Configuration
             </h2>
-            <p className="mt-1 text-xs sm:text-sm text-gray-600">
-              Please fill out all the required fields before submitting this
-              form.
-            </p>
           </div>
+          <p className="mt-2 text-xs sm:text-sm text-gray-300">
+            Please fill out all the required fields before submitting this form
+          </p>
+        </div>
 
-          <div className="p-4 sm:p-6">
-            <form onSubmit={onSubmitClick} className="space-y-6 max-w-2xl">
-              {/* Job Duration Selection */}
+        {/* Form Content */}
+        <div className="p-4 sm:p-6">
+          <form onSubmit={onSubmitClick} className="space-y-4 sm:space-y-6">
+            {/* Job Duration Section */}
+            <FormSection
+              title="Job Duration"
+              icon={ClockIcon}
+              description="Specify if this is a one-time job or ongoing service"
+            >
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Is this job one time or ongoing?{" "}
-                  <span className="text-red-500">*</span>
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  Is this job one time or ongoing?
+                  <span className="text-red-500 ml-1">*</span>
                 </label>
                 {errors.isOngoing && (
-                  <div className="text-red-600 text-xs sm:text-sm mb-2">
+                  <div className="text-red-600 text-xs sm:text-sm mb-3 flex items-center">
+                    <ExclamationCircleIcon className="w-4 h-4 mr-1 flex-shrink-0" />
                     {errors.isOngoing}
                   </div>
                 )}
-                <div className="space-y-2">
-                  <label className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                <div className="space-y-3">
+                  <label className="flex items-center p-3 sm:p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 hover:border-blue-300 transition-all">
                     <input
                       type="radio"
                       name="isOngoing"
@@ -340,11 +379,16 @@ function AdminOrderAddStep2Page() {
                       onChange={(e) => setIsOngoing(parseInt(e.target.value))}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                     />
-                    <span className="ml-3 text-sm font-medium text-gray-900">
-                      One-Time
-                    </span>
+                    <div className="ml-3">
+                      <span className="block text-sm sm:text-base font-medium text-gray-900">
+                        One-Time Job
+                      </span>
+                      <span className="block text-xs sm:text-sm text-gray-500 mt-0.5">
+                        Single service visit with defined completion
+                      </span>
+                    </div>
                   </label>
-                  <label className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <label className="flex items-center p-3 sm:p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 hover:border-blue-300 transition-all">
                     <input
                       type="radio"
                       name="isOngoing"
@@ -353,26 +397,38 @@ function AdminOrderAddStep2Page() {
                       onChange={(e) => setIsOngoing(parseInt(e.target.value))}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                     />
-                    <span className="ml-3 text-sm font-medium text-gray-900">
-                      Ongoing
-                    </span>
+                    <div className="ml-3">
+                      <span className="block text-sm sm:text-base font-medium text-gray-900">
+                        Ongoing Service
+                      </span>
+                      <span className="block text-xs sm:text-sm text-gray-500 mt-0.5">
+                        Recurring or continuous service arrangement
+                      </span>
+                    </div>
                   </label>
                 </div>
               </div>
+            </FormSection>
 
-              {/* Home Support Service Selection */}
+            {/* Home Support Service Section */}
+            <FormSection
+              title="Service Category"
+              icon={HomeModernIcon}
+              description="Identify if this qualifies as a home support service"
+            >
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
-                  Is this job a home support service?{" "}
-                  <span className="text-red-500">*</span>
+                <label className="block text-sm font-semibold text-gray-700 mb-3">
+                  Is this job a home support service?
+                  <span className="text-red-500 ml-1">*</span>
                 </label>
                 {errors.isHomeSupportService && (
-                  <div className="text-red-600 text-xs sm:text-sm mb-2">
+                  <div className="text-red-600 text-xs sm:text-sm mb-3 flex items-center">
+                    <ExclamationCircleIcon className="w-4 h-4 mr-1 flex-shrink-0" />
                     {errors.isHomeSupportService}
                   </div>
                 )}
-                <div className="space-y-2">
-                  <label className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                <div className="space-y-3">
+                  <label className="flex items-center p-3 sm:p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 hover:border-blue-300 transition-all">
                     <input
                       type="radio"
                       name="isHomeSupportService"
@@ -383,11 +439,16 @@ function AdminOrderAddStep2Page() {
                       }
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                     />
-                    <span className="ml-3 text-sm font-medium text-gray-900">
-                      No
-                    </span>
+                    <div className="ml-3">
+                      <span className="block text-sm sm:text-base font-medium text-gray-900">
+                        No - Regular Service
+                      </span>
+                      <span className="block text-xs sm:text-sm text-gray-500 mt-0.5">
+                        Standard maintenance or repair service
+                      </span>
+                    </div>
                   </label>
-                  <label className="flex items-center p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
+                  <label className="flex items-center p-3 sm:p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 hover:border-blue-300 transition-all">
                     <input
                       type="radio"
                       name="isHomeSupportService"
@@ -398,96 +459,116 @@ function AdminOrderAddStep2Page() {
                       }
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                     />
-                    <span className="ml-3 text-sm font-medium text-gray-900">
-                      Yes
-                    </span>
+                    <div className="ml-3">
+                      <span className="block text-sm sm:text-base font-medium text-gray-900">
+                        Yes - Home Support Service
+                      </span>
+                      <span className="block text-xs sm:text-sm text-gray-500 mt-0.5">
+                        Qualifies for home support service category
+                      </span>
+                    </div>
                   </label>
                 </div>
               </div>
+            </FormSection>
 
-              {/* Start Date Selection */}
+            {/* Start Date Section */}
+            <FormSection
+              title="Schedule Information"
+              icon={CalendarIcon}
+              description="Optional scheduling details for the job"
+            >
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  When should this job start? (Optional)
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  When should this job start?
+                  <span className="text-gray-500 font-normal ml-1">
+                    (Optional)
+                  </span>
                 </label>
-                <div className="relative">
+                <div className="relative max-w-xs">
                   <input
                     type="date"
                     value={startDate}
                     onChange={(e) => setStartDate(e.target.value)}
-                    className="block w-full sm:w-64 pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
+                    className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                   />
-                  <CalendarIcon className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                  <CalendarIcon className="absolute left-3 top-3 h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                 </div>
-                <p className="mt-1 text-xs text-gray-500">
-                  Leave blank if nothing was specified by client.
+                <p className="mt-2 text-xs sm:text-sm text-gray-500">
+                  Leave blank if nothing was specified by the client
                 </p>
               </div>
+            </FormSection>
 
-              {/* Form Actions */}
-              <div className="flex flex-col sm:flex-row justify-between pt-4 space-y-3 sm:space-y-0">
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            {/* Form Actions - Responsive */}
+            <div className="flex flex-col sm:flex-row sm:justify-between pt-4 sm:pt-6 mt-6 border-t border-gray-200 gap-3">
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="order-2 sm:order-1 inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+              >
+                <XMarkIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
+                Cancel
+              </button>
+              <div className="flex gap-2 sm:gap-3 order-1 sm:order-2">
+                <Link
+                  to="/admin/orders/add/step-1-search"
+                  className="flex-1 sm:flex-initial"
                 >
-                  <XMarkIcon className="w-4 h-4 inline mr-2" />
-                  Cancel
-                </button>
+                  <button
+                    type="button"
+                    className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                  >
+                    <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
+                    Back
+                  </button>
+                </Link>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 inline-flex items-center justify-center"
+                  className="flex-1 sm:flex-initial inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                 >
-                  Next Step
-                  <ArrowRightIcon className="w-4 h-4 ml-2" />
+                  Continue
+                  <ArrowRightIcon className="w-4 sm:w-5 h-4 sm:h-5 ml-1 sm:ml-2" />
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-
-        {/* Back Link */}
-        <div className="mt-6">
-          <Link
-            to="/admin/orders/add/step-1-search"
-            className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
-          >
-            <ArrowLeftIcon className="w-4 h-4 mr-1" />
-            Back to Customer Search
-          </Link>
+            </div>
+          </form>
         </div>
       </div>
 
-      {/* Cancel Confirmation Modal */}
+      {/* Cancel Confirmation Modal - Responsive */}
       {showCancelWarning && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-                <ExclamationCircleIcon className="h-5 w-5 mr-2 text-amber-600" />
-                Are you sure?
+          <div className="bg-white rounded-lg max-w-md w-full shadow-xl">
+            <div className="bg-gray-700 rounded-t-lg px-4 sm:px-6 py-3 sm:py-4">
+              <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+                <ExclamationCircleIcon className="h-5 w-5 mr-2 text-amber-400 flex-shrink-0" />
+                Confirm Cancellation
               </h3>
             </div>
 
-            <div className="px-4 sm:px-6 py-4">
-              <p className="text-sm text-gray-600">
+            <div className="px-4 sm:px-6 py-4 sm:py-5">
+              <p className="text-sm sm:text-base text-gray-600">
                 Your Order record will be cancelled and your work will be lost.
-                This cannot be undone. Do you want to continue?
+                This action cannot be undone.
+              </p>
+              <p className="mt-2 text-sm sm:text-base font-medium text-gray-900">
+                Do you want to continue?
               </p>
             </div>
 
-            <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-t border-gray-200 rounded-b-lg flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
               <button
                 onClick={() => setShowCancelWarning(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 w-full sm:w-auto"
+                className="px-4 py-2 text-sm sm:text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 w-full sm:w-auto transition-colors"
               >
                 No, Keep Working
               </button>
               <button
                 onClick={handleConfirmCancel}
-                className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 w-full sm:w-auto"
+                className="px-4 py-2 text-sm sm:text-base font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 w-full sm:w-auto transition-colors"
               >
-                Yes, Cancel
+                Yes, Cancel Order
               </button>
             </div>
           </div>

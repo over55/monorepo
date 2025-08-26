@@ -454,7 +454,7 @@ function AdminStaffAddStep3Page() {
             </div>
           </div>
         ) : (
-          <form onSubmit={onSubmitClick} className="max-w-4xl mx-auto">
+          <form onSubmit={onSubmitClick}>
             <div className="space-y-0">
               {/* Personal Information Section */}
               <DetailSection title="Personal Information" icon={UserIcon}>

@@ -325,7 +325,7 @@ function AdminStaffAddStep6Page() {
             </div>
           </div>
         ) : (
-          <form onSubmit={onSubmitClick} className="max-w-4xl mx-auto">
+          <form onSubmit={onSubmitClick}>
             <div className="space-y-0">
               {/* Tags and Identification Section */}
               <DetailSection title="Tags & Identification" icon={TagIcon}>

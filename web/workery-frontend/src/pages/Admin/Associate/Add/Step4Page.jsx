@@ -23,6 +23,24 @@ import {
   BuildingOfficeIcon,
 } from "@heroicons/react/24/outline";
 
+// Section Component with Dark Header Pattern - Moved outside to prevent re-creation
+const DetailSection = ({ title, icon: Icon, children, description }) => (
+  <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
+    <div className="px-4 sm:px-6 py-3 sm:py-4">
+      <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+        <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
+        <span className="truncate">{title}</span>
+      </h3>
+      {description && (
+        <p className="mt-1 text-xs sm:text-sm text-gray-300">{description}</p>
+      )}
+    </div>
+    <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
+      {children}
+    </div>
+  </div>
+);
+
 function AdminAssociateAddStep4Page() {
   const authManager = useAuthManager();
   const navigate = useNavigate();
@@ -229,24 +247,6 @@ function AdminAssociateAddStep4Page() {
     { value: "Yukon", label: "Yukon" },
   ];
 
-  // Section Component with Dark Header Pattern
-  const DetailSection = ({ title, icon: Icon, children, description }) => (
-    <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
-      <div className="px-4 sm:px-6 py-3 sm:py-4">
-        <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
-          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
-          <span className="truncate">{title}</span>
-        </h3>
-        {description && (
-          <p className="mt-1 text-xs sm:text-sm text-gray-300">{description}</p>
-        )}
-      </div>
-      <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
-        {children}
-      </div>
-    </div>
-  );
-
   // Copy billing to shipping helper
   const copyBillingToShipping = () => {
     const existingState = getExistingState();
@@ -426,8 +426,8 @@ function AdminAssociateAddStep4Page() {
           </div>
         )}
 
-        {/* Main Form */}
-        <form onSubmit={onSubmitClick} className="max-w-3xl mx-auto">
+        {/* Main Form - UPDATED: Removed max-w-3xl mx-auto constraint */}
+        <form onSubmit={onSubmitClick}>
           {isLoading ? (
             <div className="bg-white shadow-sm rounded-lg p-8">
               <div className="flex items-center justify-center">

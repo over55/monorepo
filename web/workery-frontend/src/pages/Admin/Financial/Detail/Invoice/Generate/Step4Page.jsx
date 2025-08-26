@@ -11,6 +11,7 @@ import {
   CheckIcon,
   ChartBarIcon,
   CurrencyDollarIcon,
+  CreditCardIcon,
   DocumentTextIcon,
   CheckCircleIcon,
   ExclamationCircleIcon,

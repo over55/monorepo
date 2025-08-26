@@ -25,7 +25,39 @@ import {
   UserGroupIcon,
   WrenchScrewdriverIcon,
   DocumentCheckIcon,
+  CheckIcon,
 } from "@heroicons/react/24/outline";
+
+// Section Component with Dark Header Pattern - Moved outside to prevent re-creation
+const DetailSection = ({
+  title,
+  icon: Icon,
+  children,
+  description,
+  actions,
+}) => (
+  <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
+    <div className="px-4 sm:px-6 py-3 sm:py-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+            <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
+            <span className="truncate">{title}</span>
+          </h3>
+          {description && (
+            <p className="mt-1 text-xs sm:text-sm text-gray-300">
+              {description}
+            </p>
+          )}
+        </div>
+        {actions && <div>{actions}</div>}
+      </div>
+    </div>
+    <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
+      {children}
+    </div>
+  </div>
+);
 
 function AdminOrderDetailMoreTransferStep1Page() {
   const { oid } = useParams();
@@ -74,6 +106,8 @@ function AdminOrderDetailMoreTransferStep1Page() {
       !actualSearchText
     ) {
       setErrors({ message: "Please enter at least one search criteria" });
+      // Scroll to top to show errors
+      window.scrollTo(0, 0);
       return;
     }
 
@@ -145,57 +179,62 @@ function AdminOrderDetailMoreTransferStep1Page() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {/* Breadcrumb */}
-        <nav className="flex mb-4" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-wrap">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* Responsive Breadcrumb */}
+        <nav
+          className="flex mb-4 sm:mb-6 overflow-x-auto"
+          aria-label="Breadcrumb"
+        >
+          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
             <li className="inline-flex items-center">
               <Link
                 to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+                className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
               >
-                <ChartBarIcon className="w-4 h-4 mr-1 sm:mr-2" />
+                <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                 <span className="hidden sm:inline">Dashboard</span>
                 <span className="sm:hidden">Dash</span>
               </Link>
             </li>
             <li>
               <div className="flex items-center">
-                <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                <ChevronRightIcon className="w-3 sm:w-4 h-3 sm:h-4 text-gray-400 mx-1 sm:mx-2" />
                 <Link
                   to="/admin/orders"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                  className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
                 >
                   <span className="inline-flex items-center">
-                    <WrenchScrewdriverIcon className="w-4 h-4 mr-1 sm:mr-2" />
-                    Orders
+                    <WrenchScrewdriverIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                    <span className="hidden sm:inline">Orders</span>
+                    <span className="sm:hidden">Orders</span>
                   </span>
                 </Link>
               </div>
             </li>
             <li>
               <div className="flex items-center">
-                <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                <ChevronRightIcon className="w-3 sm:w-4 h-3 sm:h-4 text-gray-400 mx-1 sm:mx-2" />
                 <Link
                   to={`/admin/order/${oid}`}
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                  className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
                 >
                   <span className="inline-flex items-center">
-                    <ClipboardDocumentIcon className="w-4 h-4 mr-1 sm:mr-2" />
-                    Order #{oid}
+                    <ClipboardDocumentIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                    <span className="hidden sm:inline">Order #{oid}</span>
+                    <span className="sm:hidden">#{oid}</span>
                   </span>
                 </Link>
               </div>
             </li>
             <li>
               <div className="flex items-center">
-                <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                <ChevronRightIcon className="w-3 sm:w-4 h-3 sm:h-4 text-gray-400 mx-1 sm:mx-2" />
                 <Link
                   to={`/admin/order/${oid}/more`}
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                  className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
                 >
                   <span className="inline-flex items-center">
-                    <EllipsisHorizontalIcon className="w-4 h-4 mr-1 sm:mr-2" />
+                    <EllipsisHorizontalIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                     More
                   </span>
                 </Link>
@@ -203,9 +242,9 @@ function AdminOrderDetailMoreTransferStep1Page() {
             </li>
             <li aria-current="page">
               <div className="flex items-center">
-                <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
-                  <ArrowsRightLeftIcon className="w-4 h-4 mr-1 sm:mr-2" />
+                <ChevronRightIcon className="w-3 sm:w-4 h-3 sm:h-4 text-gray-400 mx-1 sm:mx-2" />
+                <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
+                  <ArrowsRightLeftIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                   Transfer
                 </span>
               </div>
@@ -213,19 +252,49 @@ function AdminOrderDetailMoreTransferStep1Page() {
           </ol>
         </nav>
 
-        {/* Page Title */}
-        <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
-            <ArrowsRightLeftIcon className="w-6 h-6 sm:w-7 sm:h-7 mr-2 sm:mr-3 text-blue-600" />
+        {/* Page Title - Responsive */}
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center">
+            <ArrowsRightLeftIcon className="w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
             Transfer Order
           </h1>
+          <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+            <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
+            Search for the client to transfer this order to
+          </p>
         </div>
 
-        {/* Wizard Steps - Responsive Design */}
-        <div className="mb-6">
+        {/* Wizard Steps - Mobile First */}
+        <div className="mb-4 sm:mb-6">
+          {/* Mobile View */}
+          <div className="md:hidden bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full">
+                  <span className="text-white font-semibold text-sm">1</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">
+                    Step 1: Search Client
+                  </p>
+                  <p className="text-xs text-gray-500">Find Customer</p>
+                </div>
+              </div>
+              <div className="text-xs text-gray-500">1 of 5</div>
+            </div>
+            <div className="mt-2">
+              <div className="bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-blue-600 h-2 rounded-full"
+                  style={{ width: "20%" }}
+                ></div>
+              </div>
+            </div>
+          </div>
+
           {/* Desktop View */}
-          <div className="hidden lg:flex items-center justify-center">
-            <div className="flex items-center">
+          <div className="hidden md:flex items-center justify-center overflow-x-auto">
+            <div className="flex items-center min-w-max">
               {/* Step 1 - Active */}
               <div className="flex items-center">
                 <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
@@ -239,205 +308,105 @@ function AdminOrderDetailMoreTransferStep1Page() {
                 </div>
               </div>
 
-              {/* Connector */}
-              <div className="mx-2 w-16 h-0.5 bg-gray-300"></div>
-
-              {/* Step 2 - Inactive */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
-                  <span className="text-gray-600 font-semibold">2</span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-500">
-                    Pick Client
-                  </p>
-                  <p className="text-xs text-gray-400">Select Result</p>
-                </div>
-              </div>
-
-              {/* Connector */}
-              <div className="mx-2 w-16 h-0.5 bg-gray-300"></div>
-
-              {/* Step 3 - Inactive */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
-                  <span className="text-gray-600 font-semibold">3</span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-500">
-                    Search Associate
-                  </p>
-                  <p className="text-xs text-gray-400">Find Worker</p>
-                </div>
-              </div>
-
-              {/* Connector */}
-              <div className="mx-2 w-16 h-0.5 bg-gray-300"></div>
-
-              {/* Step 4 - Inactive */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
-                  <span className="text-gray-600 font-semibold">4</span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-500">
-                    Pick Associate
-                  </p>
-                  <p className="text-xs text-gray-400">Select Worker</p>
-                </div>
-              </div>
-
-              {/* Connector */}
-              <div className="mx-2 w-16 h-0.5 bg-gray-300"></div>
-
-              {/* Step 5 - Inactive */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
-                  <span className="text-gray-600 font-semibold">5</span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-500">Confirm</p>
-                  <p className="text-xs text-gray-400">Review Transfer</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Tablet View - Horizontal Scroll */}
-          <div className="hidden md:block lg:hidden">
-            <div className="overflow-x-auto pb-2">
-              <div className="flex items-center min-w-max px-2">
-                {[
-                  { num: 1, title: "Search Client", active: true },
-                  { num: 2, title: "Pick Client", active: false },
-                  { num: 3, title: "Search Associate", active: false },
-                  { num: 4, title: "Pick Associate", active: false },
-                  { num: 5, title: "Confirm", active: false },
-                ].map((step, index) => (
-                  <React.Fragment key={step.num}>
-                    <div className="flex items-center">
-                      <div
-                        className={`flex items-center justify-center w-8 h-8 ${step.active ? "bg-blue-600" : "bg-gray-300"} rounded-full`}
-                      >
-                        <span
-                          className={`${step.active ? "text-white" : "text-gray-600"} font-semibold text-xs`}
-                        >
-                          {step.num}
-                        </span>
-                      </div>
-                      <div className="ml-2">
-                        <p
-                          className={`text-xs font-medium ${step.active ? "text-gray-900" : "text-gray-500"}`}
-                        >
-                          {step.title}
-                        </p>
-                      </div>
+              {/* Remaining Steps */}
+              {[
+                { num: 2, title: "Pick Client", subtitle: "Select Result" },
+                { num: 3, title: "Search Associate", subtitle: "Find Worker" },
+                { num: 4, title: "Pick Associate", subtitle: "Select Worker" },
+                { num: 5, title: "Confirm", subtitle: "Review Transfer" },
+              ].map((step) => (
+                <React.Fragment key={step.num}>
+                  <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+                  <div className="flex items-center">
+                    <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
+                      <span className="text-gray-600 font-semibold">
+                        {step.num}
+                      </span>
                     </div>
-                    {index < 4 && (
-                      <div className="mx-1 w-8 h-0.5 bg-gray-300"></div>
-                    )}
-                  </React.Fragment>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile View - Simplified Current Step Display */}
-          <div className="md:hidden">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full">
-                    <span className="text-white font-semibold text-sm">1</span>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-gray-500">
+                        {step.title}
+                      </p>
+                      <p className="text-xs text-gray-400">{step.subtitle}</p>
+                    </div>
                   </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">
-                      Step 1: Search Client
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Find the customer for transfer
-                    </p>
-                  </div>
-                </div>
-                <div className="text-xs text-gray-500">1 of 5</div>
-              </div>
+                </React.Fragment>
+              ))}
             </div>
           </div>
         </div>
 
         {/* Error Message */}
         {errors.message && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-3 sm:px-4 py-3 rounded-lg flex items-center justify-between">
-            <span className="flex items-center text-sm">
-              <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+          <div className="mb-4 sm:mb-6 bg-red-50 border border-red-200 text-red-800 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center text-xs sm:text-sm">
+              <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
               <span>{errors.message}</span>
             </span>
             <button
               onClick={() => setErrors({})}
-              className="text-red-600 hover:text-red-800 ml-2"
+              className="text-red-600 hover:text-red-800 ml-2 flex-shrink-0"
             >
-              <XMarkIcon className="w-5 h-5" />
+              <XMarkIcon className="w-4 sm:w-5 h-4 sm:h-5" />
             </button>
           </div>
         )}
 
-        {/* Main Content */}
-        <div className="bg-white shadow-sm rounded-lg">
-          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-                <MagnifyingGlassIcon className="w-5 h-5 mr-2" />
-                Search for Client
-              </h2>
-              <button
-                type="button"
-                onClick={() => setIsAdvancedFiltering(!isAdvancedFiltering)}
-                className={`inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-                  isAdvancedFiltering
-                    ? "text-white bg-blue-600 hover:bg-blue-700"
-                    : "text-gray-700 bg-white border border-gray-300 hover:bg-gray-50"
-                }`}
-              >
-                <AdjustmentsHorizontalIcon className="w-4 h-4 mr-1.5" />
-                {isAdvancedFiltering ? "Clear Advanced" : "Advanced Filters"}
-              </button>
-            </div>
-          </div>
-
+        {/* Main Form */}
+        <form onSubmit={handleSearch}>
           {isLoading ? (
-            <div className="p-4 sm:p-6">
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-blue-600"></div>
-                <span className="ml-3 text-gray-600 text-sm sm:text-base">
-                  Searching...
-                </span>
+            <div className="bg-white shadow-sm rounded-lg p-8">
+              <div className="flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <span className="ml-3 text-gray-600">Searching...</span>
               </div>
             </div>
           ) : (
             <>
-              <form onSubmit={handleSearch} className="p-4 sm:p-6">
-                <div className="space-y-4">
+              {/* Search Section with Dark Header */}
+              <DetailSection
+                title="Search for Client"
+                icon={MagnifyingGlassIcon}
+                description="Find the customer you want to transfer this order to"
+                actions={
+                  <button
+                    type="button"
+                    onClick={() => setIsAdvancedFiltering(!isAdvancedFiltering)}
+                    className={`inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 text-xs sm:text-sm font-medium rounded-lg transition-colors ${
+                      isAdvancedFiltering
+                        ? "text-white bg-blue-600 hover:bg-blue-700"
+                        : "text-gray-300 bg-gray-600 hover:bg-gray-500"
+                    }`}
+                  >
+                    <AdjustmentsHorizontalIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-1.5" />
+                    <span className="hidden sm:inline">
+                      {isAdvancedFiltering
+                        ? "Clear Advanced"
+                        : "Advanced Filters"}
+                    </span>
+                    <span className="sm:hidden">
+                      {isAdvancedFiltering ? "Clear" : "Advanced"}
+                    </span>
+                  </button>
+                }
+              >
+                <div className="space-y-4 sm:space-y-6">
                   {/* Search Keywords */}
                   {!isAdvancedFiltering && (
                     <div>
-                      <label
-                        htmlFor="actualSearchText"
-                        className="block text-sm font-medium text-gray-700 mb-2"
-                      >
+                      <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
                         Search Keywords
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <MagnifyingGlassIcon className="h-5 w-5 text-gray-400" />
+                          <MagnifyingGlassIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                         </div>
                         <input
                           type="text"
-                          id="actualSearchText"
-                          name="actualSearchText"
                           value={actualSearchText}
                           onChange={(e) => setActualSearchText(e.target.value)}
                           placeholder="Search by name, email, phone..."
-                          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
+                          className="w-full pl-10 pr-3 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-colors"
                         />
                       </div>
                     </div>
@@ -446,113 +415,93 @@ function AdminOrderDetailMoreTransferStep1Page() {
                   {/* Advanced Filtering */}
                   {isAdvancedFiltering && (
                     <>
-                      <div className="bg-gray-50 rounded-lg p-4">
-                        <h3 className="text-sm font-semibold text-gray-900 mb-4 flex items-center">
-                          <UserGroupIcon className="w-4 h-4 mr-2" />
+                      <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-4 sm:p-6">
+                        <h3 className="text-sm sm:text-base font-semibold text-gray-900 mb-4 flex items-center">
+                          <UserGroupIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
                           Customer Details
                         </h3>
 
                         {/* Name Fields */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
                           <div>
-                            <label
-                              htmlFor="customerFirstName"
-                              className="block text-sm font-medium text-gray-700 mb-2"
-                            >
+                            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
                               First Name
                             </label>
                             <div className="relative">
                               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <UserIcon className="h-5 w-5 text-gray-400" />
+                                <UserIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                               </div>
                               <input
                                 type="text"
-                                id="customerFirstName"
-                                name="customerFirstName"
                                 value={customerFirstName}
                                 onChange={(e) =>
                                   setCustomerFirstName(e.target.value)
                                 }
                                 placeholder="Enter first name"
-                                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
+                                className="w-full pl-10 pr-3 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-colors"
                               />
                             </div>
                           </div>
 
                           <div>
-                            <label
-                              htmlFor="customerLastName"
-                              className="block text-sm font-medium text-gray-700 mb-2"
-                            >
+                            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
                               Last Name
                             </label>
                             <div className="relative">
                               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <UserIcon className="h-5 w-5 text-gray-400" />
+                                <UserIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                               </div>
                               <input
                                 type="text"
-                                id="customerLastName"
-                                name="customerLastName"
                                 value={customerLastName}
                                 onChange={(e) =>
                                   setCustomerLastName(e.target.value)
                                 }
                                 placeholder="Enter last name"
-                                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
+                                className="w-full pl-10 pr-3 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-colors"
                               />
                             </div>
                           </div>
                         </div>
 
                         {/* Contact Fields */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                           <div>
-                            <label
-                              htmlFor="customerEmail"
-                              className="block text-sm font-medium text-gray-700 mb-2"
-                            >
+                            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
                               Email Address
                             </label>
                             <div className="relative">
                               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <EnvelopeIcon className="h-5 w-5 text-gray-400" />
+                                <EnvelopeIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                               </div>
                               <input
                                 type="email"
-                                id="customerEmail"
-                                name="customerEmail"
                                 value={customerEmail}
                                 onChange={(e) =>
                                   setCustomerEmail(e.target.value)
                                 }
                                 placeholder="Enter email address"
-                                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
+                                className="w-full pl-10 pr-3 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-colors"
                               />
                             </div>
                           </div>
 
                           <div>
-                            <label
-                              htmlFor="customerPhone"
-                              className="block text-sm font-medium text-gray-700 mb-2"
-                            >
+                            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
                               Phone Number
                             </label>
                             <div className="relative">
                               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <PhoneIcon className="h-5 w-5 text-gray-400" />
+                                <PhoneIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                               </div>
                               <input
                                 type="tel"
-                                id="customerPhone"
-                                name="customerPhone"
                                 value={customerPhone}
                                 onChange={(e) =>
                                   setCustomerPhone(e.target.value)
                                 }
                                 placeholder="Enter phone number"
-                                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
+                                className="w-full pl-10 pr-3 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-colors"
                               />
                             </div>
                           </div>
@@ -564,56 +513,57 @@ function AdminOrderDetailMoreTransferStep1Page() {
                   {/* Info Note */}
                   <div className="p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
                     <p className="text-xs sm:text-sm text-blue-800 flex items-start">
-                      <InformationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+                      <InformationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 mt-0.5" />
                       <span>
                         Search for the client you want to transfer this order
                         to. Enter at least one search criteria to find existing
-                        clients in the system.
+                        clients in the system. You can also skip to associate
+                        search if needed.
                       </span>
                     </p>
                   </div>
                 </div>
+              </DetailSection>
 
-                {/* Search Actions */}
-                <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              {/* Form Actions */}
+              <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3">
+                <button
+                  type="button"
+                  onClick={handleCancel}
+                  className="flex-1 sm:flex-initial inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <XMarkIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
+                  Cancel
+                </button>
+                <div className="flex flex-col sm:flex-row gap-3 flex-1 sm:flex-initial sm:ml-auto">
                   <button
                     type="button"
-                    onClick={handleCancel}
-                    className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    onClick={handleSkip}
+                    className="inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base font-medium text-amber-700 bg-amber-50 border border-amber-300 rounded-lg hover:bg-amber-100 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500"
                   >
-                    <XMarkIcon className="w-4 h-4 inline mr-2" />
-                    Cancel
+                    Skip to Associate
+                    <ArrowRightIcon className="w-4 sm:w-5 h-4 sm:h-5 ml-2" />
                   </button>
-                  <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                    <button
-                      type="button"
-                      onClick={handleSkip}
-                      className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-amber-700 bg-amber-50 border border-amber-300 rounded-lg hover:bg-amber-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500"
-                    >
-                      Skip to Associate
-                      <ArrowRightIcon className="w-4 h-4 inline ml-2" />
-                    </button>
-                    <button
-                      type="submit"
-                      className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                      <MagnifyingGlassIcon className="w-4 h-4 mr-2" />
-                      Search
-                    </button>
-                  </div>
+                  <button
+                    type="submit"
+                    className="inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  >
+                    <MagnifyingGlassIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
+                    Search
+                  </button>
                 </div>
-              </form>
+              </div>
             </>
           )}
-        </div>
+        </form>
 
         {/* Back Link */}
-        <div className="mt-6">
+        <div className="mt-6 sm:mt-8">
           <Link
             to={`/admin/order/${oid}/more`}
-            className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+            className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800 transition-colors"
           >
-            <ArrowLeftIcon className="w-4 h-4 mr-1" />
+            <ArrowLeftIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
             Back to More Options
           </Link>
         </div>
@@ -622,32 +572,32 @@ function AdminOrderDetailMoreTransferStep1Page() {
       {/* Cancel Confirmation Modal */}
       {showCancelWarning && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full">
+          <div className="bg-white rounded-lg max-w-md w-full shadow-xl">
             <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
               <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-                <ExclamationCircleIcon className="h-5 w-5 mr-2 text-amber-600" />
+                <ExclamationCircleIcon className="h-5 sm:h-6 w-5 sm:w-6 mr-2 text-amber-600 flex-shrink-0" />
                 Are you sure?
               </h3>
             </div>
 
             <div className="px-4 sm:px-6 py-4">
-              <p className="text-sm text-gray-600">
+              <p className="text-sm sm:text-base text-gray-600">
                 Your transfer operation will be cancelled and your search
                 criteria will be lost. This cannot be undone. Do you want to
                 continue?
               </p>
             </div>
 
-            <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row sm:justify-end gap-3">
+            <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-200 rounded-b-lg flex flex-col sm:flex-row sm:justify-end gap-3">
               <button
                 onClick={() => setShowCancelWarning(false)}
-                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 order-2 sm:order-1"
+                className="w-full sm:w-auto px-4 py-2 text-sm sm:text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors order-2 sm:order-1"
               >
                 No, Keep Working
               </button>
               <button
                 onClick={handleConfirmCancel}
-                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 order-1 sm:order-2"
+                className="w-full sm:w-auto px-4 py-2 text-sm sm:text-base font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors order-1 sm:order-2"
               >
                 Yes, Cancel
               </button>
