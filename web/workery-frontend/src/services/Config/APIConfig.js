@@ -157,7 +157,7 @@ export const API_ENDPOINTS = {
   // Financial endpoints
   FINANCIALS: "/financials",
   FINANCIAL_DETAIL: "/order/{id}",
-  FINANCIAL_UPDATE: "/order/{id}/financial",
+  FINANCIAL_UPDATE: "/order/{orderWJID}/financial",
   FINANCIAL_SELECT_OPTIONS: "/financials/select-options",
 
   // Attachment endpoints
