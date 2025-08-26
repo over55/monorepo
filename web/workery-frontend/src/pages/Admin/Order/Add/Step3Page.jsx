@@ -17,13 +17,15 @@ import {
   ArrowLeftIcon,
   ChartBarIcon,
   WrenchIcon,
-  ExclamationCircleIcon,
+  ExclamationTriangleIcon,
   DocumentTextIcon,
   AcademicCapIcon,
   TagIcon,
   ChatBubbleLeftRightIcon,
   CheckIcon,
   ArrowRightIcon,
+  SparklesIcon,
+  PencilIcon,
 } from "@heroicons/react/24/outline";
 
 function AdminOrderAddStep3Page() {
@@ -132,7 +134,7 @@ function AdminOrderAddStep3Page() {
 
   if (!existingOrder) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
         <div className="flex items-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
           <span className="ml-3 text-gray-600">Loading...</span>
@@ -142,15 +144,18 @@ function AdminOrderAddStep3Page() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {/* Breadcrumb */}
-        <nav className="flex mb-4" aria-label="Breadcrumb">
+        {/* Enhanced Breadcrumb */}
+        <nav
+          className="flex mb-4 bg-white rounded-lg shadow-sm p-2 sm:p-3"
+          aria-label="Breadcrumb"
+        >
           <ol className="inline-flex items-center space-x-1 md:space-x-3">
             <li className="inline-flex items-center">
               <Link
                 to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
               >
                 <ChartBarIcon className="w-4 h-4 mr-2" />
                 <span className="hidden sm:inline">Dashboard</span>
@@ -162,7 +167,7 @@ function AdminOrderAddStep3Page() {
                 <ChevronRightIcon className="w-5 h-5 text-gray-400" />
                 <Link
                   to="/admin/orders"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors md:ml-2"
                 >
                   <span className="inline-flex items-center">
                     <WrenchIcon className="w-4 h-4 mr-2" />
@@ -183,23 +188,27 @@ function AdminOrderAddStep3Page() {
           </ol>
         </nav>
 
-        {/* Page Title */}
-        <div className="mb-6">
+        {/* Enhanced Page Title */}
+        <div className="mb-6 bg-white rounded-lg shadow-sm p-4 sm:p-6">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
             <ClipboardDocumentListIcon className="w-6 h-6 sm:w-7 sm:h-7 mr-3 text-blue-600" />
             Add New Order
           </h1>
+          <p className="mt-1 text-sm text-gray-600 flex items-center">
+            <SparklesIcon className="w-4 h-4 mr-1" />
+            Step 3: Job details and requirements
+          </p>
         </div>
 
-        {/* Wizard Steps - Responsive Version */}
-        <div className="mb-6">
+        {/* Enhanced Wizard Steps */}
+        <div className="mb-6 bg-white rounded-lg shadow-sm p-4">
           <div className="flex items-center justify-center">
             {/* Mobile/Tablet View */}
             <div className="lg:hidden w-full overflow-x-auto pb-2">
               <div className="flex items-center min-w-max px-2">
                 {/* Step 1 - Complete */}
                 <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex-shrink-0">
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex-shrink-0 shadow-lg">
                     <CheckIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
                   <div className="ml-2 sm:ml-3">
@@ -217,7 +226,7 @@ function AdminOrderAddStep3Page() {
 
                 {/* Step 2 - Complete */}
                 <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex-shrink-0">
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex-shrink-0 shadow-lg">
                     <CheckIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
                   <div className="ml-2 sm:ml-3">
@@ -235,7 +244,7 @@ function AdminOrderAddStep3Page() {
 
                 {/* Step 3 - Active */}
                 <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-full flex-shrink-0">
+                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-full flex-shrink-0 shadow-lg">
                     <span className="text-white font-semibold text-sm">3</span>
                   </div>
                   <div className="ml-2 sm:ml-3">
@@ -274,7 +283,7 @@ function AdminOrderAddStep3Page() {
             <div className="hidden lg:flex items-center">
               {/* Step 1 - Complete */}
               <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
+                <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full shadow-lg">
                   <CheckIcon className="w-6 h-6 text-white" />
                 </div>
                 <div className="ml-3">
@@ -288,7 +297,7 @@ function AdminOrderAddStep3Page() {
 
               {/* Step 2 - Complete */}
               <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
+                <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full shadow-lg">
                   <CheckIcon className="w-6 h-6 text-white" />
                 </div>
                 <div className="ml-3">
@@ -302,7 +311,7 @@ function AdminOrderAddStep3Page() {
 
               {/* Step 3 - Active */}
               <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
+                <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full shadow-lg">
                   <span className="text-white font-semibold">3</span>
                 </div>
                 <div className="ml-3">
@@ -330,13 +339,13 @@ function AdminOrderAddStep3Page() {
           </div>
         </div>
 
-        {/* Cancel Warning Modal */}
+        {/* Cancel Warning Modal - Enhanced */}
         {showCancelWarning && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-96 shadow-2xl rounded-xl bg-white">
               <div className="mt-3 text-center">
-                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100">
-                  <ExclamationCircleIcon className="h-6 w-6 text-yellow-600" />
+                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-gradient-to-r from-yellow-400 to-yellow-500">
+                  <ExclamationTriangleIcon className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="text-lg leading-6 font-medium text-gray-900 mt-2">
                   Are you sure?
@@ -350,13 +359,13 @@ function AdminOrderAddStep3Page() {
                 <div className="flex justify-center gap-4 mt-4">
                   <button
                     onClick={() => setShowCancelWarning(false)}
-                    className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    className="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all transform hover:scale-105"
                   >
                     No, Keep Working
                   </button>
                   <button
                     onClick={handleConfirmCancel}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                    className="px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:from-red-700 hover:to-red-800 transition-all transform hover:scale-105 shadow-lg"
                   >
                     Yes, Cancel Order
                   </button>
@@ -366,29 +375,32 @@ function AdminOrderAddStep3Page() {
           </div>
         )}
 
-        {/* Error Message */}
+        {/* Error Message - Enhanced */}
         {errors.message && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
+          <div className="mb-6 bg-red-50 border-l-4 border-red-400 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between shadow-sm">
             <span className="flex items-center">
-              <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+              <ExclamationTriangleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
               <span className="text-sm">{errors.message}</span>
             </span>
             <button
               onClick={() => setErrors({})}
-              className="text-red-600 hover:text-red-800 ml-2"
+              className="text-red-600 hover:text-red-800 ml-2 transition-colors"
             >
               <XMarkIcon className="w-5 h-5" />
             </button>
           </div>
         )}
 
-        {/* Main Content */}
-        <div className="bg-white shadow-sm rounded-lg">
-          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-              <DocumentTextIcon className="w-5 h-5 mr-2" />
+        {/* Main Content with Dark Header */}
+        <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+          <div className="px-4 sm:px-6 py-4 bg-gradient-to-r from-gray-800 to-gray-700">
+            <h2 className="text-base sm:text-lg font-semibold text-white flex items-center">
+              <DocumentTextIcon className="w-5 h-5 mr-2 text-blue-400" />
               Skills and Description
             </h2>
+            <p className="mt-1 text-xs sm:text-sm text-gray-300">
+              Provide details about the work requirements
+            </p>
           </div>
 
           <div className="p-4 sm:p-6">
@@ -400,10 +412,12 @@ function AdminOrderAddStep3Page() {
             ) : (
               <form onSubmit={onSubmitClick} className="max-w-4xl mx-auto">
                 <div className="space-y-6">
-                  {/* Job Description */}
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Describe the Job <span className="text-red-500">*</span>
+                  {/* Job Description - Enhanced */}
+                  <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center">
+                      <PencilIcon className="w-4 h-4 mr-1" />
+                      Describe the Job{" "}
+                      <span className="text-red-500 ml-1">*</span>
                     </label>
                     <div className="relative">
                       <textarea
@@ -414,22 +428,27 @@ function AdminOrderAddStep3Page() {
                         maxLength={1000}
                         className={`w-full px-3 py-2 border ${
                           errors.description
-                            ? "border-red-500"
-                            : "border-gray-300"
-                        } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none`}
+                            ? "border-red-500 bg-red-50"
+                            : "border-gray-300 bg-white"
+                        } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none transition-all`}
                       />
                     </div>
                     {errors.description && (
-                      <p className="mt-1 text-sm text-red-600">
+                      <p className="mt-1 text-sm text-red-600 font-medium">
                         {errors.description}
                       </p>
                     )}
-                    <p className="mt-1 text-xs text-gray-500">
-                      Please provide a clear description of the work required
-                    </p>
+                    <div className="flex justify-between mt-1">
+                      <p className="text-xs text-gray-500">
+                        Please provide a clear description of the work required
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {description.length}/1000
+                      </p>
+                    </div>
                   </div>
 
-                  {/* Skills Section */}
+                  {/* Skills Section - Enhanced */}
                   <div className="border-t pt-6">
                     <div className="flex items-center mb-4">
                       <AcademicCapIcon className="w-5 h-5 mr-2 text-blue-600" />
@@ -438,53 +457,57 @@ function AdminOrderAddStep3Page() {
                       </h3>
                     </div>
 
-                    <SkillSetsMultiSelect
-                      value={skillSets}
-                      onChange={handleSkillSetsChange}
-                      error={errors.skillSets}
-                      required={true}
-                      label="Required Job Skills"
-                      placeholder="Select required skill sets..."
-                      helperText="Pick at least one skill set that is required for this job"
-                      onUnauthorized={() =>
-                        navigate("/login?unauthorized=true")
-                      }
-                    />
+                    <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-4 border border-purple-200">
+                      <SkillSetsMultiSelect
+                        value={skillSets}
+                        onChange={handleSkillSetsChange}
+                        error={errors.skillSets}
+                        required={true}
+                        label="Required Job Skills"
+                        placeholder="Select required skill sets..."
+                        helperText="Pick at least one skill set that is required for this job"
+                        onUnauthorized={() =>
+                          navigate("/login?unauthorized=true")
+                        }
+                      />
+                    </div>
                   </div>
 
-                  {/* Metrics Section */}
+                  {/* Metrics Section - Enhanced */}
                   <div className="border-t pt-6">
                     <div className="flex items-center mb-4">
-                      <TagIcon className="w-5 h-5 mr-2 text-blue-600" />
+                      <TagIcon className="w-5 h-5 mr-2 text-green-600" />
                       <h3 className="text-base font-semibold text-gray-900">
                         Metrics
                       </h3>
                     </div>
 
-                    <TagsMultiSelect
-                      value={tags}
-                      onChange={handleTagsChange}
-                      error={errors.tags}
-                      required={false}
-                      label="Tags (Optional)"
-                      placeholder="Select tags..."
-                      helperText="Pick any tags you would like to associate with this order"
-                      onUnauthorized={() =>
-                        navigate("/login?unauthorized=true")
-                      }
-                    />
+                    <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
+                      <TagsMultiSelect
+                        value={tags}
+                        onChange={handleTagsChange}
+                        error={errors.tags}
+                        required={false}
+                        label="Tags (Optional)"
+                        placeholder="Select tags..."
+                        helperText="Pick any tags you would like to associate with this order"
+                        onUnauthorized={() =>
+                          navigate("/login?unauthorized=true")
+                        }
+                      />
+                    </div>
                   </div>
 
-                  {/* Comments Section */}
+                  {/* Comments Section - Enhanced */}
                   <div className="border-t pt-6">
                     <div className="flex items-center mb-4">
-                      <ChatBubbleLeftRightIcon className="w-5 h-5 mr-2 text-blue-600" />
+                      <ChatBubbleLeftRightIcon className="w-5 h-5 mr-2 text-amber-600" />
                       <h3 className="text-base font-semibold text-gray-900">
                         Comments
                       </h3>
                     </div>
 
-                    <div>
+                    <div className="bg-gradient-to-r from-amber-50 to-amber-100 rounded-lg p-4 border border-amber-200">
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Additional Comments (Optional)
                       </label>
@@ -494,20 +517,25 @@ function AdminOrderAddStep3Page() {
                         placeholder="Any additional comments or special instructions..."
                         rows={4}
                         maxLength={1000}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                        className="w-full px-3 py-2 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 resize-none transition-all"
                       />
-                      <p className="mt-1 text-xs text-gray-500">
-                        Add any additional information that might be helpful
-                      </p>
+                      <div className="flex justify-between mt-1">
+                        <p className="text-xs text-gray-500">
+                          Add any additional information that might be helpful
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {additionalComment.length}/1000
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Form Actions */}
+                {/* Form Actions - Enhanced */}
                 <div className="mt-8 flex flex-col sm:flex-row gap-3 pt-6 border-t">
                   <Link
                     to="/admin/orders/add/step-2"
-                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all transform hover:scale-105"
                   >
                     <ArrowLeftIcon className="w-4 h-4 mr-2" />
                     Back
@@ -515,14 +543,14 @@ function AdminOrderAddStep3Page() {
                   <button
                     type="button"
                     onClick={handleCancelClick}
-                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50"
+                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-red-600 bg-white border border-red-300 rounded-lg hover:bg-red-50 transition-all transform hover:scale-105"
                   >
                     <XMarkIcon className="w-4 h-4 mr-2" />
                     Cancel
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all transform hover:scale-105 shadow-lg"
                   >
                     Next
                     <ArrowRightIcon className="w-4 h-4 ml-2" />

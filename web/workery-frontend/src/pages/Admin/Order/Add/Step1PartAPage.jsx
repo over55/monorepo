@@ -17,9 +17,10 @@ import {
   EnvelopeIcon,
   PhoneIcon,
   UserIcon,
-  ExclamationCircleIcon,
+  ExclamationTriangleIcon,
   MagnifyingGlassIcon,
   UserPlusIcon,
+  SparklesIcon,
 } from "@heroicons/react/24/outline";
 
 function AdminOrderAddStep1PartAPage() {
@@ -107,15 +108,18 @@ function AdminOrderAddStep1PartAPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {/* Breadcrumb */}
-        <nav className="flex mb-4" aria-label="Breadcrumb">
+        {/* Enhanced Breadcrumb with better styling */}
+        <nav
+          className="flex mb-4 bg-white rounded-lg shadow-sm p-2 sm:p-3"
+          aria-label="Breadcrumb"
+        >
           <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-wrap">
             <li className="inline-flex items-center">
               <Link
                 to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
               >
                 <ChartBarIcon className="w-4 h-4 mr-1 sm:mr-2" />
                 <span className="hidden sm:inline">Dashboard</span>
@@ -127,7 +131,7 @@ function AdminOrderAddStep1PartAPage() {
                 <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                 <Link
                   to="/admin/orders"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors md:ml-2"
                 >
                   <span className="inline-flex items-center">
                     <ClipboardDocumentListIcon className="w-4 h-4 mr-1 sm:mr-2" />
@@ -148,22 +152,30 @@ function AdminOrderAddStep1PartAPage() {
           </ol>
         </nav>
 
-        {/* Page Title */}
-        <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
-            <PlusCircleIcon className="w-6 h-6 sm:w-7 sm:h-7 mr-2 sm:mr-3 text-blue-600" />
-            New Order
-          </h1>
+        {/* Enhanced Page Title with gradient */}
+        <div className="mb-6 bg-white rounded-lg shadow-sm p-4 sm:p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
+                <PlusCircleIcon className="w-6 h-6 sm:w-7 sm:h-7 mr-2 sm:mr-3 text-blue-600" />
+                New Order
+              </h1>
+              <p className="mt-1 text-sm text-gray-600 flex items-center">
+                <SparklesIcon className="w-4 h-4 mr-1" />
+                Create a new work order for a customer
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Wizard Steps - Responsive Design */}
-        <div className="mb-6">
+        {/* Enhanced Wizard Steps with dark theme */}
+        <div className="mb-6 bg-white rounded-lg shadow-sm p-4">
           {/* Desktop/Laptop View (1920x1080 and above) */}
           <div className="hidden 2xl:flex items-center justify-center">
             <div className="flex items-center">
               {/* Step 1 - Active */}
               <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
+                <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full shadow-lg">
                   <span className="text-white font-semibold">1</span>
                 </div>
                 <div className="ml-3">
@@ -222,7 +234,7 @@ function AdminOrderAddStep1PartAPage() {
               <div className="flex items-center min-w-max px-4">
                 {/* Step 1 - Active */}
                 <div className="flex items-center">
-                  <div className="flex items-center justify-center w-9 h-9 bg-blue-600 rounded-full">
+                  <div className="flex items-center justify-center w-9 h-9 bg-blue-600 rounded-full shadow-lg">
                     <span className="text-white font-semibold text-sm">1</span>
                   </div>
                   <div className="ml-2">
@@ -303,7 +315,7 @@ function AdminOrderAddStep1PartAPage() {
                   <React.Fragment key={step.num}>
                     <div className="flex items-center">
                       <div
-                        className={`flex items-center justify-center w-8 h-8 ${step.active ? "bg-blue-600" : "bg-gray-300"} rounded-full`}
+                        className={`flex items-center justify-center w-8 h-8 ${step.active ? "bg-blue-600 shadow-lg" : "bg-gray-300"} rounded-full`}
                       >
                         <span
                           className={`${step.active ? "text-white" : "text-gray-600"} font-semibold text-xs`}
@@ -328,12 +340,12 @@ function AdminOrderAddStep1PartAPage() {
             </div>
           </div>
 
-          {/* Mobile View - Simplified Current Step Display */}
+          {/* Mobile View - Enhanced Current Step Display */}
           <div className="md:hidden">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full">
+                  <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full shadow-lg">
                     <span className="text-white font-semibold text-sm">1</span>
                   </div>
                   <div className="ml-3">
@@ -345,37 +357,40 @@ function AdminOrderAddStep1PartAPage() {
                     </p>
                   </div>
                 </div>
-                <div className="text-xs text-gray-500">1 of 4</div>
+                <div className="text-xs text-gray-500 font-medium">1 of 4</div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Error Message */}
+        {/* Error Message - Enhanced styling */}
         {errors.message && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-3 sm:px-4 py-3 rounded-lg flex items-center justify-between">
+          <div className="mb-6 bg-red-50 border-l-4 border-red-400 text-red-800 px-3 sm:px-4 py-3 rounded-lg flex items-center justify-between shadow-sm">
             <span className="flex items-center text-sm">
-              <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+              <ExclamationTriangleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
               <span>{errors.message}</span>
             </span>
             <button
               onClick={() => setErrors({})}
-              className="text-red-600 hover:text-red-800 ml-2"
+              className="text-red-600 hover:text-red-800 ml-2 transition-colors"
             >
               <XMarkIcon className="w-5 h-5" />
             </button>
           </div>
         )}
 
-        {/* Main Content */}
+        {/* Main Content with dark header */}
         <div>
           <div>
-            <div className="bg-white shadow-sm rounded-lg">
-              <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-                <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-                  <MagnifyingGlassIcon className="w-5 h-5 mr-2" />
+            <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+              <div className="px-4 sm:px-6 py-4 bg-gradient-to-r from-gray-800 to-gray-700 border-b border-gray-600">
+                <h2 className="text-base sm:text-lg font-semibold text-white flex items-center">
+                  <MagnifyingGlassIcon className="w-5 h-5 mr-2 text-blue-400" />
                   Search for Existing Customer
                 </h2>
+                <p className="text-xs sm:text-sm text-gray-300 mt-1">
+                  Find the customer you want to create an order for
+                </p>
               </div>
 
               {isFetching ? (
@@ -411,7 +426,7 @@ function AdminOrderAddStep1PartAPage() {
                               value={firstName}
                               onChange={(e) => setFirstName(e.target.value)}
                               placeholder="Enter first name"
-                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
+                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all"
                             />
                           </div>
                         </div>
@@ -434,7 +449,7 @@ function AdminOrderAddStep1PartAPage() {
                               value={lastName}
                               onChange={(e) => setLastName(e.target.value)}
                               placeholder="Enter last name"
-                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
+                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all"
                             />
                           </div>
                         </div>
@@ -460,7 +475,7 @@ function AdminOrderAddStep1PartAPage() {
                               value={email}
                               onChange={(e) => setEmail(e.target.value)}
                               placeholder="Enter email address"
-                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
+                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all"
                             />
                           </div>
                         </div>
@@ -483,14 +498,14 @@ function AdminOrderAddStep1PartAPage() {
                               value={phone}
                               onChange={(e) => setPhone(e.target.value)}
                               placeholder="Enter phone number"
-                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
+                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-all"
                             />
                           </div>
                         </div>
                       </div>
 
-                      {/* Info Note */}
-                      <div className="p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                      {/* Info Note - Enhanced styling */}
+                      <div className="p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg shadow-sm">
                         <p className="text-xs sm:text-sm text-blue-800 flex items-start">
                           <InformationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
                           <span>
@@ -502,19 +517,19 @@ function AdminOrderAddStep1PartAPage() {
                       </div>
                     </div>
 
-                    {/* Search Actions */}
+                    {/* Search Actions - Enhanced buttons */}
                     <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                       <button
                         type="button"
                         onClick={handleCancel}
-                        className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all transform hover:scale-105"
                       >
                         <XMarkIcon className="w-4 h-4 inline mr-2" />
                         Cancel
                       </button>
                       <button
                         type="submit"
-                        className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all transform hover:scale-105 shadow-lg"
                       >
                         <MagnifyingGlassIcon className="w-4 h-4 mr-2" />
                         Search
@@ -522,10 +537,10 @@ function AdminOrderAddStep1PartAPage() {
                     </div>
                   </form>
 
-                  {/* OR Divider */}
+                  {/* OR Divider - Enhanced */}
                   <div className="relative px-4 sm:px-6 py-3">
                     <div className="absolute inset-0 flex items-center px-4 sm:px-6">
-                      <div className="w-full border-t border-gray-200"></div>
+                      <div className="w-full border-t border-gray-300"></div>
                     </div>
                     <div className="relative flex justify-center">
                       <span className="px-4 bg-white text-sm font-medium text-gray-500">
@@ -534,16 +549,20 @@ function AdminOrderAddStep1PartAPage() {
                     </div>
                   </div>
 
-                  {/* Create New Customer */}
+                  {/* Create New Customer - Enhanced section */}
                   <div className="px-4 sm:px-6 pb-5">
-                    <div className="text-center">
-                      <p className="text-xs sm:text-sm text-gray-600 mb-4">
-                        If you need to create a new customer first, you can do
-                        so in a new window
+                    <div className="text-center bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-6 border border-green-200">
+                      <UserPlusIcon className="w-12 h-12 mx-auto text-green-600 mb-3" />
+                      <p className="text-xs sm:text-sm text-gray-700 mb-4 font-medium">
+                        Can't find the customer? Create a new one!
+                      </p>
+                      <p className="text-xs text-gray-600 mb-4">
+                        This will open in a new window so you won't lose your
+                        progress
                       </p>
                       <button
                         onClick={onCreateNewCustomerClick}
-                        className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                        className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium text-white bg-gradient-to-r from-green-600 to-green-700 rounded-lg hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all transform hover:scale-105 shadow-lg"
                       >
                         <UserPlusIcon className="w-5 h-5 mr-2" />
                         Create New Customer
@@ -556,11 +575,11 @@ function AdminOrderAddStep1PartAPage() {
           </div>
         </div>
 
-        {/* Back Link */}
+        {/* Back Link - Enhanced */}
         <div className="mt-6">
           <Link
             to="/admin/orders"
-            className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+            className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
           >
             <ArrowLeftIcon className="w-4 h-4 mr-1" />
             Back to Orders List
@@ -568,13 +587,13 @@ function AdminOrderAddStep1PartAPage() {
         </div>
       </div>
 
-      {/* Cancel Confirmation Modal */}
+      {/* Cancel Confirmation Modal - Enhanced styling */}
       {showCancelWarning && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-                <ExclamationCircleIcon className="h-5 w-5 mr-2 text-amber-600" />
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full shadow-2xl">
+            <div className="px-4 sm:px-6 py-4 bg-gradient-to-r from-amber-600 to-amber-700 rounded-t-xl">
+              <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+                <ExclamationTriangleIcon className="h-5 w-5 mr-2" />
                 Are you sure?
               </h3>
             </div>
@@ -586,16 +605,16 @@ function AdminOrderAddStep1PartAPage() {
               </p>
             </div>
 
-            <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row sm:justify-end gap-3">
+            <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row sm:justify-end gap-3 rounded-b-xl">
               <button
                 onClick={() => setShowCancelWarning(false)}
-                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 order-2 sm:order-1"
+                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 order-2 sm:order-1 transition-all transform hover:scale-105"
               >
                 No, Keep Working
               </button>
               <button
                 onClick={handleConfirmCancel}
-                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 order-1 sm:order-2"
+                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-red-600 to-red-700 rounded-lg hover:from-red-700 hover:to-red-800 order-1 sm:order-2 transition-all transform hover:scale-105 shadow-lg"
               >
                 Yes, Cancel
               </button>

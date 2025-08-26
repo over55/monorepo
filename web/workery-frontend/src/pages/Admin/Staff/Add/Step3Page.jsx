@@ -2,7 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router";
-import { useStaffAddWizardStorage } from "../../../../services/Services";
+import {
+  useStaffAddWizardStorage,
+  useStaffManager,
+} from "../../../../services/Services";
 import {
   UserPlusIcon,
   ChevronRightIcon,
@@ -11,22 +14,42 @@ import {
   ChartBarIcon,
   UserIcon,
   ExclamationCircleIcon,
+  ExclamationTriangleIcon,
   EnvelopeIcon,
   PhoneIcon,
   IdentificationIcon,
   CheckIcon,
   ArrowRightIcon,
+  InformationCircleIcon,
+  UsersIcon,
 } from "@heroicons/react/24/outline";
 import { STAFF_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS } from "../../../../constants/Staff";
+
+// DetailSection Component with Dark Header
+const DetailSection = ({ title, icon: Icon, children }) => (
+  <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
+    <div className="px-4 sm:px-6 py-3 sm:py-4">
+      <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+        <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
+        <span className="truncate">{title}</span>
+      </h3>
+    </div>
+    <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
+      {children}
+    </div>
+  </div>
+);
 
 function AdminStaffAddStep3Page() {
   const navigate = useNavigate();
   const wizardStorage = useStaffAddWizardStorage();
+  const staffManager = useStaffManager();
   const wizardState = wizardStorage.getWizardState();
 
   // Component states
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
+  const [isCheckingEmail, setIsCheckingEmail] = useState(false);
 
   // Form data
   const [email, setEmail] = useState(wizardState.email || "");
@@ -53,9 +76,113 @@ function AdminStaffAddStep3Page() {
     window.scrollTo(0, 0);
   }, []);
 
-  const onSubmitClick = (e) => {
+  const onUnauthorized = () => {
+    navigate("/login?unauthorized=true");
+  };
+
+  // Check if email is unique by querying existing staff
+  const checkEmailUniqueness = async (emailToCheck) => {
+    if (!emailToCheck || !emailToCheck.trim()) {
+      return { isUnique: true };
+    }
+
+    try {
+      setIsCheckingEmail(true);
+
+      // Try using filtersMap with email filter - this might be more accurate
+      const filtersMap = new Map();
+      filtersMap.set("email", emailToCheck.trim());
+
+      console.log("Checking email uniqueness with filtersMap:", emailToCheck);
+
+      const response = await staffManager.getStaffWithFiltersMap(
+        filtersMap,
+        onUnauthorized,
+        true, // force refresh to ensure we get latest data
+      );
+
+      console.log("Email check response:", response);
+
+      // Check if we found any exact matches
+      if (response && response.results && response.results.length > 0) {
+        // Double-check for exact match (case-insensitive)
+        const exactMatch = response.results.find(
+          (staff) =>
+            staff.email &&
+            staff.email.toLowerCase() === emailToCheck.toLowerCase().trim(),
+        );
+
+        if (exactMatch) {
+          console.log("Found duplicate email:", exactMatch.email);
+          return {
+            isUnique: false,
+            message:
+              "This email address is already in use by another staff member",
+          };
+        }
+      }
+
+      // If the email filter didn't work, fall back to search with broader results
+      // This is less accurate but better than nothing
+      if (!response || response.results === undefined) {
+        console.log(
+          "Email filter may not be supported, trying search approach",
+        );
+
+        const searchParams = {
+          search: emailToCheck.trim(),
+          limit: 100, // Get more results to ensure we check thoroughly
+        };
+
+        const searchResponse = await staffManager.getStaff(
+          searchParams,
+          onUnauthorized,
+          true,
+        );
+
+        if (
+          searchResponse &&
+          searchResponse.results &&
+          searchResponse.results.length > 0
+        ) {
+          // Look for exact email match in search results
+          const exactMatch = searchResponse.results.find(
+            (staff) =>
+              staff.email &&
+              staff.email.toLowerCase() === emailToCheck.toLowerCase().trim(),
+          );
+
+          if (exactMatch) {
+            console.log("Found duplicate email via search:", exactMatch.email);
+            return {
+              isUnique: false,
+              message:
+                "This email address is already in use by another staff member",
+            };
+          }
+        }
+      }
+
+      console.log("Email appears to be unique");
+      return { isUnique: true };
+    } catch (error) {
+      console.error("Error checking email uniqueness:", error);
+      // If we can't verify, let the user proceed but warn them
+      // The backend will catch any duplicates
+      return {
+        isUnique: true,
+        warning:
+          "Could not validate email uniqueness at this time. The system will verify when you submit.",
+      };
+    } finally {
+      setIsCheckingEmail(false);
+    }
+  };
+
+  const onSubmitClick = async (e) => {
     e.preventDefault();
     setErrors({});
+    setIsLoading(true);
 
     let newErrors = {};
     let hasErrors = false;
@@ -87,8 +214,28 @@ function AdminStaffAddStep3Page() {
 
     if (hasErrors) {
       setErrors(newErrors);
+      setIsLoading(false);
       window.scrollTo(0, 0);
       return;
+    }
+
+    // Check email uniqueness - ALWAYS check, even if it seems unique
+    console.log("Checking email uniqueness for:", email);
+    const emailCheck = await checkEmailUniqueness(email);
+    console.log("Email check result:", emailCheck);
+
+    if (!emailCheck.isUnique) {
+      newErrors.email = emailCheck.message;
+      setErrors(newErrors);
+      setIsLoading(false);
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    // Show warning if validation couldn't be completed
+    if (emailCheck.warning) {
+      console.warn("Email validation warning:", emailCheck.warning);
+      // Still allow proceeding, but the backend will catch duplicates
     }
 
     // Save to wizard storage
@@ -106,34 +253,72 @@ function AdminStaffAddStep3Page() {
       isOkToEmail,
     });
 
+    setIsLoading(false);
     navigate("/admin/staff/add/step-4");
+  };
+
+  // Debounced email validation on blur
+  const handleEmailBlur = async () => {
+    if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      console.log("Email blur validation triggered for:", email);
+      const emailCheck = await checkEmailUniqueness(email);
+
+      if (!emailCheck.isUnique) {
+        setErrors((prev) => ({
+          ...prev,
+          email: emailCheck.message,
+        }));
+      } else if (emailCheck.warning) {
+        // Show warning but don't block
+        setErrors((prev) => ({
+          ...prev,
+          emailWarning: emailCheck.warning,
+        }));
+      } else {
+        // Clear email error if it exists and email is unique
+        setErrors((prev) => {
+          const newErrors = { ...prev };
+          if (
+            newErrors.email ===
+            "This email address is already in use by another staff member"
+          ) {
+            delete newErrors.email;
+          }
+          delete newErrors.emailWarning;
+          return newErrors;
+        });
+      }
+    }
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {/* Breadcrumb */}
-        <nav className="flex mb-4" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* Responsive Breadcrumb */}
+        <nav
+          className="flex mb-4 sm:mb-6 overflow-x-auto"
+          aria-label="Breadcrumb"
+        >
+          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
             <li className="inline-flex items-center">
               <Link
                 to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+                className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
               >
-                <ChartBarIcon className="w-4 h-4 mr-2" />
+                <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                 <span className="hidden sm:inline">Dashboard</span>
-                <span className="sm:hidden">Home</span>
+                <span className="sm:hidden">Dash</span>
               </Link>
             </li>
             <li>
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="mx-1 sm:mx-2 text-gray-400">/</span>
                 <Link
                   to="/admin/staff"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                  className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
                 >
                   <span className="inline-flex items-center">
-                    <UserIcon className="w-4 h-4 mr-2" />
+                    <UsersIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                     Staff
                   </span>
                 </Link>
@@ -141,9 +326,9 @@ function AdminStaffAddStep3Page() {
             </li>
             <li aria-current="page">
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
-                  <UserPlusIcon className="w-4 h-4 mr-2" />
+                <span className="mx-1 sm:mx-2 text-gray-400">/</span>
+                <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
+                  <UserPlusIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                   Add
                 </span>
               </div>
@@ -151,182 +336,58 @@ function AdminStaffAddStep3Page() {
           </ol>
         </nav>
 
-        {/* Page Title */}
-        <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
-            <UserPlusIcon className="w-6 h-6 sm:w-7 sm:h-7 mr-3 text-blue-600" />
+        {/* Page Title - Responsive */}
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+            <UserPlusIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
             Add New Staff Member
           </h1>
+          <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+            <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
+            Enter contact information
+          </p>
         </div>
 
-        {/* Wizard Steps - Responsive Version */}
-        <div className="mb-6">
-          <div className="flex items-center justify-center">
-            {/* Mobile/Tablet View (< 1920px) */}
-            <div className="xl:hidden w-full overflow-x-auto pb-2">
-              <div className="flex items-center min-w-max px-2">
-                {/* Step 1 - Complete */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex-shrink-0">
-                    <CheckIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                  </div>
-                  <div className="ml-2 sm:ml-3">
-                    <p className="text-xs sm:text-sm font-medium text-gray-900">
-                      Search
-                    </p>
-                    <p className="text-xs text-gray-500 hidden sm:block">
-                      Complete
-                    </p>
-                  </div>
+        {/* Wizard Steps - Mobile Simplified */}
+        <div className="mb-4 sm:mb-6">
+          <div className="md:hidden bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full">
+                  <span className="text-white font-semibold text-sm">3</span>
                 </div>
-
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-green-600"></div>
-
-                {/* Step 2 - Complete */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex-shrink-0">
-                    <CheckIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                  </div>
-                  <div className="ml-2 sm:ml-3">
-                    <p className="text-xs sm:text-sm font-medium text-gray-900">
-                      Type
-                    </p>
-                    <p className="text-xs text-gray-500 hidden sm:block">
-                      Complete
-                    </p>
-                  </div>
-                </div>
-
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-gray-300"></div>
-
-                {/* Step 3 - Active */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-full flex-shrink-0">
-                    <span className="text-white font-semibold text-sm">3</span>
-                  </div>
-                  <div className="ml-2 sm:ml-3">
-                    <p className="text-xs sm:text-sm font-medium text-gray-900">
-                      Contact
-                    </p>
-                    <p className="text-xs text-gray-500 hidden sm:block">
-                      Basic Info
-                    </p>
-                  </div>
-                </div>
-
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-gray-300"></div>
-
-                {/* Step 4 - Inactive */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
-                    <span className="text-gray-600 font-semibold text-sm">
-                      4
-                    </span>
-                  </div>
-                  <div className="ml-2 sm:ml-3">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">
-                      Address
-                    </p>
-                    <p className="text-xs text-gray-400 hidden sm:block">
-                      Location
-                    </p>
-                  </div>
-                </div>
-
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-gray-300"></div>
-
-                {/* Step 5 - Inactive */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
-                    <span className="text-gray-600 font-semibold text-sm">
-                      5
-                    </span>
-                  </div>
-                  <div className="ml-2 sm:ml-3">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">
-                      Account
-                    </p>
-                    <p className="text-xs text-gray-400 hidden sm:block">
-                      Settings
-                    </p>
-                  </div>
-                </div>
-
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-gray-300"></div>
-
-                {/* Step 6 - Inactive */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
-                    <span className="text-gray-600 font-semibold text-sm">
-                      6
-                    </span>
-                  </div>
-                  <div className="ml-2 sm:ml-3">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">
-                      Comments
-                    </p>
-                    <p className="text-xs text-gray-400 hidden sm:block">
-                      Notes
-                    </p>
-                  </div>
-                </div>
-
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-gray-300"></div>
-
-                {/* Step 7 - Inactive */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
-                    <span className="text-gray-600 font-semibold text-sm">
-                      7
-                    </span>
-                  </div>
-                  <div className="ml-2 sm:ml-3">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">
-                      Complete
-                    </p>
-                    <p className="text-xs text-gray-400 hidden sm:block">
-                      Finish
-                    </p>
-                  </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">
+                    Step 3: Contact
+                  </p>
+                  <p className="text-xs text-gray-500">Basic Information</p>
                 </div>
               </div>
+              <div className="text-xs text-gray-500">3 of 7</div>
             </div>
+          </div>
 
-            {/* Desktop View (≥ 1920px) - Original Layout */}
-            <div className="hidden xl:flex items-center">
-              {/* Step 1 - Complete */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
-                  <CheckIcon className="w-6 h-6 text-white" />
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">Search</p>
-                  <p className="text-xs text-gray-500">Complete</p>
-                </div>
-              </div>
-
-              {/* Connector */}
-              <div className="mx-2 w-12 h-0.5 bg-green-600"></div>
-
-              {/* Step 2 - Complete */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
-                  <CheckIcon className="w-6 h-6 text-white" />
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">Type</p>
-                  <p className="text-xs text-gray-500">Complete</p>
-                </div>
-              </div>
-
-              {/* Connector */}
-              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+          {/* Desktop Wizard Steps */}
+          <div className="hidden md:flex items-center justify-center overflow-x-auto pb-2">
+            <div className="flex items-center min-w-max">
+              {/* Steps 1-2 Complete */}
+              {[1, 2].map((step, index) => (
+                <React.Fragment key={step}>
+                  <div className="flex items-center">
+                    <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
+                      <CheckIcon className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-gray-900">
+                        {step === 1 && "Search"}
+                        {step === 2 && "Type"}
+                      </p>
+                      <p className="text-xs text-gray-500">Complete</p>
+                    </div>
+                  </div>
+                  <div className="mx-2 w-12 h-0.5 bg-green-600"></div>
+                </React.Fragment>
+              ))}
 
               {/* Step 3 - Active */}
               <div className="flex items-center">
@@ -339,178 +400,175 @@ function AdminStaffAddStep3Page() {
                 </div>
               </div>
 
-              {/* Connector */}
-              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
-
-              {/* Step 4 - Inactive */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
-                  <span className="text-gray-600 font-semibold">4</span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-500">Address</p>
-                  <p className="text-xs text-gray-400">Location</p>
-                </div>
-              </div>
-
-              {/* Connector */}
-              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
-
-              {/* Step 5 - Inactive */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
-                  <span className="text-gray-600 font-semibold">5</span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-500">Account</p>
-                  <p className="text-xs text-gray-400">Settings</p>
-                </div>
-              </div>
-
-              {/* Connector */}
-              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
-
-              {/* Step 6 - Inactive */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
-                  <span className="text-gray-600 font-semibold">6</span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-500">Comments</p>
-                  <p className="text-xs text-gray-400">Notes</p>
-                </div>
-              </div>
-
-              {/* Connector */}
-              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
-
-              {/* Step 7 - Inactive */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
-                  <span className="text-gray-600 font-semibold">7</span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-500">Complete</p>
-                  <p className="text-xs text-gray-400">Finish</p>
-                </div>
-              </div>
+              {[
+                { num: 4, title: "Address", subtitle: "Location" },
+                { num: 5, title: "Account", subtitle: "Settings" },
+                { num: 6, title: "Comments", subtitle: "Notes" },
+                { num: 7, title: "Complete", subtitle: "Finish" },
+              ].map((step) => (
+                <React.Fragment key={step.num}>
+                  <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+                  <div className="flex items-center">
+                    <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
+                      <span className="text-gray-600 font-semibold">
+                        {step.num}
+                      </span>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-gray-500">
+                        {step.title}
+                      </p>
+                      <p className="text-xs text-gray-400">{step.subtitle}</p>
+                    </div>
+                  </div>
+                </React.Fragment>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Error Message */}
+        {/* Error Message - Responsive */}
         {errors.general && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
-            <span className="flex items-center">
-              <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-              <span className="text-sm">{errors.general}</span>
-            </span>
-            <button
-              onClick={() => setErrors({})}
-              className="text-red-600 hover:text-red-800 ml-2"
-            >
-              <XMarkIcon className="w-5 h-5" />
-            </button>
+          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base">
+            <div className="flex justify-between items-center">
+              <span className="flex items-center break-words">
+                <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+                {errors.general}
+              </span>
+              <button
+                onClick={() => setErrors({})}
+                className="text-red-700 hover:text-red-900 ml-2 flex-shrink-0"
+              >
+                ×
+              </button>
+            </div>
           </div>
         )}
 
         {/* Main Content */}
-        <div className="bg-white shadow-sm rounded-lg">
-          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-              <IdentificationIcon className="w-5 h-5 mr-2" />
-              Contact Information
-            </h2>
+        {isLoading ? (
+          <div className="bg-white shadow-sm rounded-lg p-8">
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <span className="ml-3 text-gray-600">Validating...</span>
+            </div>
           </div>
-
-          <div className="p-4 sm:p-6">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                <span className="ml-3 text-gray-600">Submitting...</span>
-              </div>
-            ) : (
-              <form onSubmit={onSubmitClick} className="max-w-2xl mx-auto">
-                <div className="space-y-4">
-                  {/* Name Fields */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        First Name <span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <UserIcon className="h-5 w-5 text-gray-400" />
-                        </div>
-                        <input
-                          type="text"
-                          value={firstName}
-                          onChange={(e) => setFirstName(e.target.value)}
-                          placeholder="Enter first name"
-                          className={`w-full pl-10 pr-3 py-2 border ${
-                            errors.firstName
-                              ? "border-red-500"
-                              : "border-gray-300"
-                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-                        />
+        ) : (
+          <form onSubmit={onSubmitClick} className="max-w-4xl mx-auto">
+            <div className="space-y-0">
+              {/* Personal Information Section */}
+              <DetailSection title="Personal Information" icon={UserIcon}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                      First Name <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <UserIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                       </div>
-                      {errors.firstName && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {errors.firstName}
-                        </p>
-                      )}
+                      <input
+                        type="text"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        placeholder="Enter first name"
+                        className={`w-full pl-10 pr-3 py-2 border ${
+                          errors.firstName
+                            ? "border-red-500"
+                            : "border-gray-300"
+                        } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base`}
+                      />
                     </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Last Name <span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <UserIcon className="h-5 w-5 text-gray-400" />
-                        </div>
-                        <input
-                          type="text"
-                          value={lastName}
-                          onChange={(e) => setLastName(e.target.value)}
-                          placeholder="Enter last name"
-                          className={`w-full pl-10 pr-3 py-2 border ${
-                            errors.lastName
-                              ? "border-red-500"
-                              : "border-gray-300"
-                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-                        />
-                      </div>
-                      {errors.lastName && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {errors.lastName}
-                        </p>
-                      )}
-                    </div>
+                    {errors.firstName && (
+                      <p className="mt-1 text-xs sm:text-sm text-red-600">
+                        {errors.firstName}
+                      </p>
+                    )}
                   </div>
 
+                  <div>
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                      Last Name <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <UserIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="text"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        placeholder="Enter last name"
+                        className={`w-full pl-10 pr-3 py-2 border ${
+                          errors.lastName ? "border-red-500" : "border-gray-300"
+                        } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base`}
+                      />
+                    </div>
+                    {errors.lastName && (
+                      <p className="mt-1 text-xs sm:text-sm text-red-600">
+                        {errors.lastName}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </DetailSection>
+
+              {/* Contact Information Section */}
+              <DetailSection title="Contact Information" icon={PhoneIcon}>
+                <div className="space-y-4">
                   {/* Email */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
                       Email Address <span className="text-red-500">*</span>
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <EnvelopeIcon className="h-5 w-5 text-gray-400" />
+                        <EnvelopeIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                       </div>
                       <input
                         type="email"
                         value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        onChange={(e) => {
+                          setEmail(e.target.value);
+                          // Clear email error when user types
+                          if (errors.email || errors.emailWarning) {
+                            setErrors((prev) => {
+                              const newErrors = { ...prev };
+                              delete newErrors.email;
+                              delete newErrors.emailWarning;
+                              return newErrors;
+                            });
+                          }
+                        }}
+                        onBlur={handleEmailBlur}
                         placeholder="Enter email address"
-                        className={`w-full pl-10 pr-3 py-2 border ${
-                          errors.email ? "border-red-500" : "border-gray-300"
-                        } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                        disabled={isCheckingEmail}
+                        className={`w-full pl-10 pr-10 py-2 border ${
+                          errors.email
+                            ? "border-red-500"
+                            : errors.emailWarning
+                              ? "border-yellow-500"
+                              : "border-gray-300"
+                        } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base ${
+                          isCheckingEmail ? "bg-gray-50" : ""
+                        }`}
                       />
+                      {isCheckingEmail && (
+                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                        </div>
+                      )}
                     </div>
                     {errors.email && (
-                      <p className="mt-1 text-sm text-red-600">
+                      <p className="mt-1 text-xs sm:text-sm text-red-600 font-semibold">
+                        <ExclamationCircleIcon className="inline w-4 h-4 mr-1" />
                         {errors.email}
+                      </p>
+                    )}
+                    {errors.emailWarning && !errors.email && (
+                      <p className="mt-1 text-xs sm:text-sm text-yellow-600">
+                        <ExclamationTriangleIcon className="inline w-4 h-4 mr-1" />
+                        {errors.emailWarning}
                       </p>
                     )}
                   </div>
@@ -526,7 +584,7 @@ function AdminStaffAddStep3Page() {
                     />
                     <label
                       htmlFor="isOkToEmail"
-                      className="ml-2 text-sm font-semibold text-gray-700"
+                      className="ml-2 text-xs sm:text-sm font-semibold text-gray-700"
                     >
                       I agree to receive electronic email
                     </label>
@@ -535,12 +593,12 @@ function AdminStaffAddStep3Page() {
                   {/* Phone */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
                         Phone Number <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <PhoneIcon className="h-5 w-5 text-gray-400" />
+                          <PhoneIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                         </div>
                         <input
                           type="tel"
@@ -549,23 +607,23 @@ function AdminStaffAddStep3Page() {
                           placeholder="Enter phone number"
                           className={`w-full pl-10 pr-3 py-2 border ${
                             errors.phone ? "border-red-500" : "border-gray-300"
-                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base`}
                         />
                       </div>
                       {errors.phone && (
-                        <p className="mt-1 text-sm text-red-600">
+                        <p className="mt-1 text-xs sm:text-sm text-red-600">
                           {errors.phone}
                         </p>
                       )}
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
                         Phone Type <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <PhoneIcon className="h-5 w-5 text-gray-400" />
+                          <PhoneIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                         </div>
                         <select
                           value={phoneType}
@@ -576,7 +634,7 @@ function AdminStaffAddStep3Page() {
                             errors.phoneType
                               ? "border-red-500"
                               : "border-gray-300"
-                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white`}
+                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white text-sm sm:text-base`}
                         >
                           {STAFF_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS.map(
                             (option) => (
@@ -588,7 +646,7 @@ function AdminStaffAddStep3Page() {
                         </select>
                       </div>
                       {errors.phoneType && (
-                        <p className="mt-1 text-sm text-red-600">
+                        <p className="mt-1 text-xs sm:text-sm text-red-600">
                           {errors.phoneType}
                         </p>
                       )}
@@ -600,7 +658,7 @@ function AdminStaffAddStep3Page() {
                     (opt) => opt.value === phoneType,
                   )?.label === "Work" && (
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1">
                         Phone Extension (Optional)
                       </label>
                       <input
@@ -608,7 +666,7 @@ function AdminStaffAddStep3Page() {
                         value={phoneExtension}
                         onChange={(e) => setPhoneExtension(e.target.value)}
                         placeholder="Enter extension"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                       />
                     </div>
                   )}
@@ -624,7 +682,7 @@ function AdminStaffAddStep3Page() {
                     />
                     <label
                       htmlFor="isOkToText"
-                      className="ml-2 text-sm font-semibold text-gray-700"
+                      className="ml-2 text-xs sm:text-sm font-semibold text-gray-700"
                     >
                       I agree to receive texts to my phone
                     </label>
@@ -632,40 +690,43 @@ function AdminStaffAddStep3Page() {
 
                   {/* Other Phone (Optional) */}
                   <div className="border-t pt-4">
+                    <h4 className="text-sm font-semibold text-gray-700 mb-3">
+                      Alternative Contact (Optional)
+                    </h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Other Phone Number (Optional)
+                        <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                          Other Phone Number
                         </label>
                         <div className="relative">
                           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <PhoneIcon className="h-5 w-5 text-gray-400" />
+                            <PhoneIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                           </div>
                           <input
                             type="tel"
                             value={otherPhone}
                             onChange={(e) => setOtherPhone(e.target.value)}
                             placeholder="Enter other phone number"
-                            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                           />
                         </div>
                       </div>
 
                       {otherPhone && (
                         <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
                             Other Phone Type
                           </label>
                           <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <PhoneIcon className="h-5 w-5 text-gray-400" />
+                              <PhoneIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                             </div>
                             <select
                               value={otherPhoneType}
                               onChange={(e) =>
                                 setOtherPhoneType(parseInt(e.target.value))
                               }
-                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white text-sm sm:text-base"
                             >
                               {STAFF_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS.map(
                                 (option) => (
@@ -683,14 +744,14 @@ function AdminStaffAddStep3Page() {
                       )}
                     </div>
 
-                    {/* Other Phone Extension - Only show for Work phone */}
+                    {/* Other Phone Extension */}
                     {STAFF_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS.find(
                       (opt) => opt.value === otherPhoneType,
                     )?.label === "Work" &&
                       otherPhone && (
                         <div className="mt-4">
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Other Phone Extension (Optional)
+                          <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                            Other Phone Extension
                           </label>
                           <input
                             type="text"
@@ -699,34 +760,35 @@ function AdminStaffAddStep3Page() {
                               setOtherPhoneExtension(e.target.value)
                             }
                             placeholder="Enter extension"
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
                           />
                         </div>
                       )}
                   </div>
                 </div>
+              </DetailSection>
+            </div>
 
-                {/* Form Actions */}
-                <div className="mt-6 flex flex-col sm:flex-row gap-3">
-                  <Link
-                    to="/admin/staff/add/step-2"
-                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-                  >
-                    <ArrowLeftIcon className="w-4 h-4 mr-2" />
-                    Back
-                  </Link>
-                  <button
-                    type="submit"
-                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    Next
-                    <ArrowRightIcon className="w-4 h-4 ml-2" />
-                  </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
+            {/* Form Actions */}
+            <div className="mt-6 flex flex-col sm:flex-row gap-3">
+              <Link
+                to="/admin/staff/add/step-2"
+                className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 order-2 sm:order-1"
+              >
+                <ArrowLeftIcon className="w-4 h-4 mr-2" />
+                Back
+              </Link>
+              <button
+                type="submit"
+                disabled={isLoading || isCheckingEmail}
+                className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 order-1 sm:order-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isLoading ? "Validating..." : "Next"}
+                <ArrowRightIcon className="w-4 h-4 ml-2" />
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );

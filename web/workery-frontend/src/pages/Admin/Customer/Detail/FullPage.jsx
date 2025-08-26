@@ -160,16 +160,16 @@ function AdminCustomerDetailFullPage() {
     return [];
   };
 
-  // Section Component - Improved for responsiveness
+  // Section Component - Improved for responsiveness and accessibility
   const DetailSection = ({ title, icon: Icon, children }) => (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-4 sm:mb-6">
-      <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-b border-gray-200 rounded-t-lg">
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600 flex-shrink-0" />
+    <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
+      <div className="px-4 sm:px-6 py-3 sm:py-4">
+        <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
           <span className="truncate">{title}</span>
         </h3>
       </div>
-      <div className="p-4 sm:p-6">
+      <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
         <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {children}
         </dl>
@@ -177,13 +177,13 @@ function AdminCustomerDetailFullPage() {
     </div>
   );
 
-  // Detail Field Component - Improved for responsiveness
+  // Detail Field Component - Improved for responsiveness and accessibility
   const DetailField = ({ label, value, fullWidth = false }) => (
     <div className={fullWidth ? "lg:col-span-2" : ""}>
-      <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+      <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-1">
         {label}
       </dt>
-      <dd className="text-sm sm:text-base text-gray-900 break-words">
+      <dd className="text-base sm:text-lg font-medium text-gray-900 break-words">
         {value || "-"}
       </dd>
     </div>
@@ -309,7 +309,7 @@ function AdminCustomerDetailFullPage() {
                     to="/admin/customers"
                     className="flex-1 sm:flex-initial"
                   >
-                    <button className="w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                    <button className="w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-transparent rounded-lg text-sm sm:text-base font-medium text-white bg-gray-600 hover:bg-gray-700 transition-colors">
                       <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                       Back
                     </button>
@@ -320,10 +320,10 @@ function AdminCustomerDetailFullPage() {
                   >
                     <button
                       disabled={customer.status === 2}
-                      className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
+                      className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-transparent rounded-lg text-sm sm:text-base font-medium transition-colors ${
                         customer.status === 2
-                          ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                          : "border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100"
+                          ? "text-gray-400 bg-gray-200 cursor-not-allowed"
+                          : "text-white bg-amber-600 hover:bg-amber-700"
                       }`}
                     >
                       <PencilSquareIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
@@ -336,7 +336,7 @@ function AdminCustomerDetailFullPage() {
                     rel="noreferrer"
                     className="flex-1 sm:flex-initial"
                   >
-                    <button className="w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-green-300 text-green-700 bg-green-50 hover:bg-green-100 rounded-lg text-sm sm:text-base font-medium transition-colors">
+                    <button className="w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-transparent text-white bg-green-600 hover:bg-green-700 rounded-lg text-sm sm:text-base font-medium transition-colors">
                       <PlusCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                       New Order
                     </button>
@@ -563,10 +563,10 @@ function AdminCustomerDetailFullPage() {
               {/* Internal Metrics */}
               <DetailSection title="Internal Metrics" icon={ChartPieIcon}>
                 <div>
-                  <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+                  <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-1">
                     How did they discover us?
                   </dt>
-                  <dd className="text-sm sm:text-base text-gray-900">
+                  <dd className="text-base sm:text-lg font-medium text-gray-900">
                     {customer.isHowDidYouHearAboutUsOther ? (
                       <div>
                         <HowHearAboutUsDisplay
@@ -574,7 +574,7 @@ function AdminCustomerDetailFullPage() {
                           onUnauthorized={onUnauthorized}
                         />
                         {customer.howDidYouHearAboutUsOther && (
-                          <div className="mt-1 text-sm italic text-gray-600">
+                          <div className="mt-1 text-base sm:text-lg italic text-gray-600">
                             Other: {customer.howDidYouHearAboutUsOther}
                           </div>
                         )}
@@ -648,7 +648,7 @@ function AdminCustomerDetailFullPage() {
               {/* Action Buttons - Responsive */}
               <div className="flex flex-col sm:flex-row sm:justify-between items-stretch sm:items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 gap-3">
                 <Link to="/admin/customers" className="order-2 sm:order-1">
-                  <button className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                  <button className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-transparent rounded-lg text-sm sm:text-base font-medium text-white bg-gray-600 hover:bg-gray-700 transition-colors">
                     <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                     Back to Customers
                   </button>
@@ -661,10 +661,10 @@ function AdminCustomerDetailFullPage() {
                   >
                     <button
                       disabled={customer.status === 2}
-                      className={`w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
+                      className={`w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-transparent rounded-lg text-sm sm:text-base font-medium transition-colors ${
                         customer.status === 2
-                          ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                          : "border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100"
+                          ? "text-gray-400 bg-gray-200 cursor-not-allowed"
+                          : "text-white bg-amber-600 hover:bg-amber-700"
                       }`}
                     >
                       <PencilSquareIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
@@ -677,7 +677,7 @@ function AdminCustomerDetailFullPage() {
                     rel="noreferrer"
                     className="flex-1 sm:flex-initial"
                   >
-                    <button className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-green-300 text-green-700 bg-green-50 hover:bg-green-100 rounded-lg text-sm sm:text-base font-medium transition-colors">
+                    <button className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-transparent text-white bg-green-600 hover:bg-green-700 rounded-lg text-sm sm:text-base font-medium transition-colors">
                       <PlusCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                       New Order
                     </button>

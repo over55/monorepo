@@ -1,4 +1,4 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Admin/Financial/Detail/Invoice/Generate/Step1Page.jsx
+// File Path: web/workery-frontend/src/pages/Admin/Financial/Detail/Invoice/Generate/Step1Page.jsx
 
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router";
@@ -20,6 +20,10 @@ import {
   HomeIcon,
   CalendarIcon,
   IdentificationIcon,
+  ChevronLeftIcon,
+  DocumentPlusIcon,
+  UserGroupIcon,
+  BuildingOfficeIcon,
 } from "@heroicons/react/24/outline";
 
 function AdminFinancialGenerateInvoiceStep1Page() {
@@ -173,13 +177,30 @@ function AdminFinancialGenerateInvoiceStep1Page() {
     navigate(`/admin/financial/${oid}/invoice`);
   };
 
+  // Section Component with Dark Header
+  const DetailSection = ({ title, icon: Icon, children }) => (
+    <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
+      <div className="px-4 sm:px-6 py-3 sm:py-4">
+        <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
+          <span className="truncate">{title}</span>
+        </h3>
+      </div>
+      <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
+        {children}
+      </div>
+    </div>
+  );
+
   if (isFetching) {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <span className="ml-3 text-gray-600">Loading order details...</span>
+            <span className="ml-3 text-sm sm:text-base text-gray-600">
+              Loading order details...
+            </span>
           </div>
         </div>
       </div>
@@ -188,29 +209,32 @@ function AdminFinancialGenerateInvoiceStep1Page() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {/* Breadcrumb */}
-        <nav className="flex mb-4" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-wrap">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* Responsive Breadcrumb */}
+        <nav
+          className="flex mb-4 sm:mb-6 overflow-x-auto"
+          aria-label="Breadcrumb"
+        >
+          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
             <li className="inline-flex items-center">
               <Link
                 to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+                className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
               >
-                <ChartBarIcon className="w-4 h-4 mr-1 sm:mr-2" />
+                <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                 <span className="hidden sm:inline">Dashboard</span>
                 <span className="sm:hidden">Dash</span>
               </Link>
             </li>
             <li>
               <div className="flex items-center">
-                <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                <span className="mx-1 sm:mx-2 text-gray-400">/</span>
                 <Link
                   to="/admin/financials"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                  className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
                 >
                   <span className="inline-flex items-center">
-                    <CreditCardIcon className="w-4 h-4 mr-1 sm:mr-2" />
+                    <CreditCardIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                     Financials
                   </span>
                 </Link>
@@ -218,13 +242,13 @@ function AdminFinancialGenerateInvoiceStep1Page() {
             </li>
             <li>
               <div className="flex items-center">
-                <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                <span className="mx-1 sm:mx-2 text-gray-400">/</span>
                 <Link
                   to={`/admin/financial/${oid}/invoice`}
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                  className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
                 >
                   <span className="inline-flex items-center">
-                    <DocumentTextIcon className="w-4 h-4 mr-1 sm:mr-2" />
+                    <DocumentTextIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                     Order #{oid}
                   </span>
                 </Link>
@@ -232,9 +256,9 @@ function AdminFinancialGenerateInvoiceStep1Page() {
             </li>
             <li aria-current="page">
               <div className="flex items-center">
-                <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
-                  <PlusIcon className="w-4 h-4 mr-1 sm:mr-2" />
+                <span className="mx-1 sm:mx-2 text-gray-400">/</span>
+                <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
+                  <DocumentPlusIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                   Generate Invoice
                 </span>
               </div>
@@ -242,19 +266,49 @@ function AdminFinancialGenerateInvoiceStep1Page() {
           </ol>
         </nav>
 
-        {/* Page Title */}
-        <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
-            <DocumentTextIcon className="w-6 h-6 sm:w-7 sm:h-7 mr-2 sm:mr-3 text-blue-600" />
-            Generate Invoice
-          </h1>
+        {/* Page Title - Responsive */}
+        <div className="mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+                <DocumentPlusIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
+                Generate Invoice
+              </h1>
+              <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+                <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
+                Step 1 of 4 - Header Information
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Wizard Steps - Responsive Design */}
-        <div className="mb-6">
-          {/* Desktop View */}
-          <div className="hidden lg:flex items-center justify-center">
-            <div className="flex items-center">
+        {/* Wizard Steps - Improved Responsive Design */}
+        <div className="mb-4 sm:mb-6">
+          {/* Mobile View */}
+          <div className="md:hidden">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full">
+                    <span className="text-white font-semibold text-sm">1</span>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-900">
+                      Step 1: Header Info
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Invoice basic details
+                    </p>
+                  </div>
+                </div>
+                <div className="text-xs text-gray-500">1 of 4</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Tablet/Desktop View */}
+          <div className="hidden md:flex items-center justify-center overflow-x-auto pb-2">
+            <div className="flex items-center min-w-max">
               {/* Step 1 - Active */}
               <div className="flex items-center">
                 <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
@@ -315,354 +369,284 @@ function AdminFinancialGenerateInvoiceStep1Page() {
               </div>
             </div>
           </div>
-
-          {/* Tablet View */}
-          <div className="hidden md:block lg:hidden">
-            <div className="overflow-x-auto pb-2">
-              <div className="flex items-center min-w-max px-2">
-                {[
-                  { num: 1, title: "Header", active: true },
-                  { num: 2, title: "Items", active: false },
-                  { num: 3, title: "Footer", active: false },
-                  { num: 4, title: "Review", active: false },
-                ].map((step, index) => (
-                  <React.Fragment key={step.num}>
-                    <div className="flex items-center">
-                      <div
-                        className={`flex items-center justify-center w-8 h-8 ${step.active ? "bg-blue-600" : "bg-gray-300"} rounded-full`}
-                      >
-                        <span
-                          className={`${step.active ? "text-white" : "text-gray-600"} font-semibold text-xs`}
-                        >
-                          {step.num}
-                        </span>
-                      </div>
-                      <div className="ml-2">
-                        <p
-                          className={`text-xs font-medium ${step.active ? "text-gray-900" : "text-gray-500"}`}
-                        >
-                          {step.title}
-                        </p>
-                      </div>
-                    </div>
-                    {index < 3 && (
-                      <div className="mx-1 w-8 h-0.5 bg-gray-300"></div>
-                    )}
-                  </React.Fragment>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile View */}
-          <div className="md:hidden">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full">
-                    <span className="text-white font-semibold text-sm">1</span>
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">
-                      Step 1: Header Info
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Invoice basic details
-                    </p>
-                  </div>
-                </div>
-                <div className="text-xs text-gray-500">1 of 4</div>
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* Error Message */}
+        {/* Error Message - Responsive */}
         {errors.general && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-3 sm:px-4 py-3 rounded-lg flex items-center justify-between">
-            <span className="flex items-center text-sm">
-              <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-              <span>{errors.general}</span>
+          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center justify-between text-sm sm:text-base">
+            <span className="flex items-center">
+              <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+              <span className="break-words">{errors.general}</span>
             </span>
             <button
               onClick={() => setErrors({})}
-              className="text-red-600 hover:text-red-800 ml-2"
+              className="text-red-700 hover:text-red-900 ml-2 flex-shrink-0"
             >
-              <XMarkIcon className="w-5 h-5" />
+              <XMarkIcon className="w-4 sm:w-5 h-4 sm:h-5" />
             </button>
           </div>
         )}
 
         {/* Main Content */}
         <div className="bg-white shadow-sm rounded-lg">
-          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-              <DocumentTextIcon className="w-5 h-5 mr-2" />
+          {/* Header with Dark Background */}
+          <div className="bg-gray-700 rounded-t-lg px-4 sm:px-6 py-4 sm:py-5">
+            <h2 className="text-xl sm:text-2xl font-semibold text-white flex items-center">
+              <DocumentTextIcon className="w-5 sm:w-7 h-5 sm:h-7 mr-2 flex-shrink-0" />
               Invoice Header Information
             </h2>
           </div>
 
           {order && (
             <form className="p-4 sm:p-6">
-              <div className="space-y-6">
-                {/* Invoice Details Section */}
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900 mb-4">
-                    Invoice Details
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label
-                        htmlFor="invoiceId"
-                        className="block text-sm font-medium text-gray-700 mb-2"
-                      >
-                        Invoice ID # *
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <IdentificationIcon className="h-5 w-5 text-gray-400" />
-                        </div>
-                        <input
-                          type="text"
-                          id="invoiceId"
-                          name="invoiceId"
-                          value={invoiceId}
-                          disabled
-                          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed text-sm sm:text-base"
-                        />
+              {/* Invoice Details Section */}
+              <DetailSection title="Invoice Details" icon={IdentificationIcon}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      htmlFor="invoiceId"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Invoice ID # <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <IdentificationIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                       </div>
-                      <p className="mt-1 text-xs text-gray-500">
-                        To change this value, update the financials screen for
-                        this job.
-                      </p>
+                      <input
+                        type="text"
+                        id="invoiceId"
+                        name="invoiceId"
+                        value={invoiceId}
+                        disabled
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed text-sm sm:text-base"
+                      />
                     </div>
+                    <p className="mt-1 text-xs text-gray-500">
+                      To change this value, update the financials screen for
+                      this job.
+                    </p>
+                  </div>
 
-                    <div>
-                      <label
-                        htmlFor="invoiceDate"
-                        className="block text-sm font-medium text-gray-700 mb-2"
-                      >
-                        Invoice Date *
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <CalendarIcon className="h-5 w-5 text-gray-400" />
-                        </div>
-                        <input
-                          type="date"
-                          id="invoiceDate"
-                          name="invoiceDate"
-                          value={invoiceDate}
-                          disabled
-                          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed text-sm sm:text-base"
-                        />
+                  <div>
+                    <label
+                      htmlFor="invoiceDate"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Invoice Date <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <CalendarIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                       </div>
-                      <p className="mt-1 text-xs text-gray-500">
-                        To change this value, update the financials screen for
-                        this job.
-                      </p>
+                      <input
+                        type="date"
+                        id="invoiceDate"
+                        name="invoiceDate"
+                        value={invoiceDate}
+                        disabled
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed text-sm sm:text-base"
+                      />
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">
+                      To change this value, update the financials screen for
+                      this job.
+                    </p>
+                  </div>
+                </div>
+              </DetailSection>
+
+              {/* Associate Information Section */}
+              <DetailSection title="Associate Information" icon={UserIcon}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <label
+                      htmlFor="associateName"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Associate Name <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <UserIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="text"
+                        id="associateName"
+                        name="associateName"
+                        value={associateName}
+                        disabled
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed text-sm sm:text-base"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="associatePhone"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Associate Phone <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <PhoneIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="tel"
+                        id="associatePhone"
+                        name="associatePhone"
+                        value={associatePhone}
+                        disabled
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed text-sm sm:text-base"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="associateTaxId"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Associate Tax ID
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <IdentificationIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="text"
+                        id="associateTaxId"
+                        name="associateTaxId"
+                        value={associateTaxId}
+                        disabled
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed text-sm sm:text-base"
+                      />
                     </div>
                   </div>
                 </div>
+              </DetailSection>
 
-                {/* Associate Information Section */}
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900 mb-4">
-                    Associate Information
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="md:col-span-2">
-                      <label
-                        htmlFor="associateName"
-                        className="block text-sm font-medium text-gray-700 mb-2"
-                      >
-                        Associate Name *
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <UserIcon className="h-5 w-5 text-gray-400" />
-                        </div>
-                        <input
-                          type="text"
-                          id="associateName"
-                          name="associateName"
-                          value={associateName}
-                          disabled
-                          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed text-sm sm:text-base"
-                        />
+              {/* Client Information Section */}
+              <DetailSection title="Client Information" icon={UserGroupIcon}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="md:col-span-2">
+                    <label
+                      htmlFor="customerName"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Client Name <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <UserIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                       </div>
+                      <input
+                        type="text"
+                        id="customerName"
+                        name="customerName"
+                        value={customerName}
+                        disabled
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed text-sm sm:text-base"
+                      />
                     </div>
+                  </div>
 
-                    <div>
-                      <label
-                        htmlFor="associatePhone"
-                        className="block text-sm font-medium text-gray-700 mb-2"
-                      >
-                        Associate Phone *
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <PhoneIcon className="h-5 w-5 text-gray-400" />
-                        </div>
-                        <input
-                          type="tel"
-                          id="associatePhone"
-                          name="associatePhone"
-                          value={associatePhone}
-                          disabled
-                          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed text-sm sm:text-base"
-                        />
+                  <div className="md:col-span-2">
+                    <label
+                      htmlFor="customerAddress"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Client Address <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <HomeIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                       </div>
+                      <input
+                        type="text"
+                        id="customerAddress"
+                        name="customerAddress"
+                        value={customerAddress}
+                        disabled
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed text-sm sm:text-base"
+                      />
                     </div>
+                  </div>
 
-                    <div>
-                      <label
-                        htmlFor="associateTaxId"
-                        className="block text-sm font-medium text-gray-700 mb-2"
-                      >
-                        Associate Tax ID
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <IdentificationIcon className="h-5 w-5 text-gray-400" />
-                        </div>
-                        <input
-                          type="text"
-                          id="associateTaxId"
-                          name="associateTaxId"
-                          value={associateTaxId}
-                          disabled
-                          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed text-sm sm:text-base"
-                        />
+                  <div>
+                    <label
+                      htmlFor="customerPhone"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Client Phone <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <PhoneIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                       </div>
+                      <input
+                        type="tel"
+                        id="customerPhone"
+                        name="customerPhone"
+                        value={customerPhone}
+                        disabled
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed text-sm sm:text-base"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label
+                      htmlFor="customerEmail"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Client Email
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <EnvelopeIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="email"
+                        id="customerEmail"
+                        name="customerEmail"
+                        value={customerEmail}
+                        disabled
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed text-sm sm:text-base"
+                      />
                     </div>
                   </div>
                 </div>
+              </DetailSection>
 
-                {/* Client Information Section */}
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900 mb-4">
-                    Client Information
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="md:col-span-2">
-                      <label
-                        htmlFor="customerName"
-                        className="block text-sm font-medium text-gray-700 mb-2"
-                      >
-                        Client Name *
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <UserIcon className="h-5 w-5 text-gray-400" />
-                        </div>
-                        <input
-                          type="text"
-                          id="customerName"
-                          name="customerName"
-                          value={customerName}
-                          disabled
-                          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed text-sm sm:text-base"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="md:col-span-2">
-                      <label
-                        htmlFor="customerAddress"
-                        className="block text-sm font-medium text-gray-700 mb-2"
-                      >
-                        Client Address *
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <HomeIcon className="h-5 w-5 text-gray-400" />
-                        </div>
-                        <input
-                          type="text"
-                          id="customerAddress"
-                          name="customerAddress"
-                          value={customerAddress}
-                          disabled
-                          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed text-sm sm:text-base"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label
-                        htmlFor="customerPhone"
-                        className="block text-sm font-medium text-gray-700 mb-2"
-                      >
-                        Client Phone *
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <PhoneIcon className="h-5 w-5 text-gray-400" />
-                        </div>
-                        <input
-                          type="tel"
-                          id="customerPhone"
-                          name="customerPhone"
-                          value={customerPhone}
-                          disabled
-                          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed text-sm sm:text-base"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label
-                        htmlFor="customerEmail"
-                        className="block text-sm font-medium text-gray-700 mb-2"
-                      >
-                        Client Email
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <EnvelopeIcon className="h-5 w-5 text-gray-400" />
-                        </div>
-                        <input
-                          type="email"
-                          id="customerEmail"
-                          name="customerEmail"
-                          value={customerEmail}
-                          disabled
-                          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed text-sm sm:text-base"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Info Note */}
-                <div className="p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-xs sm:text-sm text-blue-800 flex items-start">
-                    <InformationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
-                    <span>
-                      The invoice header information is pulled from the order
-                      details. If you need to modify any of these values, please
-                      update them in the financials screen for this job before
-                      generating the invoice.
-                    </span>
-                  </p>
-                </div>
+              {/* Info Note */}
+              <div className="p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg mb-6">
+                <p className="text-xs sm:text-sm text-blue-800 flex items-start">
+                  <InformationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 mt-0.5" />
+                  <span>
+                    The invoice header information is pulled from the order
+                    details. If you need to modify any of these values, please
+                    update them in the financials screen for this job before
+                    generating the invoice.
+                  </span>
+                </p>
               </div>
 
-              {/* Form Actions */}
-              <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              {/* Form Actions - Responsive */}
+              <div className="flex flex-col sm:flex-row sm:justify-between items-stretch sm:items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 gap-3">
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="order-2 sm:order-1 w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors inline-flex items-center justify-center"
                 >
-                  <XMarkIcon className="w-4 h-4 inline mr-2" />
+                  <XMarkIcon className="w-4 h-4 mr-2" />
                   Cancel
                 </button>
                 <button
                   type="button"
                   onClick={handleNext}
-                  className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="order-1 sm:order-2 w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                 >
                   Next
                   <ChevronRightIcon className="w-4 h-4 ml-2" />
@@ -676,9 +660,9 @@ function AdminFinancialGenerateInvoiceStep1Page() {
         <div className="mt-6">
           <Link
             to={`/admin/financial/${oid}/invoice`}
-            className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+            className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
           >
-            <ArrowLeftIcon className="w-4 h-4 mr-1" />
+            <ChevronLeftIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
             Back to Invoice
           </Link>
         </div>
@@ -706,13 +690,13 @@ function AdminFinancialGenerateInvoiceStep1Page() {
             <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row sm:justify-end gap-3">
               <button
                 onClick={() => setShowCancelWarning(false)}
-                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 order-2 sm:order-1"
+                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 order-2 sm:order-1 transition-colors"
               >
                 No, Keep Working
               </button>
               <button
                 onClick={handleConfirmCancel}
-                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 order-1 sm:order-2"
+                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 order-1 sm:order-2 transition-colors"
               >
                 Yes, Cancel
               </button>

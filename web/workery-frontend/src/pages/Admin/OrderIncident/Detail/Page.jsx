@@ -3,19 +3,32 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import {
+  ChartBarIcon,
+  ExclamationTriangleIcon,
+  InformationCircleIcon,
+  ChevronLeftIcon,
+  PlusCircleIcon,
+  ClipboardDocumentListIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  CalendarIcon,
+  UserIcon,
+  DocumentTextIcon,
+  ChatBubbleLeftRightIcon,
+  PaperClipIcon,
+  ArrowDownTrayIcon,
+  ExclamationCircleIcon,
+  XMarkIcon,
+  LockClosedIcon,
+  LockOpenIcon,
+  ClockIcon,
+  WrenchScrewdriverIcon,
+  EllipsisHorizontalIcon,
+} from "@heroicons/react/24/outline";
+import {
   useOrderIncidentManager,
   useAuthManager,
 } from "../../../../services/Services";
-import { theme, globalStyles } from "../../../../constants/Theme";
-import {
-  Card,
-  Button,
-  Alert,
-  Loading,
-  Breadcrumb,
-  Modal,
-  TextArea,
-} from "../../../../components/UI";
 
 function AdminOrderIncidentDetailPage() {
   const { oiid } = useParams();
@@ -29,6 +42,8 @@ function AdminOrderIncidentDetailPage() {
   const [incident, setIncident] = useState(null);
   const [showCommentModal, setShowCommentModal] = useState(false);
   const [newComment, setNewComment] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertStatus, setAlertStatus] = useState("");
 
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
@@ -66,6 +81,7 @@ function AdminOrderIncidentDetailPage() {
       return;
     }
 
+    setErrors({});
     try {
       await orderIncidentManager.createOrderIncidentComment(
         oiid,
@@ -74,10 +90,13 @@ function AdminOrderIncidentDetailPage() {
       );
       setNewComment("");
       setShowCommentModal(false);
+      setAlertMessage("Comment added successfully");
+      setAlertStatus("success");
       // Refresh data
       fetchData();
     } catch (error) {
       console.error("Failed to add comment:", error);
+      setErrors({ comment: "Failed to add comment. Please try again." });
     }
   };
 
@@ -100,16 +119,6 @@ function AdminOrderIncidentDetailPage() {
     };
   }, [oiid]);
 
-  if (isFetching) {
-    return <Loading message="Loading incident details..." />;
-  }
-
-  const breadcrumbItems = [
-    { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
-    { path: "/admin/incidents", label: "Incidents", icon: "🔥" },
-    { label: "Detail", icon: "ℹ️" },
-  ];
-
   // Format initiator label
   const getInitiatorLabel = (initiator) => {
     switch (initiator) {
@@ -124,297 +133,501 @@ function AdminOrderIncidentDetailPage() {
     }
   };
 
+  // Format date for display
+  const formatDate = (dateString) => {
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  // Format datetime for display
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleString();
+  };
+
+  if (isFetching && !incident) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-sm sm:text-base text-gray-600">
+              Loading incident details...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div style={globalStyles.container}>
-      <Breadcrumb items={breadcrumbItems} />
-
-      {/* Page Title */}
-      <h1>🔥 Incident</h1>
-      <h4>ℹ️ Detail</h4>
-      <hr />
-
-      {/* Page Content */}
-      <Card
-        title="📋 Incident Detail"
-        actions={
-          <>
-            <Button variant="primary" onClick={() => setShowCommentModal(true)}>
-              ➕ New Comment
-            </Button>
-          </>
-        }
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+      {/* Responsive Breadcrumb */}
+      <nav
+        className="flex mb-4 sm:mb-6 overflow-x-auto"
+        aria-label="Breadcrumb"
       >
-        {/* Error Display */}
-        {errors && Object.keys(errors).length > 0 && (
-          <Alert type="error" onClose={() => setErrors({})}>
-            <div>
-              <strong>There were errors:</strong>
-              <ul style={{ margin: "10px 0 0 20px" }}>
+        <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
+          <li className="inline-flex items-center">
+            <Link
+              to="/admin/dashboard"
+              className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
+            >
+              <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+              <span className="hidden sm:inline">Dashboard</span>
+              <span className="sm:hidden">Dash</span>
+            </Link>
+          </li>
+          <li>
+            <div className="flex items-center">
+              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
+              <Link
+                to="/admin/incidents"
+                className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
+              >
+                <span className="inline-flex items-center">
+                  <ExclamationTriangleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                  Incidents
+                </span>
+              </Link>
+            </div>
+          </li>
+          <li aria-current="page">
+            <div className="flex items-center">
+              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
+              <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
+                <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                Detail
+              </span>
+            </div>
+          </li>
+        </ol>
+      </nav>
+
+      {/* Page Title - Responsive */}
+      <div className="mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+              <ExclamationTriangleIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-red-600 flex-shrink-0" />
+              Incident
+            </h1>
+            <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+              <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
+              View incident details and manage comments
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Alert Messages - Responsive */}
+      {alertMessage && (
+        <div
+          className={`mb-4 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center justify-between text-sm sm:text-base ${
+            alertStatus === "success"
+              ? "bg-green-50 border border-green-200 text-green-700"
+              : "bg-red-50 border border-red-200 text-red-700"
+          }`}
+        >
+          <div className="flex items-center">
+            {alertStatus === "success" ? (
+              <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+            ) : (
+              <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+            )}
+            <span className="break-words">{alertMessage}</span>
+          </div>
+          <button
+            onClick={() => {
+              setAlertMessage("");
+              setAlertStatus("");
+            }}
+            className="ml-4 hover:bg-white hover:bg-opacity-20 rounded p-1 flex-shrink-0"
+          >
+            <XMarkIcon className="w-4 sm:w-5 h-4 sm:h-5" />
+          </button>
+        </div>
+      )}
+
+      {/* Error Display - Responsive */}
+      {errors && Object.keys(errors).length > 0 && (
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base">
+          <div className="flex items-start">
+            <ExclamationTriangleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 mt-0.5 flex-shrink-0" />
+            <div className="flex-1">
+              <strong>Error:</strong>
+              <ul className="mt-2 list-disc list-inside">
                 {Object.entries(errors).map(([key, value]) => (
                   <li key={key}>{value}</li>
                 ))}
               </ul>
             </div>
-          </Alert>
-        )}
+            <button
+              onClick={() => setErrors({})}
+              className="text-red-700 hover:text-red-900 ml-3 flex-shrink-0"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
 
+      {/* Main Content with Dark Header */}
+      <div className="shadow-sm">
         {incident && (
-          <>
-            {/* Summary Table */}
-            <div style={{ marginBottom: "30px" }}>
-              <h3 style={{ marginBottom: "15px" }}>Summary</h3>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
-                <tbody>
-                  <tr style={{ borderBottom: "1px solid #ddd" }}>
-                    <td
-                      style={{
-                        padding: "10px",
-                        fontWeight: "600",
-                        width: "30%",
-                        backgroundColor: "#f5f5f5",
-                      }}
-                    >
-                      Title:
-                    </td>
-                    <td style={{ padding: "10px" }}>{incident.title}</td>
-                  </tr>
-                  <tr style={{ borderBottom: "1px solid #ddd" }}>
-                    <td
-                      style={{
-                        padding: "10px",
-                        fontWeight: "600",
-                        backgroundColor: "#f5f5f5",
-                      }}
-                    >
-                      Description:
-                    </td>
-                    <td style={{ padding: "10px" }}>{incident.description}</td>
-                  </tr>
-                  <tr style={{ borderBottom: "1px solid #ddd" }}>
-                    <td
-                      style={{
-                        padding: "10px",
-                        fontWeight: "600",
-                        backgroundColor: "#f5f5f5",
-                      }}
-                    >
-                      Related Order:
-                    </td>
-                    <td style={{ padding: "10px" }}>
-                      {incident.orderId ? (
-                        <Link to={`/admin/order/${incident.orderId}`}>
-                          Order #{incident.orderId}
-                        </Link>
-                      ) : (
-                        <span style={{ color: "#999" }}>
-                          Not linked to order
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                  <tr style={{ borderBottom: "1px solid #ddd" }}>
-                    <td
-                      style={{
-                        padding: "10px",
-                        fontWeight: "600",
-                        backgroundColor: "#f5f5f5",
-                      }}
-                    >
-                      Initiated By:
-                    </td>
-                    <td style={{ padding: "10px" }}>
-                      {getInitiatorLabel(incident.initiator)}
-                    </td>
-                  </tr>
-                  <tr style={{ borderBottom: "1px solid #ddd" }}>
-                    <td
-                      style={{
-                        padding: "10px",
-                        fontWeight: "600",
-                        backgroundColor: "#f5f5f5",
-                      }}
-                    >
-                      Start Date:
-                    </td>
-                    <td style={{ padding: "10px" }}>
-                      {incident.startDate || "N/A"}
-                    </td>
-                  </tr>
-                  <tr style={{ borderBottom: "1px solid #ddd" }}>
-                    <td
-                      style={{
-                        padding: "10px",
-                        fontWeight: "600",
-                        backgroundColor: "#f5f5f5",
-                      }}
-                    >
-                      Status:
-                    </td>
-                    <td style={{ padding: "10px" }}>
-                      {incident.closingReason ? (
-                        <span style={{ color: "green" }}>Closed</span>
-                      ) : (
-                        <span style={{ color: "orange" }}>Open</span>
-                      )}
-                    </td>
-                  </tr>
-                  {incident.closingReason && (
-                    <tr style={{ borderBottom: "1px solid #ddd" }}>
-                      <td
-                        style={{
-                          padding: "10px",
-                          fontWeight: "600",
-                          backgroundColor: "#f5f5f5",
-                        }}
-                      >
-                        Closing Reason:
-                      </td>
-                      <td style={{ padding: "10px" }}>
-                        {incident.closingReasonLabel ||
-                          incident.closingReasonOther ||
-                          "N/A"}
-                      </td>
-                    </tr>
-                  )}
-                  <tr style={{ borderBottom: "1px solid #ddd" }}>
-                    <td
-                      style={{
-                        padding: "10px",
-                        fontWeight: "600",
-                        backgroundColor: "#f5f5f5",
-                      }}
-                    >
-                      Created At:
-                    </td>
-                    <td style={{ padding: "10px" }}>
-                      {incident.createdAt || "N/A"}
-                    </td>
-                  </tr>
-                  <tr style={{ borderBottom: "1px solid #ddd" }}>
-                    <td
-                      style={{
-                        padding: "10px",
-                        fontWeight: "600",
-                        backgroundColor: "#f5f5f5",
-                      }}
-                    >
-                      Created By:
-                    </td>
-                    <td style={{ padding: "10px" }}>
-                      {incident.createdByUserName || "N/A"}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+          <div className="bg-gray-700 rounded-lg">
+            {/* Header with Actions - Responsive with Dark Background */}
+            <div className="px-4 sm:px-6 py-4 sm:py-5">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+                <h2 className="text-xl sm:text-2xl font-semibold text-white flex items-center">
+                  <ClipboardDocumentListIcon className="w-5 sm:w-7 h-5 sm:h-7 mr-2 text-blue-300 flex-shrink-0" />
+                  Incident Detail
+                </h2>
+                <div className="flex gap-2 sm:gap-3">
+                  <Link
+                    to="/admin/incidents"
+                    className="flex-1 sm:flex-initial"
+                  >
+                    <button className="w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base font-medium text-[#222222] bg-[#f6f6f6] hover:bg-gray-200 transition-colors">
+                      <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
+                      Back
+                    </button>
+                  </Link>
+                  <button
+                    onClick={() => setShowCommentModal(true)}
+                    className="flex-1 sm:flex-initial w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-green-600 rounded-lg text-sm sm:text-base font-medium text-white bg-green-600 hover:bg-green-700 transition-colors"
+                  >
+                    <PlusCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">New Comment</span>
+                    <span className="sm:hidden">Comment</span>
+                  </button>
+                </div>
+              </div>
             </div>
 
-            {/* Feed Section */}
-            <div>
-              <h3 style={{ marginBottom: "15px" }}>Feed</h3>
-              {incident.feed && incident.feed.length > 0 ? (
-                <div>
-                  {incident.feed.map((item, index) => (
-                    <div key={index} style={{ marginBottom: "20px" }}>
-                      <div
-                        style={{
-                          fontSize: "12px",
-                          color: "#666",
-                          marginBottom: "5px",
-                          textAlign: "right",
-                        }}
-                      >
-                        {item.createdByUserName} at {item.createdAt}
+            {/* Tab Navigation - Responsive with horizontal scroll on mobile */}
+            <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg">
+              <div className="px-4 sm:px-6 border-b border-gray-200">
+                <nav className="-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide">
+                  <div className="border-b-2 border-blue-600 py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-blue-600 whitespace-nowrap">
+                    Detail
+                  </div>
+                  <Link
+                    to={`/admin/incident/${incident.id}/comments`}
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
+                  >
+                    Comments
+                  </Link>
+                  <Link
+                    to={`/admin/incident/${incident.id}/attachments`}
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
+                  >
+                    Attachments
+                  </Link>
+                  <Link
+                    to={`/admin/incident/${incident.id}/history`}
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
+                  >
+                    History
+                  </Link>
+                  <Link
+                    to={`/admin/incident/${incident.id}/more`}
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center whitespace-nowrap"
+                  >
+                    More
+                    <EllipsisHorizontalIcon className="w-4 sm:w-5 h-4 sm:h-5 ml-1" />
+                  </Link>
+                </nav>
+              </div>
+
+              <div className="p-4 sm:p-6">
+                {/* Summary Section - Enhanced Responsive Layout */}
+                <div className="mb-6 sm:mb-8">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                    <DocumentTextIcon className="w-5 sm:w-6 h-5 sm:h-6 mr-2 text-gray-600" />
+                    Summary
+                  </h3>
+                  <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
+                    <dl className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                      <div className="md:col-span-2">
+                        <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+                          Title
+                        </dt>
+                        <dd className="text-sm sm:text-base lg:text-lg text-gray-900 font-medium break-words">
+                          {incident.title || "-"}
+                        </dd>
                       </div>
-                      {item.filetype ? (
-                        // Attachment
-                        <Alert type="info">
-                          <a
-                            href={item.objectUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                          >
-                            📎 {item.filename || "Download Attachment"}
-                          </a>
-                        </Alert>
-                      ) : (
-                        // Comment
-                        <div
-                          style={{
-                            padding: "15px",
-                            backgroundColor: "#f8f9fa",
-                            borderRadius: "4px",
-                            border: "1px solid #dee2e6",
-                          }}
-                        >
-                          {item.content}
+                      <div>
+                        <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+                          Related Order
+                        </dt>
+                        <dd className="text-sm sm:text-base">
+                          {incident.orderId ? (
+                            <Link
+                              to={`/admin/order/${incident.orderId}`}
+                              className="text-blue-600 hover:text-blue-700 inline-flex items-center"
+                            >
+                              <WrenchScrewdriverIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                              Order #{incident.orderId}
+                            </Link>
+                          ) : (
+                            <span className="text-gray-500">
+                              Not linked to order
+                            </span>
+                          )}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+                          Status
+                        </dt>
+                        <dd className="text-sm sm:text-base">
+                          {incident.closingReason ? (
+                            <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium bg-gray-100 text-gray-800">
+                              <LockClosedIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                              Closed
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium bg-yellow-100 text-yellow-800">
+                              <LockOpenIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                              Open
+                            </span>
+                          )}
+                        </dd>
+                      </div>
+                      <div className="md:col-span-2">
+                        <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+                          Description
+                        </dt>
+                        <dd className="text-sm sm:text-base text-gray-900 break-words whitespace-pre-wrap">
+                          {incident.description || "-"}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+                          Initiated By
+                        </dt>
+                        <dd className="text-sm sm:text-base text-gray-900">
+                          <span className="inline-flex items-center">
+                            <UserIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 text-gray-400" />
+                            {getInitiatorLabel(incident.initiator)}
+                          </span>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+                          Start Date
+                        </dt>
+                        <dd className="text-sm sm:text-base text-gray-900">
+                          <span className="inline-flex items-center">
+                            <CalendarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 text-gray-400" />
+                            {formatDate(incident.startDate)}
+                          </span>
+                        </dd>
+                      </div>
+                      {incident.closingReason && (
+                        <div className="md:col-span-2">
+                          <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+                            Closing Reason
+                          </dt>
+                          <dd className="text-sm sm:text-base text-gray-900 break-words">
+                            {incident.closingReasonLabel ||
+                              incident.closingReasonOther ||
+                              "-"}
+                          </dd>
                         </div>
                       )}
-                    </div>
-                  ))}
+                      <div>
+                        <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+                          Created At
+                        </dt>
+                        <dd className="text-sm sm:text-base text-gray-900">
+                          <span className="inline-flex items-center">
+                            <ClockIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 text-gray-400" />
+                            {formatDateTime(incident.createdAt)}
+                          </span>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+                          Created By
+                        </dt>
+                        <dd className="text-sm sm:text-base text-gray-900">
+                          <span className="inline-flex items-center">
+                            <UserIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 text-gray-400" />
+                            {incident.createdByUserName || "-"}
+                          </span>
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
                 </div>
-              ) : (
-                <p style={{ color: "#666" }}>No comments or attachments yet.</p>
-              )}
-            </div>
 
-            {/* Action Buttons */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                marginTop: "30px",
-                flexWrap: "wrap",
-                gap: "10px",
-              }}
-            >
-              <Link to="/admin/incidents">
-                <Button variant="secondary">← Back to Incidents</Button>
-              </Link>
-
-              <Button
-                variant="primary"
-                onClick={() => setShowCommentModal(true)}
-              >
-                ➕ New Comment
-              </Button>
+                {/* Feed Section - Enhanced Responsive */}
+                <div className="mb-6 sm:mb-8">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                    <ChatBubbleLeftRightIcon className="w-5 sm:w-6 h-5 sm:h-6 mr-2 text-gray-600" />
+                    Activity Feed
+                  </h3>
+                  {incident.feed && incident.feed.length > 0 ? (
+                    <div className="space-y-4">
+                      {incident.feed.map((item, index) => (
+                        <div
+                          key={index}
+                          className="bg-gray-50 rounded-lg border border-gray-200 p-3 sm:p-4 transition-all hover:shadow-sm"
+                        >
+                          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-2 sm:mb-3">
+                            <div className="flex items-center text-xs sm:text-sm text-gray-600 order-2 sm:order-1">
+                              <UserIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                              <span className="font-medium">
+                                {item.createdByUserName}
+                              </span>
+                            </div>
+                            <div className="text-xs sm:text-sm text-gray-500 flex items-center mb-2 sm:mb-0 order-1 sm:order-2">
+                              <ClockIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                              {formatDateTime(item.createdAt)}
+                            </div>
+                          </div>
+                          {item.filetype ? (
+                            <div className="bg-blue-50 border border-blue-200 rounded-md p-2 sm:p-3">
+                              <a
+                                href={item.objectUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-blue-600 hover:text-blue-700 inline-flex items-center text-sm sm:text-base"
+                              >
+                                <PaperClipIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
+                                {item.filename || "Download Attachment"}
+                                <ArrowDownTrayIcon className="w-3 sm:w-4 h-3 sm:h-4 ml-2" />
+                              </a>
+                            </div>
+                          ) : (
+                            <div className="bg-white rounded-md p-3 sm:p-4 border border-gray-100">
+                              <p className="text-sm sm:text-base text-gray-900 whitespace-pre-wrap break-words">
+                                {item.content}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 sm:py-12 bg-gray-50 rounded-lg">
+                      <ChatBubbleLeftRightIcon className="w-10 sm:w-12 h-10 sm:h-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                      <p className="text-sm sm:text-base text-gray-500">
+                        No activity recorded yet.
+                      </p>
+                      <p className="text-xs sm:text-sm text-gray-400 mt-2">
+                        Comments and attachments will appear here.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
-          </>
+          </div>
         )}
-      </Card>
 
-      {/* Comment Modal */}
-      <Modal
-        isOpen={showCommentModal}
-        onClose={() => {
-          setShowCommentModal(false);
-          setNewComment("");
-        }}
-        title="New Comment"
-        footer={
-          <>
-            <Button
+        {!incident && !isFetching && (
+          <div className="bg-white shadow-sm rounded-lg px-4 sm:px-6 py-8 sm:py-16 text-center">
+            <div className="inline-flex items-center justify-center w-12 sm:w-16 h-12 sm:h-16 bg-gray-100 rounded-full mb-4">
+              <ExclamationTriangleIcon className="w-6 sm:w-8 h-6 sm:h-8 text-gray-400" />
+            </div>
+            <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
+              Incident Not Found
+            </h3>
+            <p className="text-sm sm:text-base text-gray-500 mb-4 sm:mb-6">
+              The incident you're looking for doesn't exist or you don't have
+              permission to view it.
+            </p>
+            <Link to="/admin/incidents">
+              <button className="inline-flex items-center px-3 sm:px-4 py-2 border border-blue-600 rounded-lg text-xs sm:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                <ChevronLeftIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
+                Back to Incidents
+              </button>
+            </Link>
+          </div>
+        )}
+      </div>
+
+      {/* Comment Modal - Enhanced Responsive */}
+      {showCommentModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
+            {/* Background overlay */}
+            <div
+              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
               onClick={() => {
                 setShowCommentModal(false);
                 setNewComment("");
               }}
-              variant="secondary"
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleAddComment} variant="success">
-              Submit
-            </Button>
-          </>
-        }
-      >
-        <TextArea
-          label="Content"
-          value={newComment}
-          onChange={(e) => setNewComment(e.target.value)}
-          rows={7}
-          placeholder="Enter your comment here"
-        />
-      </Modal>
+            ></div>
+
+            {/* Modal panel */}
+            <div className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all w-full max-w-lg sm:my-8 sm:p-6">
+              <div className="absolute right-0 top-0 pr-4 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCommentModal(false);
+                    setNewComment("");
+                  }}
+                  className="rounded-md bg-white text-gray-400 hover:text-gray-500 focus:outline-none"
+                >
+                  <XMarkIcon className="h-5 sm:h-6 w-5 sm:w-6" />
+                </button>
+              </div>
+              <div>
+                <div className="mt-3 sm:mt-0">
+                  <h3 className="text-base sm:text-lg font-semibold leading-6 text-gray-900 mb-4">
+                    New Comment
+                  </h3>
+                  <div className="mt-2">
+                    <label
+                      htmlFor="comment"
+                      className="block text-xs sm:text-sm font-medium text-gray-700 mb-2"
+                    >
+                      Content
+                    </label>
+                    <textarea
+                      id="comment"
+                      rows={7}
+                      className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm sm:text-base shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      placeholder="Enter your comment here..."
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="mt-5 sm:mt-6 flex flex-col-reverse sm:flex-row gap-3 sm:justify-end">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowCommentModal(false);
+                    setNewComment("");
+                  }}
+                  className="w-full sm:w-auto inline-flex justify-center rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm sm:text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAddComment}
+                  disabled={!newComment.trim()}
+                  className={`w-full sm:w-auto inline-flex justify-center rounded-lg border border-transparent px-4 py-2 text-sm sm:text-base font-medium text-white shadow-sm focus:outline-none ${
+                    newComment.trim()
+                      ? "bg-green-600 hover:bg-green-700"
+                      : "bg-gray-400 cursor-not-allowed"
+                  }`}
+                >
+                  Submit Comment
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

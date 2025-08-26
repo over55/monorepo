@@ -18,6 +18,7 @@ import {
   BuildingOffice2Icon,
   ArrowRightIcon,
   UserGroupIcon,
+  CheckIcon,
 } from "@heroicons/react/24/outline";
 
 // Import customer type constants from the central constants file
@@ -154,10 +155,14 @@ function AdminCustomerAddStep2Page() {
 
         {/* Page Title */}
         <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
-            <UserPlusIcon className="w-6 h-6 sm:w-7 sm:h-7 mr-2 sm:mr-3 text-blue-600" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+            <UserPlusIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
             Add New Customer
           </h1>
+          <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+            <UserGroupIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
+            Step 2: Select customer type
+          </p>
         </div>
 
         {/* Wizard Steps - Responsive Design */}
@@ -168,30 +173,15 @@ function AdminCustomerAddStep2Page() {
                 {/* Step 1 - Complete */}
                 <div className="flex items-center">
                   <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex-shrink-0">
-                    <svg
-                      className="w-4 h-4 sm:w-6 sm:h-6 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
+                    <CheckIcon className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                   </div>
-                  <div className="ml-2 sm:ml-3 hidden md:block">
+                  <div className="ml-2 sm:ml-3">
                     <p className="text-xs sm:text-sm font-medium text-gray-900">
                       Search
                     </p>
                     <p className="text-xs text-gray-500 hidden lg:block">
                       Complete
                     </p>
-                  </div>
-                  <div className="ml-2 sm:ml-3 md:hidden">
-                    <p className="text-xs font-medium text-gray-900">1</p>
                   </div>
                 </div>
 
@@ -205,7 +195,7 @@ function AdminCustomerAddStep2Page() {
                       2
                     </span>
                   </div>
-                  <div className="ml-2 sm:ml-3 hidden md:block">
+                  <div className="ml-2 sm:ml-3">
                     <p className="text-xs sm:text-sm font-medium text-gray-900">
                       Type
                     </p>
@@ -213,102 +203,34 @@ function AdminCustomerAddStep2Page() {
                       Select Type
                     </p>
                   </div>
-                  <div className="ml-2 sm:ml-3 md:hidden">
-                    <p className="text-xs font-medium text-gray-900">Type</p>
-                  </div>
                 </div>
 
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-6 sm:w-8 lg:w-12 h-0.5 bg-gray-300"></div>
-
-                {/* Step 3 - Inactive */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
-                    <span className="text-gray-600 font-semibold text-sm sm:text-base">
-                      3
-                    </span>
-                  </div>
-                  <div className="ml-2 sm:ml-3 hidden md:block">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">
-                      Contact
-                    </p>
-                    <p className="text-xs text-gray-400 hidden lg:block">
-                      Basic Info
-                    </p>
-                  </div>
-                  <div className="ml-2 sm:ml-3 md:hidden">
-                    <p className="text-xs font-medium text-gray-500">3</p>
-                  </div>
-                </div>
-
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-6 sm:w-8 lg:w-12 h-0.5 bg-gray-300"></div>
-
-                {/* Step 4 - Inactive */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
-                    <span className="text-gray-600 font-semibold text-sm sm:text-base">
-                      4
-                    </span>
-                  </div>
-                  <div className="ml-2 sm:ml-3 hidden md:block">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">
-                      Address
-                    </p>
-                    <p className="text-xs text-gray-400 hidden lg:block">
-                      Location
-                    </p>
-                  </div>
-                  <div className="ml-2 sm:ml-3 md:hidden">
-                    <p className="text-xs font-medium text-gray-500">4</p>
-                  </div>
-                </div>
-
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-6 sm:w-8 lg:w-12 h-0.5 bg-gray-300"></div>
-
-                {/* Step 5 - Inactive */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
-                    <span className="text-gray-600 font-semibold text-sm sm:text-base">
-                      5
-                    </span>
-                  </div>
-                  <div className="ml-2 sm:ml-3 hidden md:block">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">
-                      Metrics
-                    </p>
-                    <p className="text-xs text-gray-400 hidden lg:block">
-                      Details
-                    </p>
-                  </div>
-                  <div className="ml-2 sm:ml-3 md:hidden">
-                    <p className="text-xs font-medium text-gray-500">5</p>
-                  </div>
-                </div>
-
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-6 sm:w-8 lg:w-12 h-0.5 bg-gray-300"></div>
-
-                {/* Step 6 - Inactive */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
-                    <span className="text-gray-600 font-semibold text-sm sm:text-base">
-                      6
-                    </span>
-                  </div>
-                  <div className="ml-2 sm:ml-3 hidden md:block">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">
-                      Comments
-                    </p>
-                    <p className="text-xs text-gray-400 hidden lg:block">
-                      Notes
-                    </p>
-                  </div>
-                  <div className="ml-2 sm:ml-3 md:hidden">
-                    <p className="text-xs font-medium text-gray-500">6</p>
-                  </div>
-                </div>
+                {/* Remaining steps */}
+                {[
+                  { num: 3, title: "Contact", subtitle: "Basic Info" },
+                  { num: 4, title: "Address", subtitle: "Location" },
+                  { num: 5, title: "Metrics", subtitle: "Details" },
+                  { num: 6, title: "Comments", subtitle: "Notes" },
+                ].map((step, index) => (
+                  <React.Fragment key={step.num}>
+                    <div className="mx-1 sm:mx-2 w-6 sm:w-8 lg:w-12 h-0.5 bg-gray-300"></div>
+                    <div className="flex items-center">
+                      <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
+                        <span className="text-gray-600 font-semibold text-sm sm:text-base">
+                          {step.num}
+                        </span>
+                      </div>
+                      <div className="ml-2 sm:ml-3">
+                        <p className="text-xs sm:text-sm font-medium text-gray-500">
+                          {step.title}
+                        </p>
+                        <p className="text-xs text-gray-400 hidden lg:block">
+                          {step.subtitle}
+                        </p>
+                      </div>
+                    </div>
+                  </React.Fragment>
+                ))}
               </div>
             </div>
           </div>
@@ -332,17 +254,21 @@ function AdminCustomerAddStep2Page() {
 
         {/* Main Content */}
         <div className="bg-white shadow-sm rounded-lg">
-          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-              <UserGroupIcon className="w-5 h-5 mr-2" />
-              Select Customer Type
-            </h2>
-            <p className="mt-1 text-xs sm:text-sm text-gray-600">
-              Please select the type of customer this is
-            </p>
+          {/* Dark Header */}
+          <div className="bg-gray-700 rounded-t-lg">
+            <div className="px-4 sm:px-6 py-3 sm:py-4">
+              <h2 className="text-base sm:text-lg font-semibold text-white flex items-center">
+                <UserGroupIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
+                Select Customer Type
+              </h2>
+              <p className="mt-1 text-xs sm:text-sm text-gray-300">
+                Please select the type of customer this is
+              </p>
+            </div>
           </div>
 
-          <div className="p-4 sm:p-6">
+          {/* Content with Border */}
+          <div className="border-x-2 border-b-2 border-gray-700 rounded-b-lg p-4 sm:p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-4xl mx-auto">
               {/* Residential Card */}
               <div

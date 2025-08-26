@@ -20,6 +20,10 @@ import {
   ChartBarSquareIcon,
   CheckCircleIcon,
   UsersIcon,
+  InformationCircleIcon,
+  PhoneIcon,
+  TruckIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import {
   GENDER_OPTIONS_WITH_EMPTY_OPTION,
@@ -36,6 +40,59 @@ import {
   TagsDisplay,
 } from "../../../../components/business/displays";
 
+// DetailField Component for Review Section
+const DetailField = ({ label, value, fullWidth = false }) => (
+  <div className={fullWidth ? "lg:col-span-2" : ""}>
+    <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+      {label}
+    </dt>
+    <dd className="text-base sm:text-lg font-medium text-gray-900 break-words">
+      {value || "-"}
+    </dd>
+  </div>
+);
+
+// DetailSection Component with Dark Header
+const DetailSection = ({
+  title,
+  icon: Icon,
+  children,
+  editLink,
+  hasError = false,
+}) => (
+  <div
+    className={`bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6 ${hasError ? "ring-2 ring-red-500" : ""}`}
+  >
+    <div className="px-4 sm:px-6 py-3 sm:py-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+          <Icon
+            className={`w-4 sm:w-5 h-4 sm:h-5 mr-2 ${hasError ? "text-red-300" : "text-blue-300"} flex-shrink-0`}
+          />
+          <span className="truncate">{title}</span>
+          {hasError && (
+            <ExclamationTriangleIcon className="w-4 sm:w-5 h-4 sm:h-5 ml-2 text-red-300" />
+          )}
+        </h3>
+        {editLink && (
+          <Link
+            to={editLink}
+            className={`inline-flex items-center text-xs sm:text-sm ${hasError ? "text-red-300 hover:text-red-200" : "text-blue-300 hover:text-blue-200"}`}
+          >
+            <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+            {hasError ? "Fix" : "Edit"}
+          </Link>
+        )}
+      </div>
+    </div>
+    <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
+      <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        {children}
+      </dl>
+    </div>
+  </div>
+);
+
 function AdminStaffAddStep7Page() {
   const navigate = useNavigate();
   const wizardStorage = useStaffAddWizardStorage();
@@ -44,6 +101,7 @@ function AdminStaffAddStep7Page() {
   const wizardState = wizardStorage.getWizardState();
 
   const [errors, setErrors] = useState({});
+  const [fieldErrors, setFieldErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const onUnauthorized = () => {
@@ -54,10 +112,49 @@ function AdminStaffAddStep7Page() {
     window.scrollTo(0, 0);
   }, []);
 
+  // Map backend field errors to sections for highlighting
+  const getSectionWithError = (fieldName) => {
+    const contactFields = [
+      "email",
+      "firstName",
+      "lastName",
+      "phone",
+      "phoneType",
+    ];
+    const addressFields = [
+      "addressLine1",
+      "city",
+      "region",
+      "postalCode",
+      "country",
+    ];
+    const accountFields = [
+      "password",
+      "passwordRepeated",
+      "preferredLanguage",
+      "vehicleTypes",
+    ];
+    const metricsFields = [
+      "tags",
+      "howDidYouHearAboutUsID",
+      "gender",
+      "birthDate",
+      "joinDate",
+    ];
+
+    if (contactFields.includes(fieldName)) return "contact";
+    if (addressFields.includes(fieldName)) return "address";
+    if (accountFields.includes(fieldName)) return "account";
+    if (metricsFields.includes(fieldName)) return "metrics";
+
+    return null;
+  };
+
   const onSubmitClick = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setErrors({});
+    setFieldErrors({});
 
     try {
       // Prepare the payload
@@ -75,7 +172,97 @@ function AdminStaffAddStep7Page() {
       });
     } catch (error) {
       console.error("Error creating staff:", error);
-      setErrors(error);
+
+      // Handle different error formats
+      let errorDetails = {};
+      let generalError = null;
+
+      if (error && typeof error === "object") {
+        // Check for field-specific errors
+        const errorFields = Object.keys(error);
+        const knownFields = [
+          "email",
+          "firstName",
+          "lastName",
+          "phone",
+          "phoneType",
+          "addressLine1",
+          "city",
+          "region",
+          "postalCode",
+          "country",
+          "password",
+          "passwordRepeated",
+          "preferredLanguage",
+          "vehicleTypes",
+          "tags",
+          "howDidYouHearAboutUsID",
+          "gender",
+          "birthDate",
+          "joinDate",
+        ];
+
+        // Extract field errors
+        errorFields.forEach((field) => {
+          if (knownFields.includes(field)) {
+            errorDetails[field] = Array.isArray(error[field])
+              ? error[field].join(", ")
+              : error[field];
+          }
+        });
+
+        // Check for general error message
+        if (error.message) {
+          generalError = error.message;
+        } else if (error.detail) {
+          generalError = error.detail;
+        } else if (error.error) {
+          generalError = error.error;
+        } else if (Object.keys(errorDetails).length === 0) {
+          // If no field errors were found, treat entire error as general
+          generalError =
+            typeof error === "string"
+              ? error
+              : "An error occurred while creating the staff member. Please review your information and try again.";
+        }
+      } else if (typeof error === "string") {
+        generalError = error;
+      } else {
+        generalError = "An unexpected error occurred. Please try again.";
+      }
+
+      setFieldErrors(errorDetails);
+
+      // Set general error only if we have one and no field errors
+      if (generalError && Object.keys(errorDetails).length === 0) {
+        setErrors({ message: generalError });
+      } else if (Object.keys(errorDetails).length > 0) {
+        // Create a helpful message when there are field errors
+        const errorSections = new Set();
+        Object.keys(errorDetails).forEach((field) => {
+          const section = getSectionWithError(field);
+          if (section) errorSections.add(section);
+        });
+
+        const sectionNames = {
+          contact: "Contact Information",
+          address: "Address Information",
+          account: "Account Information",
+          metrics: "Metrics Information",
+        };
+
+        const sectionsWithErrors = Array.from(errorSections)
+          .map((s) => sectionNames[s])
+          .filter(Boolean);
+
+        const errorMessage =
+          sectionsWithErrors.length > 0
+            ? `Please fix the errors in the following sections: ${sectionsWithErrors.join(", ")}`
+            : "Please fix the validation errors below";
+
+        setErrors({ message: errorMessage });
+      }
+
       window.scrollTo(0, 0);
     } finally {
       setIsSubmitting(false);
@@ -126,6 +313,35 @@ function AdminStaffAddStep7Page() {
     return [];
   };
 
+  // Check if a section has errors
+  const sectionHasErrors = (section) => {
+    const fieldsInSection = {
+      contact: ["email", "firstName", "lastName", "phone", "phoneType"],
+      address: ["addressLine1", "city", "region", "postalCode", "country"],
+      shipping: [
+        "shippingAddressLine1",
+        "shippingCity",
+        "shippingRegion",
+        "shippingPostalCode",
+      ],
+      account: [
+        "password",
+        "passwordRepeated",
+        "preferredLanguage",
+        "vehicleTypes",
+      ],
+      metrics: [
+        "tags",
+        "howDidYouHearAboutUsID",
+        "gender",
+        "birthDate",
+        "joinDate",
+      ],
+    };
+
+    return fieldsInSection[section]?.some((field) => fieldErrors[field]);
+  };
+
   if (!wizardState) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -137,38 +353,42 @@ function AdminStaffAddStep7Page() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {/* Breadcrumb */}
-        <nav className="flex mb-4" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* Responsive Breadcrumb */}
+        <nav
+          className="flex mb-4 sm:mb-6 overflow-x-auto"
+          aria-label="Breadcrumb"
+        >
+          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
             <li className="inline-flex items-center">
               <Link
                 to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+                className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
               >
-                <ChartBarIcon className="w-4 h-4 mr-2" />
+                <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                 <span className="hidden sm:inline">Dashboard</span>
+                <span className="sm:hidden">Dash</span>
               </Link>
             </li>
             <li>
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="mx-1 sm:mx-2 text-gray-400">/</span>
                 <Link
                   to="/admin/staff"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                  className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
                 >
                   <span className="inline-flex items-center">
-                    <UserIcon className="w-4 h-4 mr-2" />
-                    <span className="hidden sm:inline">Staff</span>
+                    <UsersIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                    Staff
                   </span>
                 </Link>
               </div>
             </li>
             <li aria-current="page">
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
-                  <UserPlusIcon className="w-4 h-4 mr-2" />
+                <span className="mx-1 sm:mx-2 text-gray-400">/</span>
+                <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
+                  <UserPlusIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                   Add
                 </span>
               </div>
@@ -176,28 +396,49 @@ function AdminStaffAddStep7Page() {
           </ol>
         </nav>
 
-        {/* Page Title */}
-        <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
-            <UserPlusIcon className="w-6 sm:w-7 h-6 sm:h-7 mr-2 sm:mr-3 text-blue-600" />
+        {/* Page Title - Responsive */}
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+            <UserPlusIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
             Add New Staff Member
           </h1>
+          <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+            <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
+            Review and submit new staff member
+          </p>
         </div>
 
-        {/* Wizard Steps - Responsive Design */}
-        <div className="mb-6">
-          {/* Desktop/Tablet View (768px and up) */}
-          <div className="hidden md:flex items-center justify-center overflow-x-auto">
-            <div className="flex items-center">
+        {/* Wizard Steps - Mobile Simplified */}
+        <div className="mb-4 sm:mb-6">
+          <div className="md:hidden bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full">
+                  <span className="text-white font-semibold text-sm">7</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">
+                    Step 7: Review
+                  </p>
+                  <p className="text-xs text-gray-500">Submit New Staff</p>
+                </div>
+              </div>
+              <div className="text-xs text-gray-500">7 of 7</div>
+            </div>
+          </div>
+
+          {/* Desktop Wizard Steps */}
+          <div className="hidden md:flex items-center justify-center overflow-x-auto pb-2">
+            <div className="flex items-center min-w-max">
               {/* Steps 1-6 Complete */}
               {[1, 2, 3, 4, 5, 6].map((step, index) => (
                 <React.Fragment key={step}>
                   <div className="flex items-center">
-                    <div className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-green-600 rounded-full">
-                      <CheckIcon className="w-4 h-4 lg:w-6 lg:h-6 text-white" />
+                    <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
+                      <CheckIcon className="w-6 h-6 text-white" />
                     </div>
-                    <div className="ml-2 lg:ml-3">
-                      <p className="text-xs lg:text-sm font-medium text-gray-900">
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-gray-900">
                         {step === 1 && "Search"}
                         {step === 2 && "Type"}
                         {step === 3 && "Contact"}
@@ -205,620 +446,433 @@ function AdminStaffAddStep7Page() {
                         {step === 5 && "Account"}
                         {step === 6 && "Metrics"}
                       </p>
-                      <p className="text-xs text-gray-500 hidden xl:block">
-                        Complete
-                      </p>
+                      <p className="text-xs text-gray-500">Complete</p>
                     </div>
                   </div>
-                  {index < 6 && (
-                    <div className="mx-1 lg:mx-2 w-8 lg:w-12 h-0.5 bg-green-600"></div>
+                  {index < 5 && (
+                    <div className="mx-2 w-12 h-0.5 bg-green-600"></div>
                   )}
                 </React.Fragment>
               ))}
 
               {/* Step 7 - Active */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-blue-600 rounded-full">
-                  <span className="text-white font-semibold text-sm lg:text-base">
-                    7
-                  </span>
-                </div>
-                <div className="ml-2 lg:ml-3">
-                  <p className="text-xs lg:text-sm font-medium text-gray-900">
-                    Review
-                  </p>
-                  <p className="text-xs text-gray-500 hidden xl:block">
-                    Submit
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile View (below 768px) */}
-          <div className="md:hidden">
-            <div className="flex items-center justify-between px-4">
+              <div className="mx-2 w-12 h-0.5 bg-green-600"></div>
               <div className="flex items-center">
                 <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
                   <span className="text-white font-semibold">7</span>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">
-                    Step 7 of 7
-                  </p>
-                  <p className="text-xs text-gray-500">Review & Submit</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-gray-500">Progress</p>
-                <div className="flex items-center mt-1">
-                  <div className="flex">
-                    {[1, 2, 3, 4, 5, 6].map((step) => (
-                      <div
-                        key={step}
-                        className="w-2 h-2 bg-green-600 rounded-full mr-1"
-                      ></div>
-                    ))}
-                    <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                  </div>
+                  <p className="text-sm font-medium text-gray-900">Review</p>
+                  <p className="text-xs text-gray-500">Submit</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="bg-white shadow-sm rounded-lg">
-          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-              <CheckCircleIcon className="w-5 h-5 mr-2" />
-              Review and Submit
-            </h2>
-          </div>
-
-          <div className="p-4 sm:p-6">
-            <p className="text-sm sm:text-base text-gray-600 mb-6">
+        {/* Review Instructions */}
+        <div className="mb-4 sm:mb-6 bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+          <p className="text-xs sm:text-sm text-blue-800 flex items-start">
+            <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 mt-0.5" />
+            <span>
               Please carefully review the following staff details. If everything
               looks correct, click the <strong>Submit</strong> button to create
               the new staff member.
-            </p>
-
-            {errors.message && (
-              <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center">
-                <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-                <span className="text-sm sm:text-base">{errors.message}</span>
-              </div>
-            )}
-
-            {isSubmitting ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                <span className="ml-3 text-gray-600">
-                  Creating staff member...
-                </span>
-              </div>
-            ) : (
-              <div className="max-w-3xl mx-auto">
-                <div className="space-y-6 sm:space-y-8">
-                  {/* Contact Information Section */}
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
-                        <UserIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600" />
-                        Contact Information
-                      </h3>
-                      <Link
-                        to="/admin/staff/add/step-3"
-                        className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                        Edit
-                      </Link>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-2">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Type:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {formatStaffType(wizardState.type)}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            First Name:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {wizardState.firstName}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Last Name:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {wizardState.lastName}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Email:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900 break-all">
-                            {wizardState.email}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Phone:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {wizardState.phone} (
-                            {formatPhoneType(wizardState.phoneType)})
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            OK to Email:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {wizardState.isOkToEmail ? "Yes" : "No"}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            OK to Text:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {wizardState.isOkToText ? "Yes" : "No"}
-                          </p>
-                        </div>
-
-                        {wizardState.otherPhone && (
-                          <>
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Other Phone:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {wizardState.otherPhone} (
-                                {formatPhoneType(wizardState.otherPhoneType)})
-                              </p>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Address Information Section */}
-                  <div className="pt-6 border-t">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
-                        <MapPinIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-green-600" />
-                        Address Information
-                      </h3>
-                      <Link
-                        to="/admin/staff/add/step-4"
-                        className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                        Edit
-                      </Link>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-2">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Address:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {wizardState.addressLine1}
-                          </p>
-                        </div>
-                        {wizardState.addressLine2 && (
-                          <div>
-                            <span className="text-xs sm:text-sm font-medium text-gray-500">
-                              Address Line 2:
-                            </span>
-                            <p className="text-xs sm:text-sm text-gray-900">
-                              {wizardState.addressLine2}
-                            </p>
-                          </div>
-                        )}
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            City:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {wizardState.city}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Province/Territory:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {wizardState.region}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Postal Code:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {wizardState.postalCode}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Country:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {wizardState.country}
-                          </p>
-                        </div>
-                      </div>
-
-                      {wizardState.hasShippingAddress && (
-                        <div className="mt-4 pt-4 border-t border-gray-200">
-                          <p className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">
-                            Shipping Address
-                          </p>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Name:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {wizardState.shippingName}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Phone:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {wizardState.shippingPhone}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Address:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {wizardState.shippingAddressLine1}
-                              </p>
-                            </div>
-                            {wizardState.shippingAddressLine2 && (
-                              <div>
-                                <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                  Address Line 2:
-                                </span>
-                                <p className="text-xs sm:text-sm text-gray-900">
-                                  {wizardState.shippingAddressLine2}
-                                </p>
-                              </div>
-                            )}
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                City:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {wizardState.shippingCity}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Province/Territory:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {wizardState.shippingRegion}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Postal Code:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {wizardState.shippingPostalCode}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Country:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {wizardState.shippingCountry}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Account Information Section */}
-                  <div className="pt-6 border-t">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
-                        <ClipboardDocumentIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-purple-600" />
-                        Account Information
-                      </h3>
-                      <Link
-                        to="/admin/staff/add/step-5"
-                        className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                        Edit
-                      </Link>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-3">
-                      {/* Vehicle Types Display */}
-                      {wizardState.vehicleTypes &&
-                        wizardState.vehicleTypes.length > 0 && (
-                          <div className="mb-2">
-                            <VehicleTypesDisplay
-                              values={parseArrayValue(wizardState.vehicleTypes)}
-                              label="Vehicle Types"
-                              variant="warning"
-                              onUnauthorized={onUnauthorized}
-                            />
-                          </div>
-                        )}
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
-                        {wizardState.limitSpecial && (
-                          <div className="sm:col-span-2">
-                            <span className="text-xs sm:text-sm font-medium text-gray-500">
-                              Limitations/Special Considerations:
-                            </span>
-                            <p className="text-xs sm:text-sm text-gray-900 mt-1">
-                              {wizardState.limitSpecial}
-                            </p>
-                          </div>
-                        )}
-                        {wizardState.policeCheck && (
-                          <div>
-                            <span className="text-xs sm:text-sm font-medium text-gray-500">
-                              Police Check Expiry:
-                            </span>
-                            <p className="text-xs sm:text-sm text-gray-900">
-                              {wizardState.policeCheck}
-                            </p>
-                          </div>
-                        )}
-                        {wizardState.driversLicenseClass && (
-                          <div>
-                            <span className="text-xs sm:text-sm font-medium text-gray-500">
-                              Drivers License Class:
-                            </span>
-                            <p className="text-xs sm:text-sm text-gray-900">
-                              {wizardState.driversLicenseClass}
-                            </p>
-                          </div>
-                        )}
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Preferred Language:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {wizardState.preferredLanguage}
-                          </p>
-                        </div>
-                      </div>
-
-                      {wizardState.emergencyContactName && (
-                        <div className="mt-4 pt-4 border-t border-gray-200">
-                          <p className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">
-                            Emergency Contact
-                          </p>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Name:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {wizardState.emergencyContactName}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Relationship:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {wizardState.emergencyContactRelationship}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Phone:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {wizardState.emergencyContactTelephone}
-                              </p>
-                            </div>
-                            {wizardState.emergencyContactAlternativeTelephone && (
-                              <div>
-                                <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                  Alternative Phone:
-                                </span>
-                                <p className="text-xs sm:text-sm text-gray-900">
-                                  {
-                                    wizardState.emergencyContactAlternativeTelephone
-                                  }
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {wizardState.description && (
-                        <div className="mt-4 pt-4 border-t border-gray-200">
-                          <p className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">
-                            System
-                          </p>
-                          <div>
-                            <span className="text-xs sm:text-sm font-medium text-gray-500">
-                              Description:
-                            </span>
-                            <p className="text-xs sm:text-sm text-gray-900 mt-1">
-                              {wizardState.description}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Metrics Information Section */}
-                  <div className="pt-6 border-t">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
-                        <ChartBarSquareIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-orange-600" />
-                        Metrics Information
-                      </h3>
-                      <Link
-                        to="/admin/staff/add/step-6"
-                        className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                        Edit
-                      </Link>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-3">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
-                        {wizardState.identifyAs &&
-                          wizardState.identifyAs.length > 0 && (
-                            <div className="sm:col-span-2">
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Identifies As:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {formatIdentifyAs(wizardState.identifyAs)}
-                              </p>
-                            </div>
-                          )}
-
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Gender:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {formatGender(wizardState.gender)}
-                          </p>
-                        </div>
-                        {wizardState.gender === STAFF_GENDER_OTHER &&
-                          wizardState.genderOther && (
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Gender (Other):
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {wizardState.genderOther}
-                              </p>
-                            </div>
-                          )}
-
-                        {wizardState.birthDate && (
-                          <div>
-                            <span className="text-xs sm:text-sm font-medium text-gray-500">
-                              Birth Date:
-                            </span>
-                            <p className="text-xs sm:text-sm text-gray-900">
-                              {wizardState.birthDate}
-                            </p>
-                          </div>
-                        )}
-
-                        {wizardState.joinDate && (
-                          <div>
-                            <span className="text-xs sm:text-sm font-medium text-gray-500">
-                              Join Date:
-                            </span>
-                            <p className="text-xs sm:text-sm text-gray-900">
-                              {wizardState.joinDate}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* How Heard About Us Display */}
-                      {wizardState.howDidYouHearAboutUsID && (
-                        <div className="mt-3">
-                          <HowHearAboutUsDisplay
-                            value={wizardState.howDidYouHearAboutUsID}
-                            label="How did you hear about us?"
-                            onUnauthorized={onUnauthorized}
-                          />
-                        </div>
-                      )}
-
-                      {wizardState.howDidYouHearAboutUsOther && (
-                        <div className="mt-3">
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            How did you hear about us (Other):
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900 mt-1">
-                            {wizardState.howDidYouHearAboutUsOther}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Tags Display */}
-                      {wizardState.tags && wizardState.tags.length > 0 && (
-                        <div className="mt-3">
-                          <TagsDisplay
-                            values={parseArrayValue(wizardState.tags)}
-                            label="Tags"
-                            variant="success"
-                            onUnauthorized={onUnauthorized}
-                          />
-                        </div>
-                      )}
-
-                      {wizardState.additionalComment && (
-                        <div className="mt-3">
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Additional Comments:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900 mt-1">
-                            {wizardState.additionalComment}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Form Actions */}
-                <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3">
-                  <Link
-                    to="/admin/staff/add/step-6"
-                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-                  >
-                    <ArrowLeftIcon className="w-4 h-4 mr-2" />
-                    Back
-                  </Link>
-                  <button
-                    onClick={onSubmitClick}
-                    disabled={isSubmitting}
-                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
-                  >
-                    <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
-                    Submit
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+            </span>
+          </p>
         </div>
+
+        {/* Error Message */}
+        {errors.message && (
+          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base">
+            <div className="flex justify-between items-start">
+              <div className="flex items-start">
+                <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold">{errors.message}</p>
+                  {Object.keys(fieldErrors).length > 0 && (
+                    <ul className="mt-2 list-disc list-inside text-xs sm:text-sm">
+                      {Object.entries(fieldErrors).map(([field, error]) => (
+                        <li key={field}>
+                          <strong>{field}:</strong> {error}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setErrors({});
+                  setFieldErrors({});
+                }}
+                className="text-red-700 hover:text-red-900 ml-2 flex-shrink-0"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Main Content */}
+        {isSubmitting ? (
+          <div className="bg-white shadow-sm rounded-lg p-8">
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <span className="ml-3 text-gray-600">
+                Creating staff member...
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div>
+            {/* Contact Information Section */}
+            <DetailSection
+              title="Contact Information"
+              icon={UserIcon}
+              editLink="/admin/staff/add/step-3"
+              hasError={sectionHasErrors("contact")}
+            >
+              {fieldErrors.type && (
+                <div className="lg:col-span-2 bg-red-50 border border-red-200 rounded p-2">
+                  <p className="text-red-700 text-sm">{fieldErrors.type}</p>
+                </div>
+              )}
+              <DetailField
+                label="Type"
+                value={formatStaffType(wizardState.type)}
+              />
+              <DetailField label="First Name" value={wizardState.firstName} />
+              {fieldErrors.firstName && (
+                <div className="lg:col-span-2 bg-red-50 border border-red-200 rounded p-2">
+                  <p className="text-red-700 text-sm">
+                    {fieldErrors.firstName}
+                  </p>
+                </div>
+              )}
+              <DetailField label="Last Name" value={wizardState.lastName} />
+              {fieldErrors.lastName && (
+                <div className="lg:col-span-2 bg-red-50 border border-red-200 rounded p-2">
+                  <p className="text-red-700 text-sm">{fieldErrors.lastName}</p>
+                </div>
+              )}
+              <DetailField label="Email" value={wizardState.email} />
+              {fieldErrors.email && (
+                <div className="lg:col-span-2 bg-red-50 border border-red-200 rounded p-2">
+                  <p className="text-red-700 text-sm font-semibold">
+                    <ExclamationTriangleIcon className="inline w-4 h-4 mr-1" />
+                    {fieldErrors.email}
+                  </p>
+                </div>
+              )}
+              <DetailField
+                label="Phone"
+                value={`${wizardState.phone} (${formatPhoneType(wizardState.phoneType)})`}
+              />
+              {(fieldErrors.phone || fieldErrors.phoneType) && (
+                <div className="lg:col-span-2 bg-red-50 border border-red-200 rounded p-2">
+                  <p className="text-red-700 text-sm">
+                    {fieldErrors.phone || fieldErrors.phoneType}
+                  </p>
+                </div>
+              )}
+              <DetailField
+                label="OK to Email"
+                value={wizardState.isOkToEmail ? "Yes" : "No"}
+              />
+              <DetailField
+                label="OK to Text"
+                value={wizardState.isOkToText ? "Yes" : "No"}
+              />
+
+              {wizardState.otherPhone && (
+                <DetailField
+                  label="Other Phone"
+                  value={`${wizardState.otherPhone} (${formatPhoneType(wizardState.otherPhoneType)})`}
+                />
+              )}
+            </DetailSection>
+
+            {/* Address Information Section */}
+            <DetailSection
+              title="Address Information"
+              icon={MapPinIcon}
+              editLink="/admin/staff/add/step-4"
+              hasError={sectionHasErrors("address")}
+            >
+              <DetailField label="Address" value={wizardState.addressLine1} />
+              {fieldErrors.addressLine1 && (
+                <div className="lg:col-span-2 bg-red-50 border border-red-200 rounded p-2">
+                  <p className="text-red-700 text-sm">
+                    {fieldErrors.addressLine1}
+                  </p>
+                </div>
+              )}
+              {wizardState.addressLine2 && (
+                <DetailField
+                  label="Address Line 2"
+                  value={wizardState.addressLine2}
+                />
+              )}
+              <DetailField label="City" value={wizardState.city} />
+              {fieldErrors.city && (
+                <div className="lg:col-span-2 bg-red-50 border border-red-200 rounded p-2">
+                  <p className="text-red-700 text-sm">{fieldErrors.city}</p>
+                </div>
+              )}
+              <DetailField
+                label="Province/Territory"
+                value={wizardState.region}
+              />
+              {fieldErrors.region && (
+                <div className="lg:col-span-2 bg-red-50 border border-red-200 rounded p-2">
+                  <p className="text-red-700 text-sm">{fieldErrors.region}</p>
+                </div>
+              )}
+              <DetailField label="Postal Code" value={wizardState.postalCode} />
+              {fieldErrors.postalCode && (
+                <div className="lg:col-span-2 bg-red-50 border border-red-200 rounded p-2">
+                  <p className="text-red-700 text-sm">
+                    {fieldErrors.postalCode}
+                  </p>
+                </div>
+              )}
+              <DetailField label="Country" value={wizardState.country} />
+              {fieldErrors.country && (
+                <div className="lg:col-span-2 bg-red-50 border border-red-200 rounded p-2">
+                  <p className="text-red-700 text-sm">{fieldErrors.country}</p>
+                </div>
+              )}
+            </DetailSection>
+
+            {/* Shipping Address Section (if applicable) */}
+            {wizardState.hasShippingAddress && (
+              <DetailSection
+                title="Shipping Address"
+                icon={TruckIcon}
+                editLink="/admin/staff/add/step-4"
+                hasError={sectionHasErrors("shipping")}
+              >
+                <DetailField label="Name" value={wizardState.shippingName} />
+                <DetailField label="Phone" value={wizardState.shippingPhone} />
+                <DetailField
+                  label="Address"
+                  value={wizardState.shippingAddressLine1}
+                />
+                {wizardState.shippingAddressLine2 && (
+                  <DetailField
+                    label="Address Line 2"
+                    value={wizardState.shippingAddressLine2}
+                  />
+                )}
+                <DetailField label="City" value={wizardState.shippingCity} />
+                <DetailField
+                  label="Province/Territory"
+                  value={wizardState.shippingRegion}
+                />
+                <DetailField
+                  label="Postal Code"
+                  value={wizardState.shippingPostalCode}
+                />
+                <DetailField
+                  label="Country"
+                  value={wizardState.shippingCountry}
+                />
+              </DetailSection>
+            )}
+
+            {/* Account Information Section */}
+            <DetailSection
+              title="Account Information"
+              icon={ClipboardDocumentIcon}
+              editLink="/admin/staff/add/step-5"
+              hasError={sectionHasErrors("account")}
+            >
+              {fieldErrors.password && (
+                <div className="lg:col-span-2 bg-red-50 border border-red-200 rounded p-2">
+                  <p className="text-red-700 text-sm font-semibold">
+                    <ExclamationTriangleIcon className="inline w-4 h-4 mr-1" />
+                    Password: {fieldErrors.password}
+                  </p>
+                </div>
+              )}
+              {fieldErrors.passwordRepeated && (
+                <div className="lg:col-span-2 bg-red-50 border border-red-200 rounded p-2">
+                  <p className="text-red-700 text-sm font-semibold">
+                    <ExclamationTriangleIcon className="inline w-4 h-4 mr-1" />
+                    Password Confirmation: {fieldErrors.passwordRepeated}
+                  </p>
+                </div>
+              )}
+
+              {wizardState.vehicleTypes &&
+                wizardState.vehicleTypes.length > 0 && (
+                  <div className="lg:col-span-2 mb-2">
+                    <VehicleTypesDisplay
+                      values={parseArrayValue(wizardState.vehicleTypes)}
+                      label="Vehicle Types"
+                      variant="warning"
+                      onUnauthorized={onUnauthorized}
+                    />
+                  </div>
+                )}
+
+              {wizardState.limitSpecial && (
+                <DetailField
+                  label="Limitations/Special Considerations"
+                  value={wizardState.limitSpecial}
+                  fullWidth
+                />
+              )}
+              {wizardState.policeCheck && (
+                <DetailField
+                  label="Police Check Expiry"
+                  value={wizardState.policeCheck}
+                />
+              )}
+              {wizardState.driversLicenseClass && (
+                <DetailField
+                  label="Drivers License Class"
+                  value={wizardState.driversLicenseClass}
+                />
+              )}
+              <DetailField
+                label="Preferred Language"
+                value={wizardState.preferredLanguage}
+              />
+              {fieldErrors.preferredLanguage && (
+                <div className="lg:col-span-2 bg-red-50 border border-red-200 rounded p-2">
+                  <p className="text-red-700 text-sm">
+                    {fieldErrors.preferredLanguage}
+                  </p>
+                </div>
+              )}
+
+              {/* Emergency Contact */}
+              {wizardState.emergencyContactName && (
+                <>
+                  <DetailField
+                    label="Emergency Contact"
+                    value={`${wizardState.emergencyContactName} (${wizardState.emergencyContactRelationship})`}
+                    fullWidth
+                  />
+                  <DetailField
+                    label="Emergency Phone"
+                    value={wizardState.emergencyContactTelephone}
+                  />
+                  {wizardState.emergencyContactAlternativeTelephone && (
+                    <DetailField
+                      label="Emergency Alt Phone"
+                      value={wizardState.emergencyContactAlternativeTelephone}
+                    />
+                  )}
+                </>
+              )}
+
+              {wizardState.description && (
+                <DetailField
+                  label="Description"
+                  value={wizardState.description}
+                  fullWidth
+                />
+              )}
+            </DetailSection>
+
+            {/* Metrics Information Section */}
+            <DetailSection
+              title="Metrics Information"
+              icon={ChartBarSquareIcon}
+              editLink="/admin/staff/add/step-6"
+              hasError={sectionHasErrors("metrics")}
+            >
+              {wizardState.identifyAs && wizardState.identifyAs.length > 0 && (
+                <DetailField
+                  label="Identifies As"
+                  value={formatIdentifyAs(wizardState.identifyAs)}
+                  fullWidth
+                />
+              )}
+
+              <DetailField
+                label="Gender"
+                value={formatGender(wizardState.gender)}
+              />
+              {wizardState.gender === STAFF_GENDER_OTHER &&
+                wizardState.genderOther && (
+                  <DetailField
+                    label="Gender (Other)"
+                    value={wizardState.genderOther}
+                  />
+                )}
+
+              {wizardState.birthDate && (
+                <DetailField label="Birth Date" value={wizardState.birthDate} />
+              )}
+
+              {wizardState.joinDate && (
+                <DetailField label="Join Date" value={wizardState.joinDate} />
+              )}
+
+              {/* How Heard About Us Display */}
+              {wizardState.howDidYouHearAboutUsID && (
+                <div className="lg:col-span-2">
+                  <HowHearAboutUsDisplay
+                    value={wizardState.howDidYouHearAboutUsID}
+                    label="How did you hear about us?"
+                    onUnauthorized={onUnauthorized}
+                  />
+                </div>
+              )}
+
+              {wizardState.howDidYouHearAboutUsOther && (
+                <DetailField
+                  label="How did you hear about us (Other)"
+                  value={wizardState.howDidYouHearAboutUsOther}
+                  fullWidth
+                />
+              )}
+
+              {/* Tags Display */}
+              {wizardState.tags && wizardState.tags.length > 0 && (
+                <div className="lg:col-span-2">
+                  <TagsDisplay
+                    values={parseArrayValue(wizardState.tags)}
+                    label="Tags"
+                    variant="success"
+                    onUnauthorized={onUnauthorized}
+                  />
+                </div>
+              )}
+
+              {wizardState.additionalComment && (
+                <DetailField
+                  label="Additional Comments"
+                  value={wizardState.additionalComment}
+                  fullWidth
+                />
+              )}
+            </DetailSection>
+
+            {/* Form Actions */}
+            <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3">
+              <Link
+                to="/admin/staff/add/step-6"
+                className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 order-2 sm:order-1"
+              >
+                <ArrowLeftIcon className="w-4 h-4 mr-2" />
+                Back
+              </Link>
+              <button
+                onClick={onSubmitClick}
+                disabled={isSubmitting}
+                className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 order-1 sm:order-2"
+              >
+                <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
+                {isSubmitting ? "Submitting..." : "Submit"}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -28,6 +28,9 @@ import {
   WrenchScrewdriverIcon,
   TagIcon,
   ChatBubbleLeftRightIcon,
+  InformationCircleIcon,
+  DocumentCheckIcon,
+  CalendarDaysIcon,
 } from "@heroicons/react/24/outline";
 
 function AdminTaskItemAssignAssociateStep4Page() {
@@ -151,19 +154,53 @@ function AdminTaskItemAssignAssociateStep4Page() {
     };
   }, [tid]);
 
+  // Section Component - Using dark header pattern
+  const DetailSection = ({ title, icon: Icon, children, action = null }) => (
+    <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
+      <div className="px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
+        <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
+          <span className="truncate">{title}</span>
+        </h3>
+        {action && <div>{action}</div>}
+      </div>
+      <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
+        {children}
+      </div>
+    </div>
+  );
+
+  // Detail Field Component
+  const DetailField = ({
+    label,
+    value,
+    fullWidth = false,
+    icon: Icon = null,
+  }) => (
+    <div className={fullWidth ? "lg:col-span-2" : ""}>
+      <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-1 flex items-center">
+        {Icon && <Icon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />}
+        {label}
+      </dt>
+      <dd className="text-base sm:text-lg font-medium text-gray-900 break-words">
+        {value || "-"}
+      </dd>
+    </div>
+  );
+
   // Component rendering
   if (forceURL !== "") {
     return <Navigate to={forceURL} />;
   }
 
   const assignAssociateStatusMap = {
-    3: "Yes",
-    4: "No",
+    3: "Yes - Accepted",
+    4: "No - Declined",
   };
 
   if (isFetching || !task || !assignmentData) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         <span className="ml-3 text-gray-600">Loading...</span>
       </div>
@@ -172,135 +209,134 @@ function AdminTaskItemAssignAssociateStep4Page() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {/* Breadcrumb */}
-        <nav className="flex mb-4" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* Responsive Breadcrumb */}
+        <nav
+          className="flex mb-4 sm:mb-6 overflow-x-auto"
+          aria-label="Breadcrumb"
+        >
+          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
             <li className="inline-flex items-center">
               <Link
                 to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+                className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
               >
-                <ChartBarIcon className="w-4 h-4 mr-2" />
+                <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                 <span className="hidden sm:inline">Dashboard</span>
+                <span className="sm:hidden">Dash</span>
               </Link>
             </li>
             <li>
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="mx-1 sm:mx-2 text-gray-400">/</span>
                 <Link
                   to="/admin/tasks"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                  className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
                 >
                   <span className="inline-flex items-center">
-                    <ClipboardDocumentListIcon className="w-4 h-4 mr-2" />
-                    <span className="hidden sm:inline">Tasks</span>
+                    <ClipboardDocumentListIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                    Tasks
                   </span>
                 </Link>
               </div>
             </li>
             <li aria-current="page">
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
-                  <UserPlusIcon className="w-4 h-4 mr-2" />
-                  Assign Associate
+                <span className="mx-1 sm:mx-2 text-gray-400">/</span>
+                <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
+                  <DocumentCheckIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                  Review & Submit
                 </span>
               </div>
             </li>
           </ol>
         </nav>
 
-        {/* Page Title */}
-        <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
-            <UserPlusIcon className="w-6 sm:w-7 h-6 sm:h-7 mr-2 sm:mr-3 text-blue-600" />
-            Assign Associate to Task
-          </h1>
+        {/* Page Title - Responsive */}
+        <div className="mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+                <DocumentCheckIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
+                Review & Submit Assignment
+              </h1>
+              <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+                <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
+                Review all details before finalizing the assignment
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Archived Alert */}
+        {/* Archived Alert - Responsive */}
         {task && task.status === 2 && (
-          <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg flex items-center">
-            <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-            <span className="text-sm sm:text-base">This task is archived</span>
+          <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center text-sm sm:text-base">
+            <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+            This task is archived
           </div>
         )}
 
-        {/* Wizard Steps - Responsive Design */}
-        <div className="mb-6">
-          {/* Desktop/Tablet View (768px and up) */}
+        {/* Wizard Steps - Responsive */}
+        <div className="mb-4 sm:mb-6 bg-white shadow-sm rounded-lg p-3 sm:p-4">
+          {/* Mobile View */}
+          <div className="md:hidden">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full">
+                  <span className="text-white font-semibold text-sm">4</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">
+                    Final Step
+                  </p>
+                  <p className="text-xs text-gray-500">Review & Submit</p>
+                </div>
+              </div>
+              <div className="text-xs text-gray-500">4 of 4</div>
+            </div>
+            <div className="mt-3">
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-green-600 h-2 rounded-full"
+                  style={{ width: "100%" }}
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop View */}
           <div className="hidden md:flex items-center justify-center overflow-x-auto">
-            <div className="flex items-center">
+            <div className="flex items-center min-w-max">
               {/* Steps 1-3 Complete */}
               {[1, 2, 3].map((step, index) => (
                 <React.Fragment key={step}>
                   <div className="flex items-center">
-                    <div className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-green-600 rounded-full">
-                      <CheckIcon className="w-4 h-4 lg:w-6 lg:h-6 text-white" />
+                    <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
+                      <CheckIcon className="w-6 h-6 text-white" />
                     </div>
-                    <div className="ml-2 lg:ml-3">
-                      <p className="text-xs lg:text-sm font-medium text-gray-900">
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-gray-900">
                         {step === 1 && "Search"}
                         {step === 2 && "Select"}
                         {step === 3 && "Details"}
                       </p>
-                      <p className="text-xs text-gray-500 hidden xl:block">
-                        Complete
-                      </p>
+                      <p className="text-xs text-gray-500">Complete</p>
                     </div>
                   </div>
                   {index < 3 && (
-                    <div className="mx-1 lg:mx-2 w-8 lg:w-12 h-0.5 bg-green-600"></div>
+                    <div className="mx-4 w-16 h-0.5 bg-green-600"></div>
                   )}
                 </React.Fragment>
               ))}
 
               {/* Step 4 - Active */}
               <div className="flex items-center">
-                <div className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-blue-600 rounded-full">
-                  <span className="text-white font-semibold text-sm lg:text-base">
-                    4
-                  </span>
-                </div>
-                <div className="ml-2 lg:ml-3">
-                  <p className="text-xs lg:text-sm font-medium text-gray-900">
-                    Review
-                  </p>
-                  <p className="text-xs text-gray-500 hidden xl:block">
-                    Submit
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile View (below 768px) */}
-          <div className="md:hidden">
-            <div className="flex items-center justify-between px-4">
-              <div className="flex items-center">
                 <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
                   <span className="text-white font-semibold">4</span>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">
-                    Step 4 of 4
-                  </p>
-                  <p className="text-xs text-gray-500">Review & Submit</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-gray-500">Progress</p>
-                <div className="flex items-center mt-1">
-                  <div className="flex">
-                    {[1, 2, 3].map((step) => (
-                      <div
-                        key={step}
-                        className="w-2 h-2 bg-green-600 rounded-full mr-1"
-                      ></div>
-                    ))}
-                    <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                  </div>
+                  <p className="text-sm font-medium text-gray-900">Review</p>
+                  <p className="text-xs text-gray-500">Submit</p>
                 </div>
               </div>
             </div>
@@ -309,27 +345,32 @@ function AdminTaskItemAssignAssociateStep4Page() {
 
         {/* Main Content */}
         <div className="bg-white shadow-sm rounded-lg">
-          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-              <CheckCircleIcon className="w-5 h-5 mr-2" />
-              Review and Submit
-            </h2>
+          <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+              <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 flex items-center">
+                <CheckCircleIcon className="w-5 sm:w-7 h-5 sm:h-7 mr-2 text-blue-600 flex-shrink-0" />
+                Final Review
+              </h2>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-1.5 text-xs sm:text-sm text-yellow-800">
+                Please review all information carefully
+              </div>
+            </div>
           </div>
 
           <div className="p-4 sm:p-6">
             <p className="text-sm sm:text-base text-gray-600 mb-6">
               Please carefully review the following assignment details. If
-              everything looks correct, click the <strong>Submit</strong> button
-              to complete the assignment.
+              everything looks correct, click the{" "}
+              <strong>Submit Assignment</strong> button to complete the process.
             </p>
 
             {errors && Object.keys(errors).length > 0 && (
-              <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+              <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base">
                 <div className="flex items-start">
-                  <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
-                  <div className="text-sm sm:text-base">
+                  <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 mt-0.5" />
+                  <div>
                     {Object.entries(errors).map(([key, value]) => (
-                      <div key={key}>
+                      <div key={key} className="break-words">
                         {key}: {value}
                       </div>
                     ))}
@@ -340,276 +381,228 @@ function AdminTaskItemAssignAssociateStep4Page() {
 
             {isSubmitting ? (
               <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                <span className="ml-3 text-gray-600">
+                <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-blue-600"></div>
+                <span className="ml-3 text-gray-600 text-sm sm:text-base">
                   Submitting assignment...
                 </span>
               </div>
             ) : (
-              <div className="max-w-3xl mx-auto">
-                <div className="space-y-6 sm:space-y-8">
-                  {/* Task Information Section */}
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
-                        <ClipboardDocumentListIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600" />
-                        Task Information
-                      </h3>
-                      <Link
-                        to={`/admin/task/${tid}/assign-associate/step-1`}
-                        className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                        Edit
-                      </Link>
-                    </div>
+              <div>
+                {/* Task Information Section */}
+                <DetailSection
+                  title="Task Information"
+                  icon={ClipboardDocumentListIcon}
+                  action={
+                    <Link
+                      to={`/admin/task/${tid}/assign-associate/step-1`}
+                      className="inline-flex items-center text-xs sm:text-sm text-white hover:text-blue-200"
+                    >
+                      <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                      <span className="hidden sm:inline">Edit</span>
+                    </Link>
+                  }
+                >
+                  <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                    <DetailField label="Type" value="Assign Associate" />
+                    <DetailField label="Description" value={task.description} />
+                  </dl>
+                </DetailSection>
 
-                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-3">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Type:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            Assign Associate
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Description:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {task.description}
-                          </p>
-                        </div>
+                {/* Job Information Section */}
+                <DetailSection title="Job Information" icon={BriefcaseIcon}>
+                  <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                    <DetailField
+                      label="Job #"
+                      value={
+                        <Link
+                          to={`/admin/order/${task.orderWjid}`}
+                          className="text-blue-600 hover:text-blue-700"
+                        >
+                          {task.orderWjid}
+                        </Link>
+                      }
+                    />
+                    <DetailField
+                      label="Start Date"
+                      icon={CalendarDaysIcon}
+                      value={
+                        task.orderStartDate
+                          ? new Date(task.orderStartDate).toLocaleDateString()
+                          : "-"
+                      }
+                    />
+                    <DetailField
+                      label="Job Description"
+                      value={task.orderDescription}
+                      fullWidth
+                    />
+
+                    {/* Skill Sets Display */}
+                    {task.orderSkillSets && task.orderSkillSets.length > 0 && (
+                      <div className="lg:col-span-2">
+                        <SkillSetsDisplay
+                          values={extractIds(task.orderSkillSets)}
+                          onUnauthorized={onUnauthorized}
+                          label="Required Skill Sets"
+                          variant="primary"
+                        />
                       </div>
-                    </div>
-                  </div>
+                    )}
 
-                  {/* Job Information Section */}
-                  <div className="pt-6 border-t">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
-                        <BriefcaseIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-green-600" />
-                        Job Information
-                      </h3>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-3">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Job #:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            <Link
-                              to={`/admin/order/${task.orderWjid}`}
-                              className="text-blue-600 hover:text-blue-800"
-                            >
-                              {task.orderWjid}
-                            </Link>
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Start Date:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {task.orderStartDate
-                              ? new Date(
-                                  task.orderStartDate,
-                                ).toLocaleDateString()
-                              : "-"}
-                          </p>
-                        </div>
-                        <div className="col-span-1 sm:col-span-2">
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Description:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {task.orderDescription || "-"}
-                          </p>
-                        </div>
+                    {/* Tags Display */}
+                    {task.orderTags && task.orderTags.length > 0 && (
+                      <div className="lg:col-span-2">
+                        <TagsDisplay
+                          values={extractIds(task.orderTags)}
+                          onUnauthorized={onUnauthorized}
+                          label="Job Tags"
+                          variant="success"
+                        />
                       </div>
+                    )}
+                  </dl>
+                </DetailSection>
 
-                      {/* Skill Sets Display */}
-                      {task.orderSkillSets &&
-                        task.orderSkillSets.length > 0 && (
-                          <div className="mt-3">
-                            <SkillSetsDisplay
-                              values={extractIds(task.orderSkillSets)}
-                              onUnauthorized={onUnauthorized}
-                              label="Job Skill Sets"
-                              variant="primary"
-                            />
-                          </div>
-                        )}
+                {/* Client Information Section */}
+                <DetailSection title="Client Information" icon={UserIcon}>
+                  <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                    <DetailField
+                      label="Name"
+                      value={
+                        <Link
+                          to={`/admin/customer/${task.customerId}`}
+                          className="text-blue-600 hover:text-blue-700"
+                        >
+                          {task.customerName}
+                        </Link>
+                      }
+                    />
+                    {task.customerPhone && (
+                      <DetailField
+                        label={`Phone (${CLIENT_PHONE_TYPE_OF_MAP[task.customerPhoneType]})`}
+                        icon={PhoneIcon}
+                        value={
+                          <>
+                            {task.customerPhone}
+                            {task.customerPhoneExtension &&
+                              ` ext. ${task.customerPhoneExtension}`}
+                          </>
+                        }
+                      />
+                    )}
+                    {task.customerFullAddressUrl && (
+                      <DetailField
+                        label="Address"
+                        icon={MapPinIcon}
+                        value={
+                          <a
+                            href={task.customerFullAddressUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-blue-600 hover:text-blue-700"
+                          >
+                            {task.customerFullAddressWithoutPostalCode}
+                          </a>
+                        }
+                        fullWidth
+                      />
+                    )}
 
-                      {/* Tags Display */}
-                      {task.orderTags && task.orderTags.length > 0 && (
-                        <div className="mt-3">
-                          <TagsDisplay
-                            values={extractIds(task.orderTags)}
-                            onUnauthorized={onUnauthorized}
-                            label="Job Tags"
-                            variant="success"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Client Information Section */}
-                  <div className="pt-6 border-t">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
-                        <UserIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-purple-600" />
-                        Client Information
-                      </h3>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-3">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Name:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            <Link
-                              to={`/admin/customer/${task.customerId}`}
-                              className="text-blue-600 hover:text-blue-800"
-                            >
-                              {task.customerName}
-                            </Link>
-                          </p>
-                        </div>
-                        {task.customerPhone && (
-                          <div>
-                            <span className="text-xs sm:text-sm font-medium text-gray-500">
-                              Phone (
-                              {CLIENT_PHONE_TYPE_OF_MAP[task.customerPhoneType]}
-                              ):
-                            </span>
-                            <p className="text-xs sm:text-sm text-gray-900">
-                              {task.customerPhone}
-                              {task.customerPhoneExtension &&
-                                ` ext. ${task.customerPhoneExtension}`}
-                            </p>
-                          </div>
-                        )}
-                        {task.customerFullAddressUrl && (
-                          <div className="col-span-1 sm:col-span-2">
-                            <span className="text-xs sm:text-sm font-medium text-gray-500">
-                              Address:
-                            </span>
-                            <p className="text-xs sm:text-sm text-gray-900">
-                              <a
-                                href={task.customerFullAddressUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-blue-600 hover:text-blue-800"
-                              >
-                                {task.customerFullAddressWithoutPostalCode}
-                              </a>
-                            </p>
-                          </div>
-                        )}
+                    {/* Client Tags Display */}
+                    {task.customerTags && task.customerTags.length > 0 && (
+                      <div className="lg:col-span-2">
+                        <TagsDisplay
+                          values={extractIds(task.customerTags)}
+                          onUnauthorized={onUnauthorized}
+                          label="Client Tags"
+                          variant="info"
+                        />
                       </div>
+                    )}
+                  </dl>
+                </DetailSection>
 
-                      {/* Client Tags Display */}
-                      {task.customerTags && task.customerTags.length > 0 && (
-                        <div className="mt-3">
-                          <TagsDisplay
-                            values={extractIds(task.customerTags)}
-                            onUnauthorized={onUnauthorized}
-                            label="Client Tags"
-                            variant="info"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                {/* Associate Assignment Section */}
+                <DetailSection
+                  title="Associate Assignment"
+                  icon={WrenchScrewdriverIcon}
+                  action={
+                    <Link
+                      to={`/admin/task/${tid}/assign-associate/step-3`}
+                      className="inline-flex items-center text-xs sm:text-sm text-white hover:text-blue-200"
+                    >
+                      <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                      <span className="hidden sm:inline">Edit</span>
+                    </Link>
+                  }
+                >
+                  <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                    <DetailField
+                      label="Associate"
+                      icon={UserIcon}
+                      value={
+                        <Link
+                          to={`/admin/associate/${assignmentData.associateID}`}
+                          className="text-blue-600 hover:text-blue-700"
+                        >
+                          {assignmentData.associateName}
+                        </Link>
+                      }
+                    />
+                    {assignmentData.associatePhone && (
+                      <DetailField
+                        label="Phone"
+                        icon={PhoneIcon}
+                        value={assignmentData.associatePhone}
+                      />
+                    )}
+                    {assignmentData.associateEmail && (
+                      <DetailField
+                        label="Email"
+                        icon={EnvelopeIcon}
+                        value={assignmentData.associateEmail}
+                        fullWidth
+                      />
+                    )}
+                    <DetailField
+                      label="Job Acceptance Status"
+                      value={
+                        <span
+                          className={`inline-flex items-center px-3 py-1 text-sm font-medium rounded-full ${
+                            assignmentData.status === 3
+                              ? "bg-green-100 text-green-800"
+                              : "bg-red-100 text-red-800"
+                          }`}
+                        >
+                          {assignmentData.status === 3 ? (
+                            <CheckCircleIcon className="w-4 h-4 mr-1" />
+                          ) : (
+                            <XCircleIcon className="w-4 h-4 mr-1" />
+                          )}
+                          {assignAssociateStatusMap[assignmentData.status]}
+                        </span>
+                      }
+                    />
+                  </dl>
 
-                  {/* Associate Assignment Section */}
-                  <div className="pt-6 border-t">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
-                        <WrenchScrewdriverIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-orange-600" />
-                        Associate Assignment
-                      </h3>
-                      <Link
-                        to={`/admin/task/${tid}/assign-associate/step-3`}
-                        className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                        Edit
-                      </Link>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-2">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Associate:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            <Link
-                              to={`/admin/associate/${assignmentData.associateID}`}
-                              className="text-blue-600 hover:text-blue-800"
-                            >
-                              {assignmentData.associateName}
-                            </Link>
-                          </p>
-                        </div>
-                        {assignmentData.associatePhone && (
-                          <div>
-                            <span className="text-xs sm:text-sm font-medium text-gray-500 flex items-center">
-                              <PhoneIcon className="w-3 h-3 mr-1" />
-                              Phone:
-                            </span>
-                            <p className="text-xs sm:text-sm text-gray-900">
-                              {assignmentData.associatePhone}
-                            </p>
-                          </div>
-                        )}
-                        {assignmentData.associateEmail && (
-                          <div>
-                            <span className="text-xs sm:text-sm font-medium text-gray-500 flex items-center">
-                              <EnvelopeIcon className="w-3 h-3 mr-1" />
-                              Email:
-                            </span>
-                            <p className="text-xs sm:text-sm text-gray-900 break-all">
-                              {assignmentData.associateEmail}
-                            </p>
-                          </div>
-                        )}
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Accepted Job?
-                          </span>
-                          <p className="text-xs sm:text-sm">
-                            <span
-                              className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-full ${
-                                assignmentData.status === 3
-                                  ? "bg-green-100 text-green-800"
-                                  : "bg-red-100 text-red-800"
-                              }`}
-                            >
-                              {assignAssociateStatusMap[assignmentData.status]}
-                            </span>
-                          </p>
-                        </div>
-                      </div>
+                  {/* Comments */}
+                  {(assignmentData.predefinedComment ||
+                    assignmentData.comment) && (
+                    <div className="mt-6 pt-6 border-t border-gray-200">
+                      <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                        <ChatBubbleLeftRightIcon className="w-4 h-4 mr-2" />
+                        Comments
+                      </h4>
 
                       {assignmentData.predefinedComment && (
-                        <div className="mt-4 pt-4 border-t border-gray-200">
+                        <div className="mb-3 bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
                           <div className="flex items-start">
-                            <ChatBubbleLeftRightIcon className="w-4 h-4 mt-0.5 mr-2 text-gray-500 flex-shrink-0" />
-                            <div className="flex-1">
-                              <span className="text-xs sm:text-sm font-medium text-gray-500 block mb-1">
-                                Predefined Comment:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
+                            <InformationCircleIcon className="w-4 h-4 mt-0.5 mr-2 text-blue-600 flex-shrink-0" />
+                            <div>
+                              <p className="text-xs font-semibold text-blue-800 mb-1">
+                                System Generated Comment
+                              </p>
+                              <p className="text-sm text-gray-700">
                                 {assignmentData.predefinedComment}
                               </p>
                             </div>
@@ -618,14 +611,14 @@ function AdminTaskItemAssignAssociateStep4Page() {
                       )}
 
                       {assignmentData.comment && (
-                        <div className="mt-4">
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4">
                           <div className="flex items-start">
-                            <ChatBubbleLeftRightIcon className="w-4 h-4 mt-0.5 mr-2 text-gray-500 flex-shrink-0" />
-                            <div className="flex-1">
-                              <span className="text-xs sm:text-sm font-medium text-gray-500 block mb-1">
-                                Additional Comment:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
+                            <ChatBubbleLeftRightIcon className="w-4 h-4 mt-0.5 mr-2 text-gray-600 flex-shrink-0" />
+                            <div>
+                              <p className="text-xs font-semibold text-gray-700 mb-1">
+                                Additional Comment
+                              </p>
+                              <p className="text-sm text-gray-700">
                                 {assignmentData.comment}
                               </p>
                             </div>
@@ -633,31 +626,31 @@ function AdminTaskItemAssignAssociateStep4Page() {
                         </div>
                       )}
                     </div>
-                  </div>
-                </div>
+                  )}
+                </DetailSection>
 
-                {/* Form Actions */}
-                <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3">
+                {/* Form Actions - Responsive */}
+                <div className="flex flex-col sm:flex-row sm:justify-between items-stretch sm:items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 gap-3">
                   <Link
                     to={`/admin/task/${tid}/assign-associate/step-3`}
-                    className="flex-1"
+                    className="order-2 sm:order-1"
                   >
                     <button
                       type="button"
                       disabled={isSubmitting}
-                      className="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                      className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
                     >
                       <ArrowLeftIcon className="w-4 h-4 mr-2" />
-                      Back
+                      Back to Step 3
                     </button>
                   </Link>
                   <button
                     onClick={onSubmitClick}
                     disabled={isSubmitting}
-                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+                    className="order-1 sm:order-2 inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 transition-colors"
                   >
                     <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
-                    Save & Submit
+                    Submit Assignment
                   </button>
                 </div>
               </div>

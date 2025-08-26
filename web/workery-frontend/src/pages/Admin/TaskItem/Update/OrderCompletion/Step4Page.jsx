@@ -17,6 +17,7 @@ import {
   ArrowRightIcon,
   ChatBubbleBottomCenterTextIcon,
   DocumentTextIcon,
+  InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 
 function AdminTaskItemOrderCompletionStep4Page() {
@@ -85,12 +86,9 @@ function AdminTaskItemOrderCompletionStep4Page() {
             errorMessage =
               "Network error. Please check your connection and try again.";
           } else if (error.response) {
-            // The request was made and the server responded with a status code
-            // that falls out of the range of 2xx
             if (error.response.status === 404) {
               errorMessage = "Task not found";
             } else if (error.response.status === 401) {
-              // Unauthorized - redirect to login
               navigate("/login?unauthorized=true");
               return;
             } else if (error.response.status === 500) {
@@ -116,7 +114,7 @@ function AdminTaskItemOrderCompletionStep4Page() {
     return () => {
       mounted = false;
     };
-  }, [tid]); // Only depend on tid, not on functions that could change
+  }, [tid]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -142,33 +140,51 @@ function AdminTaskItemOrderCompletionStep4Page() {
     navigate(`/admin/task/${tid}/order-completion/step-5`);
   };
 
+  // Section Component with Dark Header
+  const DetailSection = ({ title, icon: Icon, children }) => (
+    <div className="bg-gray-700 rounded-lg shadow-sm">
+      <div className="px-4 sm:px-6 py-3 sm:py-4">
+        <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
+          <span className="truncate">{title}</span>
+        </h3>
+      </div>
+      <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
+        {children}
+      </div>
+    </div>
+  );
+
   // If there's a critical error and we're not loading, show error state
   if (!isLoading && errors.general && !task) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          {/* Breadcrumb */}
-          <nav className="flex mb-4" aria-label="Breadcrumb">
-            <ol className="inline-flex items-center space-x-1 md:space-x-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+          {/* Responsive Breadcrumb */}
+          <nav
+            className="flex mb-4 sm:mb-6 overflow-x-auto"
+            aria-label="Breadcrumb"
+          >
+            <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
               <li className="inline-flex items-center">
                 <Link
                   to="/admin/dashboard"
-                  className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+                  className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
                 >
-                  <ChartBarIcon className="w-4 h-4 mr-2" />
+                  <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                   <span className="hidden sm:inline">Dashboard</span>
                   <span className="sm:hidden">Dash</span>
                 </Link>
               </li>
               <li>
                 <div className="flex items-center">
-                  <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                  <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                   <Link
                     to="/admin/tasks"
-                    className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                    className="ml-1 text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2 whitespace-nowrap"
                   >
                     <span className="inline-flex items-center">
-                      <ClipboardDocumentListIcon className="w-4 h-4 mr-2" />
+                      <ClipboardDocumentListIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                       Tasks
                     </span>
                   </Link>
@@ -176,8 +192,8 @@ function AdminTaskItemOrderCompletionStep4Page() {
               </li>
               <li aria-current="page">
                 <div className="flex items-center">
-                  <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                  <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">
+                  <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                  <span className="ml-1 text-xs sm:text-sm font-medium text-gray-500 md:ml-2 whitespace-nowrap">
                     Order Completion
                   </span>
                 </div>
@@ -186,24 +202,26 @@ function AdminTaskItemOrderCompletionStep4Page() {
           </nav>
 
           {/* Error State */}
-          <div className="bg-white shadow-sm rounded-lg p-6">
+          <div className="bg-white shadow-sm rounded-lg p-4 sm:p-6">
             <div className="text-center">
               <ExclamationCircleIcon className="mx-auto h-12 w-12 text-red-500 mb-4" />
-              <h2 className="text-lg font-semibold text-gray-900 mb-2">
+              <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
                 Unable to Load Task
               </h2>
-              <p className="text-gray-600 mb-4">{errors.general}</p>
-              <div className="flex gap-3 justify-center">
+              <p className="text-sm sm:text-base text-gray-600 mb-4">
+                {errors.general}
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 justify-center">
                 <Link
                   to="/admin/tasks"
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
                   <ArrowLeftIcon className="w-4 h-4 mr-2" />
                   Back to Tasks
                 </Link>
                 <button
                   onClick={() => window.location.reload()}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                  className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
                 >
                   Try Again
                 </button>
@@ -217,29 +235,32 @@ function AdminTaskItemOrderCompletionStep4Page() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {/* Breadcrumb */}
-        <nav className="flex mb-4" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* Responsive Breadcrumb */}
+        <nav
+          className="flex mb-4 sm:mb-6 overflow-x-auto"
+          aria-label="Breadcrumb"
+        >
+          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
             <li className="inline-flex items-center">
               <Link
                 to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+                className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
               >
-                <ChartBarIcon className="w-4 h-4 mr-2" />
+                <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                 <span className="hidden sm:inline">Dashboard</span>
                 <span className="sm:hidden">Dash</span>
               </Link>
             </li>
             <li>
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                 <Link
                   to="/admin/tasks"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                  className="ml-1 text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2 whitespace-nowrap"
                 >
                   <span className="inline-flex items-center">
-                    <ClipboardDocumentListIcon className="w-4 h-4 mr-2" />
+                    <ClipboardDocumentListIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                     Tasks
                   </span>
                 </Link>
@@ -247,8 +268,8 @@ function AdminTaskItemOrderCompletionStep4Page() {
             </li>
             <li aria-current="page">
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">
+                <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                <span className="ml-1 text-xs sm:text-sm font-medium text-gray-500 md:ml-2 whitespace-nowrap">
                   Order Completion
                 </span>
               </div>
@@ -256,123 +277,106 @@ function AdminTaskItemOrderCompletionStep4Page() {
           </ol>
         </nav>
 
-        {/* Page Title */}
-        <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
-            <ClipboardDocumentListIcon className="w-6 h-6 sm:w-7 sm:h-7 mr-2 sm:mr-3 text-blue-600" />
+        {/* Page Title - Responsive */}
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 flex items-center">
+            <ClipboardDocumentListIcon className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
             Task Detail - Order Completion
           </h1>
+          <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+            <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
+            Add additional comments for the order
+          </p>
         </div>
 
-        {/* Wizard Steps - Responsive */}
-        <div className="mb-6 relative">
-          <div className="overflow-x-auto pb-2">
-            <div className="flex items-center min-w-max lg:justify-center">
-              {/* Step 1 - Complete */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex-shrink-0">
-                  <CheckIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+        {/* Wizard Steps - Mobile Optimized */}
+        <div className="mb-4 sm:mb-6">
+          {/* Mobile View - Simplified */}
+          <div className="md:hidden">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full">
+                    <span className="text-white font-semibold text-sm">4</span>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-900">
+                      Step 4: Comments
+                    </p>
+                    <p className="text-xs text-gray-500">Add notes</p>
+                  </div>
                 </div>
-                <div className="ml-2 sm:ml-3">
-                  <p className="text-xs sm:text-sm font-medium text-gray-900">
-                    Step 1
-                  </p>
-                  <p className="text-xs text-gray-500 hidden sm:block">
-                    Complete
-                  </p>
-                </div>
-              </div>
-
-              {/* Connector */}
-              <div className="mx-1 sm:mx-2 w-8 sm:w-10 lg:w-16 h-0.5 bg-green-600"></div>
-
-              {/* Step 2 - Complete */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex-shrink-0">
-                  <CheckIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                </div>
-                <div className="ml-2 sm:ml-3">
-                  <p className="text-xs sm:text-sm font-medium text-gray-900">
-                    Step 2
-                  </p>
-                  <p className="text-xs text-gray-500 hidden sm:block">
-                    Complete
-                  </p>
-                </div>
-              </div>
-
-              {/* Connector */}
-              <div className="mx-1 sm:mx-2 w-8 sm:w-10 lg:w-16 h-0.5 bg-green-600"></div>
-
-              {/* Step 3 - Complete */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex-shrink-0">
-                  <CheckIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                </div>
-                <div className="ml-2 sm:ml-3">
-                  <p className="text-xs sm:text-sm font-medium text-gray-900">
-                    Step 3
-                  </p>
-                  <p className="text-xs text-gray-500 hidden sm:block">
-                    Complete
-                  </p>
-                </div>
-              </div>
-
-              {/* Connector */}
-              <div className="mx-1 sm:mx-2 w-8 sm:w-10 lg:w-16 h-0.5 bg-gray-300"></div>
-
-              {/* Step 4 - Active */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-full flex-shrink-0">
-                  <span className="text-white font-semibold text-sm sm:text-base">
-                    4
-                  </span>
-                </div>
-                <div className="ml-2 sm:ml-3">
-                  <p className="text-xs sm:text-sm font-medium text-gray-900">
-                    Comments
-                  </p>
-                  <p className="text-xs text-gray-500 hidden sm:block">
-                    Current
-                  </p>
-                </div>
-              </div>
-
-              {/* Connector */}
-              <div className="mx-1 sm:mx-2 w-8 sm:w-10 lg:w-16 h-0.5 bg-gray-300"></div>
-
-              {/* Step 5 - Inactive */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
-                  <span className="text-gray-600 font-semibold text-sm sm:text-base">
-                    5
-                  </span>
-                </div>
-                <div className="ml-2 sm:ml-3">
-                  <p className="text-xs sm:text-sm font-medium text-gray-500">
-                    Review
-                  </p>
-                  <p className="text-xs text-gray-400 hidden sm:block">Final</p>
-                </div>
+                <div className="text-xs text-gray-500">4 of 5</div>
               </div>
             </div>
           </div>
 
-          {/* Scroll indicator for mobile/tablet */}
-          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-50 to-transparent pointer-events-none lg:hidden"></div>
+          {/* Desktop View */}
+          <div className="hidden md:flex items-center justify-center">
+            <div className="flex items-center">
+              {/* Steps 1-3 Complete */}
+              {[1, 2, 3].map((step, index) => (
+                <React.Fragment key={step}>
+                  <div className="flex items-center">
+                    <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
+                      <CheckIcon className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-gray-900">
+                        {step === 1 && "Review"}
+                        {step === 2 && "Status"}
+                        {step === 3 && "Financials"}
+                      </p>
+                      <p className="text-xs text-gray-500">Complete</p>
+                    </div>
+                  </div>
+                  {index < 3 && (
+                    <div className="mx-2 w-12 h-0.5 bg-green-600"></div>
+                  )}
+                </React.Fragment>
+              ))}
+
+              {/* Connector */}
+              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+
+              {/* Step 4 - Active */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
+                  <span className="text-white font-semibold">4</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">Comments</p>
+                  <p className="text-xs text-gray-500">Current</p>
+                </div>
+              </div>
+
+              {/* Connector */}
+              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+
+              {/* Step 5 - Inactive */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
+                  <span className="text-gray-600 font-semibold">5</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-500">Review</p>
+                  <p className="text-xs text-gray-400">Final</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Error Message */}
+        {/* Error Message - Responsive */}
         {errors.general && task && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center justify-between">
-            <span className="flex items-center text-sm sm:text-base">
-              <ExclamationCircleIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+          <div className="mb-4 sm:mb-6 bg-red-50 border border-red-200 text-red-800 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center text-xs sm:text-sm">
+              <ExclamationCircleIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 flex-shrink-0" />
               {errors.general}
             </span>
             <button
               onClick={() => setErrors({})}
-              className="text-red-600 hover:text-red-800"
+              className="text-red-600 hover:text-red-800 ml-2 flex-shrink-0"
             >
               <XMarkIcon className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
@@ -380,86 +384,103 @@ function AdminTaskItemOrderCompletionStep4Page() {
         )}
 
         {/* Main Content */}
-        <div className="bg-white shadow-sm rounded-lg">
-          <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-              <ChatBubbleBottomCenterTextIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-              Add Comments
-            </h2>
-          </div>
-
-          <div className="p-4 sm:p-6">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                <span className="ml-3 text-gray-600">
-                  Loading task details...
-                </span>
-              </div>
-            ) : (
-              <form onSubmit={handleSubmit} className="max-w-2xl mx-auto">
-                <div className="space-y-4">
-                  {/* Comment Field */}
-                  <div>
-                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">
-                      Comment <span className="text-red-500">*</span>
-                    </label>
-                    <div className="relative">
-                      <div className="absolute top-3 left-3 pointer-events-none">
-                        <DocumentTextIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
-                      </div>
-                      <textarea
-                        value={comment}
-                        onChange={(e) => setComment(e.target.value)}
-                        placeholder="Write any additional comments here..."
-                        rows={6}
-                        className={`w-full pl-10 pr-3 py-2 sm:py-3 text-sm sm:text-base border ${
-                          errors.comment ? "border-red-500" : "border-gray-300"
-                        } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none`}
-                      />
+        <DetailSection
+          title="Add Comments"
+          icon={ChatBubbleBottomCenterTextIcon}
+        >
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <span className="ml-3 text-sm sm:text-base text-gray-600">
+                Loading task details...
+              </span>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit}>
+              <div className="space-y-4">
+                {/* Comment Field */}
+                <div>
+                  <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">
+                    Comment <span className="text-red-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <div className="absolute top-3 left-3 pointer-events-none">
+                      <DocumentTextIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                     </div>
-                    {errors.comment && (
-                      <p className="mt-1 text-xs sm:text-sm text-red-600">
-                        {errors.comment}
-                      </p>
-                    )}
-                    <p className="mt-2 text-xs sm:text-sm text-gray-500">
-                      This comment will be attached to the order for future
-                      reference.
-                    </p>
+                    <textarea
+                      value={comment}
+                      onChange={(e) => setComment(e.target.value)}
+                      placeholder="Write any additional comments here..."
+                      rows={6}
+                      className={`w-full pl-10 pr-3 py-2 sm:py-3 text-sm sm:text-base border ${
+                        errors.comment ? "border-red-500" : "border-gray-300"
+                      } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none`}
+                    />
                   </div>
-
-                  {/* Auto-generated Comment Info */}
-                  {savedState.hasInputtedFinancials === 1 && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
-                      <p className="text-xs sm:text-sm text-blue-800">
-                        <strong>Note:</strong> A comment has been auto-generated
-                        based on your financial inputs. You can modify it as
-                        needed before proceeding.
-                      </p>
-                    </div>
+                  {errors.comment && (
+                    <p className="mt-1 text-xs sm:text-sm text-red-600">
+                      {errors.comment}
+                    </p>
                   )}
+                  <p className="mt-2 text-xs sm:text-sm text-gray-500">
+                    This comment will be attached to the order for future
+                    reference.
+                  </p>
                 </div>
 
-                {/* Form Actions */}
-                <div className="mt-6 sm:mt-8 flex gap-2 sm:gap-3">
-                  <Link
-                    to={`/admin/task/${tid}/order-completion/step-3`}
-                    className="flex-1 inline-flex items-center justify-center px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-                  >
-                    <ArrowLeftIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                    Back to Step 3
-                  </Link>
-                  <button
-                    type="submit"
-                    className="flex-1 inline-flex items-center justify-center px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    Save & Continue
-                    <ArrowRightIcon className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
-                  </button>
-                </div>
-              </form>
-            )}
+                {/* Auto-generated Comment Info */}
+                {savedState.hasInputtedFinancials === 1 && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+                    <div className="flex items-start">
+                      <InformationCircleIcon className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                      <div className="ml-3">
+                        <p className="text-xs sm:text-sm font-medium text-blue-900">
+                          Auto-Generated Comment
+                        </p>
+                        <p className="mt-1 text-xs sm:text-sm text-blue-800">
+                          A comment has been auto-generated based on your
+                          financial inputs. You can modify it as needed before
+                          proceeding.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Form Actions - Responsive */}
+              <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3">
+                <Link
+                  to={`/admin/task/${tid}/order-completion/step-3`}
+                  className="flex-1 inline-flex items-center justify-center px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  <ArrowLeftIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                  Back to Step 3
+                </Link>
+                <button
+                  type="submit"
+                  className="flex-1 inline-flex items-center justify-center px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Save & Continue
+                  <ArrowRightIcon className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
+                </button>
+              </div>
+            </form>
+          )}
+        </DetailSection>
+
+        {/* Additional Help Section */}
+        <div className="mt-6 bg-gray-50 rounded-lg p-4">
+          <div className="flex items-start">
+            <InformationCircleIcon className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
+            <div className="ml-3">
+              <h4 className="text-sm font-medium text-gray-900">Need Help?</h4>
+              <p className="mt-1 text-xs sm:text-sm text-gray-600">
+                Comments are important for maintaining a complete record of the
+                order completion. Include any relevant details about the work
+                performed, customer interactions, or special circumstances.
+              </p>
+            </div>
           </div>
         </div>
       </div>

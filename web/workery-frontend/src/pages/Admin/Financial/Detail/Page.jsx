@@ -130,16 +130,16 @@ function AdminFinancialDetailPage() {
     return order && order.associateId && order.associateId !== EMPTY_OBJECT_ID;
   };
 
-  // Section Component
+  // Section Component - Updated with dark theme to match Customer Detail
   const DetailSection = ({ title, icon: Icon, children }) => (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-4 sm:mb-6">
-      <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-b border-gray-200 rounded-t-lg">
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600 flex-shrink-0" />
+    <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
+      <div className="px-4 sm:px-6 py-3 sm:py-4">
+        <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
           <span className="truncate">{title}</span>
         </h3>
       </div>
-      <div className="p-4 sm:p-6">
+      <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
         <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {children}
         </dl>
@@ -147,7 +147,7 @@ function AdminFinancialDetailPage() {
     </div>
   );
 
-  // Detail Field Component
+  // Detail Field Component - Updated to match Customer Detail styling
   const DetailField = ({
     label,
     value,
@@ -155,11 +155,11 @@ function AdminFinancialDetailPage() {
     highlight = false,
   }) => (
     <div className={fullWidth ? "lg:col-span-2" : ""}>
-      <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+      <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-1">
         {label}
       </dt>
       <dd
-        className={`text-sm sm:text-base ${highlight ? "font-semibold text-gray-900" : "text-gray-900"} break-words`}
+        className={`text-base sm:text-lg font-medium ${highlight ? "font-semibold text-gray-900" : "text-gray-900"} break-words`}
       >
         {value || "-"}
       </dd>
@@ -281,7 +281,7 @@ function AdminFinancialDetailPage() {
                     to="/admin/financials"
                     className="flex-1 sm:flex-initial"
                   >
-                    <button className="w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                    <button className="w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-gray-600 rounded-lg text-sm sm:text-base font-medium text-white bg-gray-600 hover:bg-gray-700 transition-colors">
                       <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                       Back
                     </button>
@@ -294,8 +294,8 @@ function AdminFinancialDetailPage() {
                       disabled={isOrderArchived()}
                       className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
                         isOrderArchived()
-                          ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                          : "border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100"
+                          ? "border-gray-300 text-gray-400 bg-gray-200 cursor-not-allowed"
+                          : "border-orange-500 text-white bg-orange-500 hover:bg-orange-600"
                       }`}
                     >
                       <PencilSquareIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
@@ -330,7 +330,7 @@ function AdminFinancialDetailPage() {
               </div>
             </div>
 
-            {/* Detail Sections - Responsive */}
+            {/* Detail Sections - Responsive with dark theme */}
             <div className="p-4 sm:p-6">
               {/* Order Information */}
               <DetailSection
@@ -479,7 +479,7 @@ function AdminFinancialDetailPage() {
               {/* Action Buttons - Responsive */}
               <div className="flex flex-col sm:flex-row sm:justify-between items-stretch sm:items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 gap-3">
                 <Link to="/admin/financials" className="order-2 sm:order-1">
-                  <button className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                  <button className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-gray-600 rounded-lg text-sm sm:text-base font-medium text-white bg-gray-600 hover:bg-gray-700 transition-colors">
                     <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                     Back to Financials
                   </button>
@@ -494,8 +494,8 @@ function AdminFinancialDetailPage() {
                       disabled={isOrderArchived()}
                       className={`w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
                         isOrderArchived()
-                          ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                          : "border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100"
+                          ? "border-gray-300 text-gray-400 bg-gray-200 cursor-not-allowed"
+                          : "border-orange-500 text-white bg-orange-500 hover:bg-orange-600"
                       }`}
                     >
                       <PencilSquareIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />

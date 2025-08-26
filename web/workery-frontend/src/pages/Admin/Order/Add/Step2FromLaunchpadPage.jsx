@@ -6,6 +6,7 @@ import {
   useAuthManager,
   useOrderCreationStorage,
 } from "../../../../services/Services";
+import { ClipboardDocumentListIcon } from "@heroicons/react/24/outline";
 
 function AdminOrderAddStep2FromLaunchpadPage() {
   const authManager = useAuthManager();
@@ -92,16 +93,41 @@ function AdminOrderAddStep2FromLaunchpadPage() {
     orderCreationStorage,
   ]);
 
-  // Show loading state while initializing
+  // Show enhanced loading state while initializing
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-center">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 flex items-center justify-center">
+      <div className="text-center bg-white rounded-2xl shadow-2xl p-8 max-w-md">
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-32 h-32 bg-blue-200 rounded-full opacity-20 animate-ping"></div>
+          </div>
+          <div className="relative">
+            <ClipboardDocumentListIcon className="w-16 h-16 mx-auto text-blue-600 animate-pulse mb-4" />
+          </div>
+        </div>
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-        <p className="mt-4 text-gray-600">
+        <p className="mt-4 text-gray-700 font-medium text-lg">
           {isInitialized
             ? "Redirecting to order creation..."
             : "Initializing order creation..."}
         </p>
+        <p className="mt-2 text-gray-500 text-sm">
+          Setting up order for {firstName} {lastName}
+        </p>
+        <div className="mt-6 flex justify-center space-x-1">
+          <div
+            className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"
+            style={{ animationDelay: "0ms" }}
+          ></div>
+          <div
+            className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"
+            style={{ animationDelay: "150ms" }}
+          ></div>
+          <div
+            className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"
+            style={{ animationDelay: "300ms" }}
+          ></div>
+        </div>
       </div>
     </div>
   );

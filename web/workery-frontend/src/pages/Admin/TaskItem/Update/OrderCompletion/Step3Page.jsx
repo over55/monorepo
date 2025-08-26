@@ -20,7 +20,6 @@ import {
   ChartBarIcon,
   ClipboardDocumentListIcon,
   ExclamationCircleIcon,
-  CurrencyDollarIcon,
   CheckIcon,
   ArrowRightIcon,
   BanknotesIcon,
@@ -29,6 +28,8 @@ import {
   CalculatorIcon,
   CreditCardIcon,
   BuildingLibraryIcon,
+  CurrencyDollarIcon,
+  InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 
 function AdminTaskItemOrderCompletionStep3Page() {
@@ -43,25 +44,21 @@ function AdminTaskItemOrderCompletionStep3Page() {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [taxRate, setTaxRate] = useState(0);
+  const [serviceFeeOptions, setServiceFeeOptions] = useState([]);
 
-  // Helper function to safely format date for input field
+  // Helper functions for date handling
   const formatDateForInput = (date) => {
     if (!date) return "";
-
     try {
-      // If it's already a Date object
       if (date instanceof Date && !isNaN(date)) {
         return date.toISOString().slice(0, 10);
       }
-
-      // If it's a string, try to parse it
       if (typeof date === "string") {
         const parsed = new Date(date);
         if (!isNaN(parsed)) {
           return parsed.toISOString().slice(0, 10);
         }
       }
-
       return "";
     } catch (error) {
       console.error("Error formatting date:", error);
@@ -69,10 +66,8 @@ function AdminTaskItemOrderCompletionStep3Page() {
     }
   };
 
-  // Helper function to safely parse date from input
   const parseDateFromInput = (value) => {
     if (!value) return null;
-
     try {
       const date = new Date(value);
       if (!isNaN(date)) {
@@ -151,7 +146,6 @@ function AdminTaskItemOrderCompletionStep3Page() {
   const [paymentMethods, setPaymentMethods] = useState(
     savedState.paymentMethods || [],
   );
-  const [serviceFeeOptions, setServiceFeeOptions] = useState([]);
 
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
@@ -165,13 +159,11 @@ function AdminTaskItemOrderCompletionStep3Page() {
         setIsLoading(true);
         setErrors({});
 
-        // Fetch task details
         const taskData = await taskManager.getTaskDetail(tid, onUnauthorized);
-
-        // Fetch tenant details for tax rate
         const currentUser = JSON.parse(
           localStorage.getItem("WORKERY_ACCOUNT_DETAIL") || "{}",
         );
+
         if (currentUser.tenantId) {
           const tenantData = await tenantManager.getTenantDetail(
             currentUser.tenantId,
@@ -182,7 +174,6 @@ function AdminTaskItemOrderCompletionStep3Page() {
           }
         }
 
-        // Fetch service fee options
         const serviceFees =
           await serviceFeeManager.getServiceFeeSelectOptions(onUnauthorized);
 
@@ -190,7 +181,6 @@ function AdminTaskItemOrderCompletionStep3Page() {
           setTask(taskData);
           setServiceFeeOptions(serviceFees || []);
 
-          // Set default service fee if not already set
           if (!invoiceServiceFeeID && taskData.associateServiceFeeID) {
             setInvoiceServiceFeeID(taskData.associateServiceFeeID);
             setInvoiceServiceFeePercentage(
@@ -217,7 +207,6 @@ function AdminTaskItemOrderCompletionStep3Page() {
     };
   }, [tid]);
 
-  // Calculate totals when amounts change
   useEffect(() => {
     performCalculation();
   }, [
@@ -236,14 +225,12 @@ function AdminTaskItemOrderCompletionStep3Page() {
   ]);
 
   const performCalculation = () => {
-    // Calculate quoted total
     const quotedTotal =
       parseFloat(invoiceQuotedLabourAmount || 0) +
       parseFloat(invoiceQuotedMaterialAmount || 0) +
       parseFloat(invoiceQuotedOtherCostsAmount || 0);
     setInvoiceTotalQuoteAmount(quotedTotal.toFixed(2));
 
-    // Calculate tax if not custom
     let taxAmount = parseFloat(invoiceTaxAmount || 0);
     if (!isCustomTaxAmount && taxRate > 0) {
       const subtotal =
@@ -254,7 +241,6 @@ function AdminTaskItemOrderCompletionStep3Page() {
       setInvoiceTaxAmount(taxAmount.toFixed(2));
     }
 
-    // Calculate actual total
     const actualTotal =
       parseFloat(invoiceLabourAmount || 0) +
       parseFloat(invoiceMaterialAmount || 0) +
@@ -262,17 +248,14 @@ function AdminTaskItemOrderCompletionStep3Page() {
       taxAmount;
     setInvoiceTotalAmount(actualTotal.toFixed(2));
 
-    // Calculate amount due
     const amountDue = actualTotal - parseFloat(invoiceDepositAmount || 0);
     setInvoiceAmountDue(amountDue.toFixed(2));
 
-    // Calculate service fee
     const serviceFee =
       parseFloat(invoiceLabourAmount || 0) *
       (parseFloat(invoiceServiceFeePercentage || 0) / 100);
     setInvoiceServiceFeeAmount(serviceFee.toFixed(2));
 
-    // Calculate balance owing
     const balanceOwing =
       serviceFee - parseFloat(invoiceActualServiceFeeAmountPaid || 0);
     setInvoiceBalanceOwingAmount(balanceOwing.toFixed(2));
@@ -281,54 +264,22 @@ function AdminTaskItemOrderCompletionStep3Page() {
   const handleSubmit = () => {
     const newErrors = {};
 
-    // Validation
     if (!hasInputtedFinancials) {
       newErrors.hasInputtedFinancials =
         "Please select whether financials were inputted";
     }
 
     if (hasInputtedFinancials === 1) {
-      if (!invoicePaidTo) {
+      if (!invoicePaidTo)
         newErrors.invoicePaidTo = "Please select who was paid";
-      }
-      if (!paymentStatus) {
+      if (!paymentStatus)
         newErrors.paymentStatus = "Please select payment status";
-      }
-      if (paymentStatus === ORDER_STATUS_COMPLETED_AND_PAID) {
-        if (!invoiceServiceFeeID) {
-          newErrors.invoiceServiceFeeID = "Service fee is required";
-        }
-        if (
-          !invoiceServiceFeeAmount ||
-          parseFloat(invoiceServiceFeeAmount) === 0
-        ) {
-          newErrors.invoiceServiceFeeAmount =
-            "Service fee amount is required when payment is complete";
-        }
-        if (!invoiceServiceFeePaymentDate) {
-          newErrors.invoiceServiceFeePaymentDate =
-            "Service fee payment date is required when payment is complete";
-        }
-        if (
-          !invoiceActualServiceFeeAmountPaid ||
-          parseFloat(invoiceActualServiceFeeAmountPaid) === 0
-        ) {
-          newErrors.invoiceActualServiceFeeAmountPaid =
-            "Actual service fee paid amount is required when payment is complete";
-        }
-      }
-      if (!invoiceDate) {
-        newErrors.invoiceDate = "Invoice date is required";
-      }
-      if (!invoiceIDs) {
-        newErrors.invoiceIDs = "Invoice ID is required";
-      }
-      if (!invoiceServiceFeeID) {
+      if (!invoiceDate) newErrors.invoiceDate = "Invoice date is required";
+      if (!invoiceIDs) newErrors.invoiceIDs = "Invoice ID is required";
+      if (!invoiceServiceFeeID)
         newErrors.invoiceServiceFeeID = "Service fee is required";
-      }
-      if (!paymentMethods || paymentMethods.length === 0) {
+      if (!paymentMethods || paymentMethods.length === 0)
         newErrors.paymentMethods = "At least one payment method is required";
-      }
     }
 
     if (Object.keys(newErrors).length > 0) {
@@ -337,14 +288,13 @@ function AdminTaskItemOrderCompletionStep3Page() {
       return;
     }
 
-    // Save to storage - ensure invoiceIDs is stored as a string
     orderCompletionStorage.updateState({
       hasInputtedFinancials,
       invoicePaidTo,
       paymentStatus,
       completionDate,
       invoiceDate,
-      invoiceIDs: String(invoiceIDs || ""), // Ensure it's a string
+      invoiceIDs: String(invoiceIDs || ""),
       invoiceQuotedLabourAmount: parseFloat(invoiceQuotedLabourAmount || 0),
       invoiceQuotedMaterialAmount: parseFloat(invoiceQuotedMaterialAmount || 0),
       invoiceQuotedOtherCostsAmount: parseFloat(
@@ -370,20 +320,34 @@ function AdminTaskItemOrderCompletionStep3Page() {
       paymentMethods,
     });
 
-    // Navigate to next step
-    if (hasInputtedFinancials === 1) {
-      navigate(`/admin/task/${tid}/order-completion/step-4`);
-    } else {
-      navigate(`/admin/task/${tid}/order-completion/step-5`);
-    }
+    navigate(
+      hasInputtedFinancials === 1
+        ? `/admin/task/${tid}/order-completion/step-4`
+        : `/admin/task/${tid}/order-completion/step-5`,
+    );
   };
+
+  // Section Component with Dark Header
+  const DetailSection = ({ title, icon: Icon, children }) => (
+    <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
+      <div className="px-4 sm:px-6 py-3 sm:py-4">
+        <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
+          <span className="truncate">{title}</span>
+        </h3>
+      </div>
+      <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
+        {children}
+      </div>
+    </div>
+  );
 
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="flex items-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <span className="ml-3 text-gray-600">Loading...</span>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-3 text-sm sm:text-base text-gray-600">Loading...</p>
         </div>
       </div>
     );
@@ -391,29 +355,32 @@ function AdminTaskItemOrderCompletionStep3Page() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {/* Breadcrumb */}
-        <nav className="flex mb-4" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* Responsive Breadcrumb */}
+        <nav
+          className="flex mb-4 sm:mb-6 overflow-x-auto"
+          aria-label="Breadcrumb"
+        >
+          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
             <li className="inline-flex items-center">
               <Link
                 to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+                className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
               >
-                <ChartBarIcon className="w-4 h-4 mr-2" />
+                <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                 <span className="hidden sm:inline">Dashboard</span>
                 <span className="sm:hidden">Home</span>
               </Link>
             </li>
             <li>
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                 <Link
                   to="/admin/tasks"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                  className="ml-1 text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2 whitespace-nowrap"
                 >
                   <span className="inline-flex items-center">
-                    <ClipboardDocumentListIcon className="w-4 h-4 mr-2" />
+                    <ClipboardDocumentListIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
                     Tasks
                   </span>
                 </Link>
@@ -421,9 +388,9 @@ function AdminTaskItemOrderCompletionStep3Page() {
             </li>
             <li aria-current="page">
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
-                  <CurrencyDollarIcon className="w-4 h-4 mr-2" />
+                <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                <span className="ml-1 text-xs sm:text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center whitespace-nowrap">
+                  <CurrencyDollarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
                   Order Completion
                 </span>
               </div>
@@ -432,143 +399,59 @@ function AdminTaskItemOrderCompletionStep3Page() {
         </nav>
 
         {/* Page Title */}
-        <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
-            <CurrencyDollarIcon className="w-6 h-6 sm:w-7 sm:h-7 mr-3 text-blue-600" />
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 flex items-center">
+            <CurrencyDollarIcon className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
             Order Completion - Financial Details
           </h1>
+          <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+            <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
+            Enter invoice and payment information
+          </p>
         </div>
 
-        {/* Wizard Steps - Responsive Version */}
-        <div className="mb-6">
-          <div className="flex items-center justify-center">
-            {/* Mobile/Tablet View (< lg) */}
-            <div className="lg:hidden w-full overflow-x-auto pb-2">
-              <div className="flex items-center min-w-max px-2">
-                {/* Step 1 - Complete */}
+        {/* Wizard Steps - Mobile Optimized */}
+        <div className="mb-4 sm:mb-6">
+          {/* Mobile View */}
+          <div className="md:hidden">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex-shrink-0">
-                    <CheckIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                  </div>
-                  <div className="ml-2 sm:ml-3">
-                    <p className="text-xs sm:text-sm font-medium text-gray-900">
-                      Task
-                    </p>
-                    <p className="text-xs text-gray-500 hidden sm:block">
-                      Review
-                    </p>
-                  </div>
-                </div>
-
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-green-600"></div>
-
-                {/* Step 2 - Complete */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex-shrink-0">
-                    <CheckIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                  </div>
-                  <div className="ml-2 sm:ml-3">
-                    <p className="text-xs sm:text-sm font-medium text-gray-900">
-                      Survey
-                    </p>
-                    <p className="text-xs text-gray-500 hidden sm:block">
-                      Complete
-                    </p>
-                  </div>
-                </div>
-
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-gray-300"></div>
-
-                {/* Step 3 - Active */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-full flex-shrink-0">
+                  <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full">
                     <span className="text-white font-semibold text-sm">3</span>
                   </div>
-                  <div className="ml-2 sm:ml-3">
-                    <p className="text-xs sm:text-sm font-medium text-gray-900">
-                      Financials
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-900">
+                      Step 3: Financials
                     </p>
-                    <p className="text-xs text-gray-500 hidden sm:block">
-                      Invoice
-                    </p>
+                    <p className="text-xs text-gray-500">Invoice details</p>
                   </div>
                 </div>
-
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-gray-300"></div>
-
-                {/* Step 4 - Inactive */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
-                    <span className="text-gray-600 font-semibold text-sm">
-                      4
-                    </span>
-                  </div>
-                  <div className="ml-2 sm:ml-3">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">
-                      Comment
-                    </p>
-                    <p className="text-xs text-gray-400 hidden sm:block">
-                      Notes
-                    </p>
-                  </div>
-                </div>
-
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-8 sm:w-12 h-0.5 bg-gray-300"></div>
-
-                {/* Step 5 - Inactive */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
-                    <span className="text-gray-600 font-semibold text-sm">
-                      5
-                    </span>
-                  </div>
-                  <div className="ml-2 sm:ml-3">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">
-                      Complete
-                    </p>
-                    <p className="text-xs text-gray-400 hidden sm:block">
-                      Finish
-                    </p>
-                  </div>
-                </div>
+                <div className="text-xs text-gray-500">3 of 5</div>
               </div>
             </div>
+          </div>
 
-            {/* Desktop View (≥ lg) */}
-            <div className="hidden lg:flex items-center">
-              {/* Step 1 - Complete */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
-                  <CheckIcon className="w-6 h-6 text-white" />
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">Task</p>
-                  <p className="text-xs text-gray-500">Review</p>
-                </div>
-              </div>
+          {/* Desktop View */}
+          <div className="hidden md:flex items-center justify-center">
+            <div className="flex items-center">
+              {[1, 2].map((step) => (
+                <React.Fragment key={step}>
+                  <div className="flex items-center">
+                    <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
+                      <CheckIcon className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-gray-900">
+                        Step {step}
+                      </p>
+                      <p className="text-xs text-gray-500">Complete</p>
+                    </div>
+                  </div>
+                  <div className="mx-2 w-12 h-0.5 bg-green-600"></div>
+                </React.Fragment>
+              ))}
 
-              {/* Connector */}
-              <div className="mx-2 w-12 h-0.5 bg-green-600"></div>
-
-              {/* Step 2 - Complete */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
-                  <CheckIcon className="w-6 h-6 text-white" />
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">Survey</p>
-                  <p className="text-xs text-gray-500">Complete</p>
-                </div>
-              </div>
-
-              {/* Connector */}
-              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
-
-              {/* Step 3 - Active */}
               <div className="flex items-center">
                 <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
                   <span className="text-white font-semibold">3</span>
@@ -581,798 +464,560 @@ function AdminTaskItemOrderCompletionStep3Page() {
                 </div>
               </div>
 
-              {/* Connector */}
-              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
-
-              {/* Step 4 - Inactive */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
-                  <span className="text-gray-600 font-semibold">4</span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-500">Comment</p>
-                  <p className="text-xs text-gray-400">Notes</p>
-                </div>
-              </div>
-
-              {/* Connector */}
-              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
-
-              {/* Step 5 - Inactive */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
-                  <span className="text-gray-600 font-semibold">5</span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-500">Complete</p>
-                  <p className="text-xs text-gray-400">Finish</p>
-                </div>
-              </div>
+              {[4, 5].map((step) => (
+                <React.Fragment key={step}>
+                  <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+                  <div className="flex items-center">
+                    <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
+                      <span className="text-gray-600 font-semibold">
+                        {step}
+                      </span>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-gray-500">
+                        Step {step}
+                      </p>
+                      <p className="text-xs text-gray-400">Pending</p>
+                    </div>
+                  </div>
+                </React.Fragment>
+              ))}
             </div>
           </div>
         </div>
 
         {/* Error Message */}
         {errors.general && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
-            <span className="flex items-center">
-              <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-              <span className="text-sm">{errors.general}</span>
+          <div className="mb-4 sm:mb-6 bg-red-50 border border-red-200 text-red-800 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center text-sm sm:text-base">
+              <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+              {errors.general}
             </span>
             <button
               onClick={() => setErrors({})}
               className="text-red-600 hover:text-red-800 ml-2"
             >
-              <XMarkIcon className="w-5 h-5" />
+              <XMarkIcon className="w-4 sm:w-5 h-4 sm:h-5" />
             </button>
           </div>
         )}
 
         {/* Main Content */}
-        <div className="bg-white shadow-sm rounded-lg">
-          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-              <BanknotesIcon className="w-5 h-5 mr-2" />
-              Financial Information
-            </h2>
-          </div>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSubmit();
+          }}
+          className="space-y-4 sm:space-y-6"
+        >
+          {/* Initial Question */}
+          <DetailSection title="Financial Information" icon={BanknotesIcon}>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-3">
+                Was there financials inputted?{" "}
+                <span className="text-red-500">*</span>
+              </label>
+              <div className="space-y-2">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="hasInputtedFinancials"
+                    value="1"
+                    checked={hasInputtedFinancials === 1}
+                    onChange={(e) =>
+                      setHasInputtedFinancials(parseInt(e.target.value))
+                    }
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <span className="ml-2 text-sm font-medium text-gray-700">
+                    Yes
+                  </span>
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="hasInputtedFinancials"
+                    value="2"
+                    checked={hasInputtedFinancials === 2}
+                    onChange={(e) =>
+                      setHasInputtedFinancials(parseInt(e.target.value))
+                    }
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  />
+                  <span className="ml-2 text-sm font-medium text-gray-700">
+                    No
+                  </span>
+                </label>
+              </div>
+              {errors.hasInputtedFinancials && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.hasInputtedFinancials}
+                </p>
+              )}
+            </div>
+          </DetailSection>
 
-          <div className="p-4 sm:p-6">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSubmit();
-              }}
-              className="max-w-3xl mx-auto"
-            >
-              <div className="space-y-4">
-                {/* Initial Question */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">
-                    Was there financials inputted?{" "}
-                    <span className="text-red-500">*</span>
-                  </label>
-                  <div className="space-y-2">
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="hasInputtedFinancials"
-                        value="1"
-                        checked={hasInputtedFinancials === 1}
-                        onChange={(e) =>
-                          setHasInputtedFinancials(parseInt(e.target.value))
-                        }
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                      />
-                      <span className="ml-2 text-sm font-medium text-gray-700">
-                        Yes
-                      </span>
+          {hasInputtedFinancials === 1 && (
+            <>
+              {/* Payment Details */}
+              <DetailSection title="Payment Details" icon={CreditCardIcon}>
+                <div className="space-y-4">
+                  {/* Who was paid */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Who was paid for this job?{" "}
+                      <span className="text-red-500">*</span>
                     </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="hasInputtedFinancials"
-                        value="2"
-                        checked={hasInputtedFinancials === 2}
-                        onChange={(e) =>
-                          setHasInputtedFinancials(parseInt(e.target.value))
-                        }
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                      />
-                      <span className="ml-2 text-sm font-medium text-gray-700">
-                        No
-                      </span>
-                    </label>
+                    <div className="space-y-2">
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="invoicePaidTo"
+                          value="1"
+                          checked={invoicePaidTo === 1}
+                          onChange={(e) =>
+                            setInvoicePaidTo(parseInt(e.target.value))
+                          }
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        />
+                        <span className="ml-2 text-sm font-medium text-gray-700">
+                          Associate
+                        </span>
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="invoicePaidTo"
+                          value="2"
+                          checked={invoicePaidTo === 2}
+                          onChange={(e) =>
+                            setInvoicePaidTo(parseInt(e.target.value))
+                          }
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        />
+                        <span className="ml-2 text-sm font-medium text-gray-700">
+                          Organization
+                        </span>
+                      </label>
+                    </div>
+                    {errors.invoicePaidTo && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors.invoicePaidTo}
+                      </p>
+                    )}
                   </div>
-                  {errors.hasInputtedFinancials && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.hasInputtedFinancials}
-                    </p>
-                  )}
-                </div>
 
-                {hasInputtedFinancials === 1 && (
-                  <>
-                    {/* Payment Details Section */}
-                    <div className="border-t pt-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                        <CreditCardIcon className="w-5 h-5 mr-2" />
-                        Payment Details
-                      </h3>
+                  {/* Payment Status */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Payment Status <span className="text-red-500">*</span>
+                    </label>
+                    <div className="space-y-2">
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="paymentStatus"
+                          value={ORDER_STATUS_COMPLETED_AND_PAID}
+                          checked={
+                            paymentStatus === ORDER_STATUS_COMPLETED_AND_PAID
+                          }
+                          onChange={(e) =>
+                            setPaymentStatus(parseInt(e.target.value))
+                          }
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        />
+                        <span className="ml-2 text-sm font-medium text-gray-700">
+                          Paid
+                        </span>
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="paymentStatus"
+                          value={ORDER_STATUS_COMPLETED_BUT_UNPAID}
+                          checked={
+                            paymentStatus === ORDER_STATUS_COMPLETED_BUT_UNPAID
+                          }
+                          onChange={(e) =>
+                            setPaymentStatus(parseInt(e.target.value))
+                          }
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                        />
+                        <span className="ml-2 text-sm font-medium text-gray-700">
+                          Unpaid
+                        </span>
+                      </label>
+                    </div>
+                    {errors.paymentStatus && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors.paymentStatus}
+                      </p>
+                    )}
+                  </div>
 
-                      {/* Who was paid */}
-                      <div className="mb-4">
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Who was paid for this job?{" "}
-                          <span className="text-red-500">*</span>
-                        </label>
-                        <div className="space-y-2">
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              name="invoicePaidTo"
-                              value="1"
-                              checked={invoicePaidTo === 1}
-                              onChange={(e) =>
-                                setInvoicePaidTo(parseInt(e.target.value))
-                              }
-                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                            />
-                            <span className="ml-2 text-sm font-medium text-gray-700">
-                              Associate
-                            </span>
-                          </label>
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              name="invoicePaidTo"
-                              value="2"
-                              checked={invoicePaidTo === 2}
-                              onChange={(e) =>
-                                setInvoicePaidTo(parseInt(e.target.value))
-                              }
-                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                            />
-                            <span className="ml-2 text-sm font-medium text-gray-700">
-                              Organization
-                            </span>
-                          </label>
+                  {/* Dates and Invoice ID */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Invoice Date <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <CalendarIcon className="h-5 w-5 text-gray-400" />
                         </div>
-                        {errors.invoicePaidTo && (
-                          <p className="mt-1 text-sm text-red-600">
-                            {errors.invoicePaidTo}
-                          </p>
-                        )}
+                        <input
+                          type="date"
+                          value={formatDateForInput(invoiceDate)}
+                          onChange={(e) =>
+                            setInvoiceDate(parseDateFromInput(e.target.value))
+                          }
+                          className={`w-full pl-10 pr-3 py-2 border ${errors.invoiceDate ? "border-red-500" : "border-gray-300"} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                        />
                       </div>
+                      {errors.invoiceDate && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {errors.invoiceDate}
+                        </p>
+                      )}
+                    </div>
 
-                      {/* Payment Status */}
-                      <div className="mb-4">
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Payment Status <span className="text-red-500">*</span>
-                        </label>
-                        <div className="space-y-2">
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              name="paymentStatus"
-                              value={ORDER_STATUS_COMPLETED_AND_PAID}
-                              checked={
-                                paymentStatus ===
-                                ORDER_STATUS_COMPLETED_AND_PAID
-                              }
-                              onChange={(e) =>
-                                setPaymentStatus(parseInt(e.target.value))
-                              }
-                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                            />
-                            <span className="ml-2 text-sm font-medium text-gray-700">
-                              Paid
-                            </span>
-                          </label>
-                          <label className="flex items-center">
-                            <input
-                              type="radio"
-                              name="paymentStatus"
-                              value={ORDER_STATUS_COMPLETED_BUT_UNPAID}
-                              checked={
-                                paymentStatus ===
-                                ORDER_STATUS_COMPLETED_BUT_UNPAID
-                              }
-                              onChange={(e) =>
-                                setPaymentStatus(parseInt(e.target.value))
-                              }
-                              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                            />
-                            <span className="ml-2 text-sm font-medium text-gray-700">
-                              Unpaid
-                            </span>
-                          </label>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Invoice IDs <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <DocumentTextIcon className="h-5 w-5 text-gray-400" />
                         </div>
-                        {errors.paymentStatus && (
-                          <p className="mt-1 text-sm text-red-600">
-                            {errors.paymentStatus}
-                          </p>
-                        )}
+                        <input
+                          type="text"
+                          value={invoiceIDs}
+                          onChange={(e) => setInvoiceIDs(e.target.value)}
+                          placeholder="Enter invoice ID(s)"
+                          className={`w-full pl-10 pr-3 py-2 border ${errors.invoiceIDs ? "border-red-500" : "border-gray-300"} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                        />
                       </div>
+                      {errors.invoiceIDs && (
+                        <p className="mt-1 text-sm text-red-600">
+                          {errors.invoiceIDs}
+                        </p>
+                      )}
+                    </div>
+                  </div>
 
-                      {/* Dates */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Completion Date
-                            {paymentStatus ===
-                              ORDER_STATUS_COMPLETED_AND_PAID && (
-                              <span className="text-red-500"> *</span>
-                            )}
-                          </label>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <CalendarIcon className="h-5 w-5 text-gray-400" />
-                            </div>
-                            <input
-                              type="date"
-                              value={formatDateForInput(completionDate)}
-                              onChange={(e) =>
-                                setCompletionDate(
-                                  parseDateFromInput(e.target.value),
-                                )
-                              }
-                              max={new Date().toISOString().slice(0, 10)}
-                              className={`w-full pl-10 pr-3 py-2 border ${
-                                errors.completionDate
-                                  ? "border-red-500"
-                                  : "border-gray-300"
-                              } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-                            />
-                          </div>
-                          {errors.completionDate && (
-                            <p className="mt-1 text-sm text-red-600">
-                              {errors.completionDate}
-                            </p>
-                          )}
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Invoice Date <span className="text-red-500">*</span>
-                          </label>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <CalendarIcon className="h-5 w-5 text-gray-400" />
-                            </div>
-                            <input
-                              type="date"
-                              value={formatDateForInput(invoiceDate)}
-                              onChange={(e) =>
-                                setInvoiceDate(
-                                  parseDateFromInput(e.target.value),
-                                )
-                              }
-                              className={`w-full pl-10 pr-3 py-2 border ${
-                                errors.invoiceDate
-                                  ? "border-red-500"
-                                  : "border-gray-300"
-                              } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-                            />
-                          </div>
-                          {errors.invoiceDate && (
-                            <p className="mt-1 text-sm text-red-600">
-                              {errors.invoiceDate}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Invoice IDs */}
-                      <div className="mt-4">
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Invoice IDs <span className="text-red-500">*</span>
-                        </label>
-                        <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <DocumentTextIcon className="h-5 w-5 text-gray-400" />
-                          </div>
+                  {/* Payment Methods */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Payment Method(s) <span className="text-red-500">*</span>
+                    </label>
+                    <div className="space-y-2">
+                      {ORDER_INVOICE_PAYMENT_METHODS_OPTIONS.map((method) => (
+                        <label key={method.value} className="flex items-center">
                           <input
-                            type="text"
-                            value={invoiceIDs}
-                            onChange={(e) => setInvoiceIDs(e.target.value)}
-                            placeholder="Enter invoice ID(s)"
-                            className={`w-full pl-10 pr-3 py-2 border ${
-                              errors.invoiceIDs
-                                ? "border-red-500"
-                                : "border-gray-300"
-                            } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-                          />
-                        </div>
-                        {errors.invoiceIDs && (
-                          <p className="mt-1 text-sm text-red-600">
-                            {errors.invoiceIDs}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Quote Section */}
-                    <div className="border-t pt-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                        <DocumentTextIcon className="w-5 h-5 mr-2" />
-                        Quote Details
-                      </h3>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Quoted Labour
-                          </label>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
-                            </div>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={invoiceQuotedLabourAmount}
-                              onChange={(e) =>
-                                setInvoiceQuotedLabourAmount(e.target.value)
-                              }
-                              placeholder="0.00"
-                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Quoted Materials
-                          </label>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
-                            </div>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={invoiceQuotedMaterialAmount}
-                              onChange={(e) =>
-                                setInvoiceQuotedMaterialAmount(e.target.value)
-                              }
-                              placeholder="0.00"
-                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Quoted Other Costs
-                          </label>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
-                            </div>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={invoiceQuotedOtherCostsAmount}
-                              onChange={(e) =>
-                                setInvoiceQuotedOtherCostsAmount(e.target.value)
-                              }
-                              placeholder="0.00"
-                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Total Quoted
-                          </label>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <CalculatorIcon className="h-5 w-5 text-gray-400" />
-                            </div>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={invoiceTotalQuoteAmount}
-                              disabled
-                              className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg bg-gray-50"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Actual Section */}
-                    <div className="border-t pt-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                        <BanknotesIcon className="w-5 h-5 mr-2" />
-                        Actual Amounts
-                      </h3>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Actual Labour
-                          </label>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
-                            </div>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={invoiceLabourAmount}
-                              onChange={(e) =>
-                                setInvoiceLabourAmount(e.target.value)
-                              }
-                              placeholder="0.00"
-                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Actual Material
-                          </label>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
-                            </div>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={invoiceMaterialAmount}
-                              onChange={(e) =>
-                                setInvoiceMaterialAmount(e.target.value)
-                              }
-                              placeholder="0.00"
-                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Actual Other Costs
-                          </label>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
-                            </div>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={invoiceOtherCostsAmount}
-                              onChange={(e) =>
-                                setInvoiceOtherCostsAmount(e.target.value)
-                              }
-                              placeholder="0.00"
-                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Actual Tax ({taxRate}%)
-                          </label>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <CalculatorIcon className="h-5 w-5 text-gray-400" />
-                            </div>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={invoiceTaxAmount}
-                              onChange={(e) =>
-                                setInvoiceTaxAmount(e.target.value)
-                              }
-                              disabled={!isCustomTaxAmount}
-                              placeholder="0.00"
-                              className={`w-full pl-10 pr-3 py-2 border ${
-                                isCustomTaxAmount
-                                  ? "border-gray-300"
-                                  : "border-gray-200"
-                              } rounded-lg ${
-                                isCustomTaxAmount
-                                  ? "focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                  : "bg-gray-50"
-                              }`}
-                            />
-                          </div>
-                          <div className="mt-2">
-                            <label className="flex items-center">
-                              <input
-                                type="checkbox"
-                                checked={isCustomTaxAmount}
-                                onChange={(e) =>
-                                  setIsCustomTaxAmount(e.target.checked)
-                                }
-                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                              />
-                              <span className="ml-2 text-sm text-gray-700">
-                                Custom Tax Amount?
-                              </span>
-                            </label>
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Actual Total Amount
-                          </label>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <CalculatorIcon className="h-5 w-5 text-gray-400" />
-                            </div>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={invoiceTotalAmount}
-                              disabled
-                              className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg bg-gray-50"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Actual Deposit Amount
-                          </label>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
-                            </div>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={invoiceDepositAmount}
-                              onChange={(e) =>
-                                setInvoiceDepositAmount(e.target.value)
-                              }
-                              placeholder="0.00"
-                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Actual Amount Due
-                          </label>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <CalculatorIcon className="h-5 w-5 text-gray-400" />
-                            </div>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={invoiceAmountDue}
-                              disabled
-                              className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg bg-gray-50"
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Service Fee Section */}
-                    <div className="border-t pt-6">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                        <BuildingLibraryIcon className="w-5 h-5 mr-2" />
-                        Service Fee
-                      </h3>
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Service Fee <span className="text-red-500">*</span>
-                          </label>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <BuildingLibraryIcon className="h-5 w-5 text-gray-400" />
-                            </div>
-                            <select
-                              value={invoiceServiceFeeID}
-                              onChange={(e) => {
-                                const selectedId = e.target.value;
-                                setInvoiceServiceFeeID(selectedId);
-                                // Find and set the percentage
-                                const selected = serviceFeeOptions.find(
-                                  (opt) =>
-                                    opt.value === selectedId ||
-                                    opt.id === selectedId,
+                            type="checkbox"
+                            value={method.value}
+                            checked={paymentMethods.includes(method.value)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setPaymentMethods([
+                                  ...paymentMethods,
+                                  method.value,
+                                ]);
+                              } else {
+                                setPaymentMethods(
+                                  paymentMethods.filter(
+                                    (m) => m !== method.value,
+                                  ),
                                 );
-                                if (selected) {
-                                  setInvoiceServiceFeePercentage(
-                                    selected.percentage || 0,
-                                  );
-                                }
-                              }}
-                              className={`w-full pl-10 pr-3 py-2 border ${
-                                errors.invoiceServiceFeeID
-                                  ? "border-red-500"
-                                  : "border-gray-300"
-                              } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white`}
-                            >
-                              <option value="">Please select...</option>
-                              {serviceFeeOptions.map((sf) => (
-                                <option
-                                  key={sf.id || sf.value}
-                                  value={sf.id || sf.value}
-                                >
-                                  {sf.title || sf.label} ({sf.percentage}%)
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          {errors.invoiceServiceFeeID && (
-                            <p className="mt-1 text-sm text-red-600">
-                              {errors.invoiceServiceFeeID}
-                            </p>
-                          )}
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Required Service Fee Amount
-                          </label>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <CalculatorIcon className="h-5 w-5 text-gray-400" />
-                            </div>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={invoiceServiceFeeAmount}
-                              disabled
-                              className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg bg-gray-50"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            {paymentStatus === ORDER_STATUS_COMPLETED_AND_PAID
-                              ? "Invoice Service Fee Payment Date"
-                              : "Invoice Service Fee Payment Date (Optional)"}
-                          </label>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <CalendarIcon className="h-5 w-5 text-gray-400" />
-                            </div>
-                            <input
-                              type="date"
-                              value={formatDateForInput(
-                                invoiceServiceFeePaymentDate,
-                              )}
-                              onChange={(e) =>
-                                setInvoiceServiceFeePaymentDate(
-                                  parseDateFromInput(e.target.value),
-                                )
                               }
-                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Actual Service Fee Paid
-                          </label>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
-                            </div>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={invoiceActualServiceFeeAmountPaid}
-                              onChange={(e) =>
-                                setInvoiceActualServiceFeeAmountPaid(
-                                  e.target.value,
-                                )
-                              }
-                              placeholder="0.00"
-                              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                            />
-                          </div>
-                        </div>
-
-                        <div>
-                          <label className="block text-sm font-semibold text-gray-700 mb-2">
-                            Balance Owing Amount
-                          </label>
-                          <div className="relative">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                              <CalculatorIcon className="h-5 w-5 text-gray-400" />
-                            </div>
-                            <input
-                              type="number"
-                              step="0.01"
-                              value={invoiceBalanceOwingAmount}
-                              disabled
-                              className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg bg-gray-50"
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Payment Methods */}
-                      <div className="mt-4">
-                        <label className="block text-sm font-semibold text-gray-700 mb-2">
-                          Payment Method(s){" "}
-                          <span className="text-red-500">*</span>
+                            }}
+                            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                          />
+                          <span className="ml-2 text-sm text-gray-700">
+                            {method.label}
+                          </span>
                         </label>
-                        <div className="space-y-2">
-                          {ORDER_INVOICE_PAYMENT_METHODS_OPTIONS.map(
-                            (method) => (
-                              <label
-                                key={method.value}
-                                className="flex items-center"
-                              >
-                                <input
-                                  type="checkbox"
-                                  value={method.value}
-                                  checked={paymentMethods.includes(
-                                    method.value,
-                                  )}
-                                  onChange={(e) => {
-                                    if (e.target.checked) {
-                                      setPaymentMethods([
-                                        ...paymentMethods,
-                                        method.value,
-                                      ]);
-                                    } else {
-                                      setPaymentMethods(
-                                        paymentMethods.filter(
-                                          (m) => m !== method.value,
-                                        ),
-                                      );
-                                    }
-                                  }}
-                                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                                />
-                                <span className="ml-2 text-sm text-gray-700">
-                                  {method.label}
-                                </span>
-                              </label>
-                            ),
-                          )}
-                        </div>
-                        {errors.paymentMethods && (
-                          <p className="mt-1 text-sm text-red-600">
-                            {errors.paymentMethods}
-                          </p>
-                        )}
-                      </div>
+                      ))}
                     </div>
-                  </>
-                )}
-              </div>
+                    {errors.paymentMethods && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors.paymentMethods}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </DetailSection>
 
-              {/* Form Actions */}
-              <div className="mt-6 flex flex-col sm:flex-row gap-3">
-                <Link
-                  to={`/admin/task/${tid}/order-completion/step-2`}
-                  className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  <ArrowLeftIcon className="w-4 h-4 mr-2" />
-                  Back
-                </Link>
-                <button
-                  type="submit"
-                  className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  Save & Continue
-                  <ArrowRightIcon className="w-4 h-4 ml-2" />
-                </button>
-              </div>
-            </form>
+              {/* Quote Details */}
+              <DetailSection title="Quote Details" icon={DocumentTextIcon}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Quoted Labour
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={invoiceQuotedLabourAmount}
+                        onChange={(e) =>
+                          setInvoiceQuotedLabourAmount(e.target.value)
+                        }
+                        placeholder="0.00"
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Quoted Materials
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={invoiceQuotedMaterialAmount}
+                        onChange={(e) =>
+                          setInvoiceQuotedMaterialAmount(e.target.value)
+                        }
+                        placeholder="0.00"
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Quoted Other Costs
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={invoiceQuotedOtherCostsAmount}
+                        onChange={(e) =>
+                          setInvoiceQuotedOtherCostsAmount(e.target.value)
+                        }
+                        placeholder="0.00"
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Total Quoted
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <CalculatorIcon className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={invoiceTotalQuoteAmount}
+                        disabled
+                        className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg bg-gray-50"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </DetailSection>
+
+              {/* Actual Amounts */}
+              <DetailSection title="Actual Amounts" icon={BanknotesIcon}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Actual Labour
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={invoiceLabourAmount}
+                        onChange={(e) => setInvoiceLabourAmount(e.target.value)}
+                        placeholder="0.00"
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Actual Material
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={invoiceMaterialAmount}
+                        onChange={(e) =>
+                          setInvoiceMaterialAmount(e.target.value)
+                        }
+                        placeholder="0.00"
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Actual Tax ({taxRate}%)
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <CalculatorIcon className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={invoiceTaxAmount}
+                        onChange={(e) => setInvoiceTaxAmount(e.target.value)}
+                        disabled={!isCustomTaxAmount}
+                        placeholder="0.00"
+                        className={`w-full pl-10 pr-3 py-2 border ${isCustomTaxAmount ? "border-gray-300" : "border-gray-200"} rounded-lg ${isCustomTaxAmount ? "" : "bg-gray-50"}`}
+                      />
+                    </div>
+                    <div className="mt-2">
+                      <label className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={isCustomTaxAmount}
+                          onChange={(e) =>
+                            setIsCustomTaxAmount(e.target.checked)
+                          }
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">
+                          Custom Tax Amount?
+                        </span>
+                      </label>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Actual Total Amount
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <CalculatorIcon className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={invoiceTotalAmount}
+                        disabled
+                        className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg bg-gray-50"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </DetailSection>
+
+              {/* Service Fee */}
+              <DetailSection title="Service Fee" icon={BuildingLibraryIcon}>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Service Fee <span className="text-red-500">*</span>
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <BuildingLibraryIcon className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <select
+                        value={invoiceServiceFeeID}
+                        onChange={(e) => {
+                          const selectedId = e.target.value;
+                          setInvoiceServiceFeeID(selectedId);
+                          const selected = serviceFeeOptions.find(
+                            (opt) =>
+                              opt.value === selectedId || opt.id === selectedId,
+                          );
+                          if (selected) {
+                            setInvoiceServiceFeePercentage(
+                              selected.percentage || 0,
+                            );
+                          }
+                        }}
+                        className={`w-full pl-10 pr-3 py-2 border ${errors.invoiceServiceFeeID ? "border-red-500" : "border-gray-300"} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white`}
+                      >
+                        <option value="">Please select...</option>
+                        {serviceFeeOptions.map((sf) => (
+                          <option
+                            key={sf.id || sf.value}
+                            value={sf.id || sf.value}
+                          >
+                            {sf.title || sf.label} ({sf.percentage}%)
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    {errors.invoiceServiceFeeID && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors.invoiceServiceFeeID}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Required Service Fee Amount
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <CalculatorIcon className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={invoiceServiceFeeAmount}
+                        disabled
+                        className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg bg-gray-50"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </DetailSection>
+            </>
+          )}
+
+          {/* Form Actions */}
+          <div className="flex flex-col sm:flex-row gap-3 pt-4">
+            <Link
+              to={`/admin/task/${tid}/order-completion/step-2`}
+              className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+            >
+              <ArrowLeftIcon className="w-4 h-4 mr-2" />
+              Back
+            </Link>
+            <button
+              type="submit"
+              className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Save & Continue
+              <ArrowRightIcon className="w-4 h-4 ml-2" />
+            </button>
           </div>
-        </div>
+        </form>
       </div>
     </div>
   );

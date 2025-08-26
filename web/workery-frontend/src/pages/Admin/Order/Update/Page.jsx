@@ -19,6 +19,7 @@ import {
   ChatBubbleLeftRightIcon,
   PaperClipIcon,
   EllipsisHorizontalIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import {
   useAuthManager,
@@ -26,6 +27,21 @@ import {
   useSkillSetManager,
   useTagManager,
 } from "../../../../services/Services";
+
+// Section Component with Dark Header - Matching Customer Update style
+const FormSection = ({ title, icon: Icon, children }) => (
+  <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
+    <div className="px-4 sm:px-6 py-3 sm:py-4">
+      <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+        <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
+        <span className="truncate">{title}</span>
+      </h3>
+    </div>
+    <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
+      {children}
+    </div>
+  </div>
+);
 
 function AdminOrderUpdatePage() {
   // Hooks
@@ -261,11 +277,13 @@ function AdminOrderUpdatePage() {
   // Render loading state
   if (isFetching) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading order details...</p>
+            <p className="mt-4 text-sm sm:text-base text-gray-600">
+              Loading order details...
+            </p>
           </div>
         </div>
       </div>
@@ -273,28 +291,32 @@ function AdminOrderUpdatePage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Breadcrumb */}
-      <nav className="flex mb-6" aria-label="Breadcrumb">
-        <ol className="inline-flex items-center space-x-1 md:space-x-3">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+      {/* Responsive Breadcrumb */}
+      <nav
+        className="flex mb-4 sm:mb-6 overflow-x-auto"
+        aria-label="Breadcrumb"
+      >
+        <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
           <li className="inline-flex items-center">
             <Link
               to="/admin/dashboard"
-              className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+              className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
             >
-              <ChartBarIcon className="w-4 h-4 mr-2" />
-              Dashboard
+              <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+              <span className="hidden sm:inline">Dashboard</span>
+              <span className="sm:hidden">Dash</span>
             </Link>
           </li>
           <li>
             <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
+              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
               <Link
                 to="/admin/orders"
-                className="text-sm font-medium text-gray-700 hover:text-blue-600"
+                className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
               >
                 <span className="inline-flex items-center">
-                  <WrenchScrewdriverIcon className="w-4 h-4 mr-2" />
+                  <WrenchScrewdriverIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                   Orders
                 </span>
               </Link>
@@ -302,22 +324,23 @@ function AdminOrderUpdatePage() {
           </li>
           <li>
             <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
+              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
               <Link
                 to={`/admin/order/${oid}`}
-                className="text-sm font-medium text-gray-700 hover:text-blue-600"
+                className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
               >
                 <span className="inline-flex items-center">
-                  <InformationCircleIcon className="w-4 h-4 mr-2" />#{oid}
+                  <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                  #{oid}
                 </span>
               </Link>
             </div>
           </li>
           <li aria-current="page">
             <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <span className="text-sm font-medium text-gray-500 inline-flex items-center">
-                <PencilSquareIcon className="w-4 h-4 mr-2" />
+              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
+              <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
+                <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                 Update
               </span>
             </div>
@@ -325,26 +348,34 @@ function AdminOrderUpdatePage() {
         </ol>
       </nav>
 
-      {/* Page Title */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center">
+      {/* Page Title - Responsive */}
+      <div className="mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-              <WrenchScrewdriverIcon className="w-8 h-8 mr-3 text-blue-600" />
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+              <WrenchScrewdriverIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
               Order
             </h1>
-            <p className="mt-1 text-sm text-gray-600 flex items-center">
-              <PencilSquareIcon className="w-4 h-4 mr-1" />
+            <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+              <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
               Update order information
             </p>
           </div>
         </div>
       </div>
 
-      {/* Alert Messages */}
+      {/* Status Alerts - Responsive */}
+      {order && order.status === 2 && (
+        <div className="mb-4 bg-amber-50 border border-amber-200 text-amber-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center text-sm sm:text-base">
+          <ArchiveBoxIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+          This order is archived
+        </div>
+      )}
+
+      {/* Alert Messages - Responsive */}
       {alert && (
         <div
-          className={`mb-4 px-4 py-3 rounded-lg ${
+          className={`mb-4 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base ${
             alert.type === "success"
               ? "bg-green-50 border border-green-200 text-green-700"
               : alert.type === "info"
@@ -352,20 +383,22 @@ function AdminOrderUpdatePage() {
                 : "bg-red-50 border border-red-200 text-red-700"
           }`}
         >
-          <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              {alert.type === "success" ? (
-                <CheckCircleIcon className="w-5 h-5 mr-2" />
-              ) : alert.type === "info" ? (
-                <InformationCircleIcon className="w-5 h-5 mr-2" />
-              ) : (
-                <XCircleIcon className="w-5 h-5 mr-2" />
-              )}
-              <span>{alert.message}</span>
+          <div className="flex justify-between">
+            <div className="flex-1">
+              <div className="flex items-start">
+                {alert.type === "success" ? (
+                  <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 mt-0.5" />
+                ) : alert.type === "info" ? (
+                  <InformationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 mt-0.5" />
+                ) : (
+                  <ExclamationTriangleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 mt-0.5" />
+                )}
+                <span className="font-medium">{alert.message}</span>
+              </div>
             </div>
             <button
               onClick={() => setAlert(null)}
-              className="text-current hover:opacity-70"
+              className="text-current hover:opacity-70 ml-4 text-lg sm:text-xl"
             >
               ×
             </button>
@@ -373,343 +406,267 @@ function AdminOrderUpdatePage() {
         </div>
       )}
 
-      {/* Archived banner */}
-      {order && order.status === 2 && (
-        <div className="mb-4 px-4 py-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-700">
-          <div className="flex items-center">
-            <ArchiveBoxIcon className="w-5 h-5 mr-2" />
-            <span>This order is archived</span>
-          </div>
-        </div>
-      )}
-
       {/* Main Content */}
       <div className="bg-white shadow-sm rounded-lg">
-        {/* Header */}
-        <div className="px-6 py-5 border-b border-gray-200">
-          <div className="flex justify-between items-center flex-wrap gap-4">
-            <h2 className="text-2xl font-semibold text-gray-900 flex items-center">
-              <PencilSquareIcon className="w-7 h-7 mr-2 text-blue-600" />
+        {/* Header with Actions - Responsive */}
+        <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 flex items-center">
+              <PencilSquareIcon className="w-5 sm:w-7 h-5 sm:h-7 mr-2 text-blue-600 flex-shrink-0" />
               Update Order #{oid}
             </h2>
-            <Link to={`/admin/order/${oid}`}>
-              <button className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                <ChevronLeftIcon className="w-5 h-5 mr-2" />
+            <Link to={`/admin/order/${oid}`} className="flex-shrink-0">
+              <button className="w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                 Back to Detail
               </button>
             </Link>
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="px-6 border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
-            <Link
-              to={`/admin/order/${oid}`}
-              className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            >
-              Summary
-            </Link>
-            <Link
-              to={`/admin/order/${oid}/detail`}
-              className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            >
-              Detail
-            </Link>
-            <Link
-              to={`/admin/order/${oid}/tasks`}
-              className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            >
-              Tasks
-            </Link>
-            <Link
-              to={`/admin/order/${oid}/activity`}
-              className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            >
-              Activity
-            </Link>
-            <Link
-              to={`/admin/order/${oid}/comments`}
-              className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            >
-              Comments
-            </Link>
-            <Link
-              to={`/admin/order/${oid}/attachments`}
-              className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            >
-              Attachments
-            </Link>
-            <Link
-              to={`/admin/order/${oid}/more`}
-              className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center"
-            >
-              More
-              <EllipsisHorizontalIcon className="w-5 h-5 ml-1" />
-            </Link>
-          </nav>
+        {/* Tab Navigation - Responsive with horizontal scroll */}
+        <div className="border-b border-gray-200">
+          <div className="px-4 sm:px-6">
+            <nav className="-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide">
+              <Link
+                to={`/admin/order/${oid}`}
+                className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
+              >
+                Summary
+              </Link>
+              <Link
+                to={`/admin/order/${oid}/detail`}
+                className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
+              >
+                Detail
+              </Link>
+              <Link
+                to={`/admin/order/${oid}/tasks`}
+                className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
+              >
+                Tasks
+              </Link>
+              <Link
+                to={`/admin/order/${oid}/activity`}
+                className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
+              >
+                Activity
+              </Link>
+              <Link
+                to={`/admin/order/${oid}/comments`}
+                className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
+              >
+                Comments
+              </Link>
+              <Link
+                to={`/admin/order/${oid}/attachments`}
+                className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
+              >
+                Attachments
+              </Link>
+              <Link
+                to={`/admin/order/${oid}/more`}
+                className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center whitespace-nowrap"
+              >
+                More
+                <EllipsisHorizontalIcon className="w-4 sm:w-5 h-4 sm:h-5 ml-1" />
+              </Link>
+            </nav>
+          </div>
         </div>
 
         {order && (
-          <form onSubmit={onSubmitClick} className="p-6">
-            {/* General Information Section */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-              <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 rounded-t-lg">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <BriefcaseIcon className="w-5 h-5 mr-2 text-blue-600" />
-                  General Information
-                </h3>
-              </div>
-              <div className="p-6">
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Is this job one time or ongoing?{" "}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <div className="space-y-2">
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="isOngoing"
-                          value="2"
-                          checked={isOngoing === 2}
-                          onChange={(e) => {
-                            setIsOngoing(parseInt(e.target.value));
-                            if (errors.isOngoing) {
-                              setErrors((prev) => ({
-                                ...prev,
-                                isOngoing: undefined,
-                              }));
-                            }
-                          }}
-                          disabled={order.status === 2 || isSubmitting}
-                          className="mr-2 text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className="text-sm text-gray-700">One-Time</span>
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="isOngoing"
-                          value="1"
-                          checked={isOngoing === 1}
-                          onChange={(e) => {
-                            setIsOngoing(parseInt(e.target.value));
-                            if (errors.isOngoing) {
-                              setErrors((prev) => ({
-                                ...prev,
-                                isOngoing: undefined,
-                              }));
-                            }
-                          }}
-                          disabled={order.status === 2 || isSubmitting}
-                          className="mr-2 text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className="text-sm text-gray-700">Ongoing</span>
-                      </label>
-                    </div>
-                    {errors.isOngoing && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {errors.isOngoing}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Is this job a home support service?{" "}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <div className="space-y-2">
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="isHomeSupportService"
-                          value="2"
-                          checked={isHomeSupportService === 2}
-                          onChange={(e) => {
-                            setIsHomeSupportService(parseInt(e.target.value));
-                            if (errors.isHomeSupportService) {
-                              setErrors((prev) => ({
-                                ...prev,
-                                isHomeSupportService: undefined,
-                              }));
-                            }
-                          }}
-                          disabled={order.status === 2 || isSubmitting}
-                          className="mr-2 text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className="text-sm text-gray-700">No</span>
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          name="isHomeSupportService"
-                          value="1"
-                          checked={isHomeSupportService === 1}
-                          onChange={(e) => {
-                            setIsHomeSupportService(parseInt(e.target.value));
-                            if (errors.isHomeSupportService) {
-                              setErrors((prev) => ({
-                                ...prev,
-                                isHomeSupportService: undefined,
-                              }));
-                            }
-                          }}
-                          disabled={order.status === 2 || isSubmitting}
-                          className="mr-2 text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className="text-sm text-gray-700">Yes</span>
-                      </label>
-                    </div>
-                    {errors.isHomeSupportService && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {errors.isHomeSupportService}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="max-w-md">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      <CalendarIcon className="w-4 h-4 inline mr-1" />
-                      When should this job start? (Optional)
-                    </label>
-                    <input
-                      type="date"
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
-                      disabled={order.status === 2 || isSubmitting}
-                      className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                        errors.startDate ? "border-red-300" : "border-gray-300"
-                      }`}
-                    />
-                    <p className="mt-1 text-sm text-gray-500">
-                      Leave blank if nothing was specified by client.
-                    </p>
-                    {errors.startDate && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {errors.startDate}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Skill Sets Section */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-              <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 rounded-t-lg">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <AcademicCapIcon className="w-5 h-5 mr-2 text-blue-600" />
-                  Skill Sets & Description
-                </h3>
-              </div>
-              <div className="p-6">
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Describe the Job <span className="text-red-500">*</span>
-                    </label>
-                    <textarea
-                      placeholder="Describe the work that needs to be done..."
-                      value={description}
-                      onChange={(e) => {
-                        setDescription(e.target.value);
-                        if (errors.description) {
-                          setErrors((prev) => ({
-                            ...prev,
-                            description: undefined,
-                          }));
-                        }
-                      }}
-                      rows={4}
-                      maxLength={1000}
-                      disabled={order.status === 2 || isSubmitting}
-                      className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                        errors.description
-                          ? "border-red-300"
-                          : "border-gray-300"
-                      }`}
-                      required
-                    />
-                    <p className="mt-1 text-sm text-gray-500">
-                      {description.length}/1000 characters
-                    </p>
-                    {errors.description && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {errors.description}
-                      </p>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Please select required job skill(s){" "}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <div
-                      className={`border rounded-lg p-4 max-h-60 overflow-y-auto ${
-                        errors.skillSets ? "border-red-300" : "border-gray-300"
-                      }`}
-                    >
-                      {skillSetOptions.length > 0 ? (
-                        <div className="space-y-2">
-                          {skillSetOptions.map((option) => (
-                            <label
-                              key={option.value}
-                              className="flex items-center"
-                            >
-                              <input
-                                type="checkbox"
-                                value={option.value}
-                                checked={skillSets.includes(option.value)}
-                                onChange={() =>
-                                  handleSkillSetChange(option.value)
-                                }
-                                disabled={order.status === 2 || isSubmitting}
-                                className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-2"
-                              />
-                              <span className="text-sm text-gray-700">
-                                {option.label}
-                              </span>
-                            </label>
-                          ))}
-                        </div>
-                      ) : (
-                        <p className="text-gray-500">Loading skill sets...</p>
-                      )}
-                    </div>
-                    <p className="mt-1 text-sm text-gray-500">
-                      Pick at least a single skill set at minimum.
-                    </p>
-                    {errors.skillSets && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {errors.skillSets}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Metrics Section */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-              <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 rounded-t-lg">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <ChartPieIcon className="w-5 h-5 mr-2 text-blue-600" />
-                  Metrics
-                </h3>
-              </div>
-              <div className="p-6">
+          <form onSubmit={onSubmitClick} className="p-4 sm:p-6">
+            {/* General Information Section with Dark Header */}
+            <FormSection title="General Information" icon={BriefcaseIcon}>
+              <div className="space-y-4 sm:space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tags (Optional)
+                    Is this job one time or ongoing?{" "}
+                    <span className="text-red-500">*</span>
                   </label>
-                  <div className="border border-gray-300 rounded-lg p-4 max-h-60 overflow-y-auto">
-                    {tagOptions.length > 0 ? (
+                  <div className="space-y-2">
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="isOngoing"
+                        value="2"
+                        checked={isOngoing === 2}
+                        onChange={(e) => {
+                          setIsOngoing(parseInt(e.target.value));
+                          if (errors.isOngoing) {
+                            setErrors((prev) => ({
+                              ...prev,
+                              isOngoing: undefined,
+                            }));
+                          }
+                        }}
+                        disabled={order.status === 2 || isSubmitting}
+                        className="mr-2 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700">One-Time</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="isOngoing"
+                        value="1"
+                        checked={isOngoing === 1}
+                        onChange={(e) => {
+                          setIsOngoing(parseInt(e.target.value));
+                          if (errors.isOngoing) {
+                            setErrors((prev) => ({
+                              ...prev,
+                              isOngoing: undefined,
+                            }));
+                          }
+                        }}
+                        disabled={order.status === 2 || isSubmitting}
+                        className="mr-2 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700">Ongoing</span>
+                    </label>
+                  </div>
+                  {errors.isOngoing && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.isOngoing}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Is this job a home support service?{" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <div className="space-y-2">
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="isHomeSupportService"
+                        value="2"
+                        checked={isHomeSupportService === 2}
+                        onChange={(e) => {
+                          setIsHomeSupportService(parseInt(e.target.value));
+                          if (errors.isHomeSupportService) {
+                            setErrors((prev) => ({
+                              ...prev,
+                              isHomeSupportService: undefined,
+                            }));
+                          }
+                        }}
+                        disabled={order.status === 2 || isSubmitting}
+                        className="mr-2 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700">No</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="isHomeSupportService"
+                        value="1"
+                        checked={isHomeSupportService === 1}
+                        onChange={(e) => {
+                          setIsHomeSupportService(parseInt(e.target.value));
+                          if (errors.isHomeSupportService) {
+                            setErrors((prev) => ({
+                              ...prev,
+                              isHomeSupportService: undefined,
+                            }));
+                          }
+                        }}
+                        disabled={order.status === 2 || isSubmitting}
+                        className="mr-2 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-sm text-gray-700">Yes</span>
+                    </label>
+                  </div>
+                  {errors.isHomeSupportService && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.isHomeSupportService}
+                    </p>
+                  )}
+                </div>
+
+                <div className="max-w-md">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <CalendarIcon className="w-4 h-4 inline mr-1" />
+                    When should this job start? (Optional)
+                  </label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    disabled={order.status === 2 || isSubmitting}
+                    className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
+                      errors.startDate ? "border-red-300" : "border-gray-300"
+                    }`}
+                  />
+                  <p className="mt-1 text-xs sm:text-sm text-gray-500">
+                    Leave blank if nothing was specified by client.
+                  </p>
+                  {errors.startDate && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.startDate}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </FormSection>
+
+            {/* Skill Sets & Description Section with Dark Header */}
+            <FormSection
+              title="Skill Sets & Description"
+              icon={AcademicCapIcon}
+            >
+              <div className="space-y-4 sm:space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Describe the Job <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    placeholder="Describe the work that needs to be done..."
+                    value={description}
+                    onChange={(e) => {
+                      setDescription(e.target.value);
+                      if (errors.description) {
+                        setErrors((prev) => ({
+                          ...prev,
+                          description: undefined,
+                        }));
+                      }
+                    }}
+                    rows={4}
+                    maxLength={1000}
+                    disabled={order.status === 2 || isSubmitting}
+                    className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base ${
+                      errors.description ? "border-red-300" : "border-gray-300"
+                    }`}
+                    required
+                  />
+                  <p className="mt-1 text-xs sm:text-sm text-gray-500">
+                    {description.length}/1000 characters
+                  </p>
+                  {errors.description && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.description}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Please select required job skill(s){" "}
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <div
+                    className={`border rounded-lg p-3 sm:p-4 max-h-60 overflow-y-auto ${
+                      errors.skillSets ? "border-red-300" : "border-gray-300"
+                    }`}
+                  >
+                    {skillSetOptions.length > 0 ? (
                       <div className="space-y-2">
-                        {tagOptions.map((option) => (
+                        {skillSetOptions.map((option) => (
                           <label
                             key={option.value}
                             className="flex items-center"
@@ -717,8 +674,10 @@ function AdminOrderUpdatePage() {
                             <input
                               type="checkbox"
                               value={option.value}
-                              checked={tags.includes(option.value)}
-                              onChange={() => handleTagChange(option.value)}
+                              checked={skillSets.includes(option.value)}
+                              onChange={() =>
+                                handleSkillSetChange(option.value)
+                              }
                               disabled={order.status === 2 || isSubmitting}
                               className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-2"
                             />
@@ -729,24 +688,66 @@ function AdminOrderUpdatePage() {
                         ))}
                       </div>
                     ) : (
-                      <p className="text-gray-500">Loading tags...</p>
+                      <p className="text-gray-500 text-sm">
+                        Loading skill sets...
+                      </p>
                     )}
                   </div>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Pick the tags you would like to associate with this order.
+                  <p className="mt-1 text-xs sm:text-sm text-gray-500">
+                    Pick at least a single skill set at minimum.
                   </p>
+                  {errors.skillSets && (
+                    <p className="mt-1 text-sm text-red-600">
+                      {errors.skillSets}
+                    </p>
+                  )}
                 </div>
               </div>
-            </div>
+            </FormSection>
 
-            {/* Form Actions */}
-            <div className="flex justify-between items-center pt-6 border-t border-gray-200">
-              <Link to={`/admin/order/${oid}`}>
+            {/* Metrics Section with Dark Header */}
+            <FormSection title="Metrics" icon={ChartPieIcon}>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Tags (Optional)
+                </label>
+                <div className="border border-gray-300 rounded-lg p-3 sm:p-4 max-h-60 overflow-y-auto">
+                  {tagOptions.length > 0 ? (
+                    <div className="space-y-2">
+                      {tagOptions.map((option) => (
+                        <label key={option.value} className="flex items-center">
+                          <input
+                            type="checkbox"
+                            value={option.value}
+                            checked={tags.includes(option.value)}
+                            onChange={() => handleTagChange(option.value)}
+                            disabled={order.status === 2 || isSubmitting}
+                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500 mr-2"
+                          />
+                          <span className="text-sm text-gray-700">
+                            {option.label}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 text-sm">Loading tags...</p>
+                  )}
+                </div>
+                <p className="mt-1 text-xs sm:text-sm text-gray-500">
+                  Pick the tags you would like to associate with this order.
+                </p>
+              </div>
+            </FormSection>
+
+            {/* Form Actions - Responsive */}
+            <div className="flex flex-col sm:flex-row sm:justify-between items-stretch sm:items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 gap-3">
+              <Link to={`/admin/order/${oid}`} className="order-2 sm:order-1">
                 <button
                   type="button"
-                  className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                  className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
                 >
-                  <ChevronLeftIcon className="w-5 h-5 mr-2" />
+                  <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                   Back to Detail
                 </button>
               </Link>
@@ -754,13 +755,13 @@ function AdminOrderUpdatePage() {
               <button
                 type="submit"
                 disabled={order.status === 2 || isSubmitting}
-                className={`inline-flex items-center px-5 py-2.5 border border-transparent rounded-lg text-base font-medium text-white transition-colors ${
+                className={`order-1 sm:order-2 inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-transparent rounded-lg text-sm sm:text-base font-medium text-white transition-colors ${
                   order.status === 2 || isSubmitting
                     ? "bg-gray-400 cursor-not-allowed"
                     : "bg-green-600 hover:bg-green-700"
                 }`}
               >
-                <CheckCircleIcon className="w-5 h-5 mr-2" />
+                <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                 {isSubmitting ? "Saving..." : "Save Changes"}
               </button>
             </div>

@@ -1,4 +1,4 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Admin/Financial/Detail/Invoice/Generate/Step4Page.jsx
+// File Path: web/workery-frontend/src/pages/Admin/Financial/Detail/Invoice/Generate/Step4Page.jsx
 
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router";
@@ -19,6 +19,15 @@ import {
   ClipboardDocumentListIcon,
   BanknotesIcon,
   PencilIcon,
+  ChevronLeftIcon,
+  DocumentPlusIcon,
+  InformationCircleIcon,
+  UserGroupIcon,
+  CalendarIcon,
+  PhoneIcon,
+  EnvelopeIcon,
+  IdentificationIcon,
+  HomeIcon,
 } from "@heroicons/react/24/outline";
 
 function AdminFinancialGenerateInvoiceStep4Page() {
@@ -37,6 +46,30 @@ function AdminFinancialGenerateInvoiceStep4Page() {
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
   };
+
+  // Section Component with Dark Header
+  const ReviewSection = ({ title, icon: Icon, editLink, children }) => (
+    <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
+      <div className="px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
+        <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
+          <span className="truncate">{title}</span>
+        </h3>
+        {editLink && (
+          <Link
+            to={editLink}
+            className="inline-flex items-center text-xs sm:text-sm text-blue-300 hover:text-blue-100 transition-colors"
+          >
+            <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+            Edit
+          </Link>
+        )}
+      </div>
+      <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
+        {children}
+      </div>
+    </div>
+  );
 
   // Load order details and invoice data
   useEffect(() => {
@@ -261,18 +294,24 @@ function AdminFinancialGenerateInvoiceStep4Page() {
 
   if (isFetching) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        <span className="ml-3 text-gray-600">Loading order details...</span>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-sm sm:text-base text-gray-600">
+            Loading order details...
+          </p>
+        </div>
       </div>
     );
   }
 
   if (!invoiceData) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        <span className="ml-3 text-gray-600">Loading...</span>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-sm sm:text-base text-gray-600">Loading...</p>
+        </div>
       </div>
     );
   }
@@ -281,54 +320,56 @@ function AdminFinancialGenerateInvoiceStep4Page() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {/* Breadcrumb */}
-        <nav className="flex mb-4" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* Responsive Breadcrumb */}
+        <nav
+          className="flex mb-4 sm:mb-6 overflow-x-auto"
+          aria-label="Breadcrumb"
+        >
+          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
             <li className="inline-flex items-center">
               <Link
                 to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+                className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
               >
-                <ChartBarIcon className="w-4 h-4 mr-2" />
+                <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                 <span className="hidden sm:inline">Dashboard</span>
+                <span className="sm:hidden">Dash</span>
               </Link>
             </li>
             <li>
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="mx-1 sm:mx-2 text-gray-400">/</span>
                 <Link
                   to="/admin/financials"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                  className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
                 >
                   <span className="inline-flex items-center">
-                    <CurrencyDollarIcon className="w-4 h-4 mr-2" />
-                    <span className="hidden sm:inline">Financials</span>
+                    <CreditCardIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                    Financials
                   </span>
                 </Link>
               </div>
             </li>
             <li>
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="mx-1 sm:mx-2 text-gray-400">/</span>
                 <Link
                   to={`/admin/financial/${oid}/invoice`}
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                  className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
                 >
                   <span className="inline-flex items-center">
-                    <DocumentTextIcon className="w-4 h-4 mr-2" />
-                    <span className="hidden sm:inline">
-                      Order #{oid} (Invoice)
-                    </span>
+                    <DocumentTextIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                    Order #{oid}
                   </span>
                 </Link>
               </div>
             </li>
             <li aria-current="page">
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
-                  <PencilIcon className="w-4 h-4 mr-2" />
+                <span className="mx-1 sm:mx-2 text-gray-400">/</span>
+                <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
+                  <DocumentPlusIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                   Generate Invoice
                 </span>
               </div>
@@ -336,91 +377,77 @@ function AdminFinancialGenerateInvoiceStep4Page() {
           </ol>
         </nav>
 
-        {/* Page Title */}
-        <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
-            <CurrencyDollarIcon className="w-6 sm:w-7 h-6 sm:h-7 mr-2 sm:mr-3 text-blue-600" />
-            Financials
-          </h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-1">
-            Generate Invoice - Step 4 of 4
-          </p>
+        {/* Page Title - Responsive */}
+        <div className="mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+                <DocumentPlusIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
+                Generate Invoice
+              </h1>
+              <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+                <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
+                Step 4 of 4 - Review & Submit
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Wizard Steps - Responsive Design */}
-        <div className="mb-6">
-          {/* Desktop/Tablet View (768px and up) */}
-          <div className="hidden md:flex items-center justify-center overflow-x-auto">
-            <div className="flex items-center">
+        {/* Wizard Steps - Improved Responsive Design */}
+        <div className="mb-4 sm:mb-6">
+          {/* Mobile View */}
+          <div className="md:hidden">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full">
+                    <span className="text-white font-semibold text-sm">4</span>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-900">
+                      Step 4: Review
+                    </p>
+                    <p className="text-xs text-gray-500">Confirm & Submit</p>
+                  </div>
+                </div>
+                <div className="text-xs text-gray-500">4 of 4</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Tablet/Desktop View */}
+          <div className="hidden md:flex items-center justify-center overflow-x-auto pb-2">
+            <div className="flex items-center min-w-max">
               {/* Steps 1-3 Complete */}
               {[1, 2, 3].map((step, index) => (
                 <React.Fragment key={step}>
                   <div className="flex items-center">
-                    <div className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-green-600 rounded-full">
-                      <CheckIcon className="w-4 h-4 lg:w-6 lg:h-6 text-white" />
+                    <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
+                      <CheckIcon className="w-5 h-5 text-white" />
                     </div>
-                    <div className="ml-2 lg:ml-3">
-                      <p className="text-xs lg:text-sm font-medium text-gray-900">
-                        {step === 1 && "Header"}
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-gray-900">
+                        {step === 1 && "Header Info"}
                         {step === 2 && "Line Items"}
-                        {step === 3 && "Financial"}
+                        {step === 3 && "Footer Info"}
                       </p>
-                      <p className="text-xs text-gray-500 hidden xl:block">
-                        Complete
-                      </p>
+                      <p className="text-xs text-gray-500">Complete</p>
                     </div>
                   </div>
                   {index < 3 && (
-                    <div className="mx-1 lg:mx-2 w-8 lg:w-12 h-0.5 bg-green-600"></div>
+                    <div className="mx-2 w-16 h-0.5 bg-green-600"></div>
                   )}
                 </React.Fragment>
               ))}
 
               {/* Step 4 - Active */}
               <div className="flex items-center">
-                <div className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-blue-600 rounded-full">
-                  <span className="text-white font-semibold text-sm lg:text-base">
-                    4
-                  </span>
-                </div>
-                <div className="ml-2 lg:ml-3">
-                  <p className="text-xs lg:text-sm font-medium text-gray-900">
-                    Review
-                  </p>
-                  <p className="text-xs text-gray-500 hidden xl:block">
-                    Submit
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile View (below 768px) */}
-          <div className="md:hidden">
-            <div className="flex items-center justify-between px-4">
-              <div className="flex items-center">
                 <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
                   <span className="text-white font-semibold">4</span>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">
-                    Step 4 of 4
-                  </p>
-                  <p className="text-xs text-gray-500">Review & Submit</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-gray-500">Progress</p>
-                <div className="flex items-center mt-1">
-                  <div className="flex">
-                    {[1, 2, 3].map((step) => (
-                      <div
-                        key={step}
-                        className="w-2 h-2 bg-green-600 rounded-full mr-1"
-                      ></div>
-                    ))}
-                    <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                  </div>
+                  <p className="text-sm font-medium text-gray-900">Review</p>
+                  <p className="text-xs text-gray-500">Submit</p>
                 </div>
               </div>
             </div>
@@ -429,40 +456,39 @@ function AdminFinancialGenerateInvoiceStep4Page() {
 
         {/* Main Content */}
         <div className="bg-white shadow-sm rounded-lg">
-          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-              <CheckCircleIcon className="w-5 h-5 mr-2" />
+          {/* Header with Dark Background */}
+          <div className="bg-gray-700 rounded-t-lg px-4 sm:px-6 py-4 sm:py-5">
+            <h2 className="text-xl sm:text-2xl font-semibold text-white flex items-center">
+              <CheckCircleIcon className="w-5 sm:w-7 h-5 sm:h-7 mr-2 flex-shrink-0" />
               Review Invoice Details
             </h2>
+            <p className="mt-1 text-xs sm:text-sm text-gray-300">
+              Please carefully review all invoice details before submitting
+            </p>
           </div>
 
           <div className="p-4 sm:p-6">
-            <p className="text-sm sm:text-base text-gray-600 mb-6">
-              Please carefully review the following invoice details and if you
-              are ready click the <strong>Submit</strong> button to complete.
-            </p>
-
             {errors.general && (
-              <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center">
-                <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-                <span className="text-sm sm:text-base">{errors.general}</span>
+              <div className="mb-4 sm:mb-6 bg-red-50 border border-red-200 text-red-800 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center text-sm sm:text-base">
+                <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+                <span className="break-words">{errors.general}</span>
               </div>
             )}
 
             {Object.keys(errors).length > 0 &&
               Object.keys(errors).some((key) => key !== "general") && (
-                <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg">
+                <div className="mb-4 sm:mb-6 bg-red-50 border border-red-200 text-red-800 px-3 sm:px-4 py-2 sm:py-3 rounded-lg">
                   <div className="flex items-start">
-                    <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+                    <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="font-medium mb-2">
+                      <p className="font-medium mb-2 text-sm sm:text-base">
                         Please correct the following errors:
                       </p>
                       <ul className="list-disc list-inside space-y-1">
                         {Object.entries(errors).map(
                           ([key, value]) =>
                             key !== "general" && (
-                              <li key={key} className="text-sm">
+                              <li key={key} className="text-xs sm:text-sm">
                                 {value}
                               </li>
                             ),
@@ -475,235 +501,207 @@ function AdminFinancialGenerateInvoiceStep4Page() {
 
             {isSubmitting ? (
               <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                <span className="ml-3 text-gray-600">
-                  Generating invoice...
-                </span>
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-4 text-sm sm:text-base text-gray-600">
+                    Generating invoice...
+                  </p>
+                </div>
               </div>
             ) : (
-              <div className="max-w-3xl mx-auto">
-                <div className="space-y-6 sm:space-y-8">
-                  {/* Header Information Section */}
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
-                        <UserIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600" />
-                        Step 1 - Header Information
-                      </h3>
-                      <Link
-                        to={`/admin/financial/${oid}/invoice/generate/step-1`}
-                        className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                        Edit
-                      </Link>
+              <div className="space-y-4 sm:space-y-6">
+                {/* Header Information Section */}
+                <ReviewSection
+                  title="Step 1 - Header Information"
+                  icon={UserIcon}
+                  editLink={`/admin/financial/${oid}/invoice/generate/step-1`}
+                >
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-3">
+                    <div>
+                      <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                        Invoice ID #:
+                      </dt>
+                      <dd className="mt-1 text-sm sm:text-base font-medium text-gray-900">
+                        {invoiceData.invoiceId}
+                      </dd>
                     </div>
-
-                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-2">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Invoice ID #:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {invoiceData.invoiceId}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Invoice Date:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {invoiceData.invoiceDate}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Associate Name:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {invoiceData.associateName}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Associate Phone:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {invoiceData.associatePhone}
-                          </p>
-                        </div>
-                        {invoiceData.associateTaxId && (
-                          <div>
-                            <span className="text-xs sm:text-sm font-medium text-gray-500">
-                              Associate Tax ID:
-                            </span>
-                            <p className="text-xs sm:text-sm text-gray-900">
-                              {invoiceData.associateTaxId}
-                            </p>
-                          </div>
-                        )}
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Client Name:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {invoiceData.customerName}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Client Address:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {invoiceData.customerAddress}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Client Phone:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {invoiceData.customerPhone}
-                          </p>
-                        </div>
-                        {invoiceData.customerEmail && (
-                          <div>
-                            <span className="text-xs sm:text-sm font-medium text-gray-500">
-                              Client Email:
-                            </span>
-                            <p className="text-xs sm:text-sm text-gray-900 break-all">
-                              {invoiceData.customerEmail}
-                            </p>
-                          </div>
-                        )}
+                    <div>
+                      <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                        Invoice Date:
+                      </dt>
+                      <dd className="mt-1 text-sm sm:text-base font-medium text-gray-900">
+                        {invoiceData.invoiceDate}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                        Associate Name:
+                      </dt>
+                      <dd className="mt-1 text-sm sm:text-base font-medium text-gray-900">
+                        {invoiceData.associateName}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                        Associate Phone:
+                      </dt>
+                      <dd className="mt-1 text-sm sm:text-base font-medium text-gray-900">
+                        {invoiceData.associatePhone}
+                      </dd>
+                    </div>
+                    {invoiceData.associateTaxId && (
+                      <div>
+                        <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                          Associate Tax ID:
+                        </dt>
+                        <dd className="mt-1 text-sm sm:text-base font-medium text-gray-900">
+                          {invoiceData.associateTaxId}
+                        </dd>
                       </div>
+                    )}
+                    <div>
+                      <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                        Client Name:
+                      </dt>
+                      <dd className="mt-1 text-sm sm:text-base font-medium text-gray-900">
+                        {invoiceData.customerName}
+                      </dd>
                     </div>
+                    <div className="sm:col-span-2">
+                      <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                        Client Address:
+                      </dt>
+                      <dd className="mt-1 text-sm sm:text-base font-medium text-gray-900">
+                        {invoiceData.customerAddress}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                        Client Phone:
+                      </dt>
+                      <dd className="mt-1 text-sm sm:text-base font-medium text-gray-900">
+                        {invoiceData.customerPhone}
+                      </dd>
+                    </div>
+                    {invoiceData.customerEmail && (
+                      <div>
+                        <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                          Client Email:
+                        </dt>
+                        <dd className="mt-1 text-sm sm:text-base font-medium text-gray-900 break-all">
+                          {invoiceData.customerEmail}
+                        </dd>
+                      </div>
+                    )}
                   </div>
+                </ReviewSection>
 
-                  {/* Line Items Section */}
-                  <div className="pt-6 border-t">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
-                        <ClipboardDocumentListIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-green-600" />
-                        Step 2 - Line Items
-                      </h3>
-                      <Link
-                        to={`/admin/financial/${oid}/invoice/generate/step-2`}
-                        className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                        Edit
-                      </Link>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
-                      {activeLineItems.length > 0 ? (
-                        <div className="space-y-4">
-                          {activeLineItems.map((item, index) => (
-                            <div
-                              key={item.number}
-                              className={`${
-                                index > 0 ? "pt-4 border-t border-gray-200" : ""
-                              }`}
-                            >
-                              <p className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">
-                                Line {item.number}
-                              </p>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
-                                <div>
-                                  <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                    Quantity:
-                                  </span>
-                                  <p className="text-xs sm:text-sm text-gray-900">
-                                    {item.quantity}
-                                  </p>
-                                </div>
-                                <div>
-                                  <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                    Unit Price:
-                                  </span>
-                                  <p className="text-xs sm:text-sm text-gray-900">
-                                    {formatCurrency(item.unitPrice)}
-                                  </p>
-                                </div>
-                                <div>
-                                  <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                    Description:
-                                  </span>
-                                  <p className="text-xs sm:text-sm text-gray-900">
-                                    {item.description}
-                                  </p>
-                                </div>
-                                <div>
-                                  <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                    Amount:
-                                  </span>
-                                  <p className="text-xs sm:text-sm text-gray-900">
-                                    {formatCurrency(item.amount)}
-                                  </p>
-                                </div>
-                              </div>
+                {/* Line Items Section */}
+                <ReviewSection
+                  title="Step 2 - Line Items"
+                  icon={ClipboardDocumentListIcon}
+                  editLink={`/admin/financial/${oid}/invoice/generate/step-2`}
+                >
+                  {activeLineItems.length > 0 ? (
+                    <div className="space-y-4">
+                      {activeLineItems.map((item, index) => (
+                        <div
+                          key={item.number}
+                          className={`${
+                            index > 0 ? "pt-4 border-t border-gray-200" : ""
+                          }`}
+                        >
+                          <p className="text-sm font-semibold text-gray-700 mb-2">
+                            Line {item.number}
+                          </p>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
+                            <div>
+                              <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                                Quantity:
+                              </dt>
+                              <dd className="mt-1 text-sm sm:text-base text-gray-900">
+                                {item.quantity}
+                              </dd>
                             </div>
-                          ))}
+                            <div>
+                              <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                                Unit Price:
+                              </dt>
+                              <dd className="mt-1 text-sm sm:text-base text-gray-900">
+                                {formatCurrency(item.unitPrice)}
+                              </dd>
+                            </div>
+                            <div>
+                              <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                                Amount:
+                              </dt>
+                              <dd className="mt-1 text-sm sm:text-base text-gray-900 font-semibold">
+                                {formatCurrency(item.amount)}
+                              </dd>
+                            </div>
+                            <div>
+                              <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                                Description:
+                              </dt>
+                              <dd className="mt-1 text-sm sm:text-base text-gray-900">
+                                {item.description}
+                              </dd>
+                            </div>
+                          </div>
                         </div>
-                      ) : (
-                        <p className="text-xs sm:text-sm text-gray-500">
-                          No line items added
-                        </p>
-                      )}
+                      ))}
                     </div>
-                  </div>
+                  ) : (
+                    <p className="text-xs sm:text-sm text-gray-500">
+                      No line items added
+                    </p>
+                  )}
+                </ReviewSection>
 
-                  {/* Financial Details & Signatures Section */}
-                  <div className="pt-6 border-t">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
-                        <BanknotesIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-purple-600" />
-                        Step 3 - Financial Details & Signatures
-                      </h3>
-                      <Link
-                        to={`/admin/financial/${oid}/invoice/generate/step-3`}
-                        className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                        Edit
-                      </Link>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-2">
+                {/* Financial Details & Signatures Section */}
+                <ReviewSection
+                  title="Step 3 - Financial Details & Signatures"
+                  icon={BanknotesIcon}
+                  editLink={`/admin/financial/${oid}/invoice/generate/step-3`}
+                >
+                  <div className="space-y-6">
+                    {/* Financial Summary */}
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-900 mb-3">
+                        Financial Summary
+                      </h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
                         <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
                             Labour Amount:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
+                          </dt>
+                          <dd className="mt-1 text-sm sm:text-base text-gray-900">
                             {formatCurrency(invoiceData.invoiceLabourAmount)}
-                          </p>
+                          </dd>
                         </div>
                         <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
                             Material Amount:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
+                          </dt>
+                          <dd className="mt-1 text-sm sm:text-base text-gray-900">
                             {formatCurrency(invoiceData.invoiceMaterialAmount)}
-                          </p>
+                          </dd>
                         </div>
                         <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
                             Other Costs:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
+                          </dt>
+                          <dd className="mt-1 text-sm sm:text-base text-gray-900">
                             {formatCurrency(
                               invoiceData.invoiceOtherCostsAmount,
                             )}
-                          </p>
+                          </dd>
                         </div>
                         <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
                             Sub-Total:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900 font-semibold">
+                          </dt>
+                          <dd className="mt-1 text-sm sm:text-base text-gray-900 font-semibold">
                             {formatCurrency(
                               (parseFloat(invoiceData.invoiceLabourAmount) ||
                                 0) +
@@ -714,151 +712,180 @@ function AdminFinancialGenerateInvoiceStep4Page() {
                                   invoiceData.invoiceOtherCostsAmount,
                                 ) || 0),
                             )}
-                          </p>
+                          </dd>
                         </div>
                         <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
                             Tax:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
+                          </dt>
+                          <dd className="mt-1 text-sm sm:text-base text-gray-900">
                             {formatCurrency(invoiceData.invoiceTaxAmount)}
-                          </p>
+                          </dd>
                         </div>
                         <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
                             Total:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900 font-bold text-green-600">
+                          </dt>
+                          <dd className="mt-1 text-sm sm:text-base text-gray-900 font-bold text-green-600">
                             {formatCurrency(invoiceData.invoiceTotalAmount)}
-                          </p>
+                          </dd>
                         </div>
                         <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
                             Deposit:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
+                          </dt>
+                          <dd className="mt-1 text-sm sm:text-base text-gray-900">
                             {formatCurrency(invoiceData.invoiceDepositAmount)}
-                          </p>
+                          </dd>
                         </div>
                         <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
                             Amount Due:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900 font-bold text-red-600">
+                          </dt>
+                          <dd className="mt-1 text-sm sm:text-base text-gray-900 font-bold text-red-600">
                             {formatCurrency(invoiceData.invoiceAmountDue)}
-                          </p>
+                          </dd>
                         </div>
+                      </div>
+                    </div>
+
+                    {/* Quote & Payment Details */}
+                    <div className="border-t pt-4">
+                      <h4 className="text-sm font-semibold text-gray-900 mb-3">
+                        Quote & Payment Details
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
                         <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
                             Quote Valid For:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
+                          </dt>
+                          <dd className="mt-1 text-sm sm:text-base text-gray-900">
                             {invoiceData.invoiceQuoteDays} days
-                          </p>
+                          </dd>
                         </div>
                         <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
                             Date of Quote Approval:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
+                          </dt>
+                          <dd className="mt-1 text-sm sm:text-base text-gray-900">
                             {invoiceData.invoiceQuoteDate}
-                          </p>
+                          </dd>
                         </div>
                         <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
                             Customer Approval:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
+                          </dt>
+                          <dd className="mt-1 text-sm sm:text-base text-gray-900">
                             {invoiceData.invoiceCustomersApproval}
-                          </p>
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                            Date Client Paid:
+                          </dt>
+                          <dd className="mt-1 text-sm sm:text-base text-gray-900">
+                            {invoiceData.dateClientPaidInvoice}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                            Payment Methods:
+                          </dt>
+                          <dd className="mt-1 text-sm sm:text-base text-gray-900">
+                            {getPaymentMethodLabels(invoiceData.paymentMethods)}
+                          </dd>
                         </div>
                         {invoiceData.line01Notes && (
-                          <div>
-                            <span className="text-xs sm:text-sm font-medium text-gray-500">
+                          <div className="sm:col-span-2">
+                            <dt className="text-xs sm:text-sm font-medium text-gray-500">
                               Line 01 Notes:
-                            </span>
-                            <p className="text-xs sm:text-sm text-gray-900">
+                            </dt>
+                            <dd className="mt-1 text-sm sm:text-base text-gray-900">
                               {invoiceData.line01Notes}
-                            </p>
+                            </dd>
                           </div>
                         )}
                         {invoiceData.line02Notes && (
-                          <div>
-                            <span className="text-xs sm:text-sm font-medium text-gray-500">
+                          <div className="sm:col-span-2">
+                            <dt className="text-xs sm:text-sm font-medium text-gray-500">
                               Line 02 Notes:
-                            </span>
-                            <p className="text-xs sm:text-sm text-gray-900">
+                            </dt>
+                            <dd className="mt-1 text-sm sm:text-base text-gray-900">
                               {invoiceData.line02Notes}
-                            </p>
+                            </dd>
                           </div>
                         )}
+                      </div>
+                    </div>
+
+                    {/* Signatures */}
+                    <div className="border-t pt-4">
+                      <h4 className="text-sm font-semibold text-gray-900 mb-3">
+                        Signatures
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
                         <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Date Client Paid:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {invoiceData.dateClientPaidInvoice}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Payment Methods:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {getPaymentMethodLabels(invoiceData.paymentMethods)}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
                             Client Signature:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
+                          </dt>
+                          <dd className="mt-1 text-sm sm:text-base text-gray-900">
                             {invoiceData.clientSignature}
-                          </p>
+                          </dd>
                         </div>
                         <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Associate Sign Date:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {invoiceData.associateSignDate}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
                             Associate Signature:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
+                          </dt>
+                          <dd className="mt-1 text-sm sm:text-base text-gray-900">
                             {invoiceData.associateSignature}
-                          </p>
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                            Associate Sign Date:
+                          </dt>
+                          <dd className="mt-1 text-sm sm:text-base text-gray-900">
+                            {invoiceData.associateSignDate}
+                          </dd>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
+                </ReviewSection>
 
-                {/* Form Actions */}
-                <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3">
+                {/* Form Actions - Responsive */}
+                <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 gap-3">
                   <button
                     onClick={handleBack}
                     disabled={isSubmitting}
-                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                    className="order-2 sm:order-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                   >
-                    <ArrowLeftIcon className="w-4 h-4 mr-2" />
+                    <ChevronLeftIcon className="w-4 h-4 mr-2" />
                     Back to Step 3
                   </button>
                   <button
                     onClick={handleSubmit}
                     disabled={isSubmitting}
-                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+                    className="order-1 sm:order-2 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 transition-colors"
                   >
                     <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
-                    Submit
+                    Submit Invoice
                   </button>
                 </div>
               </div>
             )}
           </div>
+        </div>
+
+        {/* Back Link */}
+        <div className="mt-6">
+          <Link
+            to={`/admin/financial/${oid}/invoice`}
+            className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
+          >
+            <ChevronLeftIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+            Back to Invoice
+          </Link>
         </div>
       </div>
     </div>
