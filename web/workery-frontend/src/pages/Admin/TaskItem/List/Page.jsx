@@ -54,6 +54,7 @@ function AdminTaskItemListPage() {
   const [errors, setErrors] = useState({});
   const [tasks, setTasks] = useState(null);
   const [taskCount, setTaskCount] = useState(0);
+  const [activeSearchKeyword, setActiveSearchKeyword] = useState("");
 
   // Filter and sort state
   const [type, setType] = useState(0);
@@ -200,17 +201,30 @@ function AdminTaskItemListPage() {
     if (currentUser) {
       console.log("=== useEffect triggered ===");
       console.log("Current cursor:", currentCursor || "(empty)");
+      console.log("Filter key:", filterKey);
+      console.log("Search keyword:", searchKeyword);
       console.log("Dependencies:", {
         pageSize,
         sortByValue,
         type,
         isClosed,
+        searchKeyword,
+        filterKey,
         currentUser: currentUser?.id,
       });
 
       fetchTasks(currentCursor);
     }
-  }, [currentCursor, pageSize, sortByValue, type, isClosed, currentUser]);
+  }, [
+    currentCursor,
+    pageSize,
+    sortByValue,
+    type,
+    isClosed,
+    searchKeyword,
+    filterKey,
+    currentUser,
+  ]);
 
   // Effect for background refresh of task count
   useEffect(() => {
@@ -235,27 +249,28 @@ function AdminTaskItemListPage() {
   // Event handlers
   const handleSearch = () => {
     console.log("Search clicked - resetting pagination");
+    // Set the active search keyword
+    setActiveSearchKeyword(searchKeyword);
     // Reset pagination when searching
     setCurrentCursor("");
     setPreviousCursors([]);
     setNextCursor("");
     setHasNextPage(false);
-    setFilterKey((prev) => prev + 1); // Force re-fetch
   };
 
   const handleClearFilters = () => {
     console.log("Clear filters clicked - resetting everything");
     setType(0);
-    setIsClosed(TASK_IS_CLOSED_FILTER.OPEN); // Reset to show only open tasks
+    setIsClosed(TASK_IS_CLOSED_FILTER.OPEN);
     setSortByValue(DEFAULT_TASK_SORT_BY);
     setSearchKeyword("");
+    setActiveSearchKeyword(""); // Clear active search
     setShowAllFilters(false);
     // Reset pagination
     setCurrentCursor("");
     setPreviousCursors([]);
     setNextCursor("");
     setHasNextPage(false);
-    setFilterKey((prev) => prev + 1); // Force re-fetch
   };
 
   // Pagination handlers
