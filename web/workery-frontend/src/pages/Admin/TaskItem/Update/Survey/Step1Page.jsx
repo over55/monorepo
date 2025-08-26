@@ -110,6 +110,42 @@ function AdminTaskItemSurveyStep1Page() {
     };
   }, [tid]);
 
+  // Section Component with Dark Header - Improved for responsiveness and accessibility
+  const DetailSection = ({ title, icon: Icon, children }) => (
+    <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
+      <div className="px-4 sm:px-6 py-3 sm:py-4">
+        <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
+          <span className="truncate">{title}</span>
+        </h3>
+      </div>
+      <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
+        {children}
+      </div>
+    </div>
+  );
+
+  // Detail Field Component - Improved for responsiveness and accessibility
+  const DetailField = ({ label, value, fullWidth = false, link = null }) => (
+    <div className={fullWidth ? "lg:col-span-2" : ""}>
+      <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+        {label}
+      </dt>
+      <dd className="text-base sm:text-lg font-medium text-gray-900 break-words">
+        {link ? (
+          <Link
+            to={link}
+            className="text-blue-600 hover:text-blue-800 font-medium"
+          >
+            {value || "-"}
+          </Link>
+        ) : (
+          value || "-"
+        )}
+      </dd>
+    </div>
+  );
+
   // Component rendering
   if (forceURL !== "") {
     return <Navigate to={forceURL} />;
@@ -117,29 +153,32 @@ function AdminTaskItemSurveyStep1Page() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {/* Breadcrumb */}
-        <nav className="flex mb-4" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-wrap">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* Responsive Breadcrumb */}
+        <nav
+          className="flex mb-4 sm:mb-6 overflow-x-auto"
+          aria-label="Breadcrumb"
+        >
+          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
             <li className="inline-flex items-center">
               <Link
                 to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+                className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
               >
-                <ChartBarIcon className="w-4 h-4 mr-1 sm:mr-2" />
+                <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                 <span className="hidden sm:inline">Dashboard</span>
                 <span className="sm:hidden">Dash</span>
               </Link>
             </li>
             <li>
               <div className="flex items-center">
-                <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                <span className="mx-1 sm:mx-2 text-gray-400">/</span>
                 <Link
                   to="/admin/tasks"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                  className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
                 >
                   <span className="inline-flex items-center">
-                    <ClipboardDocumentListIcon className="w-4 h-4 mr-1 sm:mr-2" />
+                    <ClipboardDocumentListIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                     Tasks
                   </span>
                 </Link>
@@ -147,9 +186,9 @@ function AdminTaskItemSurveyStep1Page() {
             </li>
             <li aria-current="page">
               <div className="flex items-center">
-                <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
-                  <DocumentTextIcon className="w-4 h-4 mr-1 sm:mr-2" />
+                <span className="mx-1 sm:mx-2 text-gray-400">/</span>
+                <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
+                  <DocumentTextIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                   Survey Task
                 </span>
               </div>
@@ -157,19 +196,27 @@ function AdminTaskItemSurveyStep1Page() {
           </ol>
         </nav>
 
-        {/* Page Title */}
-        <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
-            <ClipboardDocumentListIcon className="w-6 h-6 sm:w-7 sm:h-7 mr-2 sm:mr-3 text-blue-600" />
-            Survey Task Detail
-          </h1>
+        {/* Page Title - Responsive */}
+        <div className="mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+                <ClipboardDocumentListIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
+                Survey Task Detail
+              </h1>
+              <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+                <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
+                Review task information before proceeding
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Status Banner */}
+        {/* Status Alerts - Responsive */}
         {task && (task.status === 2 || task.isClosed === true) && (
-          <div className="mb-6 bg-blue-50 border border-blue-200 text-blue-800 px-3 sm:px-4 py-3 rounded-lg flex items-center">
-            <InformationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-            <span className="text-sm">This task is archived / closed</span>
+          <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center text-sm sm:text-base">
+            <InformationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+            This task is archived / closed
           </div>
         )}
 
@@ -222,45 +269,8 @@ function AdminTaskItemSurveyStep1Page() {
               </div>
             </div>
 
-            {/* Tablet View */}
-            <div className="hidden md:block lg:hidden">
-              <div className="overflow-x-auto pb-2">
-                <div className="flex items-center min-w-max px-2">
-                  {[
-                    { num: 1, title: "Review", active: true },
-                    { num: 2, title: "Survey", active: false },
-                    { num: 3, title: "Complete", active: false },
-                  ].map((step, index) => (
-                    <React.Fragment key={step.num}>
-                      <div className="flex items-center">
-                        <div
-                          className={`flex items-center justify-center w-8 h-8 ${step.active ? "bg-blue-600" : "bg-gray-300"} rounded-full`}
-                        >
-                          <span
-                            className={`${step.active ? "text-white" : "text-gray-600"} font-semibold text-xs`}
-                          >
-                            {step.num}
-                          </span>
-                        </div>
-                        <div className="ml-2">
-                          <p
-                            className={`text-xs font-medium ${step.active ? "text-gray-900" : "text-gray-500"}`}
-                          >
-                            {step.title}
-                          </p>
-                        </div>
-                      </div>
-                      {index < 2 && (
-                        <div className="mx-1 w-6 h-0.5 bg-gray-300"></div>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </div>
-              </div>
-            </div>
-
             {/* Mobile View */}
-            <div className="md:hidden">
+            <div className="lg:hidden">
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
@@ -285,12 +295,12 @@ function AdminTaskItemSurveyStep1Page() {
           </div>
         )}
 
-        {/* Error Message */}
+        {/* Error Display - Responsive */}
         {errors && Object.keys(errors).length > 0 && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-3 sm:px-4 py-3 rounded-lg">
+          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base">
             <div className="flex items-start">
-              <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
-              <div className="text-sm">
+              <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 mt-0.5" />
+              <div>
                 {Object.entries(errors).map(([key, value]) => (
                   <div key={key}>
                     {key}: {value}
@@ -303,345 +313,300 @@ function AdminTaskItemSurveyStep1Page() {
 
         {/* Main Content */}
         <div className="bg-white shadow-sm rounded-lg">
-          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-              <DocumentTextIcon className="w-5 h-5 mr-2" />
-              Task Details - Survey
-            </h2>
+          {/* Header with Actions - Responsive */}
+          <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+              <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 flex items-center">
+                <DocumentTextIcon className="w-5 sm:w-7 h-5 sm:h-7 mr-2 text-blue-600 flex-shrink-0" />
+                Task Details - Survey
+              </h2>
+            </div>
           </div>
 
           {isFetching ? (
-            <div className="p-4 sm:p-6">
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-blue-600"></div>
-                <span className="ml-3 text-gray-600 text-sm sm:text-base">
+            <div className="flex items-center justify-center min-h-[400px]">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-4 text-sm sm:text-base text-gray-600">
                   Loading task details...
-                </span>
+                </p>
               </div>
             </div>
           ) : (
             task && (
               <div className="p-4 sm:p-6">
-                {/* Task Information Section */}
-                <div className="space-y-6">
-                  {/* Basic Task Info */}
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
-                      <ClipboardDocumentListIcon className="w-4 h-4 mr-2" />
-                      Task Information
-                    </h3>
-                    <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-xs font-medium text-gray-500 mb-1">
-                            Type
-                          </label>
-                          <p className="text-sm text-gray-900">
-                            {task.title || "Survey"}
-                          </p>
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-500 mb-1">
-                            Created At
-                          </label>
-                          <p className="text-sm text-gray-900">
-                            {task.createdAt
-                              ? new Date(task.createdAt).toLocaleString()
-                              : "-"}
-                          </p>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-500 mb-1">
-                          Description
-                        </label>
-                        <p className="text-sm text-gray-900">
-                          {task.description || "-"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+                {/* Task Information Section with Dark Header */}
+                <DetailSection
+                  title="Task Information"
+                  icon={ClipboardDocumentListIcon}
+                >
+                  <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                    <DetailField label="Type" value={task.title || "Survey"} />
+                    <DetailField
+                      label="Created At"
+                      value={
+                        task.createdAt
+                          ? new Date(task.createdAt).toLocaleString()
+                          : "-"
+                      }
+                    />
+                    <DetailField
+                      label="Description"
+                      value={task.description}
+                      fullWidth
+                    />
+                  </dl>
+                </DetailSection>
 
-                  {/* Job Information */}
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
-                      <WrenchScrewdriverIcon className="w-4 h-4 mr-2" />
-                      Job Information
-                    </h3>
-                    <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div>
-                          <label className="block text-xs font-medium text-gray-500 mb-1">
-                            Job #
-                          </label>
-                          <Link
-                            to={`/admin/order/${task.orderWjid}`}
-                            className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                          >
-                            {task.orderWjid}
-                          </Link>
-                        </div>
-                        <div>
-                          <label className="block text-xs font-medium text-gray-500 mb-1">
-                            Start Date
-                          </label>
-                          <p className="text-sm text-gray-900">
-                            {task.orderStartDate
-                              ? new Date(
-                                  task.orderStartDate,
-                                ).toLocaleDateString()
-                              : "-"}
-                          </p>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-500 mb-1">
-                          Description
-                        </label>
-                        <p className="text-sm text-gray-900">
-                          {task.orderDescription || "-"}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-500 mb-1">
-                          Skill Sets
-                        </label>
-                        <div className="mt-1">
-                          <SkillSetsDisplay
-                            values={extractIds(task.orderSkillSets)}
-                            onUnauthorized={onUnauthorized}
-                            variant="primary"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-500 mb-1">
-                          Tags
-                        </label>
-                        <div className="mt-1">
-                          <TagsDisplay
-                            values={extractIds(task.orderTags)}
-                            onUnauthorized={onUnauthorized}
-                            variant="success"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-500 mb-1">
-                          Comments
-                        </label>
+                {/* Job Information with Dark Header */}
+                <DetailSection
+                  title="Job Information"
+                  icon={WrenchScrewdriverIcon}
+                >
+                  <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                    <DetailField
+                      label="Job #"
+                      value={task.orderWjid}
+                      link={`/admin/order/${task.orderWjid}`}
+                    />
+                    <DetailField
+                      label="Start Date"
+                      value={
+                        task.orderStartDate
+                          ? new Date(task.orderStartDate).toLocaleDateString()
+                          : "-"
+                      }
+                    />
+                    <DetailField
+                      label="Description"
+                      value={task.orderDescription}
+                      fullWidth
+                    />
+                    <div>
+                      <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                        Skill Sets
+                      </dt>
+                      <dd className="mt-1">
+                        <SkillSetsDisplay
+                          values={extractIds(task.orderSkillSets)}
+                          onUnauthorized={onUnauthorized}
+                          variant="primary"
+                        />
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                        Tags
+                      </dt>
+                      <dd className="mt-1">
+                        <TagsDisplay
+                          values={extractIds(task.orderTags)}
+                          onUnauthorized={onUnauthorized}
+                          variant="success"
+                        />
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                        Comments
+                      </dt>
+                      <dd>
                         <Link
                           to={`/admin/order/${task.orderWjid}/comments`}
-                          className="text-sm text-blue-600 hover:text-blue-800"
+                          className="text-blue-600 hover:text-blue-800 text-base sm:text-lg font-medium"
                         >
                           View comments →
                         </Link>
-                      </div>
+                      </dd>
                     </div>
-                  </div>
+                  </dl>
+                </DetailSection>
 
-                  {/* Client Information */}
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
-                      <UserIcon className="w-4 h-4 mr-2" />
-                      Client Information
-                    </h3>
-                    <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                      <div>
-                        <label className="block text-xs font-medium text-gray-500 mb-1">
-                          Name
-                        </label>
-                        <Link
-                          to={`/admin/customer/${task.customerId}`}
-                          className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                        >
-                          {task.customerName}
-                        </Link>
-                      </div>
-                      {task.customerPhone && (
-                        <div>
-                          <label className="block text-xs font-medium text-gray-500 mb-1">
-                            Phone (
-                            {CLIENT_PHONE_TYPE_OF_MAP[task.customerPhoneType]})
-                          </label>
-                          <p className="text-sm text-gray-900">
-                            {task.customerPhone}
-                            {task.customerPhoneExtension &&
-                              ` ext. ${task.customerPhoneExtension}`}
-                          </p>
-                        </div>
-                      )}
-                      {task.customerFullAddressUrl && (
-                        <div>
-                          <label className="block text-xs font-medium text-gray-500 mb-1">
-                            Address
-                          </label>
+                {/* Client Information with Dark Header */}
+                <DetailSection title="Client Information" icon={UserIcon}>
+                  <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                    <DetailField
+                      label="Name"
+                      value={task.customerName}
+                      link={`/admin/customer/${task.customerId}`}
+                    />
+                    {task.customerPhone && (
+                      <DetailField
+                        label={`Phone (${CLIENT_PHONE_TYPE_OF_MAP[task.customerPhoneType]})`}
+                        value={`${task.customerPhone}${task.customerPhoneExtension ? ` ext. ${task.customerPhoneExtension}` : ""}`}
+                      />
+                    )}
+                    {task.customerFullAddressUrl && (
+                      <div className="lg:col-span-2">
+                        <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                          Address
+                        </dt>
+                        <dd>
                           <a
                             href={task.customerFullAddressUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-sm text-blue-600 hover:text-blue-800 inline-flex items-center"
+                            className="text-blue-600 hover:text-blue-800 inline-flex items-center text-base sm:text-lg font-medium"
                           >
                             <MapPinIcon className="w-4 h-4 mr-1" />
                             {task.customerFullAddressWithoutPostalCode}
                           </a>
-                        </div>
-                      )}
-                      <div>
-                        <label className="block text-xs font-medium text-gray-500 mb-1">
-                          Tags
-                        </label>
-                        <div className="mt-1">
-                          <TagsDisplay
-                            values={extractIds(task.customerTags)}
-                            onUnauthorized={onUnauthorized}
-                            variant="info"
-                          />
-                        </div>
+                        </dd>
                       </div>
+                    )}
+                    <div>
+                      <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                        Tags
+                      </dt>
+                      <dd className="mt-1">
+                        <TagsDisplay
+                          values={extractIds(task.customerTags)}
+                          onUnauthorized={onUnauthorized}
+                          variant="info"
+                        />
+                      </dd>
                     </div>
-                  </div>
+                  </dl>
+                </DetailSection>
 
-                  {/* Associate Information */}
-                  <div>
-                    <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
-                      <WrenchScrewdriverIcon className="w-4 h-4 mr-2" />
-                      Associate Information
-                    </h3>
-                    <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                      <div>
-                        <label className="block text-xs font-medium text-gray-500 mb-1">
-                          Name
-                        </label>
-                        <Link
-                          to={`/admin/associate/${task.associateId}`}
-                          className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                        >
-                          {task.associateName}
-                        </Link>
-                      </div>
-                      {task.associatePhone && (
-                        <div>
-                          <label className="block text-xs font-medium text-gray-500 mb-1">
-                            Phone (
-                            {
-                              ASSOCIATE_PHONE_TYPE_OF_MAP[
-                                task.associatePhoneType
-                              ]
-                            }
-                            )
-                          </label>
-                          <p className="text-sm text-gray-900">
-                            {task.associatePhone}
-                            {task.associatePhoneExtension &&
-                              ` ext. ${task.associatePhoneExtension}`}
-                          </p>
-                        </div>
-                      )}
-                      {task.associateFullAddressUrl && (
-                        <div>
-                          <label className="block text-xs font-medium text-gray-500 mb-1">
-                            Address
-                          </label>
+                {/* Associate Information with Dark Header */}
+                <DetailSection
+                  title="Associate Information"
+                  icon={WrenchScrewdriverIcon}
+                >
+                  <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                    <DetailField
+                      label="Name"
+                      value={task.associateName}
+                      link={`/admin/associate/${task.associateId}`}
+                    />
+                    {task.associatePhone && (
+                      <DetailField
+                        label={`Phone (${ASSOCIATE_PHONE_TYPE_OF_MAP[task.associatePhoneType]})`}
+                        value={`${task.associatePhone}${task.associatePhoneExtension ? ` ext. ${task.associatePhoneExtension}` : ""}`}
+                      />
+                    )}
+                    {task.associateFullAddressUrl && (
+                      <div className="lg:col-span-2">
+                        <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                          Address
+                        </dt>
+                        <dd>
                           <a
                             href={task.associateFullAddressUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-sm text-blue-600 hover:text-blue-800 inline-flex items-center"
+                            className="text-blue-600 hover:text-blue-800 inline-flex items-center text-base sm:text-lg font-medium"
                           >
                             <MapPinIcon className="w-4 h-4 mr-1" />
                             {task.associateFullAddressWithoutPostalCode}
                           </a>
-                        </div>
-                      )}
-                      <div>
-                        <label className="block text-xs font-medium text-gray-500 mb-1">
-                          Tags
-                        </label>
-                        <div className="mt-1">
-                          <TagsDisplay
-                            values={extractIds(task.associateTags)}
-                            onUnauthorized={onUnauthorized}
-                            variant="warning"
-                          />
-                        </div>
+                        </dd>
                       </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-500 mb-1">
-                          Skill Sets
-                        </label>
-                        <div className="mt-1">
-                          <SkillSetsDisplay
-                            values={extractIds(task.associateSkillSets)}
-                            onUnauthorized={onUnauthorized}
-                            variant="primary"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-500 mb-1">
-                          Vehicle Types
-                        </label>
-                        <div className="mt-1">
-                          <VehicleTypesDisplay
-                            values={extractIds(task.associateVehicleTypes)}
-                            onUnauthorized={onUnauthorized}
-                            variant="warning"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-500 mb-1">
-                          Insurance Requirements
-                        </label>
-                        <div className="mt-1">
-                          <InsuranceRequirementsDisplay
-                            values={extractIds(
-                              task.associateInsuranceRequirements,
-                            )}
-                            onUnauthorized={onUnauthorized}
-                            variant="info"
-                          />
-                        </div>
-                      </div>
+                    )}
+                    <div>
+                      <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                        Tags
+                      </dt>
+                      <dd className="mt-1">
+                        <TagsDisplay
+                          values={extractIds(task.associateTags)}
+                          onUnauthorized={onUnauthorized}
+                          variant="warning"
+                        />
+                      </dd>
                     </div>
-                  </div>
-                </div>
+                    <div>
+                      <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                        Skill Sets
+                      </dt>
+                      <dd className="mt-1">
+                        <SkillSetsDisplay
+                          values={extractIds(task.associateSkillSets)}
+                          onUnauthorized={onUnauthorized}
+                          variant="primary"
+                        />
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                        Vehicle Types
+                      </dt>
+                      <dd className="mt-1">
+                        <VehicleTypesDisplay
+                          values={extractIds(task.associateVehicleTypes)}
+                          onUnauthorized={onUnauthorized}
+                          variant="warning"
+                        />
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+                        Insurance Requirements
+                      </dt>
+                      <dd className="mt-1">
+                        <InsuranceRequirementsDisplay
+                          values={extractIds(
+                            task.associateInsuranceRequirements,
+                          )}
+                          onUnauthorized={onUnauthorized}
+                          variant="info"
+                        />
+                      </dd>
+                    </div>
+                  </dl>
+                </DetailSection>
 
-                {/* Action Buttons */}
-                <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <Link
-                    to="/admin/tasks"
-                    className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    <ArrowLeftIcon className="w-4 h-4 mr-2" />
-                    Back to Tasks
+                {/* Action Buttons - Responsive */}
+                <div className="flex flex-col sm:flex-row sm:justify-between items-stretch sm:items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 gap-3">
+                  <Link to="/admin/tasks" className="order-2 sm:order-1">
+                    <button className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-transparent rounded-lg text-sm sm:text-base font-medium text-white bg-gray-600 hover:bg-gray-700 transition-colors">
+                      <ArrowLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
+                      Back to Tasks
+                    </button>
                   </Link>
 
                   {task.isClosed === false && (
-                    <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="flex gap-2 sm:gap-3 order-1 sm:order-2">
                       <button
                         onClick={() => setShowCloseConfirm(true)}
                         disabled={task.status === 2}
-                        className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className={`flex-1 sm:flex-initial inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-transparent rounded-lg text-sm sm:text-base font-medium transition-colors ${
+                          task.status === 2
+                            ? "text-gray-400 bg-gray-200 cursor-not-allowed"
+                            : "text-white bg-red-600 hover:bg-red-700"
+                        }`}
                       >
-                        <XMarkIcon className="w-4 h-4 mr-2" />
+                        <XMarkIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                         Close Task
                       </button>
                       <button
                         onClick={() => setShowPostponeConfirm(true)}
                         disabled={task.status === 2}
-                        className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-yellow-100 border border-yellow-300 rounded-lg hover:bg-yellow-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className={`flex-1 sm:flex-initial inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-transparent rounded-lg text-sm sm:text-base font-medium transition-colors ${
+                          task.status === 2
+                            ? "text-gray-400 bg-gray-200 cursor-not-allowed"
+                            : "text-gray-700 bg-yellow-100 border-yellow-300 hover:bg-yellow-200"
+                        }`}
                       >
-                        <CalendarIcon className="w-4 h-4 mr-2" />
+                        <CalendarIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                         Postpone
                       </button>
                       <Link
                         to={`/admin/task/${tid}/survey/step-2`}
-                        className={`w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${task.status === 2 ? "opacity-50 pointer-events-none" : ""}`}
+                        className={`flex-1 sm:flex-initial ${task.status === 2 ? "pointer-events-none" : ""}`}
                       >
-                        Begin Survey
-                        <ChevronRightIcon className="w-4 h-4 ml-2" />
+                        <button
+                          disabled={task.status === 2}
+                          className={`w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-transparent rounded-lg text-sm sm:text-base font-medium transition-colors ${
+                            task.status === 2
+                              ? "text-gray-400 bg-gray-200 cursor-not-allowed"
+                              : "text-white bg-blue-600 hover:bg-blue-700"
+                          }`}
+                        >
+                          Begin Survey
+                          <ChevronRightIcon className="w-4 sm:w-5 h-4 sm:h-5 ml-1 sm:ml-2" />
+                        </button>
                       </Link>
                     </div>
                   )}

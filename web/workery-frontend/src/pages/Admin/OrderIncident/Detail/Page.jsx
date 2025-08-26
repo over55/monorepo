@@ -23,6 +23,7 @@ import {
   LockOpenIcon,
   ClockIcon,
   WrenchScrewdriverIcon,
+  EllipsisHorizontalIcon,
 } from "@heroicons/react/24/outline";
 import {
   useOrderIncidentManager,
@@ -146,11 +147,13 @@ function AdminOrderIncidentDetailPage() {
 
   if (isFetching && !incident) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading incident details...</p>
+            <p className="mt-4 text-sm sm:text-base text-gray-600">
+              Loading incident details...
+            </p>
           </div>
         </div>
       </div>
@@ -269,223 +272,264 @@ function AdminOrderIncidentDetailPage() {
         </div>
       )}
 
-      {/* Main Content */}
-      <div className="bg-white shadow-sm rounded-lg">
+      {/* Main Content with Dark Header */}
+      <div className="shadow-sm">
         {incident && (
-          <>
-            {/* Header with Actions - Responsive */}
-            <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200">
+          <div className="bg-gray-700 rounded-lg">
+            {/* Header with Actions - Responsive with Dark Background */}
+            <div className="px-4 sm:px-6 py-4 sm:py-5">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
-                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 flex items-center">
-                  <ClipboardDocumentListIcon className="w-5 sm:w-7 h-5 sm:h-7 mr-2 text-blue-600 flex-shrink-0" />
+                <h2 className="text-xl sm:text-2xl font-semibold text-white flex items-center">
+                  <ClipboardDocumentListIcon className="w-5 sm:w-7 h-5 sm:h-7 mr-2 text-blue-300 flex-shrink-0" />
                   Incident Detail
                 </h2>
-                <button
-                  onClick={() => setShowCommentModal(true)}
-                  className="w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-transparent rounded-lg text-sm sm:text-base font-medium text-white bg-green-600 hover:bg-green-700 transition-colors"
-                >
-                  <PlusCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
-                  New Comment
-                </button>
-              </div>
-            </div>
-
-            <div className="p-4 sm:p-6">
-              {/* Summary Section */}
-              <div className="mb-6 sm:mb-8">
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 flex items-center">
-                  <DocumentTextIcon className="w-5 sm:w-6 h-5 sm:h-6 mr-2 text-gray-600" />
-                  Summary
-                </h3>
-                <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
-                  <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                    <div>
-                      <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
-                        Title
-                      </dt>
-                      <dd className="text-sm sm:text-base text-gray-900 break-words">
-                        {incident.title || "-"}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
-                        Related Order
-                      </dt>
-                      <dd className="text-sm sm:text-base">
-                        {incident.orderId ? (
-                          <Link
-                            to={`/admin/order/${incident.orderId}`}
-                            className="text-blue-600 hover:text-blue-700 inline-flex items-center"
-                          >
-                            <WrenchScrewdriverIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                            Order #{incident.orderId}
-                          </Link>
-                        ) : (
-                          <span className="text-gray-500">
-                            Not linked to order
-                          </span>
-                        )}
-                      </dd>
-                    </div>
-                    <div className="lg:col-span-2">
-                      <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
-                        Description
-                      </dt>
-                      <dd className="text-sm sm:text-base text-gray-900 break-words">
-                        {incident.description || "-"}
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
-                        Initiated By
-                      </dt>
-                      <dd className="text-sm sm:text-base text-gray-900">
-                        <span className="inline-flex items-center">
-                          <UserIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 text-gray-400" />
-                          {getInitiatorLabel(incident.initiator)}
-                        </span>
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
-                        Start Date
-                      </dt>
-                      <dd className="text-sm sm:text-base text-gray-900">
-                        <span className="inline-flex items-center">
-                          <CalendarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 text-gray-400" />
-                          {formatDate(incident.startDate)}
-                        </span>
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
-                        Status
-                      </dt>
-                      <dd className="text-sm sm:text-base">
-                        {incident.closingReason ? (
-                          <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium bg-gray-100 text-gray-800">
-                            <LockClosedIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                            Closed
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium bg-yellow-100 text-yellow-800">
-                            <LockOpenIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                            Open
-                          </span>
-                        )}
-                      </dd>
-                    </div>
-                    {incident.closingReason && (
-                      <div>
-                        <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
-                          Closing Reason
-                        </dt>
-                        <dd className="text-sm sm:text-base text-gray-900 break-words">
-                          {incident.closingReasonLabel ||
-                            incident.closingReasonOther ||
-                            "-"}
-                        </dd>
-                      </div>
-                    )}
-                    <div>
-                      <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
-                        Created At
-                      </dt>
-                      <dd className="text-sm sm:text-base text-gray-900">
-                        <span className="inline-flex items-center">
-                          <ClockIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 text-gray-400" />
-                          {formatDateTime(incident.createdAt)}
-                        </span>
-                      </dd>
-                    </div>
-                    <div>
-                      <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
-                        Created By
-                      </dt>
-                      <dd className="text-sm sm:text-base text-gray-900">
-                        <span className="inline-flex items-center">
-                          <UserIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 text-gray-400" />
-                          {incident.createdByUserName || "-"}
-                        </span>
-                      </dd>
-                    </div>
-                  </dl>
+                <div className="flex gap-2 sm:gap-3">
+                  <Link
+                    to="/admin/incidents"
+                    className="flex-1 sm:flex-initial"
+                  >
+                    <button className="w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base font-medium text-[#222222] bg-[#f6f6f6] hover:bg-gray-200 transition-colors">
+                      <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
+                      Back
+                    </button>
+                  </Link>
+                  <button
+                    onClick={() => setShowCommentModal(true)}
+                    className="flex-1 sm:flex-initial w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-green-600 rounded-lg text-sm sm:text-base font-medium text-white bg-green-600 hover:bg-green-700 transition-colors"
+                  >
+                    <PlusCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
+                    <span className="hidden sm:inline">New Comment</span>
+                    <span className="sm:hidden">Comment</span>
+                  </button>
                 </div>
               </div>
+            </div>
 
-              {/* Feed Section */}
-              <div className="mb-6 sm:mb-8">
-                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 flex items-center">
-                  <ChatBubbleLeftRightIcon className="w-5 sm:w-6 h-5 sm:h-6 mr-2 text-gray-600" />
-                  Feed
-                </h3>
-                {incident.feed && incident.feed.length > 0 ? (
-                  <div className="space-y-4">
-                    {incident.feed.map((item, index) => (
-                      <div
-                        key={index}
-                        className="bg-gray-50 rounded-lg border border-gray-200 p-3 sm:p-4"
-                      >
-                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-2 sm:mb-3">
-                          <div className="flex items-center text-xs sm:text-sm text-gray-600 order-2 sm:order-1">
-                            <UserIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                            <span className="font-medium">
-                              {item.createdByUserName}
-                            </span>
-                          </div>
-                          <div className="text-xs sm:text-sm text-gray-500 flex items-center mb-2 sm:mb-0 order-1 sm:order-2">
-                            <ClockIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                            {formatDateTime(item.createdAt)}
-                          </div>
-                        </div>
-                        {item.filetype ? (
-                          <div className="bg-blue-50 border border-blue-200 rounded-md p-2 sm:p-3">
-                            <a
-                              href={item.objectUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="text-blue-600 hover:text-blue-700 inline-flex items-center text-sm sm:text-base"
-                            >
-                              <PaperClipIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
-                              {item.filename || "Download Attachment"}
-                              <ArrowDownTrayIcon className="w-3 sm:w-4 h-3 sm:h-4 ml-2" />
-                            </a>
-                          </div>
-                        ) : (
-                          <div className="bg-white rounded-md p-3 sm:p-4 border border-gray-100">
-                            <p className="text-sm sm:text-base text-gray-900 whitespace-pre-wrap break-words">
-                              {item.content}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    ))}
+            {/* Tab Navigation - Responsive with horizontal scroll on mobile */}
+            <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg">
+              <div className="px-4 sm:px-6 border-b border-gray-200">
+                <nav className="-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide">
+                  <div className="border-b-2 border-blue-600 py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-blue-600 whitespace-nowrap">
+                    Detail
                   </div>
-                ) : (
-                  <div className="text-center py-8 sm:py-12 bg-gray-50 rounded-lg">
-                    <ChatBubbleLeftRightIcon className="w-10 sm:w-12 h-10 sm:h-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
-                    <p className="text-sm sm:text-base text-gray-500">
-                      No comments or attachments yet.
-                    </p>
-                  </div>
-                )}
+                  <Link
+                    to={`/admin/incident/${incident.id}/comments`}
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
+                  >
+                    Comments
+                  </Link>
+                  <Link
+                    to={`/admin/incident/${incident.id}/attachments`}
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
+                  >
+                    Attachments
+                  </Link>
+                  <Link
+                    to={`/admin/incident/${incident.id}/history`}
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
+                  >
+                    History
+                  </Link>
+                  <Link
+                    to={`/admin/incident/${incident.id}/more`}
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center whitespace-nowrap"
+                  >
+                    More
+                    <EllipsisHorizontalIcon className="w-4 sm:w-5 h-4 sm:h-5 ml-1" />
+                  </Link>
+                </nav>
               </div>
 
-              {/* Action Buttons - Responsive */}
-              <div className="flex mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200">
-                <Link to="/admin/incidents">
-                  <button className="inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                    <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
-                    Back to Incidents
-                  </button>
-                </Link>
+              <div className="p-4 sm:p-6">
+                {/* Summary Section - Enhanced Responsive Layout */}
+                <div className="mb-6 sm:mb-8">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                    <DocumentTextIcon className="w-5 sm:w-6 h-5 sm:h-6 mr-2 text-gray-600" />
+                    Summary
+                  </h3>
+                  <div className="bg-gray-50 rounded-lg p-4 sm:p-6">
+                    <dl className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                      <div className="md:col-span-2">
+                        <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+                          Title
+                        </dt>
+                        <dd className="text-sm sm:text-base lg:text-lg text-gray-900 font-medium break-words">
+                          {incident.title || "-"}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+                          Related Order
+                        </dt>
+                        <dd className="text-sm sm:text-base">
+                          {incident.orderId ? (
+                            <Link
+                              to={`/admin/order/${incident.orderId}`}
+                              className="text-blue-600 hover:text-blue-700 inline-flex items-center"
+                            >
+                              <WrenchScrewdriverIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                              Order #{incident.orderId}
+                            </Link>
+                          ) : (
+                            <span className="text-gray-500">
+                              Not linked to order
+                            </span>
+                          )}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+                          Status
+                        </dt>
+                        <dd className="text-sm sm:text-base">
+                          {incident.closingReason ? (
+                            <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium bg-gray-100 text-gray-800">
+                              <LockClosedIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                              Closed
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium bg-yellow-100 text-yellow-800">
+                              <LockOpenIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                              Open
+                            </span>
+                          )}
+                        </dd>
+                      </div>
+                      <div className="md:col-span-2">
+                        <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+                          Description
+                        </dt>
+                        <dd className="text-sm sm:text-base text-gray-900 break-words whitespace-pre-wrap">
+                          {incident.description || "-"}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+                          Initiated By
+                        </dt>
+                        <dd className="text-sm sm:text-base text-gray-900">
+                          <span className="inline-flex items-center">
+                            <UserIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 text-gray-400" />
+                            {getInitiatorLabel(incident.initiator)}
+                          </span>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+                          Start Date
+                        </dt>
+                        <dd className="text-sm sm:text-base text-gray-900">
+                          <span className="inline-flex items-center">
+                            <CalendarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 text-gray-400" />
+                            {formatDate(incident.startDate)}
+                          </span>
+                        </dd>
+                      </div>
+                      {incident.closingReason && (
+                        <div className="md:col-span-2">
+                          <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+                            Closing Reason
+                          </dt>
+                          <dd className="text-sm sm:text-base text-gray-900 break-words">
+                            {incident.closingReasonLabel ||
+                              incident.closingReasonOther ||
+                              "-"}
+                          </dd>
+                        </div>
+                      )}
+                      <div>
+                        <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+                          Created At
+                        </dt>
+                        <dd className="text-sm sm:text-base text-gray-900">
+                          <span className="inline-flex items-center">
+                            <ClockIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 text-gray-400" />
+                            {formatDateTime(incident.createdAt)}
+                          </span>
+                        </dd>
+                      </div>
+                      <div>
+                        <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+                          Created By
+                        </dt>
+                        <dd className="text-sm sm:text-base text-gray-900">
+                          <span className="inline-flex items-center">
+                            <UserIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 text-gray-400" />
+                            {incident.createdByUserName || "-"}
+                          </span>
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+                </div>
+
+                {/* Feed Section - Enhanced Responsive */}
+                <div className="mb-6 sm:mb-8">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4 flex items-center">
+                    <ChatBubbleLeftRightIcon className="w-5 sm:w-6 h-5 sm:h-6 mr-2 text-gray-600" />
+                    Activity Feed
+                  </h3>
+                  {incident.feed && incident.feed.length > 0 ? (
+                    <div className="space-y-4">
+                      {incident.feed.map((item, index) => (
+                        <div
+                          key={index}
+                          className="bg-gray-50 rounded-lg border border-gray-200 p-3 sm:p-4 transition-all hover:shadow-sm"
+                        >
+                          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start mb-2 sm:mb-3">
+                            <div className="flex items-center text-xs sm:text-sm text-gray-600 order-2 sm:order-1">
+                              <UserIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                              <span className="font-medium">
+                                {item.createdByUserName}
+                              </span>
+                            </div>
+                            <div className="text-xs sm:text-sm text-gray-500 flex items-center mb-2 sm:mb-0 order-1 sm:order-2">
+                              <ClockIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                              {formatDateTime(item.createdAt)}
+                            </div>
+                          </div>
+                          {item.filetype ? (
+                            <div className="bg-blue-50 border border-blue-200 rounded-md p-2 sm:p-3">
+                              <a
+                                href={item.objectUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-blue-600 hover:text-blue-700 inline-flex items-center text-sm sm:text-base"
+                              >
+                                <PaperClipIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
+                                {item.filename || "Download Attachment"}
+                                <ArrowDownTrayIcon className="w-3 sm:w-4 h-3 sm:h-4 ml-2" />
+                              </a>
+                            </div>
+                          ) : (
+                            <div className="bg-white rounded-md p-3 sm:p-4 border border-gray-100">
+                              <p className="text-sm sm:text-base text-gray-900 whitespace-pre-wrap break-words">
+                                {item.content}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 sm:py-12 bg-gray-50 rounded-lg">
+                      <ChatBubbleLeftRightIcon className="w-10 sm:w-12 h-10 sm:h-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                      <p className="text-sm sm:text-base text-gray-500">
+                        No activity recorded yet.
+                      </p>
+                      <p className="text-xs sm:text-sm text-gray-400 mt-2">
+                        Comments and attachments will appear here.
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </>
+          </div>
         )}
 
         {!incident && !isFetching && (
-          <div className="px-4 sm:px-6 py-8 sm:py-16 text-center">
+          <div className="bg-white shadow-sm rounded-lg px-4 sm:px-6 py-8 sm:py-16 text-center">
             <div className="inline-flex items-center justify-center w-12 sm:w-16 h-12 sm:h-16 bg-gray-100 rounded-full mb-4">
               <ExclamationTriangleIcon className="w-6 sm:w-8 h-6 sm:h-8 text-gray-400" />
             </div>
@@ -497,7 +541,7 @@ function AdminOrderIncidentDetailPage() {
               permission to view it.
             </p>
             <Link to="/admin/incidents">
-              <button className="inline-flex items-center px-3 sm:px-4 py-2 border border-transparent rounded-lg text-xs sm:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+              <button className="inline-flex items-center px-3 sm:px-4 py-2 border border-blue-600 rounded-lg text-xs sm:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
                 <ChevronLeftIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
                 Back to Incidents
               </button>
@@ -506,7 +550,7 @@ function AdminOrderIncidentDetailPage() {
         )}
       </div>
 
-      {/* Comment Modal */}
+      {/* Comment Modal - Enhanced Responsive */}
       {showCommentModal && (
         <div className="fixed inset-0 z-50 overflow-y-auto">
           <div className="flex min-h-screen items-center justify-center p-4 text-center sm:p-0">
@@ -549,7 +593,7 @@ function AdminOrderIncidentDetailPage() {
                       id="comment"
                       rows={7}
                       className="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm sm:text-base shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                      placeholder="Enter your comment here"
+                      placeholder="Enter your comment here..."
                       value={newComment}
                       onChange={(e) => setNewComment(e.target.value)}
                     />
@@ -577,7 +621,7 @@ function AdminOrderIncidentDetailPage() {
                       : "bg-gray-400 cursor-not-allowed"
                   }`}
                 >
-                  Submit
+                  Submit Comment
                 </button>
               </div>
             </div>

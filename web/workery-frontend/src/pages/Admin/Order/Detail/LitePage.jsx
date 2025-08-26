@@ -265,11 +265,13 @@ function AdminOrderDetailLitePage() {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading order details...</p>
+            <p className="mt-4 text-sm sm:text-base text-gray-600">
+              Loading order details...
+            </p>
           </div>
         </div>
       </div>
@@ -277,28 +279,32 @@ function AdminOrderDetailLitePage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      {/* Breadcrumb */}
-      <nav className="flex mb-6" aria-label="Breadcrumb">
-        <ol className="inline-flex items-center space-x-1 md:space-x-3">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+      {/* Responsive Breadcrumb */}
+      <nav
+        className="flex mb-4 sm:mb-6 overflow-x-auto"
+        aria-label="Breadcrumb"
+      >
+        <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
           <li className="inline-flex items-center">
             <Link
               to="/admin/dashboard"
-              className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+              className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
             >
-              <ChartBarIcon className="w-4 h-4 mr-2" />
-              Dashboard
+              <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+              <span className="hidden sm:inline">Dashboard</span>
+              <span className="sm:hidden">Dash</span>
             </Link>
           </li>
           <li>
             <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
+              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
               <Link
                 to="/admin/orders"
-                className="text-sm font-medium text-gray-700 hover:text-blue-600"
+                className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
               >
                 <span className="inline-flex items-center">
-                  <WrenchScrewdriverIcon className="w-4 h-4 mr-2" />
+                  <WrenchScrewdriverIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                   Orders
                 </span>
               </Link>
@@ -306,9 +312,9 @@ function AdminOrderDetailLitePage() {
           </li>
           <li aria-current="page">
             <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <span className="text-sm font-medium text-gray-500 inline-flex items-center">
-                <InformationCircleIcon className="w-4 h-4 mr-2" />
+              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
+              <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
+                <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                 Detail
               </span>
             </div>
@@ -316,38 +322,38 @@ function AdminOrderDetailLitePage() {
         </ol>
       </nav>
 
-      {/* Page Title */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center">
+      {/* Page Title - Responsive */}
+      <div className="mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center">
-              <WrenchScrewdriverIcon className="w-6 h-6 md:w-8 md:h-8 mr-3 text-blue-600" />
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+              <WrenchScrewdriverIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
               Order
             </h1>
-            <p className="mt-1 text-sm text-gray-600 flex items-center">
-              <InformationCircleIcon className="w-4 h-4 mr-1" />
+            <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+              <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
               View order information
             </p>
           </div>
         </div>
       </div>
 
-      {/* Status Alerts */}
+      {/* Status Alerts - Responsive */}
       {order && order.status === OrderStatusArchived && (
-        <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg flex items-center">
-          <ArchiveBoxIcon className="w-5 h-5 mr-2" />
+        <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center text-sm sm:text-base">
+          <ArchiveBoxIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
           This order is archived
         </div>
       )}
 
-      {/* Error Display */}
+      {/* Error Display - Responsive */}
       {error && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base">
           <div className="flex justify-between items-center">
-            <span>{error}</span>
+            <span className="break-words">{error}</span>
             <button
               onClick={() => setError(null)}
-              className="text-red-700 hover:text-red-900"
+              className="text-red-700 hover:text-red-900 ml-2 flex-shrink-0"
             >
               ×
             </button>
@@ -356,70 +362,70 @@ function AdminOrderDetailLitePage() {
       )}
 
       {/* Main Content */}
-      <div className="bg-white shadow-sm rounded-lg overflow-hidden">
+      <div className="shadow-sm">
         {order && (
-          <>
-            {/* Header with Actions */}
-            <div className="px-4 sm:px-6 py-5 border-b border-gray-200">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <h2 className="text-xl md:text-2xl font-semibold text-gray-900 flex items-center">
-                  <ClipboardDocumentListIcon className="w-6 h-6 md:w-7 md:h-7 mr-2 text-blue-600" />
+          <div className="bg-gray-700 rounded-lg">
+            {/* Header with Actions - Responsive with Dark Background */}
+            <div className="px-4 sm:px-6 py-4 sm:py-5">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+                <h2 className="text-xl sm:text-2xl font-semibold text-white flex items-center">
+                  <ClipboardDocumentListIcon className="w-5 sm:w-7 h-5 sm:h-7 mr-2 text-blue-300 flex-shrink-0" />
                   Summary
                 </h2>
-                <div className="flex flex-wrap gap-3 w-full sm:w-auto">
-                  <Link to="/admin/orders" className="flex-1 sm:flex-none">
-                    <button className="w-full sm:w-auto inline-flex items-center justify-center px-4 md:px-5 py-2 md:py-2.5 border border-gray-300 rounded-lg text-sm md:text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                      <ChevronLeftIcon className="w-4 h-4 md:w-5 md:h-5 mr-2" />
+                <div className="flex flex-wrap gap-2 sm:gap-3">
+                  <Link to="/admin/orders" className="flex-1 sm:flex-initial">
+                    <button className="w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base font-medium text-[#222222] bg-[#f6f6f6] hover:bg-gray-200 transition-colors">
+                      <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                       Back
                     </button>
                   </Link>
                   {order.associatePublicId !== 0 && (
                     <Link
                       to={`/admin/order/${oid}/more/unassign`}
-                      className="flex-1 sm:flex-none"
+                      className="flex-1 sm:flex-initial"
                     >
                       <button
                         disabled={order.status === OrderStatusArchived}
-                        className={`w-full sm:w-auto inline-flex items-center justify-center px-4 md:px-5 py-2 md:py-2.5 border rounded-lg text-sm md:text-base font-medium transition-colors ${
+                        className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
                           order.status === OrderStatusArchived
                             ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
                             : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
                         }`}
                       >
-                        <UserIcon className="w-4 h-4 md:w-5 md:h-5 mr-2" />
+                        <UserIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                         Unassign
                       </button>
                     </Link>
                   )}
                   <Link
                     to={`/admin/order/${oid}/more/close`}
-                    className="flex-1 sm:flex-none"
+                    className="flex-1 sm:flex-initial"
                   >
                     <button
                       disabled={order.status === OrderStatusArchived}
-                      className={`w-full sm:w-auto inline-flex items-center justify-center px-4 md:px-5 py-2 md:py-2.5 border rounded-lg text-sm md:text-base font-medium transition-colors ${
+                      className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
                         order.status === OrderStatusArchived
                           ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                          : "border-red-300 text-red-700 bg-red-50 hover:bg-red-100"
+                          : "border-red-600 text-white bg-red-600 hover:bg-red-700"
                       }`}
                     >
-                      <XMarkIcon className="w-4 h-4 md:w-5 md:h-5 mr-2" />
+                      <XMarkIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                       Close
                     </button>
                   </Link>
                   <Link
                     to={`/admin/order/${oid}/edit`}
-                    className="flex-1 sm:flex-none"
+                    className="flex-1 sm:flex-initial"
                   >
                     <button
                       disabled={order.status === OrderStatusArchived}
-                      className={`w-full sm:w-auto inline-flex items-center justify-center px-4 md:px-5 py-2 md:py-2.5 border rounded-lg text-sm md:text-base font-medium transition-colors ${
+                      className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
                         order.status === OrderStatusArchived
                           ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                          : "border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100"
+                          : "border-amber-600 text-white bg-amber-600 hover:bg-amber-700"
                       }`}
                     >
-                      <PencilSquareIcon className="w-4 h-4 md:w-5 md:h-5 mr-2" />
+                      <PencilSquareIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                       Edit
                     </button>
                   </Link>
@@ -431,18 +437,19 @@ function AdminOrderDetailLitePage() {
                           order.latestPendingTaskId,
                           order.latestPendingTaskType,
                         )}
-                        className="flex-1 sm:flex-none"
+                        className="flex-1 sm:flex-initial"
                       >
                         <button
                           disabled={order.status === OrderStatusArchived}
-                          className={`w-full sm:w-auto inline-flex items-center justify-center px-4 md:px-5 py-2 md:py-2.5 border rounded-lg text-sm md:text-base font-medium transition-colors ${
+                          className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
                             order.status === OrderStatusArchived
                               ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                              : "border-blue-300 text-white bg-blue-600 hover:bg-blue-700"
+                              : "border-green-600 text-white bg-green-600 hover:bg-green-700"
                           }`}
                         >
-                          Go to Task
-                          <ArrowRightIcon className="w-4 h-4 md:w-5 md:h-5 ml-2" />
+                          <span className="hidden sm:inline">Go to Task</span>
+                          <span className="sm:hidden">Task</span>
+                          <ArrowRightIcon className="w-4 sm:w-5 h-4 sm:h-5 ml-1 sm:ml-2" />
                         </button>
                       </Link>
                     )}
@@ -452,18 +459,19 @@ function AdminOrderDetailLitePage() {
                       currentUser?.role === STAFF_TYPE_EXECUTIVE) && (
                       <Link
                         to={`/admin/financial/${oid}`}
-                        className="flex-1 sm:flex-none"
+                        className="flex-1 sm:flex-initial"
                       >
                         <button
                           disabled={order.status === OrderStatusArchived}
-                          className={`w-full sm:w-auto inline-flex items-center justify-center px-4 md:px-5 py-2 md:py-2.5 border rounded-lg text-sm md:text-base font-medium transition-colors ${
+                          className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
                             order.status === OrderStatusArchived
                               ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                              : "border-cyan-300 text-cyan-700 bg-cyan-50 hover:bg-cyan-100"
+                              : "border-cyan-600 text-white bg-cyan-600 hover:bg-cyan-700"
                           }`}
                         >
-                          <CurrencyDollarIcon className="w-4 h-4 md:w-5 md:h-5 mr-2" />
-                          Financials
+                          <CurrencyDollarIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
+                          <span className="hidden sm:inline">Financials</span>
+                          <span className="sm:hidden">Finance</span>
                         </button>
                       </Link>
                     )}
@@ -471,297 +479,302 @@ function AdminOrderDetailLitePage() {
               </div>
             </div>
 
-            {/* Tab Navigation */}
-            <div className="px-4 sm:px-6 border-b border-gray-200">
-              <div className="overflow-x-auto lg:overflow-visible">
-                <nav className="-mb-px flex space-x-8 justify-center lg:justify-start min-w-max lg:min-w-0">
-                  <div className="border-b-2 border-blue-600 py-4 px-1 text-base font-medium text-blue-600 whitespace-nowrap">
+            {/* Tab Navigation - Responsive with horizontal scroll on mobile */}
+            <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg">
+              <div className="px-4 sm:px-6 border-b border-gray-200">
+                <nav className="-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide">
+                  <div className="border-b-2 border-blue-600 py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-blue-600 whitespace-nowrap">
                     Summary
                   </div>
                   <Link
                     to={`/admin/order/${order.wjid}/full`}
-                    className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
                   >
                     Detail
                   </Link>
                   <Link
                     to={`/admin/order/${order.wjid}/activity-sheets`}
-                    className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
                   >
                     Activity Sheets
                   </Link>
                   <Link
                     to={`/admin/order/${order.wjid}/tasks`}
-                    className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
                   >
                     Tasks
                   </Link>
                   <Link
                     to={`/admin/order/${order.wjid}/comments`}
-                    className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
                   >
                     Comments
                   </Link>
                   <Link
                     to={`/admin/order/${order.wjid}/attachments`}
-                    className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
                   >
                     Attachments
                   </Link>
                   <Link
                     to={`/admin/order/${order.wjid}/more`}
-                    className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center whitespace-nowrap"
+                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center whitespace-nowrap"
                   >
                     More
-                    <EllipsisHorizontalIcon className="w-5 h-5 ml-1" />
+                    <EllipsisHorizontalIcon className="w-4 sm:w-5 h-4 sm:h-5 ml-1" />
                   </Link>
                 </nav>
               </div>
-            </div>
 
-            {/* Order Summary Content */}
-            <div className="px-4 sm:px-6 lg:px-8 py-6">
-              <div className="space-y-6">
-                {/* Job ID and Status Header */}
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <h3 className="text-lg font-semibold text-gray-900">
-                      Job #{order.wjid}
-                    </h3>
-                    <div
-                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getOrderStatus(order.status).bg} ${getOrderStatus(order.status).color} ${getOrderStatus(order.status).border} border`}
-                    >
-                      {getOrderStatus(order.status).text}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Client Information */}
-                <div className="border-t border-gray-200 pt-6">
-                  <h4 className="text-base font-semibold text-gray-900 mb-4">
-                    Client Information
-                  </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="flex items-start">
-                      <UserIcon className="w-5 h-5 mr-3 text-gray-400 mt-0.5 flex-shrink-0" />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-gray-500">
-                          Name
-                        </p>
-                        <Link
-                          to={`/admin/customer/${order.customerId}`}
-                          className="text-blue-600 hover:text-blue-700 font-medium inline-flex items-center"
-                        >
-                          {order.customerName}
-                          <ArrowTopRightOnSquareIcon className="w-4 h-4 ml-1" />
-                        </Link>
-                      </div>
-                    </div>
-                    <div className="flex items-start">
-                      <PhoneIcon className="w-5 h-5 mr-3 text-gray-400 mt-0.5 flex-shrink-0" />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-gray-500">
-                          Phone (
-                          {CLIENT_PHONE_TYPE_OF_MAP[order.customerPhoneType]})
-                        </p>
-                        {order.customerPhone ? (
-                          <a
-                            href={`tel:${order.customerPhone}`}
-                            className="text-blue-600 hover:text-blue-700 font-medium"
-                          >
-                            {formatPhone(
-                              order.customerPhone,
-                              order.customerPhoneType === CLIENT_PHONE_TYPE_WORK
-                                ? order.customerPhoneExtension
-                                : null,
-                            )}
-                          </a>
-                        ) : (
-                          <span className="text-gray-500">No phone</span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-start md:col-span-2">
-                      <MapPinIcon className="w-5 h-5 mr-3 text-gray-400 mt-0.5 flex-shrink-0" />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-gray-500">
-                          Address
-                        </p>
-                        <span className="text-gray-900">
-                          {formatAddress(order)}
-                        </span>
-                        {order.customerFullAddressUrl && (
-                          <a
-                            href={order.customerFullAddressUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="ml-2 inline-flex items-center text-blue-600 hover:text-blue-700"
-                          >
-                            <ArrowTopRightOnSquareIcon className="w-4 h-4" />
-                          </a>
-                        )}
+              {/* Order Summary Content - Optimized for Responsiveness */}
+              <div className="py-4 sm:py-6 md:py-8 lg:py-10 px-4 sm:px-6 lg:px-8">
+                <div className="space-y-4 sm:space-y-6">
+                  {/* Job ID and Status Header */}
+                  <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+                        Job #{order.wjid}
+                      </h3>
+                      <div
+                        className={`inline-flex items-center px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium ${getOrderStatus(order.status).bg} ${getOrderStatus(order.status).color} ${getOrderStatus(order.status).border} border`}
+                      >
+                        {getOrderStatus(order.status).text}
                       </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Associate Information (if assigned) */}
-                {order.associateId &&
-                  order.associateId !== "" &&
-                  order.associateId !== "000000000000000000000000" && (
-                    <div className="border-t border-gray-200 pt-6">
-                      <h4 className="text-base font-semibold text-gray-900 mb-4">
-                        Associate Information
-                      </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="flex items-start">
-                          <UserIcon className="w-5 h-5 mr-3 text-gray-400 mt-0.5 flex-shrink-0" />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-gray-500">
-                              Name
-                            </p>
-                            <Link
-                              to={`/admin/associate/${order.associateId}`}
-                              className="text-blue-600 hover:text-blue-700 font-medium inline-flex items-center"
+                  {/* Client Information */}
+                  <div className="border-t border-gray-200 pt-4 sm:pt-6">
+                    <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-3 sm:mb-4">
+                      Client Information
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                      <div className="flex items-start">
+                        <UserIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 text-gray-400 mt-0.5 flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs sm:text-sm font-medium text-gray-500">
+                            Name
+                          </p>
+                          <Link
+                            to={`/admin/customer/${order.customerId}`}
+                            className="text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium inline-flex items-center"
+                          >
+                            {order.customerName}
+                            <ArrowTopRightOnSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 ml-1" />
+                          </Link>
+                        </div>
+                      </div>
+                      <div className="flex items-start">
+                        <PhoneIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 text-gray-400 mt-0.5 flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs sm:text-sm font-medium text-gray-500">
+                            Phone (
+                            {CLIENT_PHONE_TYPE_OF_MAP[order.customerPhoneType]})
+                          </p>
+                          {order.customerPhone ? (
+                            <a
+                              href={`tel:${order.customerPhone}`}
+                              className="text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium"
                             >
-                              {order.associateName}
-                              <ArrowTopRightOnSquareIcon className="w-4 h-4 ml-1" />
-                            </Link>
-                          </div>
-                        </div>
-                        <div className="flex items-start">
-                          <PhoneIcon className="w-5 h-5 mr-3 text-gray-400 mt-0.5 flex-shrink-0" />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-gray-500">
-                              Phone (
-                              {
-                                ASSOCIATE_PHONE_TYPE_OF_MAP[
-                                  order.associatePhoneType
-                                ]
-                              }
-                              )
-                            </p>
-                            {order.associatePhone ? (
-                              <a
-                                href={`tel:${order.associatePhone}`}
-                                className="text-blue-600 hover:text-blue-700 font-medium"
-                              >
-                                {formatPhone(
-                                  order.associatePhone,
-                                  order.associatePhoneType ===
-                                    ASSOCIATE_PHONE_TYPE_WORK
-                                    ? order.associatePhoneExtension
-                                    : null,
-                                )}
-                              </a>
-                            ) : (
-                              <span className="text-gray-500">No phone</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                {/* Job Details */}
-                <div className="border-t border-gray-200 pt-6">
-                  <h4 className="text-base font-semibold text-gray-900 mb-4">
-                    Job Details
-                  </h4>
-                  <div className="space-y-4">
-                    <div className="flex items-start">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-gray-500">
-                          Job Type
-                        </p>
-                        <div className="flex items-center mt-1">
-                          {order.type === 1 ? (
-                            <HomeIcon className="w-5 h-5 mr-2 text-blue-600" />
-                          ) : (
-                            <BuildingOfficeIcon className="w-5 h-5 mr-2 text-blue-600" />
-                          )}
-                          <span className="text-gray-900 font-medium">
-                            {getOrderTypeText(order.type)}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-start">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-gray-500">
-                          Description
-                        </p>
-                        <div className="mt-1 text-gray-900 whitespace-pre-wrap">
-                          {order.description || "No description provided"}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-start">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-gray-500 mb-2">
-                          Skills Required
-                        </p>
-                        <SkillSetsDisplay
-                          values={extractIds(order.skillSets)}
-                          onUnauthorized={onUnauthorized}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex items-start">
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-gray-500 mb-2">
-                          Tags
-                        </p>
-                        <TagsDisplay
-                          values={extractIds(order.tags)}
-                          onUnauthorized={onUnauthorized}
-                        />
-                      </div>
-                    </div>
-                    {order.latestPendingTaskId &&
-                      order.latestPendingTaskId !==
-                        "000000000000000000000000" && (
-                        <div className="flex items-start">
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-gray-500 mb-2">
-                              Required Task
-                            </p>
-                            <Link
-                              to={getTaskUpdateURL(
-                                order.latestPendingTaskId,
-                                order.latestPendingTaskType,
+                              {formatPhone(
+                                order.customerPhone,
+                                order.customerPhoneType ===
+                                  CLIENT_PHONE_TYPE_WORK
+                                  ? order.customerPhoneExtension
+                                  : null,
                               )}
+                            </a>
+                          ) : (
+                            <span className="text-sm sm:text-base text-gray-500">
+                              No phone
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-start md:col-span-2">
+                        <MapPinIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 text-gray-400 mt-0.5 flex-shrink-0" />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs sm:text-sm font-medium text-gray-500">
+                            Address
+                          </p>
+                          <span className="text-sm sm:text-base text-gray-900">
+                            {formatAddress(order)}
+                          </span>
+                          {order.customerFullAddressUrl && (
+                            <a
+                              href={order.customerFullAddressUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="ml-2 inline-flex items-center text-blue-600 hover:text-blue-700"
                             >
-                              <button className="inline-flex items-center px-3 py-1.5 border border-blue-300 rounded-md text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors">
-                                {order.latestPendingTaskTitle}
-                                <ArrowRightIcon className="w-4 h-4 ml-2" />
-                              </button>
-                            </Link>
+                              <ArrowTopRightOnSquareIcon className="w-3 sm:w-4 h-3 sm:h-4" />
+                            </a>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Associate Information (if assigned) */}
+                  {order.associateId &&
+                    order.associateId !== "" &&
+                    order.associateId !== "000000000000000000000000" && (
+                      <div className="border-t border-gray-200 pt-4 sm:pt-6">
+                        <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-3 sm:mb-4">
+                          Associate Information
+                        </h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                          <div className="flex items-start">
+                            <UserIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 text-gray-400 mt-0.5 flex-shrink-0" />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs sm:text-sm font-medium text-gray-500">
+                                Name
+                              </p>
+                              <Link
+                                to={`/admin/associate/${order.associateId}`}
+                                className="text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium inline-flex items-center"
+                              >
+                                {order.associateName}
+                                <ArrowTopRightOnSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 ml-1" />
+                              </Link>
+                            </div>
+                          </div>
+                          <div className="flex items-start">
+                            <PhoneIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 text-gray-400 mt-0.5 flex-shrink-0" />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs sm:text-sm font-medium text-gray-500">
+                                Phone (
+                                {
+                                  ASSOCIATE_PHONE_TYPE_OF_MAP[
+                                    order.associatePhoneType
+                                  ]
+                                }
+                                )
+                              </p>
+                              {order.associatePhone ? (
+                                <a
+                                  href={`tel:${order.associatePhone}`}
+                                  className="text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium"
+                                >
+                                  {formatPhone(
+                                    order.associatePhone,
+                                    order.associatePhoneType ===
+                                      ASSOCIATE_PHONE_TYPE_WORK
+                                      ? order.associatePhoneExtension
+                                      : null,
+                                  )}
+                                </a>
+                              ) : (
+                                <span className="text-sm sm:text-base text-gray-500">
+                                  No phone
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      )}
+                      </div>
+                    )}
+
+                  {/* Job Details */}
+                  <div className="border-t border-gray-200 pt-4 sm:pt-6">
+                    <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-3 sm:mb-4">
+                      Job Details
+                    </h4>
+                    <div className="space-y-3 sm:space-y-4">
+                      <div className="flex items-start">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs sm:text-sm font-medium text-gray-500">
+                            Job Type
+                          </p>
+                          <div className="flex items-center mt-1">
+                            {order.type === 1 ? (
+                              <HomeIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600" />
+                            ) : (
+                              <BuildingOfficeIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600" />
+                            )}
+                            <span className="text-sm sm:text-base text-gray-900 font-medium">
+                              {getOrderTypeText(order.type)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-start">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs sm:text-sm font-medium text-gray-500">
+                            Description
+                          </p>
+                          <div className="mt-1 text-sm sm:text-base text-gray-900 whitespace-pre-wrap">
+                            {order.description || "No description provided"}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-start">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs sm:text-sm font-medium text-gray-500 mb-2">
+                            Skills Required
+                          </p>
+                          <SkillSetsDisplay
+                            values={extractIds(order.skillSets)}
+                            onUnauthorized={onUnauthorized}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex items-start">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs sm:text-sm font-medium text-gray-500 mb-2">
+                            Tags
+                          </p>
+                          <TagsDisplay
+                            values={extractIds(order.tags)}
+                            onUnauthorized={onUnauthorized}
+                          />
+                        </div>
+                      </div>
+                      {order.latestPendingTaskId &&
+                        order.latestPendingTaskId !==
+                          "000000000000000000000000" && (
+                          <div className="flex items-start">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-xs sm:text-sm font-medium text-gray-500 mb-2">
+                                Required Task
+                              </p>
+                              <Link
+                                to={getTaskUpdateURL(
+                                  order.latestPendingTaskId,
+                                  order.latestPendingTaskType,
+                                )}
+                              >
+                                <button className="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 border border-blue-300 rounded-md text-xs sm:text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors">
+                                  {order.latestPendingTaskTitle}
+                                  <ArrowRightIcon className="w-3 sm:w-4 h-3 sm:h-4 ml-1 sm:ml-2" />
+                                </button>
+                              </Link>
+                            </div>
+                          </div>
+                        )}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </>
+          </div>
         )}
 
         {!order && !loading && (
-          <div className="px-6 py-16 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
-              <WrenchScrewdriverIcon className="w-8 h-8 text-gray-400" />
+          <div className="px-4 sm:px-6 py-8 sm:py-16 text-center">
+            <div className="inline-flex items-center justify-center w-12 sm:w-16 h-12 sm:h-16 bg-gray-100 rounded-full mb-4">
+              <WrenchScrewdriverIcon className="w-6 sm:w-8 h-6 sm:h-8 text-gray-400" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
               Order Not Found
             </h3>
-            <p className="text-gray-500 mb-6">
+            <p className="text-sm sm:text-base text-gray-500 mb-4 sm:mb-6">
               The order you're looking for doesn't exist or you don't have
               permission to view it.
             </p>
             <Link to="/admin/orders">
-              <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-                <ChevronLeftIcon className="w-4 h-4 mr-2" />
+              <button className="inline-flex items-center px-3 sm:px-4 py-2 border border-blue-600 rounded-lg text-xs sm:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                <ChevronLeftIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
                 Back to Orders
               </button>
             </Link>

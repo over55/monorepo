@@ -1,4 +1,4 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Admin/Staff/Update/Page.jsx
+// File Path: web/workery-frontend/src/pages/Admin/Staff/Update/Page.jsx
 
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router";
@@ -9,29 +9,14 @@ import {
   PencilSquareIcon,
   ChevronLeftIcon,
   CheckCircleIcon,
-  XCircleIcon,
   ExclamationTriangleIcon,
-  BuildingOfficeIcon,
-  HomeIcon,
   UserIcon,
-  EnvelopeIcon,
-  PhoneIcon,
   MapPinIcon,
   BriefcaseIcon,
-  ShieldCheckIcon,
-  CurrencyDollarIcon,
-  CalendarIcon,
-  DocumentTextIcon,
-  TruckIcon,
   ExclamationCircleIcon,
-  HeartIcon,
   ChartPieIcon,
   ComputerDesktopIcon,
-  GlobeAltIcon,
-  ClipboardDocumentListIcon,
   EllipsisHorizontalIcon,
-  ChatBubbleLeftRightIcon,
-  PaperClipIcon,
 } from "@heroicons/react/24/outline";
 import {
   useStaffManager,
@@ -55,6 +40,7 @@ import {
   GENDER_OPTIONS,
   IDENTIFY_AS_OPTIONS,
 } from "../../../../constants/FieldOptions";
+import { DateInput, Input, Select, Checkbox } from "../../../../components/UI";
 
 const STAFF_TYPE_OPTIONS = [
   { value: STAFF_TYPE_EXECUTIVE, label: "Executive" },
@@ -67,81 +53,104 @@ const LANGUAGE_OPTIONS = [
   { value: "French", label: "French" },
 ];
 
+// Helper function to format errors for display
+const formatErrorsForAlert = (errors) => {
+  if (!errors || typeof errors !== "object") {
+    return null;
+  }
+
+  const errorList = [];
+  for (const [field, message] of Object.entries(errors)) {
+    if (message && field !== "general") {
+      const fieldName = field
+        .replace(/([A-Z])/g, " $1")
+        .replace(/^./, (str) => str.toUpperCase())
+        .trim();
+      errorList.push(`• ${fieldName}: ${message}`);
+    }
+  }
+
+  return errorList.length > 0 ? errorList : null;
+};
+
+// Section Component with Dark Header - Matching Customer Update style
+const FormSection = ({ title, icon: Icon, children }) => (
+  <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
+    <div className="px-4 sm:px-6 py-3 sm:py-4">
+      <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+        <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
+        <span className="truncate">{title}</span>
+      </h3>
+    </div>
+    <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
+      {children}
+    </div>
+  </div>
+);
+
 function AdminStaffUpdatePage() {
   const { aid } = useParams();
   const navigate = useNavigate();
-
-  // Services
   const staffManager = useStaffManager();
 
-  // Component State
+  // State management
   const [isLoading, setIsLoading] = useState(true);
   const [errors, setErrors] = useState({});
   const [alert, setAlert] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [staffMember, setStaffMember] = useState(null);
 
-  // Form Fields - Basic Info
-  const [staffType, setStaffType] = useState(STAFF_TYPE_FRONTLINE);
-  const [email, setEmail] = useState("");
-  const [phone, setPhone] = useState("");
-  const [phoneType, setPhoneType] = useState(0);
-  const [phoneExtension, setPhoneExtension] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [otherPhone, setOtherPhone] = useState("");
-  const [otherPhoneType, setOtherPhoneType] = useState(0);
-  const [otherPhoneExtension, setOtherPhoneExtension] = useState("");
-  const [isOkToText, setIsOkToText] = useState(false);
-  const [isOkToEmail, setIsOkToEmail] = useState(false);
-
-  // Form Fields - Address
-  const [postalCode, setPostalCode] = useState("");
-  const [addressLine1, setAddressLine1] = useState("");
-  const [addressLine2, setAddressLine2] = useState("");
-  const [city, setCity] = useState("");
-  const [region, setRegion] = useState("");
-  const [country, setCountry] = useState("");
-  const [hasShippingAddress, setHasShippingAddress] = useState(false);
-  const [shippingName, setShippingName] = useState("");
-  const [shippingPhone, setShippingPhone] = useState("");
-  const [shippingCountry, setShippingCountry] = useState("");
-  const [shippingRegion, setShippingRegion] = useState("");
-  const [shippingCity, setShippingCity] = useState("");
-  const [shippingAddressLine1, setShippingAddressLine1] = useState("");
-  const [shippingAddressLine2, setShippingAddressLine2] = useState("");
-  const [shippingPostalCode, setShippingPostalCode] = useState("");
-
-  // Form Fields - Additional Info
-  const [limitSpecial, setLimitSpecial] = useState("");
-  const [policeCheck, setPoliceCheck] = useState("");
-  const [driversLicenseClass, setDriversLicenseClass] = useState("");
-  const [vehicleTypes, setVehicleTypes] = useState([]);
-  const [skillSets, setSkillSets] = useState([]);
-  const [insuranceRequirements, setInsuranceRequirements] = useState([]);
-  const [emergencyContactName, setEmergencyContactName] = useState("");
-  const [emergencyContactRelationship, setEmergencyContactRelationship] =
-    useState("");
-  const [emergencyContactTelephone, setEmergencyContactTelephone] =
-    useState("");
-  const [
-    emergencyContactAlternativeTelephone,
-    setEmergencyContactAlternativeTelephone,
-  ] = useState("");
-  const [description, setDescription] = useState("");
-  const [preferredLanguage, setPreferredLanguage] = useState("English");
-
-  // Form Fields - Metrics
-  const [tags, setTags] = useState([]);
-  const [howDidYouHearAboutUsID, setHowDidYouHearAboutUsID] = useState("");
-  const [isHowDidYouHearAboutUsOther, setIsHowDidYouHearAboutUsOther] =
-    useState(false);
-  const [howDidYouHearAboutUsOther, setHowDidYouHearAboutUsOther] =
-    useState("");
-  const [birthDate, setBirthDate] = useState("");
-  const [joinDate, setJoinDate] = useState("");
-  const [gender, setGender] = useState(0);
-  const [genderOther, setGenderOther] = useState("");
-  const [identifyAs, setIdentifyAs] = useState([]);
+  // Form state
+  const [staffData, setStaffData] = useState({
+    type: STAFF_TYPE_FRONTLINE,
+    email: "",
+    phone: "",
+    phoneType: 0,
+    phoneExtension: "",
+    firstName: "",
+    lastName: "",
+    otherPhone: "",
+    otherPhoneType: 0,
+    otherPhoneExtension: "",
+    isOkToText: false,
+    isOkToEmail: false,
+    postalCode: "",
+    addressLine1: "",
+    addressLine2: "",
+    city: "",
+    region: "",
+    country: "Canada",
+    hasShippingAddress: false,
+    shippingName: "",
+    shippingPhone: "",
+    shippingCountry: "Canada",
+    shippingRegion: "",
+    shippingCity: "",
+    shippingAddressLine1: "",
+    shippingAddressLine2: "",
+    shippingPostalCode: "",
+    limitSpecial: "",
+    policeCheck: "",
+    driversLicenseClass: "",
+    vehicleTypes: [],
+    skillSets: [],
+    insuranceRequirements: [],
+    emergencyContactName: "",
+    emergencyContactRelationship: "",
+    emergencyContactTelephone: "",
+    emergencyContactAlternativeTelephone: "",
+    description: "",
+    preferredLanguage: "English",
+    tags: [],
+    howDidYouHearAboutUsID: "",
+    isHowDidYouHearAboutUsOther: false,
+    howDidYouHearAboutUsOther: "",
+    birthDate: "",
+    joinDate: "",
+    gender: 0,
+    genderOther: "",
+    identifyAs: [],
+  });
 
   // Handle unauthorized access
   const onUnauthorized = () => {
@@ -152,268 +161,367 @@ function AdminStaffUpdatePage() {
   useEffect(() => {
     let mounted = true;
 
-    const loadData = async () => {
+    const fetchStaffDetail = async () => {
+      if (!aid) {
+        setAlert({ type: "error", message: "Invalid staff ID" });
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(true);
       setErrors({});
 
       try {
-        // Load staff detail
-        const staffData = await staffManager.getStaffDetail(
-          aid,
-          onUnauthorized,
-        );
+        const response = await staffManager.getStaffDetail(aid, onUnauthorized);
 
-        if (!mounted) return;
-
-        // Populate form fields
-        setStaffType(staffData.type || STAFF_TYPE_FRONTLINE);
-        setEmail(staffData.email || "");
-        setPhone(staffData.phone || "");
-        setPhoneType(staffData.phoneType || 0);
-        setPhoneExtension(staffData.phoneExtension || "");
-        setFirstName(staffData.firstName || "");
-        setLastName(staffData.lastName || "");
-        setOtherPhone(staffData.otherPhone || "");
-        setOtherPhoneType(staffData.otherPhoneType || 0);
-        setOtherPhoneExtension(staffData.otherPhoneExtension || "");
-        setIsOkToText(staffData.isOkToText || false);
-        setIsOkToEmail(staffData.isOkToEmail || false);
-
-        // Address fields
-        setPostalCode(staffData.postalCode || "");
-        setAddressLine1(staffData.addressLine1 || "");
-        setAddressLine2(staffData.addressLine2 || "");
-        setCity(staffData.city || "");
-        setRegion(staffData.region || "");
-        setCountry(staffData.country || "");
-        setHasShippingAddress(staffData.hasShippingAddress || false);
-        setShippingName(staffData.shippingName || "");
-        setShippingPhone(staffData.shippingPhone || "");
-        setShippingCountry(staffData.shippingCountry || "");
-        setShippingRegion(staffData.shippingRegion || "");
-        setShippingCity(staffData.shippingCity || "");
-        setShippingAddressLine1(staffData.shippingAddressLine1 || "");
-        setShippingAddressLine2(staffData.shippingAddressLine2 || "");
-        setShippingPostalCode(staffData.shippingPostalCode || "");
-
-        // Additional fields
-        setLimitSpecial(staffData.limitSpecial || "");
-        setDriversLicenseClass(staffData.driversLicenseClass || "");
-
-        // Police Check - Format date if exists
-        if (staffData.policeCheck) {
-          const date = new Date(staffData.policeCheck);
-          if (!isNaN(date.getTime())) {
-            setPoliceCheck(date.toISOString().split("T")[0]);
-          }
-        }
-
-        // Vehicle Types - Extract IDs from array of objects
-        if (staffData.vehicleTypes && Array.isArray(staffData.vehicleTypes)) {
-          const vtIds = staffData.vehicleTypes.map((vt) => vt.id || vt);
-          setVehicleTypes(vtIds);
-        }
-
-        // Skill Sets - Extract IDs from array of objects
-        if (staffData.skillSets && Array.isArray(staffData.skillSets)) {
-          const ssIds = staffData.skillSets.map((ss) => ss.id || ss);
-          setSkillSets(ssIds);
-        }
-
-        // Insurance Requirements - Extract IDs from array of objects
-        if (
-          staffData.insuranceRequirements &&
-          Array.isArray(staffData.insuranceRequirements)
-        ) {
-          const irIds = staffData.insuranceRequirements.map(
-            (ir) => ir.id || ir,
-          );
-          setInsuranceRequirements(irIds);
-        }
-
-        setEmergencyContactName(staffData.emergencyContactName || "");
-        setEmergencyContactRelationship(
-          staffData.emergencyContactRelationship || "",
-        );
-        setEmergencyContactTelephone(staffData.emergencyContactTelephone || "");
-        setEmergencyContactAlternativeTelephone(
-          staffData.emergencyContactAlternativeTelephone || "",
-        );
-        setDescription(staffData.description || "");
-        setPreferredLanguage(staffData.preferredLanguage || "English");
-
-        // Tags - Extract IDs from array of objects
-        if (staffData.tags && Array.isArray(staffData.tags)) {
-          const tagIds = staffData.tags.map((tag) => tag.id || tag);
-          setTags(tagIds);
-        }
-
-        setHowDidYouHearAboutUsID(staffData.howDidYouHearAboutUsID || "");
-        setIsHowDidYouHearAboutUsOther(
-          staffData.isHowDidYouHearAboutUsOther || false,
-        );
-        setHowDidYouHearAboutUsOther(staffData.howDidYouHearAboutUsOther || "");
-
-        // Date fields
-        if (staffData.birthDate) {
-          const date = new Date(staffData.birthDate);
-          if (!isNaN(date.getTime())) {
-            setBirthDate(date.toISOString().split("T")[0]);
-          }
-        }
-
-        if (staffData.joinDate) {
-          const date = new Date(staffData.joinDate);
-          if (!isNaN(date.getTime())) {
-            setJoinDate(date.toISOString().split("T")[0]);
-          }
-        }
-
-        setGender(staffData.gender || 0);
-        setGenderOther(staffData.genderOther || "");
-        setIdentifyAs(staffData.identifyAs || []);
-      } catch (error) {
-        console.error("Error loading staff detail:", error);
         if (mounted) {
+          setStaffMember(response);
+
+          const formatDateForInput = (dateValue) => {
+            if (!dateValue) return "";
+            try {
+              const date = new Date(dateValue);
+              if (isNaN(date.getTime())) return "";
+              return date.toISOString().split("T")[0];
+            } catch (e) {
+              return "";
+            }
+          };
+
+          setStaffData({
+            type: response.type || STAFF_TYPE_FRONTLINE,
+            email: response.email || "",
+            phone: response.phone || "",
+            phoneType: response.phoneType || 0,
+            phoneExtension: response.phoneExtension || "",
+            firstName: response.firstName || "",
+            lastName: response.lastName || "",
+            otherPhone: response.otherPhone || "",
+            otherPhoneType: response.otherPhoneType || 0,
+            otherPhoneExtension: response.otherPhoneExtension || "",
+            isOkToText: response.isOkToText || false,
+            isOkToEmail: response.isOkToEmail || false,
+            postalCode: response.postalCode || "",
+            addressLine1: response.addressLine1 || "",
+            addressLine2: response.addressLine2 || "",
+            city: response.city || "",
+            region: response.region || "",
+            country: response.country || "Canada",
+            hasShippingAddress: response.hasShippingAddress || false,
+            shippingName: response.shippingName || "",
+            shippingPhone: response.shippingPhone || "",
+            shippingCountry: response.shippingCountry || "Canada",
+            shippingRegion: response.shippingRegion || "",
+            shippingCity: response.shippingCity || "",
+            shippingAddressLine1: response.shippingAddressLine1 || "",
+            shippingAddressLine2: response.shippingAddressLine2 || "",
+            shippingPostalCode: response.shippingPostalCode || "",
+            limitSpecial: response.limitSpecial || "",
+            policeCheck: formatDateForInput(response.policeCheck),
+            driversLicenseClass: response.driversLicenseClass || "",
+            vehicleTypes: response.vehicleTypes
+              ? response.vehicleTypes.map((vt) => vt.id || vt)
+              : [],
+            skillSets: response.skillSets
+              ? response.skillSets.map((ss) => ss.id || ss)
+              : [],
+            insuranceRequirements: response.insuranceRequirements
+              ? response.insuranceRequirements.map((ir) => ir.id || ir)
+              : [],
+            emergencyContactName: response.emergencyContactName || "",
+            emergencyContactRelationship:
+              response.emergencyContactRelationship || "",
+            emergencyContactTelephone: response.emergencyContactTelephone || "",
+            emergencyContactAlternativeTelephone:
+              response.emergencyContactAlternativeTelephone || "",
+            description: response.description || "",
+            preferredLanguage: response.preferredLanguage || "English",
+            tags: response.tags
+              ? response.tags.map((tag) => tag.id || tag)
+              : [],
+            howDidYouHearAboutUsID: response.howDidYouHearAboutUsID || "",
+            isHowDidYouHearAboutUsOther:
+              response.isHowDidYouHearAboutUsOther || false,
+            howDidYouHearAboutUsOther: response.howDidYouHearAboutUsOther || "",
+            birthDate: formatDateForInput(response.birthDate),
+            joinDate: formatDateForInput(response.joinDate),
+            gender: response.gender || 0,
+            genderOther: response.genderOther || "",
+            identifyAs: response.identifyAs || [],
+          });
+
+          setIsLoading(false);
+        }
+      } catch (error) {
+        if (mounted) {
+          console.error("Failed to fetch staff details:", error);
           setAlert({
             type: "error",
             message: "Failed to load staff details. Please try again.",
           });
-        }
-      } finally {
-        if (mounted) {
           setIsLoading(false);
         }
       }
     };
 
-    loadData();
+    fetchStaffDetail();
 
     return () => {
       mounted = false;
     };
-  }, [aid]);
+  }, [aid, staffManager, navigate]);
 
-  // Handle form submission
+  const handleInputChange = (field, value) => {
+    setStaffData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+
+    if (errors[field]) {
+      setErrors((prev) => ({
+        ...prev,
+        [field]: undefined,
+      }));
+    }
+  };
+
+  const handleCheckboxChange = (field) => {
+    setStaffData((prev) => ({
+      ...prev,
+      [field]: !prev[field],
+    }));
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!staffData.firstName.trim()) {
+      newErrors.firstName = "First name is required";
+    }
+    if (!staffData.lastName.trim()) {
+      newErrors.lastName = "Last name is required";
+    }
+    if (!staffData.email.trim()) {
+      newErrors.email = "Email is required";
+    }
+    if (!staffData.phone.trim()) {
+      newErrors.phone = "Phone number is required";
+    }
+    if (!staffData.emergencyContactName.trim()) {
+      newErrors.emergencyContactName = "Emergency contact name is required";
+    }
+    if (!staffData.emergencyContactRelationship.trim()) {
+      newErrors.emergencyContactRelationship =
+        "Emergency contact relationship is required";
+    }
+    if (!staffData.emergencyContactTelephone.trim()) {
+      newErrors.emergencyContactTelephone =
+        "Emergency contact telephone is required";
+    }
+
+    if (staffData.hasShippingAddress) {
+      if (!staffData.shippingName.trim()) {
+        newErrors.shippingName = "Shipping name is required";
+      }
+      if (!staffData.shippingPhone.trim()) {
+        newErrors.shippingPhone = "Shipping phone is required";
+      }
+    }
+
+    if (
+      staffData.gender === STAFF_GENDER_OTHER &&
+      !staffData.genderOther.trim()
+    ) {
+      newErrors.genderOther = "Please specify other gender";
+    }
+
+    if (
+      staffData.isHowDidYouHearAboutUsOther &&
+      !staffData.howDidYouHearAboutUsOther.trim()
+    ) {
+      newErrors.howDidYouHearAboutUsOther = "Please specify other option";
+    }
+
+    return newErrors;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
-    setErrors({});
     setAlert(null);
 
+    const formErrors = validateForm();
+    if (Object.keys(formErrors).length > 0) {
+      setErrors(formErrors);
+
+      const errorList = formatErrorsForAlert(formErrors);
+      if (errorList) {
+        setAlert({
+          type: "error",
+          message: "Please correct the following errors:",
+          details: errorList,
+        });
+      } else {
+        setAlert({
+          type: "error",
+          message: "Please correct the errors in the form before submitting.",
+        });
+      }
+
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setErrors({});
+
+    const submitData = {
+      id: aid,
+      type: parseInt(staffData.type),
+      firstName: staffData.firstName,
+      lastName: staffData.lastName,
+      email: staffData.email,
+      phone: staffData.phone,
+      phoneType: parseInt(staffData.phoneType),
+      phoneExtension: staffData.phoneExtension,
+      otherPhone: staffData.otherPhone,
+      otherPhoneType: parseInt(staffData.otherPhoneType),
+      otherPhoneExtension: staffData.otherPhoneExtension,
+      isOkToText: staffData.isOkToText,
+      isOkToEmail: staffData.isOkToEmail,
+      postalCode: staffData.postalCode,
+      addressLine1: staffData.addressLine1,
+      addressLine2: staffData.addressLine2,
+      city: staffData.city,
+      region: staffData.region,
+      country: staffData.country,
+      hasShippingAddress: staffData.hasShippingAddress,
+      shippingName: staffData.shippingName,
+      shippingPhone: staffData.shippingPhone,
+      shippingCountry: staffData.shippingCountry,
+      shippingRegion: staffData.shippingRegion,
+      shippingCity: staffData.shippingCity,
+      shippingAddressLine1: staffData.shippingAddressLine1,
+      shippingAddressLine2: staffData.shippingAddressLine2,
+      shippingPostalCode: staffData.shippingPostalCode,
+      limitSpecial: staffData.limitSpecial,
+      policeCheck: staffData.policeCheck || null,
+      driversLicenseClass: staffData.driversLicenseClass,
+      vehicleTypes: staffData.vehicleTypes || [],
+      skillSets: staffData.skillSets || [],
+      insuranceRequirements: staffData.insuranceRequirements || [],
+      emergencyContactName: staffData.emergencyContactName,
+      emergencyContactRelationship: staffData.emergencyContactRelationship,
+      emergencyContactTelephone: staffData.emergencyContactTelephone,
+      emergencyContactAlternativeTelephone:
+        staffData.emergencyContactAlternativeTelephone,
+      description: staffData.description,
+      tags: staffData.tags || [],
+      gender: parseInt(staffData.gender),
+      genderOther: staffData.genderOther,
+      joinDate: staffData.joinDate || null,
+      birthDate: staffData.birthDate || null,
+      howDidYouHearAboutUsID: staffData.howDidYouHearAboutUsID,
+      isHowDidYouHearAboutUsOther: staffData.isHowDidYouHearAboutUsOther,
+      howDidYouHearAboutUsOther: staffData.howDidYouHearAboutUsOther,
+      preferredLanguage: staffData.preferredLanguage,
+      identifyAs: staffData.identifyAs.map((id) => parseInt(id)),
+    };
+
     try {
-      // Prepare payload
-      const payload = {
-        id: aid,
-        type: parseInt(staffType),
-        firstName,
-        lastName,
-        email,
-        phone,
-        phoneType: parseInt(phoneType),
-        phoneExtension,
-        otherPhone,
-        otherPhoneType: parseInt(otherPhoneType),
-        otherPhoneExtension,
-        isOkToText,
-        isOkToEmail,
-        postalCode,
-        addressLine1,
-        addressLine2,
-        city,
-        region,
-        country,
-        hasShippingAddress,
-        shippingName,
-        shippingPhone,
-        shippingCountry,
-        shippingRegion,
-        shippingCity,
-        shippingAddressLine1,
-        shippingAddressLine2,
-        shippingPostalCode,
-        limitSpecial,
-        policeCheck: policeCheck || null,
-        driversLicenseClass,
-        vehicleTypes: vehicleTypes || [],
-        skillSets: skillSets || [],
-        insuranceRequirements: insuranceRequirements || [],
-        emergencyContactName,
-        emergencyContactRelationship,
-        emergencyContactTelephone,
-        emergencyContactAlternativeTelephone,
-        description,
-        tags: tags || [],
-        gender: parseInt(gender),
-        genderOther,
-        joinDate: joinDate || null,
-        birthDate: birthDate || null,
-        howDidYouHearAboutUsID: howDidYouHearAboutUsID,
-        isHowDidYouHearAboutUsOther,
-        howDidYouHearAboutUsOther,
-        preferredLanguage,
-        identifyAs: identifyAs.map((id) => parseInt(id)),
-      };
+      await staffManager.updateStaff(aid, submitData, onUnauthorized);
 
-      // Call update API
-      const response = await staffManager.updateStaff(
-        aid,
-        payload,
-        onUnauthorized,
-      );
-
-      // Success - redirect to detail page
       setAlert({
         type: "success",
         message: "Staff member updated successfully!",
       });
+
       setTimeout(() => {
         navigate(`/admin/staff/${aid}`);
       }, 2000);
     } catch (error) {
-      console.error("Error updating staff:", error);
-      setErrors(error || {});
-      setAlert({
-        type: "error",
-        message:
-          "Failed to update staff member. Please check the form and try again.",
-      });
+      console.error("Failed to update staff:", error);
+
+      if (error && typeof error === "object") {
+        const hasFieldErrors = Object.keys(error).some(
+          (key) => key !== "message" && key !== "general" && key !== "detail",
+        );
+
+        if (hasFieldErrors) {
+          setErrors(error);
+          const errorList = formatErrorsForAlert(error);
+
+          if (errorList) {
+            setAlert({
+              type: "error",
+              message:
+                error.general ||
+                "Failed to update staff member. Please correct the following errors:",
+              details: errorList,
+            });
+          } else {
+            setAlert({
+              type: "error",
+              message:
+                error.general ||
+                error.message ||
+                "Failed to update staff member. Please check the form and try again.",
+            });
+          }
+        } else {
+          setAlert({
+            type: "error",
+            message:
+              error.message ||
+              error.detail ||
+              "Failed to update staff member. Please try again.",
+          });
+        }
+      } else {
+        setAlert({
+          type: "error",
+          message: "An unexpected error occurred. Please try again.",
+        });
+      }
+
       window.scrollTo(0, 0);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // Handle how hear change
   const handleHowHearChange = (value) => {
-    setHowDidYouHearAboutUsID(value);
+    handleInputChange("howDidYouHearAboutUsID", value);
   };
 
-  // Handle how hear other detected
   const handleHowHearOtherDetected = (isOther) => {
-    setIsHowDidYouHearAboutUsOther(isOther);
+    handleInputChange("isHowDidYouHearAboutUsOther", isOther);
     if (!isOther) {
-      setHowDidYouHearAboutUsOther("");
+      handleInputChange("howDidYouHearAboutUsOther", "");
     }
   };
 
-  // Handle identify as selection
   const handleIdentifyAsChange = (value) => {
     const id = parseInt(value);
-    if (identifyAs.includes(id)) {
-      setIdentifyAs(identifyAs.filter((i) => i !== id));
+    const currentIdentifyAs = staffData.identifyAs || [];
+    if (currentIdentifyAs.includes(id)) {
+      handleInputChange(
+        "identifyAs",
+        currentIdentifyAs.filter((i) => i !== id),
+      );
     } else {
-      setIdentifyAs([...identifyAs, id]);
+      handleInputChange("identifyAs", [...currentIdentifyAs, id]);
     }
   };
 
   if (isLoading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading staff details...</p>
+            <p className="mt-4 text-sm sm:text-base text-gray-600">
+              Loading staff details...
+            </p>
           </div>
         </div>
       </div>
@@ -421,28 +529,32 @@ function AdminStaffUpdatePage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Breadcrumb */}
-      <nav className="flex mb-6" aria-label="Breadcrumb">
-        <ol className="inline-flex items-center space-x-1 md:space-x-3">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+      {/* Responsive Breadcrumb */}
+      <nav
+        className="flex mb-4 sm:mb-6 overflow-x-auto"
+        aria-label="Breadcrumb"
+      >
+        <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
           <li className="inline-flex items-center">
             <Link
               to="/admin/dashboard"
-              className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+              className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
             >
-              <ChartBarIcon className="w-4 h-4 mr-2" />
-              Dashboard
+              <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+              <span className="hidden sm:inline">Dashboard</span>
+              <span className="sm:hidden">Dash</span>
             </Link>
           </li>
           <li>
             <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
+              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
               <Link
                 to="/admin/staff"
-                className="text-sm font-medium text-gray-700 hover:text-blue-600"
+                className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
               >
                 <span className="inline-flex items-center">
-                  <UserGroupIcon className="w-4 h-4 mr-2" />
+                  <UserGroupIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                   Staff
                 </span>
               </Link>
@@ -450,13 +562,13 @@ function AdminStaffUpdatePage() {
           </li>
           <li>
             <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
+              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
               <Link
                 to={`/admin/staff/${aid}`}
-                className="text-sm font-medium text-gray-700 hover:text-blue-600"
+                className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
               >
                 <span className="inline-flex items-center">
-                  <InformationCircleIcon className="w-4 h-4 mr-2" />
+                  <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                   Detail
                 </span>
               </Link>
@@ -464,9 +576,9 @@ function AdminStaffUpdatePage() {
           </li>
           <li aria-current="page">
             <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <span className="text-sm font-medium text-gray-500 inline-flex items-center">
-                <PencilSquareIcon className="w-4 h-4 mr-2" />
+              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
+              <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
+                <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                 Update
               </span>
             </div>
@@ -474,43 +586,54 @@ function AdminStaffUpdatePage() {
         </ol>
       </nav>
 
-      {/* Page Title */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center">
+      {/* Page Title - Responsive */}
+      <div className="mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-              <UserGroupIcon className="w-8 h-8 mr-3 text-blue-600" />
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+              <UserGroupIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
               Staff Member
             </h1>
-            <p className="mt-1 text-sm text-gray-600 flex items-center">
-              <PencilSquareIcon className="w-4 h-4 mr-1" />
+            <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+              <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
               Update staff member information
             </p>
           </div>
         </div>
       </div>
 
-      {/* Alert Messages */}
+      {/* Alert Messages - Responsive */}
       {alert && (
         <div
-          className={`mb-4 px-4 py-3 rounded-lg ${
+          className={`mb-4 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base ${
             alert.type === "success"
               ? "bg-green-50 border border-green-200 text-green-700"
               : "bg-red-50 border border-red-200 text-red-700"
           }`}
         >
-          <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              {alert.type === "success" ? (
-                <CheckCircleIcon className="w-5 h-5 mr-2" />
-              ) : (
-                <XCircleIcon className="w-5 h-5 mr-2" />
-              )}
-              <span>{alert.message}</span>
+          <div className="flex justify-between">
+            <div className="flex-1">
+              <div className="flex items-start">
+                {alert.type === "success" ? (
+                  <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 mt-0.5" />
+                ) : (
+                  <ExclamationTriangleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 mt-0.5" />
+                )}
+                <div className="flex-1">
+                  <span className="font-medium">{alert.message}</span>
+                  {alert.details && alert.details.length > 0 && (
+                    <div className="mt-2 text-xs sm:text-sm">
+                      {alert.details.map((detail, index) => (
+                        <div key={index}>{detail}</div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
             <button
               onClick={() => setAlert(null)}
-              className="text-current hover:opacity-70"
+              className="text-current hover:opacity-70 ml-4 text-lg sm:text-xl"
             >
               ×
             </button>
@@ -520,1036 +643,639 @@ function AdminStaffUpdatePage() {
 
       {/* Main Content */}
       <div className="bg-white shadow-sm rounded-lg">
-        {/* Header */}
-        <div className="px-6 py-5 border-b border-gray-200">
-          <div className="flex justify-between items-center flex-wrap gap-4">
-            <h2 className="text-2xl font-semibold text-gray-900 flex items-center">
-              <PencilSquareIcon className="w-7 h-7 mr-2 text-blue-600" />
+        {/* Header with Actions - Responsive */}
+        <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 flex items-center">
+              <PencilSquareIcon className="w-5 sm:w-7 h-5 sm:h-7 mr-2 text-blue-600 flex-shrink-0" />
               Update Staff Member
             </h2>
-            <Link to={`/admin/staff/${aid}`}>
-              <button className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                <ChevronLeftIcon className="w-5 h-5 mr-2" />
+            <Link to={`/admin/staff/${aid}`} className="flex-shrink-0">
+              <button className="w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                 Back to Detail
               </button>
             </Link>
           </div>
         </div>
 
-        {/* Tab Navigation */}
-        <div className="px-6 border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
-            <Link
-              to={`/admin/staff/${aid}`}
-              className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            >
-              Summary
-            </Link>
-            <Link
-              to={`/admin/staff/${aid}/detail`}
-              className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            >
-              Detail
-            </Link>
-            <Link
-              to={`/admin/staff/${aid}/comments`}
-              className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            >
-              Comments
-            </Link>
-            <Link
-              to={`/admin/staff/${aid}/attachments`}
-              className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            >
-              Attachments
-            </Link>
-            <Link
-              to={`/admin/staff/${aid}/more`}
-              className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center"
-            >
-              More
-              <EllipsisHorizontalIcon className="w-5 h-5 ml-1" />
-            </Link>
-          </nav>
+        {/* Tab Navigation - Responsive with horizontal scroll */}
+        <div className="border-b border-gray-200">
+          <div className="px-4 sm:px-6">
+            <nav className="-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide">
+              <Link
+                to={`/admin/staff/${aid}`}
+                className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
+              >
+                Summary
+              </Link>
+              <Link
+                to={`/admin/staff/${aid}/detail`}
+                className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
+              >
+                Detail
+              </Link>
+              <Link
+                to={`/admin/staff/${aid}/comments`}
+                className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
+              >
+                Comments
+              </Link>
+              <Link
+                to={`/admin/staff/${aid}/attachments`}
+                className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
+              >
+                Attachments
+              </Link>
+              <Link
+                to={`/admin/staff/${aid}/more`}
+                className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center whitespace-nowrap"
+              >
+                More
+                <EllipsisHorizontalIcon className="w-4 sm:w-5 h-4 sm:h-5 ml-1" />
+              </Link>
+            </nav>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6">
-          {/* Basic Information Section */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 rounded-t-lg">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                <UserIcon className="w-5 h-5 mr-2 text-blue-600" />
-                Basic Information
-              </h3>
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6">
+          {/* Basic Information Section with Dark Header */}
+          <FormSection title="Basic Information" icon={UserIcon}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+              <Select
+                label="Type"
+                value={staffData.type}
+                onChange={(e) =>
+                  handleInputChange("type", parseInt(e.target.value))
+                }
+                options={STAFF_TYPE_OPTIONS}
+                error={errors.type}
+                required
+              />
+
+              <Input
+                label="Email"
+                type="email"
+                value={staffData.email}
+                onChange={(e) => handleInputChange("email", e.target.value)}
+                error={errors.email}
+                required
+              />
+
+              <Input
+                label="First Name"
+                value={staffData.firstName}
+                onChange={(e) => handleInputChange("firstName", e.target.value)}
+                error={errors.firstName}
+                required
+              />
+
+              <Input
+                label="Last Name"
+                value={staffData.lastName}
+                onChange={(e) => handleInputChange("lastName", e.target.value)}
+                error={errors.lastName}
+                required
+              />
             </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Type <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={staffType}
-                    onChange={(e) => setStaffType(parseInt(e.target.value))}
-                    className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                      errors.type ? "border-red-300" : "border-gray-300"
-                    }`}
-                    required
-                  >
-                    {STAFF_TYPE_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.type && (
-                    <p className="mt-1 text-sm text-red-600">{errors.type}</p>
-                  )}
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Email <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                      errors.email ? "border-red-300" : "border-gray-300"
-                    }`}
-                    required
-                  />
-                  {errors.email && (
-                    <p className="mt-1 text-sm text-red-600">{errors.email}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    First Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                      errors.firstName ? "border-red-300" : "border-gray-300"
-                    }`}
-                    required
-                  />
-                  {errors.firstName && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.firstName}
-                    </p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Last Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                      errors.lastName ? "border-red-300" : "border-gray-300"
-                    }`}
-                    required
-                  />
-                  {errors.lastName && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.lastName}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="mt-6">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={isOkToEmail}
-                    onChange={(e) => setIsOkToEmail(e.target.checked)}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">
-                    I agree to receive electronic email
-                  </span>
-                </label>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                      errors.phone ? "border-red-300" : "border-gray-300"
-                    }`}
-                    required
-                  />
-                  {errors.phone && (
-                    <p className="mt-1 text-sm text-red-600">{errors.phone}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone Type <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    value={phoneType}
-                    onChange={(e) => setPhoneType(parseInt(e.target.value))}
-                    className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                      errors.phoneType ? "border-red-300" : "border-gray-300"
-                    }`}
-                    required
-                  >
-                    <option value={0}>Please select</option>
-                    {STAFF_PHONE_TYPE_OF_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                  {errors.phoneType && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.phoneType}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              {phoneType === 3 && (
-                <div className="mt-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Phone Extension
-                  </label>
-                  <input
-                    type="text"
-                    value={phoneExtension}
-                    onChange={(e) => setPhoneExtension(e.target.value)}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-              )}
-
-              <div className="mt-6">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={isOkToText}
-                    onChange={(e) => setIsOkToText(e.target.checked)}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">
-                    I agree to receive texts to my phone
-                  </span>
-                </label>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Other Phone (Optional)
-                  </label>
-                  <input
-                    type="tel"
-                    value={otherPhone}
-                    onChange={(e) => setOtherPhone(e.target.value)}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Other Phone Type
-                  </label>
-                  <select
-                    value={otherPhoneType}
-                    onChange={(e) =>
-                      setOtherPhoneType(parseInt(e.target.value))
-                    }
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value={0}>Please select</option>
-                    {STAFF_PHONE_TYPE_OF_OPTIONS.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {otherPhoneType === 3 && (
-                <div className="mt-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Other Phone Extension (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={otherPhoneExtension}
-                    onChange={(e) => setOtherPhoneExtension(e.target.value)}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-              )}
+            <div className="mb-4 sm:mb-6">
+              <Checkbox
+                label="I agree to receive electronic email"
+                checked={staffData.isOkToEmail}
+                onChange={() => handleCheckboxChange("isOkToEmail")}
+              />
             </div>
-          </div>
 
-          {/* Address Section */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 rounded-t-lg">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                <MapPinIcon className="w-5 h-5 mr-2 text-blue-600" />
-                Address Information
-              </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+              <Input
+                label="Phone"
+                type="tel"
+                value={staffData.phone}
+                onChange={(e) => handleInputChange("phone", e.target.value)}
+                error={errors.phone}
+                required
+              />
+
+              <Select
+                label="Phone Type"
+                value={staffData.phoneType}
+                onChange={(e) =>
+                  handleInputChange("phoneType", parseInt(e.target.value))
+                }
+                options={STAFF_PHONE_TYPE_OF_OPTIONS}
+                error={errors.phoneType}
+              />
             </div>
-            <div className="p-6">
-              <div className="mb-6">
-                <label className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={hasShippingAddress}
-                    onChange={(e) => setHasShippingAddress(e.target.checked)}
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">
-                    Has shipping address different than billing address
-                  </span>
-                </label>
+
+            {staffData.phoneType === 3 && (
+              <div className="mb-4 sm:mb-6">
+                <Input
+                  label="Phone Extension"
+                  value={staffData.phoneExtension}
+                  onChange={(e) =>
+                    handleInputChange("phoneExtension", e.target.value)
+                  }
+                  error={errors.phoneExtension}
+                />
               </div>
+            )}
 
-              <div
-                className={`grid ${hasShippingAddress ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"} gap-8`}
-              >
-                {/* Billing Address */}
-                <div>
-                  {hasShippingAddress && (
-                    <h4 className="text-base font-medium text-gray-900 mb-4">
-                      Billing Address
-                    </h4>
-                  )}
+            <div className="mb-4 sm:mb-6">
+              <Checkbox
+                label="I agree to receive texts to my phone"
+                checked={staffData.isOkToText}
+                onChange={() => handleCheckboxChange("isOkToText")}
+              />
+            </div>
 
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Country <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={country}
-                        onChange={(e) => setCountry(e.target.value)}
-                        className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                          errors.country ? "border-red-300" : "border-gray-300"
-                        }`}
-                        placeholder="e.g., Canada"
-                        required
-                      />
-                      {errors.country && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {errors.country}
-                        </p>
-                      )}
-                    </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+              <Input
+                label="Other Phone (Optional)"
+                type="tel"
+                value={staffData.otherPhone}
+                onChange={(e) =>
+                  handleInputChange("otherPhone", e.target.value)
+                }
+                error={errors.otherPhone}
+              />
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Province/State <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={region}
-                        onChange={(e) => setRegion(e.target.value)}
-                        className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                          errors.region ? "border-red-300" : "border-gray-300"
-                        }`}
-                        placeholder="e.g., Ontario"
-                        required
-                      />
-                      {errors.region && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {errors.region}
-                        </p>
-                      )}
-                    </div>
+              <Select
+                label="Other Phone Type"
+                value={staffData.otherPhoneType}
+                onChange={(e) =>
+                  handleInputChange("otherPhoneType", parseInt(e.target.value))
+                }
+                options={STAFF_PHONE_TYPE_OF_OPTIONS}
+                error={errors.otherPhoneType}
+              />
+            </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        City <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={city}
-                        onChange={(e) => setCity(e.target.value)}
-                        className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                          errors.city ? "border-red-300" : "border-gray-300"
-                        }`}
-                        required
-                      />
-                      {errors.city && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {errors.city}
-                        </p>
-                      )}
-                    </div>
+            {staffData.otherPhoneType === 3 && (
+              <div className="mb-4 sm:mb-6">
+                <Input
+                  label="Other Phone Extension (Optional)"
+                  value={staffData.otherPhoneExtension}
+                  onChange={(e) =>
+                    handleInputChange("otherPhoneExtension", e.target.value)
+                  }
+                  error={errors.otherPhoneExtension}
+                />
+              </div>
+            )}
+          </FormSection>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Address Line 1 <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={addressLine1}
-                        onChange={(e) => setAddressLine1(e.target.value)}
-                        className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                          errors.addressLine1
-                            ? "border-red-300"
-                            : "border-gray-300"
-                        }`}
-                        required
-                      />
-                      {errors.addressLine1 && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {errors.addressLine1}
-                        </p>
-                      )}
-                    </div>
+          {/* Address Section with Dark Header */}
+          <FormSection title="Address Information" icon={MapPinIcon}>
+            <div className="mb-4 sm:mb-6">
+              <Checkbox
+                label="Has shipping address different than billing address"
+                checked={staffData.hasShippingAddress}
+                onChange={() => handleCheckboxChange("hasShippingAddress")}
+              />
+            </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Address Line 2 (Optional)
-                      </label>
-                      <input
-                        type="text"
-                        value={addressLine2}
-                        onChange={(e) => setAddressLine2(e.target.value)}
-                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Postal Code <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={postalCode}
-                        onChange={(e) => setPostalCode(e.target.value)}
-                        className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                          errors.postalCode
-                            ? "border-red-300"
-                            : "border-gray-300"
-                        }`}
-                        required
-                      />
-                      {errors.postalCode && (
-                        <p className="mt-1 text-sm text-red-600">
-                          {errors.postalCode}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Shipping Address */}
-                {hasShippingAddress && (
-                  <div>
-                    <h4 className="text-base font-medium text-gray-900 mb-4">
-                      Shipping Address
-                    </h4>
-
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Name <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={shippingName}
-                          onChange={(e) => setShippingName(e.target.value)}
-                          className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                            errors.shippingName
-                              ? "border-red-300"
-                              : "border-gray-300"
-                          }`}
-                          required={hasShippingAddress}
-                        />
-                        {errors.shippingName && (
-                          <p className="mt-1 text-sm text-red-600">
-                            {errors.shippingName}
-                          </p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Phone <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="tel"
-                          value={shippingPhone}
-                          onChange={(e) => setShippingPhone(e.target.value)}
-                          className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                            errors.shippingPhone
-                              ? "border-red-300"
-                              : "border-gray-300"
-                          }`}
-                          required={hasShippingAddress}
-                        />
-                        {errors.shippingPhone && (
-                          <p className="mt-1 text-sm text-red-600">
-                            {errors.shippingPhone}
-                          </p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Country <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={shippingCountry}
-                          onChange={(e) => setShippingCountry(e.target.value)}
-                          className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                            errors.shippingCountry
-                              ? "border-red-300"
-                              : "border-gray-300"
-                          }`}
-                          required={hasShippingAddress}
-                        />
-                        {errors.shippingCountry && (
-                          <p className="mt-1 text-sm text-red-600">
-                            {errors.shippingCountry}
-                          </p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Province/State <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={shippingRegion}
-                          onChange={(e) => setShippingRegion(e.target.value)}
-                          className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                            errors.shippingRegion
-                              ? "border-red-300"
-                              : "border-gray-300"
-                          }`}
-                          required={hasShippingAddress}
-                        />
-                        {errors.shippingRegion && (
-                          <p className="mt-1 text-sm text-red-600">
-                            {errors.shippingRegion}
-                          </p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          City <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={shippingCity}
-                          onChange={(e) => setShippingCity(e.target.value)}
-                          className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                            errors.shippingCity
-                              ? "border-red-300"
-                              : "border-gray-300"
-                          }`}
-                          required={hasShippingAddress}
-                        />
-                        {errors.shippingCity && (
-                          <p className="mt-1 text-sm text-red-600">
-                            {errors.shippingCity}
-                          </p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Address Line 1 <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={shippingAddressLine1}
-                          onChange={(e) =>
-                            setShippingAddressLine1(e.target.value)
-                          }
-                          className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                            errors.shippingAddressLine1
-                              ? "border-red-300"
-                              : "border-gray-300"
-                          }`}
-                          required={hasShippingAddress}
-                        />
-                        {errors.shippingAddressLine1 && (
-                          <p className="mt-1 text-sm text-red-600">
-                            {errors.shippingAddressLine1}
-                          </p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Address Line 2 (Optional)
-                        </label>
-                        <input
-                          type="text"
-                          value={shippingAddressLine2}
-                          onChange={(e) =>
-                            setShippingAddressLine2(e.target.value)
-                          }
-                          className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Postal Code <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={shippingPostalCode}
-                          onChange={(e) =>
-                            setShippingPostalCode(e.target.value)
-                          }
-                          className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                            errors.shippingPostalCode
-                              ? "border-red-300"
-                              : "border-gray-300"
-                          }`}
-                          required={hasShippingAddress}
-                        />
-                        {errors.shippingPostalCode && (
-                          <p className="mt-1 text-sm text-red-600">
-                            {errors.shippingPostalCode}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
+            <div
+              className={`grid ${staffData.hasShippingAddress ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"} gap-6 sm:gap-8`}
+            >
+              {/* Billing Address */}
+              <div>
+                {staffData.hasShippingAddress && (
+                  <h4 className="text-sm sm:text-base font-medium text-gray-900 mb-3 sm:mb-4">
+                    Billing Address
+                  </h4>
                 )}
-              </div>
-            </div>
-          </div>
 
-          {/* Additional Information Section */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 rounded-t-lg">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                <BriefcaseIcon className="w-5 h-5 mr-2 text-blue-600" />
-                Additional Information
-              </h3>
-            </div>
-            <div className="p-6">
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Limitation or Special Consideration (Optional)
-                  </label>
-                  <textarea
-                    value={limitSpecial}
-                    onChange={(e) => setLimitSpecial(e.target.value)}
-                    rows={4}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    maxLength={638}
-                  />
-                  <p className="mt-1 text-sm text-gray-500">
-                    Max 638 characters
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Police Check Expiry
-                    </label>
-                    <input
-                      type="date"
-                      value={policeCheck}
-                      onChange={(e) => setPoliceCheck(e.target.value)}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Driver's License Class (Optional)
-                    </label>
-                    <input
-                      type="text"
-                      value={driversLicenseClass}
-                      onChange={(e) => setDriversLicenseClass(e.target.value)}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                </div>
-
-                <VehicleTypesMultiSelect
-                  value={vehicleTypes}
-                  onChange={(value) => setVehicleTypes(value)}
-                  error={errors.vehicleTypes}
-                  required={false}
-                  label="Vehicle Types (Optional)"
-                  placeholder="Select vehicle types..."
-                  helperText="Select the vehicle types available to this staff member"
-                  onUnauthorized={onUnauthorized}
-                />
-
-                <SkillSetsMultiSelect
-                  value={skillSets}
-                  onChange={(value) => setSkillSets(value)}
-                  error={errors.skillSets}
-                  required={false}
-                  label="Skill Sets (Optional)"
-                  placeholder="Select skill sets..."
-                  helperText="Select the skill sets for this staff member"
-                  onUnauthorized={onUnauthorized}
-                />
-
-                <InsuranceRequirementsMultiSelect
-                  value={insuranceRequirements}
-                  onChange={(value) => setInsuranceRequirements(value)}
-                  error={errors.insuranceRequirements}
-                  required={false}
-                  label="Insurance Requirements (Optional)"
-                  placeholder="Select insurance requirements..."
-                  helperText="Select the insurance requirements for this staff member"
-                  onUnauthorized={onUnauthorized}
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Emergency Contact Section */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 rounded-t-lg">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                <ExclamationCircleIcon className="w-5 h-5 mr-2 text-blue-600" />
-                Emergency Contact
-              </h3>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Contact Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={emergencyContactName}
-                    onChange={(e) => setEmergencyContactName(e.target.value)}
-                    className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                      errors.emergencyContactName
-                        ? "border-red-300"
-                        : "border-gray-300"
-                    }`}
+                <div className="space-y-3 sm:space-y-4">
+                  <Input
+                    label="Country"
+                    value={staffData.country}
+                    onChange={(e) =>
+                      handleInputChange("country", e.target.value)
+                    }
+                    error={errors.country}
                     required
                   />
-                  {errors.emergencyContactName && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.emergencyContactName}
-                    </p>
-                  )}
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Contact Relationship <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={emergencyContactRelationship}
+                  <Input
+                    label="Province/State"
+                    value={staffData.region}
                     onChange={(e) =>
-                      setEmergencyContactRelationship(e.target.value)
+                      handleInputChange("region", e.target.value)
                     }
-                    className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                      errors.emergencyContactRelationship
-                        ? "border-red-300"
-                        : "border-gray-300"
-                    }`}
+                    error={errors.region}
                     required
                   />
-                  {errors.emergencyContactRelationship && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.emergencyContactRelationship}
-                    </p>
-                  )}
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Contact Telephone <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    value={emergencyContactTelephone}
-                    onChange={(e) =>
-                      setEmergencyContactTelephone(e.target.value)
-                    }
-                    className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                      errors.emergencyContactTelephone
-                        ? "border-red-300"
-                        : "border-gray-300"
-                    }`}
+                  <Input
+                    label="City"
+                    value={staffData.city}
+                    onChange={(e) => handleInputChange("city", e.target.value)}
+                    error={errors.city}
                     required
                   />
-                  {errors.emergencyContactTelephone && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.emergencyContactTelephone}
-                    </p>
-                  )}
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Contact Alternative Telephone (Optional)
-                  </label>
-                  <input
-                    type="tel"
-                    value={emergencyContactAlternativeTelephone}
+                  <Input
+                    label="Address Line 1"
+                    value={staffData.addressLine1}
                     onChange={(e) =>
-                      setEmergencyContactAlternativeTelephone(e.target.value)
+                      handleInputChange("addressLine1", e.target.value)
                     }
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                    error={errors.addressLine1}
+                    required
+                  />
+
+                  <Input
+                    label="Address Line 2 (Optional)"
+                    value={staffData.addressLine2}
+                    onChange={(e) =>
+                      handleInputChange("addressLine2", e.target.value)
+                    }
+                    error={errors.addressLine2}
+                  />
+
+                  <Input
+                    label="Postal Code"
+                    value={staffData.postalCode}
+                    onChange={(e) =>
+                      handleInputChange("postalCode", e.target.value)
+                    }
+                    error={errors.postalCode}
+                    required
                   />
                 </div>
               </div>
-            </div>
-          </div>
 
-          {/* Metrics Section */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 rounded-t-lg">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                <ChartPieIcon className="w-5 h-5 mr-2 text-blue-600" />
-                Metrics
-              </h3>
-            </div>
-            <div className="p-6">
-              <div className="space-y-6">
-                <TagsMultiSelect
-                  value={tags}
-                  onChange={(value) => setTags(value)}
-                  error={errors.tags}
-                  required={false}
-                  label="Tags (Optional)"
-                  placeholder="Select tags..."
-                  helperText="Select tags to categorize this staff member"
-                  onUnauthorized={onUnauthorized}
-                />
+              {/* Shipping Address */}
+              {staffData.hasShippingAddress && (
+                <div>
+                  <h4 className="text-sm sm:text-base font-medium text-gray-900 mb-3 sm:mb-4">
+                    Shipping Address
+                  </h4>
 
-                <HowHearAboutUsSelect
-                  value={howDidYouHearAboutUsID}
-                  onChange={handleHowHearChange}
-                  onOtherDetected={handleHowHearOtherDetected}
-                  error={errors.howDidYouHearAboutUsID}
-                  required={true}
-                  label="How did you hear about us?"
-                  helperText="Tell us how this person discovered our organization"
-                  onUnauthorized={onUnauthorized}
-                />
-
-                {isHowDidYouHearAboutUsOther && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      How did you hear about us? (Other){" "}
-                      <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      value={howDidYouHearAboutUsOther}
+                  <div className="space-y-3 sm:space-y-4">
+                    <Input
+                      label="Name"
+                      value={staffData.shippingName}
                       onChange={(e) =>
-                        setHowDidYouHearAboutUsOther(e.target.value)
+                        handleInputChange("shippingName", e.target.value)
                       }
-                      className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                        errors.howDidYouHearAboutUsOther
-                          ? "border-red-300"
-                          : "border-gray-300"
-                      }`}
-                      required={isHowDidYouHearAboutUsOther}
+                      placeholder="The name to contact for this shipping address"
+                      error={errors.shippingName}
+                      required
                     />
-                    {errors.howDidYouHearAboutUsOther && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {errors.howDidYouHearAboutUsOther}
-                      </p>
-                    )}
-                  </div>
-                )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Gender
-                    </label>
-                    <select
-                      value={gender}
-                      onChange={(e) => setGender(parseInt(e.target.value))}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value={0}>Please select</option>
-                      {GENDER_OPTIONS.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
+                    <Input
+                      label="Phone"
+                      type="tel"
+                      value={staffData.shippingPhone}
+                      onChange={(e) =>
+                        handleInputChange("shippingPhone", e.target.value)
+                      }
+                      placeholder="The contact phone number for this shipping address"
+                      error={errors.shippingPhone}
+                      required
+                    />
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Birth Date (Optional)
-                    </label>
-                    <input
-                      type="date"
-                      value={birthDate}
-                      onChange={(e) => setBirthDate(e.target.value)}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                      max={new Date().toISOString().split("T")[0]}
+                    <Input
+                      label="Country"
+                      value={staffData.shippingCountry}
+                      onChange={(e) =>
+                        handleInputChange("shippingCountry", e.target.value)
+                      }
+                      error={errors.shippingCountry}
+                      required
+                    />
+
+                    <Input
+                      label="Province/State"
+                      value={staffData.shippingRegion}
+                      onChange={(e) =>
+                        handleInputChange("shippingRegion", e.target.value)
+                      }
+                      error={errors.shippingRegion}
+                      required
+                    />
+
+                    <Input
+                      label="City"
+                      value={staffData.shippingCity}
+                      onChange={(e) =>
+                        handleInputChange("shippingCity", e.target.value)
+                      }
+                      error={errors.shippingCity}
+                      required
+                    />
+
+                    <Input
+                      label="Address Line 1"
+                      value={staffData.shippingAddressLine1}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "shippingAddressLine1",
+                          e.target.value,
+                        )
+                      }
+                      error={errors.shippingAddressLine1}
+                      required
+                    />
+
+                    <Input
+                      label="Address Line 2 (Optional)"
+                      value={staffData.shippingAddressLine2}
+                      onChange={(e) =>
+                        handleInputChange(
+                          "shippingAddressLine2",
+                          e.target.value,
+                        )
+                      }
+                      error={errors.shippingAddressLine2}
+                    />
+
+                    <Input
+                      label="Postal Code"
+                      value={staffData.shippingPostalCode}
+                      onChange={(e) =>
+                        handleInputChange("shippingPostalCode", e.target.value)
+                      }
+                      error={errors.shippingPostalCode}
+                      required
                     />
                   </div>
                 </div>
+              )}
+            </div>
+          </FormSection>
 
-                {gender === STAFF_GENDER_OTHER && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Gender (Other) <span className="text-red-500">*</span>
+          {/* Additional Information Section with Dark Header */}
+          <FormSection title="Additional Information" icon={BriefcaseIcon}>
+            <div className="space-y-4 sm:space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Limitation or Special Consideration (Optional)
+                </label>
+                <textarea
+                  value={staffData.limitSpecial}
+                  onChange={(e) =>
+                    handleInputChange("limitSpecial", e.target.value)
+                  }
+                  rows={4}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  maxLength={638}
+                />
+                <p className="mt-1 text-sm text-gray-500">Max 638 characters</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                <DateInput
+                  label="Police Check Expiry"
+                  value={staffData.policeCheck}
+                  onChange={(value) => handleInputChange("policeCheck", value)}
+                  error={errors.policeCheck}
+                />
+
+                <Input
+                  label="Driver's License Class (Optional)"
+                  value={staffData.driversLicenseClass}
+                  onChange={(e) =>
+                    handleInputChange("driversLicenseClass", e.target.value)
+                  }
+                  error={errors.driversLicenseClass}
+                />
+              </div>
+
+              <VehicleTypesMultiSelect
+                value={staffData.vehicleTypes}
+                onChange={(value) => handleInputChange("vehicleTypes", value)}
+                error={errors.vehicleTypes}
+                required={false}
+                label="Vehicle Types (Optional)"
+                helperText="Select the vehicle types available to this staff member"
+                onUnauthorized={onUnauthorized}
+              />
+
+              <SkillSetsMultiSelect
+                value={staffData.skillSets}
+                onChange={(value) => handleInputChange("skillSets", value)}
+                error={errors.skillSets}
+                required={false}
+                label="Skill Sets (Optional)"
+                helperText="Select the skill sets for this staff member"
+                onUnauthorized={onUnauthorized}
+              />
+
+              <InsuranceRequirementsMultiSelect
+                value={staffData.insuranceRequirements}
+                onChange={(value) =>
+                  handleInputChange("insuranceRequirements", value)
+                }
+                error={errors.insuranceRequirements}
+                required={false}
+                label="Insurance Requirements (Optional)"
+                helperText="Select the insurance requirements for this staff member"
+                onUnauthorized={onUnauthorized}
+              />
+            </div>
+          </FormSection>
+
+          {/* Emergency Contact Section with Dark Header */}
+          <FormSection title="Emergency Contact" icon={ExclamationCircleIcon}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              <Input
+                label="Contact Name"
+                value={staffData.emergencyContactName}
+                onChange={(e) =>
+                  handleInputChange("emergencyContactName", e.target.value)
+                }
+                error={errors.emergencyContactName}
+                required
+              />
+
+              <Input
+                label="Contact Relationship"
+                value={staffData.emergencyContactRelationship}
+                onChange={(e) =>
+                  handleInputChange(
+                    "emergencyContactRelationship",
+                    e.target.value,
+                  )
+                }
+                error={errors.emergencyContactRelationship}
+                required
+              />
+
+              <Input
+                label="Contact Telephone"
+                type="tel"
+                value={staffData.emergencyContactTelephone}
+                onChange={(e) =>
+                  handleInputChange("emergencyContactTelephone", e.target.value)
+                }
+                error={errors.emergencyContactTelephone}
+                required
+              />
+
+              <Input
+                label="Contact Alternative Telephone (Optional)"
+                type="tel"
+                value={staffData.emergencyContactAlternativeTelephone}
+                onChange={(e) =>
+                  handleInputChange(
+                    "emergencyContactAlternativeTelephone",
+                    e.target.value,
+                  )
+                }
+                error={errors.emergencyContactAlternativeTelephone}
+              />
+            </div>
+          </FormSection>
+
+          {/* Metrics Section with Dark Header */}
+          <FormSection title="Metrics" icon={ChartPieIcon}>
+            <div className="space-y-4 sm:space-y-6">
+              <TagsMultiSelect
+                value={staffData.tags}
+                onChange={(value) => handleInputChange("tags", value)}
+                error={errors.tags}
+                required={false}
+                label="Tags (Optional)"
+                helperText="Select tags to categorize this staff member"
+                onUnauthorized={onUnauthorized}
+              />
+
+              <HowHearAboutUsSelect
+                value={staffData.howDidYouHearAboutUsID}
+                onChange={handleHowHearChange}
+                onOtherDetected={handleHowHearOtherDetected}
+                error={errors.howDidYouHearAboutUsID}
+                required={true}
+                helperText="Tell us how this person discovered our organization"
+                onUnauthorized={onUnauthorized}
+              />
+
+              {staffData.isHowDidYouHearAboutUsOther && (
+                <Input
+                  label="How did you hear about us? (Other)"
+                  value={staffData.howDidYouHearAboutUsOther}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "howDidYouHearAboutUsOther",
+                      e.target.value,
+                    )
+                  }
+                  error={errors.howDidYouHearAboutUsOther}
+                  required
+                />
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                <Select
+                  label="Gender"
+                  value={staffData.gender}
+                  onChange={(e) =>
+                    handleInputChange("gender", parseInt(e.target.value))
+                  }
+                  options={GENDER_OPTIONS}
+                  error={errors.gender}
+                />
+
+                <DateInput
+                  label="Birth Date (Optional)"
+                  value={staffData.birthDate}
+                  onChange={(value) => handleInputChange("birthDate", value)}
+                  max={new Date().toISOString().split("T")[0]}
+                  error={errors.birthDate}
+                />
+              </div>
+
+              {staffData.gender === STAFF_GENDER_OTHER && (
+                <Input
+                  label="Gender (Other)"
+                  value={staffData.genderOther}
+                  onChange={(e) =>
+                    handleInputChange("genderOther", e.target.value)
+                  }
+                  error={errors.genderOther}
+                  required
+                />
+              )}
+
+              <DateInput
+                label="Join Date (Optional)"
+                value={staffData.joinDate}
+                onChange={(value) => handleInputChange("joinDate", value)}
+                error={errors.joinDate}
+                helperText="This indicates when the person joined the workery"
+              />
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Do you identify as belonging to any of the following groups?
+                  (Optional)
+                </label>
+                <div className="max-h-48 overflow-y-auto border border-gray-300 rounded-lg p-3">
+                  {IDENTIFY_AS_OPTIONS.map((opt) => (
+                    <label key={opt.value} className="flex items-center mb-2">
+                      <input
+                        type="checkbox"
+                        value={opt.value}
+                        checked={(staffData.identifyAs || []).includes(
+                          opt.value,
+                        )}
+                        onChange={(e) => handleIdentifyAsChange(e.target.value)}
+                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">
+                        {opt.label}
+                      </span>
                     </label>
-                    <input
-                      type="text"
-                      value={genderOther}
-                      onChange={(e) => setGenderOther(e.target.value)}
-                      className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                        errors.genderOther
-                          ? "border-red-300"
-                          : "border-gray-300"
-                      }`}
-                      required={gender === STAFF_GENDER_OTHER}
-                    />
-                    {errors.genderOther && (
-                      <p className="mt-1 text-sm text-red-600">
-                        {errors.genderOther}
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Join Date (Optional)
-                  </label>
-                  <input
-                    type="date"
-                    value={joinDate}
-                    onChange={(e) => setJoinDate(e.target.value)}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Do you identify as belonging to any of the following groups?
-                    (Optional)
-                  </label>
-                  <div className="max-h-48 overflow-y-auto border border-gray-300 rounded-lg p-3">
-                    {IDENTIFY_AS_OPTIONS.map((opt) => (
-                      <label key={opt.value} className="flex items-center mb-2">
-                        <input
-                          type="checkbox"
-                          value={opt.value}
-                          checked={identifyAs.includes(opt.value)}
-                          onChange={(e) =>
-                            handleIdentifyAsChange(e.target.value)
-                          }
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className="ml-2 text-sm text-gray-700">
-                          {opt.label}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
+                  ))}
                 </div>
               </div>
             </div>
-          </div>
+          </FormSection>
 
-          {/* System Information Section */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-            <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 rounded-t-lg">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                <ComputerDesktopIcon className="w-5 h-5 mr-2 text-blue-600" />
-                System Information
-              </h3>
-            </div>
-            <div className="p-6">
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description (Optional)
-                  </label>
-                  <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={4}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                    maxLength={638}
-                  />
-                  <p className="mt-1 text-sm text-gray-500">
-                    Max 638 characters
-                  </p>
-                </div>
+          {/* System Information Section with Dark Header */}
+          <FormSection title="System Information" icon={ComputerDesktopIcon}>
+            <div className="space-y-4 sm:space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Description (Optional)
+                </label>
+                <textarea
+                  value={staffData.description}
+                  onChange={(e) =>
+                    handleInputChange("description", e.target.value)
+                  }
+                  rows={4}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                  maxLength={638}
+                />
+                <p className="mt-1 text-sm text-gray-500">Max 638 characters</p>
+              </div>
 
-                <div className="max-w-xl">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Preferred Language <span className="text-red-500">*</span>
-                  </label>
-                  <div className="space-y-2">
-                    {LANGUAGE_OPTIONS.map((option) => (
-                      <label key={option.value} className="flex items-center">
-                        <input
-                          type="radio"
-                          value={option.value}
-                          checked={preferredLanguage === option.value}
-                          onChange={(e) => setPreferredLanguage(e.target.value)}
-                          className="rounded-full border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className="ml-2 text-sm text-gray-700">
-                          {option.label}
-                        </span>
-                      </label>
-                    ))}
-                  </div>
-                  {errors.preferredLanguage && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.preferredLanguage}
-                    </p>
-                  )}
-                </div>
+              <div className="max-w-xl">
+                <Select
+                  label="Preferred Language"
+                  value={staffData.preferredLanguage}
+                  onChange={(e) =>
+                    handleInputChange("preferredLanguage", e.target.value)
+                  }
+                  options={LANGUAGE_OPTIONS}
+                  error={errors.preferredLanguage}
+                />
               </div>
             </div>
-          </div>
+          </FormSection>
 
-          {/* Form Actions */}
-          <div className="flex justify-between items-center pt-6 border-t border-gray-200">
-            <Link to={`/admin/staff/${aid}`}>
+          {/* Form Actions - Responsive */}
+          <div className="flex flex-col sm:flex-row sm:justify-between items-stretch sm:items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 gap-3">
+            <Link to={`/admin/staff/${aid}`} className="order-2 sm:order-1">
               <button
                 type="button"
-                className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
+                className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
               >
-                <ChevronLeftIcon className="w-5 h-5 mr-2" />
+                <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                 Back to Detail
               </button>
             </Link>
@@ -1557,13 +1283,13 @@ function AdminStaffUpdatePage() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`inline-flex items-center px-5 py-2.5 border border-transparent rounded-lg text-base font-medium text-white transition-colors ${
+              className={`order-1 sm:order-2 inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-transparent rounded-lg text-sm sm:text-base font-medium text-white transition-colors ${
                 isSubmitting
                   ? "bg-gray-400 cursor-not-allowed"
                   : "bg-green-600 hover:bg-green-700"
               }`}
             >
-              <CheckCircleIcon className="w-5 h-5 mr-2" />
+              <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
               {isSubmitting ? "Saving..." : "Save Changes"}
             </button>
           </div>

@@ -201,16 +201,16 @@ function AdminOrderDetailFullPage() {
     return address || "-";
   };
 
-  // Section Component - Improved for responsiveness
+  // Section Component - Enhanced with dark header styling
   const DetailSection = ({ title, icon: Icon, children }) => (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-4 sm:mb-6">
-      <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-b border-gray-200 rounded-t-lg">
-        <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600 flex-shrink-0" />
+    <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
+      <div className="px-4 sm:px-6 py-3 sm:py-4">
+        <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
           <span className="truncate">{title}</span>
         </h3>
       </div>
-      <div className="p-4 sm:p-6">
+      <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
         <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
           {children}
         </dl>
@@ -218,13 +218,13 @@ function AdminOrderDetailFullPage() {
     </div>
   );
 
-  // Detail Field Component - Improved for responsiveness
+  // Detail Field Component - Enhanced for responsiveness
   const DetailField = ({ label, value, fullWidth = false }) => (
     <div className={fullWidth ? "lg:col-span-2" : ""}>
-      <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+      <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-1">
         {label}
       </dt>
-      <dd className="text-sm sm:text-base text-gray-900 break-words">
+      <dd className="text-base sm:text-lg font-medium text-gray-900 break-words">
         {value || "-"}
       </dd>
     </div>
@@ -332,7 +332,7 @@ function AdminOrderDetailFullPage() {
       <div className="bg-white shadow-sm rounded-lg">
         {order && (
           <>
-            {/* Header with Actions - Responsive */}
+            {/* Header with Actions - Enhanced Responsive */}
             <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200">
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
                 <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 flex items-center">
@@ -341,19 +341,22 @@ function AdminOrderDetailFullPage() {
                 </h2>
                 <div className="flex gap-2 sm:gap-3 flex-wrap">
                   <Link to="/admin/orders" className="flex-1 sm:flex-initial">
-                    <button className="w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                    <button className="w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-transparent rounded-lg text-sm sm:text-base font-medium text-white bg-gray-600 hover:bg-gray-700 transition-colors">
                       <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                       Back
                     </button>
                   </Link>
                   {order.associatePublicId !== 0 && (
-                    <Link to={`/admin/order/${oid}/more/unassign`}>
+                    <Link
+                      to={`/admin/order/${oid}/more/unassign`}
+                      className="flex-1 sm:flex-initial"
+                    >
                       <button
                         disabled={order.status === ORDER_STATUS_ARCHIVED}
-                        className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
+                        className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-transparent rounded-lg text-sm sm:text-base font-medium transition-colors ${
                           order.status === ORDER_STATUS_ARCHIVED
-                            ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                            : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
+                            ? "text-gray-400 bg-gray-200 cursor-not-allowed"
+                            : "text-white bg-gray-500 hover:bg-gray-600"
                         }`}
                       >
                         <UserIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
@@ -361,26 +364,32 @@ function AdminOrderDetailFullPage() {
                       </button>
                     </Link>
                   )}
-                  <Link to={`/admin/order/${oid}/more/close`}>
+                  <Link
+                    to={`/admin/order/${oid}/more/close`}
+                    className="flex-1 sm:flex-initial"
+                  >
                     <button
                       disabled={order.status === ORDER_STATUS_ARCHIVED}
-                      className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
+                      className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-transparent rounded-lg text-sm sm:text-base font-medium transition-colors ${
                         order.status === ORDER_STATUS_ARCHIVED
-                          ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                          : "border-red-300 text-red-700 bg-red-50 hover:bg-red-100"
+                          ? "text-gray-400 bg-gray-200 cursor-not-allowed"
+                          : "text-white bg-red-600 hover:bg-red-700"
                       }`}
                     >
                       <XCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                       Close
                     </button>
                   </Link>
-                  <Link to={`/admin/order/${oid}/edit`}>
+                  <Link
+                    to={`/admin/order/${oid}/edit`}
+                    className="flex-1 sm:flex-initial"
+                  >
                     <button
                       disabled={order.status === ORDER_STATUS_ARCHIVED}
-                      className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
+                      className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-transparent rounded-lg text-sm sm:text-base font-medium transition-colors ${
                         order.status === ORDER_STATUS_ARCHIVED
-                          ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                          : "border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100"
+                          ? "text-gray-400 bg-gray-200 cursor-not-allowed"
+                          : "text-white bg-amber-600 hover:bg-amber-700"
                       }`}
                     >
                       <PencilSquareIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
@@ -395,13 +404,14 @@ function AdminOrderDetailFullPage() {
                           order.latestPendingTaskId,
                           order.latestPendingTaskType,
                         )}
+                        className="flex-1 sm:flex-initial"
                       >
                         <button
                           disabled={order.status === ORDER_STATUS_ARCHIVED}
-                          className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
+                          className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-transparent rounded-lg text-sm sm:text-base font-medium transition-colors ${
                             order.status === ORDER_STATUS_ARCHIVED
-                              ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                              : "border-blue-600 text-white bg-blue-600 hover:bg-blue-700"
+                              ? "text-gray-400 bg-gray-200 cursor-not-allowed"
+                              : "text-white bg-blue-600 hover:bg-blue-700"
                           }`}
                         >
                           Go to Task
@@ -413,13 +423,16 @@ function AdminOrderDetailFullPage() {
                     order.status === ORDER_STATUS_COMPLETED_AND_PAID) &&
                     (currentUser?.role === STAFF_TYPE_MANAGEMENT ||
                       currentUser?.role === STAFF_TYPE_EXECUTIVE) && (
-                      <Link to={`/admin/financial/${oid}`}>
+                      <Link
+                        to={`/admin/financial/${oid}`}
+                        className="flex-1 sm:flex-initial"
+                      >
                         <button
                           disabled={order.status === ORDER_STATUS_ARCHIVED}
-                          className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
+                          className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-transparent rounded-lg text-sm sm:text-base font-medium transition-colors ${
                             order.status === ORDER_STATUS_ARCHIVED
-                              ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                              : "border-indigo-300 text-indigo-700 bg-indigo-50 hover:bg-indigo-100"
+                              ? "text-gray-400 bg-gray-200 cursor-not-allowed"
+                              : "text-white bg-indigo-600 hover:bg-indigo-700"
                           }`}
                         >
                           Go to Financials
@@ -479,7 +492,7 @@ function AdminOrderDetailFullPage() {
               </div>
             </div>
 
-            {/* Detail Sections - Responsive */}
+            {/* Detail Sections - Enhanced with dark headers */}
             <div className="p-4 sm:p-6">
               {/* Job Detail */}
               <DetailSection
@@ -545,7 +558,7 @@ function AdminOrderDetailFullPage() {
                   fullWidth
                 />
                 <div>
-                  <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+                  <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-1">
                     Skill Sets
                   </dt>
                   <dd>
@@ -556,7 +569,7 @@ function AdminOrderDetailFullPage() {
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-xs sm:text-sm font-medium text-gray-600 mb-1">
+                  <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-1">
                     Tag(s)
                   </dt>
                   <dd>
@@ -781,10 +794,10 @@ function AdminOrderDetailFullPage() {
                 />
               </DetailSection>
 
-              {/* Action Buttons - Responsive */}
+              {/* Action Buttons - Enhanced Responsive */}
               <div className="flex flex-col sm:flex-row sm:justify-between items-stretch sm:items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 gap-3">
                 <Link to="/admin/orders" className="order-2 sm:order-1">
-                  <button className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                  <button className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-transparent rounded-lg text-sm sm:text-base font-medium text-white bg-gray-600 hover:bg-gray-700 transition-colors">
                     <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                     Back to Orders
                   </button>
@@ -792,13 +805,16 @@ function AdminOrderDetailFullPage() {
 
                 <div className="flex gap-2 sm:gap-3 order-1 sm:order-2 flex-wrap">
                   {order.associatePublicId !== 0 && (
-                    <Link to={`/admin/order/${oid}/more/unassign`}>
+                    <Link
+                      to={`/admin/order/${oid}/more/unassign`}
+                      className="flex-1 sm:flex-initial"
+                    >
                       <button
                         disabled={order.status === ORDER_STATUS_ARCHIVED}
-                        className={`w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
+                        className={`w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-transparent rounded-lg text-sm sm:text-base font-medium transition-colors ${
                           order.status === ORDER_STATUS_ARCHIVED
-                            ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                            : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
+                            ? "text-gray-400 bg-gray-200 cursor-not-allowed"
+                            : "text-white bg-gray-500 hover:bg-gray-600"
                         }`}
                       >
                         <UserIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
@@ -806,26 +822,32 @@ function AdminOrderDetailFullPage() {
                       </button>
                     </Link>
                   )}
-                  <Link to={`/admin/order/${oid}/more/close`}>
+                  <Link
+                    to={`/admin/order/${oid}/more/close`}
+                    className="flex-1 sm:flex-initial"
+                  >
                     <button
                       disabled={order.status === ORDER_STATUS_ARCHIVED}
-                      className={`w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
+                      className={`w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-transparent rounded-lg text-sm sm:text-base font-medium transition-colors ${
                         order.status === ORDER_STATUS_ARCHIVED
-                          ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                          : "border-red-300 text-red-700 bg-red-50 hover:bg-red-100"
+                          ? "text-gray-400 bg-gray-200 cursor-not-allowed"
+                          : "text-white bg-red-600 hover:bg-red-700"
                       }`}
                     >
                       <XCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                       Close
                     </button>
                   </Link>
-                  <Link to={`/admin/order/${oid}/edit`}>
+                  <Link
+                    to={`/admin/order/${oid}/edit`}
+                    className="flex-1 sm:flex-initial"
+                  >
                     <button
                       disabled={order.status === ORDER_STATUS_ARCHIVED}
-                      className={`w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
+                      className={`w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-transparent rounded-lg text-sm sm:text-base font-medium transition-colors ${
                         order.status === ORDER_STATUS_ARCHIVED
-                          ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                          : "border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100"
+                          ? "text-gray-400 bg-gray-200 cursor-not-allowed"
+                          : "text-white bg-amber-600 hover:bg-amber-700"
                       }`}
                     >
                       <PencilSquareIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
