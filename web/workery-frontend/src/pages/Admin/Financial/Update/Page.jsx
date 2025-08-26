@@ -45,7 +45,7 @@ import {
 
 function AdminFinancialUpdatePage() {
   // URL Parameters
-  const { fid } = useParams(); // Changed from oid to fid for financial ID
+  const { fid } = useParams();
   const navigate = useNavigate();
 
   // Service hooks
@@ -62,6 +62,7 @@ function AdminFinancialUpdatePage() {
   const [taxRate, setTaxRate] = useState(0.0);
   const [alert, setAlert] = useState(null);
   const [onPageLoaded, setOnPageLoaded] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Form states
   const [invoicePaidTo, setInvoicePaidTo] = useState(1);
@@ -173,6 +174,60 @@ function AdminFinancialUpdatePage() {
     let deposit = parseFloat(invoiceDepositAmount) || 0;
     const amountDue = totalAmount - deposit;
     setInvoiceAmountDue(roundToTwo(amountDue));
+  };
+
+  // Format errors for display
+  const formatErrorsForDisplay = (errorData) => {
+    const formattedErrors = {};
+
+    // Handle different error response structures
+    if (typeof errorData === "string") {
+      formattedErrors.general = errorData;
+    } else if (errorData && typeof errorData === "object") {
+      // Check if it's an API validation error response
+      if (errorData.errors && typeof errorData.errors === "object") {
+        // Handle nested errors object
+        Object.keys(errorData.errors).forEach((key) => {
+          if (Array.isArray(errorData.errors[key])) {
+            formattedErrors[key] = errorData.errors[key].join(", ");
+          } else {
+            formattedErrors[key] = errorData.errors[key];
+          }
+        });
+      } else if (errorData.error) {
+        // Handle single error message
+        formattedErrors.general = errorData.error;
+      } else if (errorData.message) {
+        // Handle message field
+        formattedErrors.general = errorData.message;
+      } else {
+        // Handle flat error object
+        Object.keys(errorData).forEach((key) => {
+          if (key !== "statusCode" && key !== "status") {
+            if (Array.isArray(errorData[key])) {
+              formattedErrors[key] = errorData[key].join(", ");
+            } else if (typeof errorData[key] === "string") {
+              formattedErrors[key] = errorData[key];
+            } else if (
+              typeof errorData[key] === "object" &&
+              errorData[key].message
+            ) {
+              formattedErrors[key] = errorData[key].message;
+            } else {
+              formattedErrors[key] = String(errorData[key]);
+            }
+          }
+        });
+      }
+    }
+
+    // Add default error if no specific errors were extracted
+    if (Object.keys(formattedErrors).length === 0) {
+      formattedErrors.general =
+        "An error occurred while updating the financial information.";
+    }
+
+    return formattedErrors;
   };
 
   // Fetch current user
@@ -361,13 +416,8 @@ function AdminFinancialUpdatePage() {
         } catch (error) {
           console.error("Failed to fetch financial details:", error);
           if (mounted) {
-            if (typeof error === "object" && error !== null) {
-              setErrors(error);
-            } else {
-              setErrors({
-                general: "Failed to load financial details. Please try again.",
-              });
-            }
+            const formattedErrors = formatErrorsForDisplay(error);
+            setErrors(formattedErrors);
           }
         } finally {
           if (mounted) {
@@ -410,12 +460,61 @@ function AdminFinancialUpdatePage() {
     e.preventDefault();
     setErrors({});
     setAlert(null);
+    setIsSubmitting(true);
 
     // Validate required fields
     const validationErrors = {};
 
+    // Basic validation
     if (!invoiceDate) {
       validationErrors.invoiceDate = "Invoice date is required";
+    }
+
+    if (!invoiceIds || invoiceIds.trim() === "") {
+      validationErrors.invoiceIds = "Invoice ID is required";
+    }
+
+    if (!invoicePaidTo) {
+      validationErrors.invoicePaidTo =
+        "Please select who was paid for this job";
+    }
+
+    if (!paymentStatus) {
+      validationErrors.paymentStatus = "Payment status is required";
+    }
+
+    // Validate amounts are not negative
+    if (parseFloat(invoiceLabourAmount) < 0) {
+      validationErrors.invoiceLabourAmount = "Labour amount cannot be negative";
+    }
+
+    if (parseFloat(invoiceMaterialAmount) < 0) {
+      validationErrors.invoiceMaterialAmount =
+        "Material amount cannot be negative";
+    }
+
+    if (parseFloat(invoiceOtherCostsAmount) < 0) {
+      validationErrors.invoiceOtherCostsAmount =
+        "Other costs cannot be negative";
+    }
+
+    if (parseFloat(invoiceDepositAmount) < 0) {
+      validationErrors.invoiceDepositAmount =
+        "Deposit amount cannot be negative";
+    }
+
+    if (parseFloat(invoiceActualServiceFeeAmountPaid) < 0) {
+      validationErrors.invoiceActualServiceFeeAmountPaid =
+        "Service fee paid cannot be negative";
+    }
+
+    // Check if at least one payment method is selected for paid status
+    if (
+      paymentStatus === FINANCIAL_STATUS_PAID &&
+      paymentMethods.length === 0
+    ) {
+      validationErrors.paymentMethods =
+        "Please select at least one payment method for paid invoices";
     }
 
     if (Object.keys(validationErrors).length > 0) {
@@ -424,6 +523,7 @@ function AdminFinancialUpdatePage() {
         type: "error",
         message: "Please correct the errors below before submitting.",
       });
+      setIsSubmitting(false);
       window.scrollTo(0, 0);
       return;
     }
@@ -437,7 +537,7 @@ function AdminFinancialUpdatePage() {
       invoicePaidTo: parseInt(invoicePaidTo),
       completionDate: completionDate,
       invoiceDate: invoiceDate,
-      invoiceIds: invoiceIds.toString(),
+      invoiceIds: invoiceIds.toString().trim(),
 
       // Quote fields
       invoiceQuotedLabourAmount: parseFloat(invoiceQuotedLabourAmount),
@@ -474,7 +574,8 @@ function AdminFinancialUpdatePage() {
     };
 
     try {
-      setFetching(true);
+      // Debug log to see what we're sending
+      console.log("Submitting financial update:", updateData);
 
       // Use FinancialManager to update the financial information
       await financialManager.updateFinancial(fid, updateData, onUnauthorized);
@@ -490,21 +591,36 @@ function AdminFinancialUpdatePage() {
       }, 2000);
     } catch (error) {
       console.error("Failed to update financial information:", error);
-      if (typeof error === "object" && error !== null) {
-        setErrors(error);
-      } else {
-        setErrors({
-          general: "Failed to update financial information. Please try again.",
-        });
-      }
+
+      // Format and set errors
+      const formattedErrors = formatErrorsForDisplay(error);
+      setErrors(formattedErrors);
+
+      // Create detailed error message for alert
+      const errorMessages = [];
+      Object.keys(formattedErrors).forEach((key) => {
+        if (key === "general") {
+          errorMessages.push(formattedErrors[key]);
+        } else {
+          // Format field name for display
+          const fieldName = key
+            .replace(/([A-Z])/g, " $1")
+            .replace(/^./, (str) => str.toUpperCase());
+          errorMessages.push(`${fieldName}: ${formattedErrors[key]}`);
+        }
+      });
+
       setAlert({
         type: "error",
         message:
-          "Failed to update financial information. Please check the form and try again.",
+          errorMessages.length > 0
+            ? errorMessages.join(". ")
+            : "Failed to update financial information. Please check the form and try again.",
       });
+
       window.scrollTo(0, 0);
     } finally {
-      setFetching(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -630,18 +746,25 @@ function AdminFinancialUpdatePage() {
               : "bg-red-50 border border-red-200 text-red-700"
           }`}
         >
-          <div className="flex justify-between items-center">
-            <div className="flex items-center">
+          <div className="flex justify-between items-start">
+            <div className="flex items-start">
               {alert.type === "success" ? (
-                <CheckCircleIcon className="w-5 h-5 mr-2" />
+                <CheckCircleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
               ) : (
-                <XCircleIcon className="w-5 h-5 mr-2" />
+                <XCircleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
               )}
-              <span>{alert.message}</span>
+              <div className="flex-1">
+                <span className="font-medium">
+                  {alert.type === "error"
+                    ? "Please fix the following errors:"
+                    : "Success!"}
+                </span>
+                <div className="mt-1 text-sm">{alert.message}</div>
+              </div>
             </div>
             <button
               onClick={() => setAlert(null)}
-              className="text-current hover:opacity-70"
+              className="text-current hover:opacity-70 text-xl ml-4"
             >
               ×
             </button>
@@ -649,24 +772,33 @@ function AdminFinancialUpdatePage() {
         </div>
       )}
 
-      {/* Error display */}
+      {/* Detailed Error display (only if there are errors and no alert) */}
       {errors && Object.keys(errors).length > 0 && !alert && (
         <div className="mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-700">
-          <div className="flex items-center mb-2">
-            <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
-            <span className="font-medium">
-              Please correct the following errors:
-            </span>
+          <div className="flex items-start mb-2">
+            <ExclamationTriangleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <span className="font-medium">
+                Please correct the following errors:
+              </span>
+              <ul className="mt-2 list-disc list-inside space-y-1 text-sm">
+                {Object.keys(errors).map((key) => {
+                  const fieldName =
+                    key === "general"
+                      ? ""
+                      : key
+                          .replace(/([A-Z])/g, " $1")
+                          .replace(/^./, (str) => str.toUpperCase()) + ": ";
+                  return (
+                    <li key={key}>
+                      <span className="font-medium">{fieldName}</span>
+                      {errors[key]}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
           </div>
-          {errors.general && <p className="ml-7">{errors.general}</p>}
-          {Object.keys(errors).map((key) => {
-            if (key !== "general") {
-              return (
-                <p key={key} className="ml-7">{`${key}: ${errors[key]}`}</p>
-              );
-            }
-            return null;
-          })}
         </div>
       )}
 
@@ -687,43 +819,6 @@ function AdminFinancialUpdatePage() {
                 </button>
               </Link>
             </div>
-          </div>
-
-          {/* Tab Navigation */}
-          <div className="px-6 border-b border-gray-200">
-            <nav className="-mb-px flex space-x-8">
-              <Link
-                to={`/admin/financial/${fid}`}
-                className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              >
-                Summary
-              </Link>
-              <Link
-                to={`/admin/financial/${fid}/detail`}
-                className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              >
-                Detail
-              </Link>
-              <Link
-                to={`/admin/financial/${fid}/invoice`}
-                className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              >
-                Invoice
-              </Link>
-              <Link
-                to={`/admin/financial/${fid}/deposits`}
-                className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              >
-                Deposits
-              </Link>
-              <Link
-                to={`/admin/financial/${fid}/more`}
-                className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center"
-              >
-                More
-                <EllipsisHorizontalIcon className="w-5 h-5 ml-1" />
-              </Link>
-            </nav>
           </div>
 
           <form onSubmit={handleSubmit} className="p-6">
@@ -776,6 +871,11 @@ function AdminFinancialUpdatePage() {
                         </span>
                       </label>
                     </div>
+                    {errors.invoicePaidTo && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors.invoicePaidTo}
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -830,6 +930,11 @@ function AdminFinancialUpdatePage() {
                         </span>
                       </label>
                     </div>
+                    {errors.paymentStatus && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors.paymentStatus}
+                      </p>
+                    )}
                   </div>
 
                   {paymentStatus === FINANCIAL_STATUS_PAID && (
@@ -888,7 +993,7 @@ function AdminFinancialUpdatePage() {
                         type="text"
                         value={invoiceIds}
                         onChange={(e) => setInvoiceIds(e.target.value)}
-                        placeholder="Please note, the system automatically generates an ID"
+                        placeholder="Enter invoice ID"
                         className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
                           errors.invoiceIds
                             ? "border-red-300"
@@ -901,6 +1006,9 @@ function AdminFinancialUpdatePage() {
                           {errors.invoiceIds}
                         </p>
                       )}
+                      <p className="mt-1 text-xs text-gray-500">
+                        The system automatically generates an ID if not provided
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -1571,15 +1679,15 @@ function AdminFinancialUpdatePage() {
 
               <button
                 type="submit"
-                disabled={isFinancialArchived() || isFetching}
+                disabled={isFinancialArchived() || isSubmitting}
                 className={`inline-flex items-center px-5 py-2.5 border border-transparent rounded-lg text-base font-medium text-white transition-colors ${
-                  isFinancialArchived() || isFetching
+                  isFinancialArchived() || isSubmitting
                     ? "bg-gray-400 cursor-not-allowed"
                     : "bg-green-600 hover:bg-green-700"
                 }`}
               >
                 <CheckCircleIcon className="w-5 h-5 mr-2" />
-                {isFetching ? "Saving..." : "Save & Submit"}
+                {isSubmitting ? "Saving..." : "Save & Submit"}
               </button>
             </div>
           </form>
