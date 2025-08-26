@@ -32,6 +32,11 @@ import {
   ORDER_STATUS_COMPLETED_AND_PAID,
   ORDER_STATUS_ARCHIVED,
 } from "../../../../../../constants/Order";
+import {
+  TASK_ITEM_TYPE_ASSIGN_ASSOCIATE,
+  TASK_ITEM_TYPE_FOLLOW_UP_CUSTOMER_SURVEY,
+  TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_ACCEPT_JOB,
+} from "../../../../../../constants/Task";
 
 function AdminOrderDetailMoreTaskListPage() {
   const { oid } = useParams();
@@ -248,16 +253,6 @@ function AdminOrderDetailMoreTaskListPage() {
         return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
-
-  const isOrderActionable =
-    order &&
-    ![
-      ORDER_STATUS_DECLINED,
-      ORDER_STATUS_CANCELLED,
-      ORDER_STATUS_COMPLETED_BUT_UNPAID,
-      ORDER_STATUS_COMPLETED_AND_PAID,
-      ORDER_STATUS_ARCHIVED,
-    ].includes(order.status);
 
   // Initial load - only clear cache once on mount
   useEffect(() => {
@@ -614,9 +609,9 @@ function AdminOrderDetailMoreTaskListPage() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div className="flex justify-end gap-2">
-                              {isOrderActionable &&
-                                task.status === 1 &&
-                                task.type === 1 && (
+                              {task.status === 1 &&
+                                task.type ===
+                                  TASK_ITEM_TYPE_ASSIGN_ASSOCIATE && (
                                   <Link
                                     to={`/admin/task/${task.id}/assign-associate/step-1`}
                                     className="text-blue-600 hover:text-blue-900"
@@ -624,9 +619,10 @@ function AdminOrderDetailMoreTaskListPage() {
                                     Assign
                                   </Link>
                                 )}
-                              {isOrderActionable &&
-                                task.status === 1 &&
-                                task.type === 3 && (
+                              {task.status === 1 &&
+                                (task.type ===
+                                  TASK_ITEM_TYPE_FOLLOW_UP_CUSTOMER_SURVEY ||
+                                  task.type === 3) && (
                                   <Link
                                     to={`/admin/task/${task.id}/order-completion/step-1`}
                                     className="text-blue-600 hover:text-blue-900"
@@ -634,9 +630,9 @@ function AdminOrderDetailMoreTaskListPage() {
                                     Complete
                                   </Link>
                                 )}
-                              {isOrderActionable &&
-                                task.status === 1 &&
-                                task.type === 4 && (
+                              {task.status === 1 &&
+                                task.type ===
+                                  TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_ACCEPT_JOB && (
                                   <Link
                                     to={`/admin/task/${task.id}/survey/step-1`}
                                     className="text-blue-600 hover:text-blue-900"
@@ -644,7 +640,7 @@ function AdminOrderDetailMoreTaskListPage() {
                                     Survey
                                   </Link>
                                 )}
-                              {isOrderActionable && task.status === 1 && (
+                              {task.status === 1 && (
                                 <>
                                   <span className="text-gray-300">|</span>
                                   <Link
