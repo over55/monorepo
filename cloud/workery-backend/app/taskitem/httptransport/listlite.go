@@ -71,12 +71,12 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		f.IsClosed = int8(isClosed)
 	}
 
-	// // Apply search text if it exists in url parameter.
-	// searchKeyword := query.Get("search")
-	// if searchKeyword != "" {
-	// 	f.SearchText = searchKeyword
-	// }
-	//
+	// Apply search text if it exists in url parameter.
+	searchKeyword := query.Get("search")
+	if searchKeyword != "" {
+		f.SearchText = searchKeyword
+	}
+
 	// // Apply filters it exists in url parameter.
 	// firstName := query.Get("first_name")
 	// if firstName != "" {

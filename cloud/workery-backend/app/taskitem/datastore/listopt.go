@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -58,6 +59,19 @@ func (impl TaskItemStorerImpl) ListAsSelectOptionByFilter(ctx context.Context, f
 	// Full-text search
 	if f.SearchText != "" {
 		query["$text"] = bson.M{"$search": f.SearchText}
+
+		query["$or"] = []bson.M{
+			{"title": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+			{"description": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+			{"order_description": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+			{"customer_organization_name": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+			{"customer_name": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+			{"customer_email": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+			{"customer_phone": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+			{"associate_name": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+			{"associate_email": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+			{"associate_phone": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+		}
 	}
 
 	options.SetSort(bson.D{{sortField, 1}}) // Sort in ascending order based on the specified field

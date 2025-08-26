@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func (impl TaskItemStorerImpl) ListByFilter(ctx context.Context, f *TaskItemPaginationListFilter) (*TaskItemPaginationListResult, error) {
@@ -71,7 +72,18 @@ func (impl TaskItemStorerImpl) ListByFilter(ctx context.Context, f *TaskItemPagi
 
 	// Include Full-text search
 	if f.SearchText != "" {
-		filter["$text"] = bson.M{"$search": f.SearchText}
+		filter["$or"] = []bson.M{
+			{"title": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+			{"description": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+			{"order_description": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+			{"customer_organization_name": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+			{"customer_name": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+			{"customer_email": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+			{"customer_phone": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+			{"associate_name": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+			{"associate_email": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+			{"associate_phone": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+		}
 	}
 
 	// Execute the query
