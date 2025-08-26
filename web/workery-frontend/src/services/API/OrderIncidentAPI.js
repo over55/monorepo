@@ -50,9 +50,30 @@ export class OrderIncidentAPI {
       // Add search params
       if (params.search) queryParams.append("search", params.search);
 
-      // Add sorting params
-      if (params.sortBy && params.sortOrder) {
-        queryParams.append("sort_by", `${params.sortBy},${params.sortOrder}`);
+      // FIXED: Handle sorting params properly
+      if (params.sortBy) {
+        // Check if sortBy contains combined format (e.g., "created_at,DESC")
+        if (params.sortBy.includes(",")) {
+          const [field, order] = params.sortBy.split(",");
+          queryParams.append("sort_field", field);
+          // Convert DESC/ASC to -1/1 for backend
+          const sortOrder = order === "DESC" ? -1 : 1;
+          queryParams.append("sort_order", sortOrder);
+        } else {
+          // Separate field and order provided
+          queryParams.append("sort_field", params.sortBy);
+          if (params.sortOrder) {
+            // Convert DESC/ASC to -1/1 if needed
+            let sortOrder = params.sortOrder;
+            if (typeof params.sortOrder === "string") {
+              sortOrder = params.sortOrder === "DESC" ? -1 : 1;
+            }
+            queryParams.append("sort_order", sortOrder);
+          } else {
+            // Default to descending if no order specified
+            queryParams.append("sort_order", -1);
+          }
+        }
       }
 
       // Add any additional filters
@@ -72,6 +93,12 @@ export class OrderIncidentAPI {
       const url = queryString
         ? `${this.endpoints.ORDER_INCIDENTS}?${queryString}`
         : this.endpoints.ORDER_INCIDENTS;
+
+      // Debug log in development
+      if (process.env.NODE_ENV === "development") {
+        console.log("OrderIncidentAPI: Fetching with URL:", url);
+        console.log("OrderIncidentAPI: Query params:", queryString);
+      }
 
       // Make the API call
       const response = await authenticatedAxios.get(url);

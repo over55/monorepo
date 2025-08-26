@@ -34,8 +34,17 @@ func (impl OrderIncidentStorerImpl) ListByFilter(ctx context.Context, f *OrderIn
 		filter["order_type"] = f.OrderType
 	}
 
+	// FIXED: Search implementation - search in title and description fields
 	if f.SearchTitle != "" {
-		filter["text"] = bson.M{"$regex": primitive.Regex{Pattern: f.SearchTitle, Options: "i"}}
+		// Option 1: Use MongoDB text search (requires text index which is already created)
+		// This will use the text index on title and description fields
+		// filter["$text"] = bson.M{"$search": f.SearchTitle}
+
+		// Option 2: Use regex search on specific fields (more flexible for partial matches)
+		filter["$or"] = []bson.M{
+			{"title": bson.M{"$regex": primitive.Regex{Pattern: f.SearchTitle, Options: "i"}}},
+			{"description": bson.M{"$regex": primitive.Regex{Pattern: f.SearchTitle, Options: "i"}}},
+		}
 	}
 
 	// impl.Logger.Debug("listing filter:",
@@ -47,22 +56,12 @@ func (impl OrderIncidentStorerImpl) ListByFilter(ctx context.Context, f *OrderIn
 		return nil, err
 	}
 
-	// Include Full-text search
-	// if f.SearchTitle != "" {
-	// 	filter["$text"] = bson.M{"$search": f.SearchTitle}
-	// }
-
 	// Execute the query
 	cursor, err := impl.Collection.Find(ctx, filter, options)
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
-
-	// var results = []*ComicSubmission{}
-	// if err = cursor.All(ctx, &results); err != nil {
-	// 	panic(err)
-	// }
 
 	// Retrieve the documents and check if there is a next page
 	results := []*OrderIncident{}
@@ -132,9 +131,16 @@ func (impl OrderIncidentStorerImpl) ListAsSelectOptionByFilter(ctx context.Conte
 		query["_id"] = bson.M{"$gt": cursor.Lookup("_id").ObjectID()}
 	}
 
-	// Full-text search
+	// FIXED: Search implementation for select options
 	if f.SearchTitle != "" {
-		query["$text"] = bson.M{"$search": f.SearchTitle}
+		// Option 1: Use MongoDB text search
+		// query["$text"] = bson.M{"$search": f.SearchTitle}
+
+		// Option 2: Use regex search (consistent with ListByFilter)
+		query["$or"] = []bson.M{
+			{"title": bson.M{"$regex": primitive.Regex{Pattern: f.SearchTitle, Options: "i"}}},
+			{"description": bson.M{"$regex": primitive.Regex{Pattern: f.SearchTitle, Options: "i"}}},
+		}
 	}
 
 	options.SetSort(bson.D{{sortField, 1}}) // Sort in ascending order based on the specified field

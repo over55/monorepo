@@ -22,8 +22,18 @@ func (impl OrderIncidentStorerImpl) CountByFilter(ctx context.Context, f *OrderI
 	if f.Status != 0 {
 		filter["status"] = f.Status
 	}
+
+	// FIXED: Search implementation - must match ListByFilter for accurate counts
 	if f.SearchTitle != "" {
-		filter["text"] = bson.M{"$regex": primitive.Regex{Pattern: f.SearchTitle, Options: "i"}}
+		// Option 1: Use MongoDB text search (requires text index which is already created)
+		// This will use the text index on title and description fields
+		// filter["$text"] = bson.M{"$search": f.SearchTitle}
+
+		// Option 2: Use regex search on specific fields (more flexible for partial matches)
+		filter["$or"] = []bson.M{
+			{"title": bson.M{"$regex": primitive.Regex{Pattern: f.SearchTitle, Options: "i"}}},
+			{"description": bson.M{"$regex": primitive.Regex{Pattern: f.SearchTitle, Options: "i"}}},
+		}
 	}
 
 	// impl.Logger.Debug("counting w/ filter:",
