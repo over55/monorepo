@@ -168,8 +168,9 @@ function AdminOrderDetailMoreClosePage() {
     setShowConfirmModal(false);
     console.log("handleConfirmClose: Beginning submission...");
 
-    // Prepare payload for API
+    // Prepare payload for API - MUST include order_id!
     const closureData = {
+      order_id: order.id || order.ID || order._id, // Include the MongoDB ObjectID
       wasCompleted: wasCompleted,
       completionDate: completionDate,
       reason: reason,
@@ -191,9 +192,9 @@ function AdminOrderDetailMoreClosePage() {
       // Show success message
       setShowSuccessMessage(true);
 
-      // Redirect after 2 seconds
+      // Redirect to tasks list after 2 seconds
       setTimeout(() => {
-        navigate(`/admin/order/${oid}/more`);
+        navigate(`/admin/tasks`); // Changed to redirect to tasks list
       }, 2000);
     } catch (error) {
       console.error(
@@ -327,7 +328,7 @@ function AdminOrderDetailMoreClosePage() {
       {showSuccessMessage && (
         <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center">
           <CheckCircleIcon className="w-5 h-5 mr-2" />
-          Order closed successfully! Redirecting...
+          Order closed successfully! Redirecting to tasks list...
         </div>
       )}
 

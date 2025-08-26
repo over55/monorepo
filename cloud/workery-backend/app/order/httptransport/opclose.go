@@ -12,6 +12,7 @@ import (
 	c_c "github.com/over55/monorepo/cloud/workery-backend/app/order/controller"
 	c_s "github.com/over55/monorepo/cloud/workery-backend/app/order/datastore"
 	"github.com/over55/monorepo/cloud/workery-backend/utils/httperror"
+	"github.com/relvacode/iso8601"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -38,6 +39,19 @@ func (h *Handler) unmarshalOperationCloseRequest(ctx context.Context, r *http.Re
 			slog.String("json", rawJSON.String()),
 		)
 		return nil, httperror.NewForSingleField(http.StatusBadRequest, "non_field_error", "payload structure is wrong")
+	}
+
+	if requestData.CompletionDate != "" {
+		completionDateFormatted, err := iso8601.ParseString(requestData.CompletionDate)
+		if err != nil {
+			h.Logger.Error("iso8601 parsing error",
+				slog.Any("err", err),
+				slog.String("CompletionDate", requestData.CompletionDate),
+				slog.String("json", rawJSON.String()),
+			)
+			return nil, httperror.NewForSingleField(http.StatusBadRequest, "start_date", "payload structure is wrong")
+		}
+		requestData.CompletionDateFormatted = completionDateFormatted
 	}
 
 	return &requestData, nil

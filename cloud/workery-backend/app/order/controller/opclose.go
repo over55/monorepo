@@ -18,13 +18,14 @@ import (
 )
 
 type OrderOperationCloseRequest struct {
-	OrderID            primitive.ObjectID `bson:"order_id" json:"order_id"`
-	WasCompleted       uint64             `bson:"was_completed" json:"was_completed"`
-	Reason             int8               `bson:"reason" json:"reason"`
-	ReasonOther        string             `bson:"reason_other" json:"reason_other"`
-	CompletionDate     time.Time          `bson:"completion_date" json:"completion_date"`
-	DescribeTheComment string             `bson:"describe_the_comment" json:"describe_the_comment"`
-	Visits             int8               `bson:"visits" json:"visits"`
+	OrderID                 primitive.ObjectID `bson:"order_id" json:"order_id"`
+	WasCompleted            uint64             `bson:"was_completed" json:"was_completed"`
+	Reason                  int8               `bson:"reason" json:"reason"`
+	ReasonOther             string             `bson:"reason_other" json:"reason_other"`
+	CompletionDateFormatted time.Time          `bson:"completion_date_formatted" json:"-"`
+	CompletionDate          string             `bson:"completion_date" json:"completion_date"`
+	DescribeTheComment      string             `bson:"describe_the_comment" json:"describe_the_comment"`
+	Visits                  int8               `bson:"visits" json:"visits"`
 }
 
 func (impl *OrderControllerImpl) validateOperationCloseRequest(ctx context.Context, dirtyData *OrderOperationCloseRequest) error {
@@ -38,7 +39,7 @@ func (impl *OrderControllerImpl) validateOperationCloseRequest(ctx context.Conte
 		e["was_completed"] = "missing value"
 	}
 	if dirtyData.WasCompleted == 1 {
-		if dirtyData.CompletionDate.IsZero() {
+		if dirtyData.CompletionDate == "" {
 			e["completion_date"] = "missing value"
 		}
 		if dirtyData.Visits <= 0 {
@@ -183,7 +184,7 @@ func (impl *OrderControllerImpl) Close(ctx context.Context, req *OrderOperationC
 		////
 
 		if req.WasCompleted == 1 { // 1=YES
-			o.CompletionDate = req.CompletionDate
+			o.CompletionDate = req.CompletionDateFormatted
 			o.Visits = req.Visits
 			o.Status = o_s.OrderStatusCompletedButUnpaid
 		} else if req.WasCompleted == 2 { // 2=NO
@@ -325,7 +326,7 @@ func (impl *OrderControllerImpl) Close(ctx context.Context, req *OrderOperationC
 			//// Update existing order.
 			////
 
-			o.CompletionDate = req.CompletionDate
+			o.CompletionDate = req.CompletionDateFormatted
 			o.Status = o_s.OrderStatusCompletedButUnpaid
 			o.Visits = req.Visits
 			o.LatestPendingTaskID = newTask.ID
