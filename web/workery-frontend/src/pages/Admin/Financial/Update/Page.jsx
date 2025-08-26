@@ -221,6 +221,16 @@ function AdminFinancialUpdatePage() {
       }
     }
 
+    // Map API field names to form field names
+    if (formattedErrors.amount && !formattedErrors.invoiceTotalAmount) {
+      formattedErrors.invoiceTotalAmount = formattedErrors.amount;
+    }
+    if (formattedErrors.type) {
+      formattedErrors.general = formattedErrors.general
+        ? `${formattedErrors.general}. ${formattedErrors.type}`
+        : formattedErrors.type;
+    }
+
     // Add default error if no specific errors were extracted
     if (Object.keys(formattedErrors).length === 0) {
       formattedErrors.general =
@@ -465,6 +475,12 @@ function AdminFinancialUpdatePage() {
     // Validate required fields
     const validationErrors = {};
 
+    // Validate amount (total amount must be greater than 0)
+    if (!invoiceTotalAmount || parseFloat(invoiceTotalAmount) === 0) {
+      validationErrors.invoiceTotalAmount =
+        "Total amount is required and must be greater than 0";
+    }
+
     // Basic validation
     if (!invoiceDate) {
       validationErrors.invoiceDate = "Invoice date is required";
@@ -530,6 +546,10 @@ function AdminFinancialUpdatePage() {
 
     // Build update data for the financial record
     const updateData = {
+      // Required base fields
+      amount: parseFloat(invoiceTotalAmount) || 0,
+      type: financial.type || "invoice", // Add this - uses existing type or defaults to 'invoice'
+
       // Status update
       status: parseInt(paymentStatus),
 
@@ -1332,9 +1352,18 @@ function AdminFinancialUpdatePage() {
                         step="0.01"
                         value={invoiceTotalAmount}
                         disabled
-                        className="block w-full pl-7 pr-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-700"
+                        className={`block w-full pl-7 pr-3 py-2 border rounded-lg bg-gray-50 text-gray-700 ${
+                          errors.invoiceTotalAmount || errors.amount
+                            ? "border-red-300"
+                            : "border-gray-200"
+                        }`}
                       />
                     </div>
+                    {(errors.invoiceTotalAmount || errors.amount) && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {errors.invoiceTotalAmount || errors.amount}
+                      </p>
+                    )}
                     <p className="mt-1 text-xs text-gray-500 flex items-center">
                       <CalculatorIcon className="w-3 h-3 mr-1" />
                       Automatically calculated
