@@ -38,6 +38,7 @@ import {
   ORDER_STATUS_COMPLETED_AND_PAID,
   ORDER_STATUS_COMPLETED_BUT_UNPAID,
 } from "../../../../constants/Order";
+import { FINANCIAL_TYPE_INVOICE } from "../../../../constants/Financial";
 
 function AdminFinancialUpdatePage() {
   // URL Parameters
@@ -68,7 +69,7 @@ function AdminFinancialUpdatePage() {
   const [completionDate, setCompletionDate] = useState(null);
   const [invoiceDate, setInvoiceDate] = useState(null);
   const [invoiceIds, setInvoiceIds] = useState("");
-  const [financialType, setFinancialType] = useState(1); // Default to Invoice type
+  const [financialType, setFinancialType] = useState(FINANCIAL_TYPE_INVOICE); // Use constant and default to Invoice type
 
   // Quote fields
   const [invoiceQuotedLabourAmount, setInvoiceQuotedLabourAmount] = useState(0);
@@ -291,7 +292,7 @@ function AdminFinancialUpdatePage() {
             setCompletionDate(orderData.completionDate);
             setInvoiceDate(orderData.invoiceDate);
             setInvoiceIds(orderData.invoiceIds || "");
-            setFinancialType(orderData.type || 1); // Set financial type from order or default to 1
+            setFinancialType(orderData.financialType || FINANCIAL_TYPE_INVOICE); // Use the financial type from order or default to Invoice
 
             // Quote fields
             setInvoiceQuotedLabourAmount(
@@ -456,7 +457,7 @@ function AdminFinancialUpdatePage() {
       invoiceBalanceOwingAmount: parseFloat(invoiceBalanceOwingAmount),
       // Add required fields for the API
       amount: parseFloat(invoiceTotalAmount), // Total invoice amount
-      type: 1, // Financial record type (1 = Invoice, you may need to adjust based on your backend)
+      type: String(financialType), // Convert type to string to satisfy validation (temporary fix)
     };
 
     try {
