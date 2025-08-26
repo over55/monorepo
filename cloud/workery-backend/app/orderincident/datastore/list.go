@@ -34,16 +34,42 @@ func (impl OrderIncidentStorerImpl) ListByFilter(ctx context.Context, f *OrderIn
 		filter["order_type"] = f.OrderType
 	}
 
-	// FIXED: Search implementation - search in title and description fields
-	if f.SearchTitle != "" {
-		// Option 1: Use MongoDB text search (requires text index which is already created)
-		// This will use the text index on title and description fields
-		// filter["$text"] = bson.M{"$search": f.SearchTitle}
+	// ADDED: Handle Initiator filter
+	if f.Initiator != 0 {
+		filter["initiator"] = f.Initiator
+	}
 
-		// Option 2: Use regex search on specific fields (more flexible for partial matches)
+	// ADDED: Handle Open/Closed status based on closing_reason field
+	if f.IsOpen {
+		// Open incidents have no closing reason (or closing_reason = 0)
 		filter["$or"] = []bson.M{
+			{"closing_reason": bson.M{"$exists": false}},
+			{"closing_reason": 0},
+			{"closing_reason": nil},
+		}
+	} else if f.IsClosed {
+		// Closed incidents have a closing reason (closing_reason > 0)
+		filter["closing_reason"] = bson.M{"$gt": 0}
+	}
+
+	// Search implementation - search in title and description fields
+	if f.SearchTitle != "" {
+		// If we already have an $or condition from open/closed status,
+		// we need to combine them with $and
+		searchFilter := []bson.M{
 			{"title": bson.M{"$regex": primitive.Regex{Pattern: f.SearchTitle, Options: "i"}}},
 			{"description": bson.M{"$regex": primitive.Regex{Pattern: f.SearchTitle, Options: "i"}}},
+		}
+
+		if existingOr, hasOr := filter["$or"]; hasOr {
+			// Combine with AND logic
+			filter["$and"] = []bson.M{
+				{"$or": existingOr},
+				{"$or": searchFilter},
+			}
+			delete(filter, "$or")
+		} else {
+			filter["$or"] = searchFilter
 		}
 	}
 
@@ -131,12 +157,9 @@ func (impl OrderIncidentStorerImpl) ListAsSelectOptionByFilter(ctx context.Conte
 		query["_id"] = bson.M{"$gt": cursor.Lookup("_id").ObjectID()}
 	}
 
-	// FIXED: Search implementation for select options
+	// Search implementation for select options
 	if f.SearchTitle != "" {
-		// Option 1: Use MongoDB text search
-		// query["$text"] = bson.M{"$search": f.SearchTitle}
-
-		// Option 2: Use regex search (consistent with ListByFilter)
+		// Use regex search (consistent with ListByFilter)
 		query["$or"] = []bson.M{
 			{"title": bson.M{"$regex": primitive.Regex{Pattern: f.SearchTitle, Options: "i"}}},
 			{"description": bson.M{"$regex": primitive.Regex{Pattern: f.SearchTitle, Options: "i"}}},

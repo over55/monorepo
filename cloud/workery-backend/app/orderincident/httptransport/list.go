@@ -73,7 +73,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		f.SortOrder = int8(sortOrder)
 	}
 
-	// Order Work Job ID filter (FIXED: was checking wrong variable)
+	// Order Work Job ID filter
 	orderWJIDStr := query.Get("order_wjid")
 	if orderWJIDStr != "" {
 		orderWJID, err := strconv.ParseUint(orderWJIDStr, 10, 64)
@@ -83,7 +83,7 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		// Ignore on parse error
 	}
 
-	// Order Type filter (FIXED: was checking wrong variable)
+	// Order Type filter
 	orderTypeStr := query.Get("order_type")
 	if orderTypeStr != "" {
 		orderType, err := strconv.ParseInt(orderTypeStr, 10, 64)
@@ -99,12 +99,32 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		f.SearchTitle = searchKeyword
 	}
 
-	// Status filter
+	// FIXED: Status filter - handle "open" and "closed" string values
+	// The frontend sends "open" or "closed", but we need to interpret this
+	// as whether the incident has a closing reason or not
 	statusStr := query.Get("status")
 	if statusStr != "" {
-		status, err := strconv.ParseInt(statusStr, 10, 64)
-		if err == nil && status > 0 {
-			f.Status = int8(status)
+		if statusStr == "open" {
+			// Open incidents have no closing reason
+			f.IsOpen = true
+		} else if statusStr == "closed" {
+			// Closed incidents have a closing reason
+			f.IsClosed = true
+		} else {
+			// Try to parse as numeric for backward compatibility
+			status, err := strconv.ParseInt(statusStr, 10, 64)
+			if err == nil && status > 0 {
+				f.Status = int8(status)
+			}
+		}
+	}
+
+	// FIXED: Initiator filter - was completely missing
+	initiatorStr := query.Get("initiator")
+	if initiatorStr != "" {
+		initiator, err := strconv.ParseInt(initiatorStr, 10, 64)
+		if err == nil && initiator > 0 {
+			f.Initiator = int8(initiator)
 		}
 		// Ignore on parse error or invalid value
 	}

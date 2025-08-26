@@ -29,6 +29,9 @@ type OrderIncidentPaginationListFilter struct {
 	OrderWJID   uint64
 	Status      int8
 	SearchTitle string
+	Initiator   int8 // ADDED: Filter by who initiated the incident
+	IsOpen      bool // ADDED: Filter for open incidents (no closing reason)
+	IsClosed    bool // ADDED: Filter for closed incidents (has closing reason)
 }
 
 // OrderIncidentPaginationListResult represents the paginated list results for
