@@ -1,8 +1,13 @@
 // File Path: monorepo/web/workery-frontend/src/services/Manager/FinancialManager.js
 
+import {
+  ORDER_STATUS_COMPLETED_AND_PAID,
+  ORDER_STATUS_COMPLETED_BUT_UNPAID,
+} from "../../constants/Order";
+
 /**
- * FinancialManager handles all financial-related business logic
- * Combines FinancialAPI with FinancialStorage for complete financial management
+ * FinancialManager handles order financial business logic
+ * Coordinates between FinancialAPI and FinancialStorage for order financial management
  */
 export class FinancialManager {
   constructor(financialAPI, financialStorage) {
@@ -11,165 +16,71 @@ export class FinancialManager {
   }
 
   /**
-   * Gets financial select options with caching
+   * Gets financial details for a specific order
+   * @param {number} orderWJID - The Work Job ID of the order
    * @param {Function} onUnauthorizedCallback - Called when authentication fails
    * @param {boolean} forceRefresh - Whether to bypass cache and force fresh data
-   * @returns {Promise<Object>} - Financial select options
+   * @returns {Promise<Object>} - Order financial details
    */
-  async getFinancialSelectOptions(
+  async getOrderFinancialDetail(
+    orderWJID,
     onUnauthorizedCallback = null,
     forceRefresh = false,
   ) {
     try {
+      // Validate order WJID
+      if (!orderWJID || typeof orderWJID !== "number") {
+        throw { orderWJID: "Valid order WJID is required" };
+      }
+
       // Check storage cache first (unless force refresh is requested)
       if (!forceRefresh) {
-        const cachedOptions = this.financialStorage.getSelectOptionsFromCache();
-        if (cachedOptions) {
-          return cachedOptions;
+        const cachedData =
+          this.financialStorage.getOrderFinancialFromCache(orderWJID);
+        if (cachedData) {
+          return cachedData;
         }
       }
 
-      // Prevent multiple simultaneous requests
-      if (this.financialStorage.isSelectOptionsCacheLoading()) {
+      // Prevent multiple simultaneous requests for same order
+      if (this.financialStorage.isOrderFinancialCacheLoading(orderWJID)) {
         console.log(
-          "FinancialManager: Select options request already in progress",
+          `FinancialManager: Financial detail request already in progress for order ${orderWJID}`,
         );
-        return this._waitForCurrentSelectOptionsRequest();
+        return this._waitForOrderFinancialRequest(orderWJID);
       }
 
-      this.financialStorage.setSelectOptionsCacheLoading(true);
-
-      console.log("FinancialManager: Fetching fresh select options data");
-
-      try {
-        // Fetch fresh data from API
-        const optionsData = await this.financialAPI.getFinancialSelectOptions(
-          onUnauthorizedCallback,
-        );
-
-        // Save to storage cache
-        this.financialStorage.saveSelectOptionsToCache(optionsData);
-
-        console.log(
-          "FinancialManager: Select options data fetched successfully",
-        );
-
-        return optionsData;
-      } finally {
-        this.financialStorage.setSelectOptionsCacheLoading(false);
-      }
-    } catch (error) {
-      this.financialStorage.setSelectOptionsCacheLoading(false);
-      console.error("FinancialManager: Failed to get select options", error);
-      throw error;
-    }
-  }
-
-  /**
-   * Gets list of financial records with caching, filtering, and pagination
-   * @param {Object} params - Query parameters { page, limit, search, sortBy, sortOrder, startDate, endDate, type }
-   * @param {Function} onUnauthorizedCallback - Called when authentication fails
-   * @param {boolean} forceRefresh - Whether to bypass cache and force fresh data
-   * @returns {Promise<Object>} - Financial records list with pagination data
-   */
-  async getFinancials(
-    params = {},
-    onUnauthorizedCallback = null,
-    forceRefresh = false,
-  ) {
-    try {
-      // Check storage cache first (unless force refresh is requested)
-      if (!forceRefresh) {
-        const cachedFinancials = this.financialStorage.getFinancialsFromCache();
-        if (cachedFinancials) {
-          return cachedFinancials;
-        }
-      }
-
-      // Prevent multiple simultaneous requests
-      if (this.financialStorage.isFinancialsCacheLoading()) {
-        console.log(
-          "FinancialManager: Financial records request already in progress",
-        );
-        return this._waitForCurrentFinancialsRequest();
-      }
-
-      this.financialStorage.setFinancialsCacheLoading(true);
+      this.financialStorage.setOrderFinancialCacheLoading(orderWJID, true);
 
       console.log(
-        "FinancialManager: Fetching fresh financial records data",
-        params,
+        `FinancialManager: Fetching fresh financial data for order ${orderWJID}`,
       );
 
       try {
-        // Validate and clean parameters
-        const validatedParams = this._validateFinancialsParams(params);
-
         // Fetch fresh data from API
-        const financialsData = await this.financialAPI.getFinancials(
-          validatedParams,
+        const financialData = await this.financialAPI.getOrderFinancialDetail(
+          orderWJID,
           onUnauthorizedCallback,
         );
 
         // Save to storage cache
-        this.financialStorage.saveFinancialsToCache(financialsData);
-
-        console.log(
-          "FinancialManager: Financial records data fetched successfully:",
-          {
-            count: financialsData.results ? financialsData.results.length : 0,
-            totalCount: financialsData.count,
-          },
+        this.financialStorage.saveOrderFinancialToCache(
+          orderWJID,
+          financialData,
         );
 
-        return financialsData;
+        console.log(
+          `FinancialManager: Order ${orderWJID} financial data fetched successfully`,
+        );
+
+        return financialData;
       } finally {
-        this.financialStorage.setFinancialsCacheLoading(false);
+        this.financialStorage.setOrderFinancialCacheLoading(orderWJID, false);
       }
     } catch (error) {
-      this.financialStorage.setFinancialsCacheLoading(false);
-      console.error("FinancialManager: Failed to get financial records", error);
-      throw error;
-    }
-  }
-
-  /**
-   * Creates a new financial record with validation
-   * @param {Object} financialData - Financial record data to create
-   * @param {Function} onUnauthorizedCallback - Called when authentication fails
-   * @returns {Promise<Object>} - Created financial record data
-   */
-  async createFinancial(financialData, onUnauthorizedCallback = null) {
-    try {
-      // Validate financial data
-      const validationErrors = this._validateFinancialData(financialData, true);
-      if (Object.keys(validationErrors).length > 0) {
-        throw validationErrors;
-      }
-
-      console.log("FinancialManager: Creating new financial record");
-
-      // Call API to create financial record
-      const createdFinancialData = await this.financialAPI.createFinancial(
-        financialData,
-        onUnauthorizedCallback,
-      );
-
-      // Clear financial records cache since new data has been added
-      this.financialStorage.clearFinancialsCache();
-      this.financialStorage.clearSelectOptionsCache();
-      this.financialStorage.clearSummaryCache();
-
-      console.log("FinancialManager: Financial record created successfully:", {
-        id: createdFinancialData.id,
-        type: createdFinancialData.type,
-        amount: createdFinancialData.amount,
-      });
-
-      return createdFinancialData;
-    } catch (error) {
+      this.financialStorage.setOrderFinancialCacheLoading(orderWJID, false);
       console.error(
-        "FinancialManager: Failed to create financial record",
+        `FinancialManager: Failed to get financial data for order ${orderWJID}`,
         error,
       );
       throw error;
@@ -177,65 +88,21 @@ export class FinancialManager {
   }
 
   /**
-   * Gets details for a specific financial record
-   * @param {string|number} financialId - The ID of the financial record
+   * Updates financial information for an order
+   * @param {number} orderWJID - The Work Job ID of the order
+   * @param {Object} financialData - Financial data to update
    * @param {Function} onUnauthorizedCallback - Called when authentication fails
-   * @returns {Promise<Object>} - Financial record details
+   * @returns {Promise<Object>} - Updated order data
    */
-  async getFinancialDetail(financialId, onUnauthorizedCallback = null) {
-    try {
-      // Validate financial ID
-      const validationError = this._validateFinancialId(financialId);
-      if (validationError) {
-        throw validationError;
-      }
-
-      console.log(
-        `FinancialManager: Fetching financial record detail for ID ${financialId}`,
-      );
-
-      // Call API to get financial record details
-      const financialData = await this.financialAPI.getFinancialDetail(
-        financialId,
-        onUnauthorizedCallback,
-      );
-
-      console.log(
-        "FinancialManager: Financial record detail fetched successfully:",
-        {
-          id: financialData.id,
-          type: financialData.type,
-          amount: financialData.amount,
-        },
-      );
-
-      return financialData;
-    } catch (error) {
-      console.error(
-        "FinancialManager: Failed to get financial record detail",
-        error,
-      );
-      throw error;
-    }
-  }
-
-  /**
-   * Updates a specific financial record
-   * @param {string|number} financialId - The ID of the financial record
-   * @param {Object} financialData - Financial record data to update
-   * @param {Function} onUnauthorizedCallback - Called when authentication fails
-   * @returns {Promise<Object>} - Updated financial record data
-   */
-  async updateFinancial(
-    financialId,
+  async updateOrderFinancial(
+    orderWJID,
     financialData,
     onUnauthorizedCallback = null,
   ) {
     try {
-      // Validate financial ID
-      const financialIdError = this._validateFinancialId(financialId);
-      if (financialIdError) {
-        throw financialIdError;
+      // Validate order WJID
+      if (!orderWJID || typeof orderWJID !== "number") {
+        throw { orderWJID: "Valid order WJID is required" };
       }
 
       // Validate financial data
@@ -245,27 +112,28 @@ export class FinancialManager {
       }
 
       console.log(
-        `FinancialManager: Updating financial record ID ${financialId}`,
+        `FinancialManager: Updating financial data for order ${orderWJID}`,
       );
 
-      // Call API to update financial record
-      const updatedFinancialData = await this.financialAPI.updateFinancial(
-        financialId,
+      // Call API to update financial data
+      const updatedData = await this.financialAPI.updateOrderFinancial(
+        orderWJID,
         financialData,
         onUnauthorizedCallback,
       );
 
-      // Clear financial records cache since data has been updated
-      this.financialStorage.clearFinancialsCache();
-      this.financialStorage.clearSelectOptionsCache();
+      // Clear cache for this order since data has been updated
+      this.financialStorage.clearOrderFinancialCache(orderWJID);
       this.financialStorage.clearSummaryCache();
 
-      console.log("FinancialManager: Financial record updated successfully");
+      console.log(
+        `FinancialManager: Order ${orderWJID} financial data updated successfully`,
+      );
 
-      return updatedFinancialData;
+      return updatedData;
     } catch (error) {
       console.error(
-        "FinancialManager: Failed to update financial record",
+        `FinancialManager: Failed to update financial data for order ${orderWJID}`,
         error,
       );
       throw error;
@@ -273,40 +141,39 @@ export class FinancialManager {
   }
 
   /**
-   * Deletes a specific financial record
-   * @param {string|number} financialId - The ID of the financial record to delete
+   * Gets orders with financial data for reporting
+   * @param {Object} params - Query parameters for filtering
    * @param {Function} onUnauthorizedCallback - Called when authentication fails
-   * @returns {Promise<Object>} - Delete response
+   * @returns {Promise<Object>} - Orders list with financial data
    */
-  async deleteFinancial(financialId, onUnauthorizedCallback = null) {
+  async getOrdersWithFinancialData(params = {}, onUnauthorizedCallback = null) {
     try {
-      // Validate financial ID
-      const validationError = this._validateFinancialId(financialId);
-      if (validationError) {
-        throw validationError;
-      }
-
       console.log(
-        `FinancialManager: Deleting financial record ID ${financialId}`,
+        "FinancialManager: Fetching orders with financial data",
+        params,
       );
 
-      // Call API to delete financial record
-      const deleteResponse = await this.financialAPI.deleteFinancial(
-        financialId,
+      // Validate and clean parameters
+      const validatedParams = this._validateOrdersParams(params);
+
+      // Fetch data from API
+      const ordersData = await this.financialAPI.getOrdersWithFinancialData(
+        validatedParams,
         onUnauthorizedCallback,
       );
 
-      // Clear financial records cache since data has been updated
-      this.financialStorage.clearFinancialsCache();
-      this.financialStorage.clearSelectOptionsCache();
-      this.financialStorage.clearSummaryCache();
+      console.log(
+        "FinancialManager: Orders with financial data fetched successfully:",
+        {
+          count: ordersData.results ? ordersData.results.length : 0,
+          totalCount: ordersData.count,
+        },
+      );
 
-      console.log("FinancialManager: Financial record deleted successfully");
-
-      return deleteResponse;
+      return ordersData;
     } catch (error) {
       console.error(
-        "FinancialManager: Failed to delete financial record",
+        "FinancialManager: Failed to get orders with financial data",
         error,
       );
       throw error;
@@ -315,7 +182,7 @@ export class FinancialManager {
 
   /**
    * Gets financial summary with caching
-   * @param {Object} params - Query parameters { startDate, endDate, type }
+   * @param {Object} params - Query parameters { startDate, endDate }
    * @param {Function} onUnauthorizedCallback - Called when authentication fails
    * @param {boolean} forceRefresh - Whether to bypass cache and force fresh data
    * @returns {Promise<Object>} - Financial summary data
@@ -337,7 +204,7 @@ export class FinancialManager {
       // Prevent multiple simultaneous requests
       if (this.financialStorage.isSummaryCacheLoading()) {
         console.log("FinancialManager: Summary request already in progress");
-        return this._waitForCurrentSummaryRequest();
+        return this._waitForSummaryRequest();
       }
 
       this.financialStorage.setSummaryCacheLoading(true);
@@ -345,7 +212,7 @@ export class FinancialManager {
       console.log("FinancialManager: Fetching fresh summary data", params);
 
       try {
-        // Validate and clean parameters
+        // Validate parameters
         const validatedParams = this._validateSummaryParams(params);
 
         // Fetch fresh data from API
@@ -371,34 +238,18 @@ export class FinancialManager {
   }
 
   /**
-   * Exports financial data
-   * @param {Object} params - Export parameters { format, startDate, endDate, type }
-   * @param {Function} onUnauthorizedCallback - Called when authentication fails
-   * @returns {Promise<Object>} - Export response
+   * Clears order financial cache
+   * @param {number} orderWJID - The Work Job ID of the order
    */
-  async exportFinancials(params = {}, onUnauthorizedCallback = null) {
-    try {
-      console.log("FinancialManager: Exporting financial data", params);
+  clearOrderFinancialCache(orderWJID) {
+    this.financialStorage.clearOrderFinancialCache(orderWJID);
+  }
 
-      // Validate export parameters
-      const validationErrors = this._validateExportParams(params);
-      if (Object.keys(validationErrors).length > 0) {
-        throw validationErrors;
-      }
-
-      // Call API to export financial data
-      const exportResponse = await this.financialAPI.exportFinancials(
-        params,
-        onUnauthorizedCallback,
-      );
-
-      console.log("FinancialManager: Financial data exported successfully");
-
-      return exportResponse;
-    } catch (error) {
-      console.error("FinancialManager: Failed to export financial data", error);
-      throw error;
-    }
+  /**
+   * Clears all caches
+   */
+  clearAllCache() {
+    this.financialStorage.clearAllCache();
   }
 
   /**
@@ -418,77 +269,30 @@ export class FinancialManager {
   }
 
   /**
-   * Clears the financial records cache
-   */
-  clearFinancialsCache() {
-    this.financialStorage.clearFinancialsCache();
-  }
-
-  /**
-   * Clears the select options cache
-   */
-  clearSelectOptionsCache() {
-    this.financialStorage.clearSelectOptionsCache();
-  }
-
-  /**
-   * Clears the summary cache
-   */
-  clearSummaryCache() {
-    this.financialStorage.clearSummaryCache();
-  }
-
-  /**
-   * Clears all caches
-   */
-  clearAllCache() {
-    this.financialStorage.clearAllCache();
-  }
-
-  /**
-   * Gets current cache state information
+   * Gets cache state information
    * @returns {Object} - Cache state details
    */
-  getFinancialsCacheInfo() {
-    return this.financialStorage.getFinancialsCacheInfo();
-  }
-
-  /**
-   * Sets cache duration
-   * @param {number} durationMs - Cache duration in milliseconds
-   */
-  setFinancialsCacheDuration(durationMs) {
-    this.financialStorage.setCacheDuration(durationMs);
-  }
-
-  /**
-   * Sets select options cache duration
-   * @param {number} durationMs - Cache duration in milliseconds
-   */
-  setSelectOptionsCacheDuration(durationMs) {
-    this.financialStorage.setSelectOptionsCacheDuration(durationMs);
-  }
-
-  /**
-   * Sets summary cache duration
-   * @param {number} durationMs - Cache duration in milliseconds
-   */
-  setSummaryCacheDuration(durationMs) {
-    this.financialStorage.setSummaryCacheDuration(durationMs);
+  getCacheInfo() {
+    return this.financialStorage.getCacheInfo();
   }
 
   /**
    * Callback-based versions for compatibility with existing components
    */
 
-  getFinancialSelectOptionsWithCallbacks(
+  getOrderFinancialDetailWithCallbacks(
+    orderWJID,
     onSuccessCallback,
     onErrorCallback,
     onDoneCallback,
     onUnauthorizedCallback = null,
     forceRefresh = false,
   ) {
-    this.getFinancialSelectOptions(onUnauthorizedCallback, forceRefresh)
+    this.getOrderFinancialDetail(
+      orderWJID,
+      onUnauthorizedCallback,
+      forceRefresh,
+    )
       .then((data) => {
         if (onSuccessCallback) {
           onSuccessCallback(data);
@@ -506,116 +310,40 @@ export class FinancialManager {
       });
   }
 
-  getFinancialsWithCallbacks(
+  updateOrderFinancialWithCallbacks(
+    orderWJID,
+    financialData,
+    onSuccessCallback,
+    onErrorCallback,
+    onDoneCallback,
+    onUnauthorizedCallback = null,
+  ) {
+    this.updateOrderFinancial(orderWJID, financialData, onUnauthorizedCallback)
+      .then((data) => {
+        if (onSuccessCallback) {
+          onSuccessCallback(data);
+        }
+      })
+      .catch((error) => {
+        if (onErrorCallback) {
+          onErrorCallback(error);
+        }
+      })
+      .finally(() => {
+        if (onDoneCallback) {
+          onDoneCallback();
+        }
+      });
+  }
+
+  getOrdersWithFinancialDataWithCallbacks(
     params = {},
     onSuccessCallback,
     onErrorCallback,
     onDoneCallback,
     onUnauthorizedCallback = null,
-    forceRefresh = false,
   ) {
-    this.getFinancials(params, onUnauthorizedCallback, forceRefresh)
-      .then((data) => {
-        if (onSuccessCallback) {
-          onSuccessCallback(data);
-        }
-      })
-      .catch((error) => {
-        if (onErrorCallback) {
-          onErrorCallback(error);
-        }
-      })
-      .finally(() => {
-        if (onDoneCallback) {
-          onDoneCallback();
-        }
-      });
-  }
-
-  createFinancialWithCallbacks(
-    financialData,
-    onSuccessCallback,
-    onErrorCallback,
-    onDoneCallback,
-    onUnauthorizedCallback = null,
-  ) {
-    this.createFinancial(financialData, onUnauthorizedCallback)
-      .then((data) => {
-        if (onSuccessCallback) {
-          onSuccessCallback(data);
-        }
-      })
-      .catch((error) => {
-        if (onErrorCallback) {
-          onErrorCallback(error);
-        }
-      })
-      .finally(() => {
-        if (onDoneCallback) {
-          onDoneCallback();
-        }
-      });
-  }
-
-  getFinancialDetailWithCallbacks(
-    financialId,
-    onSuccessCallback,
-    onErrorCallback,
-    onDoneCallback,
-    onUnauthorizedCallback = null,
-  ) {
-    this.getFinancialDetail(financialId, onUnauthorizedCallback)
-      .then((data) => {
-        if (onSuccessCallback) {
-          onSuccessCallback(data);
-        }
-      })
-      .catch((error) => {
-        if (onErrorCallback) {
-          onErrorCallback(error);
-        }
-      })
-      .finally(() => {
-        if (onDoneCallback) {
-          onDoneCallback();
-        }
-      });
-  }
-
-  updateFinancialWithCallbacks(
-    financialId,
-    financialData,
-    onSuccessCallback,
-    onErrorCallback,
-    onDoneCallback,
-    onUnauthorizedCallback = null,
-  ) {
-    this.updateFinancial(financialId, financialData, onUnauthorizedCallback)
-      .then((data) => {
-        if (onSuccessCallback) {
-          onSuccessCallback(data);
-        }
-      })
-      .catch((error) => {
-        if (onErrorCallback) {
-          onErrorCallback(error);
-        }
-      })
-      .finally(() => {
-        if (onDoneCallback) {
-          onDoneCallback();
-        }
-      });
-  }
-
-  deleteFinancialWithCallbacks(
-    financialId,
-    onSuccessCallback,
-    onErrorCallback,
-    onDoneCallback,
-    onUnauthorizedCallback = null,
-  ) {
-    this.deleteFinancial(financialId, onUnauthorizedCallback)
+    this.getOrdersWithFinancialData(params, onUnauthorizedCallback)
       .then((data) => {
         if (onSuccessCallback) {
           onSuccessCallback(data);
@@ -659,46 +387,77 @@ export class FinancialManager {
       });
   }
 
-  exportFinancialsWithCallbacks(
-    params = {},
-    onSuccessCallback,
-    onErrorCallback,
-    onDoneCallback,
-    onUnauthorizedCallback = null,
-  ) {
-    this.exportFinancials(params, onUnauthorizedCallback)
-      .then((data) => {
-        if (onSuccessCallback) {
-          onSuccessCallback(data);
-        }
-      })
-      .catch((error) => {
-        if (onErrorCallback) {
-          onErrorCallback(error);
-        }
-      })
-      .finally(() => {
-        if (onDoneCallback) {
-          onDoneCallback();
-        }
-      });
-  }
-
   /**
    * Private validation methods
    */
 
-  _validateFinancialId(financialId) {
-    if (
-      !financialId ||
-      (typeof financialId !== "string" && typeof financialId !== "number")
-    ) {
-      return { financialId: "Valid financial record ID is required" };
+  _validateFinancialData(financialData) {
+    const errors = {};
+
+    if (!financialData || typeof financialData !== "object") {
+      errors.general = "Financial data is required";
+      return errors;
     }
-    return null;
+
+    // Validate payment status if provided
+    if (financialData.paymentStatus) {
+      const validStatuses = [
+        ORDER_STATUS_COMPLETED_BUT_UNPAID,
+        ORDER_STATUS_COMPLETED_AND_PAID,
+      ];
+      if (!validStatuses.includes(financialData.paymentStatus)) {
+        errors.paymentStatus = "Invalid payment status";
+      }
+    }
+
+    // Validate invoice paid to
+    if (
+      financialData.invoicePaidTo &&
+      ![1, 2].includes(financialData.invoicePaidTo)
+    ) {
+      errors.invoicePaidTo =
+        "Invoice must be paid to either Associate (1) or Organization (2)";
+    }
+
+    // Validate amounts are numbers
+    const amountFields = [
+      "invoiceQuotedLabourAmount",
+      "invoiceQuotedMaterialAmount",
+      "invoiceQuotedOtherCostsAmount",
+      "invoiceTotalQuoteAmount",
+      "invoiceLabourAmount",
+      "invoiceMaterialAmount",
+      "invoiceOtherCostsAmount",
+      "invoiceTaxAmount",
+      "invoiceTotalAmount",
+      "invoiceDepositAmount",
+      "invoiceAmountDue",
+      "invoiceServiceFeeAmount",
+      "invoiceActualServiceFeeAmountPaid",
+      "invoiceBalanceOwingAmount",
+    ];
+
+    amountFields.forEach((field) => {
+      if (financialData[field] !== undefined && financialData[field] !== null) {
+        const value = parseFloat(financialData[field]);
+        if (isNaN(value) || value < 0) {
+          errors[field] = `${field} must be a valid non-negative number`;
+        }
+      }
+    });
+
+    // Validate payment methods array
+    if (
+      financialData.paymentMethods &&
+      !Array.isArray(financialData.paymentMethods)
+    ) {
+      errors.paymentMethods = "Payment methods must be an array";
+    }
+
+    return errors;
   }
 
-  _validateFinancialsParams(params) {
+  _validateOrdersParams(params) {
     const validatedParams = {};
 
     // Validate pagination
@@ -707,120 +466,54 @@ export class FinancialManager {
     }
 
     if (
-      params.limit &&
-      typeof params.limit === "number" &&
-      params.limit > 0 &&
-      params.limit <= 1000
+      params.pageSize &&
+      typeof params.pageSize === "number" &&
+      params.pageSize > 0 &&
+      params.pageSize <= 1000
     ) {
-      validatedParams.limit = params.limit;
+      validatedParams.pageSize = params.pageSize;
     }
 
-    // Validate search
+    // Validate financial status filter
     if (
-      params.search &&
-      typeof params.search === "string" &&
-      params.search.trim()
+      params.financialStatus &&
+      ["pending", "unpaid", "paid"].includes(params.financialStatus)
     ) {
-      validatedParams.search = params.search.trim();
+      validatedParams.financialStatus = params.financialStatus;
+    }
+
+    // Validate date filters
+    if (
+      params.completionDateStart &&
+      typeof params.completionDateStart === "string"
+    ) {
+      validatedParams.completionDateStart = params.completionDateStart;
+    }
+
+    if (
+      params.completionDateEnd &&
+      typeof params.completionDateEnd === "string"
+    ) {
+      validatedParams.completionDateEnd = params.completionDateEnd;
+    }
+
+    if (
+      params.invoiceDateStart &&
+      typeof params.invoiceDateStart === "string"
+    ) {
+      validatedParams.invoiceDateStart = params.invoiceDateStart;
+    }
+
+    if (params.invoiceDateEnd && typeof params.invoiceDateEnd === "string") {
+      validatedParams.invoiceDateEnd = params.invoiceDateEnd;
     }
 
     // Validate sorting
     if (params.sortBy && typeof params.sortBy === "string") {
-      const allowedSortFields = [
-        "amount",
-        "type",
-        "transaction_date",
-        "due_date",
-        "created_at",
-        "updated_at",
-        "status",
-        "description",
-      ];
-      if (allowedSortFields.includes(params.sortBy)) {
-        validatedParams.sortBy = params.sortBy;
-
-        if (params.sortOrder && ["ASC", "DESC"].includes(params.sortOrder)) {
-          validatedParams.sortOrder = params.sortOrder;
-        } else {
-          validatedParams.sortOrder = "DESC"; // Default to newest first for financial records
-        }
-      }
-    }
-
-    // Validate date filters
-    if (params.startDate && typeof params.startDate === "string") {
-      validatedParams.startDate = params.startDate;
-    }
-
-    if (params.endDate && typeof params.endDate === "string") {
-      validatedParams.endDate = params.endDate;
-    }
-
-    // Validate type filter
-    if (params.type && typeof params.type === "string") {
-      validatedParams.type = params.type;
-    }
-
-    // Validate status
-    if (params.status && typeof params.status === "string") {
-      validatedParams.status = params.status;
+      validatedParams.sortBy = params.sortBy;
     }
 
     return validatedParams;
-  }
-
-  _validateFinancialData(financialData, isCreate = false) {
-    const errors = {};
-
-    if (!financialData || typeof financialData !== "object") {
-      errors.general = "Financial record data is required";
-      return errors;
-    }
-
-    // Validate amount (required)
-    if (financialData.amount === undefined || financialData.amount === null) {
-      errors.amount = "Amount is required";
-    } else if (
-      typeof financialData.amount !== "number" ||
-      isNaN(financialData.amount)
-    ) {
-      errors.amount = "Amount must be a valid number";
-    } else if (financialData.amount < 0) {
-      errors.amount = "Amount cannot be negative";
-    }
-
-    // Validate type (required)
-    if (!financialData.type || !financialData.type.trim()) {
-      errors.type = "Financial record type is required";
-    }
-
-    // Validate transaction date (optional)
-    if (
-      financialData.transactionDate &&
-      typeof financialData.transactionDate !== "string"
-    ) {
-      errors.transactionDate = "Transaction date must be a valid date string";
-    }
-
-    // Validate due date (optional)
-    if (financialData.dueDate && typeof financialData.dueDate !== "string") {
-      errors.dueDate = "Due date must be a valid date string";
-    }
-
-    // Validate description (optional)
-    if (financialData.description && financialData.description.length > 1000) {
-      errors.description = "Description must be less than 1000 characters";
-    }
-
-    // Validate status (optional)
-    if (financialData.status !== undefined) {
-      const validStatuses = [1, 2, 3]; // Pending, Paid, Cancelled
-      if (!validStatuses.includes(financialData.status)) {
-        errors.status = "Invalid financial record status";
-      }
-    }
-
-    return errors;
   }
 
   _validateSummaryParams(params) {
@@ -835,52 +528,28 @@ export class FinancialManager {
       validatedParams.endDate = params.endDate;
     }
 
-    // Validate type filter
-    if (params.type && typeof params.type === "string") {
-      validatedParams.type = params.type;
-    }
-
     return validatedParams;
   }
 
-  _validateExportParams(params) {
-    const errors = {};
-
-    // Validate format
-    if (params.format && !["csv", "xlsx", "pdf"].includes(params.format)) {
-      errors.format = "Export format must be csv, xlsx, or pdf";
-    }
-
-    // Validate date range
-    if (params.startDate && params.endDate) {
-      const startDate = new Date(params.startDate);
-      const endDate = new Date(params.endDate);
-
-      if (startDate > endDate) {
-        errors.dateRange = "Start date cannot be after end date";
-      }
-    }
-
-    return errors;
-  }
-
   /**
-   * Waits for current financial records request to complete
+   * Waits for current order financial request to complete
    * @private
+   * @param {number} orderWJID - The Work Job ID of the order
    * @returns {Promise<Object>}
    */
-  _waitForCurrentFinancialsRequest() {
+  _waitForOrderFinancialRequest(orderWJID) {
     return new Promise((resolve, reject) => {
       const checkInterval = setInterval(() => {
-        if (!this.financialStorage.isFinancialsCacheLoading()) {
+        if (!this.financialStorage.isOrderFinancialCacheLoading(orderWJID)) {
           clearInterval(checkInterval);
 
           // Try to get cached data
-          const cachedData = this.financialStorage.getFinancialsFromCache();
+          const cachedData =
+            this.financialStorage.getOrderFinancialFromCache(orderWJID);
           if (cachedData) {
             resolve(cachedData);
           } else {
-            reject(new Error("Financial records request failed"));
+            reject(new Error(`Order ${orderWJID} financial request failed`));
           }
         }
       }, 100);
@@ -888,36 +557,7 @@ export class FinancialManager {
       // Timeout after 30 seconds
       setTimeout(() => {
         clearInterval(checkInterval);
-        reject(new Error("Financial records request timeout"));
-      }, 30000);
-    });
-  }
-
-  /**
-   * Waits for current select options request to complete
-   * @private
-   * @returns {Promise<Object>}
-   */
-  _waitForCurrentSelectOptionsRequest() {
-    return new Promise((resolve, reject) => {
-      const checkInterval = setInterval(() => {
-        if (!this.financialStorage.isSelectOptionsCacheLoading()) {
-          clearInterval(checkInterval);
-
-          // Try to get cached data
-          const cachedData = this.financialStorage.getSelectOptionsFromCache();
-          if (cachedData) {
-            resolve(cachedData);
-          } else {
-            reject(new Error("Select options request failed"));
-          }
-        }
-      }, 100);
-
-      // Timeout after 30 seconds
-      setTimeout(() => {
-        clearInterval(checkInterval);
-        reject(new Error("Select options request timeout"));
+        reject(new Error(`Order ${orderWJID} financial request timeout`));
       }, 30000);
     });
   }
@@ -927,7 +567,7 @@ export class FinancialManager {
    * @private
    * @returns {Promise<Object>}
    */
-  _waitForCurrentSummaryRequest() {
+  _waitForSummaryRequest() {
     return new Promise((resolve, reject) => {
       const checkInterval = setInterval(() => {
         if (!this.financialStorage.isSummaryCacheLoading()) {
