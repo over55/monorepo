@@ -84,24 +84,37 @@ export class OrderIncidentManager {
     forceRefresh = false,
   ) {
     try {
+      // Generate a cache key based on the parameters
+      const cacheKey = this._generateCacheKey(params);
+
       // Check storage cache first (unless force refresh is requested)
       if (!forceRefresh) {
         const cachedOrderIncidents =
-          this.orderIncidentStorage.getOrderIncidentsFromCache();
+          this.orderIncidentStorage.getOrderIncidentsCacheByKey(cacheKey);
         if (cachedOrderIncidents) {
+          console.log(
+            "OrderIncidentManager: Using cached data for key:",
+            cacheKey,
+          );
           return cachedOrderIncidents;
         }
       }
 
-      // Prevent multiple simultaneous requests
-      if (this.orderIncidentStorage.isOrderIncidentsCacheLoading()) {
+      // Prevent multiple simultaneous requests for the same parameters
+      if (
+        this.orderIncidentStorage.isOrderIncidentsCacheLoadingForKey(cacheKey)
+      ) {
         console.log(
-          "OrderIncidentManager: Order incidents request already in progress",
+          "OrderIncidentManager: Order incidents request already in progress for key:",
+          cacheKey,
         );
-        return this._waitForCurrentOrderIncidentsRequest();
+        return this._waitForCurrentOrderIncidentsRequest(cacheKey);
       }
 
-      this.orderIncidentStorage.setOrderIncidentsCacheLoading(true);
+      this.orderIncidentStorage.setOrderIncidentsCacheLoadingForKey(
+        cacheKey,
+        true,
+      );
 
       console.log(
         "OrderIncidentManager: Fetching fresh order incidents data",
@@ -119,8 +132,11 @@ export class OrderIncidentManager {
             onUnauthorizedCallback,
           );
 
-        // Save to storage cache
-        this.orderIncidentStorage.saveOrderIncidentsToCache(orderIncidentsData);
+        // Save to storage cache with the specific cache key
+        this.orderIncidentStorage.saveOrderIncidentsToCacheByKey(
+          cacheKey,
+          orderIncidentsData,
+        );
 
         console.log(
           "OrderIncidentManager: Order incidents data fetched successfully:",
@@ -129,15 +145,23 @@ export class OrderIncidentManager {
               ? orderIncidentsData.results.length
               : 0,
             totalCount: orderIncidentsData.count,
+            cacheKey: cacheKey,
           },
         );
 
         return orderIncidentsData;
       } finally {
-        this.orderIncidentStorage.setOrderIncidentsCacheLoading(false);
+        this.orderIncidentStorage.setOrderIncidentsCacheLoadingForKey(
+          cacheKey,
+          false,
+        );
       }
     } catch (error) {
-      this.orderIncidentStorage.setOrderIncidentsCacheLoading(false);
+      const cacheKey = this._generateCacheKey(params);
+      this.orderIncidentStorage.setOrderIncidentsCacheLoadingForKey(
+        cacheKey,
+        false,
+      );
       console.error(
         "OrderIncidentManager: Failed to get order incidents",
         error,
@@ -159,24 +183,37 @@ export class OrderIncidentManager {
     forceRefresh = false,
   ) {
     try {
+      // Convert Map to params object for cache key generation
+      const params = {};
+      filtersMap.forEach((value, key) => {
+        params[key] = value;
+      });
+
+      const cacheKey = this._generateCacheKey(params);
+
       // Check storage cache first (unless force refresh is requested)
       if (!forceRefresh) {
         const cachedOrderIncidents =
-          this.orderIncidentStorage.getOrderIncidentsFromCache();
+          this.orderIncidentStorage.getOrderIncidentsCacheByKey(cacheKey);
         if (cachedOrderIncidents) {
           return cachedOrderIncidents;
         }
       }
 
       // Prevent multiple simultaneous requests
-      if (this.orderIncidentStorage.isOrderIncidentsCacheLoading()) {
+      if (
+        this.orderIncidentStorage.isOrderIncidentsCacheLoadingForKey(cacheKey)
+      ) {
         console.log(
           "OrderIncidentManager: Order incidents request already in progress",
         );
-        return this._waitForCurrentOrderIncidentsRequest();
+        return this._waitForCurrentOrderIncidentsRequest(cacheKey);
       }
 
-      this.orderIncidentStorage.setOrderIncidentsCacheLoading(true);
+      this.orderIncidentStorage.setOrderIncidentsCacheLoadingForKey(
+        cacheKey,
+        true,
+      );
 
       console.log(
         "OrderIncidentManager: Fetching fresh order incidents data with filtersMap",
@@ -192,7 +229,10 @@ export class OrderIncidentManager {
           );
 
         // Save to storage cache
-        this.orderIncidentStorage.saveOrderIncidentsToCache(orderIncidentsData);
+        this.orderIncidentStorage.saveOrderIncidentsToCacheByKey(
+          cacheKey,
+          orderIncidentsData,
+        );
 
         console.log(
           "OrderIncidentManager: Order incidents data fetched successfully:",
@@ -206,10 +246,21 @@ export class OrderIncidentManager {
 
         return orderIncidentsData;
       } finally {
-        this.orderIncidentStorage.setOrderIncidentsCacheLoading(false);
+        this.orderIncidentStorage.setOrderIncidentsCacheLoadingForKey(
+          cacheKey,
+          false,
+        );
       }
     } catch (error) {
-      this.orderIncidentStorage.setOrderIncidentsCacheLoading(false);
+      const params = {};
+      filtersMap.forEach((value, key) => {
+        params[key] = value;
+      });
+      const cacheKey = this._generateCacheKey(params);
+      this.orderIncidentStorage.setOrderIncidentsCacheLoadingForKey(
+        cacheKey,
+        false,
+      );
       console.error(
         "OrderIncidentManager: Failed to get order incidents",
         error,
@@ -244,8 +295,9 @@ export class OrderIncidentManager {
           onUnauthorizedCallback,
         );
 
-      // Clear order incidents cache since new data has been added
-      this.orderIncidentStorage.clearOrderIncidentsCache();
+      // Clear ALL order incidents caches since new data has been added
+      // This ensures that all filtered/searched views will be refreshed
+      this.orderIncidentStorage.clearAllOrderIncidentsCache();
       this.orderIncidentStorage.clearSelectOptionsCache();
       this.orderIncidentStorage.clearStatisticsCache();
 
@@ -349,8 +401,8 @@ export class OrderIncidentManager {
           onUnauthorizedCallback,
         );
 
-      // Clear order incidents cache since data has been updated
-      this.orderIncidentStorage.clearOrderIncidentsCache();
+      // Clear ALL order incidents caches since data has been updated
+      this.orderIncidentStorage.clearAllOrderIncidentsCache();
       this.orderIncidentStorage.clearStatisticsCache();
 
       console.log("OrderIncidentManager: Order incident updated successfully");
@@ -389,8 +441,8 @@ export class OrderIncidentManager {
         onUnauthorizedCallback,
       );
 
-      // Clear order incidents cache since data has been updated
-      this.orderIncidentStorage.clearOrderIncidentsCache();
+      // Clear ALL order incidents caches since data has been deleted
+      this.orderIncidentStorage.clearAllOrderIncidentsCache();
       this.orderIncidentStorage.clearSelectOptionsCache();
       this.orderIncidentStorage.clearStatisticsCache();
 
@@ -430,8 +482,8 @@ export class OrderIncidentManager {
         onUnauthorizedCallback,
       );
 
-      // Clear order incidents cache since data has been updated
-      this.orderIncidentStorage.clearOrderIncidentsCache();
+      // Clear ALL order incidents caches since data has been updated
+      this.orderIncidentStorage.clearAllOrderIncidentsCache();
       this.orderIncidentStorage.clearStatisticsCache();
 
       console.log("OrderIncidentManager: Order incident archived successfully");
@@ -609,7 +661,7 @@ export class OrderIncidentManager {
    * Clears the order incidents cache
    */
   clearOrderIncidentsCache() {
-    this.orderIncidentStorage.clearOrderIncidentsCache();
+    this.orderIncidentStorage.clearAllOrderIncidentsCache();
   }
 
   /**
@@ -951,25 +1003,16 @@ export class OrderIncidentManager {
       validatedParams.search = params.search.trim();
     }
 
-    // Validate sorting
+    // Validate sorting - handle combined format
     if (params.sortBy && typeof params.sortBy === "string") {
-      const allowedSortFields = [
-        "title",
-        "incident_date",
-        "created_at",
-        "updated_at",
-        "severity",
-        "status",
-        "order_id",
-        "associate_id",
-      ];
-      if (allowedSortFields.includes(params.sortBy)) {
+      // Check if sortBy contains combined format (e.g., "created_at,DESC")
+      if (params.sortBy.includes(",")) {
         validatedParams.sortBy = params.sortBy;
-
-        if (params.sortOrder && ["ASC", "DESC"].includes(params.sortOrder)) {
+      } else {
+        // Separate field and order provided
+        validatedParams.sortBy = params.sortBy;
+        if (params.sortOrder) {
           validatedParams.sortOrder = params.sortOrder;
-        } else {
-          validatedParams.sortOrder = "ASC";
         }
       }
     }
@@ -977,6 +1020,10 @@ export class OrderIncidentManager {
     // Validate filters
     if (params.status && typeof params.status === "string") {
       validatedParams.status = params.status;
+    }
+
+    if (params.initiator && typeof params.initiator === "string") {
+      validatedParams.initiator = params.initiator;
     }
 
     if (params.severity && typeof params.severity === "string") {
@@ -989,6 +1036,14 @@ export class OrderIncidentManager {
 
     if (params.associateId && typeof params.associateId === "string") {
       validatedParams.associateId = params.associateId;
+    }
+
+    if (params.createdDateGte) {
+      validatedParams.createdDateGte = params.createdDateGte;
+    }
+
+    if (params.createdDateLte) {
+      validatedParams.createdDateLte = params.createdDateLte;
     }
 
     return validatedParams;
@@ -1061,19 +1116,59 @@ export class OrderIncidentManager {
   }
 
   /**
+   * Generates a cache key based on query parameters
+   * @private
+   * @param {Object} params - Query parameters
+   * @returns {string} - Cache key
+   */
+  _generateCacheKey(params) {
+    // Create a normalized key from parameters
+    const keyParts = [];
+
+    // Include all relevant parameters in the cache key
+    if (params.page) keyParts.push(`page:${params.page}`);
+    if (params.limit) keyParts.push(`limit:${params.limit}`);
+    if (params.search) keyParts.push(`search:${params.search}`);
+    if (params.sortBy) keyParts.push(`sortBy:${params.sortBy}`);
+    if (params.sortOrder) keyParts.push(`sortOrder:${params.sortOrder}`);
+    if (params.status) keyParts.push(`status:${params.status}`);
+    if (params.initiator) keyParts.push(`initiator:${params.initiator}`);
+    if (params.severity) keyParts.push(`severity:${params.severity}`);
+    if (params.orderId) keyParts.push(`orderId:${params.orderId}`);
+    if (params.associateId) keyParts.push(`associateId:${params.associateId}`);
+    if (params.createdDateGte)
+      keyParts.push(`createdDateGte:${params.createdDateGte}`);
+    if (params.createdDateLte)
+      keyParts.push(`createdDateLte:${params.createdDateLte}`);
+
+    // If no parameters, use a default key
+    if (keyParts.length === 0) {
+      return "default";
+    }
+
+    // Join parts with separator
+    return keyParts.join("|");
+  }
+
+  /**
    * Waits for current order incidents request to complete
    * @private
+   * @param {string} cacheKey - The cache key for the request
    * @returns {Promise<Object>}
    */
-  _waitForCurrentOrderIncidentsRequest() {
+  _waitForCurrentOrderIncidentsRequest(cacheKey) {
     return new Promise((resolve, reject) => {
       const checkInterval = setInterval(() => {
-        if (!this.orderIncidentStorage.isOrderIncidentsCacheLoading()) {
+        if (
+          !this.orderIncidentStorage.isOrderIncidentsCacheLoadingForKey(
+            cacheKey,
+          )
+        ) {
           clearInterval(checkInterval);
 
           // Try to get cached data
           const cachedData =
-            this.orderIncidentStorage.getOrderIncidentsFromCache();
+            this.orderIncidentStorage.getOrderIncidentsCacheByKey(cacheKey);
           if (cachedData) {
             resolve(cachedData);
           } else {

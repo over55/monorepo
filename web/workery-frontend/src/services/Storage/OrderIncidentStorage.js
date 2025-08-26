@@ -6,8 +6,9 @@
  */
 export class OrderIncidentStorage {
   constructor() {
-    this.ORDER_INCIDENTS_CACHE_KEY = "WORKERY_ORDER_INCIDENTS_CACHE";
-    this.ORDER_INCIDENTS_TIMESTAMP_KEY = "WORKERY_ORDER_INCIDENTS_TIMESTAMP";
+    this.ORDER_INCIDENTS_CACHE_KEY_PREFIX = "WORKERY_ORDER_INCIDENTS_CACHE_";
+    this.ORDER_INCIDENTS_TIMESTAMP_KEY_PREFIX =
+      "WORKERY_ORDER_INCIDENTS_TIMESTAMP_";
     this.ORDER_INCIDENT_SELECT_OPTIONS_CACHE_KEY =
       "WORKERY_ORDER_INCIDENT_SELECT_OPTIONS_CACHE";
     this.ORDER_INCIDENT_SELECT_OPTIONS_TIMESTAMP_KEY =
@@ -20,11 +21,9 @@ export class OrderIncidentStorage {
     this.SELECT_OPTIONS_CACHE_DURATION = 30 * 60 * 1000; // 30 minutes for select options
     this.STATISTICS_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes for statistics
 
-    // In-memory cache for current session
+    // In-memory cache for current session - now supports multiple cache keys
     this.memoryCache = {
-      orderIncidents: null,
-      orderIncidentsTimestamp: null,
-      isOrderIncidentsLoading: false,
+      orderIncidentsByKey: new Map(), // Map of cacheKey -> { data, timestamp, isLoading }
       selectOptions: null,
       selectOptionsTimestamp: null,
       isSelectOptionsLoading: false,
@@ -34,32 +33,35 @@ export class OrderIncidentStorage {
     };
 
     if (process.env.NODE_ENV === "development") {
-      console.log("OrderIncidentStorage initialized");
+      console.log(
+        "OrderIncidentStorage initialized with parameter-aware caching",
+      );
     }
   }
 
   /**
-   * Gets order incidents list from cache (memory first, then localStorage)
+   * Gets order incidents list from cache by specific cache key
+   * @param {string} cacheKey - The cache key to retrieve
    * @param {number} maxAge - Maximum age of cache in milliseconds
    * @returns {Object|null} - Cached order incidents data or null if not found/expired
    */
-  getOrderIncidentsFromCache(maxAge = this.DEFAULT_CACHE_DURATION) {
+  getOrderIncidentsCacheByKey(cacheKey, maxAge = this.DEFAULT_CACHE_DURATION) {
     // Check memory cache first (fastest)
-    if (this._isOrderIncidentsMemoryCacheValid(maxAge)) {
+    if (this._isOrderIncidentsMemoryCacheValidByKey(cacheKey, maxAge)) {
       console.log(
-        "OrderIncidentStorage: Using memory cache for order incidents list",
+        "OrderIncidentStorage: Using memory cache for order incidents with key:",
+        cacheKey,
       );
-      return this.memoryCache.orderIncidents;
+      return this.memoryCache.orderIncidentsByKey.get(cacheKey).data;
     }
 
     // Check localStorage cache
     try {
-      const cachedOrderIncidents = localStorage.getItem(
-        this.ORDER_INCIDENTS_CACHE_KEY,
-      );
-      const cachedTimestamp = localStorage.getItem(
-        this.ORDER_INCIDENTS_TIMESTAMP_KEY,
-      );
+      const localStorageKey = `${this.ORDER_INCIDENTS_CACHE_KEY_PREFIX}${cacheKey}`;
+      const timestampKey = `${this.ORDER_INCIDENTS_TIMESTAMP_KEY_PREFIX}${cacheKey}`;
+
+      const cachedOrderIncidents = localStorage.getItem(localStorageKey);
+      const cachedTimestamp = localStorage.getItem(timestampKey);
 
       if (cachedOrderIncidents && cachedTimestamp) {
         const timestamp = parseInt(cachedTimestamp);
@@ -69,37 +71,65 @@ export class OrderIncidentStorage {
           const orderIncidentsData = JSON.parse(cachedOrderIncidents);
 
           // Update memory cache with localStorage data
-          this.memoryCache.orderIncidents = orderIncidentsData;
-          this.memoryCache.orderIncidentsTimestamp = timestamp;
-          this.memoryCache.isOrderIncidentsLoading = false;
+          this.memoryCache.orderIncidentsByKey.set(cacheKey, {
+            data: orderIncidentsData,
+            timestamp: timestamp,
+            isLoading: false,
+          });
 
           console.log(
-            "OrderIncidentStorage: Using localStorage cache for order incidents list",
+            "OrderIncidentStorage: Using localStorage cache for order incidents with key:",
+            cacheKey,
           );
           return orderIncidentsData;
         } else {
           console.log(
-            "OrderIncidentStorage: localStorage cache expired, clearing",
+            "OrderIncidentStorage: localStorage cache expired for key:",
+            cacheKey,
           );
-          this._clearOrderIncidentsLocalStorageCache();
+          this._clearOrderIncidentsLocalStorageCacheByKey(cacheKey);
         }
       }
     } catch (error) {
       console.error(
-        "OrderIncidentStorage: Error reading order incidents from localStorage",
+        "OrderIncidentStorage: Error reading order incidents from localStorage for key:",
+        cacheKey,
         error,
       );
-      this._clearOrderIncidentsLocalStorageCache();
+      this._clearOrderIncidentsLocalStorageCacheByKey(cacheKey);
     }
 
     return null;
   }
 
   /**
-   * Saves order incidents list to cache (both memory and localStorage)
+   * DEPRECATED: Gets order incidents from cache without considering parameters
+   * @deprecated Use getOrderIncidentsCacheByKey instead
+   */
+  getOrderIncidentsFromCache(maxAge = this.DEFAULT_CACHE_DURATION) {
+    console.warn(
+      "OrderIncidentStorage: getOrderIncidentsFromCache is deprecated. Use getOrderIncidentsCacheByKey instead.",
+    );
+    return this.getOrderIncidentsCacheByKey("default", maxAge);
+  }
+
+  /**
+   * DEPRECATED: Use getOrderIncidentsCacheByKey instead
+   * @deprecated
+   */
+  getOrderIncidentsFromCacheByKey(
+    cacheKey,
+    maxAge = this.DEFAULT_CACHE_DURATION,
+  ) {
+    return this.getOrderIncidentsCacheByKey(cacheKey, maxAge);
+  }
+
+  /**
+   * Saves order incidents list to cache with specific cache key
+   * @param {string} cacheKey - The cache key to save under
    * @param {Object} orderIncidentsData - Order incidents data to cache
    */
-  saveOrderIncidentsToCache(orderIncidentsData) {
+  saveOrderIncidentsToCacheByKey(cacheKey, orderIncidentsData) {
     if (!orderIncidentsData) {
       console.warn(
         "OrderIncidentStorage: Attempted to save null/undefined order incidents data",
@@ -107,27 +137,32 @@ export class OrderIncidentStorage {
       return;
     }
 
+    if (!cacheKey) {
+      console.warn("OrderIncidentStorage: Cache key is required");
+      return;
+    }
+
     const timestamp = Date.now();
 
     // Save to memory cache
-    this.memoryCache.orderIncidents = orderIncidentsData;
-    this.memoryCache.orderIncidentsTimestamp = timestamp;
-    this.memoryCache.isOrderIncidentsLoading = false;
+    this.memoryCache.orderIncidentsByKey.set(cacheKey, {
+      data: orderIncidentsData,
+      timestamp: timestamp,
+      isLoading: false,
+    });
 
     // Save to localStorage
     try {
-      localStorage.setItem(
-        this.ORDER_INCIDENTS_CACHE_KEY,
-        JSON.stringify(orderIncidentsData),
-      );
-      localStorage.setItem(
-        this.ORDER_INCIDENTS_TIMESTAMP_KEY,
-        timestamp.toString(),
-      );
+      const localStorageKey = `${this.ORDER_INCIDENTS_CACHE_KEY_PREFIX}${cacheKey}`;
+      const timestampKey = `${this.ORDER_INCIDENTS_TIMESTAMP_KEY_PREFIX}${cacheKey}`;
+
+      localStorage.setItem(localStorageKey, JSON.stringify(orderIncidentsData));
+      localStorage.setItem(timestampKey, timestamp.toString());
 
       console.log(
         "OrderIncidentStorage: Order incidents list cached successfully",
         {
+          cacheKey: cacheKey,
           timestamp: new Date(timestamp).toISOString(),
           count: orderIncidentsData.results
             ? orderIncidentsData.results.length
@@ -136,11 +171,122 @@ export class OrderIncidentStorage {
       );
     } catch (error) {
       console.error(
-        "OrderIncidentStorage: Error saving order incidents to localStorage",
+        "OrderIncidentStorage: Error saving order incidents to localStorage for key:",
+        cacheKey,
         error,
       );
       // Continue with memory cache even if localStorage fails
     }
+  }
+
+  /**
+   * DEPRECATED: Saves order incidents to cache without considering parameters
+   * @deprecated Use saveOrderIncidentsToCacheByKey instead
+   */
+  saveOrderIncidentsToCache(orderIncidentsData) {
+    console.warn(
+      "OrderIncidentStorage: saveOrderIncidentsToCache is deprecated. Use saveOrderIncidentsToCacheByKey instead.",
+    );
+    this.saveOrderIncidentsToCacheByKey("default", orderIncidentsData);
+  }
+
+  /**
+   * Sets loading state for specific cache key
+   * @param {string} cacheKey - The cache key
+   * @param {boolean} isLoading - Loading state
+   */
+  setOrderIncidentsCacheLoadingForKey(cacheKey, isLoading) {
+    if (!this.memoryCache.orderIncidentsByKey.has(cacheKey)) {
+      this.memoryCache.orderIncidentsByKey.set(cacheKey, {
+        data: null,
+        timestamp: null,
+        isLoading: isLoading,
+      });
+    } else {
+      const cache = this.memoryCache.orderIncidentsByKey.get(cacheKey);
+      cache.isLoading = isLoading;
+    }
+  }
+
+  /**
+   * Gets loading state for specific cache key
+   * @param {string} cacheKey - The cache key
+   * @returns {boolean} - Current loading state
+   */
+  isOrderIncidentsCacheLoadingForKey(cacheKey) {
+    const cache = this.memoryCache.orderIncidentsByKey.get(cacheKey);
+    return cache ? cache.isLoading : false;
+  }
+
+  /**
+   * DEPRECATED: Sets loading state for default cache
+   * @deprecated Use setOrderIncidentsCacheLoadingForKey instead
+   */
+  setOrderIncidentsCacheLoading(isLoading) {
+    console.warn(
+      "OrderIncidentStorage: setOrderIncidentsCacheLoading is deprecated. Use setOrderIncidentsCacheLoadingForKey instead.",
+    );
+    this.setOrderIncidentsCacheLoadingForKey("default", isLoading);
+  }
+
+  /**
+   * DEPRECATED: Gets loading state from default cache
+   * @deprecated Use isOrderIncidentsCacheLoadingForKey instead
+   */
+  isOrderIncidentsCacheLoading() {
+    console.warn(
+      "OrderIncidentStorage: isOrderIncidentsCacheLoading is deprecated. Use isOrderIncidentsCacheLoadingForKey instead.",
+    );
+    return this.isOrderIncidentsCacheLoadingForKey("default");
+  }
+
+  /**
+   * Clears all order incidents caches (memory and localStorage)
+   */
+  clearAllOrderIncidentsCache() {
+    // Clear all memory caches
+    this.memoryCache.orderIncidentsByKey.clear();
+
+    // Clear all localStorage caches with the prefix
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (
+        key.startsWith(this.ORDER_INCIDENTS_CACHE_KEY_PREFIX) ||
+        key.startsWith(this.ORDER_INCIDENTS_TIMESTAMP_KEY_PREFIX)
+      ) {
+        keysToRemove.push(key);
+      }
+    }
+
+    keysToRemove.forEach((key) => localStorage.removeItem(key));
+
+    console.log("OrderIncidentStorage: All order incidents caches cleared");
+  }
+
+  /**
+   * DEPRECATED: Clears order incidents cache
+   * @deprecated Use clearAllOrderIncidentsCache instead
+   */
+  clearOrderIncidentsCache() {
+    console.warn(
+      "OrderIncidentStorage: clearOrderIncidentsCache is deprecated. Use clearAllOrderIncidentsCache instead.",
+    );
+    this.clearAllOrderIncidentsCache();
+  }
+
+  /**
+   * Clears order incidents cache for a specific key
+   * @param {string} cacheKey - The cache key to clear
+   */
+  clearOrderIncidentsCacheByKey(cacheKey) {
+    // Clear memory cache
+    this.memoryCache.orderIncidentsByKey.delete(cacheKey);
+
+    // Clear localStorage cache
+    this._clearOrderIncidentsLocalStorageCacheByKey(cacheKey);
+
+    console.log(`OrderIncidentStorage: Cache cleared for key: ${cacheKey}`);
   }
 
   /**
@@ -343,21 +489,6 @@ export class OrderIncidentStorage {
   }
 
   /**
-   * Clears order incidents cache (memory and localStorage)
-   */
-  clearOrderIncidentsCache() {
-    // Clear memory cache
-    this.memoryCache.orderIncidents = null;
-    this.memoryCache.orderIncidentsTimestamp = null;
-    this.memoryCache.isOrderIncidentsLoading = false;
-
-    // Clear localStorage cache
-    this._clearOrderIncidentsLocalStorageCache();
-
-    console.log("OrderIncidentStorage: Order incidents cache cleared");
-  }
-
-  /**
    * Clears select options cache (memory and localStorage)
    */
   clearSelectOptionsCache() {
@@ -391,26 +522,10 @@ export class OrderIncidentStorage {
    * Clears all order incident caches
    */
   clearAllCache() {
-    this.clearOrderIncidentsCache();
+    this.clearAllOrderIncidentsCache();
     this.clearSelectOptionsCache();
     this.clearStatisticsCache();
     console.log("OrderIncidentStorage: All caches cleared");
-  }
-
-  /**
-   * Sets loading state for order incidents cache
-   * @param {boolean} isLoading - Loading state
-   */
-  setOrderIncidentsCacheLoading(isLoading) {
-    this.memoryCache.isOrderIncidentsLoading = isLoading;
-  }
-
-  /**
-   * Gets loading state from order incidents cache
-   * @returns {boolean} - Current loading state
-   */
-  isOrderIncidentsCacheLoading() {
-    return this.memoryCache.isOrderIncidentsLoading;
   }
 
   /**
@@ -450,32 +565,13 @@ export class OrderIncidentStorage {
    * @returns {Object} - Cache state information
    */
   getOrderIncidentsCacheInfo() {
-    const orderIncidentsMemoryValid = this._isOrderIncidentsMemoryCacheValid();
-    const orderIncidentsLocalStorageValid =
-      this._isOrderIncidentsLocalStorageCacheValid();
-    const selectOptionsMemoryValid = this._isSelectOptionsMemoryCacheValid();
-    const selectOptionsLocalStorageValid =
-      this._isSelectOptionsLocalStorageCacheValid();
-    const statisticsMemoryValid = this._isStatisticsMemoryCacheValid();
-    const statisticsLocalStorageValid =
-      this._isStatisticsLocalStorageCacheValid();
-
-    return {
+    const cacheInfo = {
       orderIncidents: {
-        memoryCache: {
-          hasData: !!this.memoryCache.orderIncidents,
-          timestamp: this.memoryCache.orderIncidentsTimestamp,
-          age: this.memoryCache.orderIncidentsTimestamp
-            ? Date.now() - this.memoryCache.orderIncidentsTimestamp
-            : null,
-          isValid: orderIncidentsMemoryValid,
-          isLoading: this.memoryCache.isOrderIncidentsLoading,
-        },
-        localStorage: {
-          hasData: !!localStorage.getItem(this.ORDER_INCIDENTS_CACHE_KEY),
-          timestamp: localStorage.getItem(this.ORDER_INCIDENTS_TIMESTAMP_KEY),
-          isValid: orderIncidentsLocalStorageValid,
-        },
+        memoryCacheKeys: Array.from(
+          this.memoryCache.orderIncidentsByKey.keys(),
+        ),
+        memoryCacheCount: this.memoryCache.orderIncidentsByKey.size,
+        localStorageCacheCount: this._countLocalStorageCaches(),
         cacheDuration: this.DEFAULT_CACHE_DURATION,
       },
       selectOptions: {
@@ -485,7 +581,7 @@ export class OrderIncidentStorage {
           age: this.memoryCache.selectOptionsTimestamp
             ? Date.now() - this.memoryCache.selectOptionsTimestamp
             : null,
-          isValid: selectOptionsMemoryValid,
+          isValid: this._isSelectOptionsMemoryCacheValid(),
           isLoading: this.memoryCache.isSelectOptionsLoading,
         },
         localStorage: {
@@ -495,7 +591,7 @@ export class OrderIncidentStorage {
           timestamp: localStorage.getItem(
             this.ORDER_INCIDENT_SELECT_OPTIONS_TIMESTAMP_KEY,
           ),
-          isValid: selectOptionsLocalStorageValid,
+          isValid: this._isSelectOptionsLocalStorageCacheValid(),
         },
         cacheDuration: this.SELECT_OPTIONS_CACHE_DURATION,
       },
@@ -506,7 +602,7 @@ export class OrderIncidentStorage {
           age: this.memoryCache.statisticsTimestamp
             ? Date.now() - this.memoryCache.statisticsTimestamp
             : null,
-          isValid: statisticsMemoryValid,
+          isValid: this._isStatisticsMemoryCacheValid(),
           isLoading: this.memoryCache.isStatisticsLoading,
         },
         localStorage: {
@@ -516,11 +612,25 @@ export class OrderIncidentStorage {
           timestamp: localStorage.getItem(
             this.ORDER_INCIDENT_STATISTICS_TIMESTAMP_KEY,
           ),
-          isValid: statisticsLocalStorageValid,
+          isValid: this._isStatisticsLocalStorageCacheValid(),
         },
         cacheDuration: this.STATISTICS_CACHE_DURATION,
       },
     };
+
+    // Add details for each cached key
+    cacheInfo.orderIncidents.details = {};
+    this.memoryCache.orderIncidentsByKey.forEach((value, key) => {
+      cacheInfo.orderIncidents.details[key] = {
+        hasData: !!value.data,
+        timestamp: value.timestamp,
+        age: value.timestamp ? Date.now() - value.timestamp : null,
+        isLoading: value.isLoading,
+        isValid: this._isOrderIncidentsMemoryCacheValidByKey(key),
+      };
+    });
+
+    return cacheInfo;
   }
 
   /**
@@ -630,27 +740,28 @@ export class OrderIncidentStorage {
    * Private helper methods for cache validation
    */
 
-  _isOrderIncidentsMemoryCacheValid(maxAge = this.DEFAULT_CACHE_DURATION) {
-    if (
-      !this.memoryCache.orderIncidents ||
-      !this.memoryCache.orderIncidentsTimestamp
-    ) {
+  _isOrderIncidentsMemoryCacheValidByKey(
+    cacheKey,
+    maxAge = this.DEFAULT_CACHE_DURATION,
+  ) {
+    const cache = this.memoryCache.orderIncidentsByKey.get(cacheKey);
+    if (!cache || !cache.data || !cache.timestamp) {
       return false;
     }
-    const age = Date.now() - this.memoryCache.orderIncidentsTimestamp;
+    const age = Date.now() - cache.timestamp;
     return age < maxAge;
   }
 
-  _isOrderIncidentsLocalStorageCacheValid(
+  _isOrderIncidentsLocalStorageCacheValidByKey(
+    cacheKey,
     maxAge = this.DEFAULT_CACHE_DURATION,
   ) {
     try {
-      const timestamp = localStorage.getItem(
-        this.ORDER_INCIDENTS_TIMESTAMP_KEY,
-      );
-      const orderIncidents = localStorage.getItem(
-        this.ORDER_INCIDENTS_CACHE_KEY,
-      );
+      const timestampKey = `${this.ORDER_INCIDENTS_TIMESTAMP_KEY_PREFIX}${cacheKey}`;
+      const localStorageKey = `${this.ORDER_INCIDENTS_CACHE_KEY_PREFIX}${cacheKey}`;
+
+      const timestamp = localStorage.getItem(timestampKey);
+      const orderIncidents = localStorage.getItem(localStorageKey);
 
       if (!timestamp || !orderIncidents) {
         return false;
@@ -661,6 +772,25 @@ export class OrderIncidentStorage {
     } catch (error) {
       return false;
     }
+  }
+
+  _clearOrderIncidentsLocalStorageCacheByKey(cacheKey) {
+    const localStorageKey = `${this.ORDER_INCIDENTS_CACHE_KEY_PREFIX}${cacheKey}`;
+    const timestampKey = `${this.ORDER_INCIDENTS_TIMESTAMP_KEY_PREFIX}${cacheKey}`;
+
+    localStorage.removeItem(localStorageKey);
+    localStorage.removeItem(timestampKey);
+  }
+
+  _countLocalStorageCaches() {
+    let count = 0;
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.startsWith(this.ORDER_INCIDENTS_CACHE_KEY_PREFIX)) {
+        count++;
+      }
+    }
+    return count;
   }
 
   _isSelectOptionsMemoryCacheValid(
@@ -724,11 +854,6 @@ export class OrderIncidentStorage {
     } catch (error) {
       return false;
     }
-  }
-
-  _clearOrderIncidentsLocalStorageCache() {
-    localStorage.removeItem(this.ORDER_INCIDENTS_CACHE_KEY);
-    localStorage.removeItem(this.ORDER_INCIDENTS_TIMESTAMP_KEY);
   }
 
   _clearSelectOptionsLocalStorageCache() {
