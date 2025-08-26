@@ -18,6 +18,9 @@ import {
   UserIcon,
   CheckIcon,
   ArrowRightIcon,
+  InformationCircleIcon,
+  GlobeAltIcon,
+  BuildingOfficeIcon,
 } from "@heroicons/react/24/outline";
 
 function AdminAssociateAddStep4Page() {
@@ -156,6 +159,8 @@ function AdminAssociateAddStep4Page() {
 
     if (hasErrors) {
       setErrors(newErrors);
+      // Scroll to top to show errors
+      window.scrollTo(0, 0);
       return;
     }
 
@@ -224,41 +229,79 @@ function AdminAssociateAddStep4Page() {
     { value: "Yukon", label: "Yukon" },
   ];
 
+  // Section Component with Dark Header Pattern
+  const DetailSection = ({ title, icon: Icon, children, description }) => (
+    <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
+      <div className="px-4 sm:px-6 py-3 sm:py-4">
+        <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
+          <span className="truncate">{title}</span>
+        </h3>
+        {description && (
+          <p className="mt-1 text-xs sm:text-sm text-gray-300">{description}</p>
+        )}
+      </div>
+      <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
+        {children}
+      </div>
+    </div>
+  );
+
+  // Copy billing to shipping helper
+  const copyBillingToShipping = () => {
+    const existingState = getExistingState();
+    const fullName =
+      `${existingState.firstName || ""} ${existingState.lastName || ""}`.trim();
+
+    setShippingName(fullName);
+    setShippingPhone(existingState.phone || "");
+    setShippingCountry(country);
+    setShippingRegion(region);
+    setShippingCity(city);
+    setShippingAddressLine1(addressLine1);
+    setShippingAddressLine2(addressLine2);
+    setShippingPostalCode(postalCode);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {/* Breadcrumb */}
-        <nav className="flex mb-4" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* Responsive Breadcrumb */}
+        <nav
+          className="flex mb-4 sm:mb-6 overflow-x-auto"
+          aria-label="Breadcrumb"
+        >
+          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
             <li className="inline-flex items-center">
               <Link
                 to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+                className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
               >
-                <ChartBarIcon className="w-4 h-4 mr-2" />
+                <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                 <span className="hidden sm:inline">Dashboard</span>
                 <span className="sm:hidden">Dash</span>
               </Link>
             </li>
             <li>
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <ChevronRightIcon className="w-3 sm:w-4 h-3 sm:h-4 text-gray-400 mx-1 sm:mx-2" />
                 <Link
                   to="/admin/associates"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                  className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
                 >
                   <span className="inline-flex items-center">
-                    <WrenchScrewdriverIcon className="w-4 h-4 mr-2" />
-                    Associates
+                    <WrenchScrewdriverIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                    <span className="hidden sm:inline">Associates</span>
+                    <span className="sm:hidden">Assoc</span>
                   </span>
                 </Link>
               </div>
             </li>
             <li aria-current="page">
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
-                  <UserPlusIcon className="w-4 h-4 mr-2" />
+                <ChevronRightIcon className="w-3 sm:w-4 h-3 sm:h-4 text-gray-400 mx-1 sm:mx-2" />
+                <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
+                  <UserPlusIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                   Add
                 </span>
               </div>
@@ -266,210 +309,165 @@ function AdminAssociateAddStep4Page() {
           </ol>
         </nav>
 
-        {/* Page Title */}
-        <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
-            <UserPlusIcon className="w-6 h-6 sm:w-7 sm:h-7 mr-2 sm:mr-3 text-blue-600" />
+        {/* Page Title - Responsive */}
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center">
+            <UserPlusIcon className="w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
             Add New Associate
           </h1>
+          <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+            <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
+            Enter the address information for the new associate
+          </p>
         </div>
 
-        {/* Wizard Steps - Responsive */}
-        <div className="mb-6 relative">
-          <div className="overflow-x-auto pb-2">
-            <div className="flex items-center min-w-max lg:justify-center">
-              {/* Step 1 - Complete */}
+        {/* Wizard Steps - Mobile First */}
+        <div className="mb-4 sm:mb-6">
+          {/* Mobile View */}
+          <div className="md:hidden bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex-shrink-0">
-                  <CheckIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full">
+                  <span className="text-white font-semibold text-sm">4</span>
                 </div>
-                <div className="ml-2 sm:ml-3">
-                  <p className="text-xs sm:text-sm font-medium text-gray-900">
-                    Search
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">
+                    Step 4: Address
                   </p>
-                  <p className="text-xs text-gray-500 hidden sm:block">
-                    Complete
-                  </p>
+                  <p className="text-xs text-gray-500">Location Information</p>
                 </div>
               </div>
-
-              {/* Connector */}
-              <div className="mx-1 sm:mx-2 w-8 sm:w-10 lg:w-12 h-0.5 bg-green-600"></div>
-
-              {/* Step 2 - Complete */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex-shrink-0">
-                  <CheckIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                </div>
-                <div className="ml-2 sm:ml-3">
-                  <p className="text-xs sm:text-sm font-medium text-gray-900">
-                    Type
-                  </p>
-                  <p className="text-xs text-gray-500 hidden sm:block">
-                    Complete
-                  </p>
-                </div>
-              </div>
-
-              {/* Connector */}
-              <div className="mx-1 sm:mx-2 w-8 sm:w-10 lg:w-12 h-0.5 bg-green-600"></div>
-
-              {/* Step 3 - Complete */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex-shrink-0">
-                  <CheckIcon className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                </div>
-                <div className="ml-2 sm:ml-3">
-                  <p className="text-xs sm:text-sm font-medium text-gray-900">
-                    Contact
-                  </p>
-                  <p className="text-xs text-gray-500 hidden sm:block">
-                    Complete
-                  </p>
-                </div>
-              </div>
-
-              {/* Connector */}
-              <div className="mx-1 sm:mx-2 w-8 sm:w-10 lg:w-12 h-0.5 bg-gray-300"></div>
-
-              {/* Step 4 - Active */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-full flex-shrink-0">
-                  <span className="text-white font-semibold text-sm sm:text-base">
-                    4
-                  </span>
-                </div>
-                <div className="ml-2 sm:ml-3">
-                  <p className="text-xs sm:text-sm font-medium text-gray-900">
-                    Address
-                  </p>
-                  <p className="text-xs text-gray-500 hidden sm:block">
-                    Location
-                  </p>
-                </div>
-              </div>
-
-              {/* Connector */}
-              <div className="mx-1 sm:mx-2 w-8 sm:w-10 lg:w-12 h-0.5 bg-gray-300"></div>
-
-              {/* Step 5 - Inactive */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
-                  <span className="text-gray-600 font-semibold text-sm sm:text-base">
-                    5
-                  </span>
-                </div>
-                <div className="ml-2 sm:ml-3">
-                  <p className="text-xs sm:text-sm font-medium text-gray-500">
-                    Account
-                  </p>
-                  <p className="text-xs text-gray-400 hidden sm:block">
-                    Settings
-                  </p>
-                </div>
-              </div>
-
-              {/* Connector */}
-              <div className="mx-1 sm:mx-2 w-8 sm:w-10 lg:w-12 h-0.5 bg-gray-300"></div>
-
-              {/* Step 6 - Inactive */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
-                  <span className="text-gray-600 font-semibold text-sm sm:text-base">
-                    6
-                  </span>
-                </div>
-                <div className="ml-2 sm:ml-3">
-                  <p className="text-xs sm:text-sm font-medium text-gray-500">
-                    Metrics
-                  </p>
-                  <p className="text-xs text-gray-400 hidden sm:block">
-                    Performance
-                  </p>
-                </div>
-              </div>
-
-              {/* Connector */}
-              <div className="mx-1 sm:mx-2 w-8 sm:w-10 lg:w-12 h-0.5 bg-gray-300"></div>
-
-              {/* Step 7 - Inactive */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
-                  <span className="text-gray-600 font-semibold text-sm sm:text-base">
-                    7
-                  </span>
-                </div>
-                <div className="ml-2 sm:ml-3">
-                  <p className="text-xs sm:text-sm font-medium text-gray-500">
-                    Comments
-                  </p>
-                  <p className="text-xs text-gray-400 hidden sm:block">Notes</p>
-                </div>
+              <div className="text-xs text-gray-500">4 of 7</div>
+            </div>
+            <div className="mt-2">
+              <div className="bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-blue-600 h-2 rounded-full"
+                  style={{ width: "57%" }}
+                ></div>
               </div>
             </div>
           </div>
 
-          {/* Scroll indicator for mobile/tablet */}
-          <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-gray-50 to-transparent pointer-events-none lg:hidden"></div>
+          {/* Desktop View */}
+          <div className="hidden md:flex items-center justify-center overflow-x-auto">
+            <div className="flex items-center min-w-max">
+              {/* Steps 1-3 Complete */}
+              {[1, 2, 3].map((step) => (
+                <React.Fragment key={step}>
+                  <div className="flex items-center">
+                    <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
+                      <CheckIcon className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-gray-900">
+                        {step === 1 && "Search"}
+                        {step === 2 && "Type"}
+                        {step === 3 && "Contact"}
+                      </p>
+                      <p className="text-xs text-gray-500">Complete</p>
+                    </div>
+                  </div>
+                  <div className="mx-2 w-12 h-0.5 bg-green-600"></div>
+                </React.Fragment>
+              ))}
+
+              {/* Step 4 - Active */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
+                  <span className="text-white font-semibold">4</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">Address</p>
+                  <p className="text-xs text-gray-500">Location</p>
+                </div>
+              </div>
+
+              {/* Remaining Steps */}
+              {[
+                { num: 5, title: "Account", subtitle: "Settings" },
+                { num: 6, title: "Metrics", subtitle: "Performance" },
+                { num: 7, title: "Comments", subtitle: "Notes" },
+              ].map((step) => (
+                <React.Fragment key={step.num}>
+                  <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+                  <div className="flex items-center">
+                    <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
+                      <span className="text-gray-600 font-semibold">
+                        {step.num}
+                      </span>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-gray-500">
+                        {step.title}
+                      </p>
+                      <p className="text-xs text-gray-400">{step.subtitle}</p>
+                    </div>
+                  </div>
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Error Message */}
         {errors.general && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center justify-between">
-            <span className="flex items-center text-sm sm:text-base">
-              <ExclamationCircleIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-              {errors.general}
+          <div className="mb-4 sm:mb-6 bg-red-50 border border-red-200 text-red-800 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center text-xs sm:text-sm">
+              <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+              <span>{errors.general}</span>
             </span>
             <button
               onClick={() => setErrors({})}
-              className="text-red-600 hover:text-red-800"
+              className="text-red-600 hover:text-red-800 ml-2 flex-shrink-0"
             >
-              <XMarkIcon className="w-4 h-4 sm:w-5 sm:h-5" />
+              <XMarkIcon className="w-4 sm:w-5 h-4 sm:h-5" />
             </button>
           </div>
         )}
 
-        {/* Main Content */}
-        <div className="bg-white shadow-sm rounded-lg">
-          <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-              <MapPinIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
-              Address Information
-            </h2>
-          </div>
-
-          <div className="p-4 sm:p-6">
-            {isLoading ? (
-              <div className="flex items-center justify-center py-8">
+        {/* Main Form */}
+        <form onSubmit={onSubmitClick} className="max-w-3xl mx-auto">
+          {isLoading ? (
+            <div className="bg-white shadow-sm rounded-lg p-8">
+              <div className="flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
                 <span className="ml-3 text-gray-600">Submitting...</span>
               </div>
-            ) : (
-              <form onSubmit={onSubmitClick} className="max-w-2xl mx-auto">
-                {/* Billing Address */}
-                <div>
-                  {hasShippingAddress && (
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4 flex items-center">
-                      <HomeIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-600" />
-                      Billing Address
-                    </h3>
-                  )}
-
-                  <div className="space-y-4">
-                    {/* Country and Province in same row */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                      <div>
-                        <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">
-                          Country <span className="text-red-500">*</span>
-                        </label>
+            </div>
+          ) : (
+            <>
+              {/* Billing Address Section */}
+              <DetailSection
+                title={
+                  hasShippingAddress ? "Billing Address" : "Address Information"
+                }
+                icon={hasShippingAddress ? BuildingOfficeIcon : HomeIcon}
+                description={
+                  hasShippingAddress
+                    ? "Primary billing address for invoices"
+                    : "Primary address for the associate"
+                }
+              >
+                <div className="space-y-4 sm:space-y-6">
+                  {/* Country and Province Row */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                    <div>
+                      <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                        Country <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <GlobeAltIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
+                        </div>
                         <select
                           value={country}
                           onChange={(e) => setCountry(e.target.value)}
-                          className={`w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border ${
+                          className={`w-full pl-10 pr-8 py-2 sm:py-2.5 border ${
                             errors.country
                               ? "border-red-500"
                               : "border-gray-300"
-                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-colors bg-white`}
                         >
                           {countryOptions.map((option) => (
                             <option key={option.value} value={option.value}>
@@ -477,24 +475,29 @@ function AdminAssociateAddStep4Page() {
                             </option>
                           ))}
                         </select>
-                        {errors.country && (
-                          <p className="mt-1 text-xs sm:text-sm text-red-600">
-                            {errors.country}
-                          </p>
-                        )}
                       </div>
+                      {errors.country && (
+                        <p className="mt-1 text-xs sm:text-sm text-red-600">
+                          {errors.country}
+                        </p>
+                      )}
+                    </div>
 
-                      <div>
-                        <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">
-                          Province/Territory{" "}
-                          <span className="text-red-500">*</span>
-                        </label>
+                    <div>
+                      <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                        Province/Territory{" "}
+                        <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                          <MapPinIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
+                        </div>
                         <select
                           value={region}
                           onChange={(e) => setRegion(e.target.value)}
-                          className={`w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border ${
+                          className={`w-full pl-10 pr-8 py-2 sm:py-2.5 border ${
                             errors.region ? "border-red-500" : "border-gray-300"
-                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-colors bg-white`}
                         >
                           {regionOptions.map((option) => (
                             <option key={option.value} value={option.value}>
@@ -502,126 +505,160 @@ function AdminAssociateAddStep4Page() {
                             </option>
                           ))}
                         </select>
-                        {errors.region && (
-                          <p className="mt-1 text-xs sm:text-sm text-red-600">
-                            {errors.region}
-                          </p>
-                        )}
                       </div>
-                    </div>
-
-                    {/* City and Postal Code in same row */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                      <div>
-                        <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">
-                          City <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={city}
-                          onChange={(e) => setCity(e.target.value)}
-                          placeholder="Enter city"
-                          className={`w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border ${
-                            errors.city ? "border-red-500" : "border-gray-300"
-                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-                        />
-                        {errors.city && (
-                          <p className="mt-1 text-xs sm:text-sm text-red-600">
-                            {errors.city}
-                          </p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">
-                          Postal Code <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={postalCode}
-                          onChange={(e) => setPostalCode(e.target.value)}
-                          placeholder="Enter postal code"
-                          className={`w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border ${
-                            errors.postalCode
-                              ? "border-red-500"
-                              : "border-gray-300"
-                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-                        />
-                        {errors.postalCode && (
-                          <p className="mt-1 text-xs sm:text-sm text-red-600">
-                            {errors.postalCode}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Address Line 1 and Line 2 in same row */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                      <div>
-                        <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">
-                          Address Line 1 <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          value={addressLine1}
-                          onChange={(e) => setAddressLine1(e.target.value)}
-                          placeholder="Enter street address"
-                          className={`w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border ${
-                            errors.addressLine1
-                              ? "border-red-500"
-                              : "border-gray-300"
-                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-                        />
-                        {errors.addressLine1 && (
-                          <p className="mt-1 text-xs sm:text-sm text-red-600">
-                            {errors.addressLine1}
-                          </p>
-                        )}
-                      </div>
-
-                      <div>
-                        <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">
-                          Address Line 2 (Optional)
-                        </label>
-                        <input
-                          type="text"
-                          value={addressLine2}
-                          onChange={(e) => setAddressLine2(e.target.value)}
-                          placeholder="Apartment, suite, etc."
-                          className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
+                      {errors.region && (
+                        <p className="mt-1 text-xs sm:text-sm text-red-600">
+                          {errors.region}
+                        </p>
+                      )}
                     </div>
                   </div>
+
+                  {/* City and Postal Code Row */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                    <div>
+                      <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                        City <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={city}
+                        onChange={(e) => setCity(e.target.value)}
+                        placeholder="Enter city"
+                        className={`w-full px-3 py-2 sm:py-2.5 border ${
+                          errors.city ? "border-red-500" : "border-gray-300"
+                        } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-colors`}
+                      />
+                      {errors.city && (
+                        <p className="mt-1 text-xs sm:text-sm text-red-600">
+                          {errors.city}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                        Postal Code <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={postalCode}
+                        onChange={(e) => setPostalCode(e.target.value)}
+                        placeholder="Enter postal code"
+                        className={`w-full px-3 py-2 sm:py-2.5 border ${
+                          errors.postalCode
+                            ? "border-red-500"
+                            : "border-gray-300"
+                        } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-colors`}
+                      />
+                      {errors.postalCode && (
+                        <p className="mt-1 text-xs sm:text-sm text-red-600">
+                          {errors.postalCode}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Address Lines */}
+                  <div>
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                      Address Line 1 <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={addressLine1}
+                      onChange={(e) => setAddressLine1(e.target.value)}
+                      placeholder="Enter street address"
+                      className={`w-full px-3 py-2 sm:py-2.5 border ${
+                        errors.addressLine1
+                          ? "border-red-500"
+                          : "border-gray-300"
+                      } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-colors`}
+                    />
+                    {errors.addressLine1 && (
+                      <p className="mt-1 text-xs sm:text-sm text-red-600">
+                        {errors.addressLine1}
+                      </p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                      Address Line 2 (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={addressLine2}
+                      onChange={(e) => setAddressLine2(e.target.value)}
+                      placeholder="Apartment, suite, unit, building, floor, etc."
+                      className="w-full px-3 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-colors"
+                    />
+                  </div>
                 </div>
+              </DetailSection>
 
-                {/* Shipping Address */}
-                {hasShippingAddress && (
-                  <div className="mt-6 sm:mt-8">
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-3 sm:mb-4 flex items-center">
-                      <TruckIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-green-600" />
-                      Shipping Address
-                    </h3>
+              {/* Shipping Address Toggle */}
+              <div className="mb-4 sm:mb-6 bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-4 sm:p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="hasShippingAddress"
+                      checked={hasShippingAddress}
+                      onChange={(e) => setHasShippingAddress(e.target.checked)}
+                      className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded transition-all"
+                    />
+                    <label
+                      htmlFor="hasShippingAddress"
+                      className="ml-2 sm:ml-3 text-sm sm:text-base font-semibold text-gray-700"
+                    >
+                      Different shipping address
+                    </label>
+                  </div>
+                  {hasShippingAddress && (
+                    <button
+                      type="button"
+                      onClick={copyBillingToShipping}
+                      className="text-xs sm:text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                    >
+                      Copy from billing
+                    </button>
+                  )}
+                </div>
+                <p className="mt-2 text-xs sm:text-sm text-gray-600 ml-6 sm:ml-8">
+                  Check this if materials should be shipped to a different
+                  address
+                </p>
+              </div>
 
-                    <div className="space-y-4">
+              {/* Shipping Address Section */}
+              {hasShippingAddress && (
+                <DetailSection
+                  title="Shipping Address"
+                  icon={TruckIcon}
+                  description="Where materials and packages should be delivered"
+                >
+                  <div className="space-y-4 sm:space-y-6">
+                    {/* Contact Information */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                       <div>
-                        <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">
-                          Name <span className="text-red-500">*</span>
+                        <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                          Contact Name <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none">
-                            <UserIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <UserIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                           </div>
                           <input
                             type="text"
                             value={shippingName}
                             onChange={(e) => setShippingName(e.target.value)}
                             placeholder="Contact name for shipping"
-                            className={`w-full pl-8 sm:pl-10 pr-2 sm:pr-3 py-1.5 sm:py-2 text-sm sm:text-base border ${
+                            className={`w-full pl-10 pr-3 py-2 sm:py-2.5 border ${
                               errors.shippingName
                                 ? "border-red-500"
                                 : "border-gray-300"
-                            } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                            } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-colors`}
                           />
                         </div>
                         {errors.shippingName && (
@@ -632,23 +669,23 @@ function AdminAssociateAddStep4Page() {
                       </div>
 
                       <div>
-                        <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">
+                        <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
                           Phone <span className="text-red-500">*</span>
                         </label>
                         <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-2 sm:pl-3 flex items-center pointer-events-none">
-                            <PhoneIcon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <PhoneIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                           </div>
                           <input
                             type="tel"
                             value={shippingPhone}
                             onChange={(e) => setShippingPhone(e.target.value)}
                             placeholder="Contact phone for shipping"
-                            className={`w-full pl-8 sm:pl-10 pr-2 sm:pr-3 py-1.5 sm:py-2 text-sm sm:text-base border ${
+                            className={`w-full pl-10 pr-3 py-2 sm:py-2.5 border ${
                               errors.shippingPhone
                                 ? "border-red-500"
                                 : "border-gray-300"
-                            } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                            } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-colors`}
                           />
                         </div>
                         {errors.shippingPhone && (
@@ -657,21 +694,26 @@ function AdminAssociateAddStep4Page() {
                           </p>
                         )}
                       </div>
+                    </div>
 
-                      {/* Country and Province in same row */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                        <div>
-                          <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">
-                            Country <span className="text-red-500">*</span>
-                          </label>
+                    {/* Country and Province */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                      <div>
+                        <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                          Country <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <GlobeAltIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
+                          </div>
                           <select
                             value={shippingCountry}
                             onChange={(e) => setShippingCountry(e.target.value)}
-                            className={`w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border ${
+                            className={`w-full pl-10 pr-8 py-2 sm:py-2.5 border ${
                               errors.shippingCountry
                                 ? "border-red-500"
                                 : "border-gray-300"
-                            } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                            } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-colors bg-white`}
                           >
                             {countryOptions.map((option) => (
                               <option key={option.value} value={option.value}>
@@ -679,26 +721,31 @@ function AdminAssociateAddStep4Page() {
                               </option>
                             ))}
                           </select>
-                          {errors.shippingCountry && (
-                            <p className="mt-1 text-xs sm:text-sm text-red-600">
-                              {errors.shippingCountry}
-                            </p>
-                          )}
                         </div>
+                        {errors.shippingCountry && (
+                          <p className="mt-1 text-xs sm:text-sm text-red-600">
+                            {errors.shippingCountry}
+                          </p>
+                        )}
+                      </div>
 
-                        <div>
-                          <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">
-                            Province/Territory{" "}
-                            <span className="text-red-500">*</span>
-                          </label>
+                      <div>
+                        <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                          Province/Territory{" "}
+                          <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <MapPinIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
+                          </div>
                           <select
                             value={shippingRegion}
                             onChange={(e) => setShippingRegion(e.target.value)}
-                            className={`w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border ${
+                            className={`w-full pl-10 pr-8 py-2 sm:py-2.5 border ${
                               errors.shippingRegion
                                 ? "border-red-500"
                                 : "border-gray-300"
-                            } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                            } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-colors bg-white`}
                           >
                             {regionOptions.map((option) => (
                               <option key={option.value} value={option.value}>
@@ -706,149 +753,129 @@ function AdminAssociateAddStep4Page() {
                               </option>
                             ))}
                           </select>
-                          {errors.shippingRegion && (
-                            <p className="mt-1 text-xs sm:text-sm text-red-600">
-                              {errors.shippingRegion}
-                            </p>
-                          )}
                         </div>
-                      </div>
-
-                      {/* City and Postal Code in same row */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                        <div>
-                          <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">
-                            City <span className="text-red-500">*</span>
-                          </label>
-                          <input
-                            type="text"
-                            value={shippingCity}
-                            onChange={(e) => setShippingCity(e.target.value)}
-                            placeholder="Enter city"
-                            className={`w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border ${
-                              errors.shippingCity
-                                ? "border-red-500"
-                                : "border-gray-300"
-                            } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-                          />
-                          {errors.shippingCity && (
-                            <p className="mt-1 text-xs sm:text-sm text-red-600">
-                              {errors.shippingCity}
-                            </p>
-                          )}
-                        </div>
-
-                        <div>
-                          <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">
-                            Postal Code <span className="text-red-500">*</span>
-                          </label>
-                          <input
-                            type="text"
-                            value={shippingPostalCode}
-                            onChange={(e) =>
-                              setShippingPostalCode(e.target.value)
-                            }
-                            placeholder="Enter postal code"
-                            className={`w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border ${
-                              errors.shippingPostalCode
-                                ? "border-red-500"
-                                : "border-gray-300"
-                            } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-                          />
-                          {errors.shippingPostalCode && (
-                            <p className="mt-1 text-xs sm:text-sm text-red-600">
-                              {errors.shippingPostalCode}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Address Line 1 and Line 2 in same row */}
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                        <div>
-                          <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">
-                            Address Line 1{" "}
-                            <span className="text-red-500">*</span>
-                          </label>
-                          <input
-                            type="text"
-                            value={shippingAddressLine1}
-                            onChange={(e) =>
-                              setShippingAddressLine1(e.target.value)
-                            }
-                            placeholder="Enter street address"
-                            className={`w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border ${
-                              errors.shippingAddressLine1
-                                ? "border-red-500"
-                                : "border-gray-300"
-                            } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-                          />
-                          {errors.shippingAddressLine1 && (
-                            <p className="mt-1 text-xs sm:text-sm text-red-600">
-                              {errors.shippingAddressLine1}
-                            </p>
-                          )}
-                        </div>
-
-                        <div>
-                          <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1 sm:mb-2">
-                            Address Line 2 (Optional)
-                          </label>
-                          <input
-                            type="text"
-                            value={shippingAddressLine2}
-                            onChange={(e) =>
-                              setShippingAddressLine2(e.target.value)
-                            }
-                            placeholder="Apartment, suite, etc."
-                            className="w-full px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                          />
-                        </div>
+                        {errors.shippingRegion && (
+                          <p className="mt-1 text-xs sm:text-sm text-red-600">
+                            {errors.shippingRegion}
+                          </p>
+                        )}
                       </div>
                     </div>
-                  </div>
-                )}
 
-                {/* Shipping Address Toggle */}
-                <div className="mt-4 sm:mt-6 mb-4 sm:mb-6">
-                  <div className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id="hasShippingAddress"
-                      checked={hasShippingAddress}
-                      onChange={(e) => setHasShippingAddress(e.target.checked)}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                    />
-                    <label
-                      htmlFor="hasShippingAddress"
-                      className="ml-2 text-xs sm:text-sm font-semibold text-gray-700"
-                    >
-                      Has shipping address different from billing address
-                    </label>
-                  </div>
-                </div>
+                    {/* City and Postal Code */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                      <div>
+                        <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                          City <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={shippingCity}
+                          onChange={(e) => setShippingCity(e.target.value)}
+                          placeholder="Enter city"
+                          className={`w-full px-3 py-2 sm:py-2.5 border ${
+                            errors.shippingCity
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-colors`}
+                        />
+                        {errors.shippingCity && (
+                          <p className="mt-1 text-xs sm:text-sm text-red-600">
+                            {errors.shippingCity}
+                          </p>
+                        )}
+                      </div>
 
-                {/* Form Actions */}
-                <div className="mt-4 sm:mt-6 flex gap-2 sm:gap-3">
-                  <Link
-                    to="/admin/associates/add/step-3"
-                    className="flex-1 inline-flex items-center justify-center px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-                  >
-                    <ArrowLeftIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                    Back
-                  </Link>
+                      <div>
+                        <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                          Postal Code <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={shippingPostalCode}
+                          onChange={(e) =>
+                            setShippingPostalCode(e.target.value)
+                          }
+                          placeholder="Enter postal code"
+                          className={`w-full px-3 py-2 sm:py-2.5 border ${
+                            errors.shippingPostalCode
+                              ? "border-red-500"
+                              : "border-gray-300"
+                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-colors`}
+                        />
+                        {errors.shippingPostalCode && (
+                          <p className="mt-1 text-xs sm:text-sm text-red-600">
+                            {errors.shippingPostalCode}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Address Lines */}
+                    <div>
+                      <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                        Address Line 1 <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        value={shippingAddressLine1}
+                        onChange={(e) =>
+                          setShippingAddressLine1(e.target.value)
+                        }
+                        placeholder="Enter street address"
+                        className={`w-full px-3 py-2 sm:py-2.5 border ${
+                          errors.shippingAddressLine1
+                            ? "border-red-500"
+                            : "border-gray-300"
+                        } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-colors`}
+                      />
+                      {errors.shippingAddressLine1 && (
+                        <p className="mt-1 text-xs sm:text-sm text-red-600">
+                          {errors.shippingAddressLine1}
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                        Address Line 2 (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={shippingAddressLine2}
+                        onChange={(e) =>
+                          setShippingAddressLine2(e.target.value)
+                        }
+                        placeholder="Apartment, suite, unit, building, floor, etc."
+                        className="w-full px-3 py-2 sm:py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base transition-colors"
+                      />
+                    </div>
+                  </div>
+                </DetailSection>
+              )}
+
+              {/* Form Actions */}
+              <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3">
+                <Link to="/admin/associates/add/step-3" className="flex-1">
                   <button
-                    type="submit"
-                    className="flex-1 inline-flex items-center justify-center px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                    type="button"
+                    className="w-full inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                   >
-                    Next
-                    <ArrowRightIcon className="w-3 h-3 sm:w-4 sm:h-4 ml-1 sm:ml-2" />
+                    <ArrowLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
+                    Back
                   </button>
-                </div>
-              </form>
-            )}
-          </div>
-        </div>
+                </Link>
+                <button
+                  type="submit"
+                  className="flex-1 inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Next
+                  <ArrowRightIcon className="w-4 sm:w-5 h-4 sm:h-5 ml-2" />
+                </button>
+              </div>
+            </>
+          )}
+        </form>
       </div>
     </div>
   );

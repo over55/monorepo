@@ -20,6 +20,7 @@ import {
   ChatBubbleBottomCenterTextIcon,
   ArrowRightIcon,
   HashtagIcon,
+  InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 
 function AdminTaskItemOrderCompletionStep2Page() {
@@ -166,12 +167,53 @@ function AdminTaskItemOrderCompletionStep2Page() {
     navigate(`/admin/task/${tid}`);
   };
 
+  // Section Component with Dark Header
+  const DetailSection = ({
+    title,
+    icon: Icon,
+    children,
+    variant = "default",
+  }) => {
+    const bgColor =
+      variant === "success"
+        ? "bg-green-700"
+        : variant === "error"
+          ? "bg-red-700"
+          : "bg-gray-700";
+    const iconColor =
+      variant === "success"
+        ? "text-green-300"
+        : variant === "error"
+          ? "text-red-300"
+          : "text-blue-300";
+
+    return (
+      <div className={`${bgColor} rounded-lg shadow-sm`}>
+        <div className="px-4 sm:px-6 py-3 sm:py-4">
+          <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+            <Icon
+              className={`w-4 sm:w-5 h-4 sm:h-5 mr-2 ${iconColor} flex-shrink-0`}
+            />
+            <span className="truncate">{title}</span>
+          </h3>
+        </div>
+        <div
+          className={`bg-white border-2 border-t-0 border-${bgColor === "bg-gray-700" ? "gray" : bgColor === "bg-green-700" ? "green" : "red"}-700 rounded-b-lg p-4 sm:p-6`}
+        >
+          {children}
+        </div>
+      </div>
+    );
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading task details...</p>
+          <p className="mt-4 text-sm sm:text-base text-gray-600">
+            Loading task details...
+          </p>
         </div>
       </div>
     );
@@ -179,29 +221,32 @@ function AdminTaskItemOrderCompletionStep2Page() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {/* Breadcrumb */}
-        <nav className="flex mb-4" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* Responsive Breadcrumb */}
+        <nav
+          className="flex mb-4 sm:mb-6 overflow-x-auto"
+          aria-label="Breadcrumb"
+        >
+          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
             <li className="inline-flex items-center">
               <Link
                 to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+                className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
               >
-                <ChartBarIcon className="w-4 h-4 mr-2" />
+                <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                 <span className="hidden sm:inline">Dashboard</span>
                 <span className="sm:hidden">Dash</span>
               </Link>
             </li>
             <li>
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                 <Link
                   to="/admin/tasks"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                  className="ml-1 text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2 whitespace-nowrap"
                 >
                   <span className="inline-flex items-center">
-                    <ClipboardDocumentCheckIcon className="w-4 h-4 mr-2" />
+                    <ClipboardDocumentCheckIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
                     Tasks
                   </span>
                 </Link>
@@ -209,10 +254,10 @@ function AdminTaskItemOrderCompletionStep2Page() {
             </li>
             <li>
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                 <Link
                   to={`/admin/task/${tid}`}
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                  className="ml-1 text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2 whitespace-nowrap"
                 >
                   Task Detail
                 </Link>
@@ -220,8 +265,8 @@ function AdminTaskItemOrderCompletionStep2Page() {
             </li>
             <li aria-current="page">
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">
+                <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                <span className="ml-1 text-xs sm:text-sm font-medium text-gray-500 md:ml-2 whitespace-nowrap">
                   Order Completion
                 </span>
               </div>
@@ -229,175 +274,133 @@ function AdminTaskItemOrderCompletionStep2Page() {
           </ol>
         </nav>
 
-        {/* Page Title */}
-        <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
-            <ClipboardDocumentCheckIcon className="w-6 h-6 sm:w-7 sm:h-7 mr-2 sm:mr-3 text-blue-600" />
+        {/* Page Title - Responsive */}
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 flex items-center">
+            <ClipboardDocumentCheckIcon className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
             Task Order Completion
           </h1>
+          <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+            <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
+            Provide completion status and details
+          </p>
         </div>
 
-        {/* Wizard Steps - Responsive Design */}
-        <div className="mb-6">
-          <div className="overflow-x-auto">
-            <div className="flex items-center justify-start xl:justify-center min-w-max px-2">
+        {/* Wizard Steps - Mobile Optimized */}
+        <div className="mb-4 sm:mb-6">
+          {/* Mobile View */}
+          <div className="md:hidden">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full">
+                    <span className="text-white font-semibold text-sm">2</span>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-900">
+                      Step 2: Status
+                    </p>
+                    <p className="text-xs text-gray-500">Completion details</p>
+                  </div>
+                </div>
+                <div className="text-xs text-gray-500">2 of 5</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop View */}
+          <div className="hidden md:flex items-center justify-center">
+            <div className="flex items-center">
+              {/* Step 1 - Complete */}
               <div className="flex items-center">
-                {/* Step 1 - Complete */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex-shrink-0">
-                    <svg
-                      className="w-4 h-4 sm:w-6 sm:h-6 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                  </div>
-                  <div className="ml-2 sm:ml-3 hidden md:block">
-                    <p className="text-xs sm:text-sm font-medium text-gray-900">
-                      Review
-                    </p>
-                    <p className="text-xs text-gray-500 hidden lg:block">
-                      Task Details
-                    </p>
-                  </div>
-                  <div className="ml-2 sm:ml-3 md:hidden">
-                    <p className="text-xs font-medium text-gray-900">1</p>
-                  </div>
+                <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
+                  <svg
+                    className="w-6 h-6 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
                 </div>
-
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-6 sm:w-8 lg:w-12 h-0.5 bg-gray-300"></div>
-
-                {/* Step 2 - Active */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-full flex-shrink-0">
-                    <span className="text-white font-semibold text-sm sm:text-base">
-                      2
-                    </span>
-                  </div>
-                  <div className="ml-2 sm:ml-3 hidden md:block">
-                    <p className="text-xs sm:text-sm font-medium text-gray-900">
-                      Completion
-                    </p>
-                    <p className="text-xs text-gray-500 hidden lg:block">
-                      Status & Details
-                    </p>
-                  </div>
-                  <div className="ml-2 sm:ml-3 md:hidden">
-                    <p className="text-xs font-medium text-gray-900">Status</p>
-                  </div>
-                </div>
-
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-6 sm:w-8 lg:w-12 h-0.5 bg-gray-300"></div>
-
-                {/* Step 3 - Inactive */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
-                    <span className="text-gray-600 font-semibold text-sm sm:text-base">
-                      3
-                    </span>
-                  </div>
-                  <div className="ml-2 sm:ml-3 hidden md:block">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">
-                      Survey
-                    </p>
-                    <p className="text-xs text-gray-400 hidden lg:block">
-                      Customer Feedback
-                    </p>
-                  </div>
-                  <div className="ml-2 sm:ml-3 md:hidden">
-                    <p className="text-xs font-medium text-gray-500">3</p>
-                  </div>
-                </div>
-
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-6 sm:w-8 lg:w-12 h-0.5 bg-gray-300"></div>
-
-                {/* Step 4 - Inactive */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
-                    <span className="text-gray-600 font-semibold text-sm sm:text-base">
-                      4
-                    </span>
-                  </div>
-                  <div className="ml-2 sm:ml-3 hidden md:block">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">
-                      Comments
-                    </p>
-                    <p className="text-xs text-gray-400 hidden lg:block">
-                      Additional Notes
-                    </p>
-                  </div>
-                  <div className="ml-2 sm:ml-3 md:hidden">
-                    <p className="text-xs font-medium text-gray-500">4</p>
-                  </div>
-                </div>
-
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-6 sm:w-8 lg:w-12 h-0.5 bg-gray-300"></div>
-
-                {/* Step 5 - Inactive */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
-                    <span className="text-gray-600 font-semibold text-sm sm:text-base">
-                      5
-                    </span>
-                  </div>
-                  <div className="ml-2 sm:ml-3 hidden md:block">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">
-                      Review
-                    </p>
-                    <p className="text-xs text-gray-400 hidden lg:block">
-                      Confirm & Submit
-                    </p>
-                  </div>
-                  <div className="ml-2 sm:ml-3 md:hidden">
-                    <p className="text-xs font-medium text-gray-500">5</p>
-                  </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">Review</p>
+                  <p className="text-xs text-gray-500">Task Details</p>
                 </div>
               </div>
+
+              {/* Connector */}
+              <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+
+              {/* Step 2 - Active */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
+                  <span className="text-white font-semibold">2</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">
+                    Completion
+                  </p>
+                  <p className="text-xs text-gray-500">Status & Details</p>
+                </div>
+              </div>
+
+              {/* Remaining steps */}
+              {[
+                { num: 3, title: "Survey", subtitle: "Customer Feedback" },
+                { num: 4, title: "Comments", subtitle: "Additional Notes" },
+                { num: 5, title: "Review", subtitle: "Confirm & Submit" },
+              ].map((step, index) => (
+                <React.Fragment key={step.num}>
+                  <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+                  <div className="flex items-center">
+                    <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
+                      <span className="text-gray-600 font-semibold">
+                        {step.num}
+                      </span>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-gray-500">
+                        {step.title}
+                      </p>
+                      <p className="text-xs text-gray-400">{step.subtitle}</p>
+                    </div>
+                  </div>
+                </React.Fragment>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Error Message */}
+        {/* Error Message - Responsive */}
         {Object.keys(errors).length > 0 && errors.message && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
-            <span className="flex items-center">
-              <ExclamationCircleIcon className="w-5 h-5 mr-2" />
-              <span className="text-sm sm:text-base">{errors.message}</span>
+          <div className="mb-4 sm:mb-6 bg-red-50 border border-red-200 text-red-800 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center justify-between">
+            <span className="flex items-center text-sm sm:text-base">
+              <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+              {errors.message}
             </span>
             <button
               onClick={() => setErrors({})}
-              className="text-red-600 hover:text-red-800"
+              className="text-red-600 hover:text-red-800 ml-2 flex-shrink-0"
             >
-              <XMarkIcon className="w-5 h-5" />
+              <XMarkIcon className="w-4 sm:w-5 h-4 sm:h-5" />
             </button>
           </div>
         )}
 
         {/* Main Content */}
-        <div className="bg-white shadow-sm rounded-lg">
-          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900">
-              Completion Status
-            </h2>
-            <p className="mt-1 text-xs sm:text-sm text-gray-600">
-              Please provide details about the job completion
-            </p>
-          </div>
-
-          <div className="p-4 sm:p-6">
-            {/* Completion Status Selection */}
-            <div className="mb-6">
+        <div className="space-y-4 sm:space-y-6">
+          {/* Completion Status Selection */}
+          <DetailSection
+            title="Completion Status"
+            icon={ClipboardDocumentCheckIcon}
+          >
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 Did the Associate successfully complete the job?
                 <span className="text-red-500 ml-1">*</span>
@@ -479,15 +482,16 @@ function AdminTaskItemOrderCompletionStep2Page() {
                 </p>
               )}
             </div>
+          </DetailSection>
 
-            {/* If job was completed */}
-            {wasCompleted === 1 && (
-              <div className="mt-6 space-y-6 bg-green-50 p-4 sm:p-6 rounded-lg border border-green-200">
-                <h3 className="text-lg font-medium text-gray-900 flex items-center">
-                  <CheckCircleIcon className="w-5 h-5 mr-2 text-green-600" />
-                  Completion Details
-                </h3>
-
+          {/* If job was completed */}
+          {wasCompleted === 1 && (
+            <DetailSection
+              title="Completion Details"
+              icon={CheckCircleIcon}
+              variant="success"
+            >
+              <div className="space-y-4 sm:space-y-6">
                 {/* Completion Date */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -571,16 +575,17 @@ function AdminTaskItemOrderCompletionStep2Page() {
                   )}
                 </div>
               </div>
-            )}
+            </DetailSection>
+          )}
 
-            {/* If job was not completed */}
-            {wasCompleted === 2 && (
-              <div className="mt-6 space-y-6 bg-red-50 p-4 sm:p-6 rounded-lg border border-red-200">
-                <h3 className="text-lg font-medium text-gray-900 flex items-center">
-                  <XCircleIcon className="w-5 h-5 mr-2 text-red-600" />
-                  Cancellation Details
-                </h3>
-
+          {/* If job was not completed */}
+          {wasCompleted === 2 && (
+            <DetailSection
+              title="Cancellation Details"
+              icon={XCircleIcon}
+              variant="error"
+            >
+              <div className="space-y-4 sm:space-y-6">
                 {/* Cancellation Reason */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -660,35 +665,35 @@ function AdminTaskItemOrderCompletionStep2Page() {
                   )}
                 </div>
               </div>
-            )}
+            </DetailSection>
+          )}
 
-            {/* Action Buttons */}
-            <div className="mt-8 flex flex-col sm:flex-row justify-between gap-4">
-              <div className="flex gap-3">
-                <Link
-                  to={`/admin/task/${tid}/order-completion/step-1`}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <ArrowLeftIcon className="w-4 h-4 mr-2" />
-                  Back
-                </Link>
-                <button
-                  onClick={handleCancel}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <XMarkIcon className="w-4 h-4 mr-2" />
-                  Cancel
-                </button>
-              </div>
-
-              <button
-                onClick={handleSubmit}
-                className="inline-flex items-center justify-center px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+          {/* Action Buttons - Responsive */}
+          <div className="flex flex-col sm:flex-row justify-between gap-3 pt-4">
+            <div className="flex gap-3">
+              <Link
+                to={`/admin/task/${tid}/order-completion/step-1`}
+                className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
-                Save & Continue
-                <ArrowRightIcon className="w-4 h-4 ml-2" />
+                <ArrowLeftIcon className="w-4 h-4 mr-2" />
+                Back
+              </Link>
+              <button
+                onClick={handleCancel}
+                className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <XMarkIcon className="w-4 h-4 mr-2" />
+                Cancel
               </button>
             </div>
+
+            <button
+              onClick={handleSubmit}
+              className="inline-flex items-center justify-center px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            >
+              Save & Continue
+              <ArrowRightIcon className="w-4 h-4 ml-2" />
+            </button>
           </div>
         </div>
 
@@ -708,9 +713,9 @@ function AdminTaskItemOrderCompletionStep2Page() {
       {showCancelWarning && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-                <ExclamationCircleIcon className="h-5 w-5 mr-2 text-amber-600" />
+            <div className="bg-gray-700 px-4 sm:px-6 py-3 sm:py-4 rounded-t-lg">
+              <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+                <ExclamationCircleIcon className="h-5 w-5 mr-2 text-amber-300" />
                 Are you sure?
               </h3>
             </div>
@@ -723,7 +728,7 @@ function AdminTaskItemOrderCompletionStep2Page() {
               </p>
             </div>
 
-            <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3 rounded-b-lg">
               <button
                 onClick={() => setShowCancelWarning(false)}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 w-full sm:w-auto"

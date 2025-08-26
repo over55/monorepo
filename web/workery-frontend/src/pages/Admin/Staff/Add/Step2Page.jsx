@@ -18,6 +18,8 @@ import {
   UsersIcon,
   CogIcon,
   ArrowRightIcon,
+  CheckIcon,
+  InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 import {
   STAFF_TYPE_FRONTLINE,
@@ -86,29 +88,32 @@ function AdminStaffAddStep2Page() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {/* Breadcrumb */}
-        <nav className="flex mb-4" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* Responsive Breadcrumb */}
+        <nav
+          className="flex mb-4 sm:mb-6 overflow-x-auto"
+          aria-label="Breadcrumb"
+        >
+          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
             <li className="inline-flex items-center">
               <Link
                 to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+                className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
               >
-                <ChartBarIcon className="w-4 h-4 mr-2" />
+                <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                 <span className="hidden sm:inline">Dashboard</span>
                 <span className="sm:hidden">Dash</span>
               </Link>
             </li>
             <li>
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="mx-1 sm:mx-2 text-gray-400">/</span>
                 <Link
                   to="/admin/staff"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                  className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
                 >
                   <span className="inline-flex items-center">
-                    <UserIcon className="w-4 h-4 mr-2" />
+                    <UsersIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                     Staff
                   </span>
                 </Link>
@@ -116,9 +121,9 @@ function AdminStaffAddStep2Page() {
             </li>
             <li aria-current="page">
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
-                  <UserPlusIcon className="w-4 h-4 mr-2" />
+                <span className="mx-1 sm:mx-2 text-gray-400">/</span>
+                <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
+                  <UserPlusIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                   Add
                 </span>
               </div>
@@ -126,220 +131,124 @@ function AdminStaffAddStep2Page() {
           </ol>
         </nav>
 
-        {/* Page Title */}
-        <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
-            <UserPlusIcon className="w-6 h-6 sm:w-7 sm:h-7 mr-2 sm:mr-3 text-blue-600" />
+        {/* Page Title - Responsive */}
+        <div className="mb-4 sm:mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+            <UserPlusIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
             Add New Staff Member
           </h1>
+          <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+            <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
+            Select the type of staff member
+          </p>
         </div>
 
-        {/* Wizard Steps - Responsive Design */}
-        <div className="mb-6">
-          <div className="overflow-x-auto">
-            <div className="flex items-center justify-start xl:justify-center min-w-max px-2">
+        {/* Wizard Steps - Mobile Simplified */}
+        <div className="mb-4 sm:mb-6">
+          <div className="md:hidden bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div className="flex items-center justify-between">
               <div className="flex items-center">
-                {/* Step 1 - Complete */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-green-600 rounded-full flex-shrink-0">
-                    <svg
-                      className="w-4 h-4 sm:w-6 sm:h-6 text-white"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M5 13l4 4L19 7"
-                      />
-                    </svg>
-                  </div>
-                  <div className="ml-2 sm:ml-3 hidden md:block">
-                    <p className="text-xs sm:text-sm font-medium text-gray-900">
-                      Search
-                    </p>
-                    <p className="text-xs text-gray-500 hidden lg:block">
-                      Complete
-                    </p>
-                  </div>
-                  <div className="ml-2 sm:ml-3 md:hidden">
-                    <p className="text-xs font-medium text-gray-900">1</p>
-                  </div>
+                <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full">
+                  <span className="text-white font-semibold text-sm">2</span>
                 </div>
-
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-6 sm:w-8 lg:w-12 h-0.5 bg-gray-300"></div>
-
-                {/* Step 2 - Active */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-blue-600 rounded-full flex-shrink-0">
-                    <span className="text-white font-semibold text-sm sm:text-base">
-                      2
-                    </span>
-                  </div>
-                  <div className="ml-2 sm:ml-3 hidden md:block">
-                    <p className="text-xs sm:text-sm font-medium text-gray-900">
-                      Type
-                    </p>
-                    <p className="text-xs text-gray-500 hidden lg:block">
-                      Select Type
-                    </p>
-                  </div>
-                  <div className="ml-2 sm:ml-3 md:hidden">
-                    <p className="text-xs font-medium text-gray-900">Type</p>
-                  </div>
-                </div>
-
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-6 sm:w-8 lg:w-12 h-0.5 bg-gray-300"></div>
-
-                {/* Step 3 - Inactive */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
-                    <span className="text-gray-600 font-semibold text-sm sm:text-base">
-                      3
-                    </span>
-                  </div>
-                  <div className="ml-2 sm:ml-3 hidden md:block">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">
-                      Contact
-                    </p>
-                    <p className="text-xs text-gray-400 hidden lg:block">
-                      Basic Info
-                    </p>
-                  </div>
-                  <div className="ml-2 sm:ml-3 md:hidden">
-                    <p className="text-xs font-medium text-gray-500">3</p>
-                  </div>
-                </div>
-
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-6 sm:w-8 lg:w-12 h-0.5 bg-gray-300"></div>
-
-                {/* Step 4 - Inactive */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
-                    <span className="text-gray-600 font-semibold text-sm sm:text-base">
-                      4
-                    </span>
-                  </div>
-                  <div className="ml-2 sm:ml-3 hidden md:block">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">
-                      Address
-                    </p>
-                    <p className="text-xs text-gray-400 hidden lg:block">
-                      Location
-                    </p>
-                  </div>
-                  <div className="ml-2 sm:ml-3 md:hidden">
-                    <p className="text-xs font-medium text-gray-500">4</p>
-                  </div>
-                </div>
-
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-6 sm:w-8 lg:w-12 h-0.5 bg-gray-300"></div>
-
-                {/* Step 5 - Inactive */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
-                    <span className="text-gray-600 font-semibold text-sm sm:text-base">
-                      5
-                    </span>
-                  </div>
-                  <div className="ml-2 sm:ml-3 hidden md:block">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">
-                      Account
-                    </p>
-                    <p className="text-xs text-gray-400 hidden lg:block">
-                      Settings
-                    </p>
-                  </div>
-                  <div className="ml-2 sm:ml-3 md:hidden">
-                    <p className="text-xs font-medium text-gray-500">5</p>
-                  </div>
-                </div>
-
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-6 sm:w-8 lg:w-12 h-0.5 bg-gray-300"></div>
-
-                {/* Step 6 - Inactive */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
-                    <span className="text-gray-600 font-semibold text-sm sm:text-base">
-                      6
-                    </span>
-                  </div>
-                  <div className="ml-2 sm:ml-3 hidden md:block">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">
-                      Permissions
-                    </p>
-                    <p className="text-xs text-gray-400 hidden lg:block">
-                      Access Rights
-                    </p>
-                  </div>
-                  <div className="ml-2 sm:ml-3 md:hidden">
-                    <p className="text-xs font-medium text-gray-500">6</p>
-                  </div>
-                </div>
-
-                {/* Connector */}
-                <div className="mx-1 sm:mx-2 w-6 sm:w-8 lg:w-12 h-0.5 bg-gray-300"></div>
-
-                {/* Step 7 - Inactive */}
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gray-300 rounded-full flex-shrink-0">
-                    <span className="text-gray-600 font-semibold text-sm sm:text-base">
-                      7
-                    </span>
-                  </div>
-                  <div className="ml-2 sm:ml-3 hidden md:block">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">
-                      Comments
-                    </p>
-                    <p className="text-xs text-gray-400 hidden lg:block">
-                      Notes
-                    </p>
-                  </div>
-                  <div className="ml-2 sm:ml-3 md:hidden">
-                    <p className="text-xs font-medium text-gray-500">7</p>
-                  </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">
+                    Step 2: Type
+                  </p>
+                  <p className="text-xs text-gray-500">Select Staff Type</p>
                 </div>
               </div>
+              <div className="text-xs text-gray-500">2 of 7</div>
+            </div>
+          </div>
+
+          {/* Desktop Wizard Steps */}
+          <div className="hidden md:flex items-center justify-center overflow-x-auto pb-2">
+            <div className="flex items-center min-w-max">
+              {/* Step 1 - Complete */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
+                  <CheckIcon className="w-6 h-6 text-white" />
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">Search</p>
+                  <p className="text-xs text-gray-500">Complete</p>
+                </div>
+              </div>
+
+              {/* Connector */}
+              <div className="mx-2 w-12 h-0.5 bg-green-600"></div>
+
+              {/* Step 2 - Active */}
+              <div className="flex items-center">
+                <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
+                  <span className="text-white font-semibold">2</span>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">Type</p>
+                  <p className="text-xs text-gray-500">Select Type</p>
+                </div>
+              </div>
+
+              {[
+                { num: 3, title: "Contact", subtitle: "Basic Info" },
+                { num: 4, title: "Address", subtitle: "Location" },
+                { num: 5, title: "Account", subtitle: "Settings" },
+                { num: 6, title: "Permissions", subtitle: "Access Rights" },
+                { num: 7, title: "Comments", subtitle: "Notes" },
+              ].map((step) => (
+                <React.Fragment key={step.num}>
+                  <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
+                  <div className="flex items-center">
+                    <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
+                      <span className="text-gray-600 font-semibold">
+                        {step.num}
+                      </span>
+                    </div>
+                    <div className="ml-3">
+                      <p className="text-sm font-medium text-gray-500">
+                        {step.title}
+                      </p>
+                      <p className="text-xs text-gray-400">{step.subtitle}</p>
+                    </div>
+                  </div>
+                </React.Fragment>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Error Message */}
+        {/* Error Message - Responsive */}
         {errors.message && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
-            <span className="flex items-center">
-              <ExclamationCircleIcon className="w-5 h-5 mr-2" />
-              <span className="text-sm sm:text-base">{errors.message}</span>
-            </span>
-            <button
-              onClick={() => setErrors({})}
-              className="text-red-600 hover:text-red-800"
-            >
-              <XMarkIcon className="w-5 h-5" />
-            </button>
+          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base">
+            <div className="flex justify-between items-center">
+              <span className="flex items-center break-words">
+                <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+                {errors.message}
+              </span>
+              <button
+                onClick={() => setErrors({})}
+                className="text-red-700 hover:text-red-900 ml-2 flex-shrink-0"
+              >
+                ×
+              </button>
+            </div>
           </div>
         )}
 
-        {/* Main Content */}
-        <div className="bg-white shadow-sm rounded-lg">
-          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-              <UserIcon className="w-5 h-5 mr-2" />
-              Select Staff Type
+        {/* Main Content with Dark Header */}
+        <div className="bg-gray-700 rounded-lg shadow-sm">
+          <div className="px-4 sm:px-6 py-3 sm:py-4">
+            <h2 className="text-base sm:text-lg font-semibold text-white flex items-center">
+              <UserIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
+              <span className="truncate">Select Staff Type</span>
             </h2>
-            <p className="mt-1 text-xs sm:text-sm text-gray-600">
+            <p className="mt-1 text-xs sm:text-sm text-gray-300">
               Please select the type of staff member you are adding
             </p>
           </div>
 
-          <div className="p-4 sm:p-6">
+          <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-4xl mx-auto">
               {/* Frontline Staff Card */}
               <div
@@ -423,7 +332,7 @@ function AdminStaffAddStep2Page() {
         </div>
       </div>
 
-      {/* Cancel Confirmation Modal */}
+      {/* Cancel Confirmation Modal - Responsive */}
       {showCancelWarning && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-md w-full">
@@ -444,13 +353,13 @@ function AdminStaffAddStep2Page() {
             <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row justify-end space-y-2 sm:space-y-0 sm:space-x-3">
               <button
                 onClick={() => setShowCancelWarning(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 w-full sm:w-auto"
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 w-full sm:w-auto order-2 sm:order-1"
               >
                 No, Keep Working
               </button>
               <button
                 onClick={handleConfirmCancel}
-                className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 w-full sm:w-auto"
+                className="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 w-full sm:w-auto order-1 sm:order-2"
               >
                 Yes, Cancel
               </button>

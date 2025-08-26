@@ -13,14 +13,22 @@ import {
   CheckIcon,
   ChartBarIcon,
   WrenchScrewdriverIcon,
-  PlusIcon,
-  ExclamationCircleIcon,
+  PlusCircleIcon,
+  ExclamationTriangleIcon,
   PencilSquareIcon,
   UserIcon,
   ClipboardDocumentIcon,
   CalendarIcon,
   CheckCircleIcon,
   XMarkIcon,
+  SparklesIcon,
+  ClockIcon,
+  HomeIcon,
+  TagIcon,
+  AcademicCapIcon,
+  ChatBubbleBottomCenterTextIcon,
+  DocumentCheckIcon,
+  RocketLaunchIcon,
 } from "@heroicons/react/24/outline";
 import {
   TagsDisplay,
@@ -139,7 +147,7 @@ function AdminOrderAddStep4Page() {
 
   if (!orderData) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         <span className="ml-3 text-gray-600">Loading order data...</span>
       </div>
@@ -147,15 +155,18 @@ function AdminOrderAddStep4Page() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {/* Breadcrumb */}
-        <nav className="flex mb-4" aria-label="Breadcrumb">
+        {/* Enhanced Breadcrumb */}
+        <nav
+          className="flex mb-4 bg-white rounded-lg shadow-sm p-2 sm:p-3"
+          aria-label="Breadcrumb"
+        >
           <ol className="inline-flex items-center space-x-1 md:space-x-3">
             <li className="inline-flex items-center">
               <Link
                 to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
               >
                 <ChartBarIcon className="w-4 h-4 mr-2" />
                 <span className="hidden sm:inline">Dashboard</span>
@@ -166,7 +177,7 @@ function AdminOrderAddStep4Page() {
                 <ChevronRightIcon className="w-5 h-5 text-gray-400" />
                 <Link
                   to="/admin/orders"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors md:ml-2"
                 >
                   <span className="inline-flex items-center">
                     <WrenchScrewdriverIcon className="w-4 h-4 mr-2" />
@@ -179,7 +190,7 @@ function AdminOrderAddStep4Page() {
               <div className="flex items-center">
                 <ChevronRightIcon className="w-5 h-5 text-gray-400" />
                 <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
-                  <PlusIcon className="w-4 h-4 mr-2" />
+                  <PlusCircleIcon className="w-4 h-4 mr-2" />
                   Add
                 </span>
               </div>
@@ -187,24 +198,28 @@ function AdminOrderAddStep4Page() {
           </ol>
         </nav>
 
-        {/* Page Title */}
-        <div className="mb-6">
+        {/* Enhanced Page Title */}
+        <div className="mb-6 bg-white rounded-lg shadow-sm p-4 sm:p-6">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
-            <PlusIcon className="w-6 sm:w-7 h-6 sm:h-7 mr-2 sm:mr-3 text-blue-600" />
+            <PlusCircleIcon className="w-6 sm:w-7 h-6 sm:h-7 mr-2 sm:mr-3 text-blue-600" />
             Add New Order
           </h1>
+          <p className="mt-1 text-sm text-gray-600 flex items-center">
+            <DocumentCheckIcon className="w-4 h-4 mr-1" />
+            Step 4: Review and submit your order
+          </p>
         </div>
 
-        {/* Wizard Steps - Responsive Design */}
-        <div className="mb-6">
-          {/* Desktop/Tablet View (768px and up) */}
+        {/* Enhanced Wizard Steps */}
+        <div className="mb-6 bg-white rounded-lg shadow-sm p-4">
+          {/* Desktop/Tablet View */}
           <div className="hidden md:flex items-center justify-center overflow-x-auto">
             <div className="flex items-center">
               {/* Steps 1-3 Complete */}
               {[1, 2, 3].map((step, index) => (
                 <React.Fragment key={step}>
                   <div className="flex items-center">
-                    <div className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-green-600 rounded-full">
+                    <div className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-green-600 rounded-full shadow-lg">
                       <CheckIcon className="w-4 h-4 lg:w-6 lg:h-6 text-white" />
                     </div>
                     <div className="ml-2 lg:ml-3">
@@ -226,7 +241,7 @@ function AdminOrderAddStep4Page() {
 
               {/* Step 4 - Active */}
               <div className="flex items-center">
-                <div className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-blue-600 rounded-full">
+                <div className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-blue-600 rounded-full shadow-lg animate-pulse">
                   <span className="text-white font-semibold text-sm lg:text-base">
                     4
                   </span>
@@ -243,11 +258,11 @@ function AdminOrderAddStep4Page() {
             </div>
           </div>
 
-          {/* Mobile View (below 768px) */}
+          {/* Mobile View */}
           <div className="md:hidden">
             <div className="flex items-center justify-between px-4">
               <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
+                <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full shadow-lg animate-pulse">
                   <span className="text-white font-semibold">4</span>
                 </div>
                 <div className="ml-3">
@@ -267,7 +282,7 @@ function AdminOrderAddStep4Page() {
                         className="w-2 h-2 bg-green-600 rounded-full mr-1"
                       ></div>
                     ))}
-                    <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                    <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></div>
                   </div>
                 </div>
               </div>
@@ -275,13 +290,13 @@ function AdminOrderAddStep4Page() {
           </div>
         </div>
 
-        {/* Cancel Warning Modal */}
+        {/* Cancel Warning Modal - Enhanced */}
         {showCancelWarning && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full z-50">
+            <div className="relative top-20 mx-auto p-5 border w-96 shadow-2xl rounded-xl bg-white">
               <div className="mt-3">
                 <div className="flex items-center mb-4">
-                  <ExclamationCircleIcon className="w-6 h-6 text-yellow-500 mr-2" />
+                  <ExclamationTriangleIcon className="w-6 h-6 text-yellow-500 mr-2" />
                   <h3 className="text-lg font-medium text-gray-900">
                     Are you sure?
                   </h3>
@@ -293,13 +308,13 @@ function AdminOrderAddStep4Page() {
                 <div className="flex justify-end space-x-3">
                   <button
                     onClick={() => setShowCancelWarning(false)}
-                    className="px-4 py-2 bg-gray-300 text-gray-800 text-sm font-medium rounded-md hover:bg-gray-400"
+                    className="px-4 py-2 bg-gray-300 text-gray-800 text-sm font-medium rounded-md hover:bg-gray-400 transition-all transform hover:scale-105"
                   >
                     No
                   </button>
                   <button
                     onClick={handleConfirmCancel}
-                    className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700"
+                    className="px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm font-medium rounded-md hover:from-green-700 hover:to-green-800 transition-all transform hover:scale-105 shadow-lg"
                   >
                     Yes
                   </button>
@@ -309,60 +324,74 @@ function AdminOrderAddStep4Page() {
           </div>
         )}
 
-        {/* Main Content */}
-        <div className="bg-white shadow-sm rounded-lg">
-          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-              <CheckCircleIcon className="w-5 h-5 mr-2" />
+        {/* Main Content with Dark Header */}
+        <div className="bg-white shadow-lg rounded-lg overflow-hidden">
+          <div className="px-4 sm:px-6 py-4 bg-gradient-to-r from-gray-800 to-gray-700">
+            <h2 className="text-base sm:text-lg font-semibold text-white flex items-center">
+              <CheckCircleIcon className="w-5 h-5 mr-2 text-green-400" />
               Review and Submit
             </h2>
+            <p className="mt-1 text-xs sm:text-sm text-gray-300">
+              Please review the order details before submitting
+            </p>
           </div>
 
           <div className="p-4 sm:p-6">
-            <p className="text-sm sm:text-base text-gray-600 mb-6">
-              Please review the following order summary before submitting this
-              order into the system. If everything looks correct, click the
-              <strong> Submit</strong> button to create the new order.
-            </p>
+            <div className="mb-6 bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm sm:text-base text-blue-800 flex items-start">
+                <SparklesIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
+                <span>
+                  Please review the following order summary before submitting.
+                  If everything looks correct, click the
+                  <strong> Submit Order</strong> button to create the new order.
+                </span>
+              </p>
+            </div>
 
             {errors.message && (
-              <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center">
-                <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+              <div className="mb-6 bg-red-50 border-l-4 border-red-400 text-red-800 px-4 py-3 rounded-lg flex items-center">
+                <ExclamationTriangleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
                 <span className="text-sm sm:text-base">{errors.message}</span>
               </div>
             )}
             {errors.detail && (
-              <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center">
-                <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+              <div className="mb-6 bg-red-50 border-l-4 border-red-400 text-red-800 px-4 py-3 rounded-lg flex items-center">
+                <ExclamationTriangleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
                 <span className="text-sm sm:text-base">{errors.detail}</span>
               </div>
             )}
 
             {isLoading ? (
-              <div className="flex items-center justify-center py-8">
+              <div className="flex flex-col items-center justify-center py-12">
+                <RocketLaunchIcon className="w-16 h-16 text-blue-600 mb-4 animate-bounce" />
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                <span className="ml-3 text-gray-600">Creating order...</span>
+                <p className="mt-4 text-lg text-gray-600 font-medium">
+                  Creating order...
+                </p>
+                <p className="mt-2 text-sm text-gray-500">
+                  Please wait while we process your request
+                </p>
               </div>
             ) : (
               <div className="max-w-3xl mx-auto">
                 <div className="space-y-6 sm:space-y-8">
                   {/* Customer Information Section */}
-                  <div>
+                  <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-4 sm:p-6 border border-purple-200">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
-                        <UserIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600" />
+                        <UserIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-purple-600" />
                         Customer Information
                       </h3>
                       <Link
                         to="/admin/orders/add/step-2"
-                        className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
+                        className="inline-flex items-center text-xs sm:text-sm text-purple-600 hover:text-purple-800 transition-colors"
                       >
                         <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
                         Edit
                       </Link>
                     </div>
 
-                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-2">
+                    <div className="bg-white rounded-lg p-3 sm:p-4 space-y-2">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
                         <div>
                           <span className="text-xs sm:text-sm font-medium text-gray-500">
@@ -372,7 +401,7 @@ function AdminOrderAddStep4Page() {
                             <Link
                               to={`/admin/customer/${orderData.customerId}`}
                               target="_blank"
-                              className="text-blue-600 hover:text-blue-800"
+                              className="text-blue-600 hover:text-blue-800 font-medium transition-colors"
                             >
                               {orderData.customerFirstName}{" "}
                               {orderData.customerLastName}
@@ -384,22 +413,22 @@ function AdminOrderAddStep4Page() {
                   </div>
 
                   {/* Order Details Section */}
-                  <div className="pt-6 border-t">
+                  <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4 sm:p-6 border border-blue-200">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
-                        <ClipboardDocumentIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-purple-600" />
+                        <ClipboardDocumentIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600" />
                         Order Details
                       </h3>
                       <Link
                         to="/admin/orders/add/step-3"
-                        className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
+                        className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800 transition-colors"
                       >
                         <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
                         Edit
                       </Link>
                     </div>
 
-                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-3">
+                    <div className="bg-white rounded-lg p-3 sm:p-4 space-y-3">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-3">
                         <div>
                           <span className="text-xs sm:text-sm font-medium text-gray-500">
@@ -435,7 +464,7 @@ function AdminOrderAddStep4Page() {
                           <p className="text-xs sm:text-sm">
                             {orderData.isHomeSupportService === 1 ? (
                               <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                <CheckIcon className="w-3 h-3 mr-1" />
+                                <HomeIcon className="w-3 h-3 mr-1" />
                                 Yes
                               </span>
                             ) : (
@@ -450,10 +479,11 @@ function AdminOrderAddStep4Page() {
 
                       {orderData.description && (
                         <div className="mt-3">
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                          <span className="text-xs sm:text-sm font-medium text-gray-500 flex items-center mb-1">
+                            <ClipboardDocumentIcon className="w-4 h-4 mr-1" />
                             Description:
                           </span>
-                          <div className="mt-1 text-xs sm:text-sm text-gray-900 bg-white p-3 rounded border border-gray-200">
+                          <div className="mt-1 text-xs sm:text-sm text-gray-900 bg-gray-50 p-3 rounded border border-gray-200">
                             <p className="whitespace-pre-wrap">
                               {orderData.description}
                             </p>
@@ -464,10 +494,14 @@ function AdminOrderAddStep4Page() {
                       {/* Skill Sets Display */}
                       {orderData.skillSets &&
                         orderData.skillSets.length > 0 && (
-                          <div className="mt-3">
+                          <div className="mt-3 bg-purple-50 rounded-lg p-3 border border-purple-200">
+                            <span className="text-xs sm:text-sm font-medium text-gray-500 flex items-center mb-2">
+                              <AcademicCapIcon className="w-4 h-4 mr-1 text-purple-600" />
+                              Required Skills:
+                            </span>
                             <SkillSetsDisplay
                               values={orderData.skillSets}
-                              label="Skill Sets"
+                              label=""
                               variant="primary"
                               onUnauthorized={onUnauthorized}
                             />
@@ -476,10 +510,11 @@ function AdminOrderAddStep4Page() {
 
                       {orderData.additionalComment && (
                         <div className="mt-3">
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
+                          <span className="text-xs sm:text-sm font-medium text-gray-500 flex items-center mb-1">
+                            <ChatBubbleBottomCenterTextIcon className="w-4 h-4 mr-1" />
                             Additional Comments:
                           </span>
-                          <div className="mt-1 text-xs sm:text-sm text-gray-900 bg-white p-3 rounded border border-gray-200">
+                          <div className="mt-1 text-xs sm:text-sm text-gray-900 bg-amber-50 p-3 rounded border border-amber-200">
                             <p className="whitespace-pre-wrap">
                               {orderData.additionalComment}
                             </p>
@@ -489,10 +524,14 @@ function AdminOrderAddStep4Page() {
 
                       {/* Tags Display */}
                       {orderData.tags && orderData.tags.length > 0 && (
-                        <div className="mt-3">
+                        <div className="mt-3 bg-green-50 rounded-lg p-3 border border-green-200">
+                          <span className="text-xs sm:text-sm font-medium text-gray-500 flex items-center mb-2">
+                            <TagIcon className="w-4 h-4 mr-1 text-green-600" />
+                            Tags:
+                          </span>
                           <TagsDisplay
                             values={orderData.tags}
-                            label="Tags"
+                            label=""
                             variant="success"
                             onUnauthorized={onUnauthorized}
                           />
@@ -502,18 +541,18 @@ function AdminOrderAddStep4Page() {
                   </div>
                 </div>
 
-                {/* Form Actions */}
-                <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3">
+                {/* Form Actions - Enhanced */}
+                <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 pt-6 border-t-2 border-gray-200">
                   <button
                     onClick={handleCancelClick}
-                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all transform hover:scale-105"
                   >
                     <XMarkIcon className="w-4 h-4 mr-2" />
                     Cancel
                   </button>
                   <Link
                     to="/admin/orders/add/step-3"
-                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all transform hover:scale-105"
                   >
                     <ArrowLeftIcon className="w-4 h-4 mr-2" />
                     Back
@@ -521,7 +560,7 @@ function AdminOrderAddStep4Page() {
                   <button
                     onClick={onSubmitClick}
                     disabled={isLoading}
-                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-green-600 to-green-700 rounded-lg hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105 shadow-lg"
                   >
                     <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
                     {isLoading ? "Submitting..." : "Submit Order"}

@@ -45,6 +45,53 @@ export default function AdminTaskItemSurveyStep3Page() {
   // Get form state from storage
   const formData = surveyStorage.getState();
 
+  // Section Component with Dark Header
+  const DetailSection = ({ title, icon: Icon, children, editLink = null }) => (
+    <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
+      <div className="px-4 sm:px-6 py-3 sm:py-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+            <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
+            <span className="truncate">{title}</span>
+          </h3>
+          {editLink && (
+            <Link
+              to={editLink}
+              className="inline-flex items-center text-xs sm:text-sm text-blue-300 hover:text-blue-100"
+            >
+              <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+              Edit
+            </Link>
+          )}
+        </div>
+      </div>
+      <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
+        {children}
+      </div>
+    </div>
+  );
+
+  // Detail Field Component
+  const DetailField = ({ label, value, link = null, fullWidth = false }) => (
+    <div className={fullWidth ? "col-span-1 sm:col-span-2" : ""}>
+      <span className="text-xs sm:text-sm font-semibold text-gray-700">
+        {label}:
+      </span>
+      <p className="text-sm sm:text-base text-gray-900 mt-1">
+        {link ? (
+          <Link
+            to={link}
+            className="text-blue-600 hover:text-blue-800 font-medium"
+          >
+            {value || "-"}
+          </Link>
+        ) : (
+          value || "-"
+        )}
+      </p>
+    </div>
+  );
+
   useEffect(() => {
     let mounted = true;
 
@@ -171,10 +218,14 @@ export default function AdminTaskItemSurveyStep3Page() {
   if (isFetching) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            <span className="ml-3 text-gray-600">Loading task details...</span>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-4 text-sm sm:text-base text-gray-600">
+                Loading task details...
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -183,38 +234,42 @@ export default function AdminTaskItemSurveyStep3Page() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {/* Breadcrumb */}
-        <nav className="flex mb-4" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* Responsive Breadcrumb */}
+        <nav
+          className="flex mb-4 sm:mb-6 overflow-x-auto"
+          aria-label="Breadcrumb"
+        >
+          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
             <li className="inline-flex items-center">
               <Link
                 to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+                className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
               >
-                <ChartBarIcon className="w-4 h-4 mr-2" />
+                <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                 <span className="hidden sm:inline">Dashboard</span>
+                <span className="sm:hidden">Dash</span>
               </Link>
             </li>
             <li>
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <span className="mx-1 sm:mx-2 text-gray-400">/</span>
                 <Link
                   to="/admin/tasks"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                  className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
                 >
                   <span className="inline-flex items-center">
-                    <ClipboardDocumentListIcon className="w-4 h-4 mr-2" />
-                    <span className="hidden sm:inline">Tasks</span>
+                    <ClipboardDocumentListIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                    Tasks
                   </span>
                 </Link>
               </div>
             </li>
             <li aria-current="page">
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
-                  <DocumentCheckIcon className="w-4 h-4 mr-2" />
+                <span className="mx-1 sm:mx-2 text-gray-400">/</span>
+                <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
+                  <DocumentCheckIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                   Survey
                 </span>
               </div>
@@ -222,93 +277,84 @@ export default function AdminTaskItemSurveyStep3Page() {
           </ol>
         </nav>
 
-        {/* Page Title */}
-        <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
-            <ClipboardDocumentListIcon className="w-6 sm:w-7 h-6 sm:h-7 mr-2 sm:mr-3 text-blue-600" />
-            Task Survey
-          </h1>
+        {/* Page Title - Responsive */}
+        <div className="mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+                <ClipboardDocumentListIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
+                Task Survey
+              </h1>
+              <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+                <CheckCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
+                Review and submit your survey
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Wizard Steps - Responsive Design */}
+        {/* Wizard Steps - Responsive */}
         <div className="mb-6">
-          {/* Desktop/Tablet View (768px and up) */}
-          <div className="hidden md:flex items-center justify-center overflow-x-auto">
+          {/* Desktop View */}
+          <div className="hidden lg:flex items-center justify-center">
             <div className="flex items-center">
               {/* Step 1 - Complete */}
               <div className="flex items-center">
-                <div className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-green-600 rounded-full">
-                  <CheckIcon className="w-4 h-4 lg:w-6 lg:h-6 text-white" />
+                <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
+                  <CheckIcon className="w-6 h-6 text-white" />
                 </div>
-                <div className="ml-2 lg:ml-3">
-                  <p className="text-xs lg:text-sm font-medium text-gray-900">
-                    Survey
-                  </p>
-                  <p className="text-xs text-gray-500 hidden xl:block">
-                    Complete
-                  </p>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">Review</p>
+                  <p className="text-xs text-gray-500">Complete</p>
                 </div>
               </div>
-              <div className="mx-1 lg:mx-2 w-8 lg:w-12 h-0.5 bg-green-600"></div>
+
+              {/* Connector */}
+              <div className="mx-2 w-16 h-0.5 bg-green-600"></div>
 
               {/* Step 2 - Complete */}
               <div className="flex items-center">
-                <div className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-green-600 rounded-full">
-                  <CheckIcon className="w-4 h-4 lg:w-6 lg:h-6 text-white" />
+                <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
+                  <CheckIcon className="w-6 h-6 text-white" />
                 </div>
-                <div className="ml-2 lg:ml-3">
-                  <p className="text-xs lg:text-sm font-medium text-gray-900">
-                    Details
-                  </p>
-                  <p className="text-xs text-gray-500 hidden xl:block">
-                    Complete
-                  </p>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-gray-900">Survey</p>
+                  <p className="text-xs text-gray-500">Complete</p>
                 </div>
               </div>
-              <div className="mx-1 lg:mx-2 w-8 lg:w-12 h-0.5 bg-gray-300"></div>
+
+              {/* Connector */}
+              <div className="mx-2 w-16 h-0.5 bg-gray-300"></div>
 
               {/* Step 3 - Active */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-blue-600 rounded-full">
-                  <span className="text-white font-semibold text-sm lg:text-base">
-                    3
-                  </span>
-                </div>
-                <div className="ml-2 lg:ml-3">
-                  <p className="text-xs lg:text-sm font-medium text-gray-900">
-                    Review
-                  </p>
-                  <p className="text-xs text-gray-500 hidden xl:block">
-                    Submit
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile View (below 768px) */}
-          <div className="md:hidden">
-            <div className="flex items-center justify-between px-4">
               <div className="flex items-center">
                 <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
                   <span className="text-white font-semibold">3</span>
                 </div>
                 <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">
-                    Step 3 of 3
-                  </p>
-                  <p className="text-xs text-gray-500">Review & Submit</p>
+                  <p className="text-sm font-medium text-gray-900">Complete</p>
+                  <p className="text-xs text-gray-500">Submit</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-xs text-gray-500">Progress</p>
-                <div className="flex items-center mt-1">
-                  <div className="flex">
-                    <div className="w-2 h-2 bg-green-600 rounded-full mr-1"></div>
-                    <div className="w-2 h-2 bg-green-600 rounded-full mr-1"></div>
-                    <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+            </div>
+          </div>
+
+          {/* Mobile View */}
+          <div className="lg:hidden">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full">
+                    <span className="text-white font-semibold text-sm">3</span>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-900">
+                      Step 3: Review
+                    </p>
+                    <p className="text-xs text-gray-500">Review & Submit</p>
                   </div>
                 </div>
+                <div className="text-xs text-gray-500">3 of 3</div>
               </div>
             </div>
           </div>
@@ -316,11 +362,14 @@ export default function AdminTaskItemSurveyStep3Page() {
 
         {/* Main Content */}
         <div className="bg-white shadow-sm rounded-lg">
-          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-              <CheckCircleIcon className="w-5 h-5 mr-2" />
-              Review and Submit
-            </h2>
+          {/* Header with Actions - Responsive */}
+          <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+              <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 flex items-center">
+                <CheckCircleIcon className="w-5 sm:w-7 h-5 sm:h-7 mr-2 text-blue-600 flex-shrink-0" />
+                Review and Submit
+              </h2>
+            </div>
           </div>
 
           <div className="p-4 sm:p-6">
@@ -330,267 +379,212 @@ export default function AdminTaskItemSurveyStep3Page() {
               to save the survey.
             </p>
 
+            {/* Error Display - Responsive */}
             {errors && errors.message && (
-              <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center">
-                <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-                <span className="text-sm sm:text-base">{errors.message}</span>
+              <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base">
+                <div className="flex items-center">
+                  <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+                  <span className="break-words">{errors.message}</span>
+                </div>
               </div>
             )}
 
             {isSubmitting ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                <span className="ml-3 text-gray-600">Submitting survey...</span>
+              <div className="flex items-center justify-center min-h-[300px]">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="mt-4 text-sm sm:text-base text-gray-600">
+                    Submitting survey...
+                  </p>
+                </div>
               </div>
             ) : (
               task && (
-                <div className="max-w-3xl mx-auto">
-                  <div className="space-y-6 sm:space-y-8">
-                    {/* Task Information Section */}
+                <div>
+                  {/* Task Information Section with Dark Header */}
+                  <DetailSection
+                    title="Task Information"
+                    icon={DocumentTextIcon}
+                  >
+                    <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                      <DetailField label="Type" value="Order Completion" />
+                      <DetailField
+                        label="Job #"
+                        value={task.orderWjid}
+                        link={`/admin/order/${task.orderWjid}`}
+                      />
+                      <DetailField
+                        label="Description"
+                        value={task.description}
+                        fullWidth
+                      />
+                      <DetailField
+                        label="Job Start Date"
+                        value={
+                          task.orderStartDate
+                            ? new Date(task.orderStartDate).toLocaleDateString()
+                            : "-"
+                        }
+                      />
+                      <DetailField
+                        label="Client Name"
+                        value={task.customerName}
+                        link={`/admin/customer/${task.customerId}`}
+                      />
+                      <DetailField
+                        label="Associate"
+                        value={task.associateName}
+                        link={`/admin/associate/${task.associateId}`}
+                      />
+                      {task.orderDescription && (
+                        <DetailField
+                          label="Job Description"
+                          value={task.orderDescription}
+                          fullWidth
+                        />
+                      )}
+                    </dl>
+                  </DetailSection>
+
+                  {/* Survey Submission Section with Dark Header */}
+                  <DetailSection
+                    title="Survey Submission"
+                    icon={ChatBubbleBottomCenterTextIcon}
+                    editLink={`/admin/task/${tid}/survey/step-2`}
+                  >
                     <div>
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
-                          <DocumentTextIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600" />
-                          Task Information
-                        </h3>
+                      <div className="mb-4">
+                        <span className="text-xs sm:text-sm font-semibold text-gray-700">
+                          Was there a survey conducted?
+                        </span>
+                        <div className="mt-2">
+                          {renderResponseBadge(formData.wasSurveyConducted)}
+                        </div>
                       </div>
 
-                      <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-2">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
-                          <div>
-                            <span className="text-xs sm:text-sm font-medium text-gray-500">
-                              Type:
-                            </span>
-                            <p className="text-xs sm:text-sm text-gray-900">
-                              Order Completion
-                            </p>
-                          </div>
-                          <div>
-                            <span className="text-xs sm:text-sm font-medium text-gray-500">
-                              Job #:
-                            </span>
-                            <p className="text-xs sm:text-sm text-gray-900">
-                              <Link
-                                to={`/admin/order/${task.orderWjid}`}
-                                className="text-blue-600 hover:text-blue-800"
-                              >
-                                {task.orderWjid}
-                              </Link>
-                            </p>
-                          </div>
-                          <div className="col-span-1 sm:col-span-2">
-                            <span className="text-xs sm:text-sm font-medium text-gray-500">
-                              Description:
-                            </span>
-                            <p className="text-xs sm:text-sm text-gray-900">
-                              {task.description}
-                            </p>
-                          </div>
-                          <div>
-                            <span className="text-xs sm:text-sm font-medium text-gray-500">
-                              Job Start Date:
-                            </span>
-                            <p className="text-xs sm:text-sm text-gray-900">
-                              {task.orderStartDate
-                                ? new Date(
-                                    task.orderStartDate,
-                                  ).toLocaleDateString()
-                                : "-"}
-                            </p>
-                          </div>
-                          <div>
-                            <span className="text-xs sm:text-sm font-medium text-gray-500">
-                              Client Name:
-                            </span>
-                            <p className="text-xs sm:text-sm text-gray-900">
-                              <Link
-                                to={`/admin/customer/${task.customerId}`}
-                                className="text-blue-600 hover:text-blue-800"
-                              >
-                                {task.customerName}
-                              </Link>
-                            </p>
-                          </div>
-                          <div>
-                            <span className="text-xs sm:text-sm font-medium text-gray-500">
-                              Associate:
-                            </span>
-                            <p className="text-xs sm:text-sm text-gray-900">
-                              <Link
-                                to={`/admin/associate/${task.associateId}`}
-                                className="text-blue-600 hover:text-blue-800"
-                              >
-                                {task.associateName}
-                              </Link>
-                            </p>
-                          </div>
-                          {task.orderDescription && (
-                            <div className="col-span-1 sm:col-span-2">
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Job Description:
+                      {formData.wasSurveyConducted === 1 && (
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                          <p className="text-sm sm:text-base font-semibold text-gray-700 mb-4">
+                            Survey Responses
+                          </p>
+                          <div className="space-y-3">
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+                              <span className="text-xs sm:text-sm text-gray-600">
+                                Was the quality of the work satisfactory?
                               </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {task.orderDescription}
-                              </p>
+                              <div className="sm:ml-4">
+                                {renderResponseBadge(
+                                  formData.wasJobSatisfactory,
+                                )}
+                              </div>
                             </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Survey Submission Section */}
-                    <div className="pt-6 border-t">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
-                          <ChatBubbleBottomCenterTextIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-green-600" />
-                          Survey Submission
-                        </h3>
-                        <Link
-                          to={`/admin/task/${tid}/survey/step-2`}
-                          className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
-                        >
-                          <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                          Edit
-                        </Link>
-                      </div>
-
-                      <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-3">
-                        <div className="grid grid-cols-1 gap-y-3">
-                          <div>
-                            <span className="text-xs sm:text-sm font-medium text-gray-500">
-                              Was there a survey conducted?
-                            </span>
-                            <div className="mt-1">
-                              {renderResponseBadge(formData.wasSurveyConducted)}
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+                              <span className="text-xs sm:text-sm text-gray-600">
+                                Was the work completed on time and on budget?
+                              </span>
+                              <div className="sm:ml-4">
+                                {renderResponseBadge(
+                                  formData.wasJobFinishedOnTimeAndOnBudget,
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+                              <span className="text-xs sm:text-sm text-gray-600">
+                                Was the Associate Member punctual?
+                              </span>
+                              <div className="sm:ml-4">
+                                {renderResponseBadge(
+                                  formData.wasAssociatePunctual,
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+                              <span className="text-xs sm:text-sm text-gray-600">
+                                Was the Associate Member professional?
+                              </span>
+                              <div className="sm:ml-4">
+                                {renderResponseBadge(
+                                  formData.wasAssociateProfessional,
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+                              <span className="text-xs sm:text-sm text-gray-600">
+                                Would you refer Over55 to a friend or family
+                                member?
+                              </span>
+                              <div className="sm:ml-4">
+                                {renderResponseBadge(
+                                  formData.wouldCustomerReferOurOrganization,
+                                )}
+                              </div>
                             </div>
                           </div>
-
-                          {formData.wasSurveyConducted === 1 && (
-                            <>
-                              <div className="mt-3 pt-3 border-t border-gray-200">
-                                <p className="text-xs sm:text-sm font-semibold text-gray-700 mb-3">
-                                  Survey Responses
-                                </p>
-                                <div className="space-y-3">
-                                  <div className="flex justify-between items-start">
-                                    <span className="text-xs sm:text-sm text-gray-600">
-                                      Was the quality of the work satisfactory?
-                                    </span>
-                                    <div className="ml-4">
-                                      {renderResponseBadge(
-                                        formData.wasJobSatisfactory,
-                                      )}
-                                    </div>
-                                  </div>
-                                  <div className="flex justify-between items-start">
-                                    <span className="text-xs sm:text-sm text-gray-600">
-                                      Was the work completed on time and on
-                                      budget?
-                                    </span>
-                                    <div className="ml-4">
-                                      {renderResponseBadge(
-                                        formData.wasJobFinishedOnTimeAndOnBudget,
-                                      )}
-                                    </div>
-                                  </div>
-                                  <div className="flex justify-between items-start">
-                                    <span className="text-xs sm:text-sm text-gray-600">
-                                      Was the Associate Member punctual?
-                                    </span>
-                                    <div className="ml-4">
-                                      {renderResponseBadge(
-                                        formData.wasAssociatePunctual,
-                                      )}
-                                    </div>
-                                  </div>
-                                  <div className="flex justify-between items-start">
-                                    <span className="text-xs sm:text-sm text-gray-600">
-                                      Was the Associate Member professional?
-                                    </span>
-                                    <div className="ml-4">
-                                      {renderResponseBadge(
-                                        formData.wasAssociateProfessional,
-                                      )}
-                                    </div>
-                                  </div>
-                                  <div className="flex justify-between items-start">
-                                    <span className="text-xs sm:text-sm text-gray-600">
-                                      Would you refer Over55 to a friend or
-                                      family member?
-                                    </span>
-                                    <div className="ml-4">
-                                      {renderResponseBadge(
-                                        formData.wouldCustomerReferOurOrganization,
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </>
-                          )}
-
-                          {formData.wasSurveyConducted === 2 && (
-                            <>
-                              <div className="mt-3 pt-3 border-t border-gray-200">
-                                <div>
-                                  <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                    Why was the survey not conducted?
-                                  </span>
-                                  <div className="mt-1">
-                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                      {getReasonLabel(
-                                        formData.noSurveyConductedReason,
-                                      )}
-                                    </span>
-                                  </div>
-                                </div>
-
-                                {formData.noSurveyConductedReason === 1 && (
-                                  <div className="mt-3">
-                                    <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                      Other Reason:
-                                    </span>
-                                    <p className="text-xs sm:text-sm text-gray-900 mt-1">
-                                      {formData.noSurveyConductedReasonOther}
-                                    </p>
-                                  </div>
-                                )}
-
-                                {formData.comment && (
-                                  <div className="mt-3">
-                                    <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                      Comment:
-                                    </span>
-                                    <div className="mt-1 bg-white p-3 rounded-md border border-gray-200">
-                                      <p className="text-xs sm:text-sm text-gray-900 whitespace-pre-wrap">
-                                        {formData.comment}
-                                      </p>
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </>
-                          )}
                         </div>
-                      </div>
-                    </div>
-                  </div>
+                      )}
 
-                  {/* Form Actions */}
-                  <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3">
+                      {formData.wasSurveyConducted === 2 && (
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                          <div className="space-y-4">
+                            <div>
+                              <span className="text-xs sm:text-sm font-semibold text-gray-700">
+                                Why was the survey not conducted?
+                              </span>
+                              <div className="mt-2">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                  {getReasonLabel(
+                                    formData.noSurveyConductedReason,
+                                  )}
+                                </span>
+                              </div>
+                            </div>
+
+                            {formData.noSurveyConductedReason === 1 && (
+                              <div>
+                                <span className="text-xs sm:text-sm font-semibold text-gray-700">
+                                  Other Reason:
+                                </span>
+                                <p className="text-xs sm:text-sm text-gray-900 mt-1">
+                                  {formData.noSurveyConductedReasonOther}
+                                </p>
+                              </div>
+                            )}
+
+                            {formData.comment && (
+                              <div>
+                                <span className="text-xs sm:text-sm font-semibold text-gray-700">
+                                  Comment:
+                                </span>
+                                <div className="mt-2 bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                  <p className="text-xs sm:text-sm text-gray-900 whitespace-pre-wrap">
+                                    {formData.comment}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </DetailSection>
+
+                  {/* Action Buttons - Responsive */}
+                  <div className="flex flex-col sm:flex-row sm:justify-between items-stretch sm:items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 gap-3">
                     <Link
                       to={`/admin/task/${tid}/survey/step-2`}
-                      className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                      className="order-2 sm:order-1"
                     >
-                      <ArrowLeftIcon className="w-4 h-4 mr-2" />
-                      Back
+                      <button className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                        <ArrowLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
+                        Back
+                      </button>
                     </Link>
                     <button
                       onClick={onSubmitClick}
                       disabled={isSubmitting}
-                      className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
+                      className="order-1 sm:order-2 inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-transparent rounded-lg text-sm sm:text-base font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
-                      <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
+                      <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                       Submit Survey
                     </button>
                   </div>

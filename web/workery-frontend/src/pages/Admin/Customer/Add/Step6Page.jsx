@@ -19,6 +19,8 @@ import {
   MapPinIcon,
   ChartBarSquareIcon,
   CheckCircleIcon,
+  PhoneIcon,
+  ChartPieIcon,
 } from "@heroicons/react/24/outline";
 import {
   HowHearAboutUsDisplay,
@@ -194,10 +196,7 @@ function AdminCustomerAddStep6Page() {
     }
 
     // IMPORTANT: Keep howDidYouHearAboutUsID as a string (MongoDB ObjectID)
-    // DO NOT convert to integer!
-    // The backend expects this to be a MongoDB ObjectID string
     if (payload.howDidYouHearAboutUsID) {
-      // Ensure it's a string
       payload.howDidYouHearAboutUsID = String(payload.howDidYouHearAboutUsID);
     }
 
@@ -212,6 +211,42 @@ function AdminCustomerAddStep6Page() {
 
     return payload;
   };
+
+  // Review Section Component with Dark Header
+  const ReviewSection = ({ title, icon: Icon, children, editLink }) => (
+    <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
+      <div className="px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
+        <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
+          <span className="truncate">{title}</span>
+        </h3>
+        {editLink && (
+          <Link
+            to={editLink}
+            className="inline-flex items-center text-xs sm:text-sm text-blue-200 hover:text-blue-100"
+          >
+            <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+            Edit
+          </Link>
+        )}
+      </div>
+      <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
+        {children}
+      </div>
+    </div>
+  );
+
+  // Detail Field Component
+  const DetailField = ({ label, value, fullWidth = false }) => (
+    <div className={fullWidth ? "lg:col-span-2" : ""}>
+      <dt className="text-xs sm:text-sm font-medium text-gray-500 mb-1">
+        {label}
+      </dt>
+      <dd className="text-sm sm:text-base font-medium text-gray-900 break-words">
+        {value || "-"}
+      </dd>
+    </div>
+  );
 
   const getTypeLabel = (type) => {
     const option = CLIENT_TYPE_OPTIONS.find((opt) => opt.value === type);
@@ -302,17 +337,20 @@ function AdminCustomerAddStep6Page() {
 
         {/* Page Title */}
         <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
-            <UserPlusIcon className="w-6 sm:w-7 h-6 sm:h-7 mr-2 sm:mr-3 text-blue-600" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+            <UserPlusIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
             Add New Customer
           </h1>
+          <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+            <CheckCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
+            Step 6: Review and submit
+          </p>
         </div>
 
         {/* Wizard Steps - Responsive Design */}
         <div className="mb-6">
-          {/* Desktop/Tablet View (768px and up) */}
-          <div className="hidden md:flex items-center justify-center overflow-x-auto">
-            <div className="flex items-center">
+          <div className="overflow-x-auto pb-2">
+            <div className="flex items-center justify-start lg:justify-center min-w-max">
               {/* Steps 1-5 Complete */}
               {[1, 2, 3, 4, 5].map((step, index) => (
                 <React.Fragment key={step}>
@@ -357,49 +395,22 @@ function AdminCustomerAddStep6Page() {
               </div>
             </div>
           </div>
-
-          {/* Mobile View (below 768px) */}
-          <div className="md:hidden">
-            <div className="flex items-center justify-between px-4">
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
-                  <span className="text-white font-semibold">6</span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">
-                    Step 6 of 6
-                  </p>
-                  <p className="text-xs text-gray-500">Review & Submit</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-gray-500">Progress</p>
-                <div className="flex items-center mt-1">
-                  <div className="flex">
-                    {[1, 2, 3, 4, 5].map((step) => (
-                      <div
-                        key={step}
-                        className="w-2 h-2 bg-green-600 rounded-full mr-1"
-                      ></div>
-                    ))}
-                    <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Main Content */}
         <div className="bg-white shadow-sm rounded-lg">
-          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-              <CheckCircleIcon className="w-5 h-5 mr-2" />
-              Review and Submit
-            </h2>
+          {/* Dark Header */}
+          <div className="bg-gray-700 rounded-t-lg">
+            <div className="px-4 sm:px-6 py-3 sm:py-4">
+              <h2 className="text-base sm:text-lg font-semibold text-white flex items-center">
+                <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
+                Review and Submit
+              </h2>
+            </div>
           </div>
 
-          <div className="p-4 sm:p-6">
+          {/* Content with Border */}
+          <div className="border-x-2 border-b-2 border-gray-700 rounded-b-lg p-4 sm:p-6">
             <p className="text-sm sm:text-base text-gray-600 mb-6">
               Please carefully review the following customer details. If
               everything looks correct, click the <strong>Submit</strong> button
@@ -419,418 +430,240 @@ function AdminCustomerAddStep6Page() {
                 <span className="ml-3 text-gray-600">Creating customer...</span>
               </div>
             ) : (
-              <div className="max-w-3xl mx-auto">
-                <div className="space-y-6 sm:space-y-8">
-                  {/* Contact Information Section */}
-                  <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
-                        <UserIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600" />
-                        Contact Information
-                      </h3>
-                      <Link
-                        to="/admin/customers/add/step-3"
-                        className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                        Edit
-                      </Link>
-                    </div>
+              <div className="space-y-0">
+                {/* Contact Information Section */}
+                <ReviewSection
+                  title="Contact Information"
+                  icon={UserIcon}
+                  editLink="/admin/customers/add/step-3"
+                >
+                  <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                    <DetailField
+                      label="Type"
+                      value={getTypeLabel(customerData.type)}
+                    />
 
-                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-2">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Type:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {getTypeLabel(customerData.type)}
-                          </p>
-                        </div>
-
-                        {customerData.type ===
-                          COMMERCIAL_CUSTOMER_TYPE_OF_ID && (
-                          <>
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Organization Name:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {customerData.organizationName}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Organization Type:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {getOrganizationTypeLabel(
-                                  customerData.organizationType,
-                                )}
-                              </p>
-                            </div>
-                          </>
-                        )}
-
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            First Name:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {customerData.firstName}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Last Name:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {customerData.lastName}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Email:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900 break-all">
-                            {customerData.email || "Not provided"}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Phone:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {customerData.phone} (
-                            {getPhoneTypeLabel(customerData.phoneType)})
-                          </p>
-                        </div>
-
-                        {customerData.phoneType === CLIENT_PHONE_TYPE_WORK &&
-                          customerData.phoneExtension && (
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Phone Extension:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {customerData.phoneExtension}
-                              </p>
-                            </div>
+                    {customerData.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID && (
+                      <>
+                        <DetailField
+                          label="Organization Name"
+                          value={customerData.organizationName}
+                        />
+                        <DetailField
+                          label="Organization Type"
+                          value={getOrganizationTypeLabel(
+                            customerData.organizationType,
                           )}
+                        />
+                      </>
+                    )}
 
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            OK to Email:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {customerData.isOkToEmail ? "Yes" : "No"}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            OK to Text:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {customerData.isOkToText ? "Yes" : "No"}
-                          </p>
-                        </div>
+                    <DetailField
+                      label="First Name"
+                      value={customerData.firstName}
+                    />
+                    <DetailField
+                      label="Last Name"
+                      value={customerData.lastName}
+                    />
+                    <DetailField
+                      label="Email"
+                      value={customerData.email || "Not provided"}
+                    />
+                    <DetailField
+                      label="Phone"
+                      value={`${customerData.phone} (${getPhoneTypeLabel(customerData.phoneType)})`}
+                    />
 
-                        {customerData.otherPhone && (
-                          <>
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Other Phone:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {customerData.otherPhone} (
-                                {getPhoneTypeLabel(customerData.otherPhoneType)}
-                                )
-                              </p>
-                            </div>
-                            {customerData.otherPhoneType ===
-                              CLIENT_PHONE_TYPE_WORK &&
-                              customerData.otherPhoneExtension && (
-                                <div>
-                                  <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                    Other Phone Extension:
-                                  </span>
-                                  <p className="text-xs sm:text-sm text-gray-900">
-                                    {customerData.otherPhoneExtension}
-                                  </p>
-                                </div>
-                              )}
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Address Information Section */}
-                  <div className="pt-6 border-t">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
-                        <MapPinIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-green-600" />
-                        Address Information
-                      </h3>
-                      <Link
-                        to="/admin/customers/add/step-4"
-                        className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                        Edit
-                      </Link>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-2">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Address:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {customerData.addressLine1}
-                          </p>
-                        </div>
-                        {customerData.addressLine2 && (
-                          <div>
-                            <span className="text-xs sm:text-sm font-medium text-gray-500">
-                              Address Line 2:
-                            </span>
-                            <p className="text-xs sm:text-sm text-gray-900">
-                              {customerData.addressLine2}
-                            </p>
-                          </div>
-                        )}
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            City:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {customerData.city}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Province/Territory:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {customerData.region}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Postal Code:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {customerData.postalCode}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Country:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {customerData.country}
-                          </p>
-                        </div>
-                      </div>
-
-                      {customerData.hasShippingAddress && (
-                        <div className="mt-4 pt-4 border-t border-gray-200">
-                          <p className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">
-                            Shipping Address
-                          </p>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Name:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {customerData.shippingName}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Phone:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {customerData.shippingPhone}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Address:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {customerData.shippingAddressLine1}
-                              </p>
-                            </div>
-                            {customerData.shippingAddressLine2 && (
-                              <div>
-                                <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                  Address Line 2:
-                                </span>
-                                <p className="text-xs sm:text-sm text-gray-900">
-                                  {customerData.shippingAddressLine2}
-                                </p>
-                              </div>
-                            )}
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                City:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {customerData.shippingCity}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Province/Territory:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {customerData.shippingRegion}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Postal Code:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {customerData.shippingPostalCode}
-                              </p>
-                            </div>
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Country:
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {customerData.shippingCountry}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Metrics Information Section */}
-                  <div className="pt-6 border-t">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
-                        <ChartBarSquareIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-orange-600" />
-                        Metrics Information
-                      </h3>
-                      <Link
-                        to="/admin/customers/add/step-5"
-                        className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                        Edit
-                      </Link>
-                    </div>
-
-                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4 space-y-3">
-                      {/* Tags Display */}
-                      {customerData.tags && customerData.tags.length > 0 && (
-                        <div className="mb-2">
-                          <TagsDisplay
-                            values={parseArrayValue(customerData.tags)}
-                            label="Tags"
-                            variant="success"
-                          />
-                        </div>
+                    {customerData.phoneType === CLIENT_PHONE_TYPE_WORK &&
+                      customerData.phoneExtension && (
+                        <DetailField
+                          label="Phone Extension"
+                          value={customerData.phoneExtension}
+                        />
                       )}
 
-                      {/* How Heard About Us Display */}
-                      {customerData.howDidYouHearAboutUsID && (
-                        <div className="mb-2">
-                          <HowHearAboutUsDisplay
-                            value={customerData.howDidYouHearAboutUsID}
-                            label="How did you hear about us?"
-                          />
-                        </div>
-                      )}
+                    <DetailField
+                      label="OK to Email"
+                      value={customerData.isOkToEmail ? "Yes" : "No"}
+                    />
+                    <DetailField
+                      label="OK to Text"
+                      value={customerData.isOkToText ? "Yes" : "No"}
+                    />
 
-                      {/* Other Metrics */}
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
-                        {customerData.howDidYouHearAboutUsOther && (
-                          <div className="sm:col-span-2">
-                            <span className="text-xs sm:text-sm font-medium text-gray-500">
-                              How did you hear about us? (Other):
-                            </span>
-                            <p className="text-xs sm:text-sm text-gray-900">
-                              {customerData.howDidYouHearAboutUsOther}
-                            </p>
-                          </div>
-                        )}
-
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Gender:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {getGenderLabel(customerData.gender)}
-                          </p>
-                        </div>
-
-                        {customerData.gender === 1 &&
-                          customerData.genderOther && (
-                            <div>
-                              <span className="text-xs sm:text-sm font-medium text-gray-500">
-                                Gender (Other):
-                              </span>
-                              <p className="text-xs sm:text-sm text-gray-900">
-                                {customerData.genderOther}
-                              </p>
-                            </div>
+                    {customerData.otherPhone && (
+                      <>
+                        <DetailField
+                          label="Other Phone"
+                          value={`${customerData.otherPhone} (${getPhoneTypeLabel(customerData.otherPhoneType)})`}
+                        />
+                        {customerData.otherPhoneType ===
+                          CLIENT_PHONE_TYPE_WORK &&
+                          customerData.otherPhoneExtension && (
+                            <DetailField
+                              label="Other Phone Extension"
+                              value={customerData.otherPhoneExtension}
+                            />
                           )}
+                      </>
+                    )}
+                  </dl>
+                </ReviewSection>
 
-                        {customerData.birthDate && (
-                          <div>
-                            <span className="text-xs sm:text-sm font-medium text-gray-500">
-                              Birth Date:
-                            </span>
-                            <p className="text-xs sm:text-sm text-gray-900">
-                              {customerData.birthDate}
-                            </p>
-                          </div>
+                {/* Address Information Section */}
+                <ReviewSection
+                  title="Address Information"
+                  icon={MapPinIcon}
+                  editLink="/admin/customers/add/step-4"
+                >
+                  <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                    <DetailField
+                      label="Address"
+                      value={customerData.addressLine1}
+                    />
+                    {customerData.addressLine2 && (
+                      <DetailField
+                        label="Address Line 2"
+                        value={customerData.addressLine2}
+                      />
+                    )}
+                    <DetailField label="City" value={customerData.city} />
+                    <DetailField
+                      label="Province/Territory"
+                      value={customerData.region}
+                    />
+                    <DetailField
+                      label="Postal Code"
+                      value={customerData.postalCode}
+                    />
+                    <DetailField label="Country" value={customerData.country} />
+                  </dl>
+
+                  {customerData.hasShippingAddress && (
+                    <div className="mt-6 pt-6 border-t border-gray-200">
+                      <p className="text-sm font-semibold text-gray-700 mb-4">
+                        Shipping Address
+                      </p>
+                      <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                        <DetailField
+                          label="Name"
+                          value={customerData.shippingName}
+                        />
+                        <DetailField
+                          label="Phone"
+                          value={customerData.shippingPhone}
+                        />
+                        <DetailField
+                          label="Address"
+                          value={customerData.shippingAddressLine1}
+                        />
+                        {customerData.shippingAddressLine2 && (
+                          <DetailField
+                            label="Address Line 2"
+                            value={customerData.shippingAddressLine2}
+                          />
                         )}
-
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Join Date:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {customerData.joinDate}
-                          </p>
-                        </div>
-
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Preferred Language:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            {customerData.preferredLanguage}
-                          </p>
-                        </div>
-                      </div>
-
-                      {customerData.additionalComment && (
-                        <div className="mt-3">
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Additional Comments:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900 mt-1">
-                            {customerData.additionalComment}
-                          </p>
-                        </div>
-                      )}
+                        <DetailField
+                          label="City"
+                          value={customerData.shippingCity}
+                        />
+                        <DetailField
+                          label="Province/Territory"
+                          value={customerData.shippingRegion}
+                        />
+                        <DetailField
+                          label="Postal Code"
+                          value={customerData.shippingPostalCode}
+                        />
+                        <DetailField
+                          label="Country"
+                          value={customerData.shippingCountry}
+                        />
+                      </dl>
                     </div>
-                  </div>
-                </div>
+                  )}
+                </ReviewSection>
+
+                {/* Metrics Information Section */}
+                <ReviewSection
+                  title="Metrics Information"
+                  icon={ChartPieIcon}
+                  editLink="/admin/customers/add/step-5"
+                >
+                  {/* Tags Display */}
+                  {customerData.tags && customerData.tags.length > 0 && (
+                    <div className="mb-4">
+                      <TagsDisplay
+                        values={parseArrayValue(customerData.tags)}
+                        label="Tags"
+                        variant="success"
+                      />
+                    </div>
+                  )}
+
+                  {/* How Heard About Us Display */}
+                  {customerData.howDidYouHearAboutUsID && (
+                    <div className="mb-4">
+                      <HowHearAboutUsDisplay
+                        value={customerData.howDidYouHearAboutUsID}
+                        label="How did you hear about us?"
+                      />
+                    </div>
+                  )}
+
+                  {/* Other Metrics */}
+                  <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                    {customerData.howDidYouHearAboutUsOther && (
+                      <DetailField
+                        label="How did you hear about us? (Other)"
+                        value={customerData.howDidYouHearAboutUsOther}
+                        fullWidth
+                      />
+                    )}
+
+                    <DetailField
+                      label="Gender"
+                      value={getGenderLabel(customerData.gender)}
+                    />
+
+                    {customerData.gender === 1 && customerData.genderOther && (
+                      <DetailField
+                        label="Gender (Other)"
+                        value={customerData.genderOther}
+                      />
+                    )}
+
+                    {customerData.birthDate && (
+                      <DetailField
+                        label="Birth Date"
+                        value={customerData.birthDate}
+                      />
+                    )}
+
+                    <DetailField
+                      label="Join Date"
+                      value={customerData.joinDate}
+                    />
+                    <DetailField
+                      label="Preferred Language"
+                      value={customerData.preferredLanguage}
+                    />
+                  </dl>
+
+                  {customerData.additionalComment && (
+                    <div className="mt-6 pt-6 border-t">
+                      <DetailField
+                        label="Additional Comments"
+                        value={customerData.additionalComment}
+                        fullWidth
+                      />
+                    </div>
+                  )}
+                </ReviewSection>
 
                 {/* Form Actions */}
-                <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3">
+                <div className="flex flex-col sm:flex-row gap-3 mt-6">
                   <Link
                     to="/admin/customers/add/step-5"
                     className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"

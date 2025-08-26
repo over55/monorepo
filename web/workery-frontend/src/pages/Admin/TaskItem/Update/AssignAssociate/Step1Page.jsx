@@ -95,6 +95,33 @@ function AdminTaskItemAssignAssociateStep1Page() {
     };
   }, [tid]);
 
+  // Section Component - Using dark header pattern from FullPage
+  const DetailSection = ({ title, icon: Icon, children }) => (
+    <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
+      <div className="px-4 sm:px-6 py-3 sm:py-4">
+        <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
+          <span className="truncate">{title}</span>
+        </h3>
+      </div>
+      <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
+        {children}
+      </div>
+    </div>
+  );
+
+  // Detail Field Component
+  const DetailField = ({ label, value, fullWidth = false }) => (
+    <div className={fullWidth ? "lg:col-span-2" : ""}>
+      <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-1">
+        {label}
+      </dt>
+      <dd className="text-base sm:text-lg font-medium text-gray-900 break-words">
+        {value || "-"}
+      </dd>
+    </div>
+  );
+
   // Component rendering
   if (forceURL !== "") {
     return <Navigate to={forceURL} />;
@@ -102,29 +129,32 @@ function AdminTaskItemAssignAssociateStep1Page() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {/* Breadcrumb */}
-        <nav className="flex mb-4" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-wrap">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* Responsive Breadcrumb */}
+        <nav
+          className="flex mb-4 sm:mb-6 overflow-x-auto"
+          aria-label="Breadcrumb"
+        >
+          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
             <li className="inline-flex items-center">
               <Link
                 to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+                className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
               >
-                <ChartBarIcon className="w-4 h-4 mr-1 sm:mr-2" />
+                <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                 <span className="hidden sm:inline">Dashboard</span>
                 <span className="sm:hidden">Dash</span>
               </Link>
             </li>
             <li>
               <div className="flex items-center">
-                <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+                <span className="mx-1 sm:mx-2 text-gray-400">/</span>
                 <Link
                   to="/admin/tasks"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
+                  className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
                 >
                   <span className="inline-flex items-center">
-                    <ClipboardDocumentListIcon className="w-4 h-4 mr-1 sm:mr-2" />
+                    <ClipboardDocumentListIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                     Tasks
                   </span>
                 </Link>
@@ -132,9 +162,9 @@ function AdminTaskItemAssignAssociateStep1Page() {
             </li>
             <li aria-current="page">
               <div className="flex items-center">
-                <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
-                  <UserPlusIcon className="w-4 h-4 mr-1 sm:mr-2" />
+                <span className="mx-1 sm:mx-2 text-gray-400">/</span>
+                <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
+                  <UserPlusIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
                   Assign Associate
                 </span>
               </div>
@@ -142,28 +172,54 @@ function AdminTaskItemAssignAssociateStep1Page() {
           </ol>
         </nav>
 
-        {/* Page Title */}
-        <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
-            <ClipboardDocumentListIcon className="w-6 h-6 sm:w-7 sm:h-7 mr-2 sm:mr-3 text-blue-600" />
-            Task: Assign Associate
-          </h1>
+        {/* Page Title - Responsive */}
+        <div className="mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+                <ClipboardDocumentListIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
+                Task: Assign Associate
+              </h1>
+              <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+                <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
+                Review task details before assignment
+              </p>
+            </div>
+          </div>
         </div>
 
-        {/* Status Alert */}
+        {/* Status Alert - Responsive */}
         {task && (task.status === 2 || task.isClosed === true) && (
-          <div className="mb-6 bg-blue-50 border border-blue-200 text-blue-800 px-3 sm:px-4 py-3 rounded-lg flex items-center">
-            <InformationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-            <span className="text-sm">This task is archived / closed</span>
+          <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center text-sm sm:text-base">
+            <InformationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+            This task is archived / closed
           </div>
         )}
 
         {/* Wizard Steps - Only show if task is not closed */}
         {task && task.isClosed === false && (
-          <div className="mb-6">
+          <div className="mb-4 sm:mb-6 bg-white shadow-sm rounded-lg p-3 sm:p-4">
+            {/* Mobile View */}
+            <div className="md:hidden">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full">
+                    <span className="text-white font-semibold text-sm">1</span>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm font-medium text-gray-900">
+                      Step 1: Review
+                    </p>
+                    <p className="text-xs text-gray-500">Review task details</p>
+                  </div>
+                </div>
+                <div className="text-xs text-gray-500">1 of 4</div>
+              </div>
+            </div>
+
             {/* Desktop View */}
-            <div className="hidden lg:flex items-center justify-center">
-              <div className="flex items-center">
+            <div className="hidden md:flex items-center justify-center overflow-x-auto">
+              <div className="flex items-center min-w-max">
                 {/* Step 1 - Active */}
                 <div className="flex items-center">
                   <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
@@ -218,88 +274,22 @@ function AdminTaskItemAssignAssociateStep1Page() {
                 </div>
               </div>
             </div>
-
-            {/* Tablet View */}
-            <div className="hidden md:block lg:hidden">
-              <div className="overflow-x-auto pb-2">
-                <div className="flex items-center min-w-max px-2">
-                  {[
-                    { num: 1, title: "Review", active: true },
-                    { num: 2, title: "Search", active: false },
-                    { num: 3, title: "Assign", active: false },
-                    { num: 4, title: "Confirm", active: false },
-                  ].map((step, index) => (
-                    <React.Fragment key={step.num}>
-                      <div className="flex items-center">
-                        <div
-                          className={`flex items-center justify-center w-8 h-8 ${
-                            step.active ? "bg-blue-600" : "bg-gray-300"
-                          } rounded-full`}
-                        >
-                          <span
-                            className={`${
-                              step.active ? "text-white" : "text-gray-600"
-                            } font-semibold text-xs`}
-                          >
-                            {step.num}
-                          </span>
-                        </div>
-                        <div className="ml-2">
-                          <p
-                            className={`text-xs font-medium ${
-                              step.active ? "text-gray-900" : "text-gray-500"
-                            }`}
-                          >
-                            {step.title}
-                          </p>
-                        </div>
-                      </div>
-                      {index < 3 && (
-                        <div className="mx-2 w-8 h-0.5 bg-gray-300"></div>
-                      )}
-                    </React.Fragment>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Mobile View */}
-            <div className="md:hidden">
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full">
-                      <span className="text-white font-semibold text-sm">
-                        1
-                      </span>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-900">
-                        Step 1: Review
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        Review task details
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-500">1 of 4</div>
-                </div>
-              </div>
-            </div>
           </div>
         )}
 
-        {/* Error Message */}
+        {/* Error Message - Responsive */}
         {errors && Object.keys(errors).length > 0 && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-3 sm:px-4 py-3 rounded-lg">
-            <div className="flex items-start">
-              <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
-              <div className="text-sm">
-                {Object.entries(errors).map(([key, value]) => (
-                  <div key={key}>
-                    {key}: {value}
-                  </div>
-                ))}
+          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base">
+            <div className="flex justify-between items-center">
+              <div className="flex items-start">
+                <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 mt-0.5" />
+                <div>
+                  {Object.entries(errors).map(([key, value]) => (
+                    <div key={key} className="break-words">
+                      {key}: {value}
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -307,11 +297,14 @@ function AdminTaskItemAssignAssociateStep1Page() {
 
         {/* Main Content */}
         <div className="bg-white shadow-sm rounded-lg">
-          <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-            <h2 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-              <ClipboardDocumentListIcon className="w-5 h-5 mr-2" />
-              Task Details
-            </h2>
+          {/* Header with Actions - Responsive */}
+          <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200">
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
+              <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 flex items-center">
+                <ClipboardDocumentListIcon className="w-5 sm:w-7 h-5 sm:h-7 mr-2 text-blue-600 flex-shrink-0" />
+                Task Details
+              </h2>
+            </div>
           </div>
 
           {isFetching ? (
@@ -326,233 +319,186 @@ function AdminTaskItemAssignAssociateStep1Page() {
           ) : (
             task && (
               <div className="p-4 sm:p-6">
-                <div className="space-y-4">
-                  {/* Task Type and Description */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Task Information Section */}
+                <DetailSection
+                  title="Task Information"
+                  icon={ClipboardDocumentListIcon}
+                >
+                  <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                    <DetailField label="Task Type" value={task.title} />
+                    <DetailField label="Description" value={task.description} />
+                  </dl>
+                </DetailSection>
+
+                {/* Job Information Section */}
+                <DetailSection title="Job Information" icon={BriefcaseIcon}>
+                  <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                    <DetailField
+                      label="Job #"
+                      value={
+                        <Link
+                          to={`/admin/order/${task.orderWjid}`}
+                          className="text-blue-600 hover:text-blue-700"
+                        >
+                          {task.orderWjid}
+                        </Link>
+                      }
+                    />
+                    <DetailField
+                      label="Start Date"
+                      value={
+                        task.orderStartDate
+                          ? new Date(task.orderStartDate).toLocaleDateString()
+                          : "-"
+                      }
+                    />
+                    <DetailField
+                      label="Job Description"
+                      value={task.orderDescription}
+                      fullWidth
+                    />
+                  </dl>
+                </DetailSection>
+
+                {/* Skills and Tags Section */}
+                <DetailSection
+                  title="Requirements"
+                  icon={WrenchScrewdriverIcon}
+                >
+                  <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Task Type
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <p className="text-sm text-gray-900">{task.title}</p>
-                      </div>
+                      <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                        Required Skill Sets
+                      </dt>
+                      <dd>
+                        <SkillSetsDisplay
+                          values={extractIds(task.orderSkillSets)}
+                          onUnauthorized={onUnauthorized}
+                          variant="primary"
+                        />
+                      </dd>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Description
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <p className="text-sm text-gray-900">
-                          {task.description}
-                        </p>
-                      </div>
+                      <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                        Job Tags
+                      </dt>
+                      <dd>
+                        <TagsDisplay
+                          values={extractIds(task.orderTags)}
+                          onUnauthorized={onUnauthorized}
+                          variant="success"
+                        />
+                      </dd>
                     </div>
-                  </div>
+                  </dl>
+                </DetailSection>
 
-                  {/* Job Information */}
-                  <div className="border-t pt-4">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
-                      <BriefcaseIcon className="w-4 h-4 mr-2" />
-                      Job Information
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Job #
-                        </label>
-                        <div className="p-3 bg-gray-50 rounded-lg">
-                          <Link
-                            to={`/admin/order/${task.orderWjid}`}
-                            className="text-sm text-blue-600 hover:text-blue-800"
-                          >
-                            {task.orderWjid}
-                          </Link>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          <CalendarDaysIcon className="w-4 h-4 inline mr-1" />
-                          Start Date
-                        </label>
-                        <div className="p-3 bg-gray-50 rounded-lg">
-                          <p className="text-sm text-gray-900">
-                            {task.orderStartDate
-                              ? new Date(
-                                  task.orderStartDate,
-                                ).toLocaleDateString()
-                              : "-"}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="mt-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Job Description
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <p className="text-sm text-gray-900">
-                          {task.orderDescription || "-"}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Skills and Tags */}
-                  <div className="border-t pt-4">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
-                      <WrenchScrewdriverIcon className="w-4 h-4 mr-2" />
-                      Requirements
-                    </h3>
-                    <div className="space-y-3">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Required Skill Sets
-                        </label>
-                        <div className="p-3 bg-gray-50 rounded-lg">
-                          <SkillSetsDisplay
-                            values={extractIds(task.orderSkillSets)}
-                            onUnauthorized={onUnauthorized}
-                            variant="primary"
-                          />
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          <TagIcon className="w-4 h-4 inline mr-1" />
-                          Job Tags
-                        </label>
-                        <div className="p-3 bg-gray-50 rounded-lg">
-                          <TagsDisplay
-                            values={extractIds(task.orderTags)}
-                            onUnauthorized={onUnauthorized}
-                            variant="success"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Client Information */}
-                  <div className="border-t pt-4">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
-                      <UserIcon className="w-4 h-4 mr-2" />
-                      Client Information
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Client Name
-                        </label>
-                        <div className="p-3 bg-gray-50 rounded-lg">
-                          <Link
-                            to={`/admin/customer/${task.customerId}`}
-                            className="text-sm text-blue-600 hover:text-blue-800"
-                          >
-                            {task.customerName}
-                          </Link>
-                        </div>
-                      </div>
-                      {task.customerPhone && (
-                        <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">
-                            <PhoneIcon className="w-4 h-4 inline mr-1" />
-                            Phone (
-                            {CLIENT_PHONE_TYPE_OF_MAP[task.customerPhoneType]})
-                          </label>
-                          <div className="p-3 bg-gray-50 rounded-lg">
-                            <p className="text-sm text-gray-900">
-                              {task.customerPhone}
-                              {task.customerPhoneExtension &&
-                                ` ext. ${task.customerPhoneExtension}`}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                {/* Client Information Section */}
+                <DetailSection title="Client Information" icon={UserIcon}>
+                  <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                    <DetailField
+                      label="Client Name"
+                      value={
+                        <Link
+                          to={`/admin/customer/${task.customerId}`}
+                          className="text-blue-600 hover:text-blue-700"
+                        >
+                          {task.customerName}
+                        </Link>
+                      }
+                    />
+                    {task.customerPhone && (
+                      <DetailField
+                        label={`Phone (${CLIENT_PHONE_TYPE_OF_MAP[task.customerPhoneType]})`}
+                        value={
+                          <>
+                            {task.customerPhone}
+                            {task.customerPhoneExtension &&
+                              ` ext. ${task.customerPhoneExtension}`}
+                          </>
+                        }
+                      />
+                    )}
                     {task.customerFullAddressUrl && (
-                      <div className="mt-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          <MapPinIcon className="w-4 h-4 inline mr-1" />
-                          Client Address
-                        </label>
-                        <div className="p-3 bg-gray-50 rounded-lg">
+                      <DetailField
+                        label="Client Address"
+                        value={
                           <a
                             href={task.customerFullAddressUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="text-sm text-blue-600 hover:text-blue-800"
+                            className="text-blue-600 hover:text-blue-700"
                           >
                             {task.customerFullAddressWithoutPostalCode}
                           </a>
-                        </div>
-                      </div>
+                        }
+                        fullWidth
+                      />
                     )}
-                    <div className="mt-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        <TagIcon className="w-4 h-4 inline mr-1" />
+                    <div className="lg:col-span-2">
+                      <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-2">
                         Client Tags
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg">
+                      </dt>
+                      <dd>
                         <TagsDisplay
                           values={extractIds(task.customerTags)}
                           onUnauthorized={onUnauthorized}
                           variant="info"
                         />
-                      </div>
+                      </dd>
                     </div>
-                  </div>
+                  </dl>
+                </DetailSection>
 
-                  {/* Comments Link */}
-                  <div className="border-t pt-4">
-                    <div className="flex items-center justify-between">
-                      <label className="text-sm font-medium text-gray-700 flex items-center">
-                        <ChatBubbleLeftRightIcon className="w-4 h-4 mr-2" />
-                        Comments
-                      </label>
-                      <Link
-                        to={`/admin/order/${task.orderWjid}/comments`}
-                        className="text-sm text-blue-600 hover:text-blue-800"
-                      >
-                        View all comments →
-                      </Link>
-                    </div>
+                {/* Comments Link */}
+                <div className="mt-6 pt-6 border-t border-gray-200">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-gray-700 flex items-center">
+                      <ChatBubbleLeftRightIcon className="w-4 h-4 mr-2" />
+                      Comments
+                    </label>
+                    <Link
+                      to={`/admin/order/${task.orderWjid}/comments`}
+                      className="text-sm text-blue-600 hover:text-blue-800"
+                    >
+                      View all comments →
+                    </Link>
                   </div>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="mt-6 pt-6 border-t flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <Link
-                    to="/admin/tasks"
-                    className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    <ArrowLeftIcon className="w-4 h-4 mr-2" />
-                    Back to Tasks
+                {/* Action Buttons - Responsive */}
+                <div className="flex flex-col sm:flex-row sm:justify-between items-stretch sm:items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 gap-3">
+                  <Link to="/admin/tasks" className="order-2 sm:order-1">
+                    <button className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-transparent rounded-lg text-sm sm:text-base font-medium text-white bg-gray-600 hover:bg-gray-700 transition-colors">
+                      <ArrowLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
+                      Back to Tasks
+                    </button>
                   </Link>
 
                   {task.isClosed === false && (
-                    <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="flex gap-2 sm:gap-3 order-1 sm:order-2">
                       <Link
                         to={`/admin/task/${tid}/close`}
-                        className="w-full sm:w-auto"
+                        className="flex-1 sm:flex-initial"
                       >
                         <button
                           disabled={task.status === 2}
-                          className="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-transparent text-white bg-red-600 hover:bg-red-700 rounded-lg text-sm sm:text-base font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          <XMarkIcon className="w-4 h-4 mr-2" />
+                          <XMarkIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                           Close Task
                         </button>
                       </Link>
                       <Link
                         to={`/admin/task/${tid}/assign-associate/step-2`}
-                        className="w-full sm:w-auto"
+                        className="flex-1 sm:flex-initial"
                       >
                         <button
                           disabled={task.status === 2}
-                          className="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-transparent text-white bg-blue-600 hover:bg-blue-700 rounded-lg text-sm sm:text-base font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           Begin Assignment
-                          <ChevronRightIcon className="w-4 h-4 ml-2" />
+                          <ChevronRightIcon className="w-4 sm:w-5 h-4 sm:h-5 ml-1 sm:ml-2" />
                         </button>
                       </Link>
                     </div>
