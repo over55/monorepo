@@ -219,16 +219,7 @@ function AdminOrderIncidentListPage() {
   // Initial data load and reload on parameter changes
   useEffect(() => {
     fetchIncidents();
-  }, [
-    sortBy,
-    currentPage,
-    pageSize,
-    searchQuery,
-    statusFilter,
-    initiatorFilter,
-    createdDateGte,
-    createdDateLte,
-  ]);
+  }, [fetchIncidents]);
 
   // Check authentication on mount
   useEffect(() => {
