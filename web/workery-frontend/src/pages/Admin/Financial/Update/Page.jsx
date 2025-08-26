@@ -28,7 +28,6 @@ import {
   useOrderManager,
   useTenantManager,
   useServiceFeeManager,
-  useFinancialManager,
   useAccountManager,
 } from "../../../../services/Services";
 import { DateTime } from "luxon";
@@ -38,7 +37,6 @@ import {
   ORDER_STATUS_COMPLETED_AND_PAID,
   ORDER_STATUS_COMPLETED_BUT_UNPAID,
 } from "../../../../constants/Order";
-import { FINANCIAL_TYPE_INVOICE } from "../../../../constants/Financial";
 
 function AdminFinancialUpdatePage() {
   // URL Parameters
@@ -49,7 +47,6 @@ function AdminFinancialUpdatePage() {
   const orderManager = useOrderManager();
   const tenantManager = useTenantManager();
   const serviceFeeManager = useServiceFeeManager();
-  const financialManager = useFinancialManager();
   const accountManager = useAccountManager();
 
   // Component states
@@ -69,7 +66,6 @@ function AdminFinancialUpdatePage() {
   const [completionDate, setCompletionDate] = useState(null);
   const [invoiceDate, setInvoiceDate] = useState(null);
   const [invoiceIds, setInvoiceIds] = useState("");
-  const [financialType, setFinancialType] = useState(FINANCIAL_TYPE_INVOICE); // Use constant and default to Invoice type
 
   // Quote fields
   const [invoiceQuotedLabourAmount, setInvoiceQuotedLabourAmount] = useState(0);
@@ -292,7 +288,6 @@ function AdminFinancialUpdatePage() {
             setCompletionDate(orderData.completionDate);
             setInvoiceDate(orderData.invoiceDate);
             setInvoiceIds(orderData.invoiceIds || "");
-            setFinancialType(orderData.financialType || FINANCIAL_TYPE_INVOICE); // Use the financial type from order or default to Invoice
 
             // Quote fields
             setInvoiceQuotedLabourAmount(
@@ -401,7 +396,7 @@ function AdminFinancialUpdatePage() {
     associateTaxId,
   ]);
 
-  // Handle form submission
+  // Handle form submission - FIXED VERSION
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors({});
@@ -424,17 +419,24 @@ function AdminFinancialUpdatePage() {
       return;
     }
 
+    // Build update data for the order's financial fields
     const updateData = {
-      wjid: order.wjid,
+      // Status update
+      status: parseInt(paymentStatus),
+
+      // Financial fields
       invoicePaidTo: parseInt(invoicePaidTo),
-      paymentStatus: parseInt(paymentStatus),
       completionDate: completionDate,
       invoiceDate: invoiceDate,
       invoiceIds: invoiceIds.toString(),
+
+      // Quote fields
       invoiceQuotedLabourAmount: parseFloat(invoiceQuotedLabourAmount),
       invoiceQuotedMaterialAmount: parseFloat(invoiceQuotedMaterialAmount),
       invoiceQuotedOtherCostsAmount: parseFloat(invoiceQuotedOtherCostsAmount),
       invoiceTotalQuoteAmount: parseFloat(invoiceTotalQuoteAmount),
+
+      // Actual fields
       invoiceLabourAmount: parseFloat(invoiceLabourAmount),
       invoiceMaterialAmount: parseFloat(invoiceMaterialAmount),
       invoiceOtherCostsAmount: parseFloat(invoiceOtherCostsAmount),
@@ -443,6 +445,8 @@ function AdminFinancialUpdatePage() {
       invoiceTotalAmount: parseFloat(invoiceTotalAmount),
       invoiceDepositAmount: parseFloat(invoiceDepositAmount),
       invoiceAmountDue: parseFloat(invoiceAmountDue),
+
+      // Service fee fields
       invoiceServiceFeeId: invoiceServiceFeeId,
       invoiceServiceFeePercentage: parseFloat(invoiceServiceFeePercentage),
       invoiceServiceFee: invoiceServiceFee,
@@ -455,22 +459,14 @@ function AdminFinancialUpdatePage() {
         invoiceActualServiceFeeAmountPaid,
       ),
       invoiceBalanceOwingAmount: parseFloat(invoiceBalanceOwingAmount),
-      // Add required fields for the API
-      amount: parseFloat(invoiceTotalAmount), // Total invoice amount
-      type: String(financialType), // Convert type to string to satisfy validation (temporary fix)
     };
 
     try {
       setFetching(true);
 
-      // Use the FinancialManager to update financial data
-      // If FinancialManager doesn't have an update method, fall back to OrderManager
-      if (financialManager && financialManager.updateFinancial) {
-        await financialManager.updateFinancial(oid, updateData, onUnauthorized);
-      } else {
-        // Fall back to order manager update
-        await orderManager.updateOrder(oid, updateData, onUnauthorized);
-      }
+      // Use OrderManager to update the order's financial information
+      // The financial data is part of the order record, not a separate financial entity
+      await orderManager.updateOrder(oid, updateData, onUnauthorized);
 
       setAlert({
         type: "success",
