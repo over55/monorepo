@@ -308,6 +308,9 @@ import AdminReport20Page from "./pages/Admin/Report/20To29/20Page";
 import AdminReport21Page from "./pages/Admin/Report/20To29/21Page";
 import AdminReport22Page from "./pages/Admin/Report/20To29/22Page";
 
+// Admin help page.
+import AdminHelpPage from "./pages/Admin/Help/Page";
+
 ////////////////////////////////////////////////////////////////
 // Associate pages
 ////////////////////////////////////////////////////////////////
@@ -2547,15 +2550,12 @@ function AppRouter() {
               }
             />
 
-            {/* Help routes (WITH LAYOUT) */}
+            {/* Help routes */}
             <Route
               path="/help"
               element={
                 <Layout>
-                  <PlaceholderPage
-                    title="Help"
-                    description="Help and support"
-                  />
+                  <AdminHelpPage />
                 </Layout>
               }
             />
