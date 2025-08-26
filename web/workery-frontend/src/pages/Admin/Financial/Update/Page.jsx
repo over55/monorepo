@@ -25,7 +25,7 @@ import {
   BuildingOfficeIcon,
 } from "@heroicons/react/24/outline";
 import {
-  useOrderManager,
+  useFinancialManager,
   useTenantManager,
   useServiceFeeManager,
   useAccountManager,
@@ -37,14 +37,19 @@ import {
   ORDER_STATUS_COMPLETED_AND_PAID,
   ORDER_STATUS_COMPLETED_BUT_UNPAID,
 } from "../../../../constants/Order";
+import {
+  FINANCIAL_STATUS_PAID,
+  FINANCIAL_STATUS_PENDING,
+  FINANCIAL_STATUS_CANCELLED,
+} from "../../../../constants/Financial";
 
 function AdminFinancialUpdatePage() {
   // URL Parameters
-  const { oid } = useParams();
+  const { fid } = useParams(); // Changed from oid to fid for financial ID
   const navigate = useNavigate();
 
   // Service hooks
-  const orderManager = useOrderManager();
+  const financialManager = useFinancialManager();
   const tenantManager = useTenantManager();
   const serviceFeeManager = useServiceFeeManager();
   const accountManager = useAccountManager();
@@ -52,7 +57,7 @@ function AdminFinancialUpdatePage() {
   // Component states
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
-  const [order, setOrder] = useState(null);
+  const [financial, setFinancial] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
   const [taxRate, setTaxRate] = useState(0.0);
   const [alert, setAlert] = useState(null);
@@ -60,9 +65,7 @@ function AdminFinancialUpdatePage() {
 
   // Form states
   const [invoicePaidTo, setInvoicePaidTo] = useState(1);
-  const [paymentStatus, setPaymentStatus] = useState(
-    ORDER_STATUS_COMPLETED_BUT_UNPAID,
-  );
+  const [paymentStatus, setPaymentStatus] = useState(FINANCIAL_STATUS_PENDING);
   const [completionDate, setCompletionDate] = useState(null);
   const [invoiceDate, setInvoiceDate] = useState(null);
   const [invoiceIds, setInvoiceIds] = useState("");
@@ -111,7 +114,6 @@ function AdminFinancialUpdatePage() {
   // Constants
   const INVOICE_PAID_TO_ASSOCIATE = 1;
   const INVOICE_PAID_TO_ORGANIZATION = 2;
-  const EMPTY_OBJECT_ID = "000000000000000000000000";
 
   // Handle unauthorized access
   const onUnauthorized = () => {
@@ -244,8 +246,8 @@ function AdminFinancialUpdatePage() {
     let mounted = true;
 
     const initializePage = async () => {
-      if (!oid) {
-        setErrors({ general: "Order ID is required" });
+      if (!fid) {
+        setErrors({ general: "Financial ID is required" });
         return;
       }
 
@@ -264,99 +266,106 @@ function AdminFinancialUpdatePage() {
         await fetchAvailableServiceFees();
       }
 
-      // Fetch order details if not already loaded
-      if (!order || Object.keys(order).length === 0) {
+      // Fetch financial details if not already loaded
+      if (!financial || Object.keys(financial).length === 0) {
         setFetching(true);
         setErrors({});
 
         try {
-          const orderData = await orderManager.getOrderDetail(
-            oid,
+          // Use FinancialManager to get financial details
+          const financialData = await financialManager.getFinancialDetail(
+            fid,
             onUnauthorized,
           );
 
           if (mounted) {
-            setOrder(orderData);
+            setFinancial(financialData);
 
-            // Set form fields from order data
+            // Set form fields from financial data
             setInvoicePaidTo(
-              orderData.invoicePaidTo || INVOICE_PAID_TO_ASSOCIATE,
+              financialData.invoicePaidTo || INVOICE_PAID_TO_ASSOCIATE,
             );
-            setPaymentStatus(
-              orderData.status || ORDER_STATUS_COMPLETED_BUT_UNPAID,
-            );
-            setCompletionDate(orderData.completionDate);
-            setInvoiceDate(orderData.invoiceDate);
-            setInvoiceIds(orderData.invoiceIds || "");
+            setPaymentStatus(financialData.status || FINANCIAL_STATUS_PENDING);
+            setCompletionDate(financialData.completionDate);
+            setInvoiceDate(financialData.invoiceDate);
+            setInvoiceIds(financialData.invoiceIds || "");
 
             // Quote fields
             setInvoiceQuotedLabourAmount(
-              orderData.invoiceQuotedLabourAmount || 0,
+              financialData.invoiceQuotedLabourAmount || 0,
             );
             setInvoiceQuotedMaterialAmount(
-              orderData.invoiceQuotedMaterialAmount || 0,
+              financialData.invoiceQuotedMaterialAmount || 0,
             );
             setInvoiceQuotedOtherCostsAmount(
-              orderData.invoiceQuotedOtherCostsAmount || 0,
+              financialData.invoiceQuotedOtherCostsAmount || 0,
             );
-            setInvoiceTotalQuoteAmount(orderData.invoiceTotalQuoteAmount || 0);
+            setInvoiceTotalQuoteAmount(
+              financialData.invoiceTotalQuoteAmount || 0,
+            );
 
             // Actual fields
-            setInvoiceLabourAmount(orderData.invoiceLabourAmount || 0);
-            setInvoiceMaterialAmount(orderData.invoiceMaterialAmount || 0);
-            setInvoiceOtherCostsAmount(orderData.invoiceOtherCostsAmount || 0);
-            setAssociateTaxId(orderData.associateTaxId || "");
-            setInvoiceTaxAmount(orderData.invoiceTaxAmount || 0);
-            setInvoiceIsCustomTaxAmount(
-              orderData.invoiceIsCustomTaxAmount || false,
+            setInvoiceLabourAmount(financialData.invoiceLabourAmount || 0);
+            setInvoiceMaterialAmount(financialData.invoiceMaterialAmount || 0);
+            setInvoiceOtherCostsAmount(
+              financialData.invoiceOtherCostsAmount || 0,
             );
-            setInvoiceTotalAmount(orderData.invoiceTotalAmount || 0);
-            setInvoiceDepositAmount(orderData.invoiceDepositAmount || 0);
-            setInvoiceAmountDue(orderData.invoiceAmountDue || 0);
+            setAssociateTaxId(financialData.associateTaxId || "");
+            setInvoiceTaxAmount(financialData.invoiceTaxAmount || 0);
+            setInvoiceIsCustomTaxAmount(
+              financialData.invoiceIsCustomTaxAmount || false,
+            );
+            setInvoiceTotalAmount(financialData.invoiceTotalAmount || 0);
+            setInvoiceDepositAmount(financialData.invoiceDepositAmount || 0);
+            setInvoiceAmountDue(financialData.invoiceAmountDue || 0);
 
             // Service fee fields
-            setInvoiceServiceFeeId(orderData.invoiceServiceFeeId || "");
+            setInvoiceServiceFeeId(financialData.invoiceServiceFeeId || "");
             setInvoiceServiceFeePercentage(
-              orderData.invoiceServiceFeePercentage || 0,
+              financialData.invoiceServiceFeePercentage || 0,
             );
             setIsInvoiceServiceFeeOther(
-              orderData.isInvoiceServiceFeeOther || false,
+              financialData.isInvoiceServiceFeeOther || false,
             );
-            setInvoiceServiceFeeOther(orderData.invoiceServiceFeeOther || "");
-            setInvoiceServiceFeeAmount(orderData.invoiceServiceFeeAmount || 0);
+            setInvoiceServiceFeeOther(
+              financialData.invoiceServiceFeeOther || "",
+            );
+            setInvoiceServiceFeeAmount(
+              financialData.invoiceServiceFeeAmount || 0,
+            );
             setInvoiceServiceFeePaymentDate(
-              orderData.invoiceServiceFeePaymentDate,
+              financialData.invoiceServiceFeePaymentDate,
             );
-            setPaymentMethods(orderData.paymentMethods || []);
+            setPaymentMethods(financialData.paymentMethods || []);
             setInvoiceActualServiceFeeAmountPaid(
-              orderData.invoiceActualServiceFeeAmountPaid || 0,
+              financialData.invoiceActualServiceFeeAmountPaid || 0,
             );
             setInvoiceBalanceOwingAmount(
-              orderData.invoiceBalanceOwingAmount || 0,
+              financialData.invoiceBalanceOwingAmount || 0,
             );
 
             // Set the service fee object if ID exists
-            if (orderData.invoiceServiceFeeId) {
+            if (financialData.invoiceServiceFeeId) {
               // Find from available service fees if already loaded
               const foundFee = availableServiceFees.find(
-                (fee) => fee.id === orderData.invoiceServiceFeeId,
+                (fee) => fee.id === financialData.invoiceServiceFeeId,
               );
               if (foundFee) {
                 setInvoiceServiceFee(foundFee);
               } else {
                 // Fetch if not in the list (for backward compatibility)
-                await fetchServiceFeeDetails(orderData.invoiceServiceFeeId);
+                await fetchServiceFeeDetails(financialData.invoiceServiceFeeId);
               }
             }
           }
         } catch (error) {
-          console.error("Failed to fetch order details:", error);
+          console.error("Failed to fetch financial details:", error);
           if (mounted) {
             if (typeof error === "object" && error !== null) {
               setErrors(error);
             } else {
               setErrors({
-                general: "Failed to load order details. Please try again.",
+                general: "Failed to load financial details. Please try again.",
               });
             }
           }
@@ -373,11 +382,11 @@ function AdminFinancialUpdatePage() {
     return () => {
       mounted = false;
     };
-  }, [oid, onPageLoaded, availableServiceFees]);
+  }, [fid, onPageLoaded, availableServiceFees]);
 
   // Recalculate when relevant fields change
   useEffect(() => {
-    if (order) {
+    if (financial) {
       performCalculation();
     }
   }, [
@@ -396,7 +405,7 @@ function AdminFinancialUpdatePage() {
     associateTaxId,
   ]);
 
-  // Handle form submission - FIXED VERSION
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors({});
@@ -419,7 +428,7 @@ function AdminFinancialUpdatePage() {
       return;
     }
 
-    // Build update data for the order's financial fields
+    // Build update data for the financial record
     const updateData = {
       // Status update
       status: parseInt(paymentStatus),
@@ -459,23 +468,25 @@ function AdminFinancialUpdatePage() {
         invoiceActualServiceFeeAmountPaid,
       ),
       invoiceBalanceOwingAmount: parseFloat(invoiceBalanceOwingAmount),
+
+      // Include the order ID if it exists
+      orderId: financial.orderId,
     };
 
     try {
       setFetching(true);
 
-      // Use OrderManager to update the order's financial information
-      // The financial data is part of the order record, not a separate financial entity
-      await orderManager.updateOrder(oid, updateData, onUnauthorized);
+      // Use FinancialManager to update the financial information
+      await financialManager.updateFinancial(fid, updateData, onUnauthorized);
 
       setAlert({
         type: "success",
-        message: "Order financials updated successfully!",
+        message: "Financial information updated successfully!",
       });
 
       // Redirect after 2 seconds
       setTimeout(() => {
-        navigate(`/admin/financial/${oid}`);
+        navigate(`/admin/financial/${fid}`);
       }, 2000);
     } catch (error) {
       console.error("Failed to update financial information:", error);
@@ -507,13 +518,13 @@ function AdminFinancialUpdatePage() {
     }
   };
 
-  // Check if order is archived
-  const isOrderArchived = () => {
-    return order && order.status === ORDER_STATUS_ARCHIVED;
+  // Check if financial is archived
+  const isFinancialArchived = () => {
+    return financial && financial.status === ORDER_STATUS_ARCHIVED;
   };
 
   // Loading state
-  if (isFetching && !order) {
+  if (isFetching && !financial) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
@@ -558,12 +569,12 @@ function AdminFinancialUpdatePage() {
             <div className="flex items-center">
               <span className="mx-2 text-gray-400">/</span>
               <Link
-                to={`/admin/financial/${oid}`}
+                to={`/admin/financial/${fid}`}
                 className="text-sm font-medium text-gray-700 hover:text-blue-600"
               >
                 <span className="inline-flex items-center">
                   <InformationCircleIcon className="w-4 h-4 mr-2" />
-                  Order #{oid}
+                  Financial #{fid}
                 </span>
               </Link>
             </div>
@@ -586,22 +597,27 @@ function AdminFinancialUpdatePage() {
           <div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center">
               <CurrencyDollarIcon className="w-8 h-8 mr-3 text-blue-600" />
-              Financials
+              Financial Record
             </h1>
             <p className="mt-1 text-sm text-gray-600 flex items-center">
               <PencilSquareIcon className="w-4 h-4 mr-1" />
-              Update financial information for order #{oid}
+              Update financial information #{fid}
+              {financial && financial.orderId && (
+                <span className="ml-2">
+                  (Related to Order #{financial.orderId})
+                </span>
+              )}
             </p>
           </div>
         </div>
       </div>
 
       {/* Alert Messages */}
-      {isOrderArchived() && (
+      {isFinancialArchived() && (
         <div className="mb-4 px-4 py-3 rounded-lg bg-yellow-50 border border-yellow-200 text-yellow-700">
           <div className="flex items-center">
             <ArchiveBoxIcon className="w-5 h-5 mr-2" />
-            <span>This order is archived.</span>
+            <span>This financial record is archived.</span>
           </div>
         </div>
       )}
@@ -655,7 +671,7 @@ function AdminFinancialUpdatePage() {
       )}
 
       {/* Main Content */}
-      {order && (
+      {financial && (
         <div className="bg-white shadow-sm rounded-lg">
           {/* Header */}
           <div className="px-6 py-5 border-b border-gray-200">
@@ -664,7 +680,7 @@ function AdminFinancialUpdatePage() {
                 <PencilSquareIcon className="w-7 h-7 mr-2 text-blue-600" />
                 Update Financial Information
               </h2>
-              <Link to={`/admin/financial/${oid}`}>
+              <Link to={`/admin/financial/${fid}`}>
                 <button className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
                   <ChevronLeftIcon className="w-5 h-5 mr-2" />
                   Back to Detail
@@ -677,31 +693,31 @@ function AdminFinancialUpdatePage() {
           <div className="px-6 border-b border-gray-200">
             <nav className="-mb-px flex space-x-8">
               <Link
-                to={`/admin/financial/${oid}`}
+                to={`/admin/financial/${fid}`}
                 className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
               >
                 Summary
               </Link>
               <Link
-                to={`/admin/financial/${oid}/detail`}
+                to={`/admin/financial/${fid}/detail`}
                 className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
               >
                 Detail
               </Link>
               <Link
-                to={`/admin/financial/${oid}/invoice`}
+                to={`/admin/financial/${fid}/invoice`}
                 className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
               >
                 Invoice
               </Link>
               <Link
-                to={`/admin/financial/${oid}/deposits`}
+                to={`/admin/financial/${fid}/deposits`}
                 className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
               >
                 Deposits
               </Link>
               <Link
-                to={`/admin/financial/${oid}/more`}
+                to={`/admin/financial/${fid}/more`}
                 className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center"
               >
                 More
@@ -764,17 +780,15 @@ function AdminFinancialUpdatePage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      What is the service fee payment status?{" "}
+                      What is the payment status?{" "}
                       <span className="text-red-500">*</span>
                     </label>
                     <div className="space-x-6">
                       <label className="inline-flex items-center">
                         <input
                           type="radio"
-                          value={ORDER_STATUS_COMPLETED_AND_PAID}
-                          checked={
-                            paymentStatus === ORDER_STATUS_COMPLETED_AND_PAID
-                          }
+                          value={FINANCIAL_STATUS_PAID}
+                          checked={paymentStatus === FINANCIAL_STATUS_PAID}
                           onChange={(e) =>
                             setPaymentStatus(parseInt(e.target.value))
                           }
@@ -788,10 +802,23 @@ function AdminFinancialUpdatePage() {
                       <label className="inline-flex items-center">
                         <input
                           type="radio"
-                          value={ORDER_STATUS_COMPLETED_BUT_UNPAID}
-                          checked={
-                            paymentStatus === ORDER_STATUS_COMPLETED_BUT_UNPAID
+                          value={FINANCIAL_STATUS_PENDING}
+                          checked={paymentStatus === FINANCIAL_STATUS_PENDING}
+                          onChange={(e) =>
+                            setPaymentStatus(parseInt(e.target.value))
                           }
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="ml-2 text-sm text-gray-700">
+                          <XCircleIcon className="inline w-4 h-4 mr-1 text-yellow-600" />
+                          Pending
+                        </span>
+                      </label>
+                      <label className="inline-flex items-center">
+                        <input
+                          type="radio"
+                          value={FINANCIAL_STATUS_CANCELLED}
+                          checked={paymentStatus === FINANCIAL_STATUS_CANCELLED}
                           onChange={(e) =>
                             setPaymentStatus(parseInt(e.target.value))
                           }
@@ -799,13 +826,13 @@ function AdminFinancialUpdatePage() {
                         />
                         <span className="ml-2 text-sm text-gray-700">
                           <XCircleIcon className="inline w-4 h-4 mr-1 text-red-600" />
-                          Unpaid
+                          Cancelled
                         </span>
                       </label>
                     </div>
                   </div>
 
-                  {paymentStatus === ORDER_STATUS_COMPLETED_AND_PAID && (
+                  {paymentStatus === FINANCIAL_STATUS_PAID && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -1333,9 +1360,22 @@ function AdminFinancialUpdatePage() {
                           setInvoiceServiceFeePercentage(
                             selectedFee.percentage || 0,
                           );
+
+                          // Check if it's "Other" option
+                          if (
+                            selectedFee.name &&
+                            selectedFee.name.toLowerCase() === "other"
+                          ) {
+                            setIsInvoiceServiceFeeOther(true);
+                          } else {
+                            setIsInvoiceServiceFeeOther(false);
+                            setInvoiceServiceFeeOther("");
+                          }
                         } else {
                           setInvoiceServiceFee(null);
                           setInvoiceServiceFeePercentage(0);
+                          setIsInvoiceServiceFeeOther(false);
+                          setInvoiceServiceFeeOther("");
                         }
                       }}
                       className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
@@ -1519,7 +1559,7 @@ function AdminFinancialUpdatePage() {
 
             {/* Form Actions */}
             <div className="flex justify-between items-center pt-6 border-t border-gray-200">
-              <Link to={`/admin/financial/${oid}`}>
+              <Link to={`/admin/financial/${fid}`}>
                 <button
                   type="button"
                   className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
@@ -1531,9 +1571,9 @@ function AdminFinancialUpdatePage() {
 
               <button
                 type="submit"
-                disabled={isOrderArchived() || isFetching}
+                disabled={isFinancialArchived() || isFetching}
                 className={`inline-flex items-center px-5 py-2.5 border border-transparent rounded-lg text-base font-medium text-white transition-colors ${
-                  isOrderArchived() || isFetching
+                  isFinancialArchived() || isFetching
                     ? "bg-gray-400 cursor-not-allowed"
                     : "bg-green-600 hover:bg-green-700"
                 }`}

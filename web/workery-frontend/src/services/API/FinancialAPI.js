@@ -19,6 +19,7 @@ export class FinancialAPI {
         baseURL: this.baseURL,
         financialsEndpoint: this.endpoints.FINANCIALS,
         financialDetailEndpoint: this.endpoints.FINANCIAL_DETAIL,
+        financialUpdateEndpoint: this.endpoints.FINANCIAL_UPDATE,
         financialSelectOptionsEndpoint: this.endpoints.FINANCIAL_SELECT_OPTIONS,
       });
     }
@@ -288,7 +289,7 @@ export class FinancialAPI {
       decamelizedData.id = financialId;
 
       // Replace {id} placeholder in endpoint
-      const url = this.endpoints.FINANCIAL_DETAIL.replace("{id}", financialId);
+      const url = this.endpoints.FINANCIAL_UPDATE.replace("{id}", financialId);
 
       // Make the API call
       const response = await authenticatedAxios.put(url, decamelizedData);

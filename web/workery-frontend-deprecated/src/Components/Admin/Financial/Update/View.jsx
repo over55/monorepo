@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Admin/Financial/Update/View.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -130,7 +131,8 @@ function AdminFinancialUpdate() {
   const [invoiceOtherCostsAmount, setInvoiceOtherCostsAmount] = useState(0);
   const [associateTaxId, setAssociateTaxId] = useState("");
   const [invoiceTaxAmount, setInvoiceTaxAmount] = useState(0);
-  const [invoiceIsCustomTaxAmount, setInvoiceIsCustomTaxAmount] = useState(false);
+  const [invoiceIsCustomTaxAmount, setInvoiceIsCustomTaxAmount] =
+    useState(false);
   const [invoiceTotalAmount, setInvoiceTotalAmount] = useState(0);
   const [invoiceDepositAmount, setInvoiceDepositAmount] = useState(0);
   const [invoiceAmountDue, setInvoiceAmountDue] = useState(0);
@@ -189,7 +191,11 @@ function AdminFinancialUpdate() {
       invoiceOtherCostsAmount,
     );
     modifiedOrder.invoice_tax_amount = parseFloat(invoiceTaxAmount);
-    modifiedOrder.invoice_is_custom_tax_amount = true ? (invoiceIsCustomTaxAmount === "true" || invoiceIsCustomTaxAmount === true || invoiceIsCustomTaxAmount === 1) : false;
+    modifiedOrder.invoice_is_custom_tax_amount = true
+      ? invoiceIsCustomTaxAmount === "true" ||
+        invoiceIsCustomTaxAmount === true ||
+        invoiceIsCustomTaxAmount === 1
+      : false;
     modifiedOrder.invoice_total_amount = parseFloat(invoiceTotalAmount);
     modifiedOrder.invoice_deposit_amount = parseFloat(invoiceDepositAmount);
     modifiedOrder.invoice_amount_due = invoiceAmountDue;
@@ -316,14 +322,14 @@ function AdminFinancialUpdate() {
       associateTaxId !== "" &&
       associateTaxId !== "NA"
     ) {
-        if (invoiceIsCustomTaxAmount === false) {
-          modifiedInvoiceTaxAmount = parseFloat(
-            (taxRate / 100.0) *
-              (modifiedInvoiceLabourAmount +
-                modifiedInvoiceMaterialAmount +
-                modifiedInvoiceOtherCostsAmount),
-          );
-        }
+      if (invoiceIsCustomTaxAmount === false) {
+        modifiedInvoiceTaxAmount = parseFloat(
+          (taxRate / 100.0) *
+            (modifiedInvoiceLabourAmount +
+              modifiedInvoiceMaterialAmount +
+              modifiedInvoiceOtherCostsAmount),
+        );
+      }
     }
 
     // Compute the total amount.
@@ -1008,8 +1014,14 @@ function AdminFinancialUpdate() {
                             label="Custom Actual Tax?"
                             name="invoiceIsCustomTaxAmount"
                             checked={invoiceIsCustomTaxAmount}
-                            errorText={errors && errors.invoiceIsCustomTaxAmount}
-                            onChange={(e, x) => setInvoiceIsCustomTaxAmount(!invoiceIsCustomTaxAmount)}
+                            errorText={
+                              errors && errors.invoiceIsCustomTaxAmount
+                            }
+                            onChange={(e, x) =>
+                              setInvoiceIsCustomTaxAmount(
+                                !invoiceIsCustomTaxAmount,
+                              )
+                            }
                             maxWidth="180px"
                             helpText={`Would you like to override the automatic actual tax value with a custom value?`}
                           />

@@ -156,7 +156,8 @@ export const API_ENDPOINTS = {
 
   // Financial endpoints
   FINANCIALS: "/financials",
-  FINANCIAL_DETAIL: "/financial/{id}",
+  FINANCIAL_DETAIL: "/order/{id}",
+  FINANCIAL_UPDATE: "/order/financial/{id}",
   FINANCIAL_SELECT_OPTIONS: "/financials/select-options",
 
   // Attachment endpoints
@@ -316,6 +317,7 @@ export function getFullAPIUrls() {
     ACTIVITY_SHEET_SELECT_OPTIONS: `${httpServer}${basePath}${API_ENDPOINTS.ACTIVITY_SHEET_SELECT_OPTIONS}`,
     FINANCIALS: `${httpServer}${basePath}${API_ENDPOINTS.FINANCIALS}`,
     FINANCIAL_DETAIL: `${httpServer}${basePath}${API_ENDPOINTS.FINANCIAL_DETAIL}`,
+    FINANCIAL_UPDATE: `${httpServer}${basePath}${API_ENDPOINTS.FINANCIAL_UPDATE}`,
     FINANCIAL_SELECT_OPTIONS: `${httpServer}${basePath}${API_ENDPOINTS.FINANCIAL_SELECT_OPTIONS}`,
     ATTACHMENTS: `${httpServer}${basePath}${API_ENDPOINTS.ATTACHMENTS}`,
     ATTACHMENT_DETAIL: `${httpServer}${basePath}${API_ENDPOINTS.ATTACHMENT_DETAIL}`,

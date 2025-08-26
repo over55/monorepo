@@ -2078,7 +2078,7 @@ function AppRouter() {
               }
             />
             <Route
-              path="/admin/financial/:oid/edit"
+              path="/admin/financial/:fid/edit"
               element={
                 <Layout>
                   <AdminFinancialUpdatePage />
