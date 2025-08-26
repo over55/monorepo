@@ -529,41 +529,6 @@ function AdminTaskItemListPage() {
     return <Table columns={columns} data={tasks.results} />;
   };
 
-  // Debug info (remove in production)
-  const renderDebugInfo = () => {
-    if (process.env.NODE_ENV !== "development") return null;
-
-    return (
-      <div
-        style={{
-          padding: "10px",
-          backgroundColor: "#f0f0f0",
-          marginBottom: "20px",
-          fontSize: "12px",
-          fontFamily: "monospace",
-        }}
-      >
-        <strong>Debug Info:</strong>
-        <br />
-        Current Cursor: {currentCursor || "(empty)"}
-        <br />
-        Next Cursor: {nextCursor || "(none)"}
-        <br />
-        Has Next Page: {hasNextPage ? "YES" : "NO"}
-        <br />
-        Previous Cursors Count: {previousCursors.length}
-        <br />
-        Page Size: {pageSize}
-        <br />
-        Is Closed Filter: {isClosed} (0=all, 1=closed, 2=open)
-        <br />
-        Type Filter: {type}
-        <br />
-        Total Count: {taskCount}
-      </div>
-    );
-  };
-
   // Render main content
   if (!currentUser) {
     return <Loading message="Loading user information..." />;
@@ -619,9 +584,6 @@ function AdminTaskItemListPage() {
           </Button>,
         ]}
       >
-        {/* Debug info for development */}
-        {renderDebugInfo()}
-
         {/* Filter Panel */}
         <div
           style={{
