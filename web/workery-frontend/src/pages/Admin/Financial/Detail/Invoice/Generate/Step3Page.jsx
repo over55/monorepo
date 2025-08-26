@@ -32,6 +32,21 @@ import {
 } from "../../../../../../constants/FieldOptions";
 import { DateInput } from "../../../../../../components/UI";
 
+// Move DetailSection outside the main component to prevent recreation on every render
+const DetailSection = ({ title, icon: Icon, children }) => (
+  <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
+    <div className="px-4 sm:px-6 py-3 sm:py-4">
+      <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+        <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
+        <span className="truncate">{title}</span>
+      </h3>
+    </div>
+    <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
+      {children}
+    </div>
+  </div>
+);
+
 function AdminFinancialGenerateInvoiceStep3Page() {
   const { oid } = useParams();
   const navigate = useNavigate();
@@ -68,21 +83,6 @@ function AdminFinancialGenerateInvoiceStep3Page() {
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
   };
-
-  // Section Component with Dark Header
-  const DetailSection = ({ title, icon: Icon, children }) => (
-    <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
-      <div className="px-4 sm:px-6 py-3 sm:py-4">
-        <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
-          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
-          <span className="truncate">{title}</span>
-        </h3>
-      </div>
-      <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
-        {children}
-      </div>
-    </div>
-  );
 
   // Load order details and existing data
   useEffect(() => {
@@ -673,7 +673,16 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                       <DateInput
                         label="Date of Quote Approval"
                         value={invoiceQuoteDate}
-                        onChange={(value) => setInvoiceQuoteDate(value)}
+                        onChange={(value) => {
+                          setInvoiceQuoteDate(value);
+                          // Clear error when user enters a value
+                          if (errors.invoiceQuoteDate) {
+                            setErrors((prev) => ({
+                              ...prev,
+                              invoiceQuoteDate: undefined,
+                            }));
+                          }
+                        }}
                         error={errors.invoiceQuoteDate}
                         required={true}
                       />
@@ -683,7 +692,16 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                       <DateInput
                         label="Date Client Paid Invoice"
                         value={dateClientPaidInvoice}
-                        onChange={(value) => setDateClientPaidInvoice(value)}
+                        onChange={(value) => {
+                          setDateClientPaidInvoice(value);
+                          // Clear error when user enters a value
+                          if (errors.dateClientPaidInvoice) {
+                            setErrors((prev) => ({
+                              ...prev,
+                              dateClientPaidInvoice: undefined,
+                            }));
+                          }
+                        }}
                         error={errors.dateClientPaidInvoice}
                         required={true}
                       />
@@ -858,7 +876,16 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                       <DateInput
                         label="Associate Signature Date"
                         value={associateSignDate}
-                        onChange={(value) => setAssociateSignDate(value)}
+                        onChange={(value) => {
+                          setAssociateSignDate(value);
+                          // Clear error when user enters a value
+                          if (errors.associateSignDate) {
+                            setErrors((prev) => ({
+                              ...prev,
+                              associateSignDate: undefined,
+                            }));
+                          }
+                        }}
                         error={errors.associateSignDate}
                         required={true}
                       />
