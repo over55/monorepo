@@ -170,7 +170,7 @@ export class FinancialAPI {
       };
 
       // Use the financial update endpoint - /order/financial/{wjid}
-      const url = `/order/financial/${orderWJID}`;
+      const url = `/order/${orderWJID}/financial`;
 
       // Make the API call
       const response = await authenticatedAxios.put(url, requestData);

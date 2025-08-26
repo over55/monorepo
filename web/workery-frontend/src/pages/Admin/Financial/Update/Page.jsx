@@ -42,11 +42,15 @@ import {
   FINANCIAL_STATUS_PENDING,
   FINANCIAL_STATUS_CANCELLED,
 } from "../../../../constants/Financial";
+import { formatDateForInput, isZeroDate } from "../../../../constants/Date";
 
 function AdminFinancialUpdatePage() {
-  // URL Parameters
+  // URL Parameters - fid represents the order WJID
   const { fid } = useParams();
   const navigate = useNavigate();
+
+  // Convert fid to number for API calls
+  const orderWJID = fid ? parseInt(fid, 10) : null;
 
   // Service hooks
   const financialManager = useFinancialManager();
@@ -311,8 +315,8 @@ function AdminFinancialUpdatePage() {
     let mounted = true;
 
     const initializePage = async () => {
-      if (!fid) {
-        setErrors({ general: "Financial ID is required" });
+      if (!orderWJID || isNaN(orderWJID)) {
+        setErrors({ general: "Valid order ID is required" });
         return;
       }
 
@@ -337,9 +341,9 @@ function AdminFinancialUpdatePage() {
         setErrors({});
 
         try {
-          // Use FinancialManager to get financial details
-          const financialData = await financialManager.getFinancialDetail(
-            fid,
+          // Use FinancialManager to get order financial details
+          const financialData = await financialManager.getOrderFinancialDetail(
+            orderWJID,
             onUnauthorized,
           );
 
@@ -442,7 +446,7 @@ function AdminFinancialUpdatePage() {
     return () => {
       mounted = false;
     };
-  }, [fid, onPageLoaded, availableServiceFees]);
+  }, [orderWJID, onPageLoaded, availableServiceFees]);
 
   // Recalculate when relevant fields change
   useEffect(() => {
@@ -544,10 +548,10 @@ function AdminFinancialUpdatePage() {
       return;
     }
 
-    // Build update data for the financial record
+    // Build update data for the financial record (using camelCase)
     const updateData = {
       // Status update
-      payment_status: parseInt(paymentStatus),
+      paymentStatus: parseInt(paymentStatus),
 
       // Financial fields
       invoicePaidTo: parseInt(invoicePaidTo),
@@ -586,15 +590,19 @@ function AdminFinancialUpdatePage() {
       invoiceBalanceOwingAmount: parseFloat(invoiceBalanceOwingAmount),
 
       // Include the order ID if it exists
-      orderId: financial.orderId,
+      orderId: financial.orderId || financial.wjid,
     };
 
     try {
       // Debug log to see what we're sending
       console.log("Submitting financial update:", updateData);
 
-      // Use FinancialManager to update the financial information
-      await financialManager.updateFinancial(fid, updateData, onUnauthorized);
+      // Use FinancialManager to update the order financial information
+      await financialManager.updateOrderFinancial(
+        orderWJID,
+        updateData,
+        onUnauthorized,
+      );
 
       setAlert({
         type: "success",
@@ -640,9 +648,9 @@ function AdminFinancialUpdatePage() {
     }
   };
 
-  // Format date for input
-  const formatDateForInput = (dateString) => {
-    if (!dateString) return "";
+  // Format date for display
+  const formatDateForDisplay = (dateString) => {
+    if (!dateString || isZeroDate(dateString)) return "";
     try {
       return DateTime.fromISO(dateString).toFormat("yyyy-MM-dd");
     } catch (error) {
