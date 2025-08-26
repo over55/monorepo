@@ -28,6 +28,7 @@ import {
   EnvelopeIcon,
   IdentificationIcon,
   HomeIcon,
+  CreditCardIcon,
 } from "@heroicons/react/24/outline";
 
 function AdminFinancialGenerateInvoiceStep4Page() {
