@@ -30,6 +30,7 @@ import {
   HomeIcon,
   CreditCardIcon,
 } from "@heroicons/react/24/outline";
+import { ensureISODateForAPI } from "../../../../../../services/Helpers/DateFormatter";
 
 function AdminFinancialGenerateInvoiceStep4Page() {
   const { oid } = useParams();
@@ -137,7 +138,7 @@ function AdminFinancialGenerateInvoiceStep4Page() {
 
         // Step 1 - Header
         invoice_id: invoiceData.invoiceId,
-        invoice_date: invoiceData.invoiceDate,
+        invoice_date: ensureISODateForAPI(invoiceData.invoiceDate),
         associate_name: invoiceData.associateName,
         associate_phone: invoiceData.associatePhone,
         associate_tax_id: invoiceData.associateTaxId,
@@ -220,14 +221,16 @@ function AdminFinancialGenerateInvoiceStep4Page() {
         total: parseFloat(invoiceData.invoiceTotalAmount) || 0,
         deposit: parseFloat(invoiceData.invoiceDepositAmount) || 0,
         amount_due: parseFloat(invoiceData.invoiceAmountDue) || 0,
-        invoice_quote_date: invoiceData.invoiceQuoteDate,
+        invoice_quote_date: ensureISODateForAPI(invoiceData.invoiceQuoteDate),
         invoice_customers_approval: invoiceData.invoiceCustomersApproval,
         line_01_notes: invoiceData.line01Notes || "",
         line_02_notes: invoiceData.line02Notes || "",
-        date_client_paid_invoice: invoiceData.dateClientPaidInvoice,
+        date_client_paid_invoice: ensureISODateForAPI(
+          invoiceData.dateClientPaidInvoice,
+        ),
         payment_methods: invoiceData.paymentMethods || [],
         client_signature: invoiceData.clientSignature,
-        associate_sign_date: invoiceData.associateSignDate,
+        associate_sign_date: ensureISODateForAPI(invoiceData.associateSignDate),
         associate_signature: invoiceData.associateSignature,
         invoice_quote_days: parseInt(invoiceData.invoiceQuoteDays) || 30,
       };

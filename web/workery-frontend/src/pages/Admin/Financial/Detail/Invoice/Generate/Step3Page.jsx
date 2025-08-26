@@ -30,6 +30,7 @@ import {
   ORDER_INVOICE_PAYMENT_METHODS_OPTIONS,
   ORDER_INVOICE_QUOTE_VALIDITY_OPTIONS,
 } from "../../../../../../constants/FieldOptions";
+import { DateInput } from "../../../../../../components/UI";
 
 function AdminFinancialGenerateInvoiceStep3Page() {
   const { oid } = useParams();
@@ -205,9 +206,7 @@ function AdminFinancialGenerateInvoiceStep3Page() {
     });
   };
 
-  const handleNext = (e) => {
-    e.preventDefault();
-
+  const handleNext = () => {
     // Validate required fields
     const newErrors = {};
 
@@ -474,7 +473,7 @@ function AdminFinancialGenerateInvoiceStep3Page() {
           </div>
 
           <div className="p-4 sm:p-6">
-            <form onSubmit={handleNext} className="max-w-4xl mx-auto">
+            <div className="max-w-4xl mx-auto">
               {/* Financial Summary Section */}
               <DetailSection title="Financial Summary" icon={BanknotesIcon}>
                 <div className="space-y-4">
@@ -671,59 +670,23 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Date of Quote Approval{" "}
-                        <span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <CalendarIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
-                        </div>
-                        <input
-                          type="date"
-                          value={invoiceQuoteDate}
-                          onChange={(e) => setInvoiceQuoteDate(e.target.value)}
-                          className={`w-full pl-10 pr-3 py-2 border ${
-                            errors.invoiceQuoteDate
-                              ? "border-red-500"
-                              : "border-gray-300"
-                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base`}
-                        />
-                      </div>
-                      {errors.invoiceQuoteDate && (
-                        <p className="mt-1 text-xs text-red-600">
-                          {errors.invoiceQuoteDate}
-                        </p>
-                      )}
+                      <DateInput
+                        label="Date of Quote Approval"
+                        value={invoiceQuoteDate}
+                        onChange={(value) => setInvoiceQuoteDate(value)}
+                        error={errors.invoiceQuoteDate}
+                        required={true}
+                      />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Date Client Paid Invoice{" "}
-                        <span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <CalendarIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
-                        </div>
-                        <input
-                          type="date"
-                          value={dateClientPaidInvoice}
-                          onChange={(e) =>
-                            setDateClientPaidInvoice(e.target.value)
-                          }
-                          className={`w-full pl-10 pr-3 py-2 border ${
-                            errors.dateClientPaidInvoice
-                              ? "border-red-500"
-                              : "border-gray-300"
-                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base`}
-                        />
-                      </div>
-                      {errors.dateClientPaidInvoice && (
-                        <p className="mt-1 text-xs text-red-600">
-                          {errors.dateClientPaidInvoice}
-                        </p>
-                      )}
+                      <DateInput
+                        label="Date Client Paid Invoice"
+                        value={dateClientPaidInvoice}
+                        onChange={(value) => setDateClientPaidInvoice(value)}
+                        error={errors.dateClientPaidInvoice}
+                        required={true}
+                      />
                     </div>
                   </div>
 
@@ -892,30 +855,13 @@ function AdminFinancialGenerateInvoiceStep3Page() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Associate Signature Date{" "}
-                        <span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                          <CalendarIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
-                        </div>
-                        <input
-                          type="date"
-                          value={associateSignDate}
-                          onChange={(e) => setAssociateSignDate(e.target.value)}
-                          className={`w-full pl-10 pr-3 py-2 border ${
-                            errors.associateSignDate
-                              ? "border-red-500"
-                              : "border-gray-300"
-                          } rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base`}
-                        />
-                      </div>
-                      {errors.associateSignDate && (
-                        <p className="mt-1 text-xs text-red-600">
-                          {errors.associateSignDate}
-                        </p>
-                      )}
+                      <DateInput
+                        label="Associate Signature Date"
+                        value={associateSignDate}
+                        onChange={(value) => setAssociateSignDate(value)}
+                        error={errors.associateSignDate}
+                        required={true}
+                      />
                     </div>
 
                     <div>
@@ -976,7 +922,8 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                   </button>
 
                   <button
-                    type="submit"
+                    type="button"
+                    onClick={handleNext}
                     className="flex-1 sm:flex-initial inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                   >
                     Save & Next
@@ -984,7 +931,7 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                   </button>
                 </div>
               </div>
-            </form>
+            </div>
           </div>
         </div>
 

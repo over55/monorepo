@@ -254,3 +254,66 @@ export function formatDateForAPI(date) {
     return null;
   }
 }
+
+/**
+ * Ensures a date value is in ISO format for API submission
+ * @param {string|Date} dateValue - Date value to format
+ * @returns {string} - ISO formatted date string for API
+ */
+export function ensureISODateForAPI(dateValue) {
+  if (!dateValue) return "";
+
+  // Check if it's already in YYYY-MM-DD format
+  if (typeof dateValue === "string" && /^\d{4}-\d{2}-\d{2}$/.test(dateValue)) {
+    // Add time component for full ISO format
+    return `${dateValue}T00:00:00Z`;
+  }
+
+  // Try to parse and format
+  try {
+    let date;
+
+    if (typeof dateValue === "string") {
+      // Try parsing various formats
+      date = new Date(dateValue);
+
+      // If invalid, try parsing common formats
+      if (isNaN(date.getTime())) {
+        // Handle "Dec 31, 2024" format
+        const monthNames = [
+          "Jan",
+          "Feb",
+          "Mar",
+          "Apr",
+          "May",
+          "Jun",
+          "Jul",
+          "Aug",
+          "Sep",
+          "Oct",
+          "Nov",
+          "Dec",
+        ];
+        const match = dateValue.match(/^(\w{3})\s+(\d{1,2}),\s+(\d{4})$/);
+        if (match) {
+          const monthIndex = monthNames.indexOf(match[1]);
+          if (monthIndex !== -1) {
+            date = new Date(parseInt(match[3]), monthIndex, parseInt(match[2]));
+          }
+        }
+      }
+    } else if (dateValue instanceof Date) {
+      date = dateValue;
+    }
+
+    if (date && !isNaN(date.getTime())) {
+      // Return ISO string
+      return date.toISOString();
+    }
+  } catch (error) {
+    console.error("Error formatting date for API:", error);
+  }
+
+  // If all else fails, return the original value
+  return dateValue;
+}
