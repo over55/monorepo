@@ -361,7 +361,7 @@ function AdminStaffAddStep4Page() {
           </div>
         )}
 
-        {/* Main Content */}
+        {/* Main Content - REMOVED max-w-4xl mx-auto constraint */}
         {isLoading ? (
           <div className="bg-white shadow-sm rounded-lg p-8">
             <div className="flex items-center justify-center">
@@ -370,7 +370,7 @@ function AdminStaffAddStep4Page() {
             </div>
           </div>
         ) : (
-          <form onSubmit={onSubmitClick} className="max-w-4xl mx-auto">
+          <form onSubmit={onSubmitClick}>
             <div className="space-y-0">
               {/* Billing Address Section */}
               <DetailSection

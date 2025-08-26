@@ -25,6 +25,36 @@ const TASK_ITEM_NO_SURVEY_CONDUCTED_REASON_OPTIONS = [
   { value: 4, label: "Client no longer with company" },
 ];
 
+// Move DetailSection outside the main component to prevent recreation on each render
+const DetailSection = ({
+  title,
+  icon: Icon,
+  variant = "default",
+  children,
+}) => {
+  const variantStyles = {
+    default: "bg-gray-700",
+    success: "bg-green-700",
+    warning: "bg-amber-700",
+  };
+
+  return (
+    <div className="rounded-lg shadow-sm mb-4 sm:mb-6">
+      <div
+        className={`${variantStyles[variant]} px-4 sm:px-6 py-3 sm:py-4 rounded-t-lg`}
+      >
+        <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
+          <span className="truncate">{title}</span>
+        </h3>
+      </div>
+      <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
+        {children}
+      </div>
+    </div>
+  );
+};
+
 export default function AdminTaskItemSurveyStep2Page() {
   const { tid } = useParams();
   const navigate = useNavigate();
@@ -69,36 +99,6 @@ export default function AdminTaskItemSurveyStep2Page() {
     requestAnimationFrame(() => {
       window.scrollTo(0, scrollY);
     });
-  };
-
-  // Section Component with Dark Header
-  const DetailSection = ({
-    title,
-    icon: Icon,
-    variant = "default",
-    children,
-  }) => {
-    const variantStyles = {
-      default: "bg-gray-700",
-      success: "bg-green-700",
-      warning: "bg-amber-700",
-    };
-
-    return (
-      <div className="rounded-lg shadow-sm mb-4 sm:mb-6">
-        <div
-          className={`${variantStyles[variant]} px-4 sm:px-6 py-3 sm:py-4 rounded-t-lg`}
-        >
-          <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
-            <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
-            <span className="truncate">{title}</span>
-          </h3>
-        </div>
-        <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
-          {children}
-        </div>
-      </div>
-    );
   };
 
   const onSubmitClick = () => {
@@ -425,7 +425,7 @@ export default function AdminTaskItemSurveyStep2Page() {
               icon={ClipboardDocumentCheckIcon}
             >
               <div>
-                <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm sm:text-base font-semibold text-gray-700 mb-2">
                   Was there a survey conducted?
                   <span className="text-red-500 ml-1">*</span>
                 </label>
@@ -772,7 +772,7 @@ export default function AdminTaskItemSurveyStep2Page() {
                 variant="warning"
               >
                 <div className="space-y-4 sm:space-y-6">
-                  {/* Reason Select */}
+                  {/* Reason Select - Enhanced Styling from Page.jsx */}
                   <div>
                     <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
                       Please select why the survey was not conducted
@@ -783,7 +783,11 @@ export default function AdminTaskItemSurveyStep2Page() {
                       onChange={(e) =>
                         setNoSurveyConductedReason(parseInt(e.target.value))
                       }
-                      className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm sm:text-base"
+                      className={`block w-full rounded-md shadow-md border-2 px-4 py-3 text-sm md:text-base bg-white hover:bg-gray-50 transition-colors cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2714%27%20height%3D%278%27%20viewBox%3D%270%200%2014%208%27%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%3E%3Cpath%20d%3D%27M1%201l6%206%206-6%27%20stroke%3D%27%23374151%27%20stroke-width%3D%272%27%20fill%3D%27none%27%20fill-rule%3D%27evenodd%27%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_1rem_center] pr-10 ${
+                        errors.noSurveyConductedReason
+                          ? "border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500"
+                          : "border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                      }`}
                     >
                       {TASK_ITEM_NO_SURVEY_CONDUCTED_REASON_OPTIONS.map(
                         (option) => (
@@ -801,21 +805,31 @@ export default function AdminTaskItemSurveyStep2Page() {
                     )}
                   </div>
 
-                  {/* Other Reason Input */}
+                  {/* Other Reason Input - Fixed to prevent focus loss */}
                   {noSurveyConductedReason === 1 && (
                     <div>
-                      <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2">
+                      <label
+                        htmlFor="noSurveyConductedReasonOther"
+                        className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2"
+                      >
                         Please specify the reason
                         <span className="text-red-500 ml-1">*</span>
                       </label>
                       <input
+                        id="noSurveyConductedReasonOther"
+                        name="noSurveyConductedReasonOther"
                         type="text"
+                        autoComplete="off"
                         value={noSurveyConductedReasonOther}
-                        onChange={(e) =>
-                          setNoSurveyConductedReasonOther(e.target.value)
-                        }
+                        onChange={(e) => {
+                          setNoSurveyConductedReasonOther(e.target.value);
+                        }}
                         placeholder="Enter the specific reason..."
-                        className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm sm:text-base"
+                        className={`mt-1 block w-full rounded-md shadow-md border-2 px-4 py-3 text-sm md:text-base bg-white hover:bg-gray-50 transition-colors ${
+                          errors.noSurveyConductedReasonOther
+                            ? "border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500"
+                            : "border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                        }`}
                       />
                       {errors.noSurveyConductedReasonOther && (
                         <p className="mt-1 text-xs sm:text-sm text-red-600 flex items-center">
@@ -837,7 +851,11 @@ export default function AdminTaskItemSurveyStep2Page() {
                       onChange={(e) => setComment(e.target.value)}
                       placeholder="Write any additional comments here..."
                       rows={5}
-                      className="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm sm:text-base"
+                      className={`mt-1 block w-full rounded-md shadow-md border-2 px-4 py-3 text-sm md:text-base bg-white hover:bg-gray-50 transition-colors ${
+                        errors.comment
+                          ? "border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500"
+                          : "border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                      }`}
                     />
                     <p className="mt-1 text-xs text-gray-500">
                       Include any additional information here.

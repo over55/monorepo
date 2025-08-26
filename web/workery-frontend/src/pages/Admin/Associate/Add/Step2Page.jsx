@@ -116,7 +116,7 @@ function AdminAssociateAddStep2Page() {
 
   // Section Component with Dark Header Pattern
   const DetailSection = ({ title, icon: Icon, children, description }) => (
-    <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
+    <div className="bg-gray-700 rounded-lg shadow-sm mb-6">
       <div className="px-4 sm:px-6 py-3 sm:py-4">
         <h2 className="text-base sm:text-lg font-semibold text-white flex items-center">
           <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
@@ -134,12 +134,9 @@ function AdminAssociateAddStep2Page() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         {/* Responsive Breadcrumb */}
-        <nav
-          className="flex mb-4 sm:mb-6 overflow-x-auto"
-          aria-label="Breadcrumb"
-        >
+        <nav className="flex mb-4 overflow-x-auto" aria-label="Breadcrumb">
           <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
             <li className="inline-flex items-center">
               <Link
@@ -179,7 +176,7 @@ function AdminAssociateAddStep2Page() {
         </nav>
 
         {/* Page Title - Responsive */}
-        <div className="mb-4 sm:mb-6">
+        <div className="mb-6">
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center">
             <UserPlusIcon className="w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
             Add New Associate
@@ -191,7 +188,7 @@ function AdminAssociateAddStep2Page() {
         </div>
 
         {/* Wizard Steps - Mobile First Responsive Design */}
-        <div className="mb-4 sm:mb-6">
+        <div className="mb-6">
           {/* Mobile View - Simplified */}
           <div className="md:hidden bg-blue-50 border border-blue-200 rounded-lg p-3">
             <div className="flex items-center justify-between">
@@ -268,7 +265,7 @@ function AdminAssociateAddStep2Page() {
 
         {/* Error Message */}
         {errors.message && (
-          <div className="mb-4 sm:mb-6 bg-red-50 border border-red-200 text-red-800 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center justify-between">
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center justify-between">
             <span className="flex items-center text-xs sm:text-sm">
               <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
               <span>{errors.message}</span>
@@ -288,8 +285,8 @@ function AdminAssociateAddStep2Page() {
           icon={UserGroupIcon}
           description="Choose the appropriate category for this associate"
         >
-          <div className="p-4 sm:p-6 lg:p-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 max-w-5xl mx-auto">
+          <div className="p-4 sm:p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-4xl mx-auto">
               {/* Individual/Residential Card */}
               <div
                 className={`relative group cursor-pointer transform transition-all duration-300 ${
@@ -307,7 +304,7 @@ function AdminAssociateAddStep2Page() {
                   }`}
                 >
                   {/* Card Header with Gradient */}
-                  <div className="bg-gradient-to-br from-green-400 via-green-500 to-green-600 p-6 sm:p-8 lg:p-10 text-center relative overflow-hidden">
+                  <div className="bg-gradient-to-br from-green-400 via-green-500 to-green-600 p-6 sm:p-8 text-center relative overflow-hidden">
                     {/* Background Pattern */}
                     <div className="absolute inset-0 bg-black opacity-10"></div>
                     <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
@@ -315,52 +312,27 @@ function AdminAssociateAddStep2Page() {
 
                     {/* Icon Container */}
                     <div className="relative">
-                      <div className="bg-white/20 backdrop-blur-sm rounded-full w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 mx-auto flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300">
-                        <HomeIcon className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 text-white" />
-                      </div>
-                      <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2">
-                        <SparklesIcon className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-300 animate-pulse" />
+                      <div className="bg-white/20 backdrop-blur-sm rounded-full w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 mx-auto flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300">
+                        <HomeIcon className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 text-white" />
                       </div>
                     </div>
                   </div>
 
                   {/* Card Body */}
                   <div className="p-4 sm:p-6">
-                    <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center">
-                      <HomeIcon className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-green-600 flex-shrink-0" />
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 flex items-center justify-center">
+                      <HomeIcon className="w-5 h-5 mr-2 text-green-600" />
                       Individual
                     </h3>
-                    <p className="text-sm sm:text-base text-gray-600 text-center mb-4 sm:mb-6">
-                      For individual contractors and service providers working
-                      independently
+                    <p className="text-sm sm:text-base text-gray-600 text-center mb-4">
+                      For individual contractors and service providers
                     </p>
 
-                    {/* Features List */}
-                    <div className="space-y-2 mb-4 sm:mb-6">
-                      <div className="flex items-center text-xs sm:text-sm text-gray-700">
-                        <CheckIcon className="w-4 h-4 mr-2 text-green-500 flex-shrink-0" />
-                        <span>Personal profile management</span>
-                      </div>
-                      <div className="flex items-center text-xs sm:text-sm text-gray-700">
-                        <CheckIcon className="w-4 h-4 mr-2 text-green-500 flex-shrink-0" />
-                        <span>Direct client assignments</span>
-                      </div>
-                      <div className="flex items-center text-xs sm:text-sm text-gray-700">
-                        <CheckIcon className="w-4 h-4 mr-2 text-green-500 flex-shrink-0" />
-                        <span>Individual billing setup</span>
-                      </div>
-                    </div>
-
                     <button
-                      className={`w-full inline-flex items-center justify-center px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-semibold rounded-lg transition-all duration-300 ${
-                        selectedType === RESIDENTIAL_ASSOCIATE_TYPE_OF_ID
-                          ? "text-white bg-green-600 hover:bg-green-700"
-                          : "text-white bg-green-600 hover:bg-green-700"
-                      }`}
+                      className={`w-full inline-flex items-center justify-center px-3 sm:px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all duration-300`}
                     >
-                      <HomeIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                       Select Individual
-                      <ArrowRightIcon className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
+                      <ArrowRightIcon className="w-4 h-4 ml-2" />
                     </button>
                   </div>
 
@@ -390,7 +362,7 @@ function AdminAssociateAddStep2Page() {
                   }`}
                 >
                   {/* Card Header with Gradient */}
-                  <div className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 p-6 sm:p-8 lg:p-10 text-center relative overflow-hidden">
+                  <div className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 p-6 sm:p-8 text-center relative overflow-hidden">
                     {/* Background Pattern */}
                     <div className="absolute inset-0 bg-black opacity-10"></div>
                     <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
@@ -398,52 +370,27 @@ function AdminAssociateAddStep2Page() {
 
                     {/* Icon Container */}
                     <div className="relative">
-                      <div className="bg-white/20 backdrop-blur-sm rounded-full w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 mx-auto flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300">
-                        <BuildingOffice2Icon className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 text-white" />
-                      </div>
-                      <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2">
-                        <SparklesIcon className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-300 animate-pulse" />
+                      <div className="bg-white/20 backdrop-blur-sm rounded-full w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 mx-auto flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300">
+                        <BuildingOffice2Icon className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 text-white" />
                       </div>
                     </div>
                   </div>
 
                   {/* Card Body */}
                   <div className="p-4 sm:p-6">
-                    <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center">
-                      <BuildingOffice2Icon className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-blue-600 flex-shrink-0" />
+                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 flex items-center justify-center">
+                      <BuildingOffice2Icon className="w-5 h-5 mr-2 text-blue-600" />
                       Commercial
                     </h3>
-                    <p className="text-sm sm:text-base text-gray-600 text-center mb-4 sm:mb-6">
-                      For businesses, companies, and commercial service
-                      providers
+                    <p className="text-sm sm:text-base text-gray-600 text-center mb-4">
+                      For businesses and commercial providers
                     </p>
 
-                    {/* Features List */}
-                    <div className="space-y-2 mb-4 sm:mb-6">
-                      <div className="flex items-center text-xs sm:text-sm text-gray-700">
-                        <CheckIcon className="w-4 h-4 mr-2 text-blue-500 flex-shrink-0" />
-                        <span>Company profile setup</span>
-                      </div>
-                      <div className="flex items-center text-xs sm:text-sm text-gray-700">
-                        <CheckIcon className="w-4 h-4 mr-2 text-blue-500 flex-shrink-0" />
-                        <span>Multiple employee management</span>
-                      </div>
-                      <div className="flex items-center text-xs sm:text-sm text-gray-700">
-                        <CheckIcon className="w-4 h-4 mr-2 text-blue-500 flex-shrink-0" />
-                        <span>Business billing options</span>
-                      </div>
-                    </div>
-
                     <button
-                      className={`w-full inline-flex items-center justify-center px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-semibold rounded-lg transition-all duration-300 ${
-                        selectedType === COMMERCIAL_ASSOCIATE_TYPE_OF_ID
-                          ? "text-white bg-blue-600 hover:bg-blue-700"
-                          : "text-white bg-blue-600 hover:bg-blue-700"
-                      }`}
+                      className={`w-full inline-flex items-center justify-center px-3 sm:px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all duration-300`}
                     >
-                      <BuildingOffice2Icon className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                       Select Commercial
-                      <ArrowRightIcon className="w-4 h-4 sm:w-5 sm:h-5 ml-2" />
+                      <ArrowRightIcon className="w-4 h-4 ml-2" />
                     </button>
                   </div>
 
@@ -455,19 +402,6 @@ function AdminAssociateAddStep2Page() {
                   )}
                 </div>
               </div>
-            </div>
-
-            {/* Info Section */}
-            <div className="mt-6 sm:mt-8 p-3 sm:p-4 bg-blue-50 border border-blue-200 rounded-lg max-w-3xl mx-auto">
-              <p className="text-xs sm:text-sm text-blue-800 flex items-start">
-                <InformationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 mt-0.5" />
-                <span>
-                  <strong>Not sure which to choose?</strong> Select "Individual"
-                  for independent contractors or sole proprietors. Select
-                  "Commercial" for businesses with multiple employees or
-                  corporate structures.
-                </span>
-              </p>
             </div>
 
             {/* Cancel Button */}

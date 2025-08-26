@@ -23,7 +23,6 @@ import {
   ChevronLeftIcon,
   DocumentPlusIcon,
   InformationCircleIcon,
-  CreditCardIcon as PaymentIcon,
   UserIcon,
 } from "@heroicons/react/24/outline";
 import {
@@ -31,17 +30,36 @@ import {
   ORDER_INVOICE_QUOTE_VALIDITY_OPTIONS,
 } from "../../../../../../constants/FieldOptions";
 
+// Section Component with Dark Header - Moved outside to prevent recreation on each render
+const DetailSection = ({ title, icon: Icon, children }) => (
+  <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
+    <div className="px-4 sm:px-6 py-3 sm:py-4">
+      <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+        <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
+        <span className="truncate">{title}</span>
+      </h3>
+    </div>
+    <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
+      {children}
+    </div>
+  </div>
+);
+
 function AdminFinancialGenerateInvoiceStep3Page() {
   const { oid } = useParams();
   const navigate = useNavigate();
   const orderManager = useOrderManager();
-  const invoiceStorage = new InvoiceGenerationStorage();
+  const invoiceStorage = React.useMemo(
+    () => new InvoiceGenerationStorage(),
+    [],
+  );
 
   // Page state
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
   const [order, setOrder] = useState(null);
   const [showCancelWarning, setShowCancelWarning] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Form state
   const [invoiceLabourAmount, setInvoiceLabourAmount] = useState(0);
@@ -64,32 +82,15 @@ function AdminFinancialGenerateInvoiceStep3Page() {
   const [associateSignDate, setAssociateSignDate] = useState("");
   const [associateSignature, setAssociateSignature] = useState("");
 
-  const onUnauthorized = () => {
+  const onUnauthorized = React.useCallback(() => {
     navigate("/login?unauthorized=true");
-  };
+  }, [navigate]);
 
-  // Section Component with Dark Header
-  const DetailSection = ({ title, icon: Icon, children }) => (
-    <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
-      <div className="px-4 sm:px-6 py-3 sm:py-4">
-        <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
-          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
-          <span className="truncate">{title}</span>
-        </h3>
-      </div>
-      <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
-        {children}
-      </div>
-    </div>
-  );
-
-  // Load order details and existing data
+  // Load order details and existing data - only run once on mount
   useEffect(() => {
-    let mounted = true;
+    if (isInitialized) return; // Prevent re-running
 
     const fetchData = async () => {
-      if (!mounted) return;
-
       setFetching(true);
       setErrors({});
 
@@ -99,102 +100,86 @@ function AdminFinancialGenerateInvoiceStep3Page() {
           onUnauthorized,
         );
 
-        if (mounted) {
-          setOrder(orderData);
+        setOrder(orderData);
 
-          // Load existing wizard data
-          const existingData = invoiceStorage.getInvoiceGenerationData();
+        // Load existing wizard data
+        const existingData = invoiceStorage.getInvoiceGenerationData();
 
-          if (!existingData || existingData.invoiceId !== oid) {
-            // No data from previous steps, redirect back
-            navigate(`/admin/financial/${oid}/invoice/generate/step-1`);
-            return;
-          }
-
-          // Initialize form with existing data or order data
-          setInvoiceLabourAmount(
-            existingData.invoiceLabourAmount ||
-              orderData.invoiceLabourAmount ||
-              0,
-          );
-          setInvoiceMaterialAmount(
-            existingData.invoiceMaterialAmount ||
-              orderData.invoiceMaterialAmount ||
-              0,
-          );
-          setInvoiceOtherCostsAmount(
-            existingData.invoiceOtherCostsAmount ||
-              orderData.invoiceOtherCostsAmount ||
-              0,
-          );
-          setInvoiceTaxAmount(
-            existingData.invoiceTaxAmount || orderData.invoiceTaxAmount || 0,
-          );
-          setInvoiceTotalAmount(
-            existingData.invoiceTotalAmount ||
-              orderData.invoiceTotalAmount ||
-              0,
-          );
-          setInvoiceDepositAmount(
-            existingData.invoiceDepositAmount ||
-              orderData.invoiceDepositAmount ||
-              0,
-          );
-          setInvoiceAmountDue(
-            existingData.invoiceAmountDue || orderData.invoiceAmountDue || 0,
-          );
-          setInvoiceQuoteDays(existingData.invoiceQuoteDays || 30);
-          setAssociateTaxId(
-            existingData.associateTaxId || orderData.associateTaxId || "",
-          );
-          setInvoiceQuoteDate(
-            existingData.invoiceQuoteDate || orderData.completionDate || "",
-          );
-          setInvoiceCustomersApproval(
-            existingData.invoiceCustomersApproval || "Signature",
-          );
-          setLine01Notes(
-            existingData.line01Notes || orderData.line01Notes || "",
-          );
-          setLine02Notes(
-            existingData.line02Notes || orderData.line02Notes || "",
-          );
-          setDateClientPaidInvoice(
-            existingData.dateClientPaidInvoice ||
-              orderData.completionDate ||
-              "",
-          );
-          setPaymentMethods(
-            existingData.paymentMethods || orderData.paymentMethods || [],
-          );
-          setClientSignature(
-            existingData.clientSignature || orderData.customerName || "",
-          );
-          setAssociateSignDate(
-            existingData.associateSignDate || orderData.completionDate || "",
-          );
-          setAssociateSignature(
-            existingData.associateSignature || orderData.associateName || "",
-          );
+        if (!existingData || existingData.invoiceId !== oid) {
+          // No data from previous steps, redirect back
+          navigate(`/admin/financial/${oid}/invoice/generate/step-1`);
+          return;
         }
+
+        // Initialize form with existing data or order data
+        setInvoiceLabourAmount(
+          existingData.invoiceLabourAmount ||
+            orderData.invoiceLabourAmount ||
+            0,
+        );
+        setInvoiceMaterialAmount(
+          existingData.invoiceMaterialAmount ||
+            orderData.invoiceMaterialAmount ||
+            0,
+        );
+        setInvoiceOtherCostsAmount(
+          existingData.invoiceOtherCostsAmount ||
+            orderData.invoiceOtherCostsAmount ||
+            0,
+        );
+        setInvoiceTaxAmount(
+          existingData.invoiceTaxAmount || orderData.invoiceTaxAmount || 0,
+        );
+        setInvoiceTotalAmount(
+          existingData.invoiceTotalAmount || orderData.invoiceTotalAmount || 0,
+        );
+        setInvoiceDepositAmount(
+          existingData.invoiceDepositAmount ||
+            orderData.invoiceDepositAmount ||
+            0,
+        );
+        setInvoiceAmountDue(
+          existingData.invoiceAmountDue || orderData.invoiceAmountDue || 0,
+        );
+        setInvoiceQuoteDays(existingData.invoiceQuoteDays || 30);
+        setAssociateTaxId(
+          existingData.associateTaxId || orderData.associateTaxId || "",
+        );
+        setInvoiceQuoteDate(
+          existingData.invoiceQuoteDate || orderData.completionDate || "",
+        );
+        setInvoiceCustomersApproval(
+          existingData.invoiceCustomersApproval || "Signature",
+        );
+        setLine01Notes(existingData.line01Notes || orderData.line01Notes || "");
+        setLine02Notes(existingData.line02Notes || orderData.line02Notes || "");
+        setDateClientPaidInvoice(
+          existingData.dateClientPaidInvoice || orderData.completionDate || "",
+        );
+        setPaymentMethods(
+          existingData.paymentMethods || orderData.paymentMethods || [],
+        );
+        setClientSignature(
+          existingData.clientSignature || orderData.customerName || "",
+        );
+        setAssociateSignDate(
+          existingData.associateSignDate || orderData.completionDate || "",
+        );
+        setAssociateSignature(
+          existingData.associateSignature || orderData.associateName || "",
+        );
+
+        setIsInitialized(true); // Mark as initialized
       } catch (error) {
-        if (mounted) {
-          console.error("Failed to fetch order:", error);
-          setErrors({ general: "Failed to load order details" });
-        }
+        console.error("Failed to fetch order:", error);
+        setErrors({ general: "Failed to load order details" });
       } finally {
-        if (mounted) {
-          setFetching(false);
-        }
+        setFetching(false);
       }
     };
 
     fetchData();
-
-    return () => {
-      mounted = false;
-    };
-  }, [oid]);
+  }, []); // Empty dependency array - only run once
 
   const handlePaymentMethodToggle = (methodValue) => {
     setPaymentMethods((prev) => {
@@ -411,11 +396,14 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                       <p className="text-xs text-gray-500">Complete</p>
                     </div>
                   </div>
-                  {index < 2 && (
+                  {index < 1 && (
                     <div className="mx-2 w-16 h-0.5 bg-green-600"></div>
                   )}
                 </React.Fragment>
               ))}
+
+              {/* Connector between step 2 and 3 */}
+              <div className="mx-2 w-16 h-0.5 bg-green-600"></div>
 
               {/* Step 3 - Active */}
               <div className="flex items-center">
@@ -463,7 +451,7 @@ function AdminFinancialGenerateInvoiceStep3Page() {
           </div>
         )}
 
-        {/* Main Content */}
+        {/* Main Content - Removed max-w-4xl constraint from form */}
         <div className="bg-white shadow-sm rounded-lg">
           {/* Header with Dark Background */}
           <div className="bg-gray-700 rounded-t-lg px-4 sm:px-6 py-4 sm:py-5">
@@ -474,7 +462,7 @@ function AdminFinancialGenerateInvoiceStep3Page() {
           </div>
 
           <div className="p-4 sm:p-6">
-            <form onSubmit={handleNext} className="max-w-4xl mx-auto">
+            <form onSubmit={handleNext}>
               {/* Financial Summary Section */}
               <DetailSection title="Financial Summary" icon={BanknotesIcon}>
                 <div className="space-y-4">
