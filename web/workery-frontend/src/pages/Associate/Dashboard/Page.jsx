@@ -3,7 +3,7 @@
 function AssociateDashboardPage() {
   return (
     <div>
-      <h1>Welcome to the Customer</h1>
+      <h1>Welcome to the Associate</h1>
     </div>
   );
 }
