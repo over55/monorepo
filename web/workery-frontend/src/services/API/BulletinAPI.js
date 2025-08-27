@@ -49,9 +49,13 @@ export class BulletinAPI {
       // Add search params
       if (params.search) queryParams.append("search", params.search);
 
-      // Add sorting params
-      if (params.sortBy && params.sortOrder) {
-        queryParams.append("sort_by", `${params.sortBy},${params.sortOrder}`);
+      // FIX: Add sorting params as separate parameters matching backend expectations
+      if (params.sortBy) {
+        queryParams.append("sort_field", params.sortBy);
+      }
+
+      if (params.sortOrder) {
+        queryParams.append("sort_order", params.sortOrder);
       }
 
       // Add any additional filters
@@ -117,10 +121,18 @@ export class BulletinAPI {
         onUnauthorizedCallback,
       );
 
-      // Build URL with filters map (matching old implementation exactly)
+      // Build URL with filters map
       let aURL = this.endpoints.BULLETINS;
       filtersMap.forEach((value, key) => {
         let decamelizedkey = decamelize(key);
+
+        // FIX: Special handling for sort parameters to match backend expectations
+        if (key === "sortBy") {
+          decamelizedkey = "sort_field";
+        } else if (key === "sortOrder") {
+          decamelizedkey = "sort_order";
+        }
+
         if (aURL.indexOf("?") > -1) {
           aURL += "&" + decamelizedkey + "=" + encodeURIComponent(value);
         } else {
