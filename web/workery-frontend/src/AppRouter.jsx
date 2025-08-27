@@ -205,6 +205,7 @@ import AdminOrderDetailAttachmentAddPage from "./pages/Admin/Order/Detail/Attach
 import AdminOrderDetailAttachmentDetailPage from "./pages/Admin/Order/Detail/Attachment/Detail/Page";
 import AdminOrderDetailAttachmentListPage from "./pages/Admin/Order/Detail/Attachment/List/Page";
 import AdminOrderDetailAttachmentUpdatePage from "./pages/Admin/Order/Detail/Attachment/Update/Page";
+import AdminOrderDetailAttachmentDeletePage from "./pages/Admin/Order/Detail/Attachment/Delete/Page";
 import AdminOrderDetailActivitySheetListPage from "./pages/Admin/Order/Detail/ActivitySheet/List/Page";
 import AdminOrderUpdatePage from "./pages/Admin/Order/Update/Page";
 
@@ -1310,7 +1311,7 @@ function AppRouter() {
               }
             />
             <Route
-              path="/admin/associate/:cid/attachment/:aid/delete"
+              path="/admin/associate/:aid/attachment/:atid/delete"
               element={
                 <Layout>
                   <AdminAssociateDetailAttachmentDeletePage />
@@ -1794,6 +1795,14 @@ function AppRouter() {
               element={
                 <Layout>
                   <AdminOrderDetailAttachmentUpdatePage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/order/:oid/attachment/:aid/delete"
+              element={
+                <Layout>
+                  <AdminOrderDetailAttachmentDeletePage />
                 </Layout>
               }
             />
