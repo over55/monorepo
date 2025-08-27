@@ -320,6 +320,7 @@ import AccountTwoFactorAuthenticationEnableStep1Page from "./pages/Admin/Account
 import AccountTwoFactorAuthenticationEnableStep2Page from "./pages/Admin/Account/More/2FA/Enable/Step2Page.jsx";
 import AccountTwoFactorAuthenticationEnableStep3Page from "./pages/Admin/Account/More/2FA/Enable/Step3Page.jsx";
 import AccountTwoFactorAuthenticationBackupCodePage from "./pages/Admin/Account/More/2FA/BackupCodeGenerate/Page.jsx";
+import AdminChangePasswordPage from "./pages/Admin/Account/More/ChangePassword/Page.jsx";
 
 ////////////////////////////////////////////////////////////////
 // Associate pages
@@ -2550,10 +2551,10 @@ function AppRouter() {
               }
             />
             <Route
-              path="/account/more/change-password"
+              path="/admin/account/more/change-password"
               element={
                 <Layout>
-                  <PlaceholderPage title="Change My Password" />
+                  <AdminChangePasswordPage />
                 </Layout>
               }
             />
