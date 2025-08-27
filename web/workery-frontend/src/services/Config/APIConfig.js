@@ -163,7 +163,7 @@ export const API_ENDPOINTS = {
   // Attachment endpoints
   ATTACHMENTS: "/attachments",
   ATTACHMENT_DETAIL: "/attachment/{id}",
-  ATTACHMENT_UPLOAD: "/attachments/upload",
+  ATTACHMENT_UPLOAD: "/attachments",
   ATTACHMENT_DOWNLOAD: "/attachment/{id}/download",
   ATTACHMENT_THUMBNAIL: "/attachment/{id}/thumbnail",
 

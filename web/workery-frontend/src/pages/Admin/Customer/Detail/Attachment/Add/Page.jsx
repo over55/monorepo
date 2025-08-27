@@ -21,6 +21,7 @@ import {
   useCustomerManager,
   useAuthManager,
 } from "../../../../../../services/Services";
+import { ATTACHMENT_TYPES } from "../../../../../../constants/Attachment";
 
 function AdminCustomerDetailAttachmentAddPage() {
   const { cid } = useParams();
@@ -101,13 +102,15 @@ function AdminCustomerDetailAttachmentAddPage() {
         return;
       }
 
-      // Prepare metadata
+      // Prepare metadata with correct field names
       const metadata = {
         title: title.trim(),
         description: description.trim(),
-        entityType: "customer",
-        entityId: cid,
+        ownershipType: ATTACHMENT_TYPES.CUSTOMER, // Use numeric constant
+        ownershipId: cid,
       };
+
+      console.log("Uploading attachment with metadata:", metadata);
 
       // Upload attachment
       await attachmentManager.uploadAttachment(
@@ -127,9 +130,23 @@ function AdminCustomerDetailAttachmentAddPage() {
       }, 2000);
     } catch (error) {
       console.error("Failed to upload attachment:", error);
-      setErrors(error);
-      setAlertMessage("Failed to upload attachment");
-      setAlertStatus("error");
+
+      // Handle specific error messages
+      if (error.title) {
+        setErrors({ title: error.title });
+      } else if (error.description) {
+        setErrors({ description: error.description });
+      } else if (error.file) {
+        setErrors({ file: error.file });
+      } else if (error.message) {
+        setErrors({ general: error.message });
+        setAlertMessage(error.message);
+        setAlertStatus("error");
+      } else {
+        setErrors({ general: "Failed to upload attachment" });
+        setAlertMessage("Failed to upload attachment");
+        setAlertStatus("error");
+      }
     } finally {
       setFetching(false);
       setUploadProgress(0);

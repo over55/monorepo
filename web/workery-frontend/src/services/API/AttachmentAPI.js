@@ -1,8 +1,9 @@
-// File Path: monorepo/web/workery-frontend/src/services/API/AttachmentAPI.js
+// File Path: web/workery-frontend/src/services/API/AttachmentAPI.js
 
 import { camelizeKeys, decamelizeKeys } from "humps";
 import { createAuthenticatedAxios } from "../Helpers/AuthenticatedAxios";
 import { DateTime } from "luxon";
+import { ATTACHMENT_TYPE_NAMES } from "../../constants/Attachment";
 
 /**
  * AttachmentAPI handles all attachment-related API calls
@@ -19,7 +20,6 @@ export class AttachmentAPI {
         baseURL: this.baseURL,
         attachmentsEndpoint: this.endpoints.ATTACHMENTS,
         attachmentDetailEndpoint: this.endpoints.ATTACHMENT_DETAIL,
-        attachmentUploadEndpoint: this.endpoints.ATTACHMENT_UPLOAD,
         attachmentDownloadEndpoint: this.endpoints.ATTACHMENT_DOWNLOAD,
         attachmentThumbnailEndpoint: this.endpoints.ATTACHMENT_THUMBNAIL,
       });
@@ -28,7 +28,7 @@ export class AttachmentAPI {
 
   /**
    * Gets list of attachments with optional filtering, sorting, and pagination
-   * @param {Object} params - Query parameters { page, limit, search, sortBy, sortOrder, entityType, entityId, fileType }
+   * @param {Object} params - Query parameters { page, limit, search, sortBy, sortOrder, ownershipType, ownershipId, fileType }
    * @param {Function} onUnauthorizedCallback - Called when token refresh fails
    * @returns {Promise<Object>} - Attachments list with pagination data
    */
@@ -56,17 +56,25 @@ export class AttachmentAPI {
         queryParams.append("sort_by", `${params.sortBy},${params.sortOrder}`);
       }
 
-      // Add entity filters
-      if (params.entityType)
-        queryParams.append("entity_type", params.entityType);
-      if (params.entityId) queryParams.append("entity_id", params.entityId);
+      // Add ownership filters (using backend field names)
+      if (params.ownershipType) {
+        queryParams.append("ownership_type", params.ownershipType);
+      }
+      if (params.ownershipId) {
+        queryParams.append("ownership_id", params.ownershipId);
+      }
 
       // Add file type filter
       if (params.fileType) queryParams.append("file_type", params.fileType);
 
-      // IMPORTANT: Handle order_wjid with underscore for backend
+      // Handle order_wjid with underscore for backend
       if (params.orderWjid) {
-        queryParams.append("order_wjid", params.orderWjid); // Backend expects underscore
+        queryParams.append("ownership_wjid", params.orderWjid);
+      }
+
+      // Handle role-based filtering
+      if (params.ownershipRole) {
+        queryParams.append("ownership_role", params.ownershipRole);
       }
 
       // Add any additional filters
@@ -78,10 +86,11 @@ export class AttachmentAPI {
             "search",
             "sortBy",
             "sortOrder",
-            "entityType",
-            "entityId",
+            "ownershipType",
+            "ownershipId",
             "fileType",
-            "orderWjid", // Exclude from generic handling
+            "orderWjid",
+            "ownershipRole",
           ].includes(key)
         ) {
           if (
@@ -99,7 +108,7 @@ export class AttachmentAPI {
         ? `${this.endpoints.ATTACHMENTS}?${queryString}`
         : this.endpoints.ATTACHMENTS;
 
-      console.log("AttachmentAPI: Fetching attachments with URL:", url); // Debug log
+      console.log("AttachmentAPI: Fetching attachments with URL:", url);
 
       // Make the API call
       const response = await authenticatedAxios.get(url);
@@ -136,7 +145,7 @@ export class AttachmentAPI {
   /**
    * Uploads a new attachment
    * @param {File} file - File object to upload
-   * @param {Object} metadata - Additional metadata { entityType, entityId, title, description }
+   * @param {Object} metadata - Additional metadata { ownershipType, ownershipId, title, description }
    * @param {Function} onProgressCallback - Called with upload progress (0-100)
    * @param {Function} onUnauthorizedCallback - Called when token refresh fails
    * @returns {Promise<Object>} - Created attachment data
@@ -164,17 +173,47 @@ export class AttachmentAPI {
       const formData = new FormData();
       formData.append("file", file);
 
-      // Add metadata
-      if (metadata.entityType)
-        formData.append("entity_type", metadata.entityType);
-      if (metadata.entityId) formData.append("entity_id", metadata.entityId);
-      if (metadata.title) formData.append("title", metadata.title);
-      if (metadata.description)
+      // Add metadata with correct field names for backend
+      if (metadata.title) {
+        formData.append("title", metadata.title);
+      }
+      if (metadata.description) {
         formData.append("description", metadata.description);
+      }
 
-      // IMPORTANT: Handle order_wjid with underscore for backend
-      if (metadata.orderWjid) {
-        formData.append("order_wjid", metadata.orderWjid); // Backend expects underscore
+      // Handle ownership fields
+      if (metadata.ownershipType) {
+        // Convert string type to numeric if needed
+        const ownershipType =
+          ATTACHMENT_TYPE_NAMES[metadata.ownershipType] ||
+          metadata.ownershipType;
+        formData.append("ownership_type", ownershipType.toString());
+      }
+
+      if (metadata.ownershipId) {
+        formData.append("ownership_id", metadata.ownershipId);
+      }
+
+      if (metadata.ownershipWjid) {
+        formData.append("ownership_wjid", metadata.ownershipWjid);
+      }
+
+      // Legacy support: Map entityType/entityId to ownership fields
+      if (!metadata.ownershipType && metadata.entityType) {
+        const ownershipType =
+          ATTACHMENT_TYPE_NAMES[metadata.entityType] || metadata.entityType;
+        formData.append("ownership_type", ownershipType.toString());
+      }
+      if (!metadata.ownershipId && metadata.entityId) {
+        formData.append("ownership_id", metadata.entityId);
+      }
+
+      // Debug log the form data
+      if (process.env.NODE_ENV === "development") {
+        console.log("AttachmentAPI: Uploading with FormData:");
+        for (let [key, value] of formData.entries()) {
+          console.log(`  ${key}:`, value);
+        }
       }
 
       // Configure upload with progress tracking
@@ -192,9 +231,9 @@ export class AttachmentAPI {
         },
       };
 
-      // Make the API call
+      // Make the API call to the correct endpoint
       const response = await authenticatedAxios.post(
-        this.endpoints.ATTACHMENT_UPLOAD,
+        this.endpoints.ATTACHMENTS,
         formData,
         config,
       );
@@ -301,7 +340,7 @@ export class AttachmentAPI {
       // Convert camelCase to snake_case for API
       let decamelizedData = decamelizeKeys(attachmentData);
 
-      // Handle the special case for ID field (from old code pattern)
+      // Handle the special case for ID field
       if (decamelizedData.i_d) {
         decamelizedData.id = decamelizedData.i_d;
         delete decamelizedData.i_d;
@@ -536,7 +575,7 @@ export class AttachmentAPI {
 
   /**
    * Gets attachment statistics
-   * @param {Object} params - Query parameters { entityType, entityId, startDate, endDate }
+   * @param {Object} params - Query parameters { ownershipType, ownershipId, startDate, endDate }
    * @param {Function} onUnauthorizedCallback - Called when token refresh fails
    * @returns {Promise<Object>} - Attachment statistics
    */
@@ -552,9 +591,10 @@ export class AttachmentAPI {
       // Build query parameters
       const queryParams = new URLSearchParams();
 
-      if (params.entityType)
-        queryParams.append("entity_type", params.entityType);
-      if (params.entityId) queryParams.append("entity_id", params.entityId);
+      if (params.ownershipType)
+        queryParams.append("ownership_type", params.ownershipType);
+      if (params.ownershipId)
+        queryParams.append("ownership_id", params.ownershipId);
       if (params.startDate) queryParams.append("start_date", params.startDate);
       if (params.endDate) queryParams.append("end_date", params.endDate);
 
