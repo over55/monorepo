@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
+	"strings"
 
 	naics_s "github.com/over55/monorepo/cloud/workery-backend/app/naics/datastore"
 	"github.com/over55/monorepo/cloud/workery-backend/utils/httperror"
@@ -15,8 +16,8 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	f := &naics_s.NorthAmericanIndustryClassificationSystemPaginationListFilter{
 		Cursor:    "",
 		PageSize:  25,
-		SortField: "_id",
-		SortOrder: 1, // 1=ascending | -1=descending
+		SortField: "code_str", // Changed from "_id" to "code_str" to avoid duplicate _id issue
+		SortOrder: 1,          // 1=ascending | -1=descending
 		Status:    naics_s.StatusActive,
 	}
 
@@ -37,17 +38,33 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		f.PageSize = pageSize
 	}
 
-	sortField := query.Get("sort_field")
-	if sortField != "" {
-		f.SortField = sortField
-	}
+	// Handle both old format (sort_field, sort_order) and new format (sort_by)
+	sortBy := query.Get("sort_by")
+	if sortBy != "" {
+		// New format: "field,ORDER"
+		parts := strings.Split(sortBy, ",")
+		if len(parts) == 2 {
+			f.SortField = parts[0]
+			if parts[1] == "ASC" {
+				f.SortOrder = naics_s.OrderAscending
+			} else if parts[1] == "DESC" {
+				f.SortOrder = naics_s.OrderDescending
+			}
+		}
+	} else {
+		// Old format: separate sort_field and sort_order
+		sortField := query.Get("sort_field")
+		if sortField != "" {
+			f.SortField = sortField
+		}
 
-	sortOrder := query.Get("sort_order")
-	if sortOrder == "ASC" {
-		f.SortOrder = naics_s.OrderAscending
-	}
-	if sortOrder == "DESC" {
-		f.SortOrder = naics_s.OrderDescending
+		sortOrder := query.Get("sort_order")
+		if sortOrder == "ASC" {
+			f.SortOrder = naics_s.OrderAscending
+		}
+		if sortOrder == "DESC" {
+			f.SortOrder = naics_s.OrderDescending
+		}
 	}
 
 	searchKeyword := query.Get("search")
