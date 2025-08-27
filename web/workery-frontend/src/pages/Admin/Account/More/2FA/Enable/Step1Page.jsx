@@ -159,8 +159,8 @@ function AccountTwoFactorAuthenticationEnableStep1Page() {
       icon: UserCircleIcon,
     },
     {
-      label: "2FA",
-      href: "/admin/account/2fa",
+      label: "Two-Factor Authentication",
+      href: "/admin/account/more/2fa",
       icon: ShieldCheckIcon,
     },
     {
@@ -321,7 +321,7 @@ function AccountTwoFactorAuthenticationEnableStep1Page() {
           <div className="flex justify-between items-center pt-6 border-t">
             <Button
               variant="secondary"
-              onClick={() => navigate("/admin/account/2fa")}
+              onClick={() => navigate("/admin/account/more/2fa")}
               className="flex items-center"
             >
               <ArrowLeftIcon className="h-4 w-4 mr-2" />

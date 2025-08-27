@@ -174,8 +174,8 @@ function AccountTwoFactorAuthenticationEnableStep2Page() {
       icon: UserCircleIcon,
     },
     {
-      label: "2FA",
-      href: "/admin/account/2fa",
+      label: "Two-Factor Authentication",
+      href: "/admin/account/more/2fa",
       icon: ShieldCheckIcon,
     },
     {

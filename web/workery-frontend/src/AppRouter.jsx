@@ -319,6 +319,7 @@ import AccountTwoFactorAuthenticationPage from "./pages/Admin/Account/More/2FA/P
 import AccountTwoFactorAuthenticationEnableStep1Page from "./pages/Admin/Account/More/2FA/Enable/Step1Page.jsx";
 import AccountTwoFactorAuthenticationEnableStep2Page from "./pages/Admin/Account/More/2FA/Enable/Step2Page.jsx";
 import AccountTwoFactorAuthenticationEnableStep3Page from "./pages/Admin/Account/More/2FA/Enable/Step3Page.jsx";
+import AccountTwoFactorAuthenticationBackupCodePage from "./pages/Admin/Account/More/2FA/BackupCodeGenerate/Page.jsx";
 
 ////////////////////////////////////////////////////////////////
 // Associate pages
@@ -2544,7 +2545,7 @@ function AppRouter() {
               path="/admin/account/2fa/backup-code"
               element={
                 <Layout>
-                  <PlaceholderPage title="My 2FA Backup Codes" />
+                  <AccountTwoFactorAuthenticationBackupCodePage />
                 </Layout>
               }
             />
