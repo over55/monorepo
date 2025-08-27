@@ -2,6 +2,7 @@ package datastore
 
 import (
 	"context"
+	"log/slog"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -24,25 +25,31 @@ func (impl NationalOccupationalClassificationStorerImpl) CountByFilter(ctx conte
 		filter["status"] = f.Status
 	}
 
+	// FIXED: Match the list logic for code search
 	if f.CodeStr != "" {
-		filter["code_str"] = bson.M{"$regex": primitive.Regex{Pattern: f.CodeStr, Options: "i"}}
+		filter["$or"] = []bson.M{
+			{"code_str": bson.M{"$regex": primitive.Regex{Pattern: f.CodeStr, Options: "i"}}},
+			{"code": bson.M{"$regex": primitive.Regex{Pattern: f.CodeStr, Options: "i"}}},
+		}
 	}
 
+	// FIXED: Case-insensitive search for unit group title
 	if f.UnitGroupTitle != "" {
 		filter["unit_group_title"] = bson.M{"$regex": primitive.Regex{Pattern: f.UnitGroupTitle, Options: "i"}}
 	}
 
-	// Include Full-text search
-	if f.SearchText != "" {
+	// FIXED: Full-text search - only add if no other specific searches
+	if f.SearchText != "" && f.CodeStr == "" {
 		filter["$text"] = bson.M{"$search": f.SearchText}
 	}
 
-	// impl.Logger.Debug("counting w/ filter:",
-	// 	slog.Any("filter", filter))
+	impl.Logger.Debug("counting w/ filter:",
+		slog.Any("filter", filter))
 
 	// Use the CountDocuments method to count the matching documents.
 	count, err := impl.Collection.CountDocuments(ctx, filter)
 	if err != nil {
+		impl.Logger.Error("database count error", slog.Any("error", err))
 		return 0, err
 	}
 

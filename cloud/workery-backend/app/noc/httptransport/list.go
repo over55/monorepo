@@ -2,6 +2,7 @@ package httptransport
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"strconv"
 
@@ -15,8 +16,8 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	f := &noc_s.NationalOccupationalClassificationPaginationListFilter{
 		Cursor:    "",
 		PageSize:  25,
-		SortField: "_id",
-		SortOrder: 1, // 1=ascending | -1=descending
+		SortField: "unit_group_title", // FIXED: Changed default from "_id"
+		SortOrder: 1,                  // 1=ascending | -1=descending
 		Status:    noc_s.StatusActive,
 	}
 
@@ -73,8 +74,18 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 		f.UnitGroupTitle = unitGroupTitle
 	}
 
+	// Debug logging
+	h.Logger.Debug("NOC list request parameters",
+		slog.String("search", searchKeyword),
+		slog.String("code", code),
+		slog.String("ugt", unitGroupTitle),
+		slog.String("sort_field", f.SortField),
+		slog.Int("sort_order", int(f.SortOrder)),
+		slog.Int64("page_size", f.PageSize))
+
 	list, err := h.Controller.ListAndCountByFilter(ctx, f)
 	if err != nil {
+		h.Logger.Error("controller list error", slog.Any("error", err))
 		httperror.ResponseError(w, err)
 		return
 	}

@@ -56,7 +56,7 @@ export class NOCAPI {
 
   /**
    * Gets list of NOCs with optional filtering, sorting, and pagination
-   * @param {Object} params - Query parameters { page, limit, search, sortBy, sortOrder }
+   * @param {Object} params - Query parameters { page, limit, search, sortBy, sortOrder, code, ugt }
    * @param {Function} onUnauthorizedCallback - Called when token refresh fails
    * @returns {Promise<Object>} - NOCs list with pagination data
    */
@@ -76,17 +76,32 @@ export class NOCAPI {
       if (params.page) queryParams.append("page", params.page);
       if (params.limit) queryParams.append("page_size", params.limit);
 
-      // Add search params
+      // Add search params - FIXED: Handle all search types properly
       if (params.search) queryParams.append("search", params.search);
+      if (params.code) queryParams.append("code", params.code);
+      if (params.ugt) queryParams.append("ugt", params.ugt);
 
-      // Add sorting params
-      if (params.sortBy && params.sortOrder) {
-        queryParams.append("sort_by", `${params.sortBy},${params.sortOrder}`);
+      // Add sorting params - FIXED: Use correct backend format
+      if (params.sortBy) {
+        queryParams.append("sort_field", params.sortBy);
+        if (params.sortOrder) {
+          queryParams.append("sort_order", params.sortOrder);
+        }
       }
 
-      // Add any additional filters
+      // Add any additional filters that aren't already handled
       Object.keys(params).forEach((key) => {
-        if (!["page", "limit", "search", "sortBy", "sortOrder"].includes(key)) {
+        if (
+          ![
+            "page",
+            "limit",
+            "search",
+            "sortBy",
+            "sortOrder",
+            "code",
+            "ugt",
+          ].includes(key)
+        ) {
           if (
             params[key] !== undefined &&
             params[key] !== null &&
@@ -101,6 +116,12 @@ export class NOCAPI {
       const url = queryString
         ? `${this.endpoints.NATIONAL_OCCUPATIONAL_CLASSIFICATIONS}?${queryString}`
         : this.endpoints.NATIONAL_OCCUPATIONAL_CLASSIFICATIONS;
+
+      // Debug log in development
+      if (process.env.NODE_ENV === "development") {
+        console.log("NOCAPI: Making request to:", url);
+        console.log("NOCAPI: Query params:", queryString);
+      }
 
       // Make the API call
       const response = await authenticatedAxios.get(url);
