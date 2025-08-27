@@ -315,6 +315,7 @@ import AdminHelpPage from "./pages/Admin/Help/Page";
 import AdminAccountDetailPage from "./pages/Admin/Account/Detail/Page.jsx";
 import AdminAccountUpdatePage from "./pages/Admin/Account/Update/Page.jsx";
 import AccountMorePage from "./pages/Admin/Account/More/Page.jsx";
+import AccountTwoFactorAuthenticationPage from "./pages/Admin/Account/More/2FA/Page.jsx";
 
 ////////////////////////////////////////////////////////////////
 // Associate pages
@@ -2504,17 +2505,16 @@ function AppRouter() {
                 </Layout>
               }
             />
-
-            {/* Account routes (WITH LAYOUT) */}
-
             <Route
-              path="/account/2fa"
+              path="/admin/account/more/2fa"
               element={
                 <Layout>
-                  <PlaceholderPage title="My 2FA Settings" />
+                  <AccountTwoFactorAuthenticationPage />
                 </Layout>
               }
             />
+
+            {/* Account routes (WITH LAYOUT) */}
             <Route
               path="/account/2fa/setup/step-1"
               element={
