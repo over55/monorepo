@@ -6,6 +6,7 @@ import {
   useDashboardManager,
   useAuthManager,
   useBulletinManager,
+  useAssociateAwayLogManager,
 } from "../../../services/Services";
 import {
   Card,
@@ -27,11 +28,28 @@ import {
   TrashIcon,
   ExclamationTriangleIcon,
   ArrowRightIcon,
+  CalendarDaysIcon,
+  CalendarIcon,
+  ClockIcon,
+  ShieldExclamationIcon,
 } from "@heroicons/react/24/outline";
+
+// Constants for associate away log reasons
+const REASON_MAP = {
+  1: "Other",
+  2: "Going on vacation",
+  3: "Personal reasons",
+  4: "Commercial insurance expired",
+  5: "Police check expired",
+};
+
+const REASON_COMMERCIAL_INSURANCE_EXPIRED = 4;
+const REASON_POLICE_CHECK_EXPIRED = 5;
 
 function AdminDashboardPage() {
   const dashboardManager = useDashboardManager();
   const bulletinManager = useBulletinManager();
+  const associateAwayLogManager = useAssociateAwayLogManager();
   const authManager = useAuthManager();
   const navigate = useNavigate();
 
@@ -39,6 +57,7 @@ function AdminDashboardPage() {
   const [isFetching, setFetching] = useState(false);
   const [dashboard, setDashboard] = useState({});
   const [bulletins, setBulletins] = useState([]);
+  const [associateAwayLogs, setAssociateAwayLogs] = useState([]);
 
   // Modal states
   const [showBulletinModal, setShowBulletinModal] = useState(false);
@@ -49,6 +68,7 @@ function AdminDashboardPage() {
 
   // Constants
   const MAX_BULLETINS_DISPLAY = 10;
+  const MAX_AWAY_LOGS_DISPLAY = 10;
 
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
@@ -56,7 +76,6 @@ function AdminDashboardPage() {
 
   // Fetch dashboard statistics
   const fetchDashboard = async () => {
-    setFetching(true);
     setErrors({});
 
     try {
@@ -66,8 +85,6 @@ function AdminDashboardPage() {
     } catch (error) {
       console.error("AdminDashboard: Failed to fetch dashboard:", error);
       setErrors({ fetch: error.message || "Failed to load dashboard data" });
-    } finally {
-      setFetching(false);
     }
   };
 
@@ -101,10 +118,44 @@ function AdminDashboardPage() {
     }
   };
 
+  // Fetch associate away logs - limited to recent 10 active logs
+  const fetchAssociateAwayLogs = async () => {
+    try {
+      // Fetch only active away logs for dashboard
+      const params = {
+        page: 1,
+        limit: MAX_AWAY_LOGS_DISPLAY,
+        status: 1, // Active away logs only
+        sortBy: "created_at",
+        sortOrder: "DESC",
+      };
+
+      const response = await associateAwayLogManager.getAssociateAwayLogs(
+        params,
+        onUnauthorized,
+        true,
+      );
+
+      if (response && response.results) {
+        setAssociateAwayLogs(response.results);
+        console.log("Associate away logs loaded:", response.results.length);
+      } else {
+        setAssociateAwayLogs([]);
+      }
+    } catch (error) {
+      console.error("Failed to fetch associate away logs:", error);
+      setAssociateAwayLogs([]);
+    }
+  };
+
   // Initial load
   const loadAllData = async () => {
     setFetching(true);
-    await Promise.all([fetchDashboard(), fetchBulletins()]);
+    await Promise.all([
+      fetchDashboard(),
+      fetchBulletins(),
+      fetchAssociateAwayLogs(),
+    ]);
     setFetching(false);
   };
 
@@ -192,6 +243,41 @@ function AdminDashboardPage() {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  // Format date helper
+  const formatDate = (dateString) => {
+    if (!dateString) return "-";
+    try {
+      return new Date(dateString).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    } catch {
+      return dateString;
+    }
+  };
+
+  // Get reason display with icon
+  const getReasonDisplay = (awayLog) => {
+    const hasExpiredDoc =
+      awayLog.reason === REASON_COMMERCIAL_INSURANCE_EXPIRED ||
+      awayLog.reason === REASON_POLICE_CHECK_EXPIRED;
+
+    const reasonText =
+      awayLog.reason === 1
+        ? awayLog.reasonOther || "Other"
+        : REASON_MAP[awayLog.reason] || "Unknown";
+
+    return (
+      <span className="flex items-center">
+        {hasExpiredDoc && (
+          <ShieldExclamationIcon className="w-4 h-4 mr-1 text-amber-500 flex-shrink-0" />
+        )}
+        <span className="truncate">{reasonText}</span>
+      </span>
+    );
   };
 
   useEffect(() => {
@@ -313,102 +399,227 @@ function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* Office News Section */}
-        <Card className="mb-8">
-          <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-800 flex items-center">
-              <NewspaperIcon className="w-5 h-5 mr-2" />
-              Office News
-              {bulletins.length > 0 && (
-                <span className="ml-2 text-sm text-gray-500 font-normal">
-                  (Latest {Math.min(bulletins.length, MAX_BULLETINS_DISPLAY)})
-                </span>
-              )}
-            </h2>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => fetchBulletins()}
-                title="Refresh bulletins"
-              >
-                Refresh
-              </Button>
-              <Button
-                variant="primary"
-                size="sm"
-                icon={PlusIcon}
-                onClick={() => {
-                  setBulletinText("");
-                  setErrors({});
-                  setShowBulletinModal(true);
-                }}
-              >
-                Add Bulletin
-              </Button>
-            </div>
-          </div>
-
-          <div className="p-6">
-            {bulletins && bulletins.length > 0 ? (
-              <>
-                <div className="space-y-3">
-                  {bulletins.slice(0, MAX_BULLETINS_DISPLAY).map((bulletin) => (
-                    <div
-                      key={bulletin.id}
-                      className="flex items-start justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group"
-                    >
-                      <div className="flex-1 mr-4">
-                        <p className="text-gray-700">{bulletin.text}</p>
-                        {bulletin.createdAt && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            {new Date(bulletin.createdAt).toLocaleDateString(
-                              "en-US",
-                              {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              },
-                            )}
-                          </p>
-                        )}
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedBulletin(bulletin);
-                          setShowDeleteModal(true);
-                        }}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <TrashIcon className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-
-                {/* View All Bulletins Link */}
-                <div className="mt-6 pt-4 border-t border-gray-200">
-                  <Link
-                    to="/admin/settings/bulletins"
-                    className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
-                  >
-                    View All Bulletins
-                    <ArrowRightIcon className="w-4 h-4 ml-1" />
-                  </Link>
-                </div>
-              </>
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <NewspaperIcon className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                <p>No bulletins found. Click "Add Bulletin" to create one.</p>
+        {/* Two Column Layout for News and Away Logs */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+          {/* Office News Section */}
+          <Card className="h-fit">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-800 flex items-center">
+                <NewspaperIcon className="w-5 h-5 mr-2" />
+                Office News
+                {bulletins.length > 0 && (
+                  <span className="ml-2 text-sm text-gray-500 font-normal">
+                    (Latest {Math.min(bulletins.length, MAX_BULLETINS_DISPLAY)})
+                  </span>
+                )}
+              </h2>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => fetchBulletins()}
+                  title="Refresh bulletins"
+                >
+                  Refresh
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  icon={PlusIcon}
+                  onClick={() => {
+                    setBulletinText("");
+                    setErrors({});
+                    setShowBulletinModal(true);
+                  }}
+                >
+                  Add
+                </Button>
               </div>
-            )}
-          </div>
-        </Card>
+            </div>
+
+            <div className="p-6">
+              {bulletins && bulletins.length > 0 ? (
+                <>
+                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                    {bulletins
+                      .slice(0, MAX_BULLETINS_DISPLAY)
+                      .map((bulletin) => (
+                        <div
+                          key={bulletin.id}
+                          className="flex items-start justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group"
+                        >
+                          <div className="flex-1 mr-4">
+                            <p className="text-gray-700 text-sm">
+                              {bulletin.text}
+                            </p>
+                            {bulletin.createdAt && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                {new Date(
+                                  bulletin.createdAt,
+                                ).toLocaleDateString("en-US", {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </p>
+                            )}
+                          </div>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedBulletin(bulletin);
+                              setShowDeleteModal(true);
+                            }}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <TrashIcon className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      ))}
+                  </div>
+
+                  {/* View All Bulletins Link */}
+                  <div className="mt-6 pt-4 border-t border-gray-200">
+                    <Link
+                      to="/admin/settings/bulletins"
+                      className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                    >
+                      View All Bulletins
+                      <ArrowRightIcon className="w-4 h-4 ml-1" />
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <NewspaperIcon className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                  <p className="text-sm">
+                    No bulletins found. Click "Add" to create one.
+                  </p>
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* Associate Away List Section */}
+          <Card className="h-fit">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-800 flex items-center">
+                <CalendarDaysIcon className="w-5 h-5 mr-2" />
+                Associate Away List
+                {associateAwayLogs.length > 0 && (
+                  <span className="ml-2 text-sm text-gray-500 font-normal">
+                    (Active:{" "}
+                    {Math.min(associateAwayLogs.length, MAX_AWAY_LOGS_DISPLAY)})
+                  </span>
+                )}
+              </h2>
+              <div className="flex items-center space-x-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => fetchAssociateAwayLogs()}
+                  title="Refresh away logs"
+                >
+                  Refresh
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  icon={PlusIcon}
+                  onClick={() =>
+                    navigate("/admin/settings/associate-away-log/create")
+                  }
+                >
+                  Add
+                </Button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              {associateAwayLogs && associateAwayLogs.length > 0 ? (
+                <>
+                  <div className="space-y-3 max-h-96 overflow-y-auto">
+                    {associateAwayLogs
+                      .slice(0, MAX_AWAY_LOGS_DISPLAY)
+                      .map((awayLog) => (
+                        <div
+                          key={awayLog.id}
+                          className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                          onClick={() =>
+                            navigate(
+                              `/admin/settings/associate-away-log/${awayLog.id}/detail`,
+                            )
+                          }
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <Link
+                                to={`/admin/associate/${awayLog.associateId}`}
+                                className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <UserIcon className="w-4 h-4 mr-1" />
+                                {awayLog.associateName ||
+                                  `Associate #${awayLog.associateId}`}
+                              </Link>
+                              <div className="mt-2 text-xs text-gray-600 space-y-1">
+                                <div className="flex items-center">
+                                  <span className="text-gray-500 mr-2">
+                                    Reason:
+                                  </span>
+                                  {getReasonDisplay(awayLog)}
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <span className="flex items-center">
+                                    <CalendarIcon className="w-3 h-3 mr-1 text-gray-400" />
+                                    From: {formatDate(awayLog.startDate)}
+                                  </span>
+                                  {awayLog.untilFurtherNotice === 1 ? (
+                                    <span className="text-amber-600 font-medium flex items-center">
+                                      <ClockIcon className="w-3 h-3 mr-1" />
+                                      Until further notice
+                                    </span>
+                                  ) : (
+                                    <span className="flex items-center">
+                                      To: {formatDate(awayLog.untilDate)}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+
+                  {/* View All Away Logs Link */}
+                  <div className="mt-6 pt-4 border-t border-gray-200">
+                    <Link
+                      to="/admin/settings/associate-away-logs"
+                      className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                    >
+                      View All Away Logs
+                      <ArrowRightIcon className="w-4 h-4 ml-1" />
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <CalendarDaysIcon className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                  <p className="text-sm">
+                    No associates currently away. Click "Add" to create an
+                    entry.
+                  </p>
+                </div>
+              )}
+            </div>
+          </Card>
+        </div>
 
         {/* Quick Links Section */}
         <Card>
