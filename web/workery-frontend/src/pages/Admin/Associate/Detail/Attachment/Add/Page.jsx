@@ -19,13 +19,16 @@ import {
 import {
   useAttachmentManager,
   useAssociateManager,
+  useAuthManager,
 } from "../../../../../../services/Services";
+import { ATTACHMENT_TYPES } from "../../../../../../constants/Attachment";
 
 function AdminAssociateDetailAttachmentAddPage() {
   const { aid } = useParams();
   const navigate = useNavigate();
   const attachmentManager = useAttachmentManager();
   const associateManager = useAssociateManager();
+  const authManager = useAuthManager();
 
   // Component states
   const [errors, setErrors] = useState({});
@@ -36,6 +39,7 @@ function AdminAssociateDetailAttachmentAddPage() {
   const [associate, setAssociate] = useState(null);
   const [alertMessage, setAlertMessage] = useState("");
   const [alertStatus, setAlertStatus] = useState("");
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   // Unauthorized callback
   const onUnauthorized = () => {
@@ -44,6 +48,10 @@ function AdminAssociateDetailAttachmentAddPage() {
 
   // Fetch associate details on mount
   useEffect(() => {
+    if (!authManager.isAuthenticated()) {
+      navigate("/login");
+      return;
+    }
     fetchAssociateDetail();
     window.scrollTo(0, 0);
   }, [aid]);
@@ -66,18 +74,27 @@ function AdminAssociateDetailAttachmentAddPage() {
 
   // Event handlers
   const onHandleFileChange = (event) => {
-    setSelectedFile(event.target.files[0]);
+    const file = event.target.files[0];
+    setSelectedFile(file);
+    setErrors({}); // Clear any file-related errors
   };
 
   const onSubmitClick = async () => {
     console.log("onSubmitClick: Starting...");
     setFetching(true);
     setErrors({});
+    setUploadProgress(0);
 
     try {
       // Validate inputs
-      if (!title) {
+      if (!title.trim()) {
         setErrors({ title: "Title is required" });
+        setFetching(false);
+        return;
+      }
+
+      if (!description.trim()) {
+        setErrors({ description: "Description is required" });
         setFetching(false);
         return;
       }
@@ -88,19 +105,21 @@ function AdminAssociateDetailAttachmentAddPage() {
         return;
       }
 
-      // Prepare metadata
+      // Prepare metadata with correct field names
       const metadata = {
-        title: title,
-        description: description,
-        entityType: "associate",
-        entityId: aid,
+        title: title.trim(),
+        description: description.trim(),
+        ownershipType: ATTACHMENT_TYPES.ASSOCIATE, // Use numeric constant
+        ownershipId: aid,
       };
+
+      console.log("Uploading attachment with metadata:", metadata);
 
       // Upload attachment
       await attachmentManager.uploadAttachment(
         selectedFile,
         metadata,
-        null, // No progress callback for now
+        (progress) => setUploadProgress(progress),
         onUnauthorized,
       );
 
@@ -114,13 +133,39 @@ function AdminAssociateDetailAttachmentAddPage() {
       }, 2000);
     } catch (error) {
       console.error("Failed to upload attachment:", error);
-      setErrors(error);
-      setAlertMessage("Failed to upload attachment");
-      setAlertStatus("error");
+
+      // Handle specific error messages
+      if (error.title) {
+        setErrors({ title: error.title });
+      } else if (error.description) {
+        setErrors({ description: error.description });
+      } else if (error.file) {
+        setErrors({ file: error.file });
+      } else if (error.message) {
+        setErrors({ general: error.message });
+        setAlertMessage(error.message);
+        setAlertStatus("error");
+      } else {
+        setErrors({ general: "Failed to upload attachment" });
+        setAlertMessage("Failed to upload attachment");
+        setAlertStatus("error");
+      }
     } finally {
       setFetching(false);
+      setUploadProgress(0);
     }
   };
+
+  if (!authManager.isAuthenticated()) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Checking authentication...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -292,14 +337,14 @@ function AdminAssociateDetailAttachmentAddPage() {
                     htmlFor="description"
                     className="block text-sm font-medium text-gray-700 mb-2"
                   >
-                    Description
+                    Description <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     id="description"
                     name="description"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Enter attachment description (optional)"
+                    placeholder="Enter attachment description"
                     rows={4}
                     className={`block w-full px-3 py-2 border rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
                       errors.description
@@ -330,6 +375,9 @@ function AdminAssociateDetailAttachmentAddPage() {
                           <span>
                             File ready to upload:{" "}
                             <strong>{selectedFile.name}</strong>
+                            <br />
+                            Size:{" "}
+                            {(selectedFile.size / (1024 * 1024)).toFixed(2)} MB
                           </span>
                         </div>
                         <button
@@ -358,6 +406,7 @@ function AdminAssociateDetailAttachmentAddPage() {
                                 type="file"
                                 onChange={onHandleFileChange}
                                 className="sr-only"
+                                accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv"
                               />
                             </label>
                             <p className="pl-1">or drag and drop</p>
@@ -376,6 +425,21 @@ function AdminAssociateDetailAttachmentAddPage() {
                   )}
                 </div>
 
+                {/* Upload Progress */}
+                {uploadProgress > 0 && uploadProgress < 100 && (
+                  <div>
+                    <div className="mb-2 text-sm text-gray-600">
+                      Upload Progress: {uploadProgress}%
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                      <div
+                        className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-out"
+                        style={{ width: `${uploadProgress}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
+
                 {/* Action Buttons */}
                 <div className="flex justify-between items-center pt-6 border-t border-gray-200">
                   <Link to={`/admin/associate/${aid}/attachments`}>
@@ -390,9 +454,17 @@ function AdminAssociateDetailAttachmentAddPage() {
                   <button
                     type="button"
                     onClick={onSubmitClick}
-                    disabled={!title || !selectedFile || isFetching}
+                    disabled={
+                      !title.trim() ||
+                      !description.trim() ||
+                      !selectedFile ||
+                      isFetching
+                    }
                     className={`inline-flex items-center px-5 py-2.5 border rounded-lg text-base font-medium transition-colors ${
-                      !title || !selectedFile || isFetching
+                      !title.trim() ||
+                      !description.trim() ||
+                      !selectedFile ||
+                      isFetching
                         ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
                         : "border-transparent text-white bg-green-600 hover:bg-green-700"
                     }`}
