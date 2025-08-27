@@ -44,6 +44,7 @@ import {
   GlobeAltIcon,
   BriefcaseIcon,
   CalendarIcon,
+  InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 import {
   EXECUTIVE_ROLE_ID,
@@ -117,7 +118,7 @@ const REGION_OPTIONS = {
     { value: "BCN", label: "Baja California" },
     // ... add more Mexican states as needed
   ],
-};
+}; // Fixed: Changed from ]; to };
 
 /**
  * Account Update Page for Admin Users
@@ -145,10 +146,13 @@ function AdminAccountUpdatePage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [phoneType, setPhoneType] = useState(0);
+  const [phoneExtension, setPhoneExtension] = useState(""); // Added missing field
   const [otherPhone, setOtherPhone] = useState("");
   const [otherPhoneType, setOtherPhoneType] = useState(0);
+  const [otherPhoneExtension, setOtherPhoneExtension] = useState(""); // Added missing field
   const [isOkToEmail, setIsOkToEmail] = useState(false);
   const [isOkToText, setIsOkToText] = useState(false);
+  const [faxNumber, setFaxNumber] = useState(""); // Added missing field
 
   // Address fields
   const [country, setCountry] = useState("CA");
@@ -199,6 +203,7 @@ function AdminAccountUpdatePage() {
   const [gender, setGender] = useState(0);
   const [genderOther, setGenderOther] = useState("");
   const [identifyAs, setIdentifyAs] = useState([]);
+  const [agreePromotionsEmail, setAgreePromotionsEmail] = useState(false); // Added for clarity
 
   // Options for dropdowns
   const [tagOptions, setTagOptions] = useState([]);
@@ -251,10 +256,14 @@ function AdminAccountUpdatePage() {
           setEmail(profileData.email || "");
           setPhone(profileData.phone || "");
           setPhoneType(profileData.phoneType || 0);
+          setPhoneExtension(profileData.phoneExtension || ""); // Added
           setOtherPhone(profileData.otherPhone || "");
           setOtherPhoneType(profileData.otherPhoneType || 0);
+          setOtherPhoneExtension(profileData.otherPhoneExtension || ""); // Added
           setIsOkToEmail(profileData.isOkToEmail || false);
           setIsOkToText(profileData.isOkToText || false);
+          setFaxNumber(profileData.faxNumber || ""); // Added
+          setAgreePromotionsEmail(profileData.agreePromotionsEmail || false);
 
           // Address
           setCountry(profileData.country || "CA");
@@ -423,10 +432,13 @@ function AdminAccountUpdatePage() {
         email: email.trim(),
         phone: phone.trim(),
         phoneType: parseInt(phoneType) || 0,
+        phoneExtension: phoneExtension.trim(), // Added
         otherPhone: otherPhone.trim(),
         otherPhoneType: parseInt(otherPhoneType) || 0,
+        otherPhoneExtension: otherPhoneExtension.trim(), // Added
         isOkToEmail: isOkToEmail,
         isOkToText: isOkToText,
+        faxNumber: faxNumber.trim(), // Added
         country: country,
         region: region,
         city: city.trim(),
@@ -434,6 +446,7 @@ function AdminAccountUpdatePage() {
         addressLine2: addressLine2.trim(),
         postalCode: postalCode.trim(),
         hasShippingAddress: hasShippingAddress,
+        agreePromotionsEmail: agreePromotionsEmail,
       };
 
       // Add shipping address if enabled
@@ -475,6 +488,11 @@ function AdminAccountUpdatePage() {
           howDidYouHearAboutUsOther: howDidYouHearAboutUsOther.trim(),
           identifyAs: identifyAs,
         };
+      }
+
+      // Debug log in development
+      if (process.env.NODE_ENV === "development") {
+        console.log("Submitting profile update with payload:", payload);
       }
 
       // Submit update
@@ -546,6 +564,14 @@ function AdminAccountUpdatePage() {
             Edit Profile
           </h1>
           <p className="mt-2 text-gray-600">Update your account information</p>
+          {isExecutive && (
+            <Alert type="info" className="mt-4">
+              <InformationCircleIcon className="h-5 w-5" />
+              Note: As an Executive user, some fields may have limited saving
+              capabilities. Contact system administrator if you need to update
+              restricted fields.
+            </Alert>
+          )}
         </div>
 
         {/* Success Message */}
@@ -633,6 +659,137 @@ function AdminAccountUpdatePage() {
                     )}
                   </>
                 )}
+              </div>
+            </div>
+          </Card>
+
+          {/* Contact Information */}
+          <Card className="mb-6">
+            <div className="px-6 py-4 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-800 flex items-center">
+                <PhoneIcon className="h-5 w-5 mr-2 text-gray-600" />
+                Contact Information
+              </h2>
+            </div>
+            <div className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormGroup className="md:col-span-2">
+                  <Input
+                    type="email"
+                    label="Email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    error={errors.email}
+                    placeholder="email@example.com"
+                  />
+                </FormGroup>
+
+                <FormGroup className="md:col-span-2">
+                  <Checkbox
+                    label="I agree to receive electronic emails"
+                    checked={isOkToEmail}
+                    onChange={(e) => setIsOkToEmail(e.target.checked)}
+                  />
+                </FormGroup>
+
+                <FormGroup>
+                  <Input
+                    type="tel"
+                    label="Phone"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    required
+                    error={errors.phone}
+                    placeholder="(123) 456-7890"
+                  />
+                </FormGroup>
+
+                <FormGroup>
+                  <Select
+                    label="Phone Type"
+                    value={phoneType}
+                    onChange={(e) => setPhoneType(parseInt(e.target.value))}
+                    options={ASSOCIATE_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS}
+                    error={errors.phoneType}
+                  />
+                </FormGroup>
+
+                {!isExecutive && (
+                  <FormGroup>
+                    <Input
+                      label="Phone Extension (Optional)"
+                      value={phoneExtension}
+                      onChange={(e) => setPhoneExtension(e.target.value)}
+                      error={errors.phoneExtension}
+                      placeholder="1234"
+                    />
+                  </FormGroup>
+                )}
+
+                <FormGroup className="md:col-span-2">
+                  <Checkbox
+                    label="I agree to receive text messages"
+                    checked={isOkToText}
+                    onChange={(e) => setIsOkToText(e.target.checked)}
+                  />
+                </FormGroup>
+
+                <FormGroup>
+                  <Input
+                    type="tel"
+                    label="Other Phone (Optional)"
+                    value={otherPhone}
+                    onChange={(e) => setOtherPhone(e.target.value)}
+                    error={errors.otherPhone}
+                    placeholder="(123) 456-7890"
+                  />
+                </FormGroup>
+
+                <FormGroup>
+                  <Select
+                    label="Other Phone Type (Optional)"
+                    value={otherPhoneType}
+                    onChange={(e) =>
+                      setOtherPhoneType(parseInt(e.target.value))
+                    }
+                    options={ASSOCIATE_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS}
+                    error={errors.otherPhoneType}
+                  />
+                </FormGroup>
+
+                {!isExecutive && (
+                  <>
+                    <FormGroup>
+                      <Input
+                        label="Other Phone Extension (Optional)"
+                        value={otherPhoneExtension}
+                        onChange={(e) => setOtherPhoneExtension(e.target.value)}
+                        error={errors.otherPhoneExtension}
+                        placeholder="1234"
+                      />
+                    </FormGroup>
+
+                    <FormGroup>
+                      <Input
+                        type="tel"
+                        label="Fax Number (Optional)"
+                        value={faxNumber}
+                        onChange={(e) => setFaxNumber(e.target.value)}
+                        error={errors.faxNumber}
+                        placeholder="(123) 456-7890"
+                      />
+                    </FormGroup>
+                  </>
+                )}
+
+                <FormGroup className="md:col-span-2">
+                  <Checkbox
+                    label="I agree to receive promotional emails"
+                    checked={agreePromotionsEmail}
+                    onChange={(e) => setAgreePromotionsEmail(e.target.checked)}
+                  />
+                </FormGroup>
               </div>
             </div>
           </Card>
