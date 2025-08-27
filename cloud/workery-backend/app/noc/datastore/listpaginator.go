@@ -145,11 +145,19 @@ func (impl NationalOccupationalClassificationStorerImpl) newPaginationOptions(f 
 	// We want to be able to return a list without sorting so we will need to
 	// run the following code.
 	if f.SortField != "" {
-		options = options.
-			SetSort(bson.D{
+		// Check if the sort field is already "_id" to avoid duplicates
+		if f.SortField == "_id" {
+			// If sorting by _id, only add it once
+			options = options.SetSort(bson.D{
+				{f.SortField, f.SortOrder},
+			})
+		} else {
+			// For other fields, include _id as secondary sort for consistency
+			options = options.SetSort(bson.D{
 				{f.SortField, f.SortOrder},
 				{"_id", f.SortOrder}, // Include _id in sorting for consistency
 			})
+		}
 	}
 
 	return options, nil
@@ -176,8 +184,12 @@ func (impl NationalOccupationalClassificationStorerImpl) newPaginatorNextCursor(
 	case "code":
 		nextCursor = fmt.Sprintf("%v|%v", lastDatum.Code, lastDatum.ID.Hex())
 		break
+	case "_id":
+		// For _id sorting, just use the ID
+		nextCursor = fmt.Sprintf("%v|%v", lastDatum.ID.Hex(), lastDatum.ID.Hex())
+		break
 	default:
-		return "", fmt.Errorf("unsupported sort field in options for `%v`, only supported fields are `unit_group_title` and `code`", f.SortField)
+		return "", fmt.Errorf("unsupported sort field in options for `%v`, only supported fields are `unit_group_title`, `code`, and `_id`", f.SortField)
 	}
 
 	// Encode to base64 without the `=` symbol that would corrupt when we
