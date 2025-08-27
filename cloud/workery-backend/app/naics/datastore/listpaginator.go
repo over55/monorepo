@@ -54,11 +54,14 @@ func (impl NorthAmericanIndustryClassificationSystemStorerImpl) newPaginationFil
 		case "industry_title":
 			// STEP 3: Build for `industry_title` field.
 			return impl.newPaginationFilterBasedOnString(f, string(decodedCursor))
-		case "code":
-			// STEP 3: Build for `join_date` field.
+		case "code", "code_str":
+			// STEP 3: Build for `code` field.
 			return impl.newPaginationFilterBasedOnTimestamp(f, string(decodedCursor))
+		case "_id":
+			// Handle _id sorting
+			return impl.newPaginationFilterBasedOnObjectID(f, string(decodedCursor))
 		default:
-			return nil, fmt.Errorf("unsupported sort field for `%v`, only supported fields are `industry_title` and `code`", f.SortField)
+			return nil, fmt.Errorf("unsupported sort field for `%v`, only supported fields are `industry_title`, `code`, `code_str`, and `_id`", f.SortField)
 		}
 	}
 	return bson.M{}, nil
@@ -139,6 +142,23 @@ func (impl NorthAmericanIndustryClassificationSystemStorerImpl) newPaginationFil
 	}
 }
 
+// New function to handle ObjectID-based pagination
+func (impl NorthAmericanIndustryClassificationSystemStorerImpl) newPaginationFilterBasedOnObjectID(f *NorthAmericanIndustryClassificationSystemPaginationListFilter, decodedCursor string) (bson.M, error) {
+	lastID, err := primitive.ObjectIDFromHex(decodedCursor)
+	if err != nil {
+		return nil, fmt.Errorf("Failed to convert into mongodb object id: %v, from the decoded cursor of: %v", err, decodedCursor)
+	}
+
+	switch f.SortOrder {
+	case OrderAscending:
+		return bson.M{"_id": bson.M{"$gt": lastID}}, nil
+	case OrderDescending:
+		return bson.M{"_id": bson.M{"$lt": lastID}}, nil
+	default:
+		return nil, fmt.Errorf("unsupported sort order for `%v`, only supported values are `1` or `-1`", f.SortOrder)
+	}
+}
+
 // newPaginatorOptions will generate the mongodb options which will support the
 // paginator in ordering the data to work.
 func (impl NorthAmericanIndustryClassificationSystemStorerImpl) newPaginationOptions(f *NorthAmericanIndustryClassificationSystemPaginationListFilter) (*options.FindOptions, error) {
@@ -148,11 +168,17 @@ func (impl NorthAmericanIndustryClassificationSystemStorerImpl) newPaginationOpt
 	// We want to be able to return a list without sorting so we will need to
 	// run the following code.
 	if f.SortField != "" {
-		options = options.
-			SetSort(bson.D{
+		// Only add _id as secondary sort if it's not already the primary sort field
+		if f.SortField == "_id" {
+			// If sorting by _id, just use _id alone
+			options = options.SetSort(bson.D{{f.SortField, f.SortOrder}})
+		} else {
+			// For other fields, include _id as secondary sort for consistency
+			options = options.SetSort(bson.D{
 				{f.SortField, f.SortOrder},
 				{"_id", f.SortOrder}, // Include _id in sorting for consistency
 			})
+		}
 	}
 
 	return options, nil
@@ -175,12 +201,13 @@ func (impl NorthAmericanIndustryClassificationSystemStorerImpl) newPaginatorNext
 	switch f.SortField {
 	case "industry_title":
 		nextCursor = fmt.Sprintf("%v|%v", lastDatum.IndustryTitle, lastDatum.ID.Hex())
-		break
-	case "code":
+	case "code", "code_str":
 		nextCursor = fmt.Sprintf("%v|%v", lastDatum.Code, lastDatum.ID.Hex())
-		break
+	case "_id":
+		// For _id sorting, just use the ID
+		nextCursor = lastDatum.ID.Hex()
 	default:
-		return "", fmt.Errorf("unsupported sort field in options for `%v`, only supported fields are `industry_title` and `code`", f.SortField)
+		return "", fmt.Errorf("unsupported sort field in options for `%v`, only supported fields are `industry_title`, `code`, `code_str`, and `_id`", f.SortField)
 	}
 
 	// Encode to base64 without the `=` symbol that would corrupt when we
