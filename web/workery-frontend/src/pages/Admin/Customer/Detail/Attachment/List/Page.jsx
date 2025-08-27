@@ -556,16 +556,15 @@ function AdminCustomerDetailAttachmentListPage() {
                                 Edit
                               </button>
                             </Link>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onSelectAttachmentForDeletion(attachment);
-                              }}
-                              className="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-xs font-medium text-white bg-red-600 hover:bg-red-700 transition-colors"
+                            <Link
+                              to={`/admin/customer/${cid}/attachment/${attachment.id}/delete`}
+                              onClick={(e) => e.stopPropagation()}
                             >
-                              <TrashIcon className="w-4 h-4 mr-1" />
-                              Delete
-                            </button>
+                              <button className="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-xs font-medium text-white bg-red-600 hover:bg-red-700 transition-colors">
+                                <TrashIcon className="w-4 h-4 mr-1" />
+                                Delete
+                              </button>
+                            </Link>
                           </div>
                         </td>
                       </tr>

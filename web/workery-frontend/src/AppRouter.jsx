@@ -127,6 +127,7 @@ import AdminCustomerDetailAttachmentAddPage from "./pages/Admin/Customer/Detail/
 import AdminCustomerDetailAttachmentListPage from "./pages/Admin/Customer/Detail/Attachment/List/Page";
 import AdminCustomerDetailAttachmentDetailPage from "./pages/Admin/Customer/Detail/Attachment/Detail/Page";
 import AdminCustomerDetailAttachmentUpdatePage from "./pages/Admin/Customer/Detail/Attachment/Update/Page";
+import AdminCustomerDetailAttachmentDeletePage from "./pages/Admin/Customer/Detail/Attachment/Delete/Page";
 import AdminCustomerDetailMorePage from "./pages/Admin/Customer/Detail/More/Page";
 import AdminCustomerDetailMore2FAPage from "./pages/Admin/Customer/Detail/More/2FA/Page";
 import AdminCustomerDetailMoreArchivePage from "./pages/Admin/Customer/Detail/More/Archive/Page";
@@ -1544,6 +1545,14 @@ function AppRouter() {
               element={
                 <Layout>
                   <AdminCustomerDetailAttachmentUpdatePage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/customer/:cid/attachment/:aid/delete"
+              element={
+                <Layout>
+                  <AdminCustomerDetailAttachmentDeletePage />
                 </Layout>
               }
             />
