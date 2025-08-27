@@ -95,20 +95,53 @@ function AdminCustomerDetailAttachmentDetailPage() {
     }
   };
 
-  // Download handler
+  // Download handler - FIXED to use presigned URL
   const onDownloadClick = async () => {
     try {
-      const fileBlob = await attachmentManager.downloadAttachment(
-        aid,
-        null,
-        onUnauthorized,
-      );
+      // Check if we have the attachment data with the presigned URL
+      if (!attachment) {
+        setAlertMessage("Attachment data not loaded");
+        setAlertStatus("error");
+        return;
+      }
 
-      // Trigger download
-      attachmentManager.triggerFileDownload(
-        fileBlob,
-        attachment?.filename || attachment?.fileName || "download",
-      );
+      // Use the presigned URL from the attachment object
+      if (attachment.objectUrl || attachment.objectURL) {
+        const downloadUrl = attachment.objectUrl || attachment.objectURL;
+
+        // Method 1: Create a temporary anchor element to trigger download
+        const link = document.createElement("a");
+        link.href = downloadUrl;
+        link.download =
+          attachment.filename || attachment.fileName || "download";
+        link.target = "_blank"; // Open in new tab to avoid navigation issues
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Alternative Method 2: Open in new window (if Method 1 doesn't work)
+        // window.open(downloadUrl, '_blank');
+      } else {
+        // If no presigned URL, we need to refresh the attachment data
+        console.log("No presigned URL found, refreshing attachment data...");
+        await fetchAttachmentDetail(aid);
+
+        // After refresh, try again
+        if (attachment && (attachment.objectUrl || attachment.objectURL)) {
+          const downloadUrl = attachment.objectUrl || attachment.objectURL;
+          const link = document.createElement("a");
+          link.href = downloadUrl;
+          link.download =
+            attachment.filename || attachment.fileName || "download";
+          link.target = "_blank";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } else {
+          setAlertMessage("Unable to get download URL for attachment");
+          setAlertStatus("error");
+        }
+      }
     } catch (error) {
       console.error("Failed to download attachment:", error);
       setAlertMessage("Failed to download attachment");
@@ -219,6 +252,35 @@ function AdminCustomerDetailAttachmentDetailPage() {
                 <DataRow label="File Type" value={attachment.fileType} />
                 <DataRow label="Created At" value={attachment.createdAt} />
                 <DataRow label="Updated At" value={attachment.updatedAt} />
+
+                {/* Debug info - remove in production */}
+                {process.env.NODE_ENV === "development" && (
+                  <div
+                    style={{
+                      marginTop: "20px",
+                      padding: "10px",
+                      backgroundColor: "#f0f0f0",
+                      borderRadius: "5px",
+                    }}
+                  >
+                    <strong>Debug Info:</strong>
+                    <br />
+                    Presigned URL Available:{" "}
+                    {attachment.objectUrl || attachment.objectURL
+                      ? "Yes"
+                      : "No"}
+                    <br />
+                    {(attachment.objectUrl || attachment.objectURL) && (
+                      <small style={{ wordBreak: "break-all" }}>
+                        URL:{" "}
+                        {(
+                          attachment.objectUrl || attachment.objectURL
+                        ).substring(0, 100)}
+                        ...
+                      </small>
+                    )}
+                  </div>
+                )}
 
                 <div
                   style={{
