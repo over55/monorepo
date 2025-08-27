@@ -161,6 +161,7 @@ import AdminAssociateDetailAttachmentAddPage from "./pages/Admin/Associate/Detai
 import AdminAssociateDetailAttachmentListPage from "./pages/Admin/Associate/Detail/Attachment/List/Page";
 import AdminAssociateDetailAttachmentDetailPage from "./pages/Admin/Associate/Detail/Attachment/Detail/Page";
 import AdminAssociateDetailAttachmentUpdatePage from "./pages/Admin/Associate/Detail/Attachment/Update/Page";
+import AdminAssociateDetailAttachmentDeletePage from "./pages/Admin/Associate/Detail/Attachment/Delete/Page";
 import AdminAssociateDetailMorePage from "./pages/Admin/Associate/Detail/More/Page";
 import AdminAssociateDetailMore2FAPage from "./pages/Admin/Associate/Detail/More/2FA/Page";
 import AdminAssociateDetailMoreArchivePage from "./pages/Admin/Associate/Detail/More/Archive/Page";
@@ -1305,6 +1306,14 @@ function AppRouter() {
               element={
                 <Layout>
                   <AdminAssociateDetailAttachmentUpdatePage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/associate/:cid/attachment/:aid/delete"
+              element={
+                <Layout>
+                  <AdminAssociateDetailAttachmentDeletePage />
                 </Layout>
               }
             />
