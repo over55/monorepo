@@ -311,6 +311,9 @@ import AdminReport22Page from "./pages/Admin/Report/20To29/22Page";
 // Admin help page.
 import AdminHelpPage from "./pages/Admin/Help/Page";
 
+// Admin profile pages.
+import AdminAccountDetailPage from "./pages/Admin/Account/Detail/Page.jsx";
+
 ////////////////////////////////////////////////////////////////
 // Associate pages
 ////////////////////////////////////////////////////////////////
@@ -2475,13 +2478,21 @@ function AppRouter() {
                 </Layout>
               }
             />
+            <Route
+              path="/admin/account/"
+              element={
+                <Layout>
+                  <AdminAccountDetailPage />
+                </Layout>
+              }
+            />
 
             {/* Account routes (WITH LAYOUT) */}
             <Route
-              path="/account"
+              path="/xxx/account/"
               element={
                 <Layout>
-                  <PlaceholderPage title="My Profile" />
+                  <AdminAccountDetailPage />
                 </Layout>
               }
             />

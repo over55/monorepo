@@ -961,7 +961,7 @@ function Sidebar({
               </li>
               <li>
                 <Link
-                  to="/account"
+                  to="/admin/account"
                   onClick={handleLinkClick}
                   title={!shouldShowLabels ? "My Profile" : ""}
                   className={`

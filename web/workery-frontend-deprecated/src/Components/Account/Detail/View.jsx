@@ -1,3 +1,4 @@
+// monorepo/web/workery-frontend-deprecated/src/Components/Account/Detail/View.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -51,7 +52,7 @@ import {
   FRONTLINE_ROLE_ID,
   ASSOCIATE_ROLE_ID,
   CUSTOMER_ROLE_ID,
-  ASSOCIATE_JOB_SEEKER_ROLE_ID
+  ASSOCIATE_JOB_SEEKER_ROLE_ID,
 } from "../../../Constants/App";
 import {
   CLIENT_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS,
@@ -64,7 +65,6 @@ import AccountManagementOrFrontlineStaffDetail from "./ManagementOrFrontlineStaf
 import AccountAssociateDetail from "./Associate";
 import AccountAssociateJobSeekerDetail from "./AssociateJobSeeker";
 import AccountCustomerDetail from "./Customer";
-
 
 function AccountDetail() {
   ////
@@ -334,21 +334,17 @@ function AccountDetail() {
                           );
                         case ASSOCIATE_ROLE_ID:
                           return (
-                            <AccountAssociateDetail
-                                currentUser={currentUser}
-                            />
+                            <AccountAssociateDetail currentUser={currentUser} />
                           );
                         case ASSOCIATE_JOB_SEEKER_ROLE_ID:
                           return (
                             <AccountAssociateJobSeekerDetail
-                                currentUser={currentUser}
+                              currentUser={currentUser}
                             />
                           );
                         case CUSTOMER_ROLE_ID:
                           return (
-                            <AccountCustomerDetail
-                              currentUser={currentUser}
-                            />
+                            <AccountCustomerDetail currentUser={currentUser} />
                           );
                         default:
                           return <p>Unsupported view</p>;
