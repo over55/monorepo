@@ -2516,34 +2516,32 @@ function AppRouter() {
                 </Layout>
               }
             />
-
-            {/* Account routes (WITH LAYOUT) */}
             <Route
-              path="/account/2fa/setup/step-1"
+              path="/admin/account/2fa/setup/step-1"
               element={
                 <Layout>
-                  <PlaceholderPage title="Setup 2FA - Step 1" />
+                  <AccountTwoFactorAuthenticationEnableStep1Page />
                 </Layout>
               }
             />
             <Route
-              path="/account/2fa/setup/step-2"
+              path="/admin/account/2fa/setup/step-2"
               element={
                 <Layout>
-                  <PlaceholderPage title="Setup 2FA - Step 2" />
+                  <AccountTwoFactorAuthenticationEnableStep2Page />
                 </Layout>
               }
             />
             <Route
-              path="/account/2fa/setup/step-3"
+              path="/admin/account/2fa/setup/step-3"
               element={
                 <Layout>
-                  <PlaceholderPage title="Setup 2FA - Step 3" />
+                  <AccountTwoFactorAuthenticationEnableStep3Page />
                 </Layout>
               }
             />
             <Route
-              path="/account/2fa/backup-code"
+              path="/admin/account/2fa/backup-code"
               element={
                 <Layout>
                   <PlaceholderPage title="My 2FA Backup Codes" />
