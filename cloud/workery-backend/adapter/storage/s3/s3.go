@@ -39,11 +39,12 @@ type S3Storager interface {
 }
 
 type s3Storager struct {
-	S3Client      *s3.Client
-	PresignClient *s3.PresignClient
-	UUID          uuid.Provider
-	Logger        *slog.Logger
-	BucketName    string
+	S3Client            *s3.Client
+	PresignClient       *s3.PresignClient
+	PublicPresignClient *s3.PresignClient // Separate client for public-facing URLs
+	UUID                uuid.Provider
+	Logger              *slog.Logger
+	BucketName          string
 }
 
 // NewStorage connects to a specific S3 bucket instance and returns a connected
@@ -53,16 +54,17 @@ func NewStorage(appConf *c.Conf, logger *slog.Logger, uuidp uuid.Provider) S3Sto
 	// How can I use the AWS SDK v2 for Go with DigitalOcean Spaces? via https://stackoverflow.com/a/74284205
 	logger.Debug("s3 initializing...")
 
-	// STEP 1: initialize the custom `endpoint` we will connect to.
+	// STEP 1: initialize the custom `endpoint` we will connect to (for internal operations).
 	customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
 		return aws.Endpoint{
 			URL: appConf.AWS.Endpoint,
 		}, nil
 	})
 
-	// STEP 2: Configure.
+	// STEP 2: Configure for internal operations.
 	sdkConfig, err := config.LoadDefaultConfig(
-		context.TODO(), config.WithRegion(appConf.AWS.Region),
+		context.TODO(),
+		config.WithRegion(appConf.AWS.Region),
 		config.WithEndpointResolverWithOptions(customResolver),
 		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(appConf.AWS.AccessKey, appConf.AWS.SecretKey, "")),
 	)
@@ -70,24 +72,63 @@ func NewStorage(appConf *c.Conf, logger *slog.Logger, uuidp uuid.Provider) S3Sto
 		log.Fatal(err) // We need to crash the program at start to satisfy google wire requirement of having no errors.
 	}
 
-	// STEP 3\: Load up s3 instance.
+	// STEP 3: Load up s3 instance for internal operations.
 	s3Client := s3.NewFromConfig(sdkConfig, func(o *s3.Options) {
+		o.UsePathStyle = appConf.AWS.ForcePathStyle
+	})
+
+	// STEP 4: Create a separate configuration for public-facing presigned URLs
+	// This is important for Docker environments where internal and external endpoints differ
+	publicEndpoint := appConf.AWS.PublicEndpoint
+	if publicEndpoint == "" {
+		// Fallback to regular endpoint if public endpoint not configured
+		// This handles production cases where both endpoints are the same
+		publicEndpoint = appConf.AWS.Endpoint
+		logger.Debug("s3 public endpoint not configured, using regular endpoint",
+			slog.String("endpoint", publicEndpoint))
+	} else {
+		logger.Debug("s3 using separate public endpoint for presigned URLs",
+			slog.String("internal", appConf.AWS.Endpoint),
+			slog.String("public", publicEndpoint))
+	}
+
+	// Create resolver for public-facing URLs
+	publicResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
+		return aws.Endpoint{
+			URL: publicEndpoint,
+		}, nil
+	})
+
+	// Configure SDK for public-facing operations
+	publicSdkConfig, err := config.LoadDefaultConfig(
+		context.TODO(),
+		config.WithRegion(appConf.AWS.Region),
+		config.WithEndpointResolverWithOptions(publicResolver),
+		config.WithCredentialsProvider(credentials.NewStaticCredentialsProvider(appConf.AWS.AccessKey, appConf.AWS.SecretKey, "")),
+	)
+	if err != nil {
+		log.Fatal(err) // We need to crash the program at start to satisfy google wire requirement of having no errors.
+	}
+
+	// Create S3 client for public presigned URLs
+	publicS3Client := s3.NewFromConfig(publicSdkConfig, func(o *s3.Options) {
 		o.UsePathStyle = appConf.AWS.ForcePathStyle
 	})
 
 	// For debugging purposes only.
 	logger.Debug("s3 connected to remote service")
 
-	// Create our storage handler.
+	// Create our storage handler with both internal and public clients
 	s3Storage := &s3Storager{
-		S3Client:      s3Client,
-		PresignClient: s3.NewPresignClient(s3Client),
-		Logger:        logger,
-		UUID:          uuidp,
-		BucketName:    appConf.AWS.BucketName,
+		S3Client:            s3Client,
+		PresignClient:       s3.NewPresignClient(s3Client),
+		PublicPresignClient: s3.NewPresignClient(publicS3Client), // Use public client for presigned URLs
+		Logger:              logger,
+		UUID:                uuidp,
+		BucketName:          appConf.AWS.BucketName,
 	}
 
-	// STEP 4: Connect to the s3 bucket instance and confirm that bucket exists.
+	// STEP 5: Connect to the s3 bucket instance and confirm that bucket exists.
 	doesExist, err := s3Storage.BucketExists(context.TODO(), appConf.AWS.BucketName)
 	if err != nil {
 		log.Fatal(err) // We need to crash the program at start to satisfy google wire requirement of having no errors.
@@ -176,7 +217,9 @@ func (s *s3Storager) GetDownloadablePresignedURL(ctx context.Context, key string
 	// DEVELOPERS NOTE:
 	// AWS S3 Bucket — presigned URL APIs with Go (2022) via https://ronen-niv.medium.com/aws-s3-handling-presigned-urls-2718ab247d57
 
-	presignedUrl, err := s.PresignClient.PresignGetObject(context.Background(),
+	// IMPORTANT: Use the PUBLIC presign client for generating URLs that will be accessed from browsers
+	// This ensures the URL uses the public endpoint (e.g., localhost:9000) instead of internal Docker hostname (e.g., s3:9000)
+	presignedUrl, err := s.PublicPresignClient.PresignGetObject(context.Background(),
 		&s3.GetObjectInput{
 			Bucket:                     aws.String(s.BucketName),
 			Key:                        aws.String(key),
@@ -193,7 +236,9 @@ func (s *s3Storager) GetPresignedURL(ctx context.Context, objectKey string, dura
 	// DEVELOPERS NOTE:
 	// AWS S3 Bucket — presigned URL APIs with Go (2022) via https://ronen-niv.medium.com/aws-s3-handling-presigned-urls-2718ab247d57
 
-	presignedUrl, err := s.PresignClient.PresignGetObject(context.Background(),
+	// IMPORTANT: Use the PUBLIC presign client for generating URLs that will be accessed from browsers
+	// This ensures the URL uses the public endpoint (e.g., localhost:9000) instead of internal Docker hostname (e.g., s3:9000)
+	presignedUrl, err := s.PublicPresignClient.PresignGetObject(context.Background(),
 		&s3.GetObjectInput{
 			Bucket: aws.String(s.BucketName),
 			Key:    aws.String(objectKey),
@@ -274,6 +319,7 @@ func (s *s3Storager) Copy(ctx context.Context, sourceObjectKey string, destinati
 }
 
 // GetBinaryData function will return the binary data for the particular key.
+// Note: This uses the internal S3 client since it's server-side operation
 func (s *s3Storager) GetBinaryData(ctx context.Context, objectKey string) (io.ReadCloser, error) {
 	input := &s3.GetObjectInput{
 		Bucket: aws.String(s.BucketName),

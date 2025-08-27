@@ -35,6 +35,7 @@ type awsConfig struct {
 	AccessKey      string
 	SecretKey      string
 	Endpoint       string
+	PublicEndpoint string
 	Region         string
 	BucketName     string
 	ForcePathStyle bool
@@ -69,6 +70,7 @@ func New() *Conf {
 	c.AWS.AccessKey = getEnv("WORKERY_BACKEND_AWS_ACCESS_KEY", true)
 	c.AWS.SecretKey = getEnv("WORKERY_BACKEND_AWS_SECRET_KEY", true)
 	c.AWS.Endpoint = getEnv("WORKERY_BACKEND_AWS_ENDPOINT", true)
+	c.AWS.PublicEndpoint = getEnv("WORKERY_BACKEND_AWS_PUBLIC_ENDPOINT", true)
 	c.AWS.Region = getEnv("WORKERY_BACKEND_AWS_REGION", true)
 	c.AWS.BucketName = getEnv("WORKERY_BACKEND_AWS_BUCKET_NAME", true)
 	c.AWS.ForcePathStyle = getEnvBool("WORKERY_BACKEND_AWS_S3_FORCE_PATH_STYLE", false, false)
