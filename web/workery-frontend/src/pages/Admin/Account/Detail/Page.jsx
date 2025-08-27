@@ -212,8 +212,7 @@ function AdminAccountDetailPage() {
   // Tab items configuration
   const tabItems = [
     { id: "detail", label: "Detail" },
-    { id: "2fa", label: "2FA", href: "/account/2fa" },
-    { id: "more", label: "More", href: "/account/more" },
+    { id: "more", label: "More", href: "/admin/account/more" },
   ];
 
   // Loading state

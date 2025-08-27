@@ -314,6 +314,7 @@ import AdminHelpPage from "./pages/Admin/Help/Page";
 // Admin profile pages.
 import AdminAccountDetailPage from "./pages/Admin/Account/Detail/Page.jsx";
 import AdminAccountUpdatePage from "./pages/Admin/Account/Update/Page.jsx";
+import AccountMorePage from "./pages/Admin/Account/More/Page.jsx";
 
 ////////////////////////////////////////////////////////////////
 // Associate pages
@@ -2495,6 +2496,14 @@ function AppRouter() {
                 </Layout>
               }
             />
+            <Route
+              path="/admin/account/more"
+              element={
+                <Layout>
+                  <AccountMorePage />
+                </Layout>
+              }
+            />
 
             {/* Account routes (WITH LAYOUT) */}
 
@@ -2535,14 +2544,6 @@ function AppRouter() {
               element={
                 <Layout>
                   <PlaceholderPage title="My 2FA Backup Codes" />
-                </Layout>
-              }
-            />
-            <Route
-              path="/account/more"
-              element={
-                <Layout>
-                  <PlaceholderPage title="More Account Actions" />
                 </Layout>
               }
             />
