@@ -316,6 +316,9 @@ import AdminAccountDetailPage from "./pages/Admin/Account/Detail/Page.jsx";
 import AdminAccountUpdatePage from "./pages/Admin/Account/Update/Page.jsx";
 import AccountMorePage from "./pages/Admin/Account/More/Page.jsx";
 import AccountTwoFactorAuthenticationPage from "./pages/Admin/Account/More/2FA/Page.jsx";
+import AccountTwoFactorAuthenticationEnableStep1Page from "./pages/Admin/Account/More/2FA/Enable/Step1Page.jsx";
+import AccountTwoFactorAuthenticationEnableStep2Page from "./pages/Admin/Account/More/2FA/Enable/Step2Page.jsx";
+import AccountTwoFactorAuthenticationEnableStep3Page from "./pages/Admin/Account/More/2FA/Enable/Step3Page.jsx";
 
 ////////////////////////////////////////////////////////////////
 // Associate pages
