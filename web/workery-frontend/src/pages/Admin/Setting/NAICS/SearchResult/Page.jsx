@@ -1,6 +1,6 @@
 // File Path: web/workery-frontend/src/pages/Admin/Setting/NAICS/SearchResult/Page.jsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useNAICSManager } from "../../../../../services/Services";
 import {
@@ -47,11 +47,20 @@ function SettingNAICSSearchResultPage() {
   const [sortBy, setSortBy] = useState("code_str");
   const [sortOrder, setSortOrder] = useState("ASC");
 
+  // Use ref to track if initial load is done
+  const initialLoadDone = useRef(false);
+  const searchTimeoutRef = useRef(null);
+
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
   };
 
-  const performSearch = async (page = 1) => {
+  const performSearch = async (page = 1, forceRefresh = false) => {
+    // Cancel any pending search
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
     setIsLoading(true);
     setError(null);
 
@@ -71,13 +80,15 @@ function SettingNAICSSearchResultPage() {
         params.code = urlCode.trim();
       }
       if (urlIndustryTitle.trim()) {
-        params.it = urlIndustryTitle.trim();
+        params.industryTitle = urlIndustryTitle.trim();
       }
+
+      console.log("Performing NAICS search with params:", params);
 
       const response = await naicsManager.getNAICS(
         params,
         onUnauthorized,
-        true,
+        forceRefresh,
       );
 
       setNaics(response.results || []);
@@ -122,11 +133,33 @@ function SettingNAICSSearchResultPage() {
     setCurrentPage(1);
   };
 
-  // Auto-search on mount and scroll to top
+  // Initial search on mount only
   useEffect(() => {
     // Scroll to top when component mounts
     window.scrollTo(0, 0);
-    performSearch(1);
+
+    // Perform initial search with force refresh
+    performSearch(1, true);
+    initialLoadDone.current = true;
+  }, []); // Empty dependency array for mount only
+
+  // Handle sort and pagination changes after initial load
+  useEffect(() => {
+    if (!initialLoadDone.current) {
+      return; // Skip on initial mount
+    }
+
+    // Debounce the search to avoid rapid consecutive calls
+    searchTimeoutRef.current = setTimeout(() => {
+      performSearch(1, false);
+    }, 300);
+
+    // Cleanup timeout on unmount or before next effect
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
   }, [sortBy, sortOrder, pageSize]);
 
   // Build search criteria display

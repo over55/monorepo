@@ -8,6 +8,8 @@ export class NAICSManager {
   constructor(naicsAPI, naicsStorage) {
     this.naicsAPI = naicsAPI;
     this.naicsStorage = naicsStorage;
+    // Track pending requests to prevent duplicates
+    this.pendingRequests = new Map();
   }
 
   /**
@@ -29,34 +31,55 @@ export class NAICSManager {
         }
       }
 
-      // Prevent multiple simultaneous requests
-      if (this.naicsStorage.isSelectOptionsCacheLoading()) {
-        console.log("NAICSManager: Select options request already in progress");
-        return this._waitForCurrentSelectOptionsRequest();
+      // Check if there's already a pending request for select options
+      const requestKey = "select-options";
+      if (this.pendingRequests.has(requestKey)) {
+        console.log(
+          "NAICSManager: Select options request already in progress, waiting...",
+        );
+        return this.pendingRequests.get(requestKey);
       }
-
-      this.naicsStorage.setSelectOptionsCacheLoading(true);
 
       console.log("NAICSManager: Fetching fresh select options data");
 
+      // Create the request promise
+      const requestPromise = this._fetchSelectOptions(onUnauthorizedCallback);
+
+      // Store the promise to prevent duplicate requests
+      this.pendingRequests.set(requestKey, requestPromise);
+
       try {
-        // Fetch fresh data from API
-        const optionsData = await this.naicsAPI.getNAICSSelectOptions(
-          onUnauthorizedCallback,
-        );
-
-        // Save to storage cache
-        this.naicsStorage.saveSelectOptionsToCache(optionsData);
-
-        console.log("NAICSManager: Select options data fetched successfully");
-
-        return optionsData;
+        const result = await requestPromise;
+        return result;
       } finally {
-        this.naicsStorage.setSelectOptionsCacheLoading(false);
+        // Clean up the pending request
+        this.pendingRequests.delete(requestKey);
       }
     } catch (error) {
-      this.naicsStorage.setSelectOptionsCacheLoading(false);
       console.error("NAICSManager: Failed to get select options", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Internal method to fetch select options
+   * @private
+   */
+  async _fetchSelectOptions(onUnauthorizedCallback) {
+    try {
+      // Fetch fresh data from API
+      const optionsData = await this.naicsAPI.getNAICSSelectOptions(
+        onUnauthorizedCallback,
+      );
+
+      // Save to storage cache
+      this.naicsStorage.saveSelectOptionsToCache(optionsData);
+
+      console.log("NAICSManager: Select options data fetched successfully");
+
+      return optionsData;
+    } catch (error) {
+      console.error("NAICSManager: Error fetching select options:", error);
       throw error;
     }
   }
@@ -74,51 +97,102 @@ export class NAICSManager {
     forceRefresh = false,
   ) {
     try {
+      // Create a unique key for this request based on parameters
+      const requestKey = this._createRequestKey(params);
+
       // Check storage cache first (unless force refresh is requested)
       if (!forceRefresh) {
-        const cachedNaics = this.naicsStorage.getNaicsFromCache();
-        if (cachedNaics) {
-          return cachedNaics;
-        }
+        // For now, skip cache for search results as they're dynamic
+        // You could implement more sophisticated caching based on params
+        // const cachedNaics = this.naicsStorage.getNaicsFromCache();
+        // if (cachedNaics) {
+        //   return cachedNaics;
+        // }
       }
 
-      // Prevent multiple simultaneous requests
-      if (this.naicsStorage.isNaicsCacheLoading()) {
-        console.log("NAICSManager: NAICS request already in progress");
-        return this._waitForCurrentNaicsRequest();
+      // Check if there's already a pending request with the same parameters
+      if (this.pendingRequests.has(requestKey)) {
+        console.log(
+          "NAICSManager: Similar NAICS request already in progress, waiting...",
+        );
+        return this.pendingRequests.get(requestKey);
       }
-
-      this.naicsStorage.setNaicsCacheLoading(true);
 
       console.log("NAICSManager: Fetching fresh NAICS data", params);
 
+      // Validate and clean parameters
+      const validatedParams = this._validateNaicsParams(params);
+
+      // Create the request promise
+      const requestPromise = this._fetchNAICS(
+        validatedParams,
+        onUnauthorizedCallback,
+      );
+
+      // Store the promise to prevent duplicate requests
+      this.pendingRequests.set(requestKey, requestPromise);
+
       try {
-        // Validate and clean parameters
-        const validatedParams = this._validateNaicsParams(params);
-
-        // Fetch fresh data from API
-        const naicsData = await this.naicsAPI.getNAICS(
-          validatedParams,
-          onUnauthorizedCallback,
-        );
-
-        // Save to storage cache
-        this.naicsStorage.saveNaicsToCache(naicsData);
-
-        console.log("NAICSManager: NAICS data fetched successfully:", {
-          count: naicsData.results ? naicsData.results.length : 0,
-          totalCount: naicsData.count,
-        });
-
-        return naicsData;
+        const result = await requestPromise;
+        return result;
       } finally {
-        this.naicsStorage.setNaicsCacheLoading(false);
+        // Clean up the pending request
+        this.pendingRequests.delete(requestKey);
       }
     } catch (error) {
-      this.naicsStorage.setNaicsCacheLoading(false);
       console.error("NAICSManager: Failed to get NAICS", error);
       throw error;
     }
+  }
+
+  /**
+   * Internal method to fetch NAICS data
+   * @private
+   */
+  async _fetchNAICS(validatedParams, onUnauthorizedCallback) {
+    try {
+      // Fetch fresh data from API
+      const naicsData = await this.naicsAPI.getNAICS(
+        validatedParams,
+        onUnauthorizedCallback,
+      );
+
+      // Only cache if it's a general listing without search params
+      if (
+        !validatedParams.search &&
+        !validatedParams.code &&
+        !validatedParams.industryTitle
+      ) {
+        this.naicsStorage.saveNaicsToCache(naicsData);
+      }
+
+      console.log("NAICSManager: NAICS data fetched successfully:", {
+        count: naicsData.results ? naicsData.results.length : 0,
+        totalCount: naicsData.count,
+      });
+
+      return naicsData;
+    } catch (error) {
+      console.error("NAICSManager: Error fetching NAICS:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Creates a unique key for request deduplication
+   * @private
+   */
+  _createRequestKey(params) {
+    const sortedParams = Object.keys(params)
+      .sort()
+      .reduce((result, key) => {
+        if (params[key] !== undefined && params[key] !== null) {
+          result[key] = params[key];
+        }
+        return result;
+      }, {});
+
+    return `naics-${JSON.stringify(sortedParams)}`;
   }
 
   /**
@@ -177,6 +251,7 @@ export class NAICSManager {
    */
   clearNaicsCache() {
     this.naicsStorage.clearNaicsCache();
+    this.pendingRequests.clear();
   }
 
   /**
@@ -191,6 +266,7 @@ export class NAICSManager {
    */
   clearAllCache() {
     this.naicsStorage.clearAllCache();
+    this.pendingRequests.clear();
   }
 
   /**
@@ -198,7 +274,9 @@ export class NAICSManager {
    * @returns {Object} - Cache state details
    */
   getNaicsCacheInfo() {
-    return this.naicsStorage.getNaicsCacheInfo();
+    const cacheInfo = this.naicsStorage.getNaicsCacheInfo();
+    cacheInfo.pendingRequests = this.pendingRequests.size;
+    return cacheInfo;
   }
 
   /**
@@ -364,7 +442,21 @@ export class NAICSManager {
       }
     }
 
-    // Validate filters
+    // Pass through additional parameters from search
+    // These are the parameters that come from the search form
+    if (params.code && typeof params.code === "string") {
+      validatedParams.code = params.code.trim();
+    }
+
+    if (params.industryTitle && typeof params.industryTitle === "string") {
+      validatedParams.industryTitle = params.industryTitle.trim();
+    }
+
+    // Also check for alternative parameter names that might be used
+    if (params.it && typeof params.it === "string") {
+      validatedParams.it = params.it.trim();
+    }
+
     if (params.sector && typeof params.sector === "string") {
       validatedParams.sector = params.sector;
     }
@@ -382,63 +474,5 @@ export class NAICSManager {
     }
 
     return validatedParams;
-  }
-
-  /**
-   * Waits for current NAICS request to complete
-   * @private
-   * @returns {Promise<Object>}
-   */
-  _waitForCurrentNaicsRequest() {
-    return new Promise((resolve, reject) => {
-      const checkInterval = setInterval(() => {
-        if (!this.naicsStorage.isNaicsCacheLoading()) {
-          clearInterval(checkInterval);
-
-          // Try to get cached data
-          const cachedData = this.naicsStorage.getNaicsFromCache();
-          if (cachedData) {
-            resolve(cachedData);
-          } else {
-            reject(new Error("NAICS request failed"));
-          }
-        }
-      }, 100);
-
-      // Timeout after 30 seconds
-      setTimeout(() => {
-        clearInterval(checkInterval);
-        reject(new Error("NAICS request timeout"));
-      }, 30000);
-    });
-  }
-
-  /**
-   * Waits for current select options request to complete
-   * @private
-   * @returns {Promise<Object>}
-   */
-  _waitForCurrentSelectOptionsRequest() {
-    return new Promise((resolve, reject) => {
-      const checkInterval = setInterval(() => {
-        if (!this.naicsStorage.isSelectOptionsCacheLoading()) {
-          clearInterval(checkInterval);
-
-          // Try to get cached data
-          const cachedData = this.naicsStorage.getSelectOptionsFromCache();
-          if (cachedData) {
-            resolve(cachedData);
-          } else {
-            reject(new Error("Select options request failed"));
-          }
-        }
-      }, 100);
-
-      // Timeout after 30 seconds
-      setTimeout(() => {
-        clearInterval(checkInterval);
-        reject(new Error("Select options request timeout"));
-      }, 30000);
-    });
   }
 }

@@ -63,7 +63,7 @@ export class NAICSAPI {
    * @param {Function} onUnauthorizedCallback - Called when token refresh fails
    * @returns {Promise<Object>} - NAICS list with pagination data
    */
-  async getNAICS(params = {}, onUnauthorizedCallback = null) {
+  async getNAICS(params = {}, onUnauthorizedCallback = null, isRetry = false) {
     try {
       // Create authenticated axios instance
       const authenticatedAxios = createAuthenticatedAxios(
@@ -82,21 +82,69 @@ export class NAICSAPI {
       // Add search params
       if (params.search) queryParams.append("search", params.search);
 
+      // Add specific field search params
+      if (params.code) queryParams.append("code", params.code);
+      if (params.industryTitle)
+        queryParams.append("industry_title", params.industryTitle);
+
+      // Also check for 'it' parameter (industry title abbreviation)
+      if (params.it) queryParams.append("industry_title", params.it);
+
       // Add sorting params
       if (params.sortBy && params.sortOrder) {
-        // Send as combined parameter that backend now expects
-        queryParams.append("sort_by", `${params.sortBy},${params.sortOrder}`);
+        // Map camelCase field names to snake_case for the backend
+        const sortFieldMap = {
+          code: "code",
+          code_str: "code_str",
+          industryTitle: "industry_title",
+          industry_title: "industry_title",
+          createdAt: "created_at",
+          created_at: "created_at",
+          updatedAt: "updated_at",
+          updated_at: "updated_at",
+          sectorCode: "sector_code",
+          sector_code: "sector_code",
+          sectorTitle: "sector_title",
+          sector_title: "sector_title",
+          subsectorCode: "subsector_code",
+          subsector_code: "subsector_code",
+          subsectorTitle: "subsector_title",
+          subsector_title: "subsector_title",
+          industryGroupCode: "industry_group_code",
+          industry_group_code: "industry_group_code",
+          industryGroupTitle: "industry_group_title",
+          industry_group_title: "industry_group_title",
+          _id: "_id",
+        };
+
+        const mappedSortField = sortFieldMap[params.sortBy] || params.sortBy;
+        queryParams.append("sort_by", `${mappedSortField},${params.sortOrder}`);
       }
 
       // Add any additional filters
+      const excludedParams = [
+        "page",
+        "limit",
+        "search",
+        "sortBy",
+        "sortOrder",
+        "code",
+        "industryTitle",
+        "it",
+      ];
       Object.keys(params).forEach((key) => {
-        if (!["page", "limit", "search", "sortBy", "sortOrder"].includes(key)) {
+        if (!excludedParams.includes(key)) {
           if (
             params[key] !== undefined &&
             params[key] !== null &&
             params[key] !== ""
           ) {
-            queryParams.append(key, params[key]);
+            // Convert camelCase to snake_case for backend
+            const snakeKey = key.replace(
+              /[A-Z]/g,
+              (letter) => `_${letter.toLowerCase()}`,
+            );
+            queryParams.append(snakeKey, params[key]);
           }
         }
       });
@@ -105,6 +153,12 @@ export class NAICSAPI {
       const url = queryString
         ? `${this.endpoints.NORTH_AMERICA_INDUSTRY_CLASSIFICATION_SYSTEMS}?${queryString}`
         : this.endpoints.NORTH_AMERICA_INDUSTRY_CLASSIFICATION_SYSTEMS;
+
+      // Log the request in development
+      if (process.env.NODE_ENV === "development") {
+        console.log("NAICSAPI: Making request to:", url);
+        console.log("NAICSAPI: Query params:", queryString);
+      }
 
       // Make the API call
       const response = await authenticatedAxios.get(url);
@@ -120,11 +174,31 @@ export class NAICSAPI {
       ) {
         data.results.forEach((item) => {
           if (item.createdAt) {
-            item.createdAt = DateTime.fromISO(item.createdAt).toLocaleString(
-              DateTime.DATETIME_MED,
-            );
+            // Keep the ISO format for consistency
+            // The component can format it as needed
+            item.createdAtFormatted = DateTime.fromISO(
+              item.createdAt,
+            ).toLocaleString(DateTime.DATETIME_MED);
+          }
+          if (item.updatedAt) {
+            item.updatedAtFormatted = DateTime.fromISO(
+              item.updatedAt,
+            ).toLocaleString(DateTime.DATETIME_MED);
           }
         });
+      }
+
+      // Add pagination helpers
+      if (data.count !== undefined) {
+        const currentPage = params.page || 1;
+        const pageSize = params.limit || 50;
+        const totalPages = Math.ceil(data.count / pageSize);
+
+        data.hasNextPage = currentPage < totalPages;
+        data.hasPreviousPage = currentPage > 1;
+        data.currentPage = currentPage;
+        data.totalPages = totalPages;
+        data.pageSize = pageSize;
       }
 
       return data;
@@ -194,6 +268,15 @@ export class NAICSAPI {
     // Handle different error structures
     if (error.response?.data) {
       errorData = error.response.data;
+
+      // Log detailed error in development
+      if (process.env.NODE_ENV === "development") {
+        console.error("NAICSAPI Error Response:", {
+          status: error.response.status,
+          data: error.response.data,
+          headers: error.response.headers,
+        });
+      }
     } else if (error.response) {
       errorData = error.response;
     } else if (typeof error === "object" && error !== null) {
@@ -205,6 +288,14 @@ export class NAICSAPI {
 
     // Convert error to camelCase
     const formattedErrors = camelizeKeys(errorData);
+
+    // Add user-friendly message if not present
+    if (!formattedErrors.message && formattedErrors.detail) {
+      formattedErrors.message = formattedErrors.detail;
+    } else if (!formattedErrors.message) {
+      formattedErrors.message = "An error occurred while fetching NAICS data";
+    }
+
     return formattedErrors;
   }
 }
