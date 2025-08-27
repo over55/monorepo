@@ -118,7 +118,7 @@ const REGION_OPTIONS = {
     { value: "BCN", label: "Baja California" },
     // ... add more Mexican states as needed
   ],
-}; // Fixed: Changed from ]; to };
+};
 
 /**
  * Account Update Page for Admin Users
@@ -146,13 +146,13 @@ function AdminAccountUpdatePage() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [phoneType, setPhoneType] = useState(0);
-  const [phoneExtension, setPhoneExtension] = useState(""); // Added missing field
+  const [phoneExtension, setPhoneExtension] = useState("");
   const [otherPhone, setOtherPhone] = useState("");
   const [otherPhoneType, setOtherPhoneType] = useState(0);
-  const [otherPhoneExtension, setOtherPhoneExtension] = useState(""); // Added missing field
+  const [otherPhoneExtension, setOtherPhoneExtension] = useState("");
   const [isOkToEmail, setIsOkToEmail] = useState(false);
   const [isOkToText, setIsOkToText] = useState(false);
-  const [faxNumber, setFaxNumber] = useState(""); // Added missing field
+  const [faxNumber, setFaxNumber] = useState("");
 
   // Address fields
   const [country, setCountry] = useState("CA");
@@ -203,7 +203,7 @@ function AdminAccountUpdatePage() {
   const [gender, setGender] = useState(0);
   const [genderOther, setGenderOther] = useState("");
   const [identifyAs, setIdentifyAs] = useState([]);
-  const [agreePromotionsEmail, setAgreePromotionsEmail] = useState(false); // Added for clarity
+  const [agreePromotionsEmail, setAgreePromotionsEmail] = useState(false);
 
   // Options for dropdowns
   const [tagOptions, setTagOptions] = useState([]);
@@ -256,13 +256,13 @@ function AdminAccountUpdatePage() {
           setEmail(profileData.email || "");
           setPhone(profileData.phone || "");
           setPhoneType(profileData.phoneType || 0);
-          setPhoneExtension(profileData.phoneExtension || ""); // Added
+          setPhoneExtension(profileData.phoneExtension || "");
           setOtherPhone(profileData.otherPhone || "");
           setOtherPhoneType(profileData.otherPhoneType || 0);
-          setOtherPhoneExtension(profileData.otherPhoneExtension || ""); // Added
+          setOtherPhoneExtension(profileData.otherPhoneExtension || "");
           setIsOkToEmail(profileData.isOkToEmail || false);
           setIsOkToText(profileData.isOkToText || false);
-          setFaxNumber(profileData.faxNumber || ""); // Added
+          setFaxNumber(profileData.faxNumber || "");
           setAgreePromotionsEmail(profileData.agreePromotionsEmail || false);
 
           // Address
@@ -431,23 +431,30 @@ function AdminAccountUpdatePage() {
         lastName: lastName.trim(),
         email: email.trim(),
         phone: phone.trim(),
-        phoneType: parseInt(phoneType) || 0,
-        phoneExtension: phoneExtension.trim(), // Added
         otherPhone: otherPhone.trim(),
         otherPhoneType: parseInt(otherPhoneType) || 0,
-        otherPhoneExtension: otherPhoneExtension.trim(), // Added
-        isOkToEmail: isOkToEmail,
+        otherPhoneExtension: otherPhoneExtension.trim(),
         isOkToText: isOkToText,
-        faxNumber: faxNumber.trim(), // Added
+        faxNumber: faxNumber.trim(),
         country: country,
         region: region,
         city: city.trim(),
-        addressLine1: addressLine1.trim(),
-        addressLine2: addressLine2.trim(),
-        postalCode: postalCode.trim(),
         hasShippingAddress: hasShippingAddress,
-        agreePromotionsEmail: agreePromotionsEmail,
       };
+
+      // Only include these fields for non-Executive users
+      if (currentUser.role !== EXECUTIVE_ROLE_ID) {
+        payload = {
+          ...payload,
+          phoneType: parseInt(phoneType) || 0,
+          phoneExtension: phoneExtension.trim(),
+          isOkToEmail: isOkToEmail,
+          agreePromotionsEmail: agreePromotionsEmail,
+          addressLine1: addressLine1.trim(),
+          addressLine2: addressLine2.trim(),
+          postalCode: postalCode.trim(),
+        };
+      }
 
       // Add shipping address if enabled
       if (hasShippingAddress) {
@@ -567,9 +574,8 @@ function AdminAccountUpdatePage() {
           {isExecutive && (
             <Alert type="info" className="mt-4">
               <InformationCircleIcon className="h-5 w-5" />
-              Note: As an Executive user, some fields may have limited saving
-              capabilities. Contact system administrator if you need to update
-              restricted fields.
+              Note: As an Executive user, some fields are restricted and cannot
+              be edited.
             </Alert>
           )}
         </div>
@@ -685,13 +691,18 @@ function AdminAccountUpdatePage() {
                   />
                 </FormGroup>
 
-                <FormGroup className="md:col-span-2">
-                  <Checkbox
-                    label="I agree to receive electronic emails"
-                    checked={isOkToEmail}
-                    onChange={(e) => setIsOkToEmail(e.target.checked)}
-                  />
-                </FormGroup>
+                {/* Only show email agreement checkboxes for non-Executives */}
+                {!isExecutive && (
+                  <>
+                    <FormGroup className="md:col-span-2">
+                      <Checkbox
+                        label="I agree to receive electronic emails"
+                        checked={isOkToEmail}
+                        onChange={(e) => setIsOkToEmail(e.target.checked)}
+                      />
+                    </FormGroup>
+                  </>
+                )}
 
                 <FormGroup>
                   <Input
@@ -705,15 +716,20 @@ function AdminAccountUpdatePage() {
                   />
                 </FormGroup>
 
-                <FormGroup>
-                  <Select
-                    label="Phone Type"
-                    value={phoneType}
-                    onChange={(e) => setPhoneType(parseInt(e.target.value))}
-                    options={ASSOCIATE_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS}
-                    error={errors.phoneType}
-                  />
-                </FormGroup>
+                {/* Only show phone type for non-Executives */}
+                {!isExecutive && (
+                  <FormGroup>
+                    <Select
+                      label="Phone Type"
+                      value={phoneType}
+                      onChange={(e) => setPhoneType(parseInt(e.target.value))}
+                      options={
+                        ASSOCIATE_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS
+                      }
+                      error={errors.phoneType}
+                    />
+                  </FormGroup>
+                )}
 
                 {!isExecutive && (
                   <FormGroup>
@@ -783,99 +799,18 @@ function AdminAccountUpdatePage() {
                   </>
                 )}
 
-                <FormGroup className="md:col-span-2">
-                  <Checkbox
-                    label="I agree to receive promotional emails"
-                    checked={agreePromotionsEmail}
-                    onChange={(e) => setAgreePromotionsEmail(e.target.checked)}
-                  />
-                </FormGroup>
-              </div>
-            </div>
-          </Card>
-
-          {/* Contact Information */}
-          <Card className="mb-6">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-800 flex items-center">
-                <PhoneIcon className="h-5 w-5 mr-2 text-gray-600" />
-                Contact Information
-              </h2>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormGroup className="md:col-span-2">
-                  <Input
-                    type="email"
-                    label="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    error={errors.email}
-                    placeholder="email@example.com"
-                  />
-                </FormGroup>
-
-                <FormGroup className="md:col-span-2">
-                  <Checkbox
-                    label="I agree to receive electronic emails"
-                    checked={isOkToEmail}
-                    onChange={(e) => setIsOkToEmail(e.target.checked)}
-                  />
-                </FormGroup>
-
-                <FormGroup>
-                  <Input
-                    type="tel"
-                    label="Phone"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    required
-                    error={errors.phone}
-                    placeholder="(123) 456-7890"
-                  />
-                </FormGroup>
-
-                <FormGroup>
-                  <Select
-                    label="Phone Type"
-                    value={phoneType}
-                    onChange={(e) => setPhoneType(parseInt(e.target.value))}
-                    options={ASSOCIATE_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS}
-                    error={errors.phoneType}
-                  />
-                </FormGroup>
-
-                <FormGroup className="md:col-span-2">
-                  <Checkbox
-                    label="I agree to receive text messages"
-                    checked={isOkToText}
-                    onChange={(e) => setIsOkToText(e.target.checked)}
-                  />
-                </FormGroup>
-
-                <FormGroup>
-                  <Input
-                    type="tel"
-                    label="Other Phone (Optional)"
-                    value={otherPhone}
-                    onChange={(e) => setOtherPhone(e.target.value)}
-                    error={errors.otherPhone}
-                    placeholder="(123) 456-7890"
-                  />
-                </FormGroup>
-
-                <FormGroup>
-                  <Select
-                    label="Other Phone Type (Optional)"
-                    value={otherPhoneType}
-                    onChange={(e) =>
-                      setOtherPhoneType(parseInt(e.target.value))
-                    }
-                    options={ASSOCIATE_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS}
-                    error={errors.otherPhoneType}
-                  />
-                </FormGroup>
+                {/* Only show promotional email checkbox for non-Executives */}
+                {!isExecutive && (
+                  <FormGroup className="md:col-span-2">
+                    <Checkbox
+                      label="I agree to receive promotional emails"
+                      checked={agreePromotionsEmail}
+                      onChange={(e) =>
+                        setAgreePromotionsEmail(e.target.checked)
+                      }
+                    />
+                  </FormGroup>
+                )}
               </div>
             </div>
           </Card>
@@ -947,37 +882,42 @@ function AdminAccountUpdatePage() {
                       />
                     </FormGroup>
 
-                    <FormGroup className="md:col-span-2">
-                      <Input
-                        label="Address Line 1"
-                        value={addressLine1}
-                        onChange={(e) => setAddressLine1(e.target.value)}
-                        required={!isExecutive}
-                        error={errors.addressLine1}
-                        placeholder="Street address"
-                      />
-                    </FormGroup>
+                    {/* Only show address line 1 for non-Executives */}
+                    {!isExecutive && (
+                      <>
+                        <FormGroup className="md:col-span-2">
+                          <Input
+                            label="Address Line 1"
+                            value={addressLine1}
+                            onChange={(e) => setAddressLine1(e.target.value)}
+                            required
+                            error={errors.addressLine1}
+                            placeholder="Street address"
+                          />
+                        </FormGroup>
 
-                    <FormGroup className="md:col-span-2">
-                      <Input
-                        label="Address Line 2 (Optional)"
-                        value={addressLine2}
-                        onChange={(e) => setAddressLine2(e.target.value)}
-                        error={errors.addressLine2}
-                        placeholder="Apartment, suite, etc."
-                      />
-                    </FormGroup>
+                        <FormGroup className="md:col-span-2">
+                          <Input
+                            label="Address Line 2 (Optional)"
+                            value={addressLine2}
+                            onChange={(e) => setAddressLine2(e.target.value)}
+                            error={errors.addressLine2}
+                            placeholder="Apartment, suite, etc."
+                          />
+                        </FormGroup>
 
-                    <FormGroup>
-                      <Input
-                        label="Postal Code"
-                        value={postalCode}
-                        onChange={(e) => setPostalCode(e.target.value)}
-                        required={!isExecutive}
-                        error={errors.postalCode}
-                        placeholder="A1B 2C3"
-                      />
-                    </FormGroup>
+                        <FormGroup>
+                          <Input
+                            label="Postal Code"
+                            value={postalCode}
+                            onChange={(e) => setPostalCode(e.target.value)}
+                            required
+                            error={errors.postalCode}
+                            placeholder="A1B 2C3"
+                          />
+                        </FormGroup>
+                      </>
+                    )}
                   </div>
                 </div>
 

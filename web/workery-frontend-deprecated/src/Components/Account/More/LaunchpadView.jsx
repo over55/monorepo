@@ -1,3 +1,4 @@
+// monorepo/web/workery-frontend-deprecated/src/Components/Account/More/LaunchpadView.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -24,12 +25,12 @@ import PageLoadingContent from "../../Reusable/PageLoadingContent";
 import { topAlertMessageState, topAlertStatusState } from "../../../AppState";
 import { currentUserState } from "../../../AppState";
 import {
-    EXECUTIVE_ROLE_ID,
-    MANAGEMENT_ROLE_ID,
-    FRONTLINE_ROLE_ID,
-    ASSOCIATE_ROLE_ID,
-    CUSTOMER_ROLE_ID,
-    ASSOCIATE_JOB_SEEKER_ROLE_ID
+  EXECUTIVE_ROLE_ID,
+  MANAGEMENT_ROLE_ID,
+  FRONTLINE_ROLE_ID,
+  ASSOCIATE_ROLE_ID,
+  CUSTOMER_ROLE_ID,
+  ASSOCIATE_JOB_SEEKER_ROLE_ID,
 } from "../../../Constants/App";
 
 function AccountMoreLaunchpad() {
