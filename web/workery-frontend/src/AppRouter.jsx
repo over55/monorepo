@@ -259,6 +259,7 @@ import AdminStaffDetailAttachmentAddPage from "./pages/Admin/Staff/Detail/Attach
 import AdminStaffDetailAttachmentListPage from "./pages/Admin/Staff/Detail/Attachment/List/Page";
 import AdminStaffDetailAttachmentDetailPage from "./pages/Admin/Staff/Detail/Attachment/Detail/Page";
 import AdminStaffDetailAttachmentUpdatePage from "./pages/Admin/Staff/Detail/Attachment/Update/Page";
+import AdminStaffDetailAttachmentDeletePage from "./pages/Admin/Staff/Detail/Attachment/Delete/Page";
 import AdminStaffDetailMorePage from "./pages/Admin/Staff/Detail/More/Page";
 import AdminStaffDetailMore2FAPage from "./pages/Admin/Staff/Detail/More/2FA/Page";
 import AdminStaffDetailMoreArchivePage from "./pages/Admin/Staff/Detail/More/Archive/Page";
@@ -1075,6 +1076,14 @@ function AppRouter() {
               element={
                 <Layout>
                   <AdminStaffDetailAttachmentUpdatePage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/staff/:aid/attachment/:atid/delete"
+              element={
+                <Layout>
+                  <AdminStaffDetailAttachmentDeletePage />
                 </Layout>
               }
             />
