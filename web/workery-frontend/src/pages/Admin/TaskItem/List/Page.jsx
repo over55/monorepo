@@ -30,6 +30,7 @@ import {
   ClockIcon,
   LockClosedIcon,
   LockOpenIcon,
+  InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 
@@ -102,6 +103,8 @@ function AdminTaskItemListPage() {
   // Modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
 
   // Background refresh interval
   const refreshIntervalRef = useRef(null);
@@ -269,6 +272,16 @@ function AdminTaskItemListPage() {
     }
   };
 
+  // Handle page size change
+  const handlePageSizeChange = (e) => {
+    const newPageSize = parseInt(e.target.value);
+    setPageSize(newPageSize);
+    setCursorHistory([]);
+    setCurrentCursor("");
+    setNextCursor("");
+    setHasNextPage(false);
+  };
+
   // Handle delete task
   const handleDeleteTask = async () => {
     if (!taskToDelete) return;
@@ -324,8 +337,8 @@ function AdminTaskItemListPage() {
   // Get status badge color
   const getStatusBadgeColor = (isClosed) => {
     return isClosed
-      ? "bg-gray-100 text-gray-800"
-      : "bg-green-100 text-green-800";
+      ? "bg-gray-100 text-gray-800 border border-gray-200"
+      : "bg-green-100 text-green-800 border border-green-200";
   };
 
   // Calculate pagination info
@@ -350,17 +363,23 @@ function AdminTaskItemListPage() {
             <li className="inline-flex items-center">
               <Link
                 to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-black hover:text-blue-600"
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-md px-1"
               >
-                <ChartBarIcon className="w-4 h-4 mr-2" />
+                <ChartBarIcon className="w-4 h-4 mr-2" aria-hidden="true" />
                 Dashboard
               </Link>
             </li>
             <li aria-current="page">
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
+                <ChevronRightIcon
+                  className="w-5 h-5 text-gray-400"
+                  aria-hidden="true"
+                />
                 <span className="ml-1 text-sm font-medium text-black md:ml-2 inline-flex items-center">
-                  <ClipboardDocumentListIcon className="w-4 h-4 mr-2" />
+                  <ClipboardDocumentListIcon
+                    className="w-4 h-4 mr-2"
+                    aria-hidden="true"
+                  />
                   Tasks
                 </span>
               </div>
@@ -371,10 +390,13 @@ function AdminTaskItemListPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-black flex items-center">
-            <ClipboardDocumentListIcon className="w-8 h-8 mr-3 text-blue-600" />
+            <ClipboardDocumentListIcon
+              className="w-8 h-8 mr-3 text-blue-600"
+              aria-hidden="true"
+            />
             Tasks Management
             {totalCount > 0 && (
-              <span className="ml-4 text-lg font-normal text-black">
+              <span className="ml-4 text-lg font-normal text-gray-600">
                 ({totalCount}{" "}
                 {isClosedFilter === TASK_IS_CLOSED_FILTER.OPEN
                   ? "open"
@@ -389,14 +411,19 @@ function AdminTaskItemListPage() {
 
         {/* Success/Error Messages */}
         {successMessage && (
-          <div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center justify-between">
+          <div
+            className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center justify-between"
+            role="alert"
+            aria-live="polite"
+          >
             <span className="flex items-center">
-              <CheckCircleIcon className="w-5 h-5 mr-2" />
+              <CheckCircleIcon className="w-5 h-5 mr-2" aria-hidden="true" />
               {successMessage}
             </span>
             <button
               onClick={() => setSuccessMessage("")}
-              className="text-green-600 hover:text-green-800"
+              className="text-green-600 hover:text-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 rounded-md p-1"
+              aria-label="Dismiss success message"
             >
               <XMarkIcon className="w-5 h-5" />
             </button>
@@ -404,14 +431,22 @@ function AdminTaskItemListPage() {
         )}
 
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
+          <div
+            className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between"
+            role="alert"
+            aria-live="assertive"
+          >
             <span className="flex items-center">
-              <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
+              <ExclamationTriangleIcon
+                className="w-5 h-5 mr-2"
+                aria-hidden="true"
+              />
               {error}
             </span>
             <button
               onClick={() => setError(null)}
-              className="text-red-600 hover:text-red-800"
+              className="text-red-600 hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-md p-1"
+              aria-label="Dismiss error message"
             >
               <XMarkIcon className="w-5 h-5" />
             </button>
@@ -419,37 +454,42 @@ function AdminTaskItemListPage() {
         )}
 
         {/* Main Content Card */}
-        <div className="bg-white shadow-sm rounded-lg">
+        <div className="bg-white shadow-sm rounded-lg border border-gray-200">
           {/* Card Header */}
           <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-black flex items-center">
-              <ClipboardDocumentListIcon className="w-5 h-5 mr-2" />
+              <ClipboardDocumentListIcon
+                className="w-5 h-5 mr-2 text-gray-600"
+                aria-hidden="true"
+              />
               Task List
             </h2>
             <div className="flex items-center gap-2">
               {/* View Type Toggle */}
-              <div className="flex items-center bg-gray-100 rounded-lg p-1">
+              <div className="flex items-center gap-1">
                 <button
                   onClick={() => setViewType(VIEW_TYPE_TABULAR)}
-                  className={`inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  className={`p-2 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500 ${
                     viewType === VIEW_TYPE_TABULAR
-                      ? "bg-white text-black shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
+                      ? "text-blue-600"
+                      : "text-black hover:text-gray-600"
                   }`}
+                  aria-pressed={viewType === VIEW_TYPE_TABULAR}
+                  aria-label="Table view"
                 >
-                  <TableCellsIcon className="w-4 h-4 mr-1.5" />
-                  Table
+                  <TableCellsIcon className="w-6 h-6" aria-hidden="true" />
                 </button>
                 <button
                   onClick={() => setViewType(VIEW_TYPE_GRID)}
-                  className={`inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  className={`p-2 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500 ${
                     viewType === VIEW_TYPE_GRID
-                      ? "bg-white text-black shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
+                      ? "text-blue-600"
+                      : "text-black hover:text-gray-600"
                   }`}
+                  aria-pressed={viewType === VIEW_TYPE_GRID}
+                  aria-label="Grid view"
                 >
-                  <Squares2X2Icon className="w-4 h-4 mr-1.5" />
-                  Grid
+                  <Squares2X2Icon className="w-6 h-6" aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -459,37 +499,46 @@ function AdminTaskItemListPage() {
           <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-medium text-black flex items-center">
-                <FunnelIcon className="w-4 h-4 mr-2" />
+                <FunnelIcon
+                  className="w-4 h-4 mr-2 text-gray-600"
+                  aria-hidden="true"
+                />
                 Filter & Search
               </h3>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setShowFilters(!showFilters)}
-                  className={`text-sm font-medium flex items-center px-3 py-1 rounded-md transition-colors ${
+                  className={`text-sm font-medium flex items-center px-3 py-1 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                     showFilters
                       ? "text-blue-700 bg-blue-50"
-                      : "text-black hover:text-gray-800"
+                      : "text-gray-600 hover:text-gray-800"
                   }`}
+                  aria-expanded={showFilters}
+                  aria-controls="extended-filters"
                 >
                   {showFilters ? (
-                    <ChevronDownIcon className="w-4 h-4 mr-1" />
+                    <ChevronDownIcon
+                      className="w-4 h-4 mr-1"
+                      aria-hidden="true"
+                    />
                   ) : (
-                    <PlusIcon className="w-4 h-4 mr-1" />
+                    <PlusIcon className="w-4 h-4 mr-1" aria-hidden="true" />
                   )}
                   {showFilters ? "Hide" : "Show"} All Filters
                 </button>
                 <button
                   onClick={clearFilters}
-                  className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center"
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md px-2 py-1"
                 >
-                  <XMarkIcon className="w-4 h-4 mr-1" />
+                  <XMarkIcon className="w-4 h-4 mr-1" aria-hidden="true" />
                   Clear Filters
                 </button>
                 <button
                   onClick={() => fetchTasks(currentCursor)}
-                  className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center"
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md px-2 py-1"
+                  aria-label="Refresh task list"
                 >
-                  <ArrowPathIcon className="w-4 h-4 mr-1" />
+                  <ArrowPathIcon className="w-4 h-4 mr-1" aria-hidden="true" />
                   Refresh
                 </button>
               </div>
@@ -498,21 +547,27 @@ function AdminTaskItemListPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Search */}
               <div className="lg:col-span-1">
-                <label className="block text-sm font-medium text-black mb-1">
+                <label
+                  htmlFor="search-input"
+                  className="block text-sm font-medium text-black mb-1"
+                >
                   Search
                 </label>
                 <div className="relative">
                   <input
+                    id="search-input"
                     type="text"
                     value={tempSearchQuery}
                     onChange={(e) => setTempSearchQuery(e.target.value)}
                     placeholder="Search tasks..."
-                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 pr-10 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black placeholder-gray-500"
                     onKeyPress={handleSearchKeyPress}
+                    aria-label="Search tasks"
                   />
                   <button
                     onClick={handleSearch}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                    aria-label="Submit search"
                   >
                     <MagnifyingGlassIcon className="w-5 h-5" />
                   </button>
@@ -521,11 +576,15 @@ function AdminTaskItemListPage() {
 
               {/* Sort By */}
               <div>
-                <label className="block text-sm font-medium text-black mb-1">
+                <label
+                  htmlFor="sort-select"
+                  className="block text-sm font-medium text-black mb-1"
+                >
                   Sort By
                 </label>
                 <div className="relative">
                   <select
+                    id="sort-select"
                     value={sortBy}
                     onChange={(e) => {
                       setSortBy(e.target.value);
@@ -534,7 +593,8 @@ function AdminTaskItemListPage() {
                       setNextCursor("");
                       setHasNextPage(false);
                     }}
-                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                    className="w-full px-3 py-2 pr-10 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white text-black"
+                    aria-label="Sort tasks by"
                   >
                     {TASK_SORT_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -542,13 +602,19 @@ function AdminTaskItemListPage() {
                       </option>
                     ))}
                   </select>
-                  <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                  <ChevronDownIcon
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+                    aria-hidden="true"
+                  />
                 </div>
               </div>
 
               {/* Status Filter */}
               <div>
-                <label className="block text-sm font-medium text-black mb-1">
+                <label
+                  htmlFor="status-select"
+                  className="block text-sm font-medium text-black mb-1"
+                >
                   Status
                 </label>
                 <div className="flex gap-2">
@@ -602,18 +668,23 @@ function AdminTaskItemListPage() {
 
               {/* Type Filter */}
               <div>
-                <label className="block text-sm font-medium text-black mb-1">
+                <label
+                  htmlFor="type-select"
+                  className="block text-sm font-medium text-black mb-1"
+                >
                   Type
                 </label>
                 <div className="relative">
                   <select
+                    id="type-select"
                     value={typeFilter}
                     onChange={(e) => {
                       setTypeFilter(parseInt(e.target.value));
                       setCursorHistory([]);
                       setCurrentCursor("");
                     }}
-                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                    className="w-full px-3 py-2 pr-10 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white text-black"
+                    aria-label="Filter by type"
                   >
                     {TASK_TYPE_FILTER_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -621,30 +692,37 @@ function AdminTaskItemListPage() {
                       </option>
                     ))}
                   </select>
-                  <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                  <ChevronDownIcon
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+                    aria-hidden="true"
+                  />
                 </div>
               </div>
             </div>
 
             {/* Extended Filters */}
             {showFilters && (
-              <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
+              <div
+                id="extended-filters"
+                className="mt-4 p-4 bg-white rounded-lg border border-gray-200"
+              >
                 <h4 className="text-sm font-medium text-black mb-3">
                   Additional Options
                 </h4>
                 <div>
-                  <label className="block text-sm font-medium text-black mb-1">
+                  <label
+                    htmlFor="page-size-select"
+                    className="block text-sm font-medium text-black mb-1"
+                  >
                     Items per page
                   </label>
                   <div className="relative">
                     <select
+                      id="page-size-select"
                       value={pageSize}
-                      onChange={(e) => {
-                        setPageSize(parseInt(e.target.value));
-                        setCursorHistory([]);
-                        setCurrentCursor("");
-                      }}
-                      className="w-full max-w-xs px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                      onChange={handlePageSizeChange}
+                      className="w-full max-w-xs px-3 py-2 pr-10 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white text-black"
+                      aria-label="Number of items per page"
                     >
                       {PAGE_SIZE_OPTIONS.map((option) => (
                         <option key={option.value} value={option.value}>
@@ -652,7 +730,10 @@ function AdminTaskItemListPage() {
                         </option>
                       ))}
                     </select>
-                    <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                    <ChevronDownIcon
+                      className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+                      aria-hidden="true"
+                    />
                   </div>
                 </div>
               </div>
@@ -662,14 +743,21 @@ function AdminTaskItemListPage() {
           {/* Content Section */}
           <div className="px-6 py-4">
             {loading && !tasks.length ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                <span className="ml-3 text-black">Loading tasks...</span>
+              <div
+                className="flex items-center justify-center py-12"
+                role="status"
+                aria-live="polite"
+              >
+                <div
+                  className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"
+                  aria-hidden="true"
+                ></div>
+                <span className="ml-3 text-gray-600">Loading tasks...</span>
               </div>
             ) : tasks.length > 0 ? (
               <>
                 {/* Results count */}
-                <div className="mb-4 text-sm text-black">
+                <div className="mb-4 text-sm text-black" aria-live="polite">
                   Showing <strong>{tasks.length}</strong> tasks
                   {totalCount > 0 && ` of ${totalCount} total`}
                   {searchQuery && ` (filtered by "${searchQuery}")`}
@@ -678,105 +766,180 @@ function AdminTaskItemListPage() {
                 {/* List Display */}
                 {viewType === VIEW_TYPE_TABULAR ? (
                   /* Table View */
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
+                  <div
+                    className="overflow-x-auto"
+                    role="region"
+                    aria-label="Tasks table"
+                  >
+                    <table className="min-w-full">
+                      <thead className="bg-gray-700">
                         <tr>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">
+                          <th
+                            scope="col"
+                            className="px-4 py-3 text-left text-sm font-medium text-white uppercase tracking-wider rounded-tl-lg"
+                          >
                             Due Date
                           </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">
+                          <th
+                            scope="col"
+                            className="px-4 py-3 text-left text-sm font-medium text-white uppercase tracking-wider"
+                          >
                             Task
                           </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">
+                          <th
+                            scope="col"
+                            className="px-4 py-3 text-left text-sm font-medium text-white uppercase tracking-wider"
+                          >
                             Client
                           </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">
+                          <th
+                            scope="col"
+                            className="px-4 py-3 text-left text-sm font-medium text-white uppercase tracking-wider"
+                          >
                             Associate
                           </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">
+                          <th
+                            scope="col"
+                            className="px-4 py-3 text-left text-sm font-medium text-white uppercase tracking-wider"
+                          >
                             Status
                           </th>
-                          <th className="px-3 py-3 text-center text-xs font-medium text-black uppercase tracking-wider">
+                          <th
+                            scope="col"
+                            className="px-4 py-3 text-center text-sm font-medium text-white uppercase tracking-wider rounded-tr-lg"
+                          >
                             Actions
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {tasks.map((task) => (
-                          <tr key={task.id} className="hover:bg-gray-50">
-                            <td className="px-3 py-4 text-sm text-black whitespace-nowrap">
+                      <tbody className="divide-y divide-gray-200">
+                        {tasks.map((task, index) => (
+                          <tr
+                            key={task.id}
+                            className={`${index % 2 === 0 ? "bg-white" : "bg-zinc-200"} hover:bg-blue-50 cursor-pointer focus-within:bg-blue-50`}
+                            onClick={() => {
+                              setSelectedTask(task);
+                              setShowDetailModal(true);
+                            }}
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                setSelectedTask(task);
+                                setShowDetailModal(true);
+                              }
+                            }}
+                            role="row"
+                            aria-label={`View details for ${task.title}`}
+                          >
+                            <td className="px-4 py-4 text-base text-black whitespace-nowrap">
                               <div className="flex items-center">
-                                <CalendarIcon className="w-4 h-4 mr-2 text-gray-400" />
-                                {formatDateForDisplay(task.dueDate)}
+                                <CalendarIcon
+                                  className="w-5 h-5 mr-2 text-gray-400"
+                                  aria-hidden="true"
+                                />
+                                <span className="text-lg">
+                                  {formatDateForDisplay(task.dueDate)}
+                                </span>
                               </div>
                             </td>
-                            <td className="px-3 py-4 text-sm">
+                            <td className="px-4 py-4 text-base">
                               <Link
                                 to={getTaskUpdateURL(task.id, task.type)}
-                                className="text-blue-600 hover:text-blue-800 font-medium"
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-blue-600 hover:text-blue-800 font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md px-1"
                               >
-                                {task.title}
+                                <span className="text-lg">{task.title}</span>
                               </Link>
-                              <div className="text-xs text-black mt-1">
+                              <div className="text-sm text-gray-600 mt-1">
                                 {getTaskTypeDisplay(task.type)}
                               </div>
                             </td>
-                            <td className="px-3 py-4 text-sm text-black">
+                            <td className="px-4 py-4 text-base text-black">
                               {task.customerName ? (
                                 <Link
                                   to={`/admin/customer/${task.customerId}`}
-                                  className="flex items-center hover:text-blue-600"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="flex items-center hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md px-1"
+                                  aria-label={`View customer ${task.customerName}`}
                                 >
-                                  <UserIcon className="w-4 h-4 mr-2" />
-                                  {task.customerName}
+                                  <UserIcon
+                                    className="w-5 h-5 mr-2 text-gray-400"
+                                    aria-hidden="true"
+                                  />
+                                  <span className="text-lg">
+                                    {task.customerName}
+                                  </span>
                                 </Link>
                               ) : (
-                                <span className="text-gray-400 italic">
-                                  N/A
+                                <span className="text-gray-400 italic text-lg">
+                                  —
                                 </span>
                               )}
                             </td>
-                            <td className="px-3 py-4 text-sm text-black">
+                            <td className="px-4 py-4 text-base text-black">
                               {task.associateName ? (
                                 <Link
                                   to={`/admin/associate/${task.associateId}`}
-                                  className="flex items-center hover:text-blue-600"
+                                  onClick={(e) => e.stopPropagation()}
+                                  className="flex items-center hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md px-1"
+                                  aria-label={`View associate ${task.associateName}`}
                                 >
-                                  <WrenchScrewdriverIcon className="w-4 h-4 mr-2" />
-                                  {task.associateName}
+                                  <WrenchScrewdriverIcon
+                                    className="w-5 h-5 mr-2 text-gray-400"
+                                    aria-hidden="true"
+                                  />
+                                  <span className="text-lg">
+                                    {task.associateName}
+                                  </span>
                                 </Link>
                               ) : (
-                                <span className="text-gray-400 italic">
-                                  N/A
+                                <span className="text-gray-400 italic text-lg">
+                                  —
                                 </span>
                               )}
                             </td>
-                            <td className="px-3 py-4 text-sm">
+                            <td className="px-4 py-4 text-base">
                               <span
-                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeColor(task.isClosed)}`}
+                                className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeColor(task.isClosed)}`}
                               >
                                 {task.isClosed ? (
                                   <>
-                                    <LockClosedIcon className="w-3 h-3 mr-1" />
+                                    <LockClosedIcon
+                                      className="w-4 h-4 mr-1"
+                                      aria-hidden="true"
+                                    />
                                     Closed
                                   </>
                                 ) : (
                                   <>
-                                    <LockOpenIcon className="w-3 h-3 mr-1" />
+                                    <LockOpenIcon
+                                      className="w-4 h-4 mr-1"
+                                      aria-hidden="true"
+                                    />
                                     Open
                                   </>
                                 )}
                               </span>
                             </td>
-                            <td className="px-3 py-4">
+                            <td className="px-4 py-4">
                               <div className="flex items-center justify-center">
-                                <Link to={getTaskUpdateURL(task.id, task.type)}>
-                                  <button className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                                    <EyeIcon className="w-4 h-4 mr-1.5" />
-                                    {task.isClosed ? "View" : "View & Update"}
-                                  </button>
-                                </Link>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(
+                                      getTaskUpdateURL(task.id, task.type),
+                                    );
+                                  }}
+                                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                                  aria-label={`View details for ${task.title}`}
+                                >
+                                  <EyeIcon
+                                    className="w-4 h-4 mr-1.5"
+                                    aria-hidden="true"
+                                  />
+                                  {task.isClosed ? "View" : "View & Update"}
+                                </button>
                               </div>
                             </td>
                           </tr>
@@ -786,50 +949,79 @@ function AdminTaskItemListPage() {
                   </div>
                 ) : (
                   /* Grid View */
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                    role="list"
+                  >
                     {tasks.map((task) => (
                       <div
                         key={task.id}
-                        className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                        className="bg-white border-2 border-zinc-300 rounded-lg p-5 hover:shadow-md transition-shadow cursor-pointer focus-within:shadow-md"
+                        onClick={() => {
+                          setSelectedTask(task);
+                          setShowDetailModal(true);
+                        }}
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setSelectedTask(task);
+                            setShowDetailModal(true);
+                          }
+                        }}
+                        role="listitem"
+                        aria-label={`Task card for ${task.title}`}
                       >
-                        <div className="mb-3">
-                          <h3 className="text-base font-semibold text-black">
+                        <div className="mb-4">
+                          <h3 className="text-lg font-semibold text-black">
                             <Link
                               to={getTaskUpdateURL(task.id, task.type)}
-                              className="text-blue-600 hover:text-blue-800"
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-blue-600 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md"
                             >
-                              {task.title}
+                              <span className="text-xl">{task.title}</span>
                             </Link>
                           </h3>
-                          <p className="text-xs text-black mt-1">
+                          <p className="text-sm text-gray-600 mt-1">
                             {getTaskTypeDisplay(task.type)}
                           </p>
                         </div>
 
-                        <div className="space-y-2 text-sm text-black mb-3">
-                          <div className="flex items-center">
-                            <CalendarIcon className="w-4 h-4 mr-2 text-gray-400" />
+                        <div className="space-y-2 text-base text-black mb-4">
+                          <div className="flex items-center text-lg">
+                            <CalendarIcon
+                              className="w-5 h-5 mr-2 text-gray-400 flex-shrink-0"
+                              aria-hidden="true"
+                            />
                             <span>
                               Due: {formatDateForDisplay(task.dueDate)}
                             </span>
                           </div>
                           {task.customerName && (
-                            <div className="flex items-center">
-                              <UserIcon className="w-4 h-4 mr-2 text-gray-400" />
+                            <div className="flex items-center text-lg">
+                              <UserIcon
+                                className="w-5 h-5 mr-2 text-gray-400 flex-shrink-0"
+                                aria-hidden="true"
+                              />
                               <Link
                                 to={`/admin/customer/${task.customerId}`}
-                                className="hover:text-blue-600"
+                                onClick={(e) => e.stopPropagation()}
+                                className="hover:text-blue-600 truncate"
                               >
                                 {task.customerName}
                               </Link>
                             </div>
                           )}
                           {task.associateName && (
-                            <div className="flex items-center">
-                              <WrenchScrewdriverIcon className="w-4 h-4 mr-2 text-gray-400" />
+                            <div className="flex items-center text-lg">
+                              <WrenchScrewdriverIcon
+                                className="w-5 h-5 mr-2 text-gray-400 flex-shrink-0"
+                                aria-hidden="true"
+                              />
                               <Link
                                 to={`/admin/associate/${task.associateId}`}
-                                className="hover:text-blue-600"
+                                onClick={(e) => e.stopPropagation()}
+                                className="hover:text-blue-600 truncate"
                               >
                                 {task.associateName}
                               </Link>
@@ -839,27 +1031,41 @@ function AdminTaskItemListPage() {
 
                         <div className="flex items-center justify-between">
                           <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeColor(task.isClosed)}`}
+                            className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeColor(task.isClosed)}`}
                           >
                             {task.isClosed ? (
                               <>
-                                <LockClosedIcon className="w-3 h-3 mr-1" />
+                                <LockClosedIcon
+                                  className="w-4 h-4 mr-1"
+                                  aria-hidden="true"
+                                />
                                 Closed
                               </>
                             ) : (
                               <>
-                                <LockOpenIcon className="w-3 h-3 mr-1" />
+                                <LockOpenIcon
+                                  className="w-4 h-4 mr-1"
+                                  aria-hidden="true"
+                                />
                                 Open
                               </>
                             )}
                           </span>
 
-                          <Link to={getTaskUpdateURL(task.id, task.type)}>
-                            <button className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
-                              {task.isClosed ? "View" : "Update"}
-                              <ChevronRightIcon className="w-4 h-4 ml-1" />
-                            </button>
-                          </Link>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(getTaskUpdateURL(task.id, task.type));
+                            }}
+                            className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                            aria-label={`View details for ${task.title}`}
+                          >
+                            {task.isClosed ? "View" : "Update"}
+                            <ChevronRightIcon
+                              className="w-4 h-4 ml-1"
+                              aria-hidden="true"
+                            />
+                          </button>
                         </div>
                       </div>
                     ))}
@@ -867,26 +1073,31 @@ function AdminTaskItemListPage() {
                 )}
 
                 {/* Pagination */}
-                <div className="mt-6 flex items-center justify-between border-t border-gray-200 pt-4">
+                <nav
+                  className="mt-6 flex items-center justify-between border-t border-gray-200 pt-4"
+                  aria-label="Pagination"
+                >
                   <div className="flex-1 flex justify-between sm:hidden">
                     <button
                       onClick={handlePreviousPage}
                       disabled={!hasPreviousPage}
-                      className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-black bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      aria-label="Go to previous page"
                     >
                       Previous
                     </button>
                     <button
                       onClick={handleNextPage}
                       disabled={!hasNextPage}
-                      className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-black bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      aria-label="Go to next page"
                     >
                       Next
                     </button>
                   </div>
                   <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                     <div>
-                      <p className="text-sm text-black">
+                      <p className="text-sm text-black" aria-live="polite">
                         Page{" "}
                         <span className="font-medium">{currentPageNumber}</span>
                         {totalCount > 0 && (
@@ -899,21 +1110,22 @@ function AdminTaskItemListPage() {
                           </>
                         )}
                         {totalCount > 0 && (
-                          <span className="ml-2 text-black">
+                          <span className="ml-2 text-gray-600">
                             ({totalCount} total tasks)
                           </span>
                         )}
                       </p>
                     </div>
                     <div>
-                      <nav
+                      <div
                         className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                        aria-label="Pagination"
+                        role="group"
                       >
                         <button
                           onClick={handlePreviousPage}
                           disabled={!hasPreviousPage}
-                          className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          aria-label="Go to previous page"
                         >
                           <span className="sr-only">Previous</span>
                           <ChevronLeftIcon
@@ -921,13 +1133,17 @@ function AdminTaskItemListPage() {
                             aria-hidden="true"
                           />
                         </button>
-                        <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-black">
+                        <span
+                          className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-black"
+                          aria-current="page"
+                        >
                           Page {currentPageNumber}
                         </span>
                         <button
                           onClick={handleNextPage}
                           disabled={!hasNextPage}
-                          className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          aria-label="Go to next page"
                         >
                           <span className="sr-only">Next</span>
                           <ChevronRightIcon
@@ -935,19 +1151,22 @@ function AdminTaskItemListPage() {
                             aria-hidden="true"
                           />
                         </button>
-                      </nav>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </nav>
               </>
             ) : (
               /* No Results */
               <div className="text-center py-12">
-                <ClipboardDocumentListIcon className="mx-auto h-12 w-12 text-gray-400" />
+                <ClipboardDocumentListIcon
+                  className="mx-auto h-12 w-12 text-gray-400"
+                  aria-hidden="true"
+                />
                 <h3 className="mt-2 text-sm font-medium text-black">
                   No Tasks Found
                 </h3>
-                <p className="mt-1 text-sm text-black">
+                <p className="mt-1 text-sm text-gray-600">
                   {searchQuery ||
                   typeFilter !== 0 ||
                   isClosedFilter !== TASK_IS_CLOSED_FILTER.OPEN
@@ -960,7 +1179,7 @@ function AdminTaskItemListPage() {
                     isClosedFilter !== TASK_IS_CLOSED_FILTER.OPEN) && (
                     <button
                       onClick={clearFilters}
-                      className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200"
+                      className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
                     >
                       Clear Filters
                     </button>
@@ -971,13 +1190,206 @@ function AdminTaskItemListPage() {
           </div>
         </div>
 
+        {/* Detail Modal */}
+        {showDetailModal && selectedTask && (
+          <div
+            className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-title"
+          >
+            <div
+              className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden"
+              role="document"
+            >
+              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3
+                  id="modal-title"
+                  className="text-lg font-semibold text-black flex items-center"
+                >
+                  <ClipboardDocumentListIcon
+                    className="w-5 h-5 mr-2 text-blue-600"
+                    aria-hidden="true"
+                  />
+                  Task Details
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    setSelectedTask(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                >
+                  <XMarkIcon className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="px-6 py-4 overflow-y-auto">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-black mb-1">
+                      Task Title:
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded-lg text-base font-semibold text-black">
+                      {selectedTask.title}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-black mb-1">
+                        Type:
+                      </label>
+                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-black">
+                        {getTaskTypeDisplay(selectedTask.type)}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-black mb-1">
+                        Due Date:
+                      </label>
+                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-black">
+                        <span className="flex items-center">
+                          <CalendarIcon
+                            className="w-4 h-4 mr-2"
+                            aria-hidden="true"
+                          />
+                          {formatDateForDisplay(selectedTask.dueDate)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-black mb-1">
+                        Client:
+                      </label>
+                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-black">
+                        {selectedTask.customerName ? (
+                          <Link
+                            to={`/admin/customer/${selectedTask.customerId}`}
+                            className="flex items-center text-blue-600 hover:text-blue-800"
+                          >
+                            <UserIcon
+                              className="w-4 h-4 mr-2"
+                              aria-hidden="true"
+                            />
+                            {selectedTask.customerName}
+                          </Link>
+                        ) : (
+                          <span className="text-gray-400 italic">
+                            Not assigned
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-black mb-1">
+                        Associate:
+                      </label>
+                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-black">
+                        {selectedTask.associateName ? (
+                          <Link
+                            to={`/admin/associate/${selectedTask.associateId}`}
+                            className="flex items-center text-blue-600 hover:text-blue-800"
+                          >
+                            <WrenchScrewdriverIcon
+                              className="w-4 h-4 mr-2"
+                              aria-hidden="true"
+                            />
+                            {selectedTask.associateName}
+                          </Link>
+                        ) : (
+                          <span className="text-gray-400 italic">
+                            Not assigned
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-black mb-1">
+                      Status:
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded-lg">
+                      <span
+                        className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeColor(selectedTask.isClosed)}`}
+                      >
+                        {selectedTask.isClosed ? (
+                          <>
+                            <LockClosedIcon
+                              className="w-4 h-4 mr-1"
+                              aria-hidden="true"
+                            />
+                            Closed
+                          </>
+                        ) : (
+                          <>
+                            <LockOpenIcon
+                              className="w-4 h-4 mr-1"
+                              aria-hidden="true"
+                            />
+                            Open
+                          </>
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    setSelectedTask(null);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    navigate(
+                      getTaskUpdateURL(selectedTask.id, selectedTask.type),
+                    );
+                  }}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <EyeIcon className="w-4 h-4 mr-1" aria-hidden="true" />
+                  View Full Details
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Delete Confirmation Modal */}
         {showDeleteModal && taskToDelete && (
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-md w-full">
+          <div
+            className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-modal-title"
+          >
+            <div
+              className="bg-white rounded-lg max-w-md w-full"
+              role="document"
+            >
               <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-black flex items-center">
-                  <ExclamationTriangleIcon className="w-5 h-5 mr-2 text-amber-600" />
+                <h3
+                  id="delete-modal-title"
+                  className="text-lg font-semibold text-black flex items-center"
+                >
+                  <ExclamationTriangleIcon
+                    className="w-5 h-5 mr-2 text-amber-600"
+                    aria-hidden="true"
+                  />
                   Delete Task
                 </h3>
               </div>
@@ -989,7 +1401,7 @@ function AdminTaskItemListPage() {
                 </p>
 
                 <div className="p-4 bg-amber-50 rounded-lg border-l-4 border-amber-500">
-                  <p className="text-sm font-medium text-black">
+                  <p className="text-sm font-medium text-black mb-1">
                     <strong>Task:</strong> {taskToDelete.title}
                   </p>
                   {taskToDelete.customerName && (
@@ -1002,6 +1414,19 @@ function AdminTaskItemListPage() {
                     {formatDateForDisplay(taskToDelete.dueDate)}
                   </p>
                 </div>
+
+                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-xs text-blue-800 flex items-start">
+                    <InformationCircleIcon
+                      className="w-4 h-4 mr-1 flex-shrink-0"
+                      aria-hidden="true"
+                    />
+                    <span>
+                      <strong>Warning:</strong> This action is permanent and
+                      cannot be reversed. All task data will be lost.
+                    </span>
+                  </p>
+                </div>
               </div>
 
               <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
@@ -1010,14 +1435,14 @@ function AdminTaskItemListPage() {
                     setShowDeleteModal(false);
                     setTaskToDelete(null);
                   }}
-                  className="px-4 py-2 text-sm font-medium text-black bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleDeleteTask}
                   disabled={loading}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
                   {loading ? (
                     <>
@@ -1026,6 +1451,7 @@ function AdminTaskItemListPage() {
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
+                        aria-hidden="true"
                       >
                         <circle
                           className="opacity-25"
@@ -1045,7 +1471,7 @@ function AdminTaskItemListPage() {
                     </>
                   ) : (
                     <>
-                      <TrashIcon className="w-4 h-4 mr-2" />
+                      <TrashIcon className="w-4 h-4 mr-2" aria-hidden="true" />
                       Delete Task
                     </>
                   )}

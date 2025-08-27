@@ -322,19 +322,21 @@ function AdminStaffListPage() {
   const getTypeBadgeColor = (staffType) => {
     // Assuming type values from STAFF_TYPE_MAP
     const colorMap = {
-      1: "bg-blue-100 text-blue-800", // Management
-      2: "bg-green-100 text-green-800", // Frontline
-      3: "bg-purple-100 text-purple-800", // Support
-      0: "bg-gray-100 text-gray-800", // All/Unknown
+      1: "bg-blue-100 text-blue-800 border border-blue-200", // Management
+      2: "bg-green-100 text-green-800 border border-green-200", // Frontline
+      3: "bg-purple-100 text-purple-800 border border-purple-200", // Support
+      0: "bg-gray-100 text-gray-800 border border-gray-200", // All/Unknown
     };
-    return colorMap[staffType] || "bg-gray-100 text-gray-800";
+    return (
+      colorMap[staffType] || "bg-gray-100 text-gray-800 border border-gray-200"
+    );
   };
 
   // Get status badge color
   const getStatusBadgeColor = (statusValue) => {
     return statusValue === 1
-      ? "bg-green-100 text-green-800"
-      : "bg-gray-100 text-gray-800";
+      ? "bg-green-100 text-green-800 border border-green-200"
+      : "bg-gray-100 text-gray-800 border border-gray-200";
   };
 
   // Calculate pagination info
@@ -394,17 +396,20 @@ function AdminStaffListPage() {
             <li className="inline-flex items-center">
               <Link
                 to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-md px-1"
               >
-                <ChartBarIcon className="w-4 h-4 mr-2" />
+                <ChartBarIcon className="w-4 h-4 mr-2" aria-hidden="true" />
                 Dashboard
               </Link>
             </li>
             <li aria-current="page">
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
-                  <UserGroupIcon className="w-4 h-4 mr-2" />
+                <ChevronRightIcon
+                  className="w-5 h-5 text-gray-400"
+                  aria-hidden="true"
+                />
+                <span className="ml-1 text-sm font-medium text-black md:ml-2 inline-flex items-center">
+                  <UserGroupIcon className="w-4 h-4 mr-2" aria-hidden="true" />
                   Staff
                 </span>
               </div>
@@ -414,22 +419,30 @@ function AdminStaffListPage() {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-            <UserGroupIcon className="w-8 h-8 mr-3 text-blue-600" />
+          <h1 className="text-3xl font-bold text-black flex items-center">
+            <UserGroupIcon
+              className="w-8 h-8 mr-3 text-blue-600"
+              aria-hidden="true"
+            />
             Staff Management
           </h1>
         </div>
 
         {/* Success/Error Messages */}
         {successMessage && (
-          <div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center justify-between">
+          <div
+            className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center justify-between"
+            role="alert"
+            aria-live="polite"
+          >
             <span className="flex items-center">
-              <CheckCircleIcon className="w-5 h-5 mr-2" />
+              <CheckCircleIcon className="w-5 h-5 mr-2" aria-hidden="true" />
               {successMessage}
             </span>
             <button
               onClick={() => setSuccessMessage("")}
-              className="text-green-600 hover:text-green-800"
+              className="text-green-600 hover:text-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 rounded-md p-1"
+              aria-label="Dismiss success message"
             >
               <XMarkIcon className="w-5 h-5" />
             </button>
@@ -437,14 +450,22 @@ function AdminStaffListPage() {
         )}
 
         {errors.message && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
+          <div
+            className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between"
+            role="alert"
+            aria-live="assertive"
+          >
             <span className="flex items-center">
-              <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
+              <ExclamationTriangleIcon
+                className="w-5 h-5 mr-2"
+                aria-hidden="true"
+              />
               {errors.message}
             </span>
             <button
               onClick={() => setErrors({})}
-              className="text-red-600 hover:text-red-800"
+              className="text-red-600 hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-md p-1"
+              aria-label="Dismiss error message"
             >
               <XMarkIcon className="w-5 h-5" />
             </button>
@@ -452,51 +473,59 @@ function AdminStaffListPage() {
         )}
 
         {/* Main Content Card */}
-        <div className="bg-white shadow-sm rounded-lg">
+        <div className="bg-white shadow-sm rounded-lg border border-gray-200">
           {/* Card Header */}
           <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-800 flex items-center">
-              <ClipboardDocumentListIcon className="w-5 h-5 mr-2" />
+            <h2 className="text-lg font-semibold text-black flex items-center">
+              <ClipboardDocumentListIcon
+                className="w-5 h-5 mr-2 text-gray-600"
+                aria-hidden="true"
+              />
               Staff List
             </h2>
             <div className="flex items-center gap-2">
               {/* View Type Toggle */}
-              <div className="flex items-center bg-gray-100 rounded-lg p-1">
+              <div className="flex items-center gap-1">
                 <button
                   onClick={() => setViewType(VIEW_TYPE_TABULAR)}
-                  className={`inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  className={`p-2 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500 ${
                     viewType === VIEW_TYPE_TABULAR
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
+                      ? "text-blue-600"
+                      : "text-black hover:text-gray-600"
                   }`}
+                  aria-pressed={viewType === VIEW_TYPE_TABULAR}
+                  aria-label="Table view"
                 >
-                  <TableCellsIcon className="w-4 h-4 mr-1.5" />
-                  Table
+                  <TableCellsIcon className="w-6 h-6" aria-hidden="true" />
                 </button>
                 <button
                   onClick={() => setViewType(VIEW_TYPE_GRID)}
-                  className={`inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  className={`p-2 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500 ${
                     viewType === VIEW_TYPE_GRID
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
+                      ? "text-blue-600"
+                      : "text-black hover:text-gray-600"
                   }`}
+                  aria-pressed={viewType === VIEW_TYPE_GRID}
+                  aria-label="Grid view"
                 >
-                  <Squares2X2Icon className="w-4 h-4 mr-1.5" />
-                  Grid
+                  <Squares2X2Icon className="w-6 h-6" aria-hidden="true" />
                 </button>
               </div>
               <button
                 onClick={() => navigate("/admin/staff/search")}
                 className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
-                <MagnifyingGlassIcon className="w-5 h-5 mr-1" />
+                <MagnifyingGlassIcon
+                  className="w-5 h-5 mr-1"
+                  aria-hidden="true"
+                />
                 Advanced Search
               </button>
               <button
                 onClick={() => navigate("/admin/staff/add/step-1-search")}
                 className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
               >
-                <PlusIcon className="w-5 h-5 mr-1" />
+                <PlusIcon className="w-5 h-5 mr-1" aria-hidden="true" />
                 Add Staff
               </button>
             </div>
@@ -505,38 +534,47 @@ function AdminStaffListPage() {
           {/* Filters Section */}
           <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-gray-700 flex items-center">
-                <FunnelIcon className="w-4 h-4 mr-2" />
+              <h3 className="text-sm font-medium text-black flex items-center">
+                <FunnelIcon
+                  className="w-4 h-4 mr-2 text-gray-600"
+                  aria-hidden="true"
+                />
                 Filter & Search
               </h3>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setShowFilters(!showFilters)}
-                  className={`text-sm font-medium flex items-center px-3 py-1 rounded-md transition-colors ${
+                  className={`text-sm font-medium flex items-center px-3 py-1 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                     showFilters
                       ? "text-blue-700 bg-blue-50"
                       : "text-gray-600 hover:text-gray-800"
                   }`}
+                  aria-expanded={showFilters}
+                  aria-controls="extended-filters"
                 >
                   {showFilters ? (
-                    <ChevronDownIcon className="w-4 h-4 mr-1" />
+                    <ChevronDownIcon
+                      className="w-4 h-4 mr-1"
+                      aria-hidden="true"
+                    />
                   ) : (
-                    <PlusIcon className="w-4 h-4 mr-1" />
+                    <PlusIcon className="w-4 h-4 mr-1" aria-hidden="true" />
                   )}
                   {showFilters ? "Hide" : "Show"} All Filters
                 </button>
                 <button
                   onClick={handleClearFilters}
-                  className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center"
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md px-2 py-1"
                 >
-                  <XMarkIcon className="w-4 h-4 mr-1" />
+                  <XMarkIcon className="w-4 h-4 mr-1" aria-hidden="true" />
                   Clear Filters
                 </button>
                 <button
                   onClick={() => fetchStaffList(true)}
-                  className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center"
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md px-2 py-1"
+                  aria-label="Refresh staff list"
                 >
-                  <ArrowPathIcon className="w-4 h-4 mr-1" />
+                  <ArrowPathIcon className="w-4 h-4 mr-1" aria-hidden="true" />
                   Refresh
                 </button>
               </div>
@@ -545,21 +583,27 @@ function AdminStaffListPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Search */}
               <div className="lg:col-span-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="search-input"
+                  className="block text-sm font-medium text-black mb-1"
+                >
                   Search
                 </label>
                 <div className="relative">
                   <input
+                    id="search-input"
                     type="text"
                     value={tempSearchQuery}
                     onChange={(e) => setTempSearchQuery(e.target.value)}
                     placeholder="Search staff..."
-                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 pr-10 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black placeholder-gray-500"
                     onKeyPress={handleSearchKeyPress}
+                    aria-label="Search staff"
                   />
                   <button
                     onClick={handleSearch}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                    aria-label="Submit search"
                   >
                     <MagnifyingGlassIcon className="w-5 h-5" />
                   </button>
@@ -568,14 +612,19 @@ function AdminStaffListPage() {
 
               {/* Sort By */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="sort-select"
+                  className="block text-sm font-medium text-black mb-1"
+                >
                   Sort By
                 </label>
                 <div className="relative">
                   <select
+                    id="sort-select"
                     value={sortBy}
                     onChange={handleSortByChange}
-                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                    className="w-full px-3 py-2 pr-10 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white text-black"
+                    aria-label="Sort staff by"
                   >
                     {STAFF_SORT_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -583,20 +632,28 @@ function AdminStaffListPage() {
                       </option>
                     ))}
                   </select>
-                  <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                  <ChevronDownIcon
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+                    aria-hidden="true"
+                  />
                 </div>
               </div>
 
               {/* Status Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="status-select"
+                  className="block text-sm font-medium text-black mb-1"
+                >
                   Status
                 </label>
                 <div className="relative">
                   <select
+                    id="status-select"
                     value={status}
                     onChange={handleStatusChange}
-                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                    className="w-full px-3 py-2 pr-10 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white text-black"
+                    aria-label="Filter by status"
                   >
                     {STAFF_STATUS_FILTER_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -604,20 +661,28 @@ function AdminStaffListPage() {
                       </option>
                     ))}
                   </select>
-                  <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                  <ChevronDownIcon
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+                    aria-hidden="true"
+                  />
                 </div>
               </div>
 
               {/* Type Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="type-select"
+                  className="block text-sm font-medium text-black mb-1"
+                >
                   Type
                 </label>
                 <div className="relative">
                   <select
+                    id="type-select"
                     value={type}
                     onChange={handleTypeChange}
-                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                    className="w-full px-3 py-2 pr-10 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white text-black"
+                    aria-label="Filter by type"
                   >
                     {STAFF_TYPE_FILTER_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -625,27 +690,38 @@ function AdminStaffListPage() {
                       </option>
                     ))}
                   </select>
-                  <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                  <ChevronDownIcon
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+                    aria-hidden="true"
+                  />
                 </div>
               </div>
             </div>
 
             {/* Extended Filters */}
             {showFilters && (
-              <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
-                <h4 className="text-sm font-medium text-gray-700 mb-3">
+              <div
+                id="extended-filters"
+                className="mt-4 p-4 bg-white rounded-lg border border-gray-200"
+              >
+                <h4 className="text-sm font-medium text-black mb-3">
                   Additional Options
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="page-size-select"
+                      className="block text-sm font-medium text-black mb-1"
+                    >
                       Items per page
                     </label>
                     <div className="relative">
                       <select
+                        id="page-size-select"
                         value={pageSize}
                         onChange={handlePageSizeChange}
-                        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                        className="w-full px-3 py-2 pr-10 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white text-black"
+                        aria-label="Number of items per page"
                       >
                         {PAGE_SIZE_OPTIONS.map((option) => (
                           <option key={option.value} value={option.value}>
@@ -653,7 +729,10 @@ function AdminStaffListPage() {
                           </option>
                         ))}
                       </select>
-                      <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                      <ChevronDownIcon
+                        className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+                        aria-hidden="true"
+                      />
                     </div>
                   </div>
                 </div>
@@ -664,8 +743,15 @@ function AdminStaffListPage() {
           {/* Content Section */}
           <div className="px-6 py-4">
             {isLoading && !staffList ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <div
+                className="flex items-center justify-center py-12"
+                role="status"
+                aria-live="polite"
+              >
+                <div
+                  className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"
+                  aria-hidden="true"
+                ></div>
                 <span className="ml-3 text-gray-600">Loading staff...</span>
               </div>
             ) : staffList &&
@@ -673,7 +759,7 @@ function AdminStaffListPage() {
               staffList.results.length > 0 ? (
               <>
                 {/* Results count */}
-                <div className="mb-4 text-sm text-gray-600">
+                <div className="mb-4 text-sm text-black" aria-live="polite">
                   Showing <strong>{staffList.results.length}</strong> staff
                   members
                   {staffList.count > 0 && ` of ${staffList.count} total`}
@@ -683,99 +769,138 @@ function AdminStaffListPage() {
                 {/* List Display */}
                 {viewType === VIEW_TYPE_TABULAR ? (
                   /* Table View */
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
+                  <div
+                    className="overflow-x-auto"
+                    role="region"
+                    aria-label="Staff table"
+                  >
+                    <table className="min-w-full">
+                      <thead className="bg-gray-700">
                         <tr>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th
+                            scope="col"
+                            className="px-4 py-3 text-left text-sm font-medium text-white uppercase tracking-wider rounded-tl-lg"
+                          >
                             Name
                           </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th
+                            scope="col"
+                            className="px-4 py-3 text-left text-sm font-medium text-white uppercase tracking-wider"
+                          >
                             Email
                           </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th
+                            scope="col"
+                            className="px-4 py-3 text-left text-sm font-medium text-white uppercase tracking-wider"
+                          >
                             Phone
                           </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th
+                            scope="col"
+                            className="px-4 py-3 text-left text-sm font-medium text-white uppercase tracking-wider"
+                          >
                             Type
                           </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status
-                          </th>
-                          <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th
+                            scope="col"
+                            className="px-4 py-3 text-center text-sm font-medium text-white uppercase tracking-wider rounded-tr-lg"
+                          >
                             Actions
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {staffList.results.map((staff) => (
+                      <tbody className="divide-y divide-gray-200">
+                        {staffList.results.map((staff, index) => (
                           <tr
                             key={staff.id}
-                            className="hover:bg-gray-50 cursor-pointer"
+                            className={`${index % 2 === 0 ? "bg-white" : "bg-zinc-200"} hover:bg-blue-50 cursor-pointer focus-within:bg-blue-50`}
                             onClick={() => {
                               setSelectedStaff(staff);
                               setShowDetailModal(true);
                             }}
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                setSelectedStaff(staff);
+                                setShowDetailModal(true);
+                              }
+                            }}
+                            role="row"
+                            aria-label={`View details for ${staff.name || `${staff.firstName} ${staff.lastName}`}`}
                           >
-                            <td className="px-3 py-4 text-sm">
+                            <td className="px-4 py-4 text-base">
                               <Link
                                 to={`/admin/staff/${staff.id}`}
                                 onClick={(e) => e.stopPropagation()}
-                                className="text-blue-600 hover:text-blue-800 font-medium flex items-center"
+                                className="text-blue-600 hover:text-blue-800 font-medium flex items-center focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md px-1"
                               >
-                                <UserCircleIcon className="w-4 h-4 mr-2" />
-                                {staff.name ||
-                                  `${staff.firstName} ${staff.lastName}`}
+                                <UserCircleIcon
+                                  className="w-5 h-5 mr-2 flex-shrink-0"
+                                  aria-hidden="true"
+                                />
+                                <span className="text-lg">
+                                  {staff.name ||
+                                    `${staff.firstName} ${staff.lastName}`}
+                                </span>
                               </Link>
                             </td>
-                            <td className="px-3 py-4 text-sm text-gray-500">
+                            <td className="px-4 py-4 text-base text-black">
                               {staff.email ? (
                                 <a
                                   href={`mailto:${staff.email}`}
                                   onClick={(e) => e.stopPropagation()}
-                                  className="flex items-center hover:text-blue-600"
+                                  className="flex items-center hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md px-1"
+                                  aria-label={`Send email to ${staff.email}`}
                                 >
-                                  <EnvelopeIcon className="w-4 h-4 mr-2" />
-                                  {staff.email}
+                                  <EnvelopeIcon
+                                    className="w-5 h-5 mr-2 text-gray-400"
+                                    aria-hidden="true"
+                                  />
+                                  <span className="text-lg">{staff.email}</span>
                                 </a>
                               ) : (
-                                <span className="text-gray-400 italic">—</span>
+                                <span className="text-gray-400 italic text-lg">
+                                  —
+                                </span>
                               )}
                             </td>
-                            <td className="px-3 py-4 text-sm text-gray-500">
+                            <td className="px-4 py-4 text-base text-black">
                               {staff.phone ? (
-                                <span className="flex items-center">
-                                  <PhoneIcon className="w-4 h-4 mr-2" />
+                                <span className="flex items-center text-lg">
+                                  <PhoneIcon
+                                    className="w-5 h-5 mr-2 text-gray-400"
+                                    aria-hidden="true"
+                                  />
                                   {staff.phone}
                                 </span>
                               ) : (
-                                <span className="text-gray-400 italic">—</span>
+                                <span className="text-gray-400 italic text-lg">
+                                  —
+                                </span>
                               )}
                             </td>
-                            <td className="px-3 py-4 text-sm">
+                            <td className="px-4 py-4 text-base">
                               <span
                                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeBadgeColor(staff.type)}`}
                               >
                                 {STAFF_TYPE_MAP[staff.type] || "Unknown"}
                               </span>
                             </td>
-                            <td className="px-3 py-4 text-sm">
-                              <span
-                                className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeColor(staff.status)}`}
-                              >
-                                {staff.status === 1 ? "Active" : "Archived"}
-                              </span>
-                            </td>
-                            <td className="px-3 py-4">
+                            <td className="px-4 py-4">
                               <div className="flex items-center justify-center gap-2">
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     navigate(`/admin/staff/${staff.id}`);
                                   }}
-                                  className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                                  aria-label={`View details for ${staff.name || `${staff.firstName} ${staff.lastName}`}`}
                                 >
-                                  <EyeIcon className="w-4 h-4 mr-1.5" />
+                                  <EyeIcon
+                                    className="w-4 h-4 mr-1.5"
+                                    aria-hidden="true"
+                                  />
                                   View
                                 </button>
                               </div>
@@ -787,25 +912,41 @@ function AdminStaffListPage() {
                   </div>
                 ) : (
                   /* Grid View */
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                    role="list"
+                  >
                     {staffList.results.map((staff) => (
                       <div
                         key={staff.id}
-                        className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                        className="bg-white border-2 border-zinc-300 rounded-lg p-5 hover:shadow-md transition-shadow cursor-pointer focus-within:shadow-md"
                         onClick={() => {
                           setSelectedStaff(staff);
                           setShowDetailModal(true);
                         }}
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setSelectedStaff(staff);
+                            setShowDetailModal(true);
+                          }
+                        }}
+                        role="listitem"
+                        aria-label={`Staff card for ${staff.name || `${staff.firstName} ${staff.lastName}`}`}
                       >
-                        <div className="mb-3">
-                          <h3 className="text-base font-semibold text-gray-900">
+                        <div className="mb-4">
+                          <h3 className="text-lg font-semibold text-black">
                             <Link
                               to={`/admin/staff/${staff.id}`}
                               onClick={(e) => e.stopPropagation()}
-                              className="text-blue-600 hover:text-blue-800 flex items-start"
+                              className="text-blue-600 hover:text-blue-800 flex items-start focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md"
                             >
-                              <UserCircleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
-                              <span>
+                              <UserCircleIcon
+                                className="w-6 h-6 mr-2 flex-shrink-0 mt-0.5"
+                                aria-hidden="true"
+                              />
+                              <span className="text-xl">
                                 {staff.name ||
                                   `${staff.firstName} ${staff.lastName}`}
                               </span>
@@ -813,21 +954,27 @@ function AdminStaffListPage() {
                           </h3>
                         </div>
 
-                        <div className="space-y-2 text-sm text-gray-600 mb-3">
+                        <div className="space-y-2 text-base text-black mb-4">
                           {staff.email && (
-                            <div className="flex items-center">
-                              <EnvelopeIcon className="w-4 h-4 mr-2 text-gray-400" />
+                            <div className="flex items-center text-lg">
+                              <EnvelopeIcon
+                                className="w-5 h-5 mr-2 text-gray-400 flex-shrink-0"
+                                aria-hidden="true"
+                              />
                               <span className="truncate">{staff.email}</span>
                             </div>
                           )}
                           {staff.phone && (
-                            <div className="flex items-center">
-                              <PhoneIcon className="w-4 h-4 mr-2 text-gray-400" />
+                            <div className="flex items-center text-lg">
+                              <PhoneIcon
+                                className="w-5 h-5 mr-2 text-gray-400 flex-shrink-0"
+                                aria-hidden="true"
+                              />
                               {staff.phone}
                             </div>
                           )}
                           {staff.addressLine1 && (
-                            <div className="text-xs text-gray-500">
+                            <div className="text-sm text-gray-600 mt-2">
                               {staff.addressLine1}
                               {staff.city && `, ${staff.city}`}
                               {staff.region && `, ${staff.region}`}
@@ -835,26 +982,11 @@ function AdminStaffListPage() {
                           )}
                         </div>
 
-                        <div className="flex items-center gap-2 mb-3">
+                        <div className="mb-4">
                           <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getTypeBadgeColor(staff.type)}`}
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeBadgeColor(staff.type)}`}
                           >
                             {STAFF_TYPE_MAP[staff.type] || "Unknown"}
-                          </span>
-                          <span
-                            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeColor(staff.status)}`}
-                          >
-                            {staff.status === 1 ? (
-                              <>
-                                <CheckCircleIcon className="w-3 h-3 mr-1" />
-                                Active
-                              </>
-                            ) : (
-                              <>
-                                <ArchiveBoxIcon className="w-3 h-3 mr-1" />
-                                Archived
-                              </>
-                            )}
                           </span>
                         </div>
 
@@ -864,10 +996,14 @@ function AdminStaffListPage() {
                               e.stopPropagation();
                               navigate(`/admin/staff/${staff.id}`);
                             }}
-                            className="flex-1 inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                            className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                            aria-label={`View details for ${staff.name || `${staff.firstName} ${staff.lastName}`}`}
                           >
                             View Details
-                            <ChevronRightIcon className="w-4 h-4 ml-1" />
+                            <ChevronRightIcon
+                              className="w-4 h-4 ml-1"
+                              aria-hidden="true"
+                            />
                           </button>
                         </div>
                       </div>
@@ -876,26 +1012,31 @@ function AdminStaffListPage() {
                 )}
 
                 {/* Pagination */}
-                <div className="mt-6 flex items-center justify-between border-t border-gray-200 pt-4">
+                <nav
+                  className="mt-6 flex items-center justify-between border-t border-gray-200 pt-4"
+                  aria-label="Pagination"
+                >
                   <div className="flex-1 flex justify-between sm:hidden">
                     <button
                       onClick={handlePreviousPage}
                       disabled={!hasPreviousPage}
-                      className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      aria-label="Go to previous page"
                     >
                       Previous
                     </button>
                     <button
                       onClick={handleNextPage}
                       disabled={!staffList.hasNextPage}
-                      className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      aria-label="Go to next page"
                     >
                       Next
                     </button>
                   </div>
                   <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                     <div>
-                      <p className="text-sm text-gray-700">
+                      <p className="text-sm text-black" aria-live="polite">
                         Page{" "}
                         <span className="font-medium">{currentPageNumber}</span>
                         {staffList.count > 0 && (
@@ -908,21 +1049,22 @@ function AdminStaffListPage() {
                           </>
                         )}
                         {staffList.count > 0 && (
-                          <span className="ml-2 text-gray-500">
+                          <span className="ml-2 text-gray-600">
                             ({staffList.count} total staff members)
                           </span>
                         )}
                       </p>
                     </div>
                     <div>
-                      <nav
+                      <div
                         className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                        aria-label="Pagination"
+                        role="group"
                       >
                         <button
                           onClick={handlePreviousPage}
                           disabled={!hasPreviousPage}
-                          className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          aria-label="Go to previous page"
                         >
                           <span className="sr-only">Previous</span>
                           <ChevronLeftIcon
@@ -930,13 +1072,17 @@ function AdminStaffListPage() {
                             aria-hidden="true"
                           />
                         </button>
-                        <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                        <span
+                          className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-black"
+                          aria-current="page"
+                        >
                           Page {currentPageNumber}
                         </span>
                         <button
                           onClick={handleNextPage}
                           disabled={!staffList.hasNextPage}
-                          className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          aria-label="Go to next page"
                         >
                           <span className="sr-only">Next</span>
                           <ChevronRightIcon
@@ -944,19 +1090,22 @@ function AdminStaffListPage() {
                             aria-hidden="true"
                           />
                         </button>
-                      </nav>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </nav>
               </>
             ) : (
               /* No Results */
               <div className="text-center py-12">
-                <UserGroupIcon className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">
+                <UserGroupIcon
+                  className="mx-auto h-12 w-12 text-gray-400"
+                  aria-hidden="true"
+                />
+                <h3 className="mt-2 text-sm font-medium text-black">
                   No Staff Members Found
                 </h3>
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-gray-600">
                   {searchQuery || status !== 1 || type !== 0
                     ? "No staff members match your current filters. Try adjusting your search criteria."
                     : "No staff members have been added yet."}
@@ -965,16 +1114,16 @@ function AdminStaffListPage() {
                   {(searchQuery || status !== 1 || type !== 0) && (
                     <button
                       onClick={handleClearFilters}
-                      className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200"
+                      className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
                     >
                       Clear Filters
                     </button>
                   )}
                   <button
                     onClick={() => navigate("/admin/staff/add/step-1-search")}
-                    className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700"
+                    className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
                   >
-                    <PlusIcon className="w-5 h-5 mr-2" />
+                    <PlusIcon className="w-5 h-5 mr-2" aria-hidden="true" />
                     Add First Staff Member
                   </button>
                 </div>
@@ -985,11 +1134,25 @@ function AdminStaffListPage() {
 
         {/* Detail Modal */}
         {showDetailModal && selectedStaff && (
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
+          <div
+            className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-title"
+          >
+            <div
+              className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden"
+              role="document"
+            >
               <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <UserIcon className="w-5 h-5 mr-2 text-blue-600" />
+                <h3
+                  id="modal-title"
+                  className="text-lg font-semibold text-black flex items-center"
+                >
+                  <UserIcon
+                    className="w-5 h-5 mr-2 text-blue-600"
+                    aria-hidden="true"
+                  />
                   Staff Details
                 </h3>
                 <button
@@ -997,7 +1160,7 @@ function AdminStaffListPage() {
                     setShowDetailModal(false);
                     setSelectedStaff(null);
                   }}
-                  className="text-gray-400 hover:text-gray-500"
+                  className="text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
                 >
                   <XMarkIcon className="w-6 h-6" />
                 </button>
@@ -1006,11 +1169,14 @@ function AdminStaffListPage() {
               <div className="px-6 py-4 overflow-y-auto">
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-black mb-1">
                       Full Name:
                     </label>
-                    <div className="p-3 bg-gray-50 rounded-lg text-base font-semibold text-gray-900 flex items-center">
-                      <UserIcon className="w-5 h-5 mr-2 text-gray-600" />
+                    <div className="p-3 bg-gray-50 rounded-lg text-base font-semibold text-black flex items-center">
+                      <UserIcon
+                        className="w-5 h-5 mr-2 text-gray-600"
+                        aria-hidden="true"
+                      />
                       {selectedStaff.name ||
                         `${selectedStaff.firstName} ${selectedStaff.lastName}`}
                     </div>
@@ -1018,16 +1184,19 @@ function AdminStaffListPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-black mb-1">
                         Email:
                       </label>
-                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
+                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-black">
                         {selectedStaff.email ? (
                           <a
                             href={`mailto:${selectedStaff.email}`}
                             className="flex items-center text-blue-600 hover:text-blue-800"
                           >
-                            <EnvelopeIcon className="w-4 h-4 mr-2" />
+                            <EnvelopeIcon
+                              className="w-4 h-4 mr-2"
+                              aria-hidden="true"
+                            />
                             {selectedStaff.email}
                           </a>
                         ) : (
@@ -1039,13 +1208,16 @@ function AdminStaffListPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-black mb-1">
                         Phone:
                       </label>
-                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
+                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-black">
                         {selectedStaff.phone ? (
                           <span className="flex items-center">
-                            <PhoneIcon className="w-4 h-4 mr-2" />
+                            <PhoneIcon
+                              className="w-4 h-4 mr-2"
+                              aria-hidden="true"
+                            />
                             {selectedStaff.phone}
                           </span>
                         ) : (
@@ -1059,21 +1231,24 @@ function AdminStaffListPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-black mb-1">
                         Type:
                       </label>
                       <div className="p-3 bg-gray-50 rounded-lg">
                         <span
                           className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getTypeBadgeColor(selectedStaff.type)}`}
                         >
-                          <BriefcaseIcon className="w-4 h-4 mr-1" />
+                          <BriefcaseIcon
+                            className="w-4 h-4 mr-1"
+                            aria-hidden="true"
+                          />
                           {STAFF_TYPE_MAP[selectedStaff.type] || "Unknown"}
                         </span>
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-black mb-1">
                         Status:
                       </label>
                       <div className="p-3 bg-gray-50 rounded-lg">
@@ -1082,12 +1257,18 @@ function AdminStaffListPage() {
                         >
                           {selectedStaff.status === 1 ? (
                             <>
-                              <CheckCircleIcon className="w-4 h-4 mr-1" />
+                              <CheckCircleIcon
+                                className="w-4 h-4 mr-1"
+                                aria-hidden="true"
+                              />
                               Active
                             </>
                           ) : (
                             <>
-                              <ArchiveBoxIcon className="w-4 h-4 mr-1" />
+                              <ArchiveBoxIcon
+                                className="w-4 h-4 mr-1"
+                                aria-hidden="true"
+                              />
                               Archived
                             </>
                           )}
@@ -1098,10 +1279,10 @@ function AdminStaffListPage() {
 
                   {selectedStaff.addressLine1 && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-black mb-1">
                         Address:
                       </label>
-                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
+                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-black">
                         {selectedStaff.addressLine1}
                         {selectedStaff.city && `, ${selectedStaff.city}`}
                         {selectedStaff.region && `, ${selectedStaff.region}`}
@@ -1119,7 +1300,7 @@ function AdminStaffListPage() {
                     setShowDetailModal(false);
                     setSelectedStaff(null);
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
                 >
                   Close
                 </button>
@@ -1128,9 +1309,12 @@ function AdminStaffListPage() {
                     setShowDetailModal(false);
                     navigate(`/admin/staff/${selectedStaff.id}/edit`);
                   }}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500"
                 >
-                  <PencilSquareIcon className="w-4 h-4 mr-1" />
+                  <PencilSquareIcon
+                    className="w-4 h-4 mr-1"
+                    aria-hidden="true"
+                  />
                   Edit
                 </button>
                 <button
@@ -1138,9 +1322,9 @@ function AdminStaffListPage() {
                     setShowDetailModal(false);
                     navigate(`/admin/staff/${selectedStaff.id}`);
                   }}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <EyeIcon className="w-4 h-4 mr-1" />
+                  <EyeIcon className="w-4 h-4 mr-1" aria-hidden="true" />
                   View Full Details
                 </button>
               </div>
@@ -1150,33 +1334,47 @@ function AdminStaffListPage() {
 
         {/* Delete Confirmation Modal */}
         {showDeleteModal && selectedStaffForDeletion && (
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-md w-full">
+          <div
+            className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-modal-title"
+          >
+            <div
+              className="bg-white rounded-lg max-w-md w-full"
+              role="document"
+            >
               <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <ExclamationTriangleIcon className="w-5 h-5 mr-2 text-amber-600" />
+                <h3
+                  id="delete-modal-title"
+                  className="text-lg font-semibold text-black flex items-center"
+                >
+                  <ExclamationTriangleIcon
+                    className="w-5 h-5 mr-2 text-amber-600"
+                    aria-hidden="true"
+                  />
                   Archive Staff Member
                 </h3>
               </div>
 
               <div className="px-6 py-4">
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-black mb-4">
                   Are you sure you want to archive this staff member? They will
                   no longer appear in active lists.
                 </p>
 
                 <div className="p-4 bg-amber-50 rounded-lg border-l-4 border-amber-500">
-                  <p className="text-sm font-medium text-gray-700 mb-1">
+                  <p className="text-sm font-medium text-black mb-1">
                     <strong>Name:</strong>{" "}
                     {selectedStaffForDeletion.name ||
                       `${selectedStaffForDeletion.firstName} ${selectedStaffForDeletion.lastName}`}
                   </p>
                   {selectedStaffForDeletion.email && (
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-sm text-black mt-1">
                       <strong>Email:</strong> {selectedStaffForDeletion.email}
                     </p>
                   )}
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-sm text-black mt-1">
                     <strong>Type:</strong>{" "}
                     {STAFF_TYPE_MAP[selectedStaffForDeletion.type] || "Unknown"}
                   </p>
@@ -1184,7 +1382,10 @@ function AdminStaffListPage() {
 
                 <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-xs text-blue-800 flex items-start">
-                    <InformationCircleIcon className="w-4 h-4 mr-1 flex-shrink-0" />
+                    <InformationCircleIcon
+                      className="w-4 h-4 mr-1 flex-shrink-0"
+                      aria-hidden="true"
+                    />
                     <span>
                       <strong>Note:</strong> This action can be undone by a
                       system administrator. The staff member's data will be
@@ -1200,14 +1401,14 @@ function AdminStaffListPage() {
                     setShowDeleteModal(false);
                     setSelectedStaffForDeletion(null);
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleConfirmDelete}
                   disabled={isLoading}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
                   {isLoading ? (
                     <>
@@ -1216,6 +1417,7 @@ function AdminStaffListPage() {
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
+                        aria-hidden="true"
                       >
                         <circle
                           className="opacity-25"
@@ -1235,7 +1437,10 @@ function AdminStaffListPage() {
                     </>
                   ) : (
                     <>
-                      <ArchiveBoxIcon className="w-4 h-4 mr-2" />
+                      <ArchiveBoxIcon
+                        className="w-4 h-4 mr-2"
+                        aria-hidden="true"
+                      />
                       Archive Staff Member
                     </>
                   )}

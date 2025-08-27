@@ -383,34 +383,34 @@ function AdminFinancialListPage() {
   const getTypeBadgeColor = (type) => {
     switch (type) {
       case ORDER_TYPE_COMMERCIAL:
-        return "bg-blue-100 text-blue-800";
+        return "bg-blue-100 text-blue-800 border border-blue-200";
       case ORDER_TYPE_RESIDENTIAL:
-        return "bg-green-100 text-green-800";
+        return "bg-green-100 text-green-800 border border-green-200";
       case ORDER_TYPE_UNASSIGNED:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800 border border-gray-200";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800 border border-gray-200";
     }
   };
 
   const getStatusBadgeColor = (status) => {
     switch (status) {
       case ORDER_STATUS_NEW:
-        return "bg-purple-100 text-purple-800";
+        return "bg-purple-100 text-purple-800 border border-purple-200";
       case ORDER_STATUS_PENDING:
       case ORDER_STATUS_ONGOING:
       case ORDER_STATUS_IN_PROGRESS:
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-yellow-100 text-yellow-800 border border-yellow-200";
       case ORDER_STATUS_COMPLETED_AND_PAID:
-        return "bg-green-100 text-green-800";
+        return "bg-green-100 text-green-800 border border-green-200";
       case ORDER_STATUS_COMPLETED_BUT_UNPAID:
-        return "bg-orange-100 text-orange-800";
+        return "bg-orange-100 text-orange-800 border border-orange-200";
       case ORDER_STATUS_DECLINED:
       case ORDER_STATUS_CANCELLED:
       case ORDER_STATUS_ARCHIVED:
-        return "bg-red-100 text-red-800";
+        return "bg-red-100 text-red-800 border border-red-200";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-gray-100 text-gray-800 border border-gray-200";
     }
   };
 
@@ -427,17 +427,23 @@ function AdminFinancialListPage() {
             <li className="inline-flex items-center">
               <Link
                 to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
+                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-md px-1"
               >
-                <ChartBarIcon className="w-4 h-4 mr-2" />
+                <ChartBarIcon className="w-4 h-4 mr-2" aria-hidden="true" />
                 Dashboard
               </Link>
             </li>
             <li aria-current="page">
               <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
-                  <CurrencyDollarIcon className="w-4 h-4 mr-2" />
+                <ChevronRightIcon
+                  className="w-5 h-5 text-gray-400"
+                  aria-hidden="true"
+                />
+                <span className="ml-1 text-sm font-medium text-black md:ml-2 inline-flex items-center">
+                  <CurrencyDollarIcon
+                    className="w-4 h-4 mr-2"
+                    aria-hidden="true"
+                  />
                   Financials
                 </span>
               </div>
@@ -447,22 +453,30 @@ function AdminFinancialListPage() {
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-            <CurrencyDollarIcon className="w-8 h-8 mr-3 text-blue-600" />
+          <h1 className="text-3xl font-bold text-black flex items-center">
+            <CurrencyDollarIcon
+              className="w-8 h-8 mr-3 text-blue-600"
+              aria-hidden="true"
+            />
             Financial Management
           </h1>
         </div>
 
         {/* Success/Error Messages */}
         {successMessage && (
-          <div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center justify-between">
+          <div
+            className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center justify-between"
+            role="alert"
+            aria-live="polite"
+          >
             <span className="flex items-center">
-              <CheckCircleIcon className="w-5 h-5 mr-2" />
+              <CheckCircleIcon className="w-5 h-5 mr-2" aria-hidden="true" />
               {successMessage}
             </span>
             <button
               onClick={() => setSuccessMessage("")}
-              className="text-green-600 hover:text-green-800"
+              className="text-green-600 hover:text-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 rounded-md p-1"
+              aria-label="Dismiss success message"
             >
               <XMarkIcon className="w-5 h-5" />
             </button>
@@ -470,14 +484,22 @@ function AdminFinancialListPage() {
         )}
 
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
+          <div
+            className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between"
+            role="alert"
+            aria-live="assertive"
+          >
             <span className="flex items-center">
-              <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
+              <ExclamationTriangleIcon
+                className="w-5 h-5 mr-2"
+                aria-hidden="true"
+              />
               {error}
             </span>
             <button
               onClick={() => setError(null)}
-              className="text-red-600 hover:text-red-800"
+              className="text-red-600 hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-md p-1"
+              aria-label="Dismiss error message"
             >
               <XMarkIcon className="w-5 h-5" />
             </button>
@@ -485,53 +507,59 @@ function AdminFinancialListPage() {
         )}
 
         {/* Main Content Card */}
-        <div className="bg-white shadow-sm rounded-lg">
+        <div className="bg-white shadow-sm rounded-lg border border-gray-200">
           {/* Card Header */}
           <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-800 flex items-center">
-              <ClipboardDocumentListIcon className="w-5 h-5 mr-2" />
+            <h2 className="text-lg font-semibold text-black flex items-center">
+              <ClipboardDocumentListIcon
+                className="w-5 h-5 mr-2 text-gray-600"
+                aria-hidden="true"
+              />
               Financial Records
             </h2>
             <div className="flex items-center gap-2">
               {/* View Type Toggle */}
-              <div className="flex items-center bg-gray-100 rounded-lg p-1">
+              <div className="flex items-center gap-1">
                 <button
                   onClick={() => setViewType(VIEW_TYPE_TABULAR)}
-                  className={`inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  className={`p-2 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500 ${
                     viewType === VIEW_TYPE_TABULAR
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
+                      ? "text-blue-600"
+                      : "text-black hover:text-gray-600"
                   }`}
+                  aria-pressed={viewType === VIEW_TYPE_TABULAR}
+                  aria-label="Table view"
                 >
-                  <TableCellsIcon className="w-4 h-4 mr-1.5" />
-                  Table
+                  <TableCellsIcon className="w-6 h-6" aria-hidden="true" />
                 </button>
                 <button
                   onClick={() => setViewType(VIEW_TYPE_GRID)}
-                  className={`inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  className={`p-2 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500 ${
                     viewType === VIEW_TYPE_GRID
-                      ? "bg-white text-gray-900 shadow-sm"
-                      : "text-gray-500 hover:text-gray-700"
+                      ? "text-blue-600"
+                      : "text-black hover:text-gray-600"
                   }`}
+                  aria-pressed={viewType === VIEW_TYPE_GRID}
+                  aria-label="Grid view"
                 >
-                  <Squares2X2Icon className="w-4 h-4 mr-1.5" />
-                  Grid
+                  <Squares2X2Icon className="w-6 h-6" aria-hidden="true" />
                 </button>
               </div>
-              {/*
               <button
                 onClick={() => navigate("/admin/orders/search")}
                 className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
               >
-                <MagnifyingGlassIcon className="w-5 h-5 mr-1" />
+                <MagnifyingGlassIcon
+                  className="w-5 h-5 mr-1"
+                  aria-hidden="true"
+                />
                 Advanced Search
               </button>
-              */}
               <button
                 onClick={() => navigate("/admin/orders/add/step-1-search")}
                 className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
               >
-                <PlusIcon className="w-5 h-5 mr-1" />
+                <PlusIcon className="w-5 h-5 mr-1" aria-hidden="true" />
                 Add Order
               </button>
             </div>
@@ -540,38 +568,47 @@ function AdminFinancialListPage() {
           {/* Filters Section */}
           <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-gray-700 flex items-center">
-                <FunnelIcon className="w-4 h-4 mr-2" />
+              <h3 className="text-sm font-medium text-black flex items-center">
+                <FunnelIcon
+                  className="w-4 h-4 mr-2 text-gray-600"
+                  aria-hidden="true"
+                />
                 Filter & Search
               </h3>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setShowFilters(!showFilters)}
-                  className={`text-sm font-medium flex items-center px-3 py-1 rounded-md transition-colors ${
+                  className={`text-sm font-medium flex items-center px-3 py-1 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                     showFilters
                       ? "text-blue-700 bg-blue-50"
                       : "text-gray-600 hover:text-gray-800"
                   }`}
+                  aria-expanded={showFilters}
+                  aria-controls="extended-filters"
                 >
                   {showFilters ? (
-                    <ChevronDownIcon className="w-4 h-4 mr-1" />
+                    <ChevronDownIcon
+                      className="w-4 h-4 mr-1"
+                      aria-hidden="true"
+                    />
                   ) : (
-                    <PlusIcon className="w-4 h-4 mr-1" />
+                    <PlusIcon className="w-4 h-4 mr-1" aria-hidden="true" />
                   )}
                   {showFilters ? "Hide" : "Show"} All Filters
                 </button>
                 <button
                   onClick={clearFilters}
-                  className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center"
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md px-2 py-1"
                 >
-                  <XMarkIcon className="w-4 h-4 mr-1" />
+                  <XMarkIcon className="w-4 h-4 mr-1" aria-hidden="true" />
                   Clear Filters
                 </button>
                 <button
                   onClick={() => fetchOrders(currentCursor)}
-                  className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center"
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md px-2 py-1"
+                  aria-label="Refresh orders list"
                 >
-                  <ArrowPathIcon className="w-4 h-4 mr-1" />
+                  <ArrowPathIcon className="w-4 h-4 mr-1" aria-hidden="true" />
                   Refresh
                 </button>
               </div>
@@ -580,21 +617,27 @@ function AdminFinancialListPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Search */}
               <div className="lg:col-span-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="search-input"
+                  className="block text-sm font-medium text-black mb-1"
+                >
                   Search
                 </label>
                 <div className="relative">
                   <input
+                    id="search-input"
                     type="text"
                     value={tempSearchQuery}
                     onChange={(e) => setTempSearchQuery(e.target.value)}
                     placeholder="Search orders..."
-                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 pr-10 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black placeholder-gray-500"
                     onKeyPress={handleSearchKeyPress}
+                    aria-label="Search orders"
                   />
                   <button
                     onClick={handleSearch}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+                    aria-label="Submit search"
                   >
                     <MagnifyingGlassIcon className="w-5 h-5" />
                   </button>
@@ -603,14 +646,19 @@ function AdminFinancialListPage() {
 
               {/* Sort By */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="sort-select"
+                  className="block text-sm font-medium text-black mb-1"
+                >
                   Sort By
                 </label>
                 <div className="relative">
                   <select
+                    id="sort-select"
                     value={sortBy}
                     onChange={handleSortChange}
-                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                    className="w-full px-3 py-2 pr-10 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white text-black"
+                    aria-label="Sort orders by"
                   >
                     {ORDER_SORT_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -618,23 +666,31 @@ function AdminFinancialListPage() {
                       </option>
                     ))}
                   </select>
-                  <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                  <ChevronDownIcon
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+                    aria-hidden="true"
+                  />
                 </div>
               </div>
 
               {/* Status Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="status-select"
+                  className="block text-sm font-medium text-black mb-1"
+                >
                   Status
                 </label>
                 <div className="relative">
                   <select
+                    id="status-select"
                     value={statusFilter}
                     onChange={(e) => {
                       setStatusFilter(parseInt(e.target.value));
                       setTimeout(() => handleFilterChange(), 0);
                     }}
-                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                    className="w-full px-3 py-2 pr-10 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white text-black"
+                    aria-label="Filter by status"
                   >
                     {ORDER_STATUS_FILTER_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -642,23 +698,31 @@ function AdminFinancialListPage() {
                       </option>
                     ))}
                   </select>
-                  <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                  <ChevronDownIcon
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+                    aria-hidden="true"
+                  />
                 </div>
               </div>
 
               {/* Type Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label
+                  htmlFor="type-select"
+                  className="block text-sm font-medium text-black mb-1"
+                >
                   Type
                 </label>
                 <div className="relative">
                   <select
+                    id="type-select"
                     value={typeFilter}
                     onChange={(e) => {
                       setTypeFilter(parseInt(e.target.value));
                       setTimeout(() => handleFilterChange(), 0);
                     }}
-                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                    className="w-full px-3 py-2 pr-10 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white text-black"
+                    aria-label="Filter by type"
                   >
                     {ORDER_TYPE_FILTER_OPTIONS.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -666,57 +730,78 @@ function AdminFinancialListPage() {
                       </option>
                     ))}
                   </select>
-                  <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                  <ChevronDownIcon
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+                    aria-hidden="true"
+                  />
                 </div>
               </div>
             </div>
 
             {/* Extended Filters */}
             {showFilters && (
-              <div className="mt-4 p-4 bg-white rounded-lg border border-gray-200">
-                <h4 className="text-sm font-medium text-gray-700 mb-3">
+              <div
+                id="extended-filters"
+                className="mt-4 p-4 bg-white rounded-lg border border-gray-200"
+              >
+                <h4 className="text-sm font-medium text-black mb-3">
                   Additional Filters
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="start-date-input"
+                      className="block text-sm font-medium text-black mb-1"
+                    >
                       Start Date
                     </label>
                     <input
+                      id="start-date-input"
                       type="date"
                       value={startDate}
                       onChange={(e) => {
                         setStartDate(e.target.value);
                         setTimeout(() => handleFilterChange(), 0);
                       }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black"
+                      aria-label="Filter by start date"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="end-date-input"
+                      className="block text-sm font-medium text-black mb-1"
+                    >
                       End Date
                     </label>
                     <input
+                      id="end-date-input"
                       type="date"
                       value={endDate}
                       onChange={(e) => {
                         setEndDate(e.target.value);
                         setTimeout(() => handleFilterChange(), 0);
                       }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black"
+                      aria-label="Filter by end date"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      htmlFor="page-size-select"
+                      className="block text-sm font-medium text-black mb-1"
+                    >
                       Items per page
                     </label>
                     <div className="relative">
                       <select
+                        id="page-size-select"
                         value={pageSize}
                         onChange={handlePageSizeChange}
-                        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                        className="w-full px-3 py-2 pr-10 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white text-black"
+                        aria-label="Number of items per page"
                       >
                         {PAGE_SIZE_OPTIONS.map((option) => (
                           <option key={option.value} value={option.value}>
@@ -724,7 +809,10 @@ function AdminFinancialListPage() {
                           </option>
                         ))}
                       </select>
-                      <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                      <ChevronDownIcon
+                        className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+                        aria-hidden="true"
+                      />
                     </div>
                   </div>
                 </div>
@@ -735,8 +823,15 @@ function AdminFinancialListPage() {
           {/* Content Section */}
           <div className="px-6 py-4">
             {loading && !orders.length ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <div
+                className="flex items-center justify-center py-12"
+                role="status"
+                aria-live="polite"
+              >
+                <div
+                  className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"
+                  aria-hidden="true"
+                ></div>
                 <span className="ml-3 text-gray-600">
                   Loading financial records...
                 </span>
@@ -744,7 +839,7 @@ function AdminFinancialListPage() {
             ) : orders.length > 0 ? (
               <>
                 {/* Results count */}
-                <div className="mb-4 text-sm text-gray-600">
+                <div className="mb-4 text-sm text-black" aria-live="polite">
                   Showing <strong>{orders.length}</strong> records
                   {totalCount > 0 && ` of ${totalCount} total`}
                   {searchQuery && ` (filtered by "${searchQuery}")`}
@@ -753,47 +848,85 @@ function AdminFinancialListPage() {
                 {/* List Display */}
                 {viewType === VIEW_TYPE_TABULAR ? (
                   /* Table View */
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
+                  <div
+                    className="overflow-x-auto"
+                    role="region"
+                    aria-label="Financial records table"
+                  >
+                    <table className="min-w-full">
+                      <thead className="bg-gray-700">
                         <tr>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th
+                            scope="col"
+                            className="px-4 py-3 text-left text-sm font-medium text-white uppercase tracking-wider rounded-tl-lg"
+                          >
                             Type
                           </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th
+                            scope="col"
+                            className="px-4 py-3 text-left text-sm font-medium text-white uppercase tracking-wider"
+                          >
                             Job #
                           </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th
+                            scope="col"
+                            className="px-4 py-3 text-left text-sm font-medium text-white uppercase tracking-wider"
+                          >
                             Client
                           </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th
+                            scope="col"
+                            className="px-4 py-3 text-left text-sm font-medium text-white uppercase tracking-wider"
+                          >
                             Associate
                           </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th
+                            scope="col"
+                            className="px-4 py-3 text-left text-sm font-medium text-white uppercase tracking-wider"
+                          >
                             Assigned Date
                           </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th
+                            scope="col"
+                            className="px-4 py-3 text-left text-sm font-medium text-white uppercase tracking-wider"
+                          >
                             Start Date
                           </th>
-                          <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th
+                            scope="col"
+                            className="px-4 py-3 text-left text-sm font-medium text-white uppercase tracking-wider"
+                          >
                             Status
                           </th>
-                          <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          <th
+                            scope="col"
+                            className="px-4 py-3 text-center text-sm font-medium text-white uppercase tracking-wider rounded-tr-lg"
+                          >
                             Actions
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {orders.map((order) => (
+                      <tbody className="divide-y divide-gray-200">
+                        {orders.map((order, index) => (
                           <tr
                             key={order.wjid || order.id}
-                            className="hover:bg-gray-50 cursor-pointer"
+                            className={`${index % 2 === 0 ? "bg-white" : "bg-zinc-200"} hover:bg-blue-50 cursor-pointer focus-within:bg-blue-50`}
                             onClick={() => {
                               setSelectedOrder(order);
                               setShowDetailModal(true);
                             }}
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                setSelectedOrder(order);
+                                setShowDetailModal(true);
+                              }
+                            }}
+                            role="row"
+                            aria-label={`View details for job ${order.wjid || order.id}`}
                           >
-                            <td className="px-3 py-4 text-sm">
+                            <td className="px-4 py-4 text-base">
                               <span
                                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTypeBadgeColor(order.type)}`}
                               >
@@ -807,49 +940,63 @@ function AdminFinancialListPage() {
                                 {formatType(order.type)}
                               </span>
                             </td>
-                            <td className="px-3 py-4 text-sm font-medium text-gray-900">
-                              {order.wjid || order.id}
+                            <td className="px-4 py-4 text-base font-medium text-black">
+                              <span className="text-lg">
+                                {order.wjid || order.id}
+                              </span>
                             </td>
-                            <td className="px-3 py-4 text-sm text-gray-500">
+                            <td className="px-4 py-4 text-base text-black">
                               {order.customerName ? (
                                 <Link
                                   to={`/admin/customer/${order.customerId}`}
                                   onClick={(e) => e.stopPropagation()}
-                                  className="text-blue-600 hover:text-blue-800"
+                                  className="text-blue-600 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md px-1"
                                 >
-                                  {order.customerName}
+                                  <span className="text-lg">
+                                    {order.customerName}
+                                  </span>
                                 </Link>
                               ) : (
-                                <span className="text-gray-400 italic">—</span>
+                                <span className="text-gray-400 italic text-lg">
+                                  —
+                                </span>
                               )}
                             </td>
-                            <td className="px-3 py-4 text-sm text-gray-500">
+                            <td className="px-4 py-4 text-base text-black">
                               {order.associateName ? (
                                 <Link
                                   to={`/admin/associate/${order.associateId}`}
                                   onClick={(e) => e.stopPropagation()}
-                                  className="text-blue-600 hover:text-blue-800"
+                                  className="text-blue-600 hover:text-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md px-1"
                                 >
-                                  {order.associateName}
+                                  <span className="text-lg">
+                                    {order.associateName}
+                                  </span>
                                 </Link>
                               ) : (
-                                <span className="text-gray-400 italic">—</span>
+                                <span className="text-gray-400 italic text-lg">
+                                  —
+                                </span>
                               )}
                             </td>
-                            <td className="px-3 py-4 text-sm text-gray-500">
-                              {formatDate(order.assignmentDate)}
+                            <td className="px-4 py-4 text-base text-black">
+                              <span className="text-lg">
+                                {formatDate(order.assignmentDate)}
+                              </span>
                             </td>
-                            <td className="px-3 py-4 text-sm text-gray-500">
-                              {formatDate(order.startDate)}
+                            <td className="px-4 py-4 text-base text-black">
+                              <span className="text-lg">
+                                {formatDate(order.startDate)}
+                              </span>
                             </td>
-                            <td className="px-3 py-4 text-sm">
+                            <td className="px-4 py-4 text-base">
                               <span
                                 className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeColor(order.status)}`}
                               >
                                 {formatStatus(order.status)}
                               </span>
                             </td>
-                            <td className="px-3 py-4">
+                            <td className="px-4 py-4">
                               <div className="flex items-center justify-center gap-2">
                                 <button
                                   onClick={(e) => {
@@ -858,9 +1005,13 @@ function AdminFinancialListPage() {
                                       `/admin/financial/${order.wjid || order.id}`,
                                     );
                                   }}
-                                  className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                                  aria-label={`View details for job ${order.wjid || order.id}`}
                                 >
-                                  <EyeIcon className="w-4 h-4 mr-1.5" />
+                                  <EyeIcon
+                                    className="w-4 h-4 mr-1.5"
+                                    aria-hidden="true"
+                                  />
                                   View
                                 </button>
                                 {order.status ===
@@ -872,9 +1023,13 @@ function AdminFinancialListPage() {
                                         `/admin/financial/${order.wjid || order.id}/invoice`,
                                       );
                                     }}
-                                    className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors"
+                                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors"
+                                    aria-label={`Generate invoice for job ${order.wjid || order.id}`}
                                   >
-                                    <DocumentDuplicateIcon className="w-4 h-4 mr-1.5" />
+                                    <DocumentDuplicateIcon
+                                      className="w-4 h-4 mr-1.5"
+                                      aria-hidden="true"
+                                    />
                                     Invoice
                                   </button>
                                 )}
@@ -887,20 +1042,35 @@ function AdminFinancialListPage() {
                   </div>
                 ) : (
                   /* Grid View */
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                    role="list"
+                  >
                     {orders.map((order) => (
                       <div
                         key={order.wjid || order.id}
-                        className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                        className="bg-white border-2 border-zinc-300 rounded-lg p-5 hover:shadow-md transition-shadow cursor-pointer focus-within:shadow-md"
                         onClick={() => {
                           setSelectedOrder(order);
                           setShowDetailModal(true);
                         }}
+                        tabIndex={0}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setSelectedOrder(order);
+                            setShowDetailModal(true);
+                          }
+                        }}
+                        role="listitem"
+                        aria-label={`Order card for job ${order.wjid || order.id}`}
                       >
-                        <div className="mb-3">
+                        <div className="mb-4">
                           <div className="flex items-center justify-between mb-2">
-                            <h3 className="text-lg font-semibold text-gray-900">
-                              Job #{order.wjid || order.id}
+                            <h3 className="text-lg font-semibold text-black">
+                              <span className="text-xl">
+                                Job #{order.wjid || order.id}
+                              </span>
                             </h3>
                             <span
                               className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getTypeBadgeColor(order.type)}`}
@@ -915,33 +1085,40 @@ function AdminFinancialListPage() {
                           </span>
                         </div>
 
-                        <div className="space-y-2 text-sm text-gray-600 mb-3">
+                        <div className="space-y-2 text-base text-black mb-4">
                           {order.customerName && (
                             <div>
-                              <strong>Client:</strong>{" "}
+                              <strong className="text-black">Client:</strong>{" "}
                               <Link
                                 to={`/admin/customer/${order.customerId}`}
                                 onClick={(e) => e.stopPropagation()}
                                 className="text-blue-600 hover:text-blue-800"
                               >
-                                {order.customerName}
+                                <span className="text-lg">
+                                  {order.customerName}
+                                </span>
                               </Link>
                             </div>
                           )}
                           {order.associateName && (
                             <div>
-                              <strong>Associate:</strong>{" "}
+                              <strong className="text-black">Associate:</strong>{" "}
                               <Link
                                 to={`/admin/associate/${order.associateId}`}
                                 onClick={(e) => e.stopPropagation()}
                                 className="text-blue-600 hover:text-blue-800"
                               >
-                                {order.associateName}
+                                <span className="text-lg">
+                                  {order.associateName}
+                                </span>
                               </Link>
                             </div>
                           )}
-                          <div className="flex items-center">
-                            <CalendarIcon className="w-4 h-4 mr-2 text-gray-400" />
+                          <div className="flex items-center text-lg">
+                            <CalendarIcon
+                              className="w-5 h-5 mr-2 text-gray-400 flex-shrink-0"
+                              aria-hidden="true"
+                            />
                             <span>Start: {formatDate(order.startDate)}</span>
                           </div>
                         </div>
@@ -954,10 +1131,14 @@ function AdminFinancialListPage() {
                                 `/admin/financial/${order.wjid || order.id}`,
                               );
                             }}
-                            className="flex-1 inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                            className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                            aria-label={`View details for job ${order.wjid || order.id}`}
                           >
                             View Details
-                            <ChevronRightIcon className="w-4 h-4 ml-1" />
+                            <ChevronRightIcon
+                              className="w-4 h-4 ml-1"
+                              aria-hidden="true"
+                            />
                           </button>
                           {order.status ===
                             ORDER_STATUS_COMPLETED_BUT_UNPAID && (
@@ -968,7 +1149,7 @@ function AdminFinancialListPage() {
                                   `/admin/financial/${order.wjid || order.id}/invoice`,
                                 );
                               }}
-                              className="inline-flex items-center justify-center px-3 py-1.5 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors"
+                              className="inline-flex items-center justify-center px-3 py-2 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors"
                               title="Generate Invoice"
                             >
                               <DocumentDuplicateIcon className="w-4 h-4" />
@@ -981,26 +1162,31 @@ function AdminFinancialListPage() {
                 )}
 
                 {/* Pagination */}
-                <div className="mt-6 flex items-center justify-between border-t border-gray-200 pt-4">
+                <nav
+                  className="mt-6 flex items-center justify-between border-t border-gray-200 pt-4"
+                  aria-label="Pagination"
+                >
                   <div className="flex-1 flex justify-between sm:hidden">
                     <button
                       onClick={handlePreviousPage}
                       disabled={!hasPreviousPage}
-                      className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      aria-label="Go to previous page"
                     >
                       Previous
                     </button>
                     <button
                       onClick={handleNextPage}
                       disabled={!hasNextPage}
-                      className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      aria-label="Go to next page"
                     >
                       Next
                     </button>
                   </div>
                   <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                     <div>
-                      <p className="text-sm text-gray-700">
+                      <p className="text-sm text-black" aria-live="polite">
                         Page{" "}
                         <span className="font-medium">{currentPageNumber}</span>
                         {totalCount > 0 && (
@@ -1013,21 +1199,22 @@ function AdminFinancialListPage() {
                           </>
                         )}
                         {totalCount > 0 && (
-                          <span className="ml-2 text-gray-500">
+                          <span className="ml-2 text-gray-600">
                             ({totalCount} total records)
                           </span>
                         )}
                       </p>
                     </div>
                     <div>
-                      <nav
+                      <div
                         className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                        aria-label="Pagination"
+                        role="group"
                       >
                         <button
                           onClick={handlePreviousPage}
                           disabled={!hasPreviousPage}
-                          className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          aria-label="Go to previous page"
                         >
                           <span className="sr-only">Previous</span>
                           <ChevronLeftIcon
@@ -1035,13 +1222,17 @@ function AdminFinancialListPage() {
                             aria-hidden="true"
                           />
                         </button>
-                        <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                        <span
+                          className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-black"
+                          aria-current="page"
+                        >
                           Page {currentPageNumber}
                         </span>
                         <button
                           onClick={handleNextPage}
                           disabled={!hasNextPage}
-                          className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          aria-label="Go to next page"
                         >
                           <span className="sr-only">Next</span>
                           <ChevronRightIcon
@@ -1049,19 +1240,22 @@ function AdminFinancialListPage() {
                             aria-hidden="true"
                           />
                         </button>
-                      </nav>
+                      </div>
                     </div>
                   </div>
-                </div>
+                </nav>
               </>
             ) : (
               /* No Results */
               <div className="text-center py-12">
-                <CurrencyDollarIcon className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">
+                <CurrencyDollarIcon
+                  className="mx-auto h-12 w-12 text-gray-400"
+                  aria-hidden="true"
+                />
+                <h3 className="mt-2 text-sm font-medium text-black">
                   No Financial Records Found
                 </h3>
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-gray-600">
                   {searchQuery ||
                   statusFilter !== 0 ||
                   typeFilter !== 0 ||
@@ -1078,16 +1272,16 @@ function AdminFinancialListPage() {
                     endDate) && (
                     <button
                       onClick={clearFilters}
-                      className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200"
+                      className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
                     >
                       Clear Filters
                     </button>
                   )}
                   <button
                     onClick={() => navigate("/admin/orders/add/step-1-search")}
-                    className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700"
+                    className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
                   >
-                    <PlusIcon className="w-5 h-5 mr-2" />
+                    <PlusIcon className="w-5 h-5 mr-2" aria-hidden="true" />
                     Add First Order
                   </button>
                 </div>
@@ -1098,11 +1292,25 @@ function AdminFinancialListPage() {
 
         {/* Detail Modal */}
         {showDetailModal && selectedOrder && (
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
+          <div
+            className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="modal-title"
+          >
+            <div
+              className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden"
+              role="document"
+            >
               <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <BanknotesIcon className="w-5 h-5 mr-2 text-blue-600" />
+                <h3
+                  id="modal-title"
+                  className="text-lg font-semibold text-black flex items-center"
+                >
+                  <BanknotesIcon
+                    className="w-5 h-5 mr-2 text-blue-600"
+                    aria-hidden="true"
+                  />
                   Financial Details
                 </h3>
                 <button
@@ -1110,7 +1318,7 @@ function AdminFinancialListPage() {
                     setShowDetailModal(false);
                     setSelectedOrder(null);
                   }}
-                  className="text-gray-400 hover:text-gray-500"
+                  className="text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
                 >
                   <XMarkIcon className="w-6 h-6" />
                 </button>
@@ -1119,17 +1327,17 @@ function AdminFinancialListPage() {
               <div className="px-6 py-4 overflow-y-auto">
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label className="block text-sm font-medium text-black mb-1">
                       Job Number:
                     </label>
-                    <div className="p-3 bg-gray-50 rounded-lg text-base font-semibold text-gray-900">
+                    <div className="p-3 bg-gray-50 rounded-lg text-base font-semibold text-black">
                       {selectedOrder.wjid || selectedOrder.id}
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-black mb-1">
                         Type:
                       </label>
                       <div className="p-3 bg-gray-50 rounded-lg">
@@ -1137,11 +1345,20 @@ function AdminFinancialListPage() {
                           className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getTypeBadgeColor(selectedOrder.type)}`}
                         >
                           {selectedOrder.type === ORDER_TYPE_COMMERCIAL ? (
-                            <BuildingOffice2Icon className="w-4 h-4 mr-1" />
+                            <BuildingOffice2Icon
+                              className="w-4 h-4 mr-1"
+                              aria-hidden="true"
+                            />
                           ) : selectedOrder.type === ORDER_TYPE_RESIDENTIAL ? (
-                            <HomeIcon className="w-4 h-4 mr-1" />
+                            <HomeIcon
+                              className="w-4 h-4 mr-1"
+                              aria-hidden="true"
+                            />
                           ) : (
-                            <QuestionMarkCircleIcon className="w-4 h-4 mr-1" />
+                            <QuestionMarkCircleIcon
+                              className="w-4 h-4 mr-1"
+                              aria-hidden="true"
+                            />
                           )}
                           {formatType(selectedOrder.type)}
                         </span>
@@ -1149,7 +1366,7 @@ function AdminFinancialListPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-black mb-1">
                         Status:
                       </label>
                       <div className="p-3 bg-gray-50 rounded-lg">
@@ -1164,10 +1381,10 @@ function AdminFinancialListPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-black mb-1">
                         Client:
                       </label>
-                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
+                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-black">
                         {selectedOrder.customerName ? (
                           <Link
                             to={`/admin/customer/${selectedOrder.customerId}`}
@@ -1184,10 +1401,10 @@ function AdminFinancialListPage() {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-black mb-1">
                         Associate:
                       </label>
-                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
+                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-black">
                         {selectedOrder.associateName ? (
                           <Link
                             to={`/admin/associate/${selectedOrder.associateId}`}
@@ -1206,19 +1423,19 @@ function AdminFinancialListPage() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-black mb-1">
                         Assignment Date:
                       </label>
-                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
+                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-black">
                         {formatDate(selectedOrder.assignmentDate)}
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-black mb-1">
                         Start Date:
                       </label>
-                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-gray-700">
+                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-black">
                         {formatDate(selectedOrder.startDate)}
                       </div>
                     </div>
@@ -1232,7 +1449,7 @@ function AdminFinancialListPage() {
                     setShowDetailModal(false);
                     setSelectedOrder(null);
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
                 >
                   Close
                 </button>
@@ -1243,9 +1460,12 @@ function AdminFinancialListPage() {
                       `/admin/financial/${selectedOrder.wjid || selectedOrder.id}/edit`,
                     );
                   }}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500"
                 >
-                  <PencilSquareIcon className="w-4 h-4 mr-1" />
+                  <PencilSquareIcon
+                    className="w-4 h-4 mr-1"
+                    aria-hidden="true"
+                  />
                   Edit
                 </button>
                 <button
@@ -1255,9 +1475,9 @@ function AdminFinancialListPage() {
                       `/admin/financial/${selectedOrder.wjid || selectedOrder.id}`,
                     );
                   }}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <EyeIcon className="w-4 h-4 mr-1" />
+                  <EyeIcon className="w-4 h-4 mr-1" aria-hidden="true" />
                   View Full Details
                 </button>
               </div>
@@ -1267,32 +1487,46 @@ function AdminFinancialListPage() {
 
         {/* Delete Confirmation Modal */}
         {showDeleteModal && orderToDelete && (
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-md w-full">
+          <div
+            className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-modal-title"
+          >
+            <div
+              className="bg-white rounded-lg max-w-md w-full"
+              role="document"
+            >
               <div className="px-6 py-4 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <ExclamationTriangleIcon className="w-5 h-5 mr-2 text-amber-600" />
+                <h3
+                  id="delete-modal-title"
+                  className="text-lg font-semibold text-black flex items-center"
+                >
+                  <ExclamationTriangleIcon
+                    className="w-5 h-5 mr-2 text-amber-600"
+                    aria-hidden="true"
+                  />
                   Archive Order
                 </h3>
               </div>
 
               <div className="px-6 py-4">
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-black mb-4">
                   Are you sure you want to archive this order? It will no longer
                   appear in active lists.
                 </p>
 
                 <div className="p-4 bg-amber-50 rounded-lg border-l-4 border-amber-500">
-                  <p className="text-sm font-medium text-gray-700 mb-1">
+                  <p className="text-sm font-medium text-black mb-1">
                     <strong>Job #:</strong>{" "}
                     {orderToDelete.wjid || orderToDelete.id}
                   </p>
                   {orderToDelete.customerName && (
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-sm text-black mt-1">
                       <strong>Client:</strong> {orderToDelete.customerName}
                     </p>
                   )}
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-sm text-black mt-1">
                     <strong>Status:</strong>{" "}
                     {formatStatus(orderToDelete.status)}
                   </p>
@@ -1300,7 +1534,10 @@ function AdminFinancialListPage() {
 
                 <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                   <p className="text-xs text-blue-800 flex items-start">
-                    <InformationCircleIcon className="w-4 h-4 mr-1 flex-shrink-0" />
+                    <InformationCircleIcon
+                      className="w-4 h-4 mr-1 flex-shrink-0"
+                      aria-hidden="true"
+                    />
                     <span>
                       <strong>Note:</strong> This action can be undone by a
                       system administrator. The order's data will be preserved.
@@ -1315,14 +1552,14 @@ function AdminFinancialListPage() {
                     setShowDeleteModal(false);
                     setOrderToDelete(null);
                   }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleDeleteOrder}
                   disabled={loading}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-red-500"
                 >
                   {loading ? (
                     <>
@@ -1331,6 +1568,7 @@ function AdminFinancialListPage() {
                         xmlns="http://www.w3.org/2000/svg"
                         fill="none"
                         viewBox="0 0 24 24"
+                        aria-hidden="true"
                       >
                         <circle
                           className="opacity-25"
@@ -1350,7 +1588,10 @@ function AdminFinancialListPage() {
                     </>
                   ) : (
                     <>
-                      <ArchiveBoxIcon className="w-4 h-4 mr-2" />
+                      <ArchiveBoxIcon
+                        className="w-4 h-4 mr-2"
+                        aria-hidden="true"
+                      />
                       Archive Order
                     </>
                   )}
