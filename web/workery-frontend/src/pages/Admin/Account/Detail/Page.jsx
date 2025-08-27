@@ -307,7 +307,7 @@ function AdminAccountDetailPage() {
           <div className="space-y-6">
             {/* Actions Bar */}
             <div className="flex justify-end">
-              <Link to="/account/edit">
+              <Link to="/admin/account/edit">
                 <Button
                   variant="primary"
                   disabled={currentUser.status === 2}
@@ -906,7 +906,7 @@ function AdminAccountDetailPage() {
                 </Button>
               </Link>
 
-              <Link to="/account/edit">
+              <Link to="/admin/account/edit">
                 <Button
                   variant="primary"
                   disabled={currentUser.status === 2}

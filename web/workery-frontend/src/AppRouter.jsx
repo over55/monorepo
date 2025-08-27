@@ -313,6 +313,7 @@ import AdminHelpPage from "./pages/Admin/Help/Page";
 
 // Admin profile pages.
 import AdminAccountDetailPage from "./pages/Admin/Account/Detail/Page.jsx";
+import AdminAccountUpdatePage from "./pages/Admin/Account/Update/Page.jsx";
 
 ////////////////////////////////////////////////////////////////
 // Associate pages
@@ -2486,24 +2487,17 @@ function AppRouter() {
                 </Layout>
               }
             />
+            <Route
+              path="/admin/account/edit"
+              element={
+                <Layout>
+                  <AdminAccountUpdatePage />
+                </Layout>
+              }
+            />
 
             {/* Account routes (WITH LAYOUT) */}
-            <Route
-              path="/xxx/account/"
-              element={
-                <Layout>
-                  <AdminAccountDetailPage />
-                </Layout>
-              }
-            />
-            <Route
-              path="/account/edit"
-              element={
-                <Layout>
-                  <PlaceholderPage title="Edit My Profile" />
-                </Layout>
-              }
-            />
+
             <Route
               path="/account/2fa"
               element={

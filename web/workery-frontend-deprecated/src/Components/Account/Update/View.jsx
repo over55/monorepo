@@ -1,3 +1,4 @@
+// File Path: monorepo/web/workery-frontend-deprecated/src/Components/Account/Update/View.jsx
 import React, { useState, useEffect } from "react";
 import { Link, Navigate } from "react-router-dom";
 import Scroll from "react-scroll";
@@ -77,14 +78,13 @@ import {
   FRONTLINE_ROLE_ID,
   ASSOCIATE_ROLE_ID,
   ASSOCIATE_JOB_SEEKER_ROLE_ID,
-  CUSTOMER_ROLE_ID
+  CUSTOMER_ROLE_ID,
 } from "../../../Constants/App";
 import AccountExecutiveStaffUpdate from "./ExecutiveStaffView";
 import AccountManagementOrFrontlineStaffUpdate from "./ManagementOrFrontlineStaffView";
 import AssociateUpdate from "./AssociateView";
 import AssociateJobSeekerUpdate from "./AssociateJobSeeker";
 import CustomerUpdate from "./CustomerView";
-
 
 function AccountUpdate() {
   ////

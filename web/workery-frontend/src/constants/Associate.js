@@ -61,7 +61,9 @@ export const ASSOCIATE_EDUCATION_CERTIFICATE_OR_DIPLOMA = 10;
 export const ASSOCIATE_EDUCATION_BACHELORS_DEGREE = 11;
 export const ASSOCIATE_EDUCATION_POST_GRADUATE = 12;
 
-export const ASSOCIATE_PHONE_TYPE_WORK = 1;
+export const ASSOCIATE_PHONE_TYPE_LANDLINE = 1;
+export const ASSOCIATE_PHONE_TYPE_MOBILE = 2;
+export const ASSOCIATE_PHONE_TYPE_WORK = 3;
 
 // Constants for filtering and sorting
 export const ASSOCIATE_STATUS_OPTIONS = [
@@ -158,4 +160,27 @@ export const ASSOCIATE_ACCOMPLISHED_EDUCATION_OPTIONS_WITH_EMPTY_OPTIONS = [
   { value: ASSOCIATE_EDUCATION_BACHELORS_DEGREE, label: "Bachelor's Degree" },
   { value: ASSOCIATE_EDUCATION_POST_GRADUATE, label: "Post Graduate" },
   { value: ASSOCIATE_EDUCATION_OTHER, label: "Other" },
+];
+
+export const ASSOCIATE_STATUS_FILTER_OPTIONS = [
+  { value: 0, label: "All" },
+  { value: 1, label: "Active" },
+  { value: 2, label: "Archived" },
+];
+
+export const ASSOCIATE_TYPE_OF_FILTER_OPTIONS = [
+  { value: 0, label: "All" },
+  { value: RESIDENTIAL_ASSOCIATE_TYPE_OF_ID, label: "Residential" },
+  { value: COMMERCIAL_ASSOCIATE_TYPE_OF_ID, label: "Commercial" },
+];
+
+export const ASSOCIATE_PHONE_TYPE_OF_OPTIONS = [
+  { value: ASSOCIATE_PHONE_TYPE_LANDLINE, label: "Landline" },
+  { value: ASSOCIATE_PHONE_TYPE_MOBILE, label: "Mobile" },
+  { value: ASSOCIATE_PHONE_TYPE_WORK, label: "Work" },
+];
+
+export const ASSOCIATE_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS = [
+  { value: 0, label: "Please select" }, // EMPTY OPTION
+  ...ASSOCIATE_PHONE_TYPE_OF_OPTIONS,
 ];
