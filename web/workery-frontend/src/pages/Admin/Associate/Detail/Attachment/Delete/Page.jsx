@@ -1,8 +1,10 @@
+// File Path: monorepo/web/workery-frontend/src/pages/Admin/Associate/Detail/Attachment/Delete/Page.jsx
+
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import {
   ChartBarIcon,
-  UserIcon,
+  UserGroupIcon,
   InformationCircleIcon,
   PaperClipIcon,
   ChevronLeftIcon,
@@ -24,7 +26,7 @@ import {
 import { formatDateForDisplay } from "../../../../../../services/Helpers/DateFormatter";
 
 function AdminAssociateDetailAttachmentDeletePage() {
-  const { cid, aid } = useParams();
+  const { aid, atid } = useParams(); // FIXED: Changed from { cid, aid } to { aid, atid }
   const navigate = useNavigate();
 
   // Services
@@ -58,11 +60,11 @@ function AdminAssociateDetailAttachmentDeletePage() {
       return;
     }
 
-    if (cid && aid) {
+    if (aid && atid) {
       fetchData();
       window.scrollTo(0, 0);
     }
-  }, [cid, aid]);
+  }, [aid, atid]);
 
   const fetchData = async () => {
     try {
@@ -71,22 +73,22 @@ function AdminAssociateDetailAttachmentDeletePage() {
 
       // Fetch associate details
       const associateData = await associateManager.getAssociateDetail(
-        cid,
+        aid,
         onUnauthorized,
       );
       setAssociate(associateData);
 
       // Fetch attachment details
       const attachmentData = await attachmentManager.getAttachmentDetail(
-        aid,
+        atid,
         onUnauthorized,
       );
       setAttachment(attachmentData);
 
       // Verify the attachment belongs to this associate
       if (
-        attachmentData.associateId !== cid &&
-        attachmentData.ownershipId !== cid
+        attachmentData.associateId !== aid &&
+        attachmentData.ownershipId !== aid
       ) {
         setErrors({
           general: "This attachment does not belong to the selected associate",
@@ -119,7 +121,7 @@ function AdminAssociateDetailAttachmentDeletePage() {
       setErrors({});
 
       // Call delete API
-      await attachmentManager.deleteAttachment(aid, onUnauthorized);
+      await attachmentManager.deleteAttachment(atid, onUnauthorized);
 
       // Show success message
       setAlertMessage("Attachment deleted successfully");
@@ -127,7 +129,7 @@ function AdminAssociateDetailAttachmentDeletePage() {
 
       // Redirect after a short delay
       setTimeout(() => {
-        navigate(`/admin/associate/${cid}/attachments`);
+        navigate(`/admin/associate/${aid}/attachments`);
       }, 1500);
     } catch (error) {
       console.error("Failed to delete attachment:", error);
@@ -149,7 +151,7 @@ function AdminAssociateDetailAttachmentDeletePage() {
   };
 
   const handleCancel = () => {
-    navigate(`/admin/associate/${cid}/attachment/${aid}`);
+    navigate(`/admin/associate/${aid}/attachment/${atid}`);
   };
 
   // Format file size
@@ -228,7 +230,7 @@ function AdminAssociateDetailAttachmentDeletePage() {
                 className="text-sm font-medium text-gray-700 hover:text-blue-600"
               >
                 <span className="inline-flex items-center">
-                  <UserIcon className="w-4 h-4 mr-2" />
+                  <UserGroupIcon className="w-4 h-4 mr-2" />
                   Associates
                 </span>
               </Link>
@@ -238,7 +240,7 @@ function AdminAssociateDetailAttachmentDeletePage() {
             <div className="flex items-center">
               <span className="mx-2 text-gray-400">/</span>
               <Link
-                to={`/admin/associate/${cid}`}
+                to={`/admin/associate/${aid}`}
                 className="text-sm font-medium text-gray-700 hover:text-blue-600"
               >
                 <span className="inline-flex items-center">
@@ -252,7 +254,7 @@ function AdminAssociateDetailAttachmentDeletePage() {
             <div className="flex items-center">
               <span className="mx-2 text-gray-400">/</span>
               <Link
-                to={`/admin/associate/${cid}/attachments`}
+                to={`/admin/associate/${aid}/attachments`}
                 className="text-sm font-medium text-gray-700 hover:text-blue-600"
               >
                 <span className="inline-flex items-center">
@@ -266,7 +268,7 @@ function AdminAssociateDetailAttachmentDeletePage() {
             <div className="flex items-center">
               <span className="mx-2 text-gray-400">/</span>
               <Link
-                to={`/admin/associate/${cid}/attachment/${aid}`}
+                to={`/admin/associate/${aid}/attachment/${atid}`}
                 className="text-sm font-medium text-gray-700 hover:text-blue-600"
               >
                 Detail
@@ -432,7 +434,7 @@ function AdminAssociateDetailAttachmentDeletePage() {
             {associate && (
               <div className="mt-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center">
-                  <UserIcon className="w-5 h-5 mr-2 text-blue-600" />
+                  <UserGroupIcon className="w-5 h-5 mr-2 text-blue-600" />
                   Associate Information
                 </h3>
                 <div className="bg-gray-50 rounded-lg p-4">
@@ -449,6 +451,28 @@ function AdminAssociateDetailAttachmentDeletePage() {
                       </label>
                       <p className="text-sm text-gray-900">{associate.email}</p>
                     </div>
+                    {associate.phone && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">
+                          Phone
+                        </label>
+                        <p className="text-sm text-gray-900">
+                          {associate.phone}
+                        </p>
+                      </div>
+                    )}
+                    {associate.typeOf && (
+                      <div>
+                        <label className="text-sm font-medium text-gray-500">
+                          Type
+                        </label>
+                        <p className="text-sm text-gray-900">
+                          {associate.typeOf === 1
+                            ? "Residential"
+                            : "Commercial"}
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
