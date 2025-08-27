@@ -44,7 +44,7 @@ function SettingNAICSSearchResultPage() {
   const [hasPreviousPage, setHasPreviousPage] = useState(false);
 
   // Sorting state
-  const [sortBy, setSortBy] = useState("code");
+  const [sortBy, setSortBy] = useState("code_str");
   const [sortOrder, setSortOrder] = useState("ASC");
 
   const onUnauthorized = () => {
@@ -389,8 +389,8 @@ function SettingNAICSSearchResultPage() {
                       onChange={handleSortChange}
                       className="block w-full sm:w-auto rounded-lg border-gray-300 py-1.5 pl-3 pr-8 text-xs sm:text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                     >
-                      <option value="code,ASC">Code (A-Z)</option>
-                      <option value="code,DESC">Code (Z-A)</option>
+                      <option value="code_str,ASC">Code (A-Z)</option>
+                      <option value="code_str,DESC">Code (Z-A)</option>
                       <option value="industry_title,ASC">
                         Industry Title (A-Z)
                       </option>

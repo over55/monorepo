@@ -84,6 +84,7 @@ export class NAICSAPI {
 
       // Add sorting params
       if (params.sortBy && params.sortOrder) {
+        // Send as combined parameter that backend now expects
         queryParams.append("sort_by", `${params.sortBy},${params.sortOrder}`);
       }
 

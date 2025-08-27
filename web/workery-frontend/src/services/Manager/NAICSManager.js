@@ -341,13 +341,17 @@ export class NAICSManager {
     if (params.sortBy && typeof params.sortBy === "string") {
       const allowedSortFields = [
         "code",
+        "code_str",
         "industry_title",
         "created_at",
         "updated_at",
-        "sector",
-        "subsector",
-        "industry_group",
-        "naics_industry",
+        "sector_code",
+        "sector_title",
+        "subsector_code",
+        "subsector_title",
+        "industry_group_code",
+        "industry_group_title",
+        "_id",
       ];
       if (allowedSortFields.includes(params.sortBy)) {
         validatedParams.sortBy = params.sortBy;
