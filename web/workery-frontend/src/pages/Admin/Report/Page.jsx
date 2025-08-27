@@ -416,7 +416,7 @@ function AdminReportPage() {
                 return (
                   <div
                     key={report.id}
-                    className="group bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex flex-col"
+                    className="group bg-white rounded-lg shadow-sm border-2 border-slate-600 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex flex-col"
                   >
                     {/* Icon Header - Using Settings page styling */}
                     <div className="bg-gradient-to-br from-slate-600 to-slate-700 p-4 sm:p-6 lg:p-8 text-white flex justify-center">
