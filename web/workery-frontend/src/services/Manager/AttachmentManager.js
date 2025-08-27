@@ -280,6 +280,7 @@ export class AttachmentManager {
     attachmentId,
     attachmentData,
     onUnauthorizedCallback = null,
+    onProgressCallback = null,
   ) {
     try {
       // Validate attachment ID
@@ -296,10 +297,11 @@ export class AttachmentManager {
 
       console.log(`AttachmentManager: Updating attachment ID ${attachmentId}`);
 
-      // Call API to update attachment
+      // Call API to update attachment with progress callback
       const updatedAttachmentData = await this.attachmentAPI.updateAttachment(
         attachmentId,
         attachmentData,
+        onProgressCallback,
         onUnauthorizedCallback,
       );
 

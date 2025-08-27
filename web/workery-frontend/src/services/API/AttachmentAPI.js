@@ -310,13 +310,15 @@ export class AttachmentAPI {
   /**
    * Updates a specific attachment's metadata
    * @param {string|number} attachmentId - The ID of the attachment
-   * @param {Object} attachmentData - Attachment metadata to update
+   * @param {Object} attachmentData - Attachment metadata to update (may include file)
+   * @param {Function} onProgressCallback - Called with upload progress if file is included
    * @param {Function} onUnauthorizedCallback - Called when token refresh fails
    * @returns {Promise<Object>} - Updated attachment data
    */
   async updateAttachment(
     attachmentId,
     attachmentData,
+    onProgressCallback = null,
     onUnauthorizedCallback = null,
   ) {
     try {
@@ -337,17 +339,53 @@ export class AttachmentAPI {
         onUnauthorizedCallback,
       );
 
-      // Convert camelCase to snake_case for API
-      let decamelizedData = decamelizeKeys(attachmentData);
+      // Create FormData for multipart/form-data submission
+      const formData = new FormData();
 
-      // Handle the special case for ID field
-      if (decamelizedData.i_d) {
-        decamelizedData.id = decamelizedData.i_d;
-        delete decamelizedData.i_d;
+      // Add title if provided
+      if (attachmentData.title !== undefined) {
+        formData.append("title", attachmentData.title);
       }
 
-      // Ensure ID is included in the data
-      decamelizedData.id = attachmentId;
+      // Add description if provided
+      if (attachmentData.description !== undefined) {
+        formData.append("description", attachmentData.description);
+      }
+
+      // Add file if provided (for file replacement)
+      if (attachmentData.file && attachmentData.file instanceof File) {
+        formData.append("file", attachmentData.file);
+      }
+
+      // Debug log the form data
+      if (process.env.NODE_ENV === "development") {
+        console.log("AttachmentAPI: Updating attachment with FormData:");
+        for (let [key, value] of formData.entries()) {
+          console.log(
+            `  ${key}:`,
+            value instanceof File ? `File: ${value.name}` : value,
+          );
+        }
+      }
+
+      // Configure request with progress tracking if file is included
+      const config = {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      };
+
+      // Add progress tracking if file is being uploaded
+      if (attachmentData.file && onProgressCallback) {
+        config.onUploadProgress = (progressEvent) => {
+          if (progressEvent.total) {
+            const progress = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total,
+            );
+            onProgressCallback(progress);
+          }
+        };
+      }
 
       // Replace {id} placeholder in endpoint
       const url = this.endpoints.ATTACHMENT_DETAIL.replace(
@@ -355,8 +393,8 @@ export class AttachmentAPI {
         attachmentId,
       );
 
-      // Make the API call
-      const response = await authenticatedAxios.put(url, decamelizedData);
+      // Make the API call using PUT with multipart/form-data
+      const response = await authenticatedAxios.put(url, formData, config);
 
       // Convert response from snake_case to camelCase
       const data = camelizeKeys(response.data);
