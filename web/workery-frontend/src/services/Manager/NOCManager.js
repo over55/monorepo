@@ -8,6 +8,10 @@ export class NOCManager {
   constructor(nocAPI, nocStorage) {
     this.nocAPI = nocAPI;
     this.nocStorage = nocStorage;
+
+    // Add promise tracking for concurrent requests
+    this.pendingNocsRequest = null;
+    this.pendingSelectOptionsRequest = null;
   }
 
   /**
@@ -29,33 +33,40 @@ export class NOCManager {
         }
       }
 
-      // Prevent multiple simultaneous requests
-      if (this.nocStorage.isSelectOptionsCacheLoading()) {
-        console.log("NOCManager: Select options request already in progress");
-        return this._waitForCurrentSelectOptionsRequest();
+      // If there's already a pending request, return it
+      if (this.pendingSelectOptionsRequest) {
+        console.log("NOCManager: Returning existing select options request");
+        return this.pendingSelectOptionsRequest;
       }
-
-      this.nocStorage.setSelectOptionsCacheLoading(true);
 
       console.log("NOCManager: Fetching fresh select options data");
 
-      try {
-        // Fetch fresh data from API
-        const optionsData = await this.nocAPI.getNOCSelectOptions(
-          onUnauthorizedCallback,
-        );
+      // Create the promise for the API request
+      this.pendingSelectOptionsRequest = (async () => {
+        try {
+          this.nocStorage.setSelectOptionsCacheLoading(true);
 
-        // Save to storage cache
-        this.nocStorage.saveSelectOptionsToCache(optionsData);
+          // Fetch fresh data from API
+          const optionsData = await this.nocAPI.getNOCSelectOptions(
+            onUnauthorizedCallback,
+          );
 
-        console.log("NOCManager: Select options data fetched successfully");
+          // Save to storage cache
+          this.nocStorage.saveSelectOptionsToCache(optionsData);
 
-        return optionsData;
-      } finally {
-        this.nocStorage.setSelectOptionsCacheLoading(false);
-      }
+          console.log("NOCManager: Select options data fetched successfully");
+
+          return optionsData;
+        } finally {
+          this.nocStorage.setSelectOptionsCacheLoading(false);
+          this.pendingSelectOptionsRequest = null;
+        }
+      })();
+
+      return this.pendingSelectOptionsRequest;
     } catch (error) {
       this.nocStorage.setSelectOptionsCacheLoading(false);
+      this.pendingSelectOptionsRequest = null;
       console.error("NOCManager: Failed to get select options", error);
       throw error;
     }
@@ -74,48 +85,74 @@ export class NOCManager {
     forceRefresh = false,
   ) {
     try {
+      // Generate a cache key based on params to handle different searches
+      const cacheKey = JSON.stringify(params);
+
       // Check storage cache first (unless force refresh is requested)
       if (!forceRefresh) {
         const cachedNocs = this.nocStorage.getNocsFromCache();
-        if (cachedNocs) {
+        // Only use cache if it matches the same params
+        if (cachedNocs && cachedNocs._cacheKey === cacheKey) {
           return cachedNocs;
         }
       }
 
-      // Prevent multiple simultaneous requests
-      if (this.nocStorage.isNocsCacheLoading()) {
-        console.log("NOCManager: NOCs request already in progress");
-        return this._waitForCurrentNocsRequest();
+      // If there's already a pending request with the same params, return it
+      if (
+        this.pendingNocsRequest &&
+        this.pendingNocsRequest._cacheKey === cacheKey
+      ) {
+        console.log("NOCManager: Returning existing NOCs request");
+        return this.pendingNocsRequest._promise;
       }
-
-      this.nocStorage.setNocsCacheLoading(true);
 
       console.log("NOCManager: Fetching fresh NOCs data", params);
 
-      try {
-        // Validate and clean parameters
-        const validatedParams = this._validateNocsParams(params);
+      // Create the promise for the API request
+      const requestPromise = (async () => {
+        try {
+          this.nocStorage.setNocsCacheLoading(true);
 
-        // Fetch fresh data from API
-        const nocsData = await this.nocAPI.getNOCs(
-          validatedParams,
-          onUnauthorizedCallback,
-        );
+          // Validate and clean parameters
+          const validatedParams = this._validateNocsParams(params);
 
-        // Save to storage cache
-        this.nocStorage.saveNocsToCache(nocsData);
+          // Fetch fresh data from API
+          const nocsData = await this.nocAPI.getNOCs(
+            validatedParams,
+            onUnauthorizedCallback,
+          );
 
-        console.log("NOCManager: NOCs data fetched successfully:", {
-          count: nocsData.results ? nocsData.results.length : 0,
-          totalCount: nocsData.count,
-        });
+          // Add cache key to the data for validation
+          nocsData._cacheKey = cacheKey;
 
-        return nocsData;
-      } finally {
-        this.nocStorage.setNocsCacheLoading(false);
-      }
+          // Save to storage cache
+          this.nocStorage.saveNocsToCache(nocsData);
+
+          console.log("NOCManager: NOCs data fetched successfully:", {
+            count: nocsData.results ? nocsData.results.length : 0,
+            totalCount: nocsData.count,
+          });
+
+          return nocsData;
+        } catch (error) {
+          console.error("NOCManager: Error fetching NOCs", error);
+          throw error;
+        } finally {
+          this.nocStorage.setNocsCacheLoading(false);
+          this.pendingNocsRequest = null;
+        }
+      })();
+
+      // Store the promise with its cache key
+      this.pendingNocsRequest = {
+        _promise: requestPromise,
+        _cacheKey: cacheKey,
+      };
+
+      return requestPromise;
     } catch (error) {
       this.nocStorage.setNocsCacheLoading(false);
+      this.pendingNocsRequest = null;
       console.error("NOCManager: Failed to get NOCs", error);
       throw error;
     }
@@ -177,6 +214,7 @@ export class NOCManager {
    */
   clearNocsCache() {
     this.nocStorage.clearNocsCache();
+    this.pendingNocsRequest = null;
   }
 
   /**
@@ -184,6 +222,7 @@ export class NOCManager {
    */
   clearSelectOptionsCache() {
     this.nocStorage.clearSelectOptionsCache();
+    this.pendingSelectOptionsRequest = null;
   }
 
   /**
@@ -191,6 +230,8 @@ export class NOCManager {
    */
   clearAllCache() {
     this.nocStorage.clearAllCache();
+    this.pendingNocsRequest = null;
+    this.pendingSelectOptionsRequest = null;
   }
 
   /**
@@ -334,6 +375,16 @@ export class NOCManager {
       validatedParams.search = params.search.trim();
     }
 
+    // Validate code
+    if (params.code && typeof params.code === "string" && params.code.trim()) {
+      validatedParams.code = params.code.trim();
+    }
+
+    // Validate unit group title (ugt)
+    if (params.ugt && typeof params.ugt === "string" && params.ugt.trim()) {
+      validatedParams.ugt = params.ugt.trim();
+    }
+
     // Validate sorting
     if (params.sortBy && typeof params.sortBy === "string") {
       const allowedSortFields = [
@@ -345,6 +396,7 @@ export class NOCManager {
         "sub_major_group",
         "minor_group",
         "unit_group",
+        "_id",
       ];
       if (allowedSortFields.includes(params.sortBy)) {
         validatedParams.sortBy = params.sortBy;
@@ -375,63 +427,5 @@ export class NOCManager {
     }
 
     return validatedParams;
-  }
-
-  /**
-   * Waits for current NOCs request to complete
-   * @private
-   * @returns {Promise<Object>}
-   */
-  _waitForCurrentNocsRequest() {
-    return new Promise((resolve, reject) => {
-      const checkInterval = setInterval(() => {
-        if (!this.nocStorage.isNocsCacheLoading()) {
-          clearInterval(checkInterval);
-
-          // Try to get cached data
-          const cachedData = this.nocStorage.getNocsFromCache();
-          if (cachedData) {
-            resolve(cachedData);
-          } else {
-            reject(new Error("NOCs request failed"));
-          }
-        }
-      }, 100);
-
-      // Timeout after 30 seconds
-      setTimeout(() => {
-        clearInterval(checkInterval);
-        reject(new Error("NOCs request timeout"));
-      }, 30000);
-    });
-  }
-
-  /**
-   * Waits for current select options request to complete
-   * @private
-   * @returns {Promise<Object>}
-   */
-  _waitForCurrentSelectOptionsRequest() {
-    return new Promise((resolve, reject) => {
-      const checkInterval = setInterval(() => {
-        if (!this.nocStorage.isSelectOptionsCacheLoading()) {
-          clearInterval(checkInterval);
-
-          // Try to get cached data
-          const cachedData = this.nocStorage.getSelectOptionsFromCache();
-          if (cachedData) {
-            resolve(cachedData);
-          } else {
-            reject(new Error("Select options request failed"));
-          }
-        }
-      }, 100);
-
-      // Timeout after 30 seconds
-      setTimeout(() => {
-        clearInterval(checkInterval);
-        reject(new Error("Select options request timeout"));
-      }, 30000);
-    });
   }
 }
