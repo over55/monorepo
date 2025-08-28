@@ -30,7 +30,11 @@ import {
   useOrderManager,
   useAuthManager,
 } from "../../../../../../services/Services";
-import { ATTACHMENT_TYPE_NAMES } from "../../../../../../constants/Attachment";
+import {
+  ATTACHMENT_STATUS,
+  ATTACHMENT_TYPES,
+  ATTACHMENT_TYPE_NAMES,
+} from "../../../../../../constants/Attachment";
 import {
   ORDER_STATUS_NEW,
   ORDER_STATUS_DECLINED,
@@ -89,18 +93,32 @@ function AdminOrderDetailAttachmentListPage() {
   const fetchData = async () => {
     try {
       setFetching(true);
+      setErrors({});
 
       // Fetch order details
       const orderData = await orderManager.getOrderDetail(oid, onUnauthorized);
       setOrder(orderData);
 
-      // Fetch attachments using proper ownership filtering
+      // BUILD PARAMS WITH CORRECT OWNERSHIP FILTERING
       const params = {
-        ownershipType: ATTACHMENT_TYPE_NAMES.order, // Use constant from Attachment.js
         ownershipId: oid,
-        limit: pageSize,
-        cursor: currentCursor || undefined,
+        ownershipRole: ATTACHMENT_TYPES.ORDER, // This is 3
+        page_size: pageSize,
       };
+
+      if (currentCursor) {
+        params.cursor = currentCursor;
+      }
+
+      // Debug logging for development
+      if (process.env.NODE_ENV === "development") {
+        console.log("🔍 ATTACHMENT FILTER DEBUG:");
+        console.log("  Order ID (oid):", oid);
+        console.log("  Request params:", params);
+        console.log("  Expected backend params:");
+        console.log("    ownership_id:", oid);
+        console.log("    ownership_role:", ATTACHMENT_TYPES.ORDER);
+      }
 
       // Force refresh to bypass any stale cache
       const attachmentsData = await attachmentManager.getAttachments(
@@ -108,31 +126,67 @@ function AdminOrderDetailAttachmentListPage() {
         onUnauthorized,
         true, // Force refresh
       );
+
+      // LOG THE RESPONSE
+      if (process.env.NODE_ENV === "development") {
+        console.log("📦 ATTACHMENT RESPONSE:");
+        console.log("  Total count:", attachmentsData?.count || 0);
+        console.log("  Results count:", attachmentsData?.results?.length || 0);
+
+        // VERIFY FILTERING: Check if all attachments belong to this order
+        if (attachmentsData?.results?.length > 0) {
+          const allBelongToOrder = attachmentsData.results.every(
+            (att) => att.orderId === oid || att.orderID === oid,
+          );
+          console.log(
+            "  ✅ All attachments belong to order?",
+            allBelongToOrder,
+          );
+
+          // Log any attachments that don't match
+          attachmentsData.results.forEach((att, index) => {
+            if (att.orderId !== oid && att.orderID !== oid) {
+              console.warn(`  ⚠️ Attachment ${index} has different order:`, {
+                attachmentId: att.id,
+                attachmentOrderId: att.orderId || att.orderID,
+                expectedOrderId: oid,
+              });
+            }
+          });
+        }
+      }
+
       setAttachments(attachmentsData);
 
-      if (attachmentsData.hasNextPage) {
+      if (attachmentsData && attachmentsData.hasNextPage) {
         setNextCursor(attachmentsData.nextCursor);
+      } else {
+        setNextCursor("");
       }
     } catch (error) {
-      console.error("Failed to fetch data:", error);
+      console.error("❌ Failed to fetch data:", error);
       setErrors({ general: "Failed to load attachments" });
+      setAlertMessage("Failed to load attachments");
+      setAlertType("error");
     } finally {
       setFetching(false);
     }
   };
 
   const onNextClicked = () => {
-    const arr = [...previousCursors];
-    arr.push(currentCursor);
-    setPreviousCursors(arr);
-    setCurrentCursor(nextCursor);
+    if (nextCursor) {
+      const arr = [...previousCursors];
+      arr.push(currentCursor);
+      setPreviousCursors(arr);
+      setCurrentCursor(nextCursor);
+    }
   };
 
   const onPreviousClicked = () => {
     const arr = [...previousCursors];
     const previousCursor = arr.pop();
     setPreviousCursors(arr);
-    setCurrentCursor(previousCursor);
+    setCurrentCursor(previousCursor || "");
   };
 
   const onSelectAttachmentForDeletion = (attachment) => {
@@ -165,7 +219,7 @@ function AdminOrderDetailAttachmentListPage() {
       }, 3000);
 
       // Refresh the list
-      fetchData();
+      await fetchData();
     } catch (error) {
       console.error("Failed to delete attachment:", error);
       setErrors({ general: "Failed to delete attachment" });
@@ -184,6 +238,10 @@ function AdminOrderDetailAttachmentListPage() {
   // Format date helper
   const formatDate = (dateString) => {
     if (!dateString) return "-";
+    // Check if it's already formatted (contains month name)
+    if (/[A-Za-z]/.test(dateString) && !dateString.includes("T")) {
+      return dateString;
+    }
     return new Date(dateString).toLocaleDateString();
   };
 
@@ -313,7 +371,8 @@ function AdminOrderDetailAttachmentListPage() {
             </h1>
             <p className="mt-1 text-sm text-gray-600 flex items-center">
               <InformationCircleIcon className="w-4 h-4 mr-1" />
-              Manage attachments and documents
+              Manage attachments and documents for{" "}
+              {order?.wjid ? `Order #${order.wjid}` : "this order"}
             </p>
           </div>
         </div>
@@ -424,12 +483,17 @@ function AdminOrderDetailAttachmentListPage() {
             <h2 className="text-2xl font-semibold text-gray-900 flex items-center">
               <PaperClipIcon className="w-7 h-7 mr-2 text-blue-600" />
               Attachments
+              {attachments?.count !== undefined && (
+                <span className="ml-2 text-sm font-normal text-gray-500">
+                  ({attachments.count} total)
+                </span>
+              )}
             </h2>
             {canAddAttachments && (
               <Link to={`/admin/order/${oid}/attachments/add`}>
                 <button className="inline-flex items-center px-5 py-2.5 border border-transparent rounded-lg text-base font-medium text-white bg-green-600 hover:bg-green-700 transition-colors">
                   <PlusCircleIcon className="w-5 h-5 mr-2" />
-                  New
+                  New Attachment
                 </button>
               </Link>
             )}
@@ -527,7 +591,7 @@ function AdminOrderDetailAttachmentListPage() {
                           {attachment.title || "Untitled"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          {attachment.status === 1 ? (
+                          {attachment.status === ATTACHMENT_STATUS.ACTIVE ? (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                               Active
                             </span>
@@ -545,6 +609,9 @@ function AdminOrderDetailAttachmentListPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <div className="flex items-center gap-2">
+                            {getFileTypeIcon(
+                              attachment.filetype || attachment.fileType,
+                            )}
                             <span className="text-gray-900">
                               {attachment.filename ||
                                 attachment.fileName ||
@@ -557,6 +624,7 @@ function AdminOrderDetailAttachmentListPage() {
                                 rel="noreferrer"
                                 onClick={(e) => e.stopPropagation()}
                                 className="inline-flex items-center text-blue-600 hover:text-blue-700"
+                                title="Download file"
                               >
                                 <ArrowDownTrayIcon className="w-4 h-4" />
                               </a>
@@ -583,15 +651,16 @@ function AdminOrderDetailAttachmentListPage() {
                                 Edit
                               </button>
                             </Link>
-                            <Link
-                              to={`/admin/order/${oid}/attachment/${attachment.id}/delete`}
-                              onClick={(e) => e.stopPropagation()}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onSelectAttachmentForDeletion(attachment);
+                              }}
+                              className="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-xs font-medium text-white bg-red-600 hover:bg-red-700 transition-colors"
                             >
-                              <button className="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-xs font-medium text-white bg-red-600 hover:bg-red-700 transition-colors">
-                                <TrashIcon className="w-4 h-4 mr-1" />
-                                Delete
-                              </button>
-                            </Link>
+                              <TrashIcon className="w-4 h-4 mr-1" />
+                              Delete
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -633,7 +702,7 @@ function AdminOrderDetailAttachmentListPage() {
                       Previous
                     </button>
                   )}
-                  {attachments.hasNextPage && (
+                  {attachments.hasNextPage && nextCursor && (
                     <button
                       onClick={onNextClicked}
                       className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors"
@@ -678,7 +747,7 @@ function AdminOrderDetailAttachmentListPage() {
               <Link to={`/admin/order/${oid}/attachments/add`}>
                 <button className="inline-flex items-center px-5 py-2.5 border border-transparent rounded-lg text-base font-medium text-white bg-green-600 hover:bg-green-700 transition-colors">
                   <PlusCircleIcon className="w-5 h-5 mr-2" />
-                  New
+                  New Attachment
                 </button>
               </Link>
             )}
