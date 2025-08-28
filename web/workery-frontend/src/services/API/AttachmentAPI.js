@@ -47,6 +47,7 @@ export class AttachmentAPI {
       // Add pagination params
       if (params.page) queryParams.append("page", params.page);
       if (params.limit) queryParams.append("page_size", params.limit);
+      if (params.cursor) queryParams.append("cursor", params.cursor);
 
       // Add search params
       if (params.search) queryParams.append("search", params.search);
@@ -56,12 +57,25 @@ export class AttachmentAPI {
         queryParams.append("sort_by", `${params.sortBy},${params.sortOrder}`);
       }
 
-      // Add ownership filters (using backend field names)
-      if (params.ownershipType) {
-        queryParams.append("ownership_type", params.ownershipType);
-      }
+      // Handle ownership filtering - Backend expects ownership_id and ownership_role
       if (params.ownershipId) {
         queryParams.append("ownership_id", params.ownershipId);
+      }
+
+      if (params.ownershipRole) {
+        queryParams.append("ownership_role", params.ownershipRole);
+      }
+
+      // Legacy support: Map entityType/entityId to ownership fields
+      if (!params.ownershipId && params.entityId) {
+        queryParams.append("ownership_id", params.entityId);
+      }
+
+      if (!params.ownershipRole && params.entityType) {
+        const ownershipRole = ATTACHMENT_TYPE_NAMES[params.entityType];
+        if (ownershipRole) {
+          queryParams.append("ownership_role", ownershipRole);
+        }
       }
 
       // Add file type filter
@@ -72,25 +86,23 @@ export class AttachmentAPI {
         queryParams.append("ownership_wjid", params.orderWjid);
       }
 
-      // Handle role-based filtering
-      if (params.ownershipRole) {
-        queryParams.append("ownership_role", params.ownershipRole);
-      }
-
       // Add any additional filters
       Object.keys(params).forEach((key) => {
         if (
           ![
             "page",
             "limit",
+            "cursor",
             "search",
             "sortBy",
             "sortOrder",
             "ownershipType",
             "ownershipId",
+            "ownershipRole",
+            "entityType",
+            "entityId",
             "fileType",
             "orderWjid",
-            "ownershipRole",
           ].includes(key)
         ) {
           if (

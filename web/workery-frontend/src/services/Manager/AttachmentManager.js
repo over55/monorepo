@@ -925,6 +925,21 @@ export class AttachmentManager {
       validatedParams.limit = params.limit;
     }
 
+    // ADD CURSOR SUPPORT
+    if (params.cursor && typeof params.cursor === "string") {
+      validatedParams.cursor = params.cursor;
+    }
+
+    // ADD PAGE_SIZE SUPPORT (alias for limit)
+    if (
+      params.page_size &&
+      typeof params.page_size === "number" &&
+      params.page_size > 0 &&
+      params.page_size <= 1000
+    ) {
+      validatedParams.page_size = params.page_size;
+    }
+
     // Validate search
     if (
       params.search &&
@@ -955,7 +970,25 @@ export class AttachmentManager {
       }
     }
 
-    // Validate entity filters
+    // *** FIX: ADD THESE LINES TO PASS THROUGH OWNERSHIP PARAMETERS ***
+    // Validate ownership filters (NEW - THESE WERE MISSING!)
+    if (
+      params.ownershipId &&
+      (typeof params.ownershipId === "string" ||
+        typeof params.ownershipId === "number")
+    ) {
+      validatedParams.ownershipId = params.ownershipId;
+    }
+
+    if (
+      params.ownershipRole &&
+      (typeof params.ownershipRole === "string" ||
+        typeof params.ownershipRole === "number")
+    ) {
+      validatedParams.ownershipRole = params.ownershipRole;
+    }
+
+    // ALSO keep the legacy entity filters for backward compatibility
     if (params.entityType && typeof params.entityType === "string") {
       validatedParams.entityType = params.entityType;
     }
@@ -968,7 +1001,7 @@ export class AttachmentManager {
       validatedParams.entityId = params.entityId;
     }
 
-    // ADD THIS: Validate order_wjid parameter
+    // Validate order_wjid parameter
     if (
       params.orderWjid &&
       (typeof params.orderWjid === "string" ||

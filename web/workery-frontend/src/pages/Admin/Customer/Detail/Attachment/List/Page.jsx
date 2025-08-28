@@ -1,7 +1,7 @@
 // File Path: web/workery-frontend/src/pages/Admin/Customer/Detail/Attachment/List/Page.jsx
 
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ChartBarIcon,
   UserIcon,
@@ -29,6 +29,10 @@ import {
   useCustomerManager,
   useAuthManager,
 } from "../../../../../../services/Services";
+import {
+  ATTACHMENT_TYPE_NAMES,
+  ATTACHMENT_TYPES,
+} from "../../../../../../constants/Attachment";
 
 function AdminCustomerDetailAttachmentListPage() {
   const { cid } = useParams();
@@ -76,6 +80,7 @@ function AdminCustomerDetailAttachmentListPage() {
   const fetchData = async () => {
     try {
       setFetching(true);
+      setErrors({});
 
       // Fetch customer details
       const customerData = await customerManager.getCustomerDetail(
@@ -84,43 +89,89 @@ function AdminCustomerDetailAttachmentListPage() {
       );
       setCustomer(customerData);
 
-      // Fetch attachments
+      // BUILD PARAMS WITH CLEAR LOGGING
       const params = {
-        entityType: "customer",
-        entityId: cid,
-        limit: pageSize,
-        cursor: currentCursor || undefined,
+        ownershipId: cid,
+        ownershipRole: ATTACHMENT_TYPES.CUSTOMER, // This is 1
+        page_size: pageSize,
       };
+
+      if (currentCursor) {
+        params.cursor = currentCursor;
+      }
+
+      // IMPORTANT: Log the request params
+      console.log("🔍 ATTACHMENT FILTER DEBUG:");
+      console.log("  Customer ID (cid):", cid);
+      console.log("  Request params:", params);
+      console.log("  Expected backend params:");
+      console.log("    ownership_id:", cid);
+      console.log("    ownership_role:", ATTACHMENT_TYPES.CUSTOMER);
 
       const attachmentsData = await attachmentManager.getAttachments(
         params,
         onUnauthorized,
+        true, // Force refresh
       );
+
+      // LOG THE RESPONSE
+      console.log("📦 ATTACHMENT RESPONSE:");
+      console.log("  Total count:", attachmentsData?.count || 0);
+      console.log("  Results count:", attachmentsData?.results?.length || 0);
+
+      // VERIFY FILTERING: Check if all attachments belong to this customer
+      if (attachmentsData?.results?.length > 0) {
+        const allBelongToCustomer = attachmentsData.results.every(
+          (att) => att.customerId === cid || att.customerID === cid,
+        );
+        console.log(
+          "  ✅ All attachments belong to customer?",
+          allBelongToCustomer,
+        );
+
+        // Log any attachments that don't match
+        attachmentsData.results.forEach((att, index) => {
+          if (att.customerId !== cid && att.customerID !== cid) {
+            console.warn(`  ⚠️ Attachment ${index} has different customer:`, {
+              attachmentId: att.id,
+              attachmentCustomerId: att.customerId || att.customerID,
+              expectedCustomerId: cid,
+            });
+          }
+        });
+      }
+
       setAttachments(attachmentsData);
 
-      if (attachmentsData.hasNextPage) {
+      if (attachmentsData && attachmentsData.hasNextPage) {
         setNextCursor(attachmentsData.nextCursor);
+      } else {
+        setNextCursor("");
       }
     } catch (error) {
-      console.error("Failed to fetch data:", error);
+      console.error("❌ Failed to fetch data:", error);
       setErrors({ general: "Failed to load attachments" });
+      setAlertMessage("Failed to load attachments");
+      setAlertType("error");
     } finally {
       setFetching(false);
     }
   };
 
   const onNextClicked = () => {
-    const arr = [...previousCursors];
-    arr.push(currentCursor);
-    setPreviousCursors(arr);
-    setCurrentCursor(nextCursor);
+    if (nextCursor) {
+      const arr = [...previousCursors];
+      arr.push(currentCursor);
+      setPreviousCursors(arr);
+      setCurrentCursor(nextCursor);
+    }
   };
 
   const onPreviousClicked = () => {
     const arr = [...previousCursors];
     const previousCursor = arr.pop();
     setPreviousCursors(arr);
-    setCurrentCursor(previousCursor);
+    setCurrentCursor(previousCursor || "");
   };
 
   const onSelectAttachmentForDeletion = (attachment) => {
@@ -153,7 +204,7 @@ function AdminCustomerDetailAttachmentListPage() {
       }, 3000);
 
       // Refresh the list
-      fetchData();
+      await fetchData();
     } catch (error) {
       console.error("Failed to delete attachment:", error);
       setErrors({ general: "Failed to delete attachment" });
@@ -172,6 +223,10 @@ function AdminCustomerDetailAttachmentListPage() {
   // Format date helper
   const formatDate = (dateString) => {
     if (!dateString) return "-";
+    // Check if it's already formatted (contains month name)
+    if (/[A-Za-z]/.test(dateString) && !dateString.includes("T")) {
+      return dateString;
+    }
     return new Date(dateString).toLocaleDateString();
   };
 
@@ -204,6 +259,22 @@ function AdminCustomerDetailAttachmentListPage() {
   if (!authManager.isAuthenticated()) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Add Debug Banner in Development */}
+        {debugMode && (
+          <div className="mb-4 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="text-sm text-yellow-800">
+              <strong>Debug Mode:</strong> Check console for attachment
+              filtering details
+              <div className="mt-2 font-mono text-xs">
+                Customer ID: {cid}
+                <br />
+                Ownership Role: {ATTACHMENT_TYPES.CUSTOMER} (Customer)
+                <br />
+                Check Network tab for: ownership_id={cid}&ownership_role=1
+              </div>
+            </div>
+          </div>
+        )}
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
@@ -291,7 +362,8 @@ function AdminCustomerDetailAttachmentListPage() {
             </h1>
             <p className="mt-1 text-sm text-gray-600 flex items-center">
               <InformationCircleIcon className="w-4 h-4 mr-1" />
-              Manage attachments and documents
+              Manage attachments and documents for{" "}
+              {customer?.name || "this customer"}
             </p>
           </div>
         </div>
@@ -396,6 +468,11 @@ function AdminCustomerDetailAttachmentListPage() {
             <h2 className="text-2xl font-semibold text-gray-900 flex items-center">
               <PaperClipIcon className="w-7 h-7 mr-2 text-blue-600" />
               Attachments
+              {attachments?.count !== undefined && (
+                <span className="ml-2 text-sm font-normal text-gray-500">
+                  ({attachments.count} total)
+                </span>
+              )}
             </h2>
             {customer && (
               <Link to={`/admin/customer/${cid}/attachments/add`}>
@@ -518,6 +595,9 @@ function AdminCustomerDetailAttachmentListPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <div className="flex items-center gap-2">
+                            {getFileTypeIcon(
+                              attachment.filetype || attachment.fileType,
+                            )}
                             <span className="text-gray-900">
                               {attachment.filename ||
                                 attachment.fileName ||
@@ -530,6 +610,7 @@ function AdminCustomerDetailAttachmentListPage() {
                                 rel="noreferrer"
                                 onClick={(e) => e.stopPropagation()}
                                 className="inline-flex items-center text-blue-600 hover:text-blue-700"
+                                title="Download file"
                               >
                                 <ArrowDownTrayIcon className="w-4 h-4" />
                               </a>
@@ -556,15 +637,16 @@ function AdminCustomerDetailAttachmentListPage() {
                                 Edit
                               </button>
                             </Link>
-                            <Link
-                              to={`/admin/customer/${cid}/attachment/${attachment.id}/delete`}
-                              onClick={(e) => e.stopPropagation()}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onSelectAttachmentForDeletion(attachment);
+                              }}
+                              className="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-xs font-medium text-white bg-red-600 hover:bg-red-700 transition-colors"
                             >
-                              <button className="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-xs font-medium text-white bg-red-600 hover:bg-red-700 transition-colors">
-                                <TrashIcon className="w-4 h-4 mr-1" />
-                                Delete
-                              </button>
-                            </Link>
+                              <TrashIcon className="w-4 h-4 mr-1" />
+                              Delete
+                            </button>
                           </div>
                         </td>
                       </tr>
@@ -606,7 +688,7 @@ function AdminCustomerDetailAttachmentListPage() {
                       Previous
                     </button>
                   )}
-                  {attachments.hasNextPage && (
+                  {attachments.hasNextPage && nextCursor && (
                     <button
                       onClick={onNextClicked}
                       className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors"
@@ -658,7 +740,7 @@ function AdminCustomerDetailAttachmentListPage() {
                   }`}
                 >
                   <PlusCircleIcon className="w-5 h-5 mr-2" />
-                  New
+                  New Attachment
                 </button>
               </Link>
             )}
