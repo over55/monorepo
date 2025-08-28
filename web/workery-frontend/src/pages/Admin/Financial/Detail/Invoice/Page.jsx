@@ -38,6 +38,7 @@ function AdminFinancialInvoiceDetailPage() {
   const [isFetching, setFetching] = useState(false);
   const [order, setOrder] = useState(null);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   // Handle unauthorized access
   const onUnauthorized = () => {
@@ -102,6 +103,58 @@ function AdminFinancialInvoiceDetailPage() {
   // Handle regenerate invoice click
   const onRegenerateInvoiceClick = () => {
     navigate(`/admin/financial/${oid}/invoice/generate/step-1`);
+  };
+
+  // Handle invoice download
+  const onDownloadInvoiceClick = async () => {
+    if (!order?.invoice?.fileObjectUrl) {
+      console.error("No invoice file URL available");
+      setErrors({ general: "Invoice file not available for download" });
+      return;
+    }
+
+    setIsDownloading(true);
+    setErrors({});
+
+    try {
+      // Fetch the file from the URL
+      const response = await fetch(order.invoice.fileObjectUrl);
+
+      if (!response.ok) {
+        throw new Error(`Failed to download invoice: ${response.statusText}`);
+      }
+
+      // Get the blob from the response
+      const blob = await response.blob();
+
+      // Create a temporary URL for the blob
+      const blobUrl = URL.createObjectURL(blob);
+
+      // Create a temporary anchor element to trigger download
+      const link = document.createElement("a");
+      link.href = blobUrl;
+
+      // Set the filename - use invoice ID or order ID
+      const fileName = `invoice_${order.invoiceIds || order.wjid || order.id}.pdf`;
+      link.download = fileName;
+
+      // Append to body, click, and remove
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Clean up the blob URL
+      URL.revokeObjectURL(blobUrl);
+
+      console.log(`Invoice downloaded successfully: ${fileName}`);
+    } catch (error) {
+      console.error("Failed to download invoice:", error);
+      setErrors({
+        general: "Failed to download invoice. Please try again later.",
+      });
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   // Format currency
@@ -294,16 +347,18 @@ function AdminFinancialInvoiceDetailPage() {
                       Edit & Regenerate
                     </button>
                     {order.invoice.fileObjectUrl && (
-                      <a
-                        href={order.invoice.fileObjectUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <button
+                        onClick={onDownloadInvoiceClick}
+                        disabled={isDownloading}
+                        className={`inline-flex items-center px-5 py-2.5 border border-transparent rounded-lg text-base font-medium text-white transition-colors ${
+                          isDownloading
+                            ? "bg-gray-400 cursor-not-allowed"
+                            : "bg-green-600 hover:bg-green-700"
+                        }`}
                       >
-                        <button className="inline-flex items-center px-5 py-2.5 border border-transparent rounded-lg text-base font-medium text-white bg-green-600 hover:bg-green-700 transition-colors">
-                          <ArrowDownTrayIcon className="w-5 h-5 mr-2" />
-                          Download Invoice
-                        </button>
-                      </a>
+                        <ArrowDownTrayIcon className="w-5 h-5 mr-2" />
+                        {isDownloading ? "Downloading..." : "Download Invoice"}
+                      </button>
                     )}
                   </>
                 ) : (
