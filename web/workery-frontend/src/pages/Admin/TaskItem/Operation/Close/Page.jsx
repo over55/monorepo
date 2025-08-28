@@ -134,9 +134,9 @@ function AdminTaskItemCloseOperationPage() {
       // Set success message
       setSuccessMessage("Task has been successfully closed");
 
-      // Navigate to task detail page or back URL after a short delay
+      // Navigate to task list or back URL after a short delay
       setTimeout(() => {
-        navigate(back || `/admin/task/${task.id}`);
+        navigate(back || "/admin/tasks");
       }, 2000);
     } catch (error) {
       console.error("Failed to close task:", error);
@@ -211,20 +211,6 @@ function AdminTaskItemCloseOperationPage() {
                 <span className="inline-flex items-center">
                   <ClipboardDocumentCheckIcon className="w-4 h-4 mr-2" />
                   Tasks
-                </span>
-              </Link>
-            </div>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <Link
-                to={back || (task ? `/admin/task/${task.id}` : "#")}
-                className="text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                <span className="inline-flex items-center">
-                  <InformationCircleIcon className="w-4 h-4 mr-2" />
-                  Task Detail
                 </span>
               </Link>
             </div>
@@ -500,17 +486,13 @@ function AdminTaskItemCloseOperationPage() {
 
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row justify-between gap-4 mt-8">
-                <Link
-                  to={
-                    back || (task ? `/admin/task/${task.id}` : "/admin/tasks")
-                  }
-                >
+                <Link to={back || "/admin/tasks"}>
                   <button
                     disabled={isSubmitting}
                     className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <ChevronLeftIcon className="w-4 h-4 mr-2" />
-                    Back to Detail
+                    Back
                   </button>
                 </Link>
 
