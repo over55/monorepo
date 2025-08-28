@@ -97,22 +97,6 @@ function SettingBulletinDetailPage() {
     }
   };
 
-  const handleArchive = async () => {
-    if (!bulletin) return;
-
-    try {
-      setIsLoading(true);
-      await bulletinManager.archiveBulletin(bulletin.id, onUnauthorized);
-      setSuccessMessage("Bulletin archived successfully");
-      loadBulletin(); // Reload to show updated status
-    } catch (err) {
-      console.error("Failed to archive bulletin:", err);
-      setError(err.message || "Failed to archive bulletin");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   // Loading state
   if (isLoading && !bulletin) {
     return (
@@ -248,14 +232,7 @@ function SettingBulletinDetailPage() {
                     <PencilSquareIcon className="w-4 h-4 mr-1" />
                     Edit
                   </button>
-                  <button
-                    onClick={handleArchive}
-                    disabled={isLoading}
-                    className="inline-flex items-center px-3 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <ArchiveBoxIcon className="w-4 h-4 mr-1" />
-                    Archive
-                  </button>
+
                   <button
                     onClick={() => setShowDeleteModal(true)}
                     disabled={isLoading}
