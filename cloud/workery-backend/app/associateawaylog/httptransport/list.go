@@ -7,6 +7,7 @@ import (
 
 	associateawaylog_s "github.com/over55/monorepo/cloud/workery-backend/app/associateawaylog/datastore"
 	"github.com/over55/monorepo/cloud/workery-backend/utils/httperror"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
@@ -60,6 +61,16 @@ func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	searchKeyword := query.Get("search")
 	if searchKeyword != "" {
 		f.SearchText = searchKeyword
+	}
+
+	associateIDStr := query.Get("associate_id")
+	if associateIDStr != "" {
+		associateID, err := primitive.ObjectIDFromHex(associateIDStr)
+		if err != nil {
+			httperror.ResponseError(w, err)
+			return
+		}
+		f.AssociateID = associateID
 	}
 
 	m, err := h.Controller.ListAndCountByFilter(ctx, f)
