@@ -2,7 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router";
-import { useAttachmentManager } from "../../../../../../services/Services";
+import {
+  useAttachmentManager,
+  useAuthManager,
+} from "../../../../../../services/Services";
 import { theme, globalStyles } from "../../../../../../constants/Theme";
 import {
   Card,
@@ -17,6 +20,7 @@ function AdminStaffDetailAttachmentDetailPage() {
   const { aid, atid } = useParams();
   const navigate = useNavigate();
   const attachmentManager = useAttachmentManager();
+  const authManager = useAuthManager();
 
   // Component states
   const [errors, setErrors] = useState({});
@@ -33,24 +37,30 @@ function AdminStaffDetailAttachmentDetailPage() {
 
   // Fetch data on mount
   useEffect(() => {
-    fetchData();
-    window.scrollTo(0, 0);
-  }, [aid, atid]);
+    if (!authManager.isAuthenticated()) {
+      navigate("/login");
+      return;
+    }
 
-  const fetchData = async () => {
+    if (atid) {
+      fetchAttachmentDetail(atid);
+    }
+    window.scrollTo(0, 0);
+  }, [atid]);
+
+  const fetchAttachmentDetail = async (attachmentId) => {
     try {
       setFetching(true);
+      setErrors({});
 
-      // Fetch attachment details
-      const attachmentData = await attachmentManager.getAttachmentDetail(
-        atid,
+      const response = await attachmentManager.getAttachmentDetail(
+        attachmentId,
         onUnauthorized,
       );
-
-      setAttachment(attachmentData);
+      setAttachment(response);
     } catch (error) {
-      console.error("Failed to fetch data:", error);
-      setErrors({ general: "Failed to load details" });
+      console.error("Failed to fetch attachment detail:", error);
+      setErrors({ general: "Failed to load attachment details" });
     } finally {
       setFetching(false);
     }
@@ -85,20 +95,53 @@ function AdminStaffDetailAttachmentDetailPage() {
     }
   };
 
-  // Download handler
+  // Download handler - FIXED to use presigned URL
   const onDownloadClick = async () => {
     try {
-      const blob = await attachmentManager.downloadAttachment(
-        atid,
-        null,
-        onUnauthorized,
-      );
+      // Check if we have the attachment data with the presigned URL
+      if (!attachment) {
+        setAlertMessage("Attachment data not loaded");
+        setAlertStatus("error");
+        return;
+      }
 
-      // Trigger download
-      attachmentManager.triggerFileDownload(
-        blob,
-        attachment?.filename || attachment?.fileName || "download",
-      );
+      // Use the presigned URL from the attachment object
+      if (attachment.objectUrl || attachment.objectURL) {
+        const downloadUrl = attachment.objectUrl || attachment.objectURL;
+
+        // Method 1: Create a temporary anchor element to trigger download
+        const link = document.createElement("a");
+        link.href = downloadUrl;
+        link.download =
+          attachment.filename || attachment.fileName || "download";
+        link.target = "_blank"; // Open in new tab to avoid navigation issues
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        // Alternative Method 2: Open in new window (if Method 1 doesn't work)
+        // window.open(downloadUrl, '_blank');
+      } else {
+        // If no presigned URL, we need to refresh the attachment data
+        console.log("No presigned URL found, refreshing attachment data...");
+        await fetchAttachmentDetail(atid);
+
+        // After refresh, try again
+        if (attachment && (attachment.objectUrl || attachment.objectURL)) {
+          const downloadUrl = attachment.objectUrl || attachment.objectURL;
+          const link = document.createElement("a");
+          link.href = downloadUrl;
+          link.download =
+            attachment.filename || attachment.fileName || "download";
+          link.target = "_blank";
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        } else {
+          setAlertMessage("Unable to get download URL for attachment");
+          setAlertStatus("error");
+        }
+      }
     } catch (error) {
       console.error("Failed to download attachment:", error);
       setAlertMessage("Failed to download attachment");
@@ -106,30 +149,10 @@ function AdminStaffDetailAttachmentDetailPage() {
     }
   };
 
-  // Format date helper
-  const formatDateTime = (dateString) => {
-    if (!dateString) return "N/A";
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleString();
-    } catch {
-      return dateString;
-    }
-  };
-
-  // Format file size
-  const formatFileSize = (bytes) => {
-    if (!bytes) return "N/A";
-    const sizes = ["Bytes", "KB", "MB", "GB"];
-    if (bytes === 0) return "0 Bytes";
-    const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + " " + sizes[i];
-  };
-
   // Breadcrumb items
   const breadcrumbItems = [
     { path: "/admin/dashboard", label: "Dashboard", icon: "📊" },
-    { path: "/admin/staff", label: "Staff", icon: "👔" },
+    { path: "/admin/staff", label: "Staff", icon: "👥" },
     {
       path: `/admin/staff/${aid}/attachments`,
       label: "Detail (Attachments)",
@@ -144,6 +167,10 @@ function AdminStaffDetailAttachmentDetailPage() {
       <strong>{label}:</strong> {value || "N/A"}
     </div>
   );
+
+  if (!authManager.isAuthenticated()) {
+    return <Loading message="Checking authentication..." />;
+  }
 
   return (
     <div style={globalStyles.container}>
@@ -161,7 +188,7 @@ function AdminStaffDetailAttachmentDetailPage() {
         </Alert>
       )}
 
-      <h1>👔 Staff - Attachment Detail</h1>
+      <h1>👥 Staff - Attachment Detail</h1>
 
       <Card
         title="📄 Attachment"
@@ -216,25 +243,44 @@ function AdminStaffDetailAttachmentDetailPage() {
 
                 <DataRow
                   label="File Size"
-                  value={formatFileSize(attachment.fileSize)}
+                  value={
+                    attachment.fileSize
+                      ? `${(attachment.fileSize / 1024).toFixed(2)} KB`
+                      : "N/A"
+                  }
                 />
                 <DataRow label="File Type" value={attachment.fileType} />
-                <DataRow
-                  label="Created At"
-                  value={formatDateTime(attachment.createdAt)}
-                />
-                <DataRow
-                  label="Created By"
-                  value={attachment.createdByUserName}
-                />
-                <DataRow
-                  label="Modified At"
-                  value={formatDateTime(attachment.modifiedAt)}
-                />
-                <DataRow
-                  label="Modified By"
-                  value={attachment.modifiedByUserName}
-                />
+                <DataRow label="Created At" value={attachment.createdAt} />
+                <DataRow label="Updated At" value={attachment.updatedAt} />
+
+                {/* Debug info - remove in production */}
+                {process.env.NODE_ENV === "development" && (
+                  <div
+                    style={{
+                      marginTop: "20px",
+                      padding: "10px",
+                      backgroundColor: "#f0f0f0",
+                      borderRadius: "5px",
+                    }}
+                  >
+                    <strong>Debug Info:</strong>
+                    <br />
+                    Presigned URL Available:{" "}
+                    {attachment.objectUrl || attachment.objectURL
+                      ? "Yes"
+                      : "No"}
+                    <br />
+                    {(attachment.objectUrl || attachment.objectURL) && (
+                      <small style={{ wordBreak: "break-all" }}>
+                        URL:{" "}
+                        {(
+                          attachment.objectUrl || attachment.objectURL
+                        ).substring(0, 100)}
+                        ...
+                      </small>
+                    )}
+                  </div>
+                )}
 
                 <div
                   style={{
