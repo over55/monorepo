@@ -25,6 +25,7 @@ import {
   SparklesIcon,
 } from "@heroicons/react/24/outline";
 import { ensureISODateForAPI } from "../../../../../services/Helpers/DateFormatter";
+import { AssociateSelect } from "../../../../../components/business/selects";
 
 const REASON_OPTIONS = [
   { value: "", label: "Please select" },
@@ -63,12 +64,26 @@ function SettingAssociateAwayLogCreatePage() {
   });
 
   // Associates for selection
+  const [associateID, setAssociateID] = useState("");
   const [associates, setAssociates] = useState([]);
   const [loadingAssociates, setLoadingAssociates] = useState(true);
 
   // Handle unauthorized access
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
+  };
+
+  const handleAssociateChange = (value) => {
+    handleInputChange("associateId", value);
+
+    // Clear associate error if it exists
+    if (formData.associateID) {
+      setFormErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.associateID;
+        return newErrors;
+      });
+    }
   };
 
   // Fetch associates for selection
@@ -339,36 +354,17 @@ function SettingAssociateAwayLogCreatePage() {
                 <form onSubmit={handleSubmit}>
                   <div className="space-y-4 sm:space-y-6">
                     {/* Associate Selection */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
-                        Associate <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        value={formData.associateId}
-                        onChange={(e) =>
-                          handleInputChange("associateId", e.target.value)
-                        }
-                        disabled={loading}
-                        className={`w-full px-3 py-2 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                          formErrors.associateId
-                            ? "border-red-500"
-                            : "border-gray-300"
-                        }`}
-                      >
-                        <option value="">Please select an associate</option>
-                        {associates.map((associate) => (
-                          <option key={associate.id} value={associate.id}>
-                            {associate.firstName} {associate.lastName}{" "}
-                            {associate.email && `(${associate.email})`}
-                          </option>
-                        ))}
-                      </select>
-                      {formErrors.associateId && (
-                        <p className="mt-1 text-xs sm:text-sm text-red-600">
-                          {formErrors.associateId}
-                        </p>
-                      )}
-                    </div>
+                    <AssociateSelect
+                      value={formData.associateId}
+                      onChange={handleAssociateChange}
+                      error={formErrors.associateID}
+                      required={true}
+                      label="Associate"
+                      helperText="Start typing to search for an associate by name"
+                      onUnauthorized={onUnauthorized}
+                      placeholder="Please select an associate"
+                      statusFilter={1} // Only show active associates
+                    />
 
                     {/* Reason Selection */}
                     <div>
