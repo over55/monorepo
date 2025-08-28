@@ -26,7 +26,7 @@ export class AssociateAwayLogAPI {
 
   /**
    * Gets list of associate away logs with optional filtering, sorting, and pagination
-   * @param {Object} params - Query parameters { page, limit, search, sortBy, sortOrder }
+   * @param {Object} params - Query parameters { page, limit, search, sortBy, sortOrder, associateId }
    * @param {Function} onUnauthorizedCallback - Called when token refresh fails
    * @returns {Promise<Object>} - Associate away logs list with pagination data
    */
@@ -54,7 +54,7 @@ export class AssociateAwayLogAPI {
         queryParams.append("sort_by", `${params.sortBy},${params.sortOrder}`);
       }
 
-      // Add any additional filters
+      // Add any additional filters - CONVERT TO SNAKE_CASE
       Object.keys(params).forEach((key) => {
         if (!["page", "limit", "search", "sortBy", "sortOrder"].includes(key)) {
           if (
@@ -62,7 +62,9 @@ export class AssociateAwayLogAPI {
             params[key] !== null &&
             params[key] !== ""
           ) {
-            queryParams.append(key, params[key]);
+            // Convert camelCase to snake_case for backend
+            const snakeKey = decamelize(key);
+            queryParams.append(snakeKey, params[key]);
           }
         }
       });
@@ -71,6 +73,10 @@ export class AssociateAwayLogAPI {
       const url = queryString
         ? `${this.endpoints.ASSOCIATE_AWAY_LOGS}?${queryString}`
         : this.endpoints.ASSOCIATE_AWAY_LOGS;
+
+      if (process.env.NODE_ENV === "development") {
+        console.log("AssociateAwayLogAPI: Making request to:", url);
+      }
 
       // Make the API call
       const response = await authenticatedAxios.get(url);
@@ -127,6 +133,13 @@ export class AssociateAwayLogAPI {
           aURL += "?" + decamelizedkey + "=" + encodeURIComponent(value);
         }
       });
+
+      if (process.env.NODE_ENV === "development") {
+        console.log(
+          "AssociateAwayLogAPI: Making request to (with filtersMap):",
+          aURL,
+        );
+      }
 
       // Make the API call
       const response = await authenticatedAxios.get(aURL);

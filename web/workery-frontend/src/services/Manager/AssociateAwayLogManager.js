@@ -755,7 +755,7 @@ export class AssociateAwayLogManager {
       }
     }
 
-    // Validate filters
+    // Validate filters - Keep as camelCase here, API will convert to snake_case
     if (
       params.associateId &&
       (typeof params.associateId === "string" ||
