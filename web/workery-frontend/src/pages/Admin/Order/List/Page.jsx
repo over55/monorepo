@@ -2,8 +2,15 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router";
-import { useOrderManager, useAuthManager } from "../../../../services/Services";
+import {
+  useOrderManager,
+  useAccountManager,
+} from "../../../../services/Services";
 import { formatDateForDisplay } from "../../../../services/Helpers/DateFormatter";
+import {
+  EXECUTIVE_ROLE_ID,
+  MANAGEMENT_ROLE_ID,
+} from "../../../../constants/Roles";
 import {
   ClipboardDocumentListIcon,
   PlusIcon,
@@ -13,15 +20,11 @@ import {
   ChevronRightIcon,
   XMarkIcon,
   ArchiveBoxIcon,
-  PencilSquareIcon,
   EyeIcon,
   ExclamationTriangleIcon,
   ChartBarIcon,
   CheckCircleIcon,
   UserIcon,
-  EnvelopeIcon,
-  PhoneIcon,
-  BuildingOfficeIcon,
   BuildingOffice2Icon,
   CalendarDaysIcon,
   HomeIcon,
@@ -30,9 +33,7 @@ import {
   TableCellsIcon,
   ChevronLeftIcon,
   WrenchScrewdriverIcon,
-  ClockIcon,
   CurrencyDollarIcon,
-  BriefcaseIcon,
 } from "@heroicons/react/24/outline";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import {
@@ -96,7 +97,7 @@ const VIEW_TYPE_GRID = "grid";
 
 function AdminOrderListPage() {
   const orderManager = useOrderManager();
-  const authManager = useAuthManager();
+  const accountManager = useAccountManager();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -106,6 +107,7 @@ function AdminOrderListPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
+  const [userRole, setUserRole] = useState(null);
 
   // Pagination state using cursor-based approach
   const [currentCursor, setCurrentCursor] = useState("");
@@ -132,8 +134,6 @@ function AdminOrderListPage() {
   // Delete confirmation modal
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [orderToDelete, setOrderToDelete] = useState(null);
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [selectedOrder, setSelectedOrder] = useState(null);
 
   // Use refs to track the latest filter values to avoid stale closures
   const filtersRef = useRef({
@@ -172,6 +172,45 @@ function AdminOrderListPage() {
     completionDateLte,
     pageSize,
   ]);
+
+  // Get user role on component mount
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      try {
+        // Fetch account details to get the user's role
+        const accountDetails = await accountManager.getAccountDetail(
+          onUnauthorized,
+          false, // don't force refresh, use cache if available
+        );
+
+        if (accountDetails && accountDetails.role) {
+          // The role field is already a number in the response
+          const roleId = accountDetails.role;
+          setUserRole(roleId);
+
+          // Debug log in development
+          if (process.env.NODE_ENV === "development") {
+            console.log("User role fetched:", {
+              roleId: roleId,
+              isExecutive: roleId === EXECUTIVE_ROLE_ID,
+              isManagement: roleId === MANAGEMENT_ROLE_ID,
+              canViewFinancials:
+                roleId === EXECUTIVE_ROLE_ID || roleId === MANAGEMENT_ROLE_ID,
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch user role:", err);
+        // If we can't fetch the role, the user won't see the financials button
+        // This is a safe fallback - better to not show than to show incorrectly
+      }
+    };
+    fetchUserRole();
+  }, [accountManager]);
+
+  // Check if user can view financials (Executive or Management)
+  const canViewFinancials =
+    userRole === EXECUTIVE_ROLE_ID || userRole === MANAGEMENT_ROLE_ID;
 
   // Handle unauthorized access
   const onUnauthorized = () => {
@@ -1037,15 +1076,17 @@ function AdminOrderListPage() {
                             key={order.id}
                             className={`${index % 2 === 0 ? "bg-white" : "bg-zinc-200"} hover:bg-blue-50 cursor-pointer focus-within:bg-blue-50`}
                             onClick={() => {
-                              setSelectedOrder(order);
-                              setShowDetailModal(true);
+                              navigate(
+                                `/admin/order/${order.wjid || order.id}`,
+                              );
                             }}
                             tabIndex={0}
                             onKeyDown={(e) => {
                               if (e.key === "Enter" || e.key === " ") {
                                 e.preventDefault();
-                                setSelectedOrder(order);
-                                setShowDetailModal(true);
+                                navigate(
+                                  `/admin/order/${order.wjid || order.id}`,
+                                );
                               }
                             }}
                             role="row"
@@ -1138,7 +1179,7 @@ function AdminOrderListPage() {
                               )}
                             </td>
                             <td className="px-4 py-4">
-                              <div className="flex items-center justify-center">
+                              <div className="flex items-center justify-center gap-2">
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -1146,15 +1187,33 @@ function AdminOrderListPage() {
                                       `/admin/order/${order.wjid || order.id}`,
                                     );
                                   }}
-                                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                                  className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                                   aria-label={`View details for order ${order.wjid || order.id}`}
                                 >
                                   <EyeIcon
-                                    className="w-4 h-4 mr-1.5"
+                                    className="w-4 h-4 mr-1"
                                     aria-hidden="true"
                                   />
                                   View
                                 </button>
+                                {canViewFinancials && (
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      navigate(
+                                        `/admin/financial/${order.wjid || order.id}`,
+                                      );
+                                    }}
+                                    className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+                                    aria-label={`View financials for order ${order.wjid || order.id}`}
+                                  >
+                                    <CurrencyDollarIcon
+                                      className="w-4 h-4 mr-1"
+                                      aria-hidden="true"
+                                    />
+                                    Financials
+                                  </button>
+                                )}
                               </div>
                             </td>
                           </tr>
@@ -1173,15 +1232,13 @@ function AdminOrderListPage() {
                         key={order.id}
                         className="bg-white border-2 border-zinc-300 rounded-lg p-5 hover:shadow-md transition-shadow cursor-pointer focus-within:shadow-md"
                         onClick={() => {
-                          setSelectedOrder(order);
-                          setShowDetailModal(true);
+                          navigate(`/admin/order/${order.wjid || order.id}`);
                         }}
                         tabIndex={0}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
                             e.preventDefault();
-                            setSelectedOrder(order);
-                            setShowDetailModal(true);
+                            navigate(`/admin/order/${order.wjid || order.id}`);
                           }
                         }}
                         role="listitem"
@@ -1253,20 +1310,42 @@ function AdminOrderListPage() {
                           </span>
                         </div>
 
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/admin/order/${order.wjid || order.id}`);
-                          }}
-                          className="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                          aria-label={`View details for order ${order.wjid || order.id}`}
-                        >
-                          View Details
-                          <ChevronRightIcon
-                            className="w-4 h-4 ml-1"
-                            aria-hidden="true"
-                          />
-                        </button>
+                        <div className="space-y-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(
+                                `/admin/order/${order.wjid || order.id}`,
+                              );
+                            }}
+                            className="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                            aria-label={`View details for order ${order.wjid || order.id}`}
+                          >
+                            View Details
+                            <ChevronRightIcon
+                              className="w-4 h-4 ml-1"
+                              aria-hidden="true"
+                            />
+                          </button>
+                          {canViewFinancials && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                navigate(
+                                  `/admin/financial/${order.wjid || order.id}`,
+                                );
+                              }}
+                              className="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
+                              aria-label={`View financials for order ${order.wjid || order.id}`}
+                            >
+                              <CurrencyDollarIcon
+                                className="w-4 h-4 mr-1"
+                                aria-hidden="true"
+                              />
+                              View Financials
+                            </button>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1404,241 +1483,6 @@ function AdminOrderListPage() {
             )}
           </div>
         </div>
-
-        {/* Detail Modal */}
-        {showDetailModal && selectedOrder && (
-          <div
-            className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="modal-title"
-          >
-            <div
-              className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden"
-              role="document"
-            >
-              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                <h3
-                  id="modal-title"
-                  className="text-lg font-semibold text-black flex items-center"
-                >
-                  <ClipboardDocumentListIcon
-                    className="w-5 h-5 mr-2 text-blue-600"
-                    aria-hidden="true"
-                  />
-                  Order Details
-                </h3>
-                <button
-                  onClick={() => {
-                    setShowDetailModal(false);
-                    setSelectedOrder(null);
-                  }}
-                  className="text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
-                >
-                  <XMarkIcon className="w-6 h-6" />
-                </button>
-              </div>
-
-              <div className="px-6 py-4 overflow-y-auto">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-black mb-1">
-                      Order Number:
-                    </label>
-                    <div className="p-3 bg-gray-50 rounded-lg text-base font-semibold text-black flex items-center">
-                      <ClipboardDocumentListIcon
-                        className="w-5 h-5 mr-2 text-gray-600"
-                        aria-hidden="true"
-                      />
-                      {selectedOrder.wjid || `#${selectedOrder.id}`}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-black mb-1">
-                        Customer:
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-black">
-                        {selectedOrder.customerName ? (
-                          <Link
-                            to={`/admin/customer/${selectedOrder.customerId}`}
-                            className="flex items-center text-blue-600 hover:text-blue-800"
-                          >
-                            <UserIcon
-                              className="w-4 h-4 mr-2"
-                              aria-hidden="true"
-                            />
-                            {selectedOrder.customerName}
-                          </Link>
-                        ) : (
-                          <span className="text-gray-400 italic">
-                            Not assigned
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-black mb-1">
-                        Associate:
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-black">
-                        {selectedOrder.associateName ? (
-                          <Link
-                            to={`/admin/associate/${selectedOrder.associateId}`}
-                            className="flex items-center text-blue-600 hover:text-blue-800"
-                          >
-                            <WrenchScrewdriverIcon
-                              className="w-4 h-4 mr-2"
-                              aria-hidden="true"
-                            />
-                            {selectedOrder.associateName}
-                          </Link>
-                        ) : (
-                          <span className="text-gray-400 italic">
-                            Unassigned
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-black mb-1">
-                        Status:
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <span
-                          className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusBadgeColor(selectedOrder.status)}`}
-                        >
-                          {getOrderStatusDisplay(selectedOrder.status)}
-                        </span>
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-black mb-1">
-                        Type:
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg">
-                        <span
-                          className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getTypeBadgeColor(selectedOrder.type)}`}
-                        >
-                          {selectedOrder.type === ORDER_TYPE_COMMERCIAL ? (
-                            <BuildingOffice2Icon
-                              className="w-4 h-4 mr-1"
-                              aria-hidden="true"
-                            />
-                          ) : (
-                            <HomeIcon
-                              className="w-4 h-4 mr-1"
-                              aria-hidden="true"
-                            />
-                          )}
-                          {getOrderTypeDisplay(selectedOrder.type)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-black mb-1">
-                        Start Date:
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-black">
-                        {selectedOrder.startDate ? (
-                          <span className="flex items-center">
-                            <CalendarDaysIcon
-                              className="w-4 h-4 mr-2"
-                              aria-hidden="true"
-                            />
-                            {formatDateForDisplay(selectedOrder.startDate)}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400 italic">Not set</span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-black mb-1">
-                        Completion Date:
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-black">
-                        {selectedOrder.completionDate ? (
-                          <span className="flex items-center">
-                            <CalendarDaysIcon
-                              className="w-4 h-4 mr-2"
-                              aria-hidden="true"
-                            />
-                            {formatDateForDisplay(selectedOrder.completionDate)}
-                          </span>
-                        ) : (
-                          <span className="text-gray-400 italic">
-                            Not completed
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {selectedOrder.description && (
-                    <div>
-                      <label className="block text-sm font-medium text-black mb-1">
-                        Description:
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg text-sm text-black">
-                        {selectedOrder.description}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
-                <button
-                  onClick={() => {
-                    setShowDetailModal(false);
-                    setSelectedOrder(null);
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                >
-                  Close
-                </button>
-                <button
-                  onClick={() => {
-                    setShowDetailModal(false);
-                    navigate(
-                      `/admin/order/${selectedOrder.wjid || selectedOrder.id}/edit`,
-                    );
-                  }}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-amber-500"
-                >
-                  <PencilSquareIcon
-                    className="w-4 h-4 mr-1"
-                    aria-hidden="true"
-                  />
-                  Edit
-                </button>
-                <button
-                  onClick={() => {
-                    setShowDetailModal(false);
-                    navigate(
-                      `/admin/order/${selectedOrder.wjid || selectedOrder.id}`,
-                    );
-                  }}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <EyeIcon className="w-4 h-4 mr-1" aria-hidden="true" />
-                  View Full Details
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Delete Confirmation Modal */}
         {showDeleteModal && orderToDelete && (
