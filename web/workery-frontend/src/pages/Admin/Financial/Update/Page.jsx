@@ -40,7 +40,6 @@ import {
 import {
   FINANCIAL_STATUS_PAID,
   FINANCIAL_STATUS_PENDING,
-  FINANCIAL_STATUS_CANCELLED,
 } from "../../../../constants/Financial";
 import { formatDateForInput, isZeroDate } from "../../../../constants/Date";
 
@@ -945,21 +944,6 @@ function AdminFinancialUpdatePage() {
                         <span className="ml-2 text-sm text-gray-700">
                           <XCircleIcon className="inline w-4 h-4 mr-1 text-yellow-600" />
                           Pending
-                        </span>
-                      </label>
-                      <label className="inline-flex items-center">
-                        <input
-                          type="radio"
-                          value={FINANCIAL_STATUS_CANCELLED}
-                          checked={paymentStatus === FINANCIAL_STATUS_CANCELLED}
-                          onChange={(e) =>
-                            setPaymentStatus(parseInt(e.target.value))
-                          }
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className="ml-2 text-sm text-gray-700">
-                          <XCircleIcon className="inline w-4 h-4 mr-1 text-red-600" />
-                          Cancelled
                         </span>
                       </label>
                     </div>
