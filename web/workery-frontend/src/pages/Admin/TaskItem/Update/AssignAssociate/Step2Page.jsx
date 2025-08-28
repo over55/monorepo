@@ -2,13 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import { Link, Navigate, useParams } from "react-router";
-import {
-  useTaskManager,
-  useAssociateManager,
-} from "../../../../../services/Services";
+import { useTaskManager } from "../../../../../services/Services";
 import { CLIENT_PHONE_TYPE_OF_MAP } from "../../../../../constants/FieldOptions";
 import { STORAGE_KEYS } from "../../../../../constants/Storage";
-import { ASSOCIATE_STATUS_ACTIVE } from "../../../../../constants/Associate";
 import {
   ChevronRightIcon,
   XMarkIcon,
@@ -38,7 +34,6 @@ function AdminTaskItemAssignAssociateStep2Page() {
 
   // Services
   const taskManager = useTaskManager();
-  const associateManager = useAssociateManager();
 
   // Component states
   const [task, setTask] = useState(null);
@@ -89,7 +84,7 @@ function AdminTaskItemAssignAssociateStep2Page() {
     }
   }, []);
 
-  // Load task details and then load filtered associates
+  // Load task details and then load assignable associates
   useEffect(() => {
     let mounted = true;
 
@@ -100,44 +95,30 @@ function AdminTaskItemAssignAssociateStep2Page() {
       setErrors({});
 
       try {
+        // First, get the task details
         const taskData = await taskManager.getTaskDetail(tid, onUnauthorized);
         if (!mounted) return;
 
         setTask(taskData);
 
-        let skillSetIds = [];
-        if (taskData.orderSkillSets && taskData.orderSkillSets.length > 0) {
-          skillSetIds = taskData.orderSkillSets
-            .map((skill) => skill.id || skill.value || skill._id)
-            .filter((id) => id);
-        }
+        console.log("Fetching assignable associates for task:", tid);
 
-        const filtersMap = new Map();
-        filtersMap.set("status", ASSOCIATE_STATUS_ACTIVE);
-
-        if (skillSetIds.length > 0) {
-          filtersMap.set("inSkillSetIds", skillSetIds.join(","));
-        }
-
-        console.log("Fetching associates with skill set filters:", skillSetIds);
-
-        const associatesData =
-          await associateManager.getAssociatesWithFiltersMap(
-            filtersMap,
-            onUnauthorized,
-            true,
-          );
+        // Then get the assignable associates for this task
+        // The backend will automatically filter by skill sets and sort by contacts
+        const associatesData = await taskManager.getAssignableAssociates(
+          tid,
+          onUnauthorized,
+          true, // Force refresh to get latest data
+        );
 
         if (mounted) {
-          if (associatesData.results && skillSetIds.length > 0) {
-            associatesData.results.sort((a, b) => {
-              const aMatchCount = countMatchingSkills(a.skillSets, skillSetIds);
-              const bMatchCount = countMatchingSkills(b.skillSets, skillSetIds);
-              return bMatchCount - aMatchCount;
-            });
-          }
-
+          // The results are already sorted by contactsLast30Days (ascending) from the backend
+          // Associates with matching skill sets are included and sorted properly
           setAssociates(associatesData);
+
+          console.log("Assignable associates loaded:", {
+            count: associatesData.results ? associatesData.results.length : 0,
+          });
         }
       } catch (error) {
         if (mounted) {
@@ -157,22 +138,6 @@ function AdminTaskItemAssignAssociateStep2Page() {
       mounted = false;
     };
   }, [tid]);
-
-  const countMatchingSkills = (associateSkills, requiredSkillIds) => {
-    if (!associateSkills || associateSkills.length === 0) return 0;
-
-    const requiredSet = new Set(requiredSkillIds);
-    let count = 0;
-
-    for (const skill of associateSkills) {
-      const skillId = skill.id || skill.value || skill._id;
-      if (requiredSet.has(skillId)) {
-        count++;
-      }
-    }
-
-    return count;
-  };
 
   const renderSkillSets = (associateSkillSets, taskSkillSets) => {
     if (!associateSkillSets || associateSkillSets.length === 0) {
@@ -627,8 +592,8 @@ function AdminTaskItemAssignAssociateStep2Page() {
                       <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center text-sm sm:text-base">
                         <InformationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
                         <strong>Note:</strong> Associates are filtered by
-                        matching skill sets. Green highlighted skills match the
-                        job requirements.
+                        matching skill sets and sorted by least recent contacts.
+                        Green highlighted skills match the job requirements.
                       </div>
                     )}
 
@@ -672,7 +637,7 @@ function AdminTaskItemAssignAssociateStep2Page() {
                                   Rate
                                 </th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                  Matching Skills
+                                  Skills
                                 </th>
                                 <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                   Action
