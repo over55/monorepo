@@ -19,6 +19,7 @@ import {
   ChartBarIcon,
   ClipboardDocumentListIcon,
   CheckCircleIcon,
+  ChevronLeftIcon,
 } from "@heroicons/react/24/outline";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 
@@ -41,24 +42,20 @@ function SettingBulletinListPage() {
   const [sortBy, setSortBy] = useState("created_at");
   const [sortOrder, setSortOrder] = useState("DESC");
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
+  // Cursor-based pagination state
+  const [currentCursor, setCurrentCursor] = useState("");
+  const [nextCursor, setNextCursor] = useState("");
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [cursorHistory, setCursorHistory] = useState([]); // Track cursor history for going back
   const [pageSize, setPageSize] = useState(25);
   const [totalCount, setTotalCount] = useState(0);
-  const [hasNextPage, setHasNextPage] = useState(false);
-  const [hasPreviousPage, setHasPreviousPage] = useState(false);
-
-  // Delete modal state
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedBulletinForDeletion, setSelectedBulletinForDeletion] =
-    useState(null);
 
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
   };
 
   // Load bulletins
-  const loadBulletins = async (forceRefresh = false) => {
+  const loadBulletins = async (cursor = "", isNavigatingBack = false) => {
     // Cancel any pending request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -72,7 +69,7 @@ function SettingBulletinListPage() {
       setError(null);
 
       const params = {
-        page: currentPage,
+        cursor: cursor,
         limit: pageSize,
         sortBy: sortBy,
         sortOrder: sortOrder,
@@ -91,7 +88,7 @@ function SettingBulletinListPage() {
       const response = await bulletinManager.getBulletins(
         params,
         onUnauthorized,
-        forceRefresh,
+        true, // Force refresh
       );
 
       // Check if request was aborted
@@ -101,8 +98,17 @@ function SettingBulletinListPage() {
 
       setBulletins(response.results || []);
       setTotalCount(response.count || 0);
+      setNextCursor(response.nextCursor || "");
       setHasNextPage(response.hasNextPage || false);
-      setHasPreviousPage(currentPage > 1);
+
+      // Update cursor history when moving forward
+      if (!isNavigatingBack && cursor && cursor !== currentCursor) {
+        setCursorHistory((prev) =>
+          [...prev, currentCursor].filter((c) => c !== ""),
+        );
+      }
+
+      setCurrentCursor(cursor);
     } catch (err) {
       // Don't set error if request was aborted
       if (err.name !== "AbortError") {
@@ -115,17 +121,13 @@ function SettingBulletinListPage() {
     }
   };
 
-  // Watch for filter, sort, and pagination changes
+  // Initial load and filter changes
   useEffect(() => {
-    loadBulletins(true);
-  }, [
-    currentPage,
-    pageSize,
-    actualSearchText,
-    statusFilter,
-    sortBy,
-    sortOrder,
-  ]);
+    // Reset cursor history when filters change
+    setCursorHistory([]);
+    setCurrentCursor("");
+    loadBulletins("");
+  }, [actualSearchText, statusFilter, sortBy, sortOrder, pageSize]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -158,7 +160,6 @@ function SettingBulletinListPage() {
   // Event handlers
   const handleSearch = () => {
     setActualSearchText(temporarySearchText);
-    setCurrentPage(1);
   };
 
   const handleClearFilter = () => {
@@ -167,37 +168,42 @@ function SettingBulletinListPage() {
     setSortOrder("DESC");
     setActualSearchText("");
     setTemporarySearchText("");
-    setCurrentPage(1);
+    setCursorHistory([]);
+    setCurrentCursor("");
   };
 
   const handleStatusChange = (e) => {
     setStatusFilter(e.target.value);
-    setCurrentPage(1);
   };
 
   const handleSortChange = (e) => {
     const [field, order] = e.target.value.split(",");
     setSortBy(field);
     setSortOrder(order);
-    setCurrentPage(1);
   };
 
   const handlePageSizeChange = (e) => {
     const newPageSize = parseInt(e.target.value);
     setPageSize(newPageSize);
-    setCurrentPage(1);
   };
 
   const handleNextPage = () => {
-    setCurrentPage((prev) => prev + 1);
+    if (hasNextPage && nextCursor) {
+      loadBulletins(nextCursor, false);
+    }
   };
 
   const handlePreviousPage = () => {
-    setCurrentPage((prev) => prev - 1);
+    if (cursorHistory.length > 0) {
+      const newHistory = [...cursorHistory];
+      const previousCursor = newHistory.pop();
+      setCursorHistory(newHistory);
+      loadBulletins(previousCursor, true);
+    }
   };
 
   const handleRefresh = () => {
-    loadBulletins(true);
+    loadBulletins(currentCursor, false);
   };
 
   const handleDeleteConfirm = async () => {
@@ -212,7 +218,10 @@ function SettingBulletinListPage() {
       setSuccessMessage("Bulletin deleted successfully");
       setShowDeleteModal(false);
       setSelectedBulletinForDeletion(null);
-      loadBulletins(true);
+      // Reload from the beginning after deletion
+      setCursorHistory([]);
+      setCurrentCursor("");
+      loadBulletins("");
     } catch (err) {
       console.error("Failed to delete bulletin:", err);
       setError(err.message || "Failed to delete bulletin");
@@ -222,10 +231,18 @@ function SettingBulletinListPage() {
     }
   };
 
-  // Pagination calculations
-  const totalPages = Math.ceil(totalCount / pageSize);
-  const startRecord = (currentPage - 1) * pageSize + 1;
-  const endRecord = Math.min(currentPage * pageSize, totalCount);
+  // Delete modal state
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedBulletinForDeletion, setSelectedBulletinForDeletion] =
+    useState(null);
+
+  // Check if we can go back
+  const hasPreviousPage = cursorHistory.length > 0;
+
+  // Calculate display range
+  const displayedCount = bulletins.length;
+  const startRecord = displayedCount > 0 ? 1 : 0;
+  const endRecord = displayedCount;
 
   if (isLoading && !bulletins.length) {
     return (
@@ -459,8 +476,17 @@ function SettingBulletinListPage() {
             ) : bulletins && bulletins.length > 0 ? (
               <>
                 {/* Results count */}
-                <div className="mb-4 text-sm text-gray-600">
-                  Showing {startRecord}-{endRecord} of {totalCount} bulletins
+                <div className="mb-4 text-sm text-gray-600 flex justify-between items-center">
+                  <span>
+                    Showing {displayedCount}{" "}
+                    {displayedCount === 1 ? "bulletin" : "bulletins"}
+                    {totalCount > 0 && ` (Total: ${totalCount})`}
+                  </span>
+                  {(hasNextPage || hasPreviousPage) && (
+                    <span className="text-xs text-gray-500">
+                      Use navigation below to see more results
+                    </span>
+                  )}
                 </div>
 
                 {/* Table */}
@@ -549,31 +575,41 @@ function SettingBulletinListPage() {
                   </table>
                 </div>
 
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="mt-6 flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-sm text-gray-700">
-                        Page {currentPage} of {totalPages}
-                      </span>
+                {/* Cursor-based Pagination */}
+                {(hasNextPage || hasPreviousPage) && (
+                  <div className="mt-6 flex items-center justify-between border-t pt-4">
+                    <button
+                      onClick={handlePreviousPage}
+                      disabled={!hasPreviousPage}
+                      className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white transition-colors"
+                    >
+                      <ChevronLeftIcon className="w-5 h-5 mr-1" />
+                      Previous
+                    </button>
+
+                    <div className="text-sm text-gray-700">
+                      {hasNextPage && !hasPreviousPage && (
+                        <span>More results available →</span>
+                      )}
+                      {!hasNextPage && hasPreviousPage && (
+                        <span>← Back to previous results</span>
+                      )}
+                      {hasNextPage && hasPreviousPage && (
+                        <span>Navigate for more results</span>
+                      )}
+                      {!hasNextPage && !hasPreviousPage && (
+                        <span>All results displayed</span>
+                      )}
                     </div>
 
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={handlePreviousPage}
-                        disabled={!hasPreviousPage || currentPage === 1}
-                        className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        ← Previous
-                      </button>
-                      <button
-                        onClick={handleNextPage}
-                        disabled={!hasNextPage || currentPage >= totalPages}
-                        className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        Next →
-                      </button>
-                    </div>
+                    <button
+                      onClick={handleNextPage}
+                      disabled={!hasNextPage}
+                      className="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white transition-colors"
+                    >
+                      Next
+                      <ChevronRightIcon className="w-5 h-5 ml-1" />
+                    </button>
                   </div>
                 )}
               </>
