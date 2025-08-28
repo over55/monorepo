@@ -530,7 +530,7 @@ function AdminFinancialUpdatePage() {
 
     // Check if at least one payment method is selected for paid status
     if (
-      paymentStatus === FINANCIAL_STATUS_PAID &&
+      paymentStatus === ORDER_STATUS_COMPLETED_AND_PAID &&
       paymentMethods.length === 0
     ) {
       validationErrors.paymentMethods =
@@ -546,6 +546,15 @@ function AdminFinancialUpdatePage() {
       setIsSubmitting(false);
       window.scrollTo(0, 0);
       return;
+    }
+
+    // Ensure we always have at least one payment method
+    // If no payment methods selected and not paid, default to "Other" (value 1)
+    let finalPaymentMethods = paymentMethods;
+    if (paymentMethods.length === 0) {
+      // Default to "Other" payment method when no methods are selected
+      // This is required because the backend always expects at least one payment method
+      finalPaymentMethods = [1]; // 1 = PaymentMethodOther
     }
 
     // Build update data for the financial record (using camelCase)
@@ -583,7 +592,7 @@ function AdminFinancialUpdatePage() {
       isInvoiceServiceFeeOther: isInvoiceServiceFeeOther,
       invoiceServiceFeeAmount: parseFloat(invoiceServiceFeeAmount),
       invoiceServiceFeePaymentDate: invoiceServiceFeePaymentDate,
-      paymentMethods: paymentMethods,
+      paymentMethods: finalPaymentMethods, // Use the final payment methods with default
       invoiceActualServiceFeeAmountPaid: parseFloat(
         invoiceActualServiceFeeAmountPaid,
       ),
