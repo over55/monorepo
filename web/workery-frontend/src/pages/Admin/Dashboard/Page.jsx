@@ -56,8 +56,6 @@ function AdminDashboardPage() {
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
   const [dashboard, setDashboard] = useState({});
-  const [bulletins, setBulletins] = useState([]);
-  const [associateAwayLogs, setAssociateAwayLogs] = useState([]);
 
   // Modal states
   const [showBulletinModal, setShowBulletinModal] = useState(false);
@@ -74,89 +72,39 @@ function AdminDashboardPage() {
     navigate("/login?unauthorized=true");
   };
 
-  // Fetch dashboard statistics
+  // Fetch dashboard data (includes bulletins and associate away logs)
   const fetchDashboard = async () => {
     setErrors({});
+    setFetching(true);
 
     try {
       const dashboardData = await dashboardManager.getDashboard(onUnauthorized);
       setDashboard(dashboardData);
-      console.log("AdminDashboard: Dashboard data loaded successfully");
+      console.log(
+        "AdminDashboard: Dashboard data loaded successfully",
+        dashboardData,
+      );
     } catch (error) {
       console.error("AdminDashboard: Failed to fetch dashboard:", error);
       setErrors({ fetch: error.message || "Failed to load dashboard data" });
+    } finally {
+      setFetching(false);
     }
   };
 
-  // Fetch bulletins separately - limited to recent 10
-  const fetchBulletins = async () => {
+  // Refresh only bulletins after create/delete operations
+  const refreshDashboard = async () => {
     try {
-      // Fetch only the most recent bulletins for dashboard
-      const params = {
-        page: 1,
-        limit: MAX_BULLETINS_DISPLAY,
-        status: 1, // Active bulletins only
-        sortBy: "created_at",
-        sortOrder: "DESC",
-      };
-
-      const response = await bulletinManager.getBulletins(
-        params,
+      // Force refresh to get updated data
+      const dashboardData = await dashboardManager.getDashboard(
         onUnauthorized,
         true,
       );
-
-      if (response && response.results) {
-        setBulletins(response.results);
-        console.log("Bulletins loaded:", response.results.length);
-      } else {
-        setBulletins([]);
-      }
+      setDashboard(dashboardData);
+      console.log("AdminDashboard: Dashboard refreshed successfully");
     } catch (error) {
-      console.error("Failed to fetch bulletins:", error);
-      setBulletins([]);
+      console.error("AdminDashboard: Failed to refresh dashboard:", error);
     }
-  };
-
-  // Fetch associate away logs - limited to recent 10 active logs
-  const fetchAssociateAwayLogs = async () => {
-    try {
-      // Fetch only active away logs for dashboard
-      const params = {
-        page: 1,
-        limit: MAX_AWAY_LOGS_DISPLAY,
-        status: 1, // Active away logs only
-        sortBy: "created_at",
-        sortOrder: "DESC",
-      };
-
-      const response = await associateAwayLogManager.getAssociateAwayLogs(
-        params,
-        onUnauthorized,
-        true,
-      );
-
-      if (response && response.results) {
-        setAssociateAwayLogs(response.results);
-        console.log("Associate away logs loaded:", response.results.length);
-      } else {
-        setAssociateAwayLogs([]);
-      }
-    } catch (error) {
-      console.error("Failed to fetch associate away logs:", error);
-      setAssociateAwayLogs([]);
-    }
-  };
-
-  // Initial load
-  const loadAllData = async () => {
-    setFetching(true);
-    await Promise.all([
-      fetchDashboard(),
-      fetchBulletins(),
-      fetchAssociateAwayLogs(),
-    ]);
-    setFetching(false);
   };
 
   const handleCreateBulletin = async (e) => {
@@ -185,22 +133,16 @@ function AdminDashboardPage() {
         status: 1, // Active status
       };
 
-      const newBulletin = await bulletinManager.createBulletin(
-        bulletinData,
-        onUnauthorized,
-      );
+      await bulletinManager.createBulletin(bulletinData, onUnauthorized);
 
-      console.log("Bulletin created successfully:", newBulletin);
+      console.log("Bulletin created successfully");
 
       // Clear form and close modal
       setBulletinText("");
       setShowBulletinModal(false);
 
-      // If we're at max display, remove the last one and add new one at the beginning
-      setBulletins((prevBulletins) => {
-        const updated = [newBulletin, ...prevBulletins];
-        return updated.slice(0, MAX_BULLETINS_DISPLAY);
-      });
+      // Refresh dashboard to get updated bulletins list
+      await refreshDashboard();
     } catch (error) {
       console.error("Failed to create bulletin:", error);
       setErrors({ bulletin: error.message || "Failed to create bulletin" });
@@ -221,19 +163,12 @@ function AdminDashboardPage() {
 
       console.log("Bulletin deleted successfully:", selectedBulletin.id);
 
-      // Remove the deleted bulletin from the list
-      setBulletins((prevBulletins) =>
-        prevBulletins.filter((bulletin) => bulletin.id !== selectedBulletin.id),
-      );
-
       // Close modal and clear selection
       setShowDeleteModal(false);
       setSelectedBulletin(null);
 
-      // Optionally refetch to get the next bulletin if we had 10
-      if (bulletins.length === MAX_BULLETINS_DISPLAY) {
-        await fetchBulletins();
-      }
+      // Refresh dashboard to get updated bulletins list
+      await refreshDashboard();
     } catch (error) {
       console.error("Failed to delete bulletin:", error);
       setErrors({ delete: error.message || "Failed to delete bulletin" });
@@ -291,7 +226,7 @@ function AdminDashboardPage() {
         return;
       }
 
-      loadAllData();
+      fetchDashboard();
     }
 
     return () => {
@@ -302,6 +237,14 @@ function AdminDashboardPage() {
   if (isFetching) {
     return <Loading fullScreen message="Loading Dashboard..." />;
   }
+
+  // Extract data from dashboard response
+  const bulletins = dashboard.bulletins || [];
+  const associateAwayLogs = dashboard.associateAwayLogs || [];
+
+  // Limit display to maximum allowed
+  const displayBulletins = bulletins.slice(0, MAX_BULLETINS_DISPLAY);
+  const displayAwayLogs = associateAwayLogs.slice(0, MAX_AWAY_LOGS_DISPLAY);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -407,9 +350,9 @@ function AdminDashboardPage() {
               <h2 className="text-lg font-semibold text-gray-800 flex items-center">
                 <NewspaperIcon className="w-5 h-5 mr-2" />
                 Office News
-                {bulletins.length > 0 && (
+                {displayBulletins.length > 0 && (
                   <span className="ml-2 text-sm text-gray-500 font-normal">
-                    (Latest {Math.min(bulletins.length, MAX_BULLETINS_DISPLAY)})
+                    (Latest {displayBulletins.length})
                   </span>
                 )}
               </h2>
@@ -417,8 +360,8 @@ function AdminDashboardPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => fetchBulletins()}
-                  title="Refresh bulletins"
+                  onClick={() => refreshDashboard()}
+                  title="Refresh dashboard"
                 >
                   Refresh
                 </Button>
@@ -438,59 +381,60 @@ function AdminDashboardPage() {
             </div>
 
             <div className="p-6">
-              {bulletins && bulletins.length > 0 ? (
+              {displayBulletins.length > 0 ? (
                 <>
                   <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {bulletins
-                      .slice(0, MAX_BULLETINS_DISPLAY)
-                      .map((bulletin) => (
-                        <div
-                          key={bulletin.id}
-                          className="flex items-start justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group"
-                        >
-                          <div className="flex-1 mr-4">
-                            <p className="text-gray-700 text-sm">
-                              {bulletin.text}
-                            </p>
-                            {bulletin.createdAt && (
-                              <p className="text-xs text-gray-500 mt-1">
-                                {new Date(
-                                  bulletin.createdAt,
-                                ).toLocaleDateString("en-US", {
+                    {displayBulletins.map((bulletin) => (
+                      <div
+                        key={bulletin.id}
+                        className="flex items-start justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors group"
+                      >
+                        <div className="flex-1 mr-4">
+                          <p className="text-gray-700 text-sm">
+                            {bulletin.text}
+                          </p>
+                          {bulletin.createdAt && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              {new Date(bulletin.createdAt).toLocaleDateString(
+                                "en-US",
+                                {
                                   month: "short",
                                   day: "numeric",
                                   year: "numeric",
                                   hour: "2-digit",
                                   minute: "2-digit",
-                                })}
-                              </p>
-                            )}
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedBulletin(bulletin);
-                              setShowDeleteModal(true);
-                            }}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <TrashIcon className="w-4 h-4" />
-                          </Button>
+                                },
+                              )}
+                            </p>
+                          )}
                         </div>
-                      ))}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedBulletin(bulletin);
+                            setShowDeleteModal(true);
+                          }}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <TrashIcon className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
                   </div>
 
-                  {/* View All Bulletins Link */}
-                  <div className="mt-6 pt-4 border-t border-gray-200">
-                    <Link
-                      to="/admin/settings/bulletins"
-                      className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
-                    >
-                      View All Bulletins
-                      <ArrowRightIcon className="w-4 h-4 ml-1" />
-                    </Link>
-                  </div>
+                  {/* View All Bulletins Link - only show if more than displayed */}
+                  {bulletins.length > MAX_BULLETINS_DISPLAY && (
+                    <div className="mt-6 pt-4 border-t border-gray-200">
+                      <Link
+                        to="/admin/settings/bulletins"
+                        className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                      >
+                        View All Bulletins ({bulletins.length} total)
+                        <ArrowRightIcon className="w-4 h-4 ml-1" />
+                      </Link>
+                    </div>
+                  )}
                 </>
               ) : (
                 <div className="text-center py-8 text-gray-500">
@@ -509,10 +453,9 @@ function AdminDashboardPage() {
               <h2 className="text-lg font-semibold text-gray-800 flex items-center">
                 <CalendarDaysIcon className="w-5 h-5 mr-2" />
                 Associate Away List
-                {associateAwayLogs.length > 0 && (
+                {displayAwayLogs.length > 0 && (
                   <span className="ml-2 text-sm text-gray-500 font-normal">
-                    (Active:{" "}
-                    {Math.min(associateAwayLogs.length, MAX_AWAY_LOGS_DISPLAY)})
+                    (Active: {displayAwayLogs.length})
                   </span>
                 )}
               </h2>
@@ -520,8 +463,8 @@ function AdminDashboardPage() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => fetchAssociateAwayLogs()}
-                  title="Refresh away logs"
+                  onClick={() => refreshDashboard()}
+                  title="Refresh dashboard"
                 >
                   Refresh
                 </Button>
@@ -539,74 +482,74 @@ function AdminDashboardPage() {
             </div>
 
             <div className="p-6">
-              {associateAwayLogs && associateAwayLogs.length > 0 ? (
+              {displayAwayLogs.length > 0 ? (
                 <>
                   <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {associateAwayLogs
-                      .slice(0, MAX_AWAY_LOGS_DISPLAY)
-                      .map((awayLog) => (
-                        <div
-                          key={awayLog.id}
-                          className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-                          onClick={() =>
-                            navigate(
-                              `/admin/settings/associate-away-log/${awayLog.id}/detail`,
-                            )
-                          }
-                        >
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <Link
-                                to={`/admin/associate/${awayLog.associateId}`}
-                                className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <UserIcon className="w-4 h-4 mr-1" />
-                                {awayLog.associateName ||
-                                  `Associate #${awayLog.associateId}`}
-                              </Link>
-                              <div className="mt-2 text-xs text-gray-600 space-y-1">
-                                <div className="flex items-center">
-                                  <span className="text-gray-500 mr-2">
-                                    Reason:
+                    {displayAwayLogs.map((awayLog) => (
+                      <div
+                        key={awayLog.id}
+                        className="p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                        onClick={() =>
+                          navigate(
+                            `/admin/settings/associate-away-log/${awayLog.id}/detail`,
+                          )
+                        }
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <Link
+                              to={`/admin/associate/${awayLog.associateId}`}
+                              className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <UserIcon className="w-4 h-4 mr-1" />
+                              {awayLog.associateName ||
+                                `Associate #${awayLog.associateId}`}
+                            </Link>
+                            <div className="mt-2 text-xs text-gray-600 space-y-1">
+                              <div className="flex items-center">
+                                <span className="text-gray-500 mr-2">
+                                  Reason:
+                                </span>
+                                {getReasonDisplay(awayLog)}
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="flex items-center">
+                                  <CalendarIcon className="w-3 h-3 mr-1 text-gray-400" />
+                                  From: {formatDate(awayLog.startDate)}
+                                </span>
+                                {awayLog.untilFurtherNotice === 1 ? (
+                                  <span className="text-amber-600 font-medium flex items-center">
+                                    <ClockIcon className="w-3 h-3 mr-1" />
+                                    Until further notice
                                   </span>
-                                  {getReasonDisplay(awayLog)}
-                                </div>
-                                <div className="flex items-center justify-between">
+                                ) : (
                                   <span className="flex items-center">
-                                    <CalendarIcon className="w-3 h-3 mr-1 text-gray-400" />
-                                    From: {formatDate(awayLog.startDate)}
+                                    To: {formatDate(awayLog.untilDate)}
                                   </span>
-                                  {awayLog.untilFurtherNotice === 1 ? (
-                                    <span className="text-amber-600 font-medium flex items-center">
-                                      <ClockIcon className="w-3 h-3 mr-1" />
-                                      Until further notice
-                                    </span>
-                                  ) : (
-                                    <span className="flex items-center">
-                                      To: {formatDate(awayLog.untilDate)}
-                                    </span>
-                                  )}
-                                </div>
+                                )}
                               </div>
                             </div>
                           </div>
                         </div>
-                      ))}
+                      </div>
+                    ))}
                   </div>
 
-                  {/* View All Away Logs Link */}
-                  <div className="mt-6 pt-4 border-t border-gray-200">
-                    <Link
-                      to="/admin/settings/associate-away-logs"
-                      className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
-                    >
-                      View All Away Logs
-                      <ArrowRightIcon className="w-4 h-4 ml-1" />
-                    </Link>
-                  </div>
+                  {/* View All Away Logs Link - only show if more than displayed */}
+                  {associateAwayLogs.length > MAX_AWAY_LOGS_DISPLAY && (
+                    <div className="mt-6 pt-4 border-t border-gray-200">
+                      <Link
+                        to="/admin/settings/associate-away-logs"
+                        className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors"
+                      >
+                        View All Away Logs ({associateAwayLogs.length} total)
+                        <ArrowRightIcon className="w-4 h-4 ml-1" />
+                      </Link>
+                    </div>
+                  )}
                 </>
               ) : (
                 <div className="text-center py-8 text-gray-500">
