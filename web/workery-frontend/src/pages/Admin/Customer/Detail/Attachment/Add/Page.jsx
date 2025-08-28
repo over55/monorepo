@@ -1,10 +1,10 @@
-// File Path: web/workery-frontend/src/pages/Admin/Customer/Detail/Attachment/Add/Page.jsx
+// File Path: web/workery-frontend/src/pages/Admin/Staff/Detail/Attachment/Add/Page.jsx
 
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import {
   ChartBarIcon,
-  UserIcon,
+  UserGroupIcon,
   PaperClipIcon,
   ChevronLeftIcon,
   PlusCircleIcon,
@@ -18,16 +18,16 @@ import {
 } from "@heroicons/react/24/outline";
 import {
   useAttachmentManager,
-  useCustomerManager,
+  useStaffManager,
   useAuthManager,
 } from "../../../../../../services/Services";
 import { ATTACHMENT_TYPES } from "../../../../../../constants/Attachment";
 
-function AdminCustomerDetailAttachmentAddPage() {
-  const { cid } = useParams();
+function AdminStaffDetailAttachmentAddPage() {
+  const { aid } = useParams();
   const navigate = useNavigate();
   const attachmentManager = useAttachmentManager();
-  const customerManager = useCustomerManager();
+  const staffManager = useStaffManager();
   const authManager = useAuthManager();
 
   // Component states
@@ -36,7 +36,7 @@ function AdminCustomerDetailAttachmentAddPage() {
   const [selectedFile, setSelectedFile] = useState(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [customer, setCustomer] = useState(null);
+  const [staff, setStaff] = useState(null);
   const [alertMessage, setAlertMessage] = useState("");
   const [alertStatus, setAlertStatus] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -46,24 +46,24 @@ function AdminCustomerDetailAttachmentAddPage() {
     navigate("/login?unauthorized=true");
   };
 
-  // Fetch customer details on mount
+  // Fetch staff details on mount
   useEffect(() => {
     if (!authManager.isAuthenticated()) {
       navigate("/login");
       return;
     }
-    fetchCustomerDetail();
+    fetchStaffDetail();
     window.scrollTo(0, 0);
-  }, [cid]);
+  }, [aid]);
 
-  const fetchCustomerDetail = async () => {
+  const fetchStaffDetail = async () => {
     try {
       setFetching(true);
-      const data = await customerManager.getCustomerDetail(cid, onUnauthorized);
-      setCustomer(data);
+      const data = await staffManager.getStaffDetail(aid, onUnauthorized);
+      setStaff(data);
     } catch (error) {
-      console.error("Failed to fetch customer:", error);
-      setErrors({ general: "Failed to load customer details" });
+      console.error("Failed to fetch staff:", error);
+      setErrors({ general: "Failed to load staff details" });
     } finally {
       setFetching(false);
     }
@@ -106,8 +106,8 @@ function AdminCustomerDetailAttachmentAddPage() {
       const metadata = {
         title: title.trim(),
         description: description.trim(),
-        ownershipType: ATTACHMENT_TYPES.CUSTOMER, // Use numeric constant
-        ownershipId: cid,
+        ownershipType: ATTACHMENT_TYPES.STAFF, // Use numeric constant for STAFF
+        ownershipId: aid,
       };
 
       console.log("Uploading attachment with metadata:", metadata);
@@ -126,7 +126,7 @@ function AdminCustomerDetailAttachmentAddPage() {
 
       // Redirect after 2 seconds
       setTimeout(() => {
-        navigate(`/admin/customer/${cid}/attachments`);
+        navigate(`/admin/staff/${aid}/attachments`);
       }, 2000);
     } catch (error) {
       console.error("Failed to upload attachment:", error);
@@ -182,12 +182,12 @@ function AdminCustomerDetailAttachmentAddPage() {
             <div className="flex items-center">
               <span className="mx-2 text-gray-400">/</span>
               <Link
-                to="/admin/customers"
+                to="/admin/staff"
                 className="text-sm font-medium text-gray-700 hover:text-blue-600"
               >
                 <span className="inline-flex items-center">
-                  <UserIcon className="w-4 h-4 mr-2" />
-                  Customers
+                  <UserGroupIcon className="w-4 h-4 mr-2" />
+                  Staff
                 </span>
               </Link>
             </div>
@@ -196,7 +196,7 @@ function AdminCustomerDetailAttachmentAddPage() {
             <div className="flex items-center">
               <span className="mx-2 text-gray-400">/</span>
               <Link
-                to={`/admin/customer/${cid}/attachments`}
+                to={`/admin/staff/${aid}/attachments`}
                 className="text-sm font-medium text-gray-700 hover:text-blue-600"
               >
                 <span className="inline-flex items-center">
@@ -223,22 +223,22 @@ function AdminCustomerDetailAttachmentAddPage() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-              <UserIcon className="w-8 h-8 mr-3 text-blue-600" />
-              Customer - Add Attachment
+              <UserGroupIcon className="w-8 h-8 mr-3 text-blue-600" />
+              Staff Member - Add Attachment
             </h1>
             <p className="mt-1 text-sm text-gray-600 flex items-center">
               <InformationCircleIcon className="w-4 h-4 mr-1" />
-              Upload documents and files for this customer
+              Upload documents and files for this staff member
             </p>
           </div>
         </div>
       </div>
 
       {/* Status Alerts */}
-      {customer && customer.status === 2 && (
+      {staff && staff.status === 2 && (
         <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg flex items-center">
           <ArchiveBoxIcon className="w-5 h-5 mr-2" />
-          This customer is archived
+          This staff member is archived
         </div>
       )}
 
@@ -439,7 +439,7 @@ function AdminCustomerDetailAttachmentAddPage() {
 
                 {/* Action Buttons */}
                 <div className="flex justify-between items-center pt-6 border-t border-gray-200">
-                  <Link to={`/admin/customer/${cid}/attachments`}>
+                  <Link to={`/admin/staff/${aid}/attachments`}>
                     <button
                       type="button"
                       className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
@@ -479,4 +479,4 @@ function AdminCustomerDetailAttachmentAddPage() {
   );
 }
 
-export default AdminCustomerDetailAttachmentAddPage;
+export default AdminStaffDetailAttachmentAddPage;
