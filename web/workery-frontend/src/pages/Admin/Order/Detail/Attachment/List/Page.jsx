@@ -20,10 +20,8 @@ import {
   DocumentTextIcon,
   CalendarIcon,
   ExclamationCircleIcon,
-  TrashIcon,
   PencilIcon,
-  DocumentChartBarIcon,
-  ClipboardDocumentCheckIcon,
+  TrashIcon,
   XCircleIcon,
   NoSymbolIcon,
 } from "@heroicons/react/24/outline";
@@ -32,47 +30,37 @@ import {
   useOrderManager,
   useAuthManager,
 } from "../../../../../../services/Services";
+import { ATTACHMENT_TYPE_NAMES } from "../../../../../../constants/Attachment";
+import {
+  ORDER_STATUS_NEW,
+  ORDER_STATUS_DECLINED,
+  ORDER_STATUS_PENDING,
+  ORDER_STATUS_CANCELLED,
+  ORDER_STATUS_ONGOING,
+  ORDER_STATUS_IN_PROGRESS,
+  ORDER_STATUS_COMPLETED_BUT_UNPAID,
+  ORDER_STATUS_COMPLETED_AND_PAID,
+  ORDER_STATUS_ARCHIVED,
+} from "../../../../../../constants/Order";
 
 function AdminOrderDetailAttachmentListPage() {
-  ////
-  //// Constants
-  ////
-
-  const OrderStatusNew = 1;
-  const OrderStatusDeclined = 2;
-  const OrderStatusPending = 3;
-  const OrderStatusCancelled = 4;
-  const OrderStatusOngoing = 5;
-  const OrderStatusInProgress = 6;
-  const OrderStatusCompletedButUnpaid = 7;
-  const OrderStatusCompletedAndPaid = 8;
-  const OrderStatusArchived = 9;
-
-  ////
-  //// URL Parameters.
-  ////
-
   const { oid } = useParams();
   const navigate = useNavigate();
 
-  ////
-  //// Services.
-  ////
-
+  // Services
   const attachmentManager = useAttachmentManager();
   const orderManager = useOrderManager();
   const authManager = useAuthManager();
 
-  ////
-  //// Component states.
-  ////
-
+  // Component states
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
-  const [order, setOrder] = useState({});
-  const [attachments, setAttachments] = useState([]);
+  const [order, setOrder] = useState(null);
+  const [attachments, setAttachments] = useState(null);
   const [selectedAttachmentForDeletion, setSelectedAttachmentForDeletion] =
     useState(null);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState("");
 
   // Pagination states
   const [pageSize, setPageSize] = useState(50);
@@ -80,56 +68,56 @@ function AdminOrderDetailAttachmentListPage() {
   const [nextCursor, setNextCursor] = useState("");
   const [currentCursor, setCurrentCursor] = useState("");
 
-  ////
-  //// Event handling.
-  ////
-
-  const fetchAttachmentList = async (
-    cur,
-    limit,
-    orderId,
-    forceRefresh = false,
-  ) => {
-    setFetching(true);
-    setErrors({});
-
-    try {
-      // Use order_wjid for filtering
-      const params = {
-        orderWjid: orderId,
-        limit: limit,
-        cursor: cur || undefined,
-      };
-
-      // IMPORTANT: Pass forceRefresh parameter to bypass cache
-      const response = await attachmentManager.getAttachments(
-        params,
-        onUnauthorized,
-        forceRefresh, // Force refresh to bypass cache
-      );
-
-      setAttachments(response);
-      if (response.hasNextPage) {
-        setNextCursor(response.nextCursor);
-      }
-    } catch (error) {
-      console.error("Failed to fetch attachment list:", error);
-      setErrors(error);
-    } finally {
-      setFetching(false);
-    }
+  // Unauthorized callback
+  const onUnauthorized = () => {
+    navigate("/login?unauthorized=true");
   };
 
-  const fetchOrderDetail = async (orderId) => {
+  // Fetch data on mount and when pagination changes
+  useEffect(() => {
+    if (!authManager.isAuthenticated()) {
+      navigate("/login");
+      return;
+    }
+
+    if (oid) {
+      fetchData();
+      window.scrollTo(0, 0);
+    }
+  }, [currentCursor, pageSize, oid]);
+
+  const fetchData = async () => {
     try {
-      const response = await orderManager.getOrderDetail(
-        orderId,
+      setFetching(true);
+
+      // Fetch order details
+      const orderData = await orderManager.getOrderDetail(oid, onUnauthorized);
+      setOrder(orderData);
+
+      // Fetch attachments using proper ownership filtering
+      const params = {
+        ownershipType: ATTACHMENT_TYPE_NAMES.order, // Use constant from Attachment.js
+        ownershipId: oid,
+        limit: pageSize,
+        cursor: currentCursor || undefined,
+      };
+
+      // Force refresh to bypass any stale cache
+      const attachmentsData = await attachmentManager.getAttachments(
+        params,
         onUnauthorized,
+        true, // Force refresh
       );
-      setOrder(response);
+      setAttachments(attachmentsData);
+
+      if (attachmentsData.hasNextPage) {
+        setNextCursor(attachmentsData.nextCursor);
+      }
     } catch (error) {
-      console.error("Failed to fetch order detail:", error);
-      setErrors(error);
+      console.error("Failed to fetch data:", error);
+      setErrors({ general: "Failed to load attachments" });
+    } finally {
+      setFetching(false);
     }
   };
 
@@ -166,53 +154,32 @@ function AdminOrderDetailAttachmentListPage() {
         onUnauthorized,
       );
 
-      // Refresh the list with force refresh
-      fetchAttachmentList(currentCursor, pageSize, oid, true);
+      // Show success message
+      setAlertMessage("Attachment deleted successfully");
+      setAlertType("success");
+
+      // Clear alert after 3 seconds
+      setTimeout(() => {
+        setAlertMessage("");
+        setAlertType("");
+      }, 3000);
+
+      // Refresh the list
+      fetchData();
     } catch (error) {
       console.error("Failed to delete attachment:", error);
       setErrors({ general: "Failed to delete attachment" });
+      setAlertMessage("Failed to delete attachment");
+      setAlertType("error");
     } finally {
       setFetching(false);
       setSelectedAttachmentForDeletion(null);
     }
   };
 
-  const onUnauthorized = () => {
-    navigate("/login?unauthorized=true");
-  };
-
   const onRowClick = (attachment) => {
     navigate(`/admin/order/${oid}/attachment/${attachment.id}`);
   };
-
-  ////
-  //// Lifecycle.
-  ////
-
-  useEffect(() => {
-    if (!authManager.isAuthenticated()) {
-      navigate("/login");
-      return;
-    }
-
-    if (oid) {
-      fetchOrderDetail(oid);
-      // IMPORTANT: Force refresh on initial load to bypass stale cache
-      fetchAttachmentList(currentCursor, pageSize, oid, true);
-    }
-  }, [oid]); // Only depend on oid, not currentCursor or pageSize
-
-  // Separate effect for pagination changes
-  useEffect(() => {
-    if (oid && currentCursor !== "") {
-      // Don't force refresh for pagination, use cache if available
-      fetchAttachmentList(currentCursor, pageSize, oid, false);
-    }
-  }, [currentCursor, pageSize]);
-
-  ////
-  //// Render helpers.
-  ////
 
   // Format date helper
   const formatDate = (dateString) => {
@@ -221,16 +188,16 @@ function AdminOrderDetailAttachmentListPage() {
   };
 
   // Get file type icon
-  const getFileTypeIcon = (filename) => {
-    if (!filename) return <DocumentIcon className="w-5 h-5 text-gray-400" />;
+  const getFileTypeIcon = (fileType) => {
+    if (!fileType) return <DocumentIcon className="w-5 h-5 text-gray-400" />;
 
-    const ext = filename.toLowerCase();
-    if (ext.includes(".pdf")) {
+    const type = fileType.toLowerCase();
+    if (type.includes("pdf")) {
       return <DocumentTextIcon className="w-5 h-5 text-red-500" />;
     } else if (
-      ext.includes(".jpg") ||
-      ext.includes(".png") ||
-      ext.includes(".jpeg")
+      type.includes("image") ||
+      type.includes("jpg") ||
+      type.includes("png")
     ) {
       return <DocumentIcon className="w-5 h-5 text-blue-500" />;
     } else {
@@ -238,43 +205,23 @@ function AdminOrderDetailAttachmentListPage() {
     }
   };
 
-  // Get attachment status badge
-  const getAttachmentStatusBadge = (status) => {
-    const statusConfig = {
-      1: { text: "Active", className: "bg-green-100 text-green-800" },
-      2: { text: "Archived", className: "bg-gray-100 text-gray-800" },
-    };
-
-    const config = statusConfig[status] || {
-      text: "Unknown",
-      className: "bg-gray-100 text-gray-800",
-    };
-
-    return (
-      <span
-        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.className}`}
-      >
-        {config.text}
-      </span>
-    );
-  };
-
-  // Page size options
-  const pageSizeOptions = [
-    { value: 25, label: "25 per page" },
-    { value: 50, label: "50 per page" },
-    { value: 100, label: "100 per page" },
-    { value: 250, label: "250 per page" },
-  ];
-
+  // Check if we can add attachments based on order status
   const canAddAttachments =
     order &&
     ![
-      OrderStatusDeclined,
-      OrderStatusCancelled,
-      OrderStatusCompletedAndPaid,
-      OrderStatusArchived,
+      ORDER_STATUS_DECLINED,
+      ORDER_STATUS_CANCELLED,
+      ORDER_STATUS_COMPLETED_AND_PAID,
+      ORDER_STATUS_ARCHIVED,
     ].includes(order.status);
+
+  // Page size options
+  const pageSizeOptions = [
+    { value: 10, label: "10 per page" },
+    { value: 25, label: "25 per page" },
+    { value: 50, label: "50 per page" },
+    { value: 100, label: "100 per page" },
+  ];
 
   if (!authManager.isAuthenticated()) {
     return (
@@ -289,7 +236,7 @@ function AdminOrderDetailAttachmentListPage() {
     );
   }
 
-  if (isFetching && !order.id) {
+  if (isFetching && !order) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
@@ -373,22 +320,36 @@ function AdminOrderDetailAttachmentListPage() {
       </div>
 
       {/* Status Alerts */}
-      {order && order.status === OrderStatusDeclined && (
+      {order && order.status === ORDER_STATUS_DECLINED && (
         <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center">
           <XCircleIcon className="w-5 h-5 mr-2" />
           This order has been declined
         </div>
       )}
-      {order && order.status === OrderStatusCancelled && (
+      {order && order.status === ORDER_STATUS_CANCELLED && (
         <div className="mb-4 bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-lg flex items-center">
           <NoSymbolIcon className="w-5 h-5 mr-2" />
           This order is cancelled
         </div>
       )}
-      {order && order.status === OrderStatusArchived && (
+      {order && order.status === ORDER_STATUS_ARCHIVED && (
         <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg flex items-center">
           <ArchiveBoxIcon className="w-5 h-5 mr-2" />
           This order is archived
+        </div>
+      )}
+
+      {/* Success/Error Alerts */}
+      {alertMessage && (
+        <div
+          className={`mb-4 px-4 py-3 rounded-lg flex items-center ${
+            alertType === "success"
+              ? "bg-green-50 border border-green-200 text-green-700"
+              : "bg-red-50 border border-red-200 text-red-700"
+          }`}
+        >
+          <InformationCircleIcon className="w-5 h-5 mr-2" />
+          <span>{alertMessage}</span>
         </div>
       )}
 
@@ -404,30 +365,52 @@ function AdminOrderDetailAttachmentListPage() {
 
       {/* Delete Confirmation Modal */}
       {selectedAttachmentForDeletion && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
-              Are you sure?
-            </h3>
-            <p className="text-sm text-gray-500 mb-6">
-              You are about to <strong>delete</strong> this attachment; it will
-              no longer appear on your dashboard and will be permanently
-              removed. This action cannot be undone. Are you sure you would like
-              to continue?
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={onDeselectAttachmentForDeletion}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={onDeleteConfirmButtonClick}
-                className="px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-red-600 hover:bg-red-700 transition-colors"
-              >
-                Confirm
-              </button>
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div
+              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              onClick={onDeselectAttachmentForDeletion}
+            ></div>
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen">
+              &#8203;
+            </span>
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="sm:flex sm:items-start">
+                  <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <ExclamationCircleIcon className="h-6 w-6 text-red-600" />
+                  </div>
+                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900">
+                      Are you sure?
+                    </h3>
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-500">
+                        You are about to <strong>delete</strong> this
+                        attachment; it will no longer appear on your dashboard
+                        and will be permanently removed. This action cannot be
+                        undone. Are you sure you would like to continue?
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button
+                  type="button"
+                  onClick={onDeleteConfirmButtonClick}
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                  Confirm
+                </button>
+                <button
+                  type="button"
+                  onClick={onDeselectAttachmentForDeletion}
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -544,7 +527,15 @@ function AdminOrderDetailAttachmentListPage() {
                           {attachment.title || "Untitled"}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          {getAttachmentStatusBadge(attachment.status)}
+                          {attachment.status === 1 ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              Active
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                              Archived
+                            </span>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           <div className="flex items-center">
@@ -554,9 +545,10 @@ function AdminOrderDetailAttachmentListPage() {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
                           <div className="flex items-center gap-2">
-                            {getFileTypeIcon(attachment.filename)}
-                            <span className="text-gray-700">
-                              {attachment.filename || "Unknown file"}
+                            <span className="text-gray-900">
+                              {attachment.filename ||
+                                attachment.fileName ||
+                                "Unknown file"}
                             </span>
                             {attachment.objectUrl && (
                               <a
@@ -566,13 +558,13 @@ function AdminOrderDetailAttachmentListPage() {
                                 onClick={(e) => e.stopPropagation()}
                                 className="inline-flex items-center text-blue-600 hover:text-blue-700"
                               >
-                                <ArrowDownTrayIcon className="w-4 h-4 ml-2" />
+                                <ArrowDownTrayIcon className="w-4 h-4" />
                               </a>
                             )}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex justify-end gap-2">
+                          <div className="flex items-center justify-end gap-2">
                             <Link
                               to={`/admin/order/${oid}/attachment/${attachment.id}`}
                               onClick={(e) => e.stopPropagation()}
@@ -591,16 +583,15 @@ function AdminOrderDetailAttachmentListPage() {
                                 Edit
                               </button>
                             </Link>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onSelectAttachmentForDeletion(attachment);
-                              }}
-                              className="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-xs font-medium text-white bg-red-600 hover:bg-red-700 transition-colors"
+                            <Link
+                              to={`/admin/order/${oid}/attachment/${attachment.id}/delete`}
+                              onClick={(e) => e.stopPropagation()}
                             >
-                              <TrashIcon className="w-4 h-4 mr-1" />
-                              Delete
-                            </button>
+                              <button className="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-xs font-medium text-white bg-red-600 hover:bg-red-700 transition-colors">
+                                <TrashIcon className="w-4 h-4 mr-1" />
+                                Delete
+                              </button>
+                            </Link>
                           </div>
                         </td>
                       </tr>
@@ -619,8 +610,8 @@ function AdminOrderDetailAttachmentListPage() {
                     value={pageSize}
                     onChange={(e) => {
                       setPageSize(parseInt(e.target.value));
-                      setPreviousCursors([]);
                       setCurrentCursor("");
+                      setPreviousCursors([]);
                     }}
                     className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                   >
