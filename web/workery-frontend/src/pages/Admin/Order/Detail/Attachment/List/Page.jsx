@@ -95,13 +95,20 @@ function AdminOrderDetailAttachmentListPage() {
       setFetching(true);
       setErrors({});
 
-      // Fetch order details
+      // Fetch order details FIRST to get the MongoDB ObjectID
       const orderData = await orderManager.getOrderDetail(oid, onUnauthorized);
       setOrder(orderData);
 
-      // BUILD PARAMS WITH CORRECT OWNERSHIP FILTERING
+      // IMPORTANT: Use order.id (MongoDB ObjectID) not oid (public ID)
+      if (!orderData || !orderData.id) {
+        console.error("Order data missing or has no ID");
+        setErrors({ general: "Failed to load order details" });
+        return;
+      }
+
+      // BUILD PARAMS WITH CORRECT OWNERSHIP FILTERING USING order.id
       const params = {
-        ownershipId: oid,
+        ownershipId: orderData.id, // Use MongoDB ObjectID from order, not oid!
         ownershipRole: ATTACHMENT_TYPES.ORDER, // This is 3
         page_size: pageSize,
       };
@@ -113,10 +120,12 @@ function AdminOrderDetailAttachmentListPage() {
       // Debug logging for development
       if (process.env.NODE_ENV === "development") {
         console.log("🔍 ATTACHMENT FILTER DEBUG:");
-        console.log("  Order ID (oid):", oid);
+        console.log("  Order Public ID (oid):", oid);
+        console.log("  Order MongoDB ID (order.id):", orderData.id);
+        console.log("  Order WJID:", orderData.wjid);
         console.log("  Request params:", params);
         console.log("  Expected backend params:");
-        console.log("    ownership_id:", oid);
+        console.log("    ownership_id:", orderData.id);
         console.log("    ownership_role:", ATTACHMENT_TYPES.ORDER);
       }
 
@@ -136,7 +145,8 @@ function AdminOrderDetailAttachmentListPage() {
         // VERIFY FILTERING: Check if all attachments belong to this order
         if (attachmentsData?.results?.length > 0) {
           const allBelongToOrder = attachmentsData.results.every(
-            (att) => att.orderId === oid || att.orderID === oid,
+            (att) =>
+              att.orderId === orderData.id || att.orderID === orderData.id,
           );
           console.log(
             "  ✅ All attachments belong to order?",
@@ -145,11 +155,11 @@ function AdminOrderDetailAttachmentListPage() {
 
           // Log any attachments that don't match
           attachmentsData.results.forEach((att, index) => {
-            if (att.orderId !== oid && att.orderID !== oid) {
+            if (att.orderId !== orderData.id && att.orderID !== orderData.id) {
               console.warn(`  ⚠️ Attachment ${index} has different order:`, {
                 attachmentId: att.id,
                 attachmentOrderId: att.orderId || att.orderID,
-                expectedOrderId: oid,
+                expectedOrderId: orderData.id,
               });
             }
           });
