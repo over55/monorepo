@@ -19,8 +19,6 @@ import {
   ChartBarIcon,
   ClipboardDocumentListIcon,
   CheckCircleIcon,
-  CalendarDaysIcon,
-  UserIcon,
 } from "@heroicons/react/24/outline";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 
@@ -50,10 +48,10 @@ function SettingBulletinListPage() {
   const [hasNextPage, setHasNextPage] = useState(false);
   const [hasPreviousPage, setHasPreviousPage] = useState(false);
 
-  // Modal state
-  const [showDetailModal, setShowDetailModal] = useState(false);
+  // Delete modal state
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedBulletin, setSelectedBulletin] = useState(null);
+  const [selectedBulletinForDeletion, setSelectedBulletinForDeletion] =
+    useState(null);
 
   const onUnauthorized = () => {
     navigate("/login?unauthorized=true");
@@ -215,20 +213,18 @@ function SettingBulletinListPage() {
     );
   };
 
-  const handleViewDetail = (bulletin) => {
-    setSelectedBulletin(bulletin);
-    setShowDetailModal(true);
-  };
-
   const handleDeleteConfirm = async () => {
-    if (!selectedBulletin) return;
+    if (!selectedBulletinForDeletion) return;
 
     try {
       setIsLoading(true);
-      await bulletinManager.deleteBulletin(selectedBulletin.id, onUnauthorized);
+      await bulletinManager.deleteBulletin(
+        selectedBulletinForDeletion.id,
+        onUnauthorized,
+      );
       setSuccessMessage("Bulletin deleted successfully");
       setShowDeleteModal(false);
-      setSelectedBulletin(null);
+      setSelectedBulletinForDeletion(null);
       loadBulletins(
         currentPage,
         pageSize,
@@ -550,7 +546,11 @@ function SettingBulletinListPage() {
                       {bulletins.map((bulletin) => (
                         <tr
                           key={bulletin.id}
-                          onClick={() => handleViewDetail(bulletin)}
+                          onClick={() =>
+                            navigate(
+                              `/admin/settings/bulletin/${bulletin.id}/detail`,
+                            )
+                          }
                           className="hover:bg-gray-50 cursor-pointer"
                         >
                           <td className="px-3 py-4 text-sm">
@@ -596,7 +596,7 @@ function SettingBulletinListPage() {
                               <button
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setSelectedBulletin(bulletin);
+                                  setSelectedBulletinForDeletion(bulletin);
                                   setShowDeleteModal(true);
                                 }}
                                 className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
@@ -665,136 +665,8 @@ function SettingBulletinListPage() {
           </div>
         </div>
 
-        {/* Detail Modal */}
-        {showDetailModal && selectedBulletin && (
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
-              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <NewspaperIcon className="w-5 h-5 mr-2 text-blue-600" />
-                  Bulletin Details
-                </h3>
-                <button
-                  onClick={() => {
-                    setShowDetailModal(false);
-                    setSelectedBulletin(null);
-                  }}
-                  className="text-gray-400 hover:text-gray-500"
-                >
-                  <XMarkIcon className="w-6 h-6" />
-                </button>
-              </div>
-
-              <div className="px-6 py-4 overflow-y-auto">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Text:
-                    </label>
-                    <div className="p-3 bg-gray-50 rounded-lg text-base text-gray-900">
-                      {selectedBulletin.text}
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Status:
-                    </label>
-                    <span
-                      className={`inline-flex px-3 py-1 text-sm font-medium rounded-full ${
-                        selectedBulletin.status === 1
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
-                    >
-                      {selectedBulletin.status === 1 ? "Active" : "Archived"}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
-                    <div>
-                      <div className="flex items-center text-sm text-gray-500 mb-1">
-                        <CalendarDaysIcon className="w-4 h-4 mr-1" />
-                        Created:
-                      </div>
-                      <p className="text-sm text-gray-900">
-                        {formatDateForDisplay(selectedBulletin.createdAt)}
-                      </p>
-                    </div>
-                    <div>
-                      <div className="flex items-center text-sm text-gray-500 mb-1">
-                        <UserIcon className="w-4 h-4 mr-1" />
-                        Created By:
-                      </div>
-                      <p className="text-sm text-gray-900">
-                        {selectedBulletin.createdByUserName || "System"}
-                      </p>
-                    </div>
-                    {selectedBulletin.modifiedAt && (
-                      <div>
-                        <div className="flex items-center text-sm text-gray-500 mb-1">
-                          <CalendarDaysIcon className="w-4 h-4 mr-1" />
-                          Modified:
-                        </div>
-                        <p className="text-sm text-gray-900">
-                          {formatDateForDisplay(selectedBulletin.modifiedAt)}
-                        </p>
-                      </div>
-                    )}
-                    {selectedBulletin.modifiedByUserName && (
-                      <div>
-                        <div className="flex items-center text-sm text-gray-500 mb-1">
-                          <UserIcon className="w-4 h-4 mr-1" />
-                          Modified By:
-                        </div>
-                        <p className="text-sm text-gray-900">
-                          {selectedBulletin.modifiedByUserName}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
-                <button
-                  onClick={() => {
-                    setShowDetailModal(false);
-                    setSelectedBulletin(null);
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  Close
-                </button>
-                <button
-                  onClick={() => {
-                    setShowDetailModal(false);
-                    navigate(
-                      `/admin/settings/bulletin/${selectedBulletin.id}/update`,
-                    );
-                  }}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600"
-                >
-                  <PencilSquareIcon className="w-4 h-4 mr-1" />
-                  Edit
-                </button>
-                <button
-                  onClick={() => {
-                    setShowDetailModal(false);
-                    setShowDeleteModal(true);
-                  }}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700"
-                >
-                  <TrashIcon className="w-4 h-4 mr-1" />
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Delete Confirmation Modal */}
-        {showDeleteModal && selectedBulletin && (
+        {showDeleteModal && selectedBulletinForDeletion && (
           <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-lg max-w-md w-full">
               <div className="px-6 py-4 border-b border-gray-200">
@@ -812,7 +684,7 @@ function SettingBulletinListPage() {
 
                 <div className="p-4 bg-red-50 rounded-lg border-l-4 border-red-500">
                   <p className="text-sm text-gray-700">
-                    <strong>Text:</strong> {selectedBulletin.text}
+                    <strong>Text:</strong> {selectedBulletinForDeletion.text}
                   </p>
                 </div>
 
@@ -831,6 +703,7 @@ function SettingBulletinListPage() {
                 <button
                   onClick={() => {
                     setShowDeleteModal(false);
+                    setSelectedBulletinForDeletion(null);
                   }}
                   disabled={isLoading}
                   className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
