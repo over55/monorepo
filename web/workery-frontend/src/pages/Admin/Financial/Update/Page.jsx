@@ -37,10 +37,6 @@ import {
   ORDER_STATUS_COMPLETED_AND_PAID,
   ORDER_STATUS_COMPLETED_BUT_UNPAID,
 } from "../../../../constants/Order";
-import {
-  FINANCIAL_STATUS_PAID,
-  FINANCIAL_STATUS_PENDING,
-} from "../../../../constants/Financial";
 import { formatDateForInput, isZeroDate } from "../../../../constants/Date";
 
 function AdminFinancialUpdatePage() {
@@ -69,7 +65,9 @@ function AdminFinancialUpdatePage() {
 
   // Form states
   const [invoicePaidTo, setInvoicePaidTo] = useState(1);
-  const [paymentStatus, setPaymentStatus] = useState(FINANCIAL_STATUS_PENDING);
+  const [paymentStatus, setPaymentStatus] = useState(
+    ORDER_STATUS_COMPLETED_BUT_UNPAID,
+  );
   const [completionDate, setCompletionDate] = useState(null);
   const [invoiceDate, setInvoiceDate] = useState(null);
   const [invoiceIds, setInvoiceIds] = useState("");
@@ -353,7 +351,9 @@ function AdminFinancialUpdatePage() {
             setInvoicePaidTo(
               financialData.invoicePaidTo || INVOICE_PAID_TO_ASSOCIATE,
             );
-            setPaymentStatus(financialData.status || FINANCIAL_STATUS_PENDING);
+            setPaymentStatus(
+              financialData.status || ORDER_STATUS_COMPLETED_BUT_UNPAID,
+            );
             setCompletionDate(financialData.completionDate);
             setInvoiceDate(financialData.invoiceDate);
             setInvoiceIds(financialData.invoiceIds || "");
@@ -912,15 +912,17 @@ function AdminFinancialUpdatePage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      What is the payment status?{" "}
+                      What is the service fee payment status of this job?{" "}
                       <span className="text-red-500">*</span>
                     </label>
                     <div className="space-x-6">
                       <label className="inline-flex items-center">
                         <input
                           type="radio"
-                          value={FINANCIAL_STATUS_PAID}
-                          checked={paymentStatus === FINANCIAL_STATUS_PAID}
+                          value={ORDER_STATUS_COMPLETED_AND_PAID}
+                          checked={
+                            paymentStatus === ORDER_STATUS_COMPLETED_AND_PAID
+                          }
                           onChange={(e) =>
                             setPaymentStatus(parseInt(e.target.value))
                           }
@@ -934,8 +936,10 @@ function AdminFinancialUpdatePage() {
                       <label className="inline-flex items-center">
                         <input
                           type="radio"
-                          value={FINANCIAL_STATUS_PENDING}
-                          checked={paymentStatus === FINANCIAL_STATUS_PENDING}
+                          value={ORDER_STATUS_COMPLETED_BUT_UNPAID}
+                          checked={
+                            paymentStatus === ORDER_STATUS_COMPLETED_BUT_UNPAID
+                          }
                           onChange={(e) =>
                             setPaymentStatus(parseInt(e.target.value))
                           }
@@ -943,7 +947,7 @@ function AdminFinancialUpdatePage() {
                         />
                         <span className="ml-2 text-sm text-gray-700">
                           <XCircleIcon className="inline w-4 h-4 mr-1 text-yellow-600" />
-                          Pending
+                          Unpaid
                         </span>
                       </label>
                     </div>
@@ -954,7 +958,7 @@ function AdminFinancialUpdatePage() {
                     )}
                   </div>
 
-                  {paymentStatus === FINANCIAL_STATUS_PAID && (
+                  {paymentStatus === ORDER_STATUS_COMPLETED_AND_PAID && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
