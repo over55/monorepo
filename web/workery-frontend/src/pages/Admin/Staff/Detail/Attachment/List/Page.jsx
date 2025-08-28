@@ -1,4 +1,4 @@
-// File Path: web/workery-frontend/src/pages/Admin/Staff/Detail/Attachment/List/Page.jsx
+// File Path: monorepo/web/workery-frontend/src/pages/Admin/Staff/Detail/Attachment/List/Page.jsx
 
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router";
@@ -20,32 +20,36 @@ import {
   DocumentTextIcon,
   CalendarIcon,
   ExclamationCircleIcon,
-  UserIcon,
+  PencilIcon,
+  TrashIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/outline";
 import {
-  useStaffManager,
   useAttachmentManager,
+  useStaffManager,
+  useAuthManager,
 } from "../../../../../../services/Services";
-import {
-  ATTACHMENT_OWNERSHIP_TYPE,
-  ATTACHMENT_STATUS_LABELS,
-} from "../../../../../../constants/Attachment";
-
-// Staff status constants
-const STAFF_STATUS_ACTIVE = 1;
-const STAFF_STATUS_ARCHIVED = 2;
 
 function AdminStaffDetailAttachmentListPage() {
   const { aid } = useParams();
   const navigate = useNavigate();
-  const staffManager = useStaffManager();
+
+  // Services
   const attachmentManager = useAttachmentManager();
+  const staffManager = useStaffManager();
+  const authManager = useAuthManager();
 
   // Component states
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
   const [staff, setStaff] = useState(null);
   const [attachments, setAttachments] = useState(null);
+  const [selectedAttachmentForDeletion, setSelectedAttachmentForDeletion] =
+    useState(null);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState("");
+
+  // Pagination states
   const [pageSize, setPageSize] = useState(50);
   const [previousCursors, setPreviousCursors] = useState([]);
   const [nextCursor, setNextCursor] = useState("");
@@ -58,9 +62,16 @@ function AdminStaffDetailAttachmentListPage() {
 
   // Fetch data on mount and when pagination changes
   useEffect(() => {
-    fetchData();
-    window.scrollTo(0, 0);
-  }, [aid, currentCursor, pageSize]);
+    if (!authManager.isAuthenticated()) {
+      navigate("/login");
+      return;
+    }
+
+    if (aid) {
+      fetchData();
+      window.scrollTo(0, 0);
+    }
+  }, [currentCursor, pageSize, aid]);
 
   const fetchData = async () => {
     try {
@@ -72,8 +83,8 @@ function AdminStaffDetailAttachmentListPage() {
 
       // Fetch attachments
       const params = {
-        entityId: aid,
-        entityType: String(ATTACHMENT_OWNERSHIP_TYPE.STAFF),
+        ownershipType: 4, // STAFF type from constants
+        ownershipId: aid,
         limit: pageSize,
         cursor: currentCursor || undefined,
       };
@@ -81,7 +92,6 @@ function AdminStaffDetailAttachmentListPage() {
       const attachmentsData = await attachmentManager.getAttachments(
         params,
         onUnauthorized,
-        true, // force refresh
       );
       setAttachments(attachmentsData);
 
@@ -97,17 +107,59 @@ function AdminStaffDetailAttachmentListPage() {
   };
 
   const onNextClicked = () => {
-    let arr = [...previousCursors];
+    const arr = [...previousCursors];
     arr.push(currentCursor);
     setPreviousCursors(arr);
     setCurrentCursor(nextCursor);
   };
 
   const onPreviousClicked = () => {
-    let arr = [...previousCursors];
+    const arr = [...previousCursors];
     const previousCursor = arr.pop();
     setPreviousCursors(arr);
     setCurrentCursor(previousCursor);
+  };
+
+  const onSelectAttachmentForDeletion = (attachment) => {
+    setSelectedAttachmentForDeletion(attachment);
+  };
+
+  const onDeselectAttachmentForDeletion = () => {
+    setSelectedAttachmentForDeletion(null);
+  };
+
+  const onDeleteConfirmButtonClick = async () => {
+    if (!selectedAttachmentForDeletion) return;
+
+    setFetching(true);
+
+    try {
+      await attachmentManager.deleteAttachment(
+        selectedAttachmentForDeletion.id,
+        onUnauthorized,
+      );
+
+      // Show success message
+      setAlertMessage("Attachment deleted successfully");
+      setAlertType("success");
+
+      // Clear alert after 3 seconds
+      setTimeout(() => {
+        setAlertMessage("");
+        setAlertType("");
+      }, 3000);
+
+      // Refresh the list
+      fetchData();
+    } catch (error) {
+      console.error("Failed to delete attachment:", error);
+      setErrors({ general: "Failed to delete attachment" });
+      setAlertMessage("Failed to delete attachment");
+      setAlertType("error");
+    } finally {
+      setFetching(false);
+      setSelectedAttachmentForDeletion(null);
+    }
   };
 
   const onRowClick = (attachment) => {
@@ -146,6 +198,19 @@ function AdminStaffDetailAttachmentListPage() {
     { value: 100, label: "100 per page" },
   ];
 
+  if (!authManager.isAuthenticated()) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Checking authentication...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (isFetching && !staff) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -181,7 +246,7 @@ function AdminStaffDetailAttachmentListPage() {
                 className="text-sm font-medium text-gray-700 hover:text-blue-600"
               >
                 <span className="inline-flex items-center">
-                  <UserIcon className="w-4 h-4 mr-2" />
+                  <UserGroupIcon className="w-4 h-4 mr-2" />
                   Staff
                 </span>
               </Link>
@@ -218,7 +283,7 @@ function AdminStaffDetailAttachmentListPage() {
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-              <UserIcon className="w-8 h-8 mr-3 text-blue-600" />
+              <UserGroupIcon className="w-8 h-8 mr-3 text-blue-600" />
               Staff Member
             </h1>
             <p className="mt-1 text-sm text-gray-600 flex items-center">
@@ -230,10 +295,24 @@ function AdminStaffDetailAttachmentListPage() {
       </div>
 
       {/* Status Alerts */}
-      {staff && staff.status === STAFF_STATUS_ARCHIVED && (
+      {staff && staff.status === 2 && (
         <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg flex items-center">
           <ArchiveBoxIcon className="w-5 h-5 mr-2" />
           This staff member is archived
+        </div>
+      )}
+
+      {/* Success/Error Alerts */}
+      {alertMessage && (
+        <div
+          className={`mb-4 px-4 py-3 rounded-lg flex items-center ${
+            alertType === "success"
+              ? "bg-green-50 border border-green-200 text-green-700"
+              : "bg-red-50 border border-red-200 text-red-700"
+          }`}
+        >
+          <InformationCircleIcon className="w-5 h-5 mr-2" />
+          <span>{alertMessage}</span>
         </div>
       )}
 
@@ -243,6 +322,59 @@ function AdminStaffDetailAttachmentListPage() {
           <div className="flex items-center">
             <ExclamationCircleIcon className="w-5 h-5 mr-2" />
             <span>{errors.general}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {selectedAttachmentForDeletion && (
+        <div className="fixed inset-0 z-50 overflow-y-auto">
+          <div className="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div
+              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+              onClick={onDeselectAttachmentForDeletion}
+            ></div>
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen">
+              &#8203;
+            </span>
+            <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="sm:flex sm:items-start">
+                  <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                    <ExclamationCircleIcon className="h-6 w-6 text-red-600" />
+                  </div>
+                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900">
+                      Are you sure?
+                    </h3>
+                    <div className="mt-2">
+                      <p className="text-sm text-gray-500">
+                        You are about to <strong>delete</strong> this
+                        attachment; it will no longer appear on your dashboard
+                        and will be permanently removed. This action cannot be
+                        undone. Are you sure you would like to continue?
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button
+                  type="button"
+                  onClick={onDeleteConfirmButtonClick}
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                  Confirm
+                </button>
+                <button
+                  type="button"
+                  onClick={onDeselectAttachmentForDeletion}
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -259,9 +391,9 @@ function AdminStaffDetailAttachmentListPage() {
             {staff && (
               <Link to={`/admin/staff/${aid}/attachments/add`}>
                 <button
-                  disabled={staff.status === STAFF_STATUS_ARCHIVED}
+                  disabled={staff.status === 2}
                   className={`inline-flex items-center px-5 py-2.5 border rounded-lg text-base font-medium transition-colors ${
-                    staff.status === STAFF_STATUS_ARCHIVED
+                    staff.status === 2
                       ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
                       : "border-transparent text-white bg-green-600 hover:bg-green-700"
                   }`}
@@ -288,6 +420,12 @@ function AdminStaffDetailAttachmentListPage() {
               className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
             >
               Detail
+            </Link>
+            <Link
+              to={`/admin/staff/${aid}/orders`}
+              className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
+            >
+              Orders
             </Link>
             <Link
               to={`/admin/staff/${aid}/comments`}
@@ -318,10 +456,10 @@ function AdminStaffDetailAttachmentListPage() {
             </div>
           ) : attachments &&
             attachments.results &&
-            attachments.results.length > 0 ? (
+            (attachments.results.length > 0 || previousCursors.length > 0) ? (
             <>
-              {/* Attachments Table - Desktop View */}
-              <div className="hidden sm:block overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg mb-6">
+              {/* Attachments Table */}
+              <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg mb-6">
                 <table className="min-w-full divide-y divide-gray-300">
                   <thead className="bg-gray-50">
                     <tr>
@@ -350,15 +488,18 @@ function AdminStaffDetailAttachmentListPage() {
                         onClick={() => onRowClick(attachment)}
                       >
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                          {attachment.title ||
-                            attachment.fileName ||
-                            "Untitled"}
+                          {attachment.title || "Untitled"}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                            {ATTACHMENT_STATUS_LABELS[attachment.status] ||
-                              "Active"}
-                          </span>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm">
+                          {attachment.status === 1 ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              Active
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                              Archived
+                            </span>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           <div className="flex items-center">
@@ -367,27 +508,55 @@ function AdminStaffDetailAttachmentListPage() {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">
-                          <a
-                            href={attachment.objectUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="inline-flex items-center text-blue-600 hover:text-blue-700"
-                          >
-                            <ArrowDownTrayIcon className="w-4 h-4 mr-1" />
-                            {attachment.filename || "Download"}
-                          </a>
+                          <div className="flex items-center gap-2">
+                            <span className="text-gray-900">
+                              {attachment.filename ||
+                                attachment.fileName ||
+                                "Unknown file"}
+                            </span>
+                            {attachment.objectUrl && (
+                              <a
+                                href={attachment.objectUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="inline-flex items-center text-blue-600 hover:text-blue-700"
+                              >
+                                <ArrowDownTrayIcon className="w-4 h-4" />
+                              </a>
+                            )}
+                          </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <Link
-                            to={`/admin/staff/${aid}/attachment/${attachment.id}`}
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <button className="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-                              <EyeIcon className="w-4 h-4 mr-1" />
-                              View
-                            </button>
-                          </Link>
+                          <div className="flex items-center justify-end gap-2">
+                            <Link
+                              to={`/admin/staff/${aid}/attachment/${attachment.id}`}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <button className="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
+                                <EyeIcon className="w-4 h-4 mr-1" />
+                                View
+                              </button>
+                            </Link>
+                            <Link
+                              to={`/admin/staff/${aid}/attachment/${attachment.id}/edit`}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <button className="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-xs font-medium text-white bg-yellow-600 hover:bg-yellow-700 transition-colors">
+                                <PencilIcon className="w-4 h-4 mr-1" />
+                                Edit
+                              </button>
+                            </Link>
+                            <Link
+                              to={`/admin/staff/${aid}/attachment/${attachment.id}/delete`}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <button className="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-xs font-medium text-white bg-red-600 hover:bg-red-700 transition-colors">
+                                <TrashIcon className="w-4 h-4 mr-1" />
+                                Delete
+                              </button>
+                            </Link>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -395,58 +564,8 @@ function AdminStaffDetailAttachmentListPage() {
                 </table>
               </div>
 
-              {/* Attachments Cards - Mobile View */}
-              <div className="sm:hidden space-y-4">
-                {attachments.results.map((attachment) => (
-                  <div
-                    key={attachment.id}
-                    className="bg-gray-50 rounded-lg p-4 cursor-pointer hover:bg-gray-100 transition-colors"
-                    onClick={() => onRowClick(attachment)}
-                  >
-                    <div className="mb-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-medium text-gray-900">
-                          {attachment.title ||
-                            attachment.fileName ||
-                            "Untitled"}
-                        </span>
-                        <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                          {ATTACHMENT_STATUS_LABELS[attachment.status] ||
-                            "Active"}
-                        </span>
-                      </div>
-                      <div className="flex items-center text-sm text-gray-500 mb-2">
-                        <CalendarIcon className="w-4 h-4 mr-2" />
-                        {formatDate(attachment.createdAt)}
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <a
-                          href={attachment.objectUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
-                          className="inline-flex items-center text-blue-600 hover:text-blue-700 text-sm"
-                        >
-                          <ArrowDownTrayIcon className="w-4 h-4 mr-1" />
-                          {attachment.filename || "Download"}
-                        </a>
-                        <Link
-                          to={`/admin/staff/${aid}/attachment/${attachment.id}`}
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <button className="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-                            <EyeIcon className="w-4 h-4 mr-1" />
-                            View
-                          </button>
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
               {/* Pagination Controls */}
-              <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-6">
+              <div className="flex justify-between items-center">
                 <div className="flex items-center">
                   <label className="mr-3 text-sm font-medium text-gray-700">
                     Items per page:
@@ -478,7 +597,7 @@ function AdminStaffDetailAttachmentListPage() {
                       Previous
                     </button>
                   )}
-                  {nextCursor && (
+                  {attachments.hasNextPage && (
                     <button
                       onClick={onNextClicked}
                       className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors"
@@ -500,7 +619,7 @@ function AdminStaffDetailAttachmentListPage() {
               <p className="text-gray-500 mb-4">
                 No attachments have been uploaded for this staff member.
               </p>
-              {staff && staff.status !== STAFF_STATUS_ARCHIVED && (
+              {staff && staff.status !== 2 && (
                 <Link to={`/admin/staff/${aid}/attachments/add`}>
                   <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
                     <PlusCircleIcon className="w-4 h-4 mr-2" />
@@ -512,7 +631,7 @@ function AdminStaffDetailAttachmentListPage() {
           )}
 
           {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-8 pt-6 border-t border-gray-200">
+          <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
             <Link to="/admin/staff">
               <button className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
                 <ChevronLeftIcon className="w-5 h-5 mr-2" />
@@ -522,9 +641,9 @@ function AdminStaffDetailAttachmentListPage() {
             {staff && (
               <Link to={`/admin/staff/${aid}/attachments/add`}>
                 <button
-                  disabled={staff.status === STAFF_STATUS_ARCHIVED}
+                  disabled={staff.status === 2}
                   className={`inline-flex items-center px-5 py-2.5 border rounded-lg text-base font-medium transition-colors ${
-                    staff.status === STAFF_STATUS_ARCHIVED
+                    staff.status === 2
                       ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
                       : "border-transparent text-white bg-green-600 hover:bg-green-700"
                   }`}
