@@ -790,8 +790,8 @@ export class AssociateAwayLogManager {
     if (!associateAwayLogData.associateId) {
       errors.associateId = "Associate ID is required";
     } else if (
-      typeof associateAwayLogData.associateId !== "number" ||
-      associateAwayLogData.associateId < 1
+      typeof associateAwayLogData.associateId !== "string" ||
+      associateAwayLogData.associateId === ""
     ) {
       errors.associateId = "Valid associate ID is required";
     }

@@ -24,6 +24,7 @@ import {
   BriefcaseIcon,
   SparklesIcon,
 } from "@heroicons/react/24/outline";
+import { ensureISODateForAPI } from "../../../../../services/Helpers/DateFormatter";
 
 const REASON_OPTIONS = [
   { value: "", label: "Please select" },
@@ -163,13 +164,19 @@ function SettingAssociateAwayLogCreatePage() {
 
       // Prepare data for API
       const submitData = {
-        associateId: parseInt(formData.associateId),
+        associateId: formData.associateId,
         reason: parseInt(formData.reason),
         reasonOther: formData.reasonOther?.trim() || "",
         untilFurtherNotice: parseInt(formData.untilFurtherNotice),
         untilDate:
-          formData.untilFurtherNotice === "2" ? formData.untilDate : "",
-        startDate: formData.startDate,
+          formData.untilFurtherNotice === "2"
+            ? formData.startDate
+              ? ensureISODateForAPI(formData.untilDate)
+              : ""
+            : "",
+        startDate: formData.startDate
+          ? ensureISODateForAPI(formData.startDate)
+          : "",
       };
 
       await associateAwayLogManager.createAssociateAwayLog(
