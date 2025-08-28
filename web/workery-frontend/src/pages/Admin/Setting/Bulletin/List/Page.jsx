@@ -58,15 +58,7 @@ function SettingBulletinListPage() {
   };
 
   // Load bulletins
-  const loadBulletins = async (
-    page = 1,
-    limit = 25,
-    search = "",
-    statusValue = "",
-    sortField = "created_at",
-    sortDirection = "DESC",
-    forceRefresh = false,
-  ) => {
+  const loadBulletins = async (forceRefresh = false) => {
     // Cancel any pending request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -80,18 +72,18 @@ function SettingBulletinListPage() {
       setError(null);
 
       const params = {
-        page: page,
-        limit: limit,
-        sortBy: sortField,
-        sortOrder: sortDirection,
+        page: currentPage,
+        limit: pageSize,
+        sortBy: sortBy,
+        sortOrder: sortOrder,
       };
 
-      if (search) {
-        params.search = search;
+      if (actualSearchText) {
+        params.search = actualSearchText;
       }
 
-      if (statusValue) {
-        params.status = statusValue;
+      if (statusFilter) {
+        params.status = statusFilter;
       }
 
       console.log("Loading bulletins with params:", params);
@@ -110,7 +102,7 @@ function SettingBulletinListPage() {
       setBulletins(response.results || []);
       setTotalCount(response.count || 0);
       setHasNextPage(response.hasNextPage || false);
-      setHasPreviousPage(page > 1);
+      setHasPreviousPage(currentPage > 1);
     } catch (err) {
       // Don't set error if request was aborted
       if (err.name !== "AbortError") {
@@ -123,17 +115,21 @@ function SettingBulletinListPage() {
     }
   };
 
-  // Initial load
+  // Watch for filter, sort, and pagination changes
   useEffect(() => {
-    let mounted = true;
+    loadBulletins(true);
+  }, [
+    currentPage,
+    pageSize,
+    actualSearchText,
+    statusFilter,
+    sortBy,
+    sortOrder,
+  ]);
 
-    if (mounted) {
-      window.scrollTo(0, 0);
-      loadBulletins();
-    }
-
+  // Cleanup on unmount
+  useEffect(() => {
     return () => {
-      mounted = false;
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
@@ -163,14 +159,6 @@ function SettingBulletinListPage() {
   const handleSearch = () => {
     setActualSearchText(temporarySearchText);
     setCurrentPage(1);
-    loadBulletins(
-      1,
-      pageSize,
-      temporarySearchText,
-      statusFilter,
-      sortBy,
-      sortOrder,
-    );
   };
 
   const handleClearFilter = () => {
@@ -180,37 +168,36 @@ function SettingBulletinListPage() {
     setActualSearchText("");
     setTemporarySearchText("");
     setCurrentPage(1);
+  };
 
-    // Force refresh with cleared values
-    setTimeout(() => {
-      loadBulletins(1, pageSize, "", "", "created_at", "DESC", true);
-    }, 0);
+  const handleStatusChange = (e) => {
+    setStatusFilter(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleSortChange = (e) => {
+    const [field, order] = e.target.value.split(",");
+    setSortBy(field);
+    setSortOrder(order);
+    setCurrentPage(1);
+  };
+
+  const handlePageSizeChange = (e) => {
+    const newPageSize = parseInt(e.target.value);
+    setPageSize(newPageSize);
+    setCurrentPage(1);
   };
 
   const handleNextPage = () => {
-    const nextPage = currentPage + 1;
-    setCurrentPage(nextPage);
-    loadBulletins(
-      nextPage,
-      pageSize,
-      actualSearchText,
-      statusFilter,
-      sortBy,
-      sortOrder,
-    );
+    setCurrentPage((prev) => prev + 1);
   };
 
   const handlePreviousPage = () => {
-    const prevPage = currentPage - 1;
-    setCurrentPage(prevPage);
-    loadBulletins(
-      prevPage,
-      pageSize,
-      actualSearchText,
-      statusFilter,
-      sortBy,
-      sortOrder,
-    );
+    setCurrentPage((prev) => prev - 1);
+  };
+
+  const handleRefresh = () => {
+    loadBulletins(true);
   };
 
   const handleDeleteConfirm = async () => {
@@ -225,15 +212,7 @@ function SettingBulletinListPage() {
       setSuccessMessage("Bulletin deleted successfully");
       setShowDeleteModal(false);
       setSelectedBulletinForDeletion(null);
-      loadBulletins(
-        currentPage,
-        pageSize,
-        actualSearchText,
-        statusFilter,
-        sortBy,
-        sortOrder,
-        true,
-      );
+      loadBulletins(true);
     } catch (err) {
       console.error("Failed to delete bulletin:", err);
       setError(err.message || "Failed to delete bulletin");
@@ -372,17 +351,7 @@ function SettingBulletinListPage() {
                   Clear Filters
                 </button>
                 <button
-                  onClick={() =>
-                    loadBulletins(
-                      currentPage,
-                      pageSize,
-                      actualSearchText,
-                      statusFilter,
-                      sortBy,
-                      sortOrder,
-                      true,
-                    )
-                  }
+                  onClick={handleRefresh}
                   className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center"
                 >
                   <ArrowPathIcon className="w-4 h-4 mr-1" />
@@ -403,7 +372,11 @@ function SettingBulletinListPage() {
                     placeholder="Search by text..."
                     value={temporarySearchText}
                     onChange={(e) => setTemporarySearchText(e.target.value)}
-                    onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        handleSearch();
+                      }
+                    }}
                     className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                   <button
@@ -423,23 +396,12 @@ function SettingBulletinListPage() {
                 <div className="relative">
                   <select
                     value={statusFilter}
-                    onChange={(e) => {
-                      setStatusFilter(e.target.value);
-                      setCurrentPage(1);
-                      loadBulletins(
-                        1,
-                        pageSize,
-                        actualSearchText,
-                        e.target.value,
-                        sortBy,
-                        sortOrder,
-                      );
-                    }}
+                    onChange={handleStatusChange}
                     className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
                   >
                     <option value="">All Statuses</option>
                     <option value="1">Active</option>
-                    <option value="2">Archived</option>
+                    <option value="0">Archived</option>
                   </select>
                   <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
                 </div>
@@ -453,20 +415,7 @@ function SettingBulletinListPage() {
                 <div className="relative">
                   <select
                     value={`${sortBy},${sortOrder}`}
-                    onChange={(e) => {
-                      const [field, order] = e.target.value.split(",");
-                      setSortBy(field);
-                      setSortOrder(order);
-                      setCurrentPage(1);
-                      loadBulletins(
-                        1,
-                        pageSize,
-                        actualSearchText,
-                        statusFilter,
-                        field,
-                        order,
-                      );
-                    }}
+                    onChange={handleSortChange}
                     className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
                   >
                     <option value="created_at,DESC">Created (Newest)</option>
@@ -486,19 +435,7 @@ function SettingBulletinListPage() {
                 <div className="relative">
                   <select
                     value={pageSize}
-                    onChange={(e) => {
-                      const newPageSize = parseInt(e.target.value);
-                      setPageSize(newPageSize);
-                      setCurrentPage(1);
-                      loadBulletins(
-                        1,
-                        newPageSize,
-                        actualSearchText,
-                        statusFilter,
-                        sortBy,
-                        sortOrder,
-                      );
-                    }}
+                    onChange={handlePageSizeChange}
                     className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
                   >
                     <option value={10}>10 per page</option>
@@ -624,14 +561,14 @@ function SettingBulletinListPage() {
                     <div className="flex items-center space-x-2">
                       <button
                         onClick={handlePreviousPage}
-                        disabled={!hasPreviousPage}
+                        disabled={!hasPreviousPage || currentPage === 1}
                         className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         ← Previous
                       </button>
                       <button
                         onClick={handleNextPage}
-                        disabled={!hasNextPage}
+                        disabled={!hasNextPage || currentPage >= totalPages}
                         className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Next →
