@@ -29,6 +29,7 @@ import {
   useStaffManager,
   useAuthManager,
 } from "../../../../../../services/Services";
+import { ATTACHMENT_OWNERSHIP_TYPE } from "../../../../../../constants/Attachment";
 
 function AdminStaffDetailAttachmentListPage() {
   const { aid } = useParams();
@@ -68,6 +69,8 @@ function AdminStaffDetailAttachmentListPage() {
     }
 
     if (aid) {
+      // Clear attachment cache to force fresh data when navigating to this page
+      attachmentManager.clearAttachmentsCache();
       fetchData();
       window.scrollTo(0, 0);
     }
@@ -81,22 +84,31 @@ function AdminStaffDetailAttachmentListPage() {
       const staffData = await staffManager.getStaffDetail(aid, onUnauthorized);
       setStaff(staffData);
 
-      // Fetch attachments
+      // Fetch attachments with proper filtering
+      // Use ownershipType and ownershipId (the API will handle the mapping)
       const params = {
-        ownershipType: 4, // STAFF type from constants
+        ownershipRole: ATTACHMENT_OWNERSHIP_TYPE.STAFF, // This is 4
         ownershipId: aid,
         limit: pageSize,
         cursor: currentCursor || undefined,
       };
 
+      console.log("Fetching attachments with params:", params);
+
       const attachmentsData = await attachmentManager.getAttachments(
         params,
         onUnauthorized,
+        true, // Force refresh to bypass cache
       );
+
+      console.log("Received attachments data:", attachmentsData);
+
       setAttachments(attachmentsData);
 
-      if (attachmentsData.hasNextPage) {
+      if (attachmentsData && attachmentsData.hasNextPage) {
         setNextCursor(attachmentsData.nextCursor);
+      } else {
+        setNextCursor("");
       }
     } catch (error) {
       console.error("Failed to fetch data:", error);
