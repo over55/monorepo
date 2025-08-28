@@ -268,11 +268,11 @@ function AdminTaskItemAssignAssociateStep4Page() {
           </div>
         </div>
 
-        {/* Archived Alert - Responsive */}
-        {task && task.status === 2 && (
+        {/* Status Alerts - Responsive */}
+        {task && (task.status === 2 || task.isClosed === true) && (
           <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center text-sm sm:text-base">
-            <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
-            This task is archived
+            <InformationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+            This task is archived / closed
           </div>
         )}
 
