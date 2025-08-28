@@ -1,7 +1,8 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Setting/Bulletin/List/Page.jsx
 import React, { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router";
+import { Link, useNavigate, useLocation } from "react-router";
 import { useBulletinManager } from "../../../../../services/Services";
+import { formatDateForDisplay } from "../../../../../services/Helpers/DateFormatter";
 import {
   NewspaperIcon,
   PlusIcon,
@@ -17,12 +18,16 @@ import {
   Cog6ToothIcon,
   ChartBarIcon,
   ClipboardDocumentListIcon,
+  CheckCircleIcon,
+  CalendarDaysIcon,
+  UserIcon,
 } from "@heroicons/react/24/outline";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 
 function SettingBulletinListPage() {
   const bulletinManager = useBulletinManager();
   const navigate = useNavigate();
+  const location = useLocation();
   const abortControllerRef = useRef(null);
 
   // Component state
@@ -32,7 +37,8 @@ function SettingBulletinListPage() {
   const [successMessage, setSuccessMessage] = useState("");
 
   // Filter and search state
-  const [searchText, setSearchText] = useState("");
+  const [temporarySearchText, setTemporarySearchText] = useState("");
+  const [actualSearchText, setActualSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [sortBy, setSortBy] = useState("created_at");
   const [sortOrder, setSortOrder] = useState("DESC");
@@ -42,6 +48,7 @@ function SettingBulletinListPage() {
   const [pageSize, setPageSize] = useState(25);
   const [totalCount, setTotalCount] = useState(0);
   const [hasNextPage, setHasNextPage] = useState(false);
+  const [hasPreviousPage, setHasPreviousPage] = useState(false);
 
   // Modal state
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -53,7 +60,15 @@ function SettingBulletinListPage() {
   };
 
   // Load bulletins
-  const loadBulletins = async (forceRefresh = false) => {
+  const loadBulletins = async (
+    page = 1,
+    limit = 25,
+    search = "",
+    statusValue = "",
+    sortField = "created_at",
+    sortDirection = "DESC",
+    forceRefresh = false,
+  ) => {
     // Cancel any pending request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -67,16 +82,18 @@ function SettingBulletinListPage() {
       setError(null);
 
       const params = {
-        page: currentPage,
-        limit: pageSize,
-        search: searchText,
-        sortBy: sortBy,
-        sortOrder: sortOrder,
+        page: page,
+        limit: limit,
+        sortBy: sortField,
+        sortOrder: sortDirection,
       };
 
-      // Add status filter - keep as STRING, don't convert to number
-      if (statusFilter !== "") {
-        params.status = statusFilter; // Keep as string!
+      if (search) {
+        params.search = search;
+      }
+
+      if (statusValue) {
+        params.status = statusValue;
       }
 
       console.log("Loading bulletins with params:", params);
@@ -84,7 +101,7 @@ function SettingBulletinListPage() {
       const response = await bulletinManager.getBulletins(
         params,
         onUnauthorized,
-        true, // Always force refresh to ensure filters are applied
+        forceRefresh,
       );
 
       // Check if request was aborted
@@ -95,6 +112,7 @@ function SettingBulletinListPage() {
       setBulletins(response.results || []);
       setTotalCount(response.count || 0);
       setHasNextPage(response.hasNextPage || false);
+      setHasPreviousPage(page > 1);
     } catch (err) {
       // Don't set error if request was aborted
       if (err.name !== "AbortError") {
@@ -107,19 +125,33 @@ function SettingBulletinListPage() {
     }
   };
 
-  // Effects
+  // Initial load
   useEffect(() => {
-    loadBulletins(true); // Force refresh on filter changes
-  }, [currentPage, pageSize, searchText, statusFilter, sortBy, sortOrder]);
+    let mounted = true;
 
-  // Cleanup on unmount
-  useEffect(() => {
+    if (mounted) {
+      window.scrollTo(0, 0);
+      loadBulletins();
+    }
+
     return () => {
+      mounted = false;
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
     };
   }, []);
+
+  // Handle success message from navigation state
+  useEffect(() => {
+    if (location.state?.successMessage) {
+      setSuccessMessage(location.state.successMessage);
+      // Clear the state
+      window.history.replaceState({}, document.title);
+      // Clear success message after 3 seconds
+      setTimeout(() => setSuccessMessage(""), 3000);
+    }
+  }, [location]);
 
   // Clear success message after 3 seconds
   useEffect(() => {
@@ -131,51 +163,61 @@ function SettingBulletinListPage() {
 
   // Event handlers
   const handleSearch = () => {
+    setActualSearchText(temporarySearchText);
     setCurrentPage(1);
-    // No need to manually call loadBulletins, useEffect will handle it
+    loadBulletins(
+      1,
+      pageSize,
+      temporarySearchText,
+      statusFilter,
+      sortBy,
+      sortOrder,
+    );
   };
 
-  const handleClearFilters = () => {
-    // Clear all state values at once
-    setSearchText("");
+  const handleClearFilter = () => {
     setStatusFilter("");
     setSortBy("created_at");
     setSortOrder("DESC");
+    setActualSearchText("");
+    setTemporarySearchText("");
     setCurrentPage(1);
-    // useEffect will automatically trigger loadBulletins
+
+    // Force refresh with cleared values
+    setTimeout(() => {
+      loadBulletins(1, pageSize, "", "", "created_at", "DESC", true);
+    }, 0);
   };
 
-  const handleStatusChange = (e) => {
-    const newStatus = e.target.value;
-    console.log("Status filter changed to:", newStatus); // Debug log
-    setStatusFilter(newStatus);
-    setCurrentPage(1);
-    // useEffect will automatically trigger loadBulletins
+  const handleNextPage = () => {
+    const nextPage = currentPage + 1;
+    setCurrentPage(nextPage);
+    loadBulletins(
+      nextPage,
+      pageSize,
+      actualSearchText,
+      statusFilter,
+      sortBy,
+      sortOrder,
+    );
   };
 
-  const handleSortChange = (e) => {
-    const [field, order] = e.target.value.split(",");
-    setSortBy(field);
-    setSortOrder(order);
-    setCurrentPage(1);
-    // useEffect will automatically trigger loadBulletins
-  };
-
-  const handlePageSizeChange = (e) => {
-    const newSize = parseInt(e.target.value);
-    setPageSize(newSize);
-    setCurrentPage(1);
-    // useEffect will automatically trigger loadBulletins
+  const handlePreviousPage = () => {
+    const prevPage = currentPage - 1;
+    setCurrentPage(prevPage);
+    loadBulletins(
+      prevPage,
+      pageSize,
+      actualSearchText,
+      statusFilter,
+      sortBy,
+      sortOrder,
+    );
   };
 
   const handleViewDetail = (bulletin) => {
     setSelectedBulletin(bulletin);
     setShowDetailModal(true);
-  };
-
-  const handleDelete = (bulletin) => {
-    setSelectedBulletin(bulletin);
-    setShowDeleteModal(true);
   };
 
   const handleDeleteConfirm = async () => {
@@ -187,10 +229,19 @@ function SettingBulletinListPage() {
       setSuccessMessage("Bulletin deleted successfully");
       setShowDeleteModal(false);
       setSelectedBulletin(null);
-      loadBulletins(true);
+      loadBulletins(
+        currentPage,
+        pageSize,
+        actualSearchText,
+        statusFilter,
+        sortBy,
+        sortOrder,
+        true,
+      );
     } catch (err) {
       console.error("Failed to delete bulletin:", err);
       setError(err.message || "Failed to delete bulletin");
+      window.scrollTo(0, 0);
     } finally {
       setIsLoading(false);
     }
@@ -200,6 +251,17 @@ function SettingBulletinListPage() {
   const totalPages = Math.ceil(totalCount / pageSize);
   const startRecord = (currentPage - 1) * pageSize + 1;
   const endRecord = Math.min(currentPage * pageSize, totalCount);
+
+  if (isLoading && !bulletins.length) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading Bulletins...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -245,7 +307,7 @@ function SettingBulletinListPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-            <NewspaperIcon className="w-8 h-8 mr-3 text-gray-700" />
+            <NewspaperIcon className="w-8 h-8 mr-3 text-blue-600" />
             Bulletins
           </h1>
         </div>
@@ -253,7 +315,10 @@ function SettingBulletinListPage() {
         {/* Success/Error Messages */}
         {successMessage && (
           <div className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center justify-between">
-            <span>{successMessage}</span>
+            <span className="flex items-center">
+              <CheckCircleIcon className="w-5 h-5 mr-2" />
+              {successMessage}
+            </span>
             <button
               onClick={() => setSuccessMessage("")}
               className="text-green-600 hover:text-green-800"
@@ -265,7 +330,10 @@ function SettingBulletinListPage() {
 
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between">
-            <span>{error}</span>
+            <span className="flex items-center">
+              <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
+              {error}
+            </span>
             <button
               onClick={() => setError(null)}
               className="text-red-600 hover:text-red-800"
@@ -281,14 +349,14 @@ function SettingBulletinListPage() {
           <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-800 flex items-center">
               <ClipboardDocumentListIcon className="w-5 h-5 mr-2" />
-              List
+              Bulletins List
             </h2>
             <button
               onClick={() => navigate("/admin/settings/bulletin/create")}
-              className="inline-flex items-center px-4 py-2 bg-emerald-500 text-white text-sm font-medium rounded-lg hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors"
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
             >
               <PlusIcon className="w-5 h-5 mr-1" />
-              New
+              New Bulletin
             </button>
           </div>
 
@@ -297,38 +365,50 @@ function SettingBulletinListPage() {
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-medium text-gray-700 flex items-center">
                 <FunnelIcon className="w-4 h-4 mr-2" />
-                Filtering & Sorting
+                Filter & Search
               </h3>
-              <button
-                onClick={handleClearFilters}
-                className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center"
-              >
-                <XMarkIcon className="w-4 h-4 mr-1" />
-                Clear Filter
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleClearFilter}
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center"
+                >
+                  <XMarkIcon className="w-4 h-4 mr-1" />
+                  Clear Filters
+                </button>
+                <button
+                  onClick={() =>
+                    loadBulletins(
+                      currentPage,
+                      pageSize,
+                      actualSearchText,
+                      statusFilter,
+                      sortBy,
+                      sortOrder,
+                      true,
+                    )
+                  }
+                  className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center"
+                >
+                  <ArrowPathIcon className="w-4 h-4 mr-1" />
+                  Refresh
+                </button>
+              </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {/* Search */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Search:
+                  Search
                 </label>
                 <div className="relative">
                   <input
                     type="text"
-                    value={searchText}
-                    onChange={(e) => {
-                      setSearchText(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    placeholder="Search by name"
+                    placeholder="Search by text..."
+                    value={temporarySearchText}
+                    onChange={(e) => setTemporarySearchText(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && handleSearch()}
                     className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    onKeyPress={(e) => {
-                      if (e.key === "Enter") {
-                        handleSearch();
-                      }
-                    }}
                   />
                   <button
                     onClick={handleSearch}
@@ -347,7 +427,18 @@ function SettingBulletinListPage() {
                 <div className="relative">
                   <select
                     value={statusFilter}
-                    onChange={handleStatusChange}
+                    onChange={(e) => {
+                      setStatusFilter(e.target.value);
+                      setCurrentPage(1);
+                      loadBulletins(
+                        1,
+                        pageSize,
+                        actualSearchText,
+                        e.target.value,
+                        sortBy,
+                        sortOrder,
+                      );
+                    }}
                     className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
                   >
                     <option value="">All Statuses</option>
@@ -361,18 +452,63 @@ function SettingBulletinListPage() {
               {/* Sort By */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Sort by
+                  Sort By
                 </label>
                 <div className="relative">
                   <select
                     value={`${sortBy},${sortOrder}`}
-                    onChange={handleSortChange}
+                    onChange={(e) => {
+                      const [field, order] = e.target.value.split(",");
+                      setSortBy(field);
+                      setSortOrder(order);
+                      setCurrentPage(1);
+                      loadBulletins(
+                        1,
+                        pageSize,
+                        actualSearchText,
+                        statusFilter,
+                        field,
+                        order,
+                      );
+                    }}
                     className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
                   >
-                    <option value="created_at,DESC">Created At (Newest)</option>
-                    <option value="created_at,ASC">Created At (Oldest)</option>
+                    <option value="created_at,DESC">Created (Newest)</option>
+                    <option value="created_at,ASC">Created (Oldest)</option>
                     <option value="text,ASC">Text (A-Z)</option>
                     <option value="text,DESC">Text (Z-A)</option>
+                  </select>
+                  <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Items per page */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Items per page
+                </label>
+                <div className="relative">
+                  <select
+                    value={pageSize}
+                    onChange={(e) => {
+                      const newPageSize = parseInt(e.target.value);
+                      setPageSize(newPageSize);
+                      setCurrentPage(1);
+                      loadBulletins(
+                        1,
+                        newPageSize,
+                        actualSearchText,
+                        statusFilter,
+                        sortBy,
+                        sortOrder,
+                      );
+                    }}
+                    className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
+                  >
+                    <option value={10}>10 per page</option>
+                    <option value={25}>25 per page</option>
+                    <option value={50}>50 per page</option>
+                    <option value={100}>100 per page</option>
                   </select>
                   <ChevronDownIcon className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
                 </div>
@@ -380,14 +516,14 @@ function SettingBulletinListPage() {
             </div>
           </div>
 
-          {/* Table Content - rest of the component remains the same */}
+          {/* Table Content */}
           <div className="px-6 py-4">
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
                 <span className="ml-3 text-gray-600">Loading bulletins...</span>
               </div>
-            ) : bulletins.length > 0 ? (
+            ) : bulletins && bulletins.length > 0 ? (
               <>
                 {/* Results count */}
                 <div className="mb-4 text-sm text-gray-600">
@@ -397,60 +533,78 @@ function SettingBulletinListPage() {
                 {/* Table */}
                 <div className="overflow-x-auto">
                   <table className="min-w-full divide-y divide-gray-200">
-                    <thead>
+                    <thead className="bg-gray-50">
                       <tr>
                         <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Text
                         </th>
                         <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Created At
-                          <ChevronDownIcon className="inline w-4 h-4 ml-1" />
                         </th>
-                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+                        <th className="px-3 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider w-80">
+                          Actions
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {bulletins.map((bulletin) => (
                         <tr
                           key={bulletin.id}
-                          className="hover:bg-gray-50 cursor-pointer"
                           onClick={() => handleViewDetail(bulletin)}
+                          className="hover:bg-gray-50 cursor-pointer"
                         >
-                          <td className="px-3 py-4 text-sm text-gray-900">
-                            <div className="max-w-md truncate">
-                              {bulletin.text}
-                            </div>
+                          <td className="px-3 py-4 text-sm">
+                            <Link
+                              to={`/admin/settings/bulletin/${bulletin.id}/detail`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="text-blue-600 hover:text-blue-800 font-medium"
+                            >
+                              <div className="max-w-md truncate">
+                                {bulletin.text}
+                              </div>
+                            </Link>
                           </td>
                           <td className="px-3 py-4 text-sm text-gray-500">
-                            {new Date(bulletin.createdAt).toLocaleDateString(
-                              "en-US",
-                              {
-                                month: "2-digit",
-                                day: "2-digit",
-                                year: "numeric",
-                              },
-                            )}
-                            ,{" "}
-                            {new Date(bulletin.createdAt).toLocaleTimeString(
-                              "en-US",
-                              {
-                                hour: "numeric",
-                                minute: "2-digit",
-                                hour12: true,
-                              },
-                            )}
+                            {formatDateForDisplay(bulletin.createdAt)}
                           </td>
-                          <td className="px-3 py-4 text-sm text-right">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleViewDetail(bulletin);
-                              }}
-                              className="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center"
-                            >
-                              View
-                              <ChevronRightIcon className="w-4 h-4 ml-1" />
-                            </button>
+                          <td className="px-3 py-4">
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(
+                                    `/admin/settings/bulletin/${bulletin.id}/detail`,
+                                  );
+                                }}
+                                className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                              >
+                                <EyeIcon className="w-4 h-4 mr-1.5" />
+                                View
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(
+                                    `/admin/settings/bulletin/${bulletin.id}/update`,
+                                  );
+                                }}
+                                className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-colors"
+                              >
+                                <PencilSquareIcon className="w-4 h-4 mr-1.5" />
+                                Edit
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedBulletin(bulletin);
+                                  setShowDeleteModal(true);
+                                }}
+                                className="inline-flex items-center px-3 py-1.5 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+                              >
+                                <TrashIcon className="w-4 h-4 mr-1.5" />
+                                Delete
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -462,37 +616,22 @@ function SettingBulletinListPage() {
                 {totalPages > 1 && (
                   <div className="mt-6 flex items-center justify-between">
                     <div className="flex items-center space-x-2">
-                      <label className="text-sm text-gray-700">
-                        Page size:
-                      </label>
-                      <select
-                        value={pageSize}
-                        onChange={handlePageSizeChange}
-                        className="px-3 py-1 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value={10}>10</option>
-                        <option value={25}>25</option>
-                        <option value={50}>50</option>
-                        <option value={100}>100</option>
-                      </select>
+                      <span className="text-sm text-gray-700">
+                        Page {currentPage} of {totalPages}
+                      </span>
                     </div>
 
                     <div className="flex items-center space-x-2">
                       <button
-                        onClick={() =>
-                          setCurrentPage(Math.max(1, currentPage - 1))
-                        }
-                        disabled={currentPage === 1}
+                        onClick={handlePreviousPage}
+                        disabled={!hasPreviousPage}
                         className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         ← Previous
                       </button>
-                      <span className="text-sm text-gray-700">
-                        Page {currentPage} of {totalPages}
-                      </span>
                       <button
-                        onClick={() => setCurrentPage(currentPage + 1)}
-                        disabled={!hasNextPage || currentPage >= totalPages}
+                        onClick={handleNextPage}
+                        disabled={!hasNextPage}
                         className="px-3 py-1 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Next →
@@ -508,8 +647,8 @@ function SettingBulletinListPage() {
                   No Bulletins Found
                 </h3>
                 <p className="mt-1 text-sm text-gray-500">
-                  {searchText || statusFilter
-                    ? "No bulletins match your current filters."
+                  {actualSearchText || statusFilter
+                    ? "No bulletins match your search criteria."
                     : "No bulletins have been created yet."}
                 </p>
                 <div className="mt-6">
@@ -526,8 +665,218 @@ function SettingBulletinListPage() {
           </div>
         </div>
 
-        {/* Modals remain the same - Detail Modal and Delete Modal */}
-        {/* ... rest of the component unchanged ... */}
+        {/* Detail Modal */}
+        {showDetailModal && selectedBulletin && (
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <NewspaperIcon className="w-5 h-5 mr-2 text-blue-600" />
+                  Bulletin Details
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    setSelectedBulletin(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-500"
+                >
+                  <XMarkIcon className="w-6 h-6" />
+                </button>
+              </div>
+
+              <div className="px-6 py-4 overflow-y-auto">
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Text:
+                    </label>
+                    <div className="p-3 bg-gray-50 rounded-lg text-base text-gray-900">
+                      {selectedBulletin.text}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Status:
+                    </label>
+                    <span
+                      className={`inline-flex px-3 py-1 text-sm font-medium rounded-full ${
+                        selectedBulletin.status === 1
+                          ? "bg-green-100 text-green-800"
+                          : "bg-gray-100 text-gray-800"
+                      }`}
+                    >
+                      {selectedBulletin.status === 1 ? "Active" : "Archived"}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t border-gray-200">
+                    <div>
+                      <div className="flex items-center text-sm text-gray-500 mb-1">
+                        <CalendarDaysIcon className="w-4 h-4 mr-1" />
+                        Created:
+                      </div>
+                      <p className="text-sm text-gray-900">
+                        {formatDateForDisplay(selectedBulletin.createdAt)}
+                      </p>
+                    </div>
+                    <div>
+                      <div className="flex items-center text-sm text-gray-500 mb-1">
+                        <UserIcon className="w-4 h-4 mr-1" />
+                        Created By:
+                      </div>
+                      <p className="text-sm text-gray-900">
+                        {selectedBulletin.createdByUserName || "System"}
+                      </p>
+                    </div>
+                    {selectedBulletin.modifiedAt && (
+                      <div>
+                        <div className="flex items-center text-sm text-gray-500 mb-1">
+                          <CalendarDaysIcon className="w-4 h-4 mr-1" />
+                          Modified:
+                        </div>
+                        <p className="text-sm text-gray-900">
+                          {formatDateForDisplay(selectedBulletin.modifiedAt)}
+                        </p>
+                      </div>
+                    )}
+                    {selectedBulletin.modifiedByUserName && (
+                      <div>
+                        <div className="flex items-center text-sm text-gray-500 mb-1">
+                          <UserIcon className="w-4 h-4 mr-1" />
+                          Modified By:
+                        </div>
+                        <p className="text-sm text-gray-900">
+                          {selectedBulletin.modifiedByUserName}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    setSelectedBulletin(null);
+                  }}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    navigate(
+                      `/admin/settings/bulletin/${selectedBulletin.id}/update`,
+                    );
+                  }}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600"
+                >
+                  <PencilSquareIcon className="w-4 h-4 mr-1" />
+                  Edit
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDetailModal(false);
+                    setShowDeleteModal(true);
+                  }}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700"
+                >
+                  <TrashIcon className="w-4 h-4 mr-1" />
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && selectedBulletin && (
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-md w-full">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+                  <ExclamationTriangleIcon className="w-5 h-5 mr-2 text-red-600" />
+                  Delete Bulletin
+                </h3>
+              </div>
+
+              <div className="px-6 py-4">
+                <p className="text-sm text-gray-600 mb-4">
+                  Are you sure you want to delete this bulletin? This action
+                  cannot be undone.
+                </p>
+
+                <div className="p-4 bg-red-50 rounded-lg border-l-4 border-red-500">
+                  <p className="text-sm text-gray-700">
+                    <strong>Text:</strong> {selectedBulletin.text}
+                  </p>
+                </div>
+
+                <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p className="text-xs text-amber-800 flex items-start">
+                    <ExclamationTriangleIcon className="w-4 h-4 mr-1 flex-shrink-0" />
+                    <span>
+                      <strong>Warning:</strong> This will permanently delete
+                      this bulletin and cannot be recovered.
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
+                <button
+                  onClick={() => {
+                    setShowDeleteModal(false);
+                  }}
+                  disabled={isLoading}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteConfirm}
+                  disabled={isLoading}
+                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? (
+                    <>
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      Deleting...
+                    </>
+                  ) : (
+                    <>
+                      <TrashIcon className="w-4 h-4 mr-2" />
+                      Delete
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
