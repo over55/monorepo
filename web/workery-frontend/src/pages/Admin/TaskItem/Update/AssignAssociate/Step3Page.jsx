@@ -2,7 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import { Link, Navigate, useParams } from "react-router";
-import { useAuthManager } from "../../../../../services/Services";
+import {
+  useAuthManager,
+  useAssociateAwayLogManager,
+} from "../../../../../services/Services";
 import {
   ClipboardDocumentCheckIcon,
   ChevronRightIcon,
@@ -25,6 +28,9 @@ import {
   UsersIcon,
   CheckCircleIcon,
   InformationCircleIcon,
+  ExclamationTriangleIcon,
+  ShieldExclamationIcon,
+  NoSymbolIcon,
 } from "@heroicons/react/24/outline";
 import { STORAGE_KEYS } from "../../../../../constants/Storage";
 import {
@@ -51,6 +57,7 @@ const DetailSection = ({ title, icon: Icon, children }) => (
 
 function AdminTaskItemAssignAssociateStep3Page() {
   const authManager = useAuthManager();
+  const associateAwayLogManager = useAssociateAwayLogManager();
   const { tid } = useParams();
 
   // Component states
@@ -64,6 +71,13 @@ function AdminTaskItemAssignAssociateStep3Page() {
   const [whyJobDeclined, setWhyJobDeclined] = useState(0);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [associateAwayLog, setAssociateAwayLog] = useState(null);
+  const [checkingAwayStatus, setCheckingAwayStatus] = useState(true);
+
+  // Event handling
+  const onUnauthorized = () => {
+    setForceURL("/login?unauthorized=true");
+  };
 
   // Check authentication and load associate data
   useEffect(() => {
@@ -109,7 +123,127 @@ function AdminTaskItemAssignAssociateStep3Page() {
     setIsDataLoaded(true);
   }, [authManager, tid]);
 
-  // Event handling
+  // Check for associate away logs
+  useEffect(() => {
+    const checkAssociateAwayStatus = async () => {
+      if (!associateData || !associateData.associateID) {
+        setCheckingAwayStatus(false);
+        return;
+      }
+
+      setCheckingAwayStatus(true);
+
+      try {
+        console.log(
+          "Checking away status for associate:",
+          associateData.associateID,
+        );
+
+        // Create filters for the associate
+        const filtersMap = new Map();
+        filtersMap.set("associate_id", associateData.associateID);
+
+        // Fetch away logs for the associate
+        const awayLogsData =
+          await associateAwayLogManager.getAssociateAwayLogsWithFiltersMap(
+            filtersMap,
+            onUnauthorized,
+            true, // Force refresh to get latest data
+          );
+
+        if (
+          awayLogsData &&
+          awayLogsData.results &&
+          awayLogsData.results.length > 0
+        ) {
+          // Check if any of the away logs are currently active
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+
+          const activeAwayLog = awayLogsData.results.find((log) => {
+            // Parse dates
+            const startDate = new Date(log.startDate);
+            startDate.setHours(0, 0, 0, 0);
+
+            // Check if start date has passed
+            if (startDate > today) {
+              return false; // Away period hasn't started yet
+            }
+
+            // If "until further notice" is set
+            if (log.untilFurtherNotice === 1) {
+              return true; // Still away
+            }
+
+            // Otherwise check the until date
+            if (log.untilDate) {
+              const untilDate = new Date(log.untilDate);
+              untilDate.setHours(23, 59, 59, 999);
+              return today <= untilDate; // Check if still within away period
+            }
+
+            return false;
+          });
+
+          if (activeAwayLog) {
+            console.log("Found active away log for associate:", activeAwayLog);
+            setAssociateAwayLog(activeAwayLog);
+          } else {
+            console.log("No active away logs found for associate");
+            setAssociateAwayLog(null);
+          }
+        } else {
+          console.log("No away logs found for associate");
+          setAssociateAwayLog(null);
+        }
+      } catch (error) {
+        console.error("Error checking associate away status:", error);
+        // Don't block the user if we can't check away status
+        setAssociateAwayLog(null);
+      } finally {
+        setCheckingAwayStatus(false);
+      }
+    };
+
+    if (isDataLoaded && associateData) {
+      checkAssociateAwayStatus();
+    }
+  }, [associateData, isDataLoaded, associateAwayLogManager]);
+
+  // Format away log reason
+  const getAwayLogReasonText = (reason, reasonOther) => {
+    switch (reason) {
+      case 1: // Other
+        return reasonOther || "Other reason";
+      case 2: // Vacation
+        return "Vacation";
+      case 3: // Sick
+        return "Sick";
+      case 4: // Personal
+        return "Personal";
+      default:
+        return "Away";
+    }
+  };
+
+  // Format away log period
+  const getAwayLogPeriodText = (awayLog) => {
+    if (!awayLog) return "";
+
+    const startDate = new Date(awayLog.startDate).toLocaleDateString();
+
+    if (awayLog.untilFurtherNotice === 1) {
+      return `From ${startDate} until further notice`;
+    }
+
+    if (awayLog.untilDate) {
+      const untilDate = new Date(awayLog.untilDate).toLocaleDateString();
+      return `From ${startDate} to ${untilDate}`;
+    }
+
+    return `From ${startDate}`;
+  };
+
   const onSubmitClick = (e) => {
     e.preventDefault();
     console.log("onSubmitClick: Beginning...");
@@ -244,6 +378,203 @@ function AdminTaskItemAssignAssociateStep3Page() {
     );
   }
 
+  // BLOCKED VIEW - When associate is away
+  if (associateAwayLog && !checkingAwayStatus) {
+    return (
+      <div className="min-h-screen bg-red-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Breadcrumb - Simple version */}
+          <nav className="mb-8">
+            <Link
+              to="/admin/dashboard"
+              className="text-gray-600 hover:text-gray-800"
+            >
+              ← Back to Dashboard
+            </Link>
+          </nav>
+
+          {/* MAIN BLOCKING WARNING */}
+          <div className="bg-white border-4 border-red-500 rounded-xl shadow-2xl overflow-hidden">
+            {/* Red Header */}
+            <div className="bg-red-600 px-6 py-8 text-center">
+              <div className="flex justify-center mb-4">
+                <div className="bg-white rounded-full p-4">
+                  <NoSymbolIcon className="w-16 h-16 text-red-600" />
+                </div>
+              </div>
+              <h1 className="text-3xl sm:text-4xl font-bold text-white mb-2">
+                ASSIGNMENT BLOCKED
+              </h1>
+              <p className="text-xl text-red-100">
+                This associate cannot be assigned to any tasks
+              </p>
+            </div>
+
+            {/* Warning Content */}
+            <div className="p-8">
+              {/* Associate Status Box */}
+              <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-6 mb-6">
+                <div className="flex items-start">
+                  <ExclamationTriangleIcon className="w-8 h-8 text-yellow-600 flex-shrink-0 mt-1" />
+                  <div className="ml-4">
+                    <h2 className="text-xl font-bold text-gray-900 mb-3">
+                      Associate Currently Unavailable
+                    </h2>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center">
+                        <UserIcon className="w-5 h-5 text-gray-600 mr-2" />
+                        <span className="text-lg">
+                          <strong>{associateData.associateName}</strong> is
+                          marked as AWAY
+                        </span>
+                      </div>
+
+                      <div className="bg-white rounded-lg p-4 border border-yellow-300">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-600 mb-1">
+                              Reason for Absence:
+                            </p>
+                            <p className="text-lg font-bold text-red-600">
+                              {getAwayLogReasonText(
+                                associateAwayLog.reason,
+                                associateAwayLog.reasonOther,
+                              )}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-sm font-semibold text-gray-600 mb-1">
+                              Away Period:
+                            </p>
+                            <p className="text-lg font-bold text-red-600">
+                              {getAwayLogPeriodText(associateAwayLog)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Explanation Box */}
+              <div className="bg-red-50 border-2 border-red-300 rounded-lg p-6 mb-8">
+                <div className="flex items-start">
+                  <ShieldExclamationIcon className="w-8 h-8 text-red-600 flex-shrink-0" />
+                  <div className="ml-4">
+                    <h3 className="text-lg font-bold text-red-900 mb-2">
+                      Why This Assignment Is Blocked
+                    </h3>
+                    <ul className="space-y-2 text-red-800">
+                      <li className="flex items-start">
+                        <span className="font-bold mr-2">•</span>
+                        Associates who are marked as away cannot accept new jobs
+                      </li>
+                      <li className="flex items-start">
+                        <span className="font-bold mr-2">•</span>
+                        This restriction is in place to ensure proper scheduling
+                        and availability
+                      </li>
+                      <li className="flex items-start">
+                        <span className="font-bold mr-2">•</span>
+                        The associate must be available before being assigned to
+                        any tasks
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* What to do next */}
+              <div className="bg-blue-50 border-2 border-blue-300 rounded-lg p-6 mb-8">
+                <div className="flex items-start">
+                  <InformationCircleIcon className="w-8 h-8 text-blue-600 flex-shrink-0" />
+                  <div className="ml-4">
+                    <h3 className="text-lg font-bold text-blue-900 mb-2">
+                      What You Can Do
+                    </h3>
+                    <div className="space-y-3 text-blue-800">
+                      <div className="flex items-start">
+                        <span className="font-bold text-blue-600 mr-3">1.</span>
+                        <div>
+                          <p className="font-semibold">
+                            Go back and select a different associate
+                          </p>
+                          <p className="text-sm mt-1">
+                            Choose an associate who is currently available for
+                            work
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start">
+                        <span className="font-bold text-blue-600 mr-3">2.</span>
+                        <div>
+                          <p className="font-semibold">
+                            Wait for this associate to return
+                          </p>
+                          <p className="text-sm mt-1">
+                            {associateAwayLog.untilFurtherNotice === 1
+                              ? "This associate is away until further notice"
+                              : associateAwayLog.untilDate
+                                ? `This associate will return after ${new Date(associateAwayLog.untilDate).toLocaleDateString()}`
+                                : "Check the associate's away log for return date"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-start">
+                        <span className="font-bold text-blue-600 mr-3">3.</span>
+                        <div>
+                          <p className="font-semibold">
+                            Contact administration
+                          </p>
+                          <p className="text-sm mt-1">
+                            If you believe this is an error or need urgent
+                            assistance
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4">
+                <Link
+                  to={`/admin/task/${tid}/assign-associate/step-2`}
+                  className="flex-1"
+                >
+                  <button className="w-full px-6 py-3 bg-blue-600 text-white font-bold text-lg rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center">
+                    <ArrowLeftIcon className="w-5 h-5 mr-2" />
+                    Go Back & Select Different Associate
+                  </button>
+                </Link>
+                <Link to="/admin/tasks" className="flex-1">
+                  <button className="w-full px-6 py-3 bg-gray-600 text-white font-bold text-lg rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center">
+                    <XMarkIcon className="w-5 h-5 mr-2" />
+                    Cancel Assignment
+                  </button>
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Additional Info Footer */}
+          <div className="mt-8 text-center text-sm text-gray-600">
+            <p>
+              Task ID: {tid} | Associate ID: {associateData.associateID}
+            </p>
+            <p className="mt-1">
+              If you need help, contact your system administrator
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // NORMAL VIEW - When associate is not away
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
@@ -404,8 +735,18 @@ function AdminTaskItemAssignAssociateStep3Page() {
           </div>
         )}
 
+        {/* Loading state while checking away status */}
+        {checkingAwayStatus && (
+          <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base">
+            <div className="flex items-center">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+              <span>Checking associate availability...</span>
+            </div>
+          </div>
+        )}
+
         {/* Previous Data Loaded Notification */}
-        {status !== 0 && (
+        {status !== 0 && !checkingAwayStatus && (
           <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base">
             <p className="flex items-center">
               <InformationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
@@ -415,7 +756,7 @@ function AdminTaskItemAssignAssociateStep3Page() {
           </div>
         )}
 
-        {/* Main Content - REMOVED max-w-3xl constraint from form */}
+        {/* Main Content */}
         <div className="bg-white shadow-sm rounded-lg">
           <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200">
             <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 flex items-center">
@@ -425,11 +766,13 @@ function AdminTaskItemAssignAssociateStep3Page() {
           </div>
 
           <div className="p-4 sm:p-6">
-            {isLoading ? (
+            {isLoading || checkingAwayStatus ? (
               <div className="flex items-center justify-center py-8">
                 <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-blue-600"></div>
                 <span className="ml-3 text-gray-600 text-sm sm:text-base">
-                  Processing...
+                  {checkingAwayStatus
+                    ? "Checking associate availability..."
+                    : "Processing..."}
                 </span>
               </div>
             ) : (
@@ -448,6 +791,9 @@ function AdminTaskItemAssignAssociateStep3Page() {
                         >
                           {associateData.associateName}
                         </Link>
+                        <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                          Available
+                        </span>
                       </dd>
                     </div>
                     {associateData.associatePhone && (
