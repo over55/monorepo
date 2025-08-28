@@ -21,6 +21,7 @@ import {
   useOrderManager,
   useAuthManager,
 } from "../../../../../../services/Services";
+import { ATTACHMENT_TYPES } from "../../../../../../constants/Attachment";
 
 function AdminOrderDetailAttachmentAddPage() {
   const { oid } = useParams();
@@ -60,6 +61,15 @@ function AdminOrderDetailAttachmentAddPage() {
       setFetching(true);
       const data = await orderManager.getOrderDetail(oid, onUnauthorized);
       setOrder(data);
+
+      // Log for debugging in development
+      if (process.env.NODE_ENV === "development") {
+        console.log("Order fetched for attachment upload:", {
+          publicId: oid,
+          mongoId: data.id,
+          wjid: data.wjid,
+        });
+      }
     } catch (error) {
       console.error("Failed to fetch order:", error);
       setErrors({ general: "Failed to load order details" });
@@ -101,12 +111,34 @@ function AdminOrderDetailAttachmentAddPage() {
         return;
       }
 
-      // Prepare metadata - keeping the orderWjid structure
+      // Ensure we have the order data with MongoDB ID
+      if (!order || !order.id) {
+        setErrors({
+          general: "Order data is not available. Please refresh the page.",
+        });
+        setFetching(false);
+        return;
+      }
+
+      // Prepare metadata with BOTH ownership fields AND orderWjid
       const metadata = {
-        orderWjid: oid, // Use order_wjid instead of entityType/entityId
+        // These are the REQUIRED fields for the backend
+        ownershipWjid: order.wjid, // Use the MongoDB ObjectID from the order
+        ownershipId: order.id,
+        ownershipType: ATTACHMENT_TYPES.ORDER, // This is 3
+
+        // Keep orderWjid for backward compatibility
+        orderWjid: oid,
+
+        // User-provided fields
         title: title.trim(),
         description: description.trim(),
       };
+
+      // Debug log in development
+      if (process.env.NODE_ENV === "development") {
+        console.log("Uploading attachment with metadata:", metadata);
+      }
 
       // Upload attachment with progress callback
       await attachmentManager.uploadAttachment(
