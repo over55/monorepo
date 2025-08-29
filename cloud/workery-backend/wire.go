@@ -7,6 +7,7 @@ import (
 	"github.com/google/wire"
 
 	"github.com/over55/monorepo/cloud/workery-backend/adapter/cache/mongodbcache"
+	"github.com/over55/monorepo/cloud/workery-backend/adapter/distributedlock/mongolock"
 	"github.com/over55/monorepo/cloud/workery-backend/adapter/emailer/mailgun"
 	"github.com/over55/monorepo/cloud/workery-backend/adapter/pdfbuilder"
 	s3_storage "github.com/over55/monorepo/cloud/workery-backend/adapter/storage/s3"
@@ -122,6 +123,7 @@ func InitializeEvent() Application {
 		mongodbcache.NewCache,
 		s3_storage.NewStorage,
 		pdfbuilder.NewAssociateInvoiceBuilder,
+		mongolock.NewDistributedLock,
 		user_s.NewDatastore,
 		user_c.NewController,
 		tag_s.NewDatastore,

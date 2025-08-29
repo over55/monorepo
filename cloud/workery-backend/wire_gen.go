@@ -8,6 +8,7 @@ package main
 
 import (
 	"github.com/over55/monorepo/cloud/workery-backend/adapter/cache/mongodbcache"
+	"github.com/over55/monorepo/cloud/workery-backend/adapter/distributedlock/mongolock"
 	"github.com/over55/monorepo/cloud/workery-backend/adapter/emailer/mailgun"
 	"github.com/over55/monorepo/cloud/workery-backend/adapter/pdfbuilder"
 	"github.com/over55/monorepo/cloud/workery-backend/adapter/storage/s3"
@@ -200,7 +201,8 @@ func InitializeEvent() Application {
 	handler24 := httptransport25.NewHandler(slogLogger, jobHistoryController)
 	inputPortServer := http.NewInputPort(conf, slogLogger, middlewareMiddleware, handler, httptransportHandler, handler2, handler3, handler4, handler5, handler6, handler7, handler8, handler9, handler10, handler11, handler12, handler13, handler14, handler15, handler16, handler17, handler18, handler19, handler20, handler21, handler22, handler23, handler24)
 	taskqueueHandler := taskqueue2.NewHandler(slogLogger, associateAwayLogController)
-	taskqueueInputPortServer := taskqueue3.NewInputPort(conf, slogLogger, taskqueueHandler)
+	distributedLock := mongolock.NewDistributedLock(conf, slogLogger, client, provider)
+	taskqueueInputPortServer := taskqueue3.NewInputPort(conf, slogLogger, taskqueueHandler, distributedLock)
 	application := NewApplication(slogLogger, inputPortServer, taskqueueInputPortServer)
 	return application
 }
