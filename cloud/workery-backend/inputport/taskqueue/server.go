@@ -264,9 +264,6 @@ func (port *taskQueuePort) executeScheduledTasks() {
 			port.Logger.Error("Failed to process associate away log tasks",
 				slog.Any("error", err))
 		}
-
-		_ = ctx // Remove this once you implement the actual task processing
-		port.Logger.Debug("Processing associate away log tasks")
 	}
 
 	// Add other scheduled tasks here as needed

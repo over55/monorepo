@@ -49,9 +49,16 @@ func (h *Handler) createAwayLogOnAnyRequiredExpiredDates(ctx context.Context, t 
 				slog.Any("error", err))
 			return err
 		}
-		// AutoInsuranceExpiryDate              time.Time                        `bson:"auto_insurance_expiry_date" json:"auto_insurance_expiry_date"`
-		// WsibInsuranceDate                    time.Time                        `bson:"wsib_insurance_date" json:"wsib_insurance_date"`
-
+		if err := h.createAwayLogOnExpiredAutoInsuranceExpiryDate(ctx, today, a); err != nil {
+			h.Logger.Error("failed to create away log on expired auto insurance expiry date",
+				slog.Any("error", err))
+			return err
+		}
+		if err := h.createAwayLogOnWsibInsuranceDate(ctx, today, a); err != nil {
+			h.Logger.Error("failed to create away log on expired auto insurance expiry date",
+				slog.Any("error", err))
+			return err
+		}
 	}
 	return nil
 }
@@ -164,7 +171,7 @@ func (h *Handler) createAwayLogOnExpiredPoliceCheck(ctx context.Context, today t
 }
 
 func (h *Handler) createAwayLogOnExpiredCommercialInsuranceExpiryDate(ctx context.Context, today time.Time, a *ass_ds.Associate) error {
-	if a.PoliceCheck.Before(today) {
+	if a.CommercialInsuranceExpiryDate.Before(today) {
 		f := &away_ds.AssociateAwayLogPaginationListFilter{
 			TenantID:    a.TenantID,
 			PageSize:    1_000_000,
@@ -212,6 +219,126 @@ func (h *Handler) createAwayLogOnExpiredCommercialInsuranceExpiryDate(ctx contex
 		h.Logger.Debug("Created commercial insurance expiry date away log for associate",
 			slog.String("associate_id", a.ID.Hex()),
 			slog.Any("Reason", away_ds.ReasonCommercialInsuranceExpired))
+	}
+	return nil
+}
+
+func (h *Handler) createAwayLogOnExpiredAutoInsuranceExpiryDate(ctx context.Context, today time.Time, a *ass_ds.Associate) error {
+	// Because auto insurance is optional, if the associate doesn't have it any date set then skip this function.
+	if a.AutoInsuranceExpiryDate.IsZero() {
+		return nil
+	}
+
+	if a.AutoInsuranceExpiryDate.Before(today) {
+		f := &away_ds.AssociateAwayLogPaginationListFilter{
+			TenantID:    a.TenantID,
+			PageSize:    1_000_000,
+			SortField:   "created_at",
+			SortOrder:   1, // 1=ascending | -1=descending
+			Status:      1,
+			Reason:      away_ds.ReasonAutoInsuranceExpired,
+			AssociateID: a.ID,
+		}
+		bb, err := h.AssociateAwayLogDatastore.ListByFilter(ctx, f)
+		if err != nil {
+			h.Logger.Error("failed to list away log for auto insurance expired", slog.Any("error", err))
+			return err
+		}
+
+		if len(bb.Results) > 0 {
+			return nil
+		}
+
+		h.Logger.Debug("Associate auto-insurance is past due",
+			slog.String("associate_id", a.ID.Hex()),
+			slog.String("associate_email", a.Email),
+			slog.Any("status", a.Status),
+			slog.Time("auto_insurance", a.AutoInsuranceExpiryDate),
+			slog.Time("today", today))
+
+		// Else create associate away log.
+		c := &away_ds.AssociateAwayLog{
+			ID:                   primitive.NewObjectID(),
+			TenantID:             a.TenantID,
+			AssociateID:          a.ID,
+			AssociateName:        a.Name,
+			AssociateLexicalName: a.LexicalName,
+			Reason:               away_ds.ReasonAutoInsuranceExpired,
+			ReasonOther:          "",
+			UntilFurtherNotice:   away_ds.UntilFurtherNoticeYes,
+			StartDate:            time.Now(),
+			Status:               away_ds.StatusActive,
+			CreatedAt:            time.Now(),
+			ModifiedAt:           time.Now(),
+		}
+		_ = c
+		if err := h.AssociateAwayLogDatastore.Create(ctx, c); err != nil {
+			h.Logger.Error("failed to create away log", slog.Any("error", err))
+			return err
+		}
+		h.Logger.Debug("Created (optional) auto insurance expiry based away log for associate",
+			slog.String("associate_id", a.ID.Hex()),
+			slog.Any("Reason", away_ds.ReasonAutoInsuranceExpired))
+	}
+	return nil
+}
+
+func (h *Handler) createAwayLogOnWsibInsuranceDate(ctx context.Context, today time.Time, a *ass_ds.Associate) error {
+	// Because wsib insurance is optional, if the associate doesn't have it any date set then skip this function.
+	if a.WsibInsuranceDate.IsZero() {
+		return nil
+	}
+
+	if a.AutoInsuranceExpiryDate.Before(today) {
+		f := &away_ds.AssociateAwayLogPaginationListFilter{
+			TenantID:    a.TenantID,
+			PageSize:    1_000_000,
+			SortField:   "created_at",
+			SortOrder:   1, // 1=ascending | -1=descending
+			Status:      1,
+			Reason:      away_ds.ReasonWSIBExpired,
+			AssociateID: a.ID,
+		}
+		bb, err := h.AssociateAwayLogDatastore.ListByFilter(ctx, f)
+		if err != nil {
+			h.Logger.Error("failed to list away log for wsib insurance expired", slog.Any("error", err))
+			return err
+		}
+
+		if len(bb.Results) > 0 {
+			return nil
+		}
+
+		h.Logger.Debug("Associate wsib insurance is past due",
+			slog.String("associate_id", a.ID.Hex()),
+			slog.String("associate_email", a.Email),
+			slog.Any("status", a.Status),
+			slog.Time("wsib_insurance", a.WsibInsuranceDate),
+			slog.Time("today", today))
+
+		// Else create associate away log.
+		c := &away_ds.AssociateAwayLog{
+			ID:                   primitive.NewObjectID(),
+			TenantID:             a.TenantID,
+			AssociateID:          a.ID,
+			AssociateName:        a.Name,
+			AssociateLexicalName: a.LexicalName,
+			Reason:               away_ds.ReasonWSIBExpired,
+			ReasonOther:          "",
+			UntilFurtherNotice:   away_ds.UntilFurtherNoticeYes,
+			StartDate:            time.Now(),
+			Status:               away_ds.StatusActive,
+			CreatedAt:            time.Now(),
+			ModifiedAt:           time.Now(),
+		}
+		_ = c
+		if err := h.AssociateAwayLogDatastore.Create(ctx, c); err != nil {
+			h.Logger.Error("failed to create away log", slog.Any("error", err))
+			return err
+		}
+		h.Logger.Debug("Created (optional) wsib insurance expiry based away log for associate",
+			slog.String("associate_id", a.ID.Hex()),
+			slog.Any("Reason", away_ds.ReasonWSIBExpired))
 	}
 	return nil
 }
