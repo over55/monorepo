@@ -1,6 +1,7 @@
 package taskqueue
 
 import (
+	"context"
 	"log/slog"
 
 	associateawaylog_c "github.com/over55/monorepo/cloud/workery-backend/app/associateawaylog/controller"
@@ -18,4 +19,9 @@ func NewHandler(loggerp *slog.Logger, c associateawaylog_c.AssociateAwayLogContr
 		Logger:     loggerp,
 		Controller: c,
 	}
+}
+
+func (h *Handler) ProcessPendingTasks(ctx context.Context) error {
+	h.createAwayLogOnAnyRequiredExpiredDates(ctx)
+	return nil
 }

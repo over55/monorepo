@@ -260,13 +260,10 @@ func (port *taskQueuePort) executeScheduledTasks() {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 		defer cancel()
 
-		// Call your handler's processing method
-		// You'll need to implement a Process method in your handler
-		// For example:
-		// if err := port.AssociateAwayLogQueueHandler.ProcessPendingTasks(ctx); err != nil {
-		//     port.Logger.Error("Failed to process associate away log tasks",
-		//         slog.Any("error", err))
-		// }
+		if err := port.AssociateAwayLogQueueHandler.ProcessPendingTasks(ctx); err != nil {
+			port.Logger.Error("Failed to process associate away log tasks",
+				slog.Any("error", err))
+		}
 
 		_ = ctx // Remove this once you implement the actual task processing
 		port.Logger.Debug("Processing associate away log tasks")
