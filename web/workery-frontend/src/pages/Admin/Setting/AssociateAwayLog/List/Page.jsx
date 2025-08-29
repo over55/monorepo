@@ -12,6 +12,7 @@ import {
   MagnifyingGlassIcon,
   FunnelIcon,
   ChevronRightIcon,
+  ChevronLeftIcon,
   XMarkIcon,
   TrashIcon,
   PencilSquareIcon,
@@ -79,15 +80,19 @@ function SettingAssociateAwayLogListPage() {
   const [checkingExpiredDocs, setCheckingExpiredDocs] = useState(false);
   const [showExpiredDocsModal, setShowExpiredDocsModal] = useState(false);
 
-  // Filter and pagination state
+  // Filter state
   const [searchText, setSearchText] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [sortBy, setSortBy] = useState("created_at");
   const [sortOrder, setSortOrder] = useState("DESC");
-  const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
-  const [totalCount, setTotalCount] = useState(0);
+
+  // Cursor-based pagination state
+  const [currentCursor, setCurrentCursor] = useState("");
+  const [nextCursor, setNextCursor] = useState("");
   const [hasNextPage, setHasNextPage] = useState(false);
+  const [cursorHistory, setCursorHistory] = useState([]); // Stack to track previous cursors
+  const [totalCount, setTotalCount] = useState(0);
 
   // Modal state
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -219,8 +224,10 @@ function SettingAssociateAwayLogListPage() {
 
       setSuccess(`Away log created for ${associateName}`);
 
-      // Refresh the list
-      await fetchAssociateAwayLogs(true);
+      // Reset pagination and refresh
+      setCurrentCursor("");
+      setCursorHistory([]);
+      await fetchAssociateAwayLogs(true, "");
 
       // Re-check for expired documents
       await checkForExpiredDocuments();
@@ -273,12 +280,14 @@ function SettingAssociateAwayLogListPage() {
     setShowExpiredDocsModal(false);
     setLoading(false);
 
-    // Refresh the list
-    await fetchAssociateAwayLogs(true);
+    // Reset pagination and refresh
+    setCurrentCursor("");
+    setCursorHistory([]);
+    await fetchAssociateAwayLogs(true, "");
   };
 
-  // Fetch associate away logs
-  const fetchAssociateAwayLogs = async (forceRefresh = false) => {
+  // Fetch associate away logs with cursor
+  const fetchAssociateAwayLogs = async (forceRefresh = false, cursor = "") => {
     // Prevent double loading
     if (isLoadingRef.current && !forceRefresh) {
       return;
@@ -290,22 +299,39 @@ function SettingAssociateAwayLogListPage() {
       setError(null);
 
       const params = {
-        page: currentPage,
-        limit: pageSize,
+        page_size: pageSize,
+        cursor: cursor || undefined,
         search: searchText.trim() || undefined,
         status: statusFilter || undefined,
-        sortBy: sortBy,
-        sortOrder: sortOrder,
+        sort_field: sortBy,
+        sort_order: sortOrder,
       };
 
-      const response = await associateAwayLogManager.getAssociateAwayLogs(
-        params,
-        onUnauthorized,
-        forceRefresh,
-      );
+      // Remove undefined values
+      Object.keys(params).forEach((key) => {
+        if (params[key] === undefined) {
+          delete params[key];
+        }
+      });
+
+      // Create filters map for the API
+      const filtersMap = new Map();
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== "") {
+          filtersMap.set(key, value);
+        }
+      });
+
+      const response =
+        await associateAwayLogManager.getAssociateAwayLogsWithFiltersMap(
+          filtersMap,
+          onUnauthorized,
+          forceRefresh,
+        );
 
       setAssociateAwayLogs(response.results || []);
       setTotalCount(response.count || 0);
+      setNextCursor(response.nextCursor || "");
       setHasNextPage(response.hasNextPage || false);
 
       // After fetching away logs, check for expired documents
@@ -322,8 +348,9 @@ function SettingAssociateAwayLogListPage() {
 
   // Handle search
   const handleSearch = () => {
-    setCurrentPage(1);
-    fetchAssociateAwayLogs(true);
+    setCurrentCursor("");
+    setCursorHistory([]);
+    fetchAssociateAwayLogs(true, "");
   };
 
   // Clear filters
@@ -332,13 +359,34 @@ function SettingAssociateAwayLogListPage() {
     setStatusFilter("");
     setSortBy("created_at");
     setSortOrder("DESC");
-    setCurrentPage(1);
+    setCurrentCursor("");
+    setCursorHistory([]);
     setShowMobileFilters(false);
 
     // Force refresh with cleared values
     setTimeout(() => {
-      fetchAssociateAwayLogs(true);
+      fetchAssociateAwayLogs(true, "");
     }, 0);
+  };
+
+  // Handle pagination
+  const handleNextPage = () => {
+    if (hasNextPage && nextCursor) {
+      // Save current cursor to history for "previous" functionality
+      setCursorHistory((prev) => [...prev, currentCursor]);
+      setCurrentCursor(nextCursor);
+      fetchAssociateAwayLogs(true, nextCursor);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (cursorHistory.length > 0) {
+      const newHistory = [...cursorHistory];
+      const previousCursor = newHistory.pop();
+      setCursorHistory(newHistory);
+      setCurrentCursor(previousCursor);
+      fetchAssociateAwayLogs(true, previousCursor);
+    }
   };
 
   // Handle view detail
@@ -366,7 +414,11 @@ function SettingAssociateAwayLogListPage() {
       setSuccess("Associate away log deleted successfully");
       setShowDeleteModal(false);
       setSelectedAwayLog(null);
-      fetchAssociateAwayLogs(true);
+
+      // Reset to first page after delete
+      setCurrentCursor("");
+      setCursorHistory([]);
+      fetchAssociateAwayLogs(true, "");
     } catch (err) {
       console.error("Failed to delete associate away log:", err);
       setError(err.message || "Failed to delete associate away log");
@@ -375,10 +427,13 @@ function SettingAssociateAwayLogListPage() {
     }
   };
 
-  // Initial load
+  // Initial load and handle filter changes
   useEffect(() => {
-    fetchAssociateAwayLogs();
-  }, [currentPage, pageSize, searchText, statusFilter, sortBy, sortOrder]);
+    // Reset cursor when filters change
+    setCurrentCursor("");
+    setCursorHistory([]);
+    fetchAssociateAwayLogs(true, "");
+  }, [statusFilter, sortBy, sortOrder, pageSize]);
 
   // Clear success message after 3 seconds
   useEffect(() => {
@@ -408,10 +463,10 @@ function SettingAssociateAwayLogListPage() {
     }
   };
 
-  // Pagination calculations
-  const totalPages = Math.ceil(totalCount / pageSize);
-  const startRecord = (currentPage - 1) * pageSize + 1;
-  const endRecord = Math.min(currentPage * pageSize, totalCount);
+  // Calculate displayed records
+  const startRecord = associateAwayLogs.length > 0 ? 1 : 0;
+  const endRecord = associateAwayLogs.length;
+  const hasPreviousPage = cursorHistory.length > 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -614,7 +669,6 @@ function SettingAssociateAwayLogListPage() {
                     value={statusFilter}
                     onChange={(e) => {
                       setStatusFilter(e.target.value);
-                      setCurrentPage(1);
                     }}
                     className="w-full px-2.5 py-1.5 sm:px-3 sm:py-2 pr-8 sm:pr-10 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
                   >
@@ -640,7 +694,6 @@ function SettingAssociateAwayLogListPage() {
                       const [field, order] = e.target.value.split(",");
                       setSortBy(field);
                       setSortOrder(order);
-                      setCurrentPage(1);
                     }}
                     className="w-full px-2.5 py-1.5 sm:px-3 sm:py-2 pr-8 sm:pr-10 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
                   >
@@ -865,54 +918,52 @@ function SettingAssociateAwayLogListPage() {
                   ))}
                 </div>
 
-                {/* Pagination - Responsive */}
-                {totalPages > 1 && (
-                  <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
-                    <div className="flex items-center space-x-2">
-                      <label className="text-xs sm:text-sm text-gray-700">
-                        Per page:
-                      </label>
-                      <select
-                        value={pageSize}
-                        onChange={(e) => {
-                          setPageSize(parseInt(e.target.value));
-                          setCurrentPage(1);
-                        }}
-                        className="px-2 py-1 sm:px-3 sm:py-1 border border-gray-300 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      >
-                        <option value={10}>10</option>
-                        <option value={25}>25</option>
-                        <option value={50}>50</option>
-                        <option value={100}>100</option>
-                      </select>
-                    </div>
-
-                    <div className="flex items-center justify-center space-x-2">
-                      <button
-                        onClick={() => setCurrentPage(currentPage - 1)}
-                        disabled={currentPage === 1}
-                        className="px-2 py-1 sm:px-3 sm:py-1 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        ← <span className="hidden sm:inline">Previous</span>
-                        <span className="sm:hidden">Prev</span>
-                      </button>
-                      <span className="text-xs sm:text-sm text-gray-700">
-                        <span className="hidden sm:inline">Page</span>{" "}
-                        {currentPage}{" "}
-                        <span className="hidden sm:inline">of</span>
-                        <span className="sm:hidden">/</span> {totalPages}
-                      </span>
-                      <button
-                        onClick={() => setCurrentPage(currentPage + 1)}
-                        disabled={!hasNextPage}
-                        className="px-2 py-1 sm:px-3 sm:py-1 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <span className="hidden sm:inline">Next</span>
-                        <span className="sm:hidden">Next</span> →
-                      </button>
-                    </div>
+                {/* Cursor-based Pagination - Responsive */}
+                <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
+                  <div className="flex items-center space-x-2">
+                    <label className="text-xs sm:text-sm text-gray-700">
+                      Per page:
+                    </label>
+                    <select
+                      value={pageSize}
+                      onChange={(e) => {
+                        setPageSize(parseInt(e.target.value));
+                      }}
+                      className="px-2 py-1 sm:px-3 sm:py-1 border border-gray-300 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    >
+                      <option value={10}>10</option>
+                      <option value={25}>25</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                    </select>
                   </div>
-                )}
+
+                  <div className="flex items-center justify-center space-x-2">
+                    <button
+                      onClick={handlePreviousPage}
+                      disabled={!hasPreviousPage}
+                      className="px-2 py-1 sm:px-3 sm:py-1 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
+                    >
+                      <ChevronLeftIcon className="w-4 h-4 mr-1" />
+                      <span className="hidden sm:inline">Previous</span>
+                      <span className="sm:hidden">Prev</span>
+                    </button>
+
+                    <span className="text-xs sm:text-sm text-gray-700 px-3">
+                      Showing {startRecord} - {endRecord}
+                    </span>
+
+                    <button
+                      onClick={handleNextPage}
+                      disabled={!hasNextPage}
+                      className="px-2 py-1 sm:px-3 sm:py-1 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
+                    >
+                      <span className="hidden sm:inline">Next</span>
+                      <span className="sm:hidden">Next</span>
+                      <ChevronRightIcon className="w-4 h-4 ml-1" />
+                    </button>
+                  </div>
+                </div>
               </>
             ) : (
               <div className="text-center py-8 sm:py-12">
