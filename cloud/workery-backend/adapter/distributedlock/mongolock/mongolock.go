@@ -159,9 +159,9 @@ func (dl *mongoDistributedLock) TryAcquire(ctx context.Context, key string, ttl 
 	}
 
 	if acquired {
-		dl.logger.Debug("lock acquired (try)",
-			slog.String("key", key),
-			slog.String("owner", owner))
+		// dl.logger.Debug("lock acquired (try)",
+		// 	slog.String("key", key),
+		// 	slog.String("owner", owner)) // Commented out to reduce log noise
 		return owner, true, nil
 	}
 

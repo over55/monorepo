@@ -213,7 +213,7 @@ func (port *taskQueuePort) keepLockAlive(ctx context.Context, lockKey string, ow
 }
 
 func (port *taskQueuePort) runTaskProcessing() {
-	port.Logger.Info("Starting task processing routines")
+	// port.Logger.Info("Starting task processing routines") // Commented out to reduce log noise
 
 	// Create a ticker for periodic task execution
 	// Adjust the interval based on your needs
