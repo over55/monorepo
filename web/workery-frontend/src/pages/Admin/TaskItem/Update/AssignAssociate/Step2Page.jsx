@@ -28,6 +28,7 @@ import {
   CalendarDaysIcon,
   ExclamationTriangleIcon,
   PauseCircleIcon,
+  LockClosedIcon,
 } from "@heroicons/react/24/outline";
 
 function AdminTaskItemAssignAssociateStep2Page() {
@@ -51,12 +52,10 @@ function AdminTaskItemAssignAssociateStep2Page() {
   };
 
   const onSelectClick = (associate) => {
-    // If associate is away, show a confirmation dialog
+    // Prevent selection if associate is away
     if (associate.isAway) {
-      const confirmMessage = `${associate.name} is currently marked as away. Are you sure you want to assign this task to them?`;
-      if (!window.confirm(confirmMessage)) {
-        return;
-      }
+      // Do nothing - selection is restricted
+      return;
     }
 
     sessionStorage.setItem(
@@ -244,6 +243,8 @@ function AdminTaskItemAssignAssociateStep2Page() {
   // Count away associates for display
   const awayAssociatesCount =
     associates?.results?.filter((a) => a.isAway).length || 0;
+  const availableAssociatesCount =
+    associates?.results?.filter((a) => !a.isAway).length || 0;
   const totalAssociatesCount = associates?.results?.length || 0;
 
   return (
@@ -301,7 +302,7 @@ function AdminTaskItemAssignAssociateStep2Page() {
               </h1>
               <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
                 <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
-                Choose the best associate for this task
+                Choose an available associate for this task
               </p>
             </div>
           </div>
@@ -617,12 +618,20 @@ function AdminTaskItemAssignAssociateStep2Page() {
                     )}
 
                     {awayAssociatesCount > 0 && (
-                      <div className="mb-4 bg-amber-50 border border-amber-200 text-amber-800 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center text-sm sm:text-base">
-                        <ExclamationTriangleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
-                        <strong>Away Associates:</strong> {awayAssociatesCount}{" "}
-                        of {totalAssociatesCount} associates are currently
-                        marked as away and may not be available for immediate
-                        assignment.
+                      <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center text-sm sm:text-base">
+                        <LockClosedIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+                        <div>
+                          <strong>Restricted Associates:</strong>{" "}
+                          {awayAssociatesCount} of {totalAssociatesCount}{" "}
+                          associates are currently marked as away and cannot be
+                          selected for assignment.
+                          <br />
+                          <span className="text-xs mt-1 inline-block">
+                            Only {availableAssociatesCount} associate
+                            {availableAssociatesCount !== 1 ? "s are" : " is"}{" "}
+                            available for selection.
+                          </span>
+                        </div>
                       </div>
                     )}
 
@@ -689,7 +698,7 @@ function AdminTaskItemAssignAssociateStep2Page() {
                                       isSelected
                                         ? "bg-green-50"
                                         : isAway
-                                          ? "bg-amber-50 hover:bg-amber-100"
+                                          ? "bg-gray-100 opacity-60"
                                           : "hover:bg-gray-50"
                                     }
                                   >
@@ -699,11 +708,11 @@ function AdminTaskItemAssignAssociateStep2Page() {
                                     <td className="px-4 py-4 whitespace-nowrap">
                                       {isAway ? (
                                         <span
-                                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800"
-                                          title="Associate is currently away"
+                                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800"
+                                          title="Associate is currently away and cannot be selected"
                                         >
-                                          <PauseCircleIcon className="w-3 h-3 mr-1" />
-                                          Away
+                                          <LockClosedIcon className="w-3 h-3 mr-1" />
+                                          Unavailable
                                         </span>
                                       ) : (
                                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -716,7 +725,7 @@ function AdminTaskItemAssignAssociateStep2Page() {
                                       <Link
                                         to={`/admin/associate/${associate.id}`}
                                         target="_blank"
-                                        className={`text-sm font-medium ${isAway ? "text-amber-700 hover:text-amber-900" : "text-blue-600 hover:text-blue-800"}`}
+                                        className={`text-sm font-medium ${isAway ? "text-gray-500" : "text-blue-600 hover:text-blue-800"}`}
                                       >
                                         {associate.name}
                                       </Link>
@@ -730,7 +739,7 @@ function AdminTaskItemAssignAssociateStep2Page() {
                                       {associate.phone ? (
                                         <a
                                           href={`tel:${associate.phone}`}
-                                          className={`text-sm ${isAway ? "text-amber-700 hover:text-amber-900" : "text-blue-600 hover:text-blue-800"} flex items-center`}
+                                          className={`text-sm ${isAway ? "text-gray-500 pointer-events-none" : "text-blue-600 hover:text-blue-800"} flex items-center`}
                                         >
                                           <PhoneIcon className="w-4 h-4 mr-1" />
                                           {associate.phone}
@@ -745,7 +754,7 @@ function AdminTaskItemAssignAssociateStep2Page() {
                                       {associate.email ? (
                                         <a
                                           href={`mailto:${associate.email}`}
-                                          className={`text-sm ${isAway ? "text-amber-700 hover:text-amber-900" : "text-blue-600 hover:text-blue-800"} flex items-center`}
+                                          className={`text-sm ${isAway ? "text-gray-500 pointer-events-none" : "text-blue-600 hover:text-blue-800"} flex items-center`}
                                         >
                                           <EnvelopeIcon className="w-4 h-4 mr-1" />
                                           {associate.email}
@@ -756,17 +765,23 @@ function AdminTaskItemAssignAssociateStep2Page() {
                                         </span>
                                       )}
                                     </td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td
+                                      className={`px-4 py-4 whitespace-nowrap text-sm ${isAway ? "text-gray-500" : "text-gray-900"}`}
+                                    >
                                       {associate.contactsLast30Days || 0}
                                     </td>
-                                    <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    <td
+                                      className={`px-4 py-4 whitespace-nowrap text-sm ${isAway ? "text-gray-500" : "text-gray-900"}`}
+                                    >
                                       {associate.wsibNumber || (
                                         <span className="text-gray-400">-</span>
                                       )}
                                     </td>
                                     <td className="px-4 py-4 whitespace-nowrap">
                                       {associate.hourlySalaryDesired ? (
-                                        <span className="text-sm text-green-600 font-medium">
+                                        <span
+                                          className={`text-sm font-medium ${isAway ? "text-gray-500" : "text-green-600"}`}
+                                        >
                                           ${associate.hourlySalaryDesired}/hr
                                         </span>
                                       ) : (
@@ -776,34 +791,39 @@ function AdminTaskItemAssignAssociateStep2Page() {
                                       )}
                                     </td>
                                     <td className="px-4 py-4">
-                                      {renderSkillSets(
-                                        associate.skillSets,
-                                        task?.orderSkillSets,
-                                      )}
+                                      <div
+                                        className={isAway ? "opacity-50" : ""}
+                                      >
+                                        {renderSkillSets(
+                                          associate.skillSets,
+                                          task?.orderSkillSets,
+                                        )}
+                                      </div>
                                     </td>
                                     <td className="px-4 py-4 whitespace-nowrap">
-                                      <button
-                                        className={`inline-flex items-center px-3 py-1.5 text-xs font-medium text-white rounded-md ${
-                                          isSelected
-                                            ? "bg-green-600 hover:bg-green-700"
-                                            : isAway
-                                              ? "bg-amber-600 hover:bg-amber-700"
+                                      {isAway ? (
+                                        <div
+                                          className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-500 bg-gray-200 rounded-md cursor-not-allowed"
+                                          title="This associate is currently away and cannot be assigned"
+                                        >
+                                          <LockClosedIcon className="w-3 h-3 mr-1" />
+                                          Restricted
+                                        </div>
+                                      ) : (
+                                        <button
+                                          className={`inline-flex items-center px-3 py-1.5 text-xs font-medium text-white rounded-md ${
+                                            isSelected
+                                              ? "bg-green-600 hover:bg-green-700"
                                               : "bg-blue-600 hover:bg-blue-700"
-                                        }`}
-                                        onClick={() => onSelectClick(associate)}
-                                        title={
-                                          isAway
-                                            ? "This associate is currently away"
-                                            : ""
-                                        }
-                                      >
-                                        {isSelected
-                                          ? "Reselect"
-                                          : isAway
-                                            ? "Assign (Away)"
-                                            : "Assign"}
-                                        <ArrowRightIcon className="w-3 h-3 ml-1" />
-                                      </button>
+                                          }`}
+                                          onClick={() =>
+                                            onSelectClick(associate)
+                                          }
+                                        >
+                                          {isSelected ? "Reselect" : "Assign"}
+                                          <ArrowRightIcon className="w-3 h-3 ml-1" />
+                                        </button>
+                                      )}
                                     </td>
                                   </tr>
                                 );
@@ -826,7 +846,7 @@ function AdminTaskItemAssignAssociateStep2Page() {
                                   isSelected
                                     ? "bg-green-50 border-green-200"
                                     : isAway
-                                      ? "bg-amber-50 border-amber-200"
+                                      ? "bg-gray-100 border-gray-300 opacity-75"
                                       : "bg-white border-gray-200"
                                 }`}
                               >
@@ -835,18 +855,18 @@ function AdminTaskItemAssignAssociateStep2Page() {
                                     <Link
                                       to={`/admin/associate/${associate.id}`}
                                       target="_blank"
-                                      className={`text-sm font-medium ${isAway ? "text-amber-700 hover:text-amber-900" : "text-blue-600 hover:text-blue-800"}`}
+                                      className={`text-sm font-medium ${isAway ? "text-gray-500" : "text-blue-600 hover:text-blue-800"}`}
                                     >
                                       {associate.name}
                                     </Link>
                                     <div className="flex items-center gap-2 mt-1">
                                       {isAway ? (
                                         <span
-                                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800"
-                                          title="Associate is currently away"
+                                          className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800"
+                                          title="Associate is currently away and cannot be selected"
                                         >
-                                          <PauseCircleIcon className="w-3 h-3 mr-1" />
-                                          Away
+                                          <LockClosedIcon className="w-3 h-3 mr-1" />
+                                          Unavailable
                                         </span>
                                       ) : (
                                         <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -872,7 +892,7 @@ function AdminTaskItemAssignAssociateStep2Page() {
                                       <PhoneIcon className="w-4 h-4 mr-2 text-gray-400" />
                                       <a
                                         href={`tel:${associate.phone}`}
-                                        className={`${isAway ? "text-amber-700 hover:text-amber-900" : "text-blue-600 hover:text-blue-800"}`}
+                                        className={`${isAway ? "text-gray-500 pointer-events-none" : "text-blue-600 hover:text-blue-800"}`}
                                       >
                                         {associate.phone}
                                       </a>
@@ -884,7 +904,7 @@ function AdminTaskItemAssignAssociateStep2Page() {
                                       <EnvelopeIcon className="w-4 h-4 mr-2 text-gray-400" />
                                       <a
                                         href={`mailto:${associate.email}`}
-                                        className={`${isAway ? "text-amber-700 hover:text-amber-900" : "text-blue-600 hover:text-blue-800"} break-all`}
+                                        className={`${isAway ? "text-gray-500 pointer-events-none" : "text-blue-600 hover:text-blue-800"} break-all`}
                                       >
                                         {associate.email}
                                       </a>
@@ -894,7 +914,13 @@ function AdminTaskItemAssignAssociateStep2Page() {
                                   {associate.organizationName && (
                                     <div className="flex items-center">
                                       <BuildingOfficeIcon className="w-4 h-4 mr-2 text-gray-400" />
-                                      <span className="text-gray-900">
+                                      <span
+                                        className={
+                                          isAway
+                                            ? "text-gray-500"
+                                            : "text-gray-900"
+                                        }
+                                      >
                                         {associate.organizationName}
                                       </span>
                                     </div>
@@ -904,7 +930,13 @@ function AdminTaskItemAssignAssociateStep2Page() {
                                     <span className="text-gray-500">
                                       Contacts (30d):
                                     </span>
-                                    <span className="text-gray-900">
+                                    <span
+                                      className={
+                                        isAway
+                                          ? "text-gray-500"
+                                          : "text-gray-900"
+                                      }
+                                    >
                                       {associate.contactsLast30Days || 0}
                                     </span>
                                   </div>
@@ -913,14 +945,22 @@ function AdminTaskItemAssignAssociateStep2Page() {
                                     <span className="text-gray-500">
                                       WSIB #:
                                     </span>
-                                    <span className="text-gray-900">
+                                    <span
+                                      className={
+                                        isAway
+                                          ? "text-gray-500"
+                                          : "text-gray-900"
+                                      }
+                                    >
                                       {associate.wsibNumber || "-"}
                                     </span>
                                   </div>
 
                                   <div className="flex justify-between">
                                     <span className="text-gray-500">Rate:</span>
-                                    <span className="text-green-600 font-medium">
+                                    <span
+                                      className={`font-medium ${isAway ? "text-gray-500" : "text-green-600"}`}
+                                    >
                                       {associate.hourlySalaryDesired
                                         ? `$${associate.hourlySalaryDesired}/hr`
                                         : "-"}
@@ -931,7 +971,9 @@ function AdminTaskItemAssignAssociateStep2Page() {
                                     <span className="text-gray-500">
                                       Skills:
                                     </span>
-                                    <div className="mt-1">
+                                    <div
+                                      className={`mt-1 ${isAway ? "opacity-50" : ""}`}
+                                    >
                                       {renderSkillSets(
                                         associate.skillSets,
                                         task?.orderSkillSets,
@@ -940,28 +982,24 @@ function AdminTaskItemAssignAssociateStep2Page() {
                                   </div>
                                 </div>
 
-                                <button
-                                  className={`mt-4 w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white rounded-md ${
-                                    isSelected
-                                      ? "bg-green-600 hover:bg-green-700"
-                                      : isAway
-                                        ? "bg-amber-600 hover:bg-amber-700"
+                                {isAway ? (
+                                  <div className="mt-4 w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-500 bg-gray-200 rounded-md cursor-not-allowed">
+                                    <LockClosedIcon className="w-4 h-4 mr-2" />
+                                    Cannot Assign - Associate is Away
+                                  </div>
+                                ) : (
+                                  <button
+                                    className={`mt-4 w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white rounded-md ${
+                                      isSelected
+                                        ? "bg-green-600 hover:bg-green-700"
                                         : "bg-blue-600 hover:bg-blue-700"
-                                  }`}
-                                  onClick={() => onSelectClick(associate)}
-                                  title={
-                                    isAway
-                                      ? "This associate is currently away"
-                                      : ""
-                                  }
-                                >
-                                  {isSelected
-                                    ? "Reselect"
-                                    : isAway
-                                      ? "Assign (Away)"
-                                      : "Assign"}
-                                  <ArrowRightIcon className="w-4 h-4 ml-2" />
-                                </button>
+                                    }`}
+                                    onClick={() => onSelectClick(associate)}
+                                  >
+                                    {isSelected ? "Reselect" : "Assign"}
+                                    <ArrowRightIcon className="w-4 h-4 ml-2" />
+                                  </button>
+                                )}
                               </div>
                             );
                           })}
