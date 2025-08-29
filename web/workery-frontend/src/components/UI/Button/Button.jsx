@@ -9,7 +9,10 @@ function Button({
   disabled = false,
   type = "button",
   className = "",
-  ...props
+  loading = false, // Extract this
+  fullWidth = false, // Extract this
+  size, // Extract this (if you use it)
+  ...props // Now this only contains valid HTML attributes
 }) {
   const baseClasses =
     "px-4 py-2 font-medium rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2";
@@ -26,17 +29,27 @@ function Button({
     ghost: "bg-transparent text-gray-700 hover:bg-gray-100 focus:ring-gray-500",
   };
 
-  const classes = `${baseClasses} ${variantClasses[variant]} ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"} ${className}`;
+  // Add fullWidth and size handling if needed
+  const widthClass = fullWidth ? "w-full" : "";
+  const sizeClasses = {
+    sm: "px-3 py-1.5 text-sm",
+    md: "px-4 py-2",
+    lg: "px-6 py-3 text-lg",
+  };
+
+  const finalSizeClass = size ? sizeClasses[size] : "";
+
+  const classes = `${finalSizeClass || baseClasses} ${variantClasses[variant]} ${widthClass} ${disabled || loading ? "cursor-not-allowed opacity-50" : "cursor-pointer"} ${className}`;
 
   return (
     <button
       type={type}
       className={classes}
       onClick={onClick}
-      disabled={disabled}
-      {...props}
+      disabled={disabled || loading}
+      {...props} // Now safe - only contains valid HTML attributes
     >
-      {children}
+      {loading ? "Loading..." : children}
     </button>
   );
 }
