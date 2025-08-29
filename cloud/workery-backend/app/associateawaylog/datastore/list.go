@@ -29,6 +29,9 @@ func (impl AssociateAwayLogStorerImpl) ListByFilter(ctx context.Context, f *Asso
 	if f.Status != 0 {
 		filter["status"] = f.Status
 	}
+	if f.Reason != 0 {
+		filter["reason"] = f.Reason
+	}
 
 	// impl.Logger.Debug("listing filter:",
 	// 	slog.Any("filter", filter))

@@ -27,6 +27,7 @@ type AssociateAwayLogPaginationListFilter struct {
 	TenantID    primitive.ObjectID
 	AssociateID primitive.ObjectID
 	Status      int8
+	Reason      int8
 	SearchText  string
 }
 

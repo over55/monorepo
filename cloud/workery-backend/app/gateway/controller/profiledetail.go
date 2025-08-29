@@ -194,7 +194,7 @@ func (impl *GatewayControllerImpl) Profile(ctx context.Context) (*ProfileRespons
 	// STEP 2: Convert reference record to `profile`.
 	switch u.Role {
 	case user_s.UserRoleExecutive:
-		impl.Logger.Debug("skipping fetching executive staff record")
+		// impl.Logger.Debug("skipping fetching executive staff record")
 		break
 	case user_s.UserRoleFrontlineStaff, user_s.UserRoleManagement:
 		impl.Logger.Debug("fetching frontline or management staff record")

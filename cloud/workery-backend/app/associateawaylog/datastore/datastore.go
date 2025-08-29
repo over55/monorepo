@@ -14,6 +14,8 @@ import (
 )
 
 const (
+	StatusActive                     = 1
+	StatusArchived                   = 2
 	AssociateAwayLogStatusActive     = 1
 	AssociateAwayLogStatusArchived   = 2
 	UntilFurtherNoticeUnspecified    = 0
@@ -64,6 +66,7 @@ type AssociateAwayLogListFilter struct {
 	TenantID        primitive.ObjectID
 	AssociateID     primitive.ObjectID
 	Status          int8
+	Reason          int8
 	ExcludeArchived bool
 	SearchText      string
 }

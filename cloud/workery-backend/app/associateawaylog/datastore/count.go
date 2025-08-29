@@ -24,6 +24,9 @@ func (impl AssociateAwayLogStorerImpl) CountByFilter(ctx context.Context, f *Ass
 	if f.Status != 0 {
 		filter["status"] = f.Status
 	}
+	if f.Reason != 0 {
+		filter["reason"] = f.Reason
+	}
 
 	// impl.Logger.Debug("counting w/ filter:",
 	// 	slog.Any("filter", filter))
