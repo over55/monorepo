@@ -35,14 +35,19 @@ func (h *Handler) createAwayLogOnAnyRequiredExpiredDates(ctx context.Context, t 
 
 	for _, a := range aa.Results {
 		if err := h.createAwayLogOnExpiredDuesDate(ctx, today, a); err != nil {
-			h.Logger.Error("failed to create away log on expired dues date", slog.Any("error", err))
+			h.Logger.Error("failed to create away log on expired dues date",
+				slog.Any("error", err))
+			return err
+		}
+		if err := h.createAwayLogOnExpiredPoliceCheck(ctx, today, a); err != nil {
+			h.Logger.Error("failed to create away log on expired police check",
+				slog.Any("error", err))
 			return err
 		}
 
 		// CommercialInsuranceExpiryDate        time.Time                        `bson:"commercial_insurance_expiry_date" json:"commercial_insurance_expiry_date"`
 		// AutoInsuranceExpiryDate              time.Time                        `bson:"auto_insurance_expiry_date" json:"auto_insurance_expiry_date"`
 		// WsibInsuranceDate                    time.Time                        `bson:"wsib_insurance_date" json:"wsib_insurance_date"`
-		// PoliceCheck                          time.Time                        `bson:"police_check" json:"police_check"`
 
 	}
 	return nil
@@ -61,7 +66,7 @@ func (h *Handler) createAwayLogOnExpiredDuesDate(ctx context.Context, today time
 		}
 		bb, err := h.AssociateAwayLogDatastore.ListByFilter(ctx, f)
 		if err != nil {
-			h.Logger.Error("failed to list away log by associate", slog.Any("error", err))
+			h.Logger.Error("failed to list away log for dues date", slog.Any("error", err))
 			return err
 		}
 
@@ -117,6 +122,59 @@ func (h *Handler) createAwayLogOnExpiredDuesDate(ctx context.Context, today time
 			return err
 		}
 		h.Logger.Debug("Created away log for associate",
+			slog.String("associate_id", a.ID.Hex()),
+			slog.Any("Reason", away_ds.ReasonDuesDateExpired))
+	}
+	return nil
+}
+
+func (h *Handler) createAwayLogOnExpiredPoliceCheck(ctx context.Context, today time.Time, a *ass_ds.Associate) error {
+	if a.PoliceCheck.Before(today) {
+		f := &away_ds.AssociateAwayLogPaginationListFilter{
+			TenantID:    a.TenantID,
+			PageSize:    1_000_000,
+			SortField:   "created_at",
+			SortOrder:   1, // 1=ascending | -1=descending
+			Status:      1,
+			Reason:      away_ds.ReasonPoliceCheckExpired,
+			AssociateID: a.ID,
+		}
+		bb, err := h.AssociateAwayLogDatastore.ListByFilter(ctx, f)
+		if err != nil {
+			h.Logger.Error("failed to list away log for police checks", slog.Any("error", err))
+			return err
+		}
+
+		if len(bb.Results) > 0 {
+			return nil
+		}
+
+		h.Logger.Debug("Associate police check is past due",
+			slog.String("associate_id", a.ID.Hex()),
+			slog.Any("status", a.Status),
+			slog.Time("police_check", a.PoliceCheck),
+			slog.Time("today", today))
+
+		// Else create associate away log.
+		c := &away_ds.AssociateAwayLog{
+			ID:                   primitive.NewObjectID(),
+			TenantID:             a.TenantID,
+			AssociateID:          a.ID,
+			AssociateName:        a.Name,
+			AssociateLexicalName: a.LexicalName,
+			Reason:               away_ds.ReasonPoliceCheckExpired,
+			ReasonOther:          "",
+			UntilFurtherNotice:   away_ds.UntilFurtherNoticeYes,
+			StartDate:            time.Now(),
+			Status:               away_ds.StatusActive,
+			CreatedAt:            time.Now(),
+			ModifiedAt:           time.Now(),
+		}
+		if err := h.AssociateAwayLogDatastore.Create(ctx, c); err != nil {
+			h.Logger.Error("failed to create police check away log", slog.Any("error", err))
+			return err
+		}
+		h.Logger.Debug("Created police check away log for associate",
 			slog.String("associate_id", a.ID.Hex()),
 			slog.Any("Reason", away_ds.ReasonDuesDateExpired))
 	}
