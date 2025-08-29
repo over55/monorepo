@@ -293,36 +293,6 @@ function SettingAssociateAwayLogListPage() {
     }
   };
 
-  // Handle delete
-  const handleDelete = async (awayLog) => {
-    if (
-      !confirm(
-        `Are you sure you want to delete this away log for ${awayLog.associateName}?`,
-      )
-    ) {
-      return;
-    }
-
-    try {
-      setLoading(true);
-      await associateAwayLogManager.deleteAssociateAwayLog(
-        awayLog.id,
-        onUnauthorized,
-      );
-      setSuccess("Associate away log deleted successfully");
-
-      // Reset to first page after delete
-      setCurrentCursor("");
-      setCursorHistory([]);
-      fetchAssociateAwayLogs(true, "");
-    } catch (err) {
-      console.error("Failed to delete associate away log:", err);
-      setError(err.message || "Failed to delete associate away log");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Initial load and handle filter changes
   useEffect(() => {
     // Reset cursor when filters change
@@ -704,7 +674,11 @@ function SettingAssociateAwayLogListPage() {
                                 <PencilSquareIcon className="w-4 h-4" />
                               </button>
                               <button
-                                onClick={() => handleDelete(awayLog)}
+                                onClick={() =>
+                                  navigate(
+                                    `/admin/settings/associate-away-log/${awayLog.id}/delete`,
+                                  )
+                                }
                                 className="text-red-600 hover:text-red-800"
                                 title="Delete"
                               >
@@ -760,7 +734,11 @@ function SettingAssociateAwayLogListPage() {
                             <PencilSquareIcon className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => handleDelete(awayLog)}
+                            onClick={() =>
+                              navigate(
+                                `/admin/settings/associate-away-log/${awayLog.id}/delete`,
+                              )
+                            }
                             className="text-red-600 hover:text-red-800"
                             title="Delete"
                           >
