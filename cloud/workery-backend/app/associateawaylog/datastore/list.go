@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
@@ -49,6 +50,13 @@ func (impl AssociateAwayLogStorerImpl) ListByFilter(ctx context.Context, f *Asso
 	// if f.SearchText != "" {
 	// 	filter["$text"] = bson.M{"$search": f.SearchText}
 	// }
+	if f.SearchText != "" {
+		filter["$or"] = []bson.M{
+			{"associate_name": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+			{"associate_lexical_name": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+			{"reason_other": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+		}
+	}
 
 	// Execute the query
 	cursor, err := impl.Collection.Find(ctx, filter, options)
@@ -143,6 +151,13 @@ func (impl AssociateAwayLogStorerImpl) ListAsSelectOptionByFilter(ctx context.Co
 	// Full-text search
 	if f.SearchText != "" {
 		query["$text"] = bson.M{"$search": f.SearchText}
+	}
+	if f.SearchText != "" {
+		query["$or"] = []bson.M{
+			{"associate_name": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+			{"associate_lexical_name": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+			{"reason_other": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+		}
 	}
 
 	options.SetSort(bson.D{{sortField, 1}}) // Sort in ascending order based on the specified field

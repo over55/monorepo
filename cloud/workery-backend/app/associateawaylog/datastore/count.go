@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 func (impl AssociateAwayLogStorerImpl) CountByFilter(ctx context.Context, f *AssociateAwayLogPaginationListFilter) (int64, error) {
@@ -29,6 +30,13 @@ func (impl AssociateAwayLogStorerImpl) CountByFilter(ctx context.Context, f *Ass
 	}
 	if len(f.InAssociateIDs) > 0 {
 		filter["associate_id"] = bson.M{"$in": f.InAssociateIDs}
+	}
+	if f.SearchText != "" {
+		filter["$or"] = []bson.M{
+			{"associate_name": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+			{"associate_lexical_name": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+			{"reason_other": bson.M{"$regex": primitive.Regex{Pattern: f.SearchText, Options: "i"}}},
+		}
 	}
 
 	// impl.Logger.Debug("counting w/ filter:",

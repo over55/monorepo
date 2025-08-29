@@ -186,6 +186,7 @@ func (impl *TaskItemControllerImpl) processAwayAssociates(ctx context.Context, t
 		PageSize:       1_000_000, // No limit
 		TenantID:       tenantID,
 		InAssociateIDs: uniqueAssociateIDs,
+		Status:         aal_s.AssociateAwayLogStatusActive, // Important: Only active away logs!
 	}
 	awayRecords, err := impl.AssociateAwayLogStorer.ListByFilter(ctx, f)
 	if err != nil {
@@ -198,6 +199,11 @@ func (impl *TaskItemControllerImpl) processAwayAssociates(ctx context.Context, t
 	for _, a := range aa {
 		for _, awayRecord := range awayRecords.Results {
 			if a.ID == awayRecord.AssociateID {
+				// impl.Logger.Debug("Associate set to away",
+				// 	slog.Any("associate_id", a.ID),
+				// 	slog.Any("associate_name", a.Name),
+				// 	slog.Any("away_log_id", awayRecord.ID),
+				// ) // For debugging purposes only.
 				a.IsAway = true
 				break // No need to check further records for this associate.
 			}
