@@ -92,6 +92,40 @@ func (impl TenantStorerImpl) ListByFilter(ctx context.Context, f *TenantListFilt
 	}, nil
 }
 
+func (impl TenantStorerImpl) ListAllByActiveStatus(ctx context.Context) (*TenantListResult, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
+	// Create the filter for active tenants (not archived)
+	filter := bson.M{
+		"status": bson.M{"$ne": TenantArchivedStatus}, // Do not list archived items!
+	}
+
+	// Options for the query. No limit is set to retrieve all documents.
+	options := options.Find().
+		SetSort(bson.M{"_id": 1}) // Sort by _id for consistent ordering
+
+	// Execute the query
+	cursor, err := impl.Collection.Find(ctx, filter, options)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	// Retrieve all documents
+	results := []*Tenant{}
+	if err = cursor.All(ctx, &results); err != nil {
+		return nil, err // Change panic to return error for robustness
+	}
+
+	// When listing all, there is no next cursor or next page.
+	return &TenantListResult{
+		Results:     results,
+		NextCursor:  primitive.NilObjectID,
+		HasNextPage: false,
+	}, nil
+}
+
 func (impl TenantStorerImpl) ListAsSelectOptionByFilter(ctx context.Context, f *TenantListFilter) ([]*TenantAsSelectOption, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()

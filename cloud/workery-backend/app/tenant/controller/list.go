@@ -84,3 +84,52 @@ func (c *TenantControllerImpl) ListAsSelectOptionByFilter(ctx context.Context, f
 	// c.Logger.Debug("fetched Tenants", slog.Any("m", m))
 	return m, err
 }
+
+func (c *TenantControllerImpl) ListAllActive(ctx context.Context) (*domain.TenantListResult, error) {
+	// Extract from our session the following data.
+	userID, _ := ctx.Value(constants.SessionUserID).(primitive.ObjectID)
+	userRole, _ := ctx.Value(constants.SessionUserRole).(int8)
+	ipAddress, _ := ctx.Value(constants.SessionIPAddress).(string)
+	proxies, _ := ctx.Value(constants.SessionProxies).(string)
+
+	// Apply protection based on ownership and role.
+	if userRole != user_d.UserRoleExecutive {
+		c.Logger.Error("authenticated user is not staff role error",
+			slog.String("ip_address", ipAddress),
+			slog.String("proxies", proxies),
+			slog.Any("role", userRole),
+			slog.Any("userID", userID))
+		return nil, httperror.NewForForbiddenWithSingleField("message", "you role does not grant you access to this")
+	}
+
+	// For debugging purposes only.
+	// c.Logger.Debug("fetching Tenants now...", slog.Any("userID", userID))
+	// c.Logger.Debug("listing using filter options:",
+	// 	slog.Any("TenantID", f.TenantID),
+	// 	slog.Any("Cursor", f.Cursor),
+	// 	slog.Int64("PageSize", f.PageSize),
+	// 	slog.String("SortField", f.SortField),
+	// 	slog.Int("SortOrder", int(f.SortOrder)),
+	// 	slog.Any("Status", f.Status),
+	// 	slog.Time("CreatedAtGTE", f.CreatedAtGTE),
+	// 	slog.String("SearchText", f.SearchText),
+	// 	slog.Bool("ExcludeArchived", f.ExcludeArchived))
+	//
+	f := &domain.TenantListFilter{
+		ExcludeArchived: true,
+		PageSize:        1_000_000_000, // Essentially unlimited.
+		SortField:       "created_at",
+		SortOrder:       -1,
+	}
+
+	m, err := c.TenantStorer.ListByFilter(ctx, f)
+	if err != nil {
+		c.Logger.Error("database list by filter error",
+			slog.String("ip_address", ipAddress),
+			slog.String("proxies", proxies),
+			slog.Any("error", err))
+		return nil, err
+	}
+	// c.Logger.Debug("fetched Tenants", slog.Any("m", m))
+	return m, err
+}

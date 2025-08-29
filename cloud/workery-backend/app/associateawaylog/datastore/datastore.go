@@ -14,13 +14,20 @@ import (
 )
 
 const (
-	AssociateAwayLogStatusActive   = 1
-	AssociateAwayLogStatusArchived = 2
-	UntilFurtherNoticeUnspecified  = 0
-	UntilFurtherNoticeYes          = 1
-	UntilFurtherNoticeNo           = 2
-	ReasonUnspecified              = 0
-	ReasonOther                    = 1
+	AssociateAwayLogStatusActive     = 1
+	AssociateAwayLogStatusArchived   = 2
+	UntilFurtherNoticeUnspecified    = 0
+	UntilFurtherNoticeYes            = 1
+	UntilFurtherNoticeNo             = 2
+	ReasonUnspecified                = 0
+	ReasonOther                      = 1
+	ReasonGoingOnVacation            = 2
+	ReasonPersonalReasons            = 3
+	ReasonCommercialInsuranceExpired = 4
+	ReasonPoliceCheckExpired         = 5
+	ReasonAutoInsuranceExpired       = 6
+	ReasonWSIBExpired                = 7
+	ReasonDuesDateExpired            = 8
 )
 
 type AssociateAwayLog struct {

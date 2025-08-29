@@ -33,6 +33,9 @@ const REASON_OPTIONS = [
   { value: 3, label: "Personal reasons" },
   { value: 4, label: "Commercial insurance expired" },
   { value: 5, label: "Policy check expired" },
+  { value: 6, label: "Auto Insurance Expired" },
+  { value: 7, label: "WSIB Expired" },
+  { value: 8, label: "Dues Date Expired" },
   { value: 1, label: "Other" },
 ];
 

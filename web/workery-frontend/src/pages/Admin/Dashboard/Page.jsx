@@ -41,6 +41,9 @@ const REASON_MAP = {
   3: "Personal reasons",
   4: "Commercial insurance expired",
   5: "Police check expired",
+  6: "Auto Insurance Expired",
+  7: "WSIB Expired",
+  8: "Dues Date Expired",
 };
 
 const REASON_COMMERCIAL_INSURANCE_EXPIRED = 4;

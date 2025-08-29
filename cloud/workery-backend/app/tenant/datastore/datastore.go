@@ -72,7 +72,7 @@ type Tenant struct {
 	LatestOrderWJID         uint64             `bson:"latest_order_wjid" json:"latest_order_wjid,omitempty"`
 	LatestStaffID           primitive.ObjectID `bson:"latest_staff_id" json:"latest_staff_id,omitempty"`
 	LatestStaffPublicID     uint64             `bson:"latest_staff_public_id" json:"latest_staff_public_id,omitempty"`
-	TaxRate           float64               `bson:"tax_rate" json:"tax_rate"`
+	TaxRate                 float64            `bson:"tax_rate" json:"tax_rate"`
 }
 
 type TenantComment struct {
@@ -124,6 +124,7 @@ type TenantStorer interface {
 	GetBySchemaName(ctx context.Context, schemaName string) (*Tenant, error)
 	GetLatest(ctx context.Context) (*Tenant, error)
 	UpdateByID(ctx context.Context, m *Tenant) error
+	ListAllByActiveStatus(ctx context.Context) (*TenantListResult, error)
 	ListByFilter(ctx context.Context, m *TenantListFilter) (*TenantListResult, error)
 	ListAsSelectOptionByFilter(ctx context.Context, f *TenantListFilter) ([]*TenantAsSelectOption, error)
 	DeleteByID(ctx context.Context, id primitive.ObjectID) error

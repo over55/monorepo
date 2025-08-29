@@ -23,6 +23,7 @@ type TenantController interface {
 	Create(ctx context.Context, m *domain.Tenant) (*domain.Tenant, error)
 	GetByID(ctx context.Context, id primitive.ObjectID) (*domain.Tenant, error)
 	UpdateByID(ctx context.Context, m *domain.Tenant) (*domain.Tenant, error)
+	ListAllActive(ctx context.Context) (*domain.TenantListResult, error)
 	ListByFilter(ctx context.Context, f *domain.TenantListFilter) (*domain.TenantListResult, error)
 	ListAsSelectOptionByFilter(ctx context.Context, f *domain.TenantListFilter) ([]*domain.TenantAsSelectOption, error)
 	DeleteByID(ctx context.Context, id primitive.ObjectID) error
