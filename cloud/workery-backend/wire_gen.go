@@ -198,7 +198,7 @@ func InitializeEvent() Application {
 	jobHistoryController := controller25.NewController(conf, slogLogger, provider, jwtProvider, passwordProvider, cacher, templatedEmailer, userStorer, tenantStorer, customerStorer, associateStorer, associateAwayLogStorer, orderStorer, taskItemStorer, bulletinStorer, commentStorer)
 	handler24 := httptransport25.NewHandler(slogLogger, jobHistoryController)
 	inputPortServer := http.NewInputPort(conf, slogLogger, middlewareMiddleware, handler, httptransportHandler, handler2, handler3, handler4, handler5, handler6, handler7, handler8, handler9, handler10, handler11, handler12, handler13, handler14, handler15, handler16, handler17, handler18, handler19, handler20, handler21, handler22, handler23, handler24)
-	taskqueueInputPortServer := taskqueue2.NewInputPort(conf, slogLogger, stepper)
+	taskqueueInputPortServer := taskqueue2.NewInputPort(conf, slogLogger)
 	application := NewApplication(slogLogger, inputPortServer, taskqueueInputPortServer)
 	return application
 }
