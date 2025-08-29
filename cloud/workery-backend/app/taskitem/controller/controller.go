@@ -11,6 +11,7 @@ import (
 	"github.com/over55/monorepo/cloud/workery-backend/adapter/templatedemailer"
 	act_s "github.com/over55/monorepo/cloud/workery-backend/app/activitysheet/datastore"
 	a_c "github.com/over55/monorepo/cloud/workery-backend/app/associate/datastore"
+	aal_s "github.com/over55/monorepo/cloud/workery-backend/app/associateawaylog/datastore"
 	com_s "github.com/over55/monorepo/cloud/workery-backend/app/comment/datastore"
 	c_s "github.com/over55/monorepo/cloud/workery-backend/app/customer/datastore"
 	hh_s "github.com/over55/monorepo/cloud/workery-backend/app/howhear/datastore"
@@ -46,24 +47,25 @@ type TaskItemController interface {
 }
 
 type TaskItemControllerImpl struct {
-	Config              *config.Conf
-	Logger              *slog.Logger
-	UUID                uuid.Provider
-	S3                  s3_storage.S3Storager
-	Password            password.Provider
-	Kmutex              kmutex.Provider
-	DbClient            *mongo.Client
-	TemplatedEmailer    templatedemailer.TemplatedEmailer
-	CommentStorer       com_s.CommentStorer
-	HowHearStorer       hh_s.HowHearAboutUsItemStorer
-	TagStorer           t_s.TagStorer
-	UserStorer          user_s.UserStorer
-	ActivitySheetStorer act_s.ActivitySheetStorer
-	CustomerStorer      c_s.CustomerStorer
-	TaskItemStorer      ti_s.TaskItemStorer
-	AssociateStorer     a_c.AssociateStorer
-	OrderStorer         o_s.OrderStorer
-	ServiceFeeStorer    servicefee_s.ServiceFeeStorer
+	Config                 *config.Conf
+	Logger                 *slog.Logger
+	UUID                   uuid.Provider
+	S3                     s3_storage.S3Storager
+	Password               password.Provider
+	Kmutex                 kmutex.Provider
+	DbClient               *mongo.Client
+	TemplatedEmailer       templatedemailer.TemplatedEmailer
+	CommentStorer          com_s.CommentStorer
+	HowHearStorer          hh_s.HowHearAboutUsItemStorer
+	TagStorer              t_s.TagStorer
+	UserStorer             user_s.UserStorer
+	ActivitySheetStorer    act_s.ActivitySheetStorer
+	CustomerStorer         c_s.CustomerStorer
+	TaskItemStorer         ti_s.TaskItemStorer
+	AssociateStorer        a_c.AssociateStorer
+	AssociateAwayLogStorer aal_s.AssociateAwayLogStorer
+	OrderStorer            o_s.OrderStorer
+	ServiceFeeStorer       servicefee_s.ServiceFeeStorer
 }
 
 func NewController(
@@ -83,29 +85,31 @@ func NewController(
 	c_storer c_s.CustomerStorer,
 	ti_storer ti_s.TaskItemStorer,
 	a_ctorer a_c.AssociateStorer,
+	aal_ctorer aal_s.AssociateAwayLogStorer,
 	o_storer o_s.OrderStorer,
 	servicefee_s servicefee_s.ServiceFeeStorer,
 ) TaskItemController {
 	loggerp.Debug("customer controller initialization started...")
 	s := &TaskItemControllerImpl{
-		Config:              appCfg,
-		Logger:              loggerp,
-		UUID:                uuidp,
-		S3:                  s3,
-		Password:            passwordp,
-		Kmutex:              kmux,
-		TemplatedEmailer:    temailer,
-		DbClient:            client,
-		CommentStorer:       com_storer,
-		HowHearStorer:       hh_storer,
-		TagStorer:           t_storer,
-		UserStorer:          usr_storer,
-		ActivitySheetStorer: act_storer,
-		CustomerStorer:      c_storer,
-		TaskItemStorer:      ti_storer,
-		AssociateStorer:     a_ctorer,
-		OrderStorer:         o_storer,
-		ServiceFeeStorer:    servicefee_s,
+		Config:                 appCfg,
+		Logger:                 loggerp,
+		UUID:                   uuidp,
+		S3:                     s3,
+		Password:               passwordp,
+		Kmutex:                 kmux,
+		TemplatedEmailer:       temailer,
+		DbClient:               client,
+		CommentStorer:          com_storer,
+		HowHearStorer:          hh_storer,
+		TagStorer:              t_storer,
+		UserStorer:             usr_storer,
+		ActivitySheetStorer:    act_storer,
+		CustomerStorer:         c_storer,
+		TaskItemStorer:         ti_storer,
+		AssociateStorer:        a_ctorer,
+		AssociateAwayLogStorer: aal_ctorer,
+		OrderStorer:            o_storer,
+		ServiceFeeStorer:       servicefee_s,
 	}
 	s.Logger.Debug("customer controller initialized")
 	return s
