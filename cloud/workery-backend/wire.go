@@ -20,6 +20,7 @@ import (
 	away_c "github.com/over55/monorepo/cloud/workery-backend/app/associateawaylog/controller"
 	away_s "github.com/over55/monorepo/cloud/workery-backend/app/associateawaylog/datastore"
 	away_http "github.com/over55/monorepo/cloud/workery-backend/app/associateawaylog/httptransport"
+	away_queue "github.com/over55/monorepo/cloud/workery-backend/app/associateawaylog/taskqueue"
 	attachment_c "github.com/over55/monorepo/cloud/workery-backend/app/attachment/controller"
 	attachment_s "github.com/over55/monorepo/cloud/workery-backend/app/attachment/datastore"
 	attachment_http "github.com/over55/monorepo/cloud/workery-backend/app/attachment/httptransport"
@@ -189,6 +190,7 @@ func InitializeEvent() Application {
 		taskitem_http.NewHandler,
 		b_http.NewHandler,
 		away_http.NewHandler,
+		away_queue.NewHandler,
 		comment_http.NewHandler,
 		dash_http.NewHandler,
 		orderincident_http.NewHandler,
