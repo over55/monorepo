@@ -78,7 +78,6 @@ function SettingAssociateAwayLogListPage() {
     [],
   );
   const [checkingExpiredDocs, setCheckingExpiredDocs] = useState(false);
-  const [showExpiredDocsModal, setShowExpiredDocsModal] = useState(false);
 
   // Filter state
   const [searchText, setSearchText] = useState("");
@@ -93,11 +92,6 @@ function SettingAssociateAwayLogListPage() {
   const [hasNextPage, setHasNextPage] = useState(false);
   const [cursorHistory, setCursorHistory] = useState([]); // Stack to track previous cursors
   const [totalCount, setTotalCount] = useState(0);
-
-  // Modal state
-  const [showDetailModal, setShowDetailModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedAwayLog, setSelectedAwayLog] = useState(null);
 
   // Mobile filter toggle
   const [showMobileFilters, setShowMobileFilters] = useState(false);
@@ -188,102 +182,12 @@ function SettingAssociateAwayLogListPage() {
         setError(
           `Found ${expiredAssociates.length} associate(s) with expired documents not on away list`,
         );
-        setShowExpiredDocsModal(true);
       }
     } catch (err) {
       console.error("Failed to check for expired documents:", err);
     } finally {
       setCheckingExpiredDocs(false);
     }
-  };
-
-  // Create away log for expired document
-  const createAwayLogForExpiredDoc = async (
-    associateId,
-    associateName,
-    reason,
-    expiryDate,
-  ) => {
-    try {
-      setLoading(true);
-
-      const awayLogData = {
-        associateId: associateId,
-        associateName: associateName,
-        reason: reason,
-        reasonOther: reason === 1 ? "Expired document" : "",
-        untilFurtherNotice: 1, // Yes - until further notice
-        startDate: expiryDate || new Date().toISOString(),
-        status: 1, // Active
-      };
-
-      await associateAwayLogManager.createAssociateAwayLog(
-        awayLogData,
-        onUnauthorized,
-      );
-
-      setSuccess(`Away log created for ${associateName}`);
-
-      // Reset pagination and refresh
-      setCurrentCursor("");
-      setCursorHistory([]);
-      await fetchAssociateAwayLogs(true, "");
-
-      // Re-check for expired documents
-      await checkForExpiredDocuments();
-    } catch (err) {
-      console.error("Failed to create away log:", err);
-      setError(err.message || "Failed to create away log");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Create away logs for all expired documents
-  const createAllAwayLogsForExpiredDocs = async () => {
-    if (!associatesWithExpiredDocs || associatesWithExpiredDocs.length === 0) {
-      return;
-    }
-
-    setLoading(true);
-    let successCount = 0;
-    let errorCount = 0;
-
-    for (const item of associatesWithExpiredDocs) {
-      for (const expiredReason of item.expiredReasons) {
-        try {
-          await createAwayLogForExpiredDoc(
-            item.associate.id,
-            item.associate.name,
-            expiredReason.reason,
-            expiredReason.expiryDate,
-          );
-          successCount++;
-        } catch (err) {
-          errorCount++;
-          console.error(
-            `Failed to create away log for ${item.associate.name}:`,
-            err,
-          );
-        }
-      }
-    }
-
-    if (successCount > 0) {
-      setSuccess(`Created ${successCount} away log(s) for expired documents`);
-    }
-
-    if (errorCount > 0) {
-      setError(`Failed to create ${errorCount} away log(s)`);
-    }
-
-    setShowExpiredDocsModal(false);
-    setLoading(false);
-
-    // Reset pagination and refresh
-    setCurrentCursor("");
-    setCursorHistory([]);
-    await fetchAssociateAwayLogs(true, "");
   };
 
   // Fetch associate away logs with cursor
@@ -389,31 +293,23 @@ function SettingAssociateAwayLogListPage() {
     }
   };
 
-  // Handle view detail
-  const handleViewDetail = (awayLog) => {
-    setSelectedAwayLog(awayLog);
-    setShowDetailModal(true);
-  };
-
   // Handle delete
-  const handleDelete = (awayLog) => {
-    setSelectedAwayLog(awayLog);
-    setShowDeleteModal(true);
-  };
-
-  // Handle delete confirmation
-  const handleDeleteConfirm = async () => {
-    if (!selectedAwayLog) return;
+  const handleDelete = async (awayLog) => {
+    if (
+      !confirm(
+        `Are you sure you want to delete this away log for ${awayLog.associateName}?`,
+      )
+    ) {
+      return;
+    }
 
     try {
       setLoading(true);
       await associateAwayLogManager.deleteAssociateAwayLog(
-        selectedAwayLog.id,
+        awayLog.id,
         onUnauthorized,
       );
       setSuccess("Associate away log deleted successfully");
-      setShowDeleteModal(false);
-      setSelectedAwayLog(null);
 
       // Reset to first page after delete
       setCurrentCursor("");
@@ -448,16 +344,6 @@ function SettingAssociateAwayLogListPage() {
     if (!dateString) return "-";
     try {
       return new Date(dateString).toLocaleDateString();
-    } catch {
-      return dateString;
-    }
-  };
-
-  // Format datetime helper
-  const formatDateTime = (dateString) => {
-    if (!dateString) return "-";
-    try {
-      return new Date(dateString).toLocaleString();
     } catch {
       return dateString;
     }
@@ -552,22 +438,15 @@ function SettingAssociateAwayLogListPage() {
         )}
 
         {/* Expired Documents Warning */}
-        {associatesWithExpiredDocs.length > 0 && !showExpiredDocsModal && (
+        {associatesWithExpiredDocs.length > 0 && (
           <div className="mb-4 sm:mb-6 bg-amber-50 border border-amber-200 text-amber-800 px-3 py-2 sm:px-4 sm:py-3 rounded-lg">
-            <div className="flex items-center justify-between">
-              <span className="flex items-center text-sm sm:text-base">
-                <ShieldExclamationIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 flex-shrink-0" />
-                <span>
-                  {associatesWithExpiredDocs.length} associate(s) have expired
-                  documents but are not on the away list
-                </span>
+            <div className="flex items-center">
+              <ShieldExclamationIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 flex-shrink-0" />
+              <span className="text-sm sm:text-base">
+                {associatesWithExpiredDocs.length} associate(s) have expired
+                documents but are not on the away list. Consider creating away
+                logs for them.
               </span>
-              <button
-                onClick={() => setShowExpiredDocsModal(true)}
-                className="ml-2 px-3 py-1 bg-amber-600 text-white text-xs sm:text-sm rounded hover:bg-amber-700"
-              >
-                View & Fix
-              </button>
             </div>
           </div>
         )}
@@ -745,27 +624,20 @@ function SettingAssociateAwayLogListPage() {
                         <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Created
                         </th>
-                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"></th>
+                        <th className="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Actions
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       {associateAwayLogs.map((awayLog) => (
-                        <tr
-                          key={awayLog.id}
-                          className="hover:bg-gray-50 cursor-pointer"
-                          onClick={() =>
-                            navigate(
-                              `/admin/settings/associate-away-log/${awayLog.id}/detail`,
-                            )
-                          }
-                        >
+                        <tr key={awayLog.id} className="hover:bg-gray-50">
                           <td className="px-3 py-4 text-sm">
                             <Link
                               to={`/admin/associate/${awayLog.associateId}`}
                               className="text-blue-600 hover:text-blue-800 font-medium flex items-center"
                               target="_blank"
                               rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
                             >
                               <UserIcon className="w-4 h-4 mr-1" />
                               {awayLog.associateName ||
@@ -807,17 +679,38 @@ function SettingAssociateAwayLogListPage() {
                           <td className="px-3 py-4 text-sm text-gray-500">
                             {formatDate(awayLog.createdAt)}
                           </td>
-                          <td className="px-3 py-4 text-sm text-right">
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleViewDetail(awayLog);
-                              }}
-                              className="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center"
-                            >
-                              View
-                              <ChevronRightIcon className="w-4 h-4 ml-1" />
-                            </button>
+                          <td className="px-3 py-4 text-sm">
+                            <div className="flex items-center space-x-3">
+                              <button
+                                onClick={() =>
+                                  navigate(
+                                    `/admin/settings/associate-away-log/${awayLog.id}/detail`,
+                                  )
+                                }
+                                className="text-blue-600 hover:text-blue-800"
+                                title="View"
+                              >
+                                <EyeIcon className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() =>
+                                  navigate(
+                                    `/admin/settings/associate-away-log/${awayLog.id}/update`,
+                                  )
+                                }
+                                className="text-amber-600 hover:text-amber-800"
+                                title="Edit"
+                              >
+                                <PencilSquareIcon className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(awayLog)}
+                                className="text-red-600 hover:text-red-800"
+                                title="Delete"
+                              >
+                                <TrashIcon className="w-4 h-4" />
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -830,12 +723,7 @@ function SettingAssociateAwayLogListPage() {
                   {associateAwayLogs.map((awayLog) => (
                     <div
                       key={awayLog.id}
-                      className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
-                      onClick={() =>
-                        navigate(
-                          `/admin/settings/associate-away-log/${awayLog.id}/detail`,
-                        )
-                      }
+                      className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
                     >
                       <div className="flex items-start justify-between mb-3">
                         <Link
@@ -843,21 +731,42 @@ function SettingAssociateAwayLogListPage() {
                           className="text-blue-600 hover:text-blue-800 font-medium flex items-center text-sm"
                           target="_blank"
                           rel="noopener noreferrer"
-                          onClick={(e) => e.stopPropagation()}
                         >
                           <UserIcon className="w-4 h-4 mr-1" />
                           {awayLog.associateName ||
                             `Associate #${awayLog.associateId}`}
                         </Link>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewDetail(awayLog);
-                          }}
-                          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                        >
-                          View
-                        </button>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() =>
+                              navigate(
+                                `/admin/settings/associate-away-log/${awayLog.id}/detail`,
+                              )
+                            }
+                            className="text-blue-600 hover:text-blue-800"
+                            title="View"
+                          >
+                            <EyeIcon className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() =>
+                              navigate(
+                                `/admin/settings/associate-away-log/${awayLog.id}/update`,
+                              )
+                            }
+                            className="text-amber-600 hover:text-amber-800"
+                            title="Edit"
+                          >
+                            <PencilSquareIcon className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(awayLog)}
+                            className="text-red-600 hover:text-red-800"
+                            title="Delete"
+                          >
+                            <TrashIcon className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
 
                       <div className="space-y-2 text-xs">
@@ -991,321 +900,6 @@ function SettingAssociateAwayLogListPage() {
             )}
           </div>
         </div>
-
-        {/* Expired Documents Modal */}
-        {showExpiredDocsModal && associatesWithExpiredDocs.length > 0 && (
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg w-full max-w-4xl max-h-[90vh] overflow-hidden">
-              <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-200 flex items-center justify-between">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-                  <ShieldExclamationIcon className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-amber-500" />
-                  Associates with Expired Documents
-                </h3>
-                <button
-                  onClick={() => setShowExpiredDocsModal(false)}
-                  className="text-gray-400 hover:text-gray-500 p-1"
-                >
-                  <XMarkIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-                </button>
-              </div>
-
-              <div className="px-4 py-4 sm:px-6 overflow-y-auto max-h-[60vh]">
-                <p className="text-sm text-gray-600 mb-4">
-                  The following associates have expired insurance or police
-                  checks but are not on the away list. You can automatically
-                  create away logs for them.
-                </p>
-
-                <div className="space-y-3">
-                  {associatesWithExpiredDocs.map((item) => (
-                    <div
-                      key={item.associate.id}
-                      className="border border-gray-200 rounded-lg p-4"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <Link
-                            to={`/admin/associate/${item.associate.id}`}
-                            className="text-blue-600 hover:text-blue-800 font-medium flex items-center text-sm"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            <UserIcon className="w-4 h-4 mr-1" />
-                            {item.associate.name}
-                          </Link>
-
-                          <div className="mt-2 space-y-1">
-                            {item.expiredReasons.map((reason, idx) => (
-                              <div
-                                key={idx}
-                                className="text-xs text-gray-600 flex items-center"
-                              >
-                                <ShieldExclamationIcon className="w-3 h-3 mr-1 text-amber-500" />
-                                <span className="font-medium">
-                                  {reason.type === "insurance"
-                                    ? "Insurance"
-                                    : "Police Check"}
-                                </span>
-                                <span className="ml-1">
-                                  expired on {formatDate(reason.expiryDate)}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-
-                        <button
-                          onClick={() => {
-                            item.expiredReasons.forEach((reason) => {
-                              createAwayLogForExpiredDoc(
-                                item.associate.id,
-                                item.associate.name,
-                                reason.reason,
-                                reason.expiryDate,
-                              );
-                            });
-                          }}
-                          className="ml-4 px-3 py-1 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
-                        >
-                          Create Away Log
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="px-4 py-3 sm:px-6 sm:py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-3">
-                <button
-                  onClick={() => setShowExpiredDocsModal(false)}
-                  className="w-full sm:w-auto px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={createAllAwayLogsForExpiredDocs}
-                  disabled={loading}
-                  className="w-full sm:w-auto px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white bg-amber-600 rounded-lg hover:bg-amber-700 disabled:opacity-50"
-                >
-                  Create All Away Logs ({associatesWithExpiredDocs.length})
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Detail Modal - Responsive */}
-        {showDetailModal && selectedAwayLog && (
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg w-full max-w-2xl max-h-[90vh] overflow-hidden">
-              <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-200 flex items-center justify-between">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-                  <CalendarDaysIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
-                  Away Log Details
-                </h3>
-                <button
-                  onClick={() => setShowDetailModal(false)}
-                  className="text-gray-400 hover:text-gray-500 p-1"
-                >
-                  <XMarkIcon className="w-5 h-5 sm:w-6 sm:h-6" />
-                </button>
-              </div>
-
-              <div className="px-4 py-4 sm:px-6 overflow-y-auto max-h-[60vh]">
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                      Associate:
-                    </label>
-                    <div className="p-3 bg-blue-50 rounded-lg">
-                      <Link
-                        to={`/admin/associate/${selectedAwayLog.associateId}`}
-                        className="text-blue-600 hover:text-blue-800 font-medium flex items-center text-sm"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        <UserIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
-                        {selectedAwayLog.associateName ||
-                          `Associate #${selectedAwayLog.associateId}`}
-                      </Link>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                      Reason:
-                    </label>
-                    <div className="p-3 bg-gray-50 rounded-lg text-xs sm:text-sm text-gray-900">
-                      <div className="flex items-center">
-                        {(selectedAwayLog.reason ===
-                          REASON_COMMERCIAL_INSURANCE_EXPIRED ||
-                          selectedAwayLog.reason ===
-                            REASON_POLICE_CHECK_EXPIRED) && (
-                          <ShieldExclamationIcon className="w-4 h-4 mr-1 text-amber-500" />
-                        )}
-                        {selectedAwayLog.reason === 1 ? (
-                          <>
-                            {REASON_MAP[1]}
-                            {selectedAwayLog.reasonOther && (
-                              <span className="block mt-1 italic">
-                                "{selectedAwayLog.reasonOther}"
-                              </span>
-                            )}
-                          </>
-                        ) : (
-                          REASON_MAP[selectedAwayLog.reason] || "Unknown"
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                        Start Date:
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg text-xs sm:text-sm text-gray-900 flex items-center">
-                        <CalendarIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 text-gray-500" />
-                        {formatDate(selectedAwayLog.startDate)}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                        Until:
-                      </label>
-                      <div className="p-3 bg-gray-50 rounded-lg text-xs sm:text-sm">
-                        {selectedAwayLog.untilFurtherNotice === 1 ? (
-                          <span className="text-amber-600 font-medium flex items-center">
-                            <ClockIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                            Further Notice
-                          </span>
-                        ) : (
-                          <span className="text-gray-900 flex items-center">
-                            <CalendarIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 text-gray-500" />
-                            {formatDate(selectedAwayLog.untilDate)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm">
-                    <div>
-                      <span className="font-medium text-gray-700">
-                        Created:
-                      </span>
-                      <p className="text-gray-900 mt-1">
-                        {formatDateTime(selectedAwayLog.createdAt)}
-                      </p>
-                    </div>
-                    {selectedAwayLog.createdByUserName && (
-                      <div>
-                        <span className="font-medium text-gray-700">
-                          Created By:
-                        </span>
-                        <p className="text-gray-900 mt-1">
-                          {selectedAwayLog.createdByUserName}
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="px-4 py-3 sm:px-6 sm:py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row sm:justify-end space-y-2 sm:space-y-0 sm:space-x-3">
-                <button
-                  onClick={() => setShowDetailModal(false)}
-                  className="w-full sm:w-auto px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  Close
-                </button>
-                <button
-                  onClick={() => {
-                    setShowDetailModal(false);
-                    navigate(
-                      `/admin/settings/associate-away-log/${selectedAwayLog.id}/update`,
-                    );
-                  }}
-                  className="w-full sm:w-auto px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white bg-amber-500 rounded-lg hover:bg-amber-600"
-                >
-                  <PencilSquareIcon className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1" />
-                  Edit
-                </button>
-                <button
-                  onClick={() => {
-                    setShowDetailModal(false);
-                    handleDelete(selectedAwayLog);
-                  }}
-                  className="w-full sm:w-auto px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700"
-                >
-                  <TrashIcon className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1" />
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Delete Confirmation Modal - Responsive */}
-        {showDeleteModal && selectedAwayLog && (
-          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg w-full max-w-md">
-              <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-200">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-                  <ExclamationTriangleIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 text-red-600" />
-                  Delete Away Log
-                </h3>
-              </div>
-
-              <div className="px-4 py-4 sm:px-6">
-                <p className="text-xs sm:text-sm text-gray-600 mb-4">
-                  Are you sure you want to delete this associate away log? This
-                  action cannot be undone.
-                </p>
-                <div className="p-3 bg-gray-50 rounded-lg text-xs sm:text-sm">
-                  <div className="space-y-1">
-                    <p>
-                      <strong>Associate:</strong>{" "}
-                      {selectedAwayLog.associateName ||
-                        `Associate #${selectedAwayLog.associateId}`}
-                    </p>
-                    <p>
-                      <strong>Reason:</strong>{" "}
-                      {selectedAwayLog.reason === 1
-                        ? selectedAwayLog.reasonOther || "Other"
-                        : REASON_MAP[selectedAwayLog.reason]}
-                    </p>
-                    <p>
-                      <strong>Start Date:</strong>{" "}
-                      {formatDate(selectedAwayLog.startDate)}
-                    </p>
-                    <p>
-                      <strong>Until:</strong>{" "}
-                      {selectedAwayLog.untilFurtherNotice === 1
-                        ? "Further Notice"
-                        : formatDate(selectedAwayLog.untilDate)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="px-4 py-3 sm:px-6 sm:py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-2 sm:space-x-3">
-                <button
-                  onClick={() => setShowDeleteModal(false)}
-                  className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDeleteConfirm}
-                  className="px-3 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
