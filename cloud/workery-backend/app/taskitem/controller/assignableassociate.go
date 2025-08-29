@@ -8,6 +8,7 @@ import (
 	"time"
 
 	a_c "github.com/over55/monorepo/cloud/workery-backend/app/associate/datastore"
+	aal_s "github.com/over55/monorepo/cloud/workery-backend/app/associateawaylog/datastore"
 	"github.com/over55/monorepo/cloud/workery-backend/utils/httperror"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -42,6 +43,7 @@ type AssignableAssociate struct {
 	WsibNumber          string                   `bson:"wsib_number" json:"wsib_number"`
 	HourlySalaryDesired int64                    `bson:"hourly_salary_desired" json:"hourly_salary_desired"`
 	SkillSets           []*a_c.AssociateSkillSet `bson:"skill_sets" json:"skill_sets,omitempty"`
+	IsAway              bool                     `bson:"is_away" json:"is_away"`
 }
 
 type ListAssignableAssociatesByTaskIDResponse struct {
@@ -131,6 +133,7 @@ func (impl *TaskItemControllerImpl) ListAssignableAssociatesByTaskID(ctx context
 			WsibNumber:          associate.WsibNumber,
 			HourlySalaryDesired: associate.HourlySalaryDesired,
 			SkillSets:           associate.SkillSets,
+			IsAway:              false,
 		})
 	}
 
@@ -154,5 +157,52 @@ func (impl *TaskItemControllerImpl) ListAssignableAssociatesByTaskID(ctx context
 	// Step 5: Implement sorting using the custom type
 	sort.Sort(ByContactsLast30Days(uniqueAssociatesSlice))
 
+	//
+	// Set the away status in the response.
+	//
+
+	err = impl.processAwayAssociates(ctx, t.TenantID, uniqueAssociatesSlice)
+	if err != nil {
+		impl.Logger.Error("process away associates error",
+			slog.Any("error", err),
+			slog.Any("task_id", id))
+		return nil, err
+	}
+
 	return &ListAssignableAssociatesByTaskIDResponse{Results: uniqueAssociatesSlice}, err
+}
+
+func (impl *TaskItemControllerImpl) processAwayAssociates(ctx context.Context, tenantID primitive.ObjectID, aa []*AssignableAssociate) error {
+	// STEP 1: Extract the unique associate IDs from the list of associates.
+	uniqueAssociateIDs := make([]primitive.ObjectID, 0, len(aa))
+	for _, a := range aa {
+		uniqueAssociateIDs = append(uniqueAssociateIDs, a.ID)
+	}
+
+	// STEP 2: Retrieve all away records for these associate IDs in a single query.
+	f := &aal_s.AssociateAwayLogPaginationListFilter{
+		SortField:      "created_a",
+		SortOrder:      1,         // Ascending
+		PageSize:       1_000_000, // No limit
+		TenantID:       tenantID,
+		InAssociateIDs: uniqueAssociateIDs,
+	}
+	awayRecords, err := impl.AssociateAwayLogStorer.ListByFilter(ctx, f)
+	if err != nil {
+		impl.Logger.Error("list away logs by filter error",
+			slog.Any("error", err))
+		return err
+	}
+
+	// Iterate through the list of assignable associates and set the away status if applicable.
+	for _, a := range aa {
+		for _, awayRecord := range awayRecords.Results {
+			if a.ID == awayRecord.AssociateID {
+				a.IsAway = true
+				break // No need to check further records for this associate.
+			}
+		}
+	}
+
+	return nil
 }

@@ -69,6 +69,7 @@ type AssociateAwayLogListFilter struct {
 	Reason          int8
 	ExcludeArchived bool
 	SearchText      string
+	InAssociateIDs  []primitive.ObjectID
 }
 
 type AssociateAwayLogListResult struct {

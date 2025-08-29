@@ -27,6 +27,9 @@ func (impl AssociateAwayLogStorerImpl) CountByFilter(ctx context.Context, f *Ass
 	if f.Reason != 0 {
 		filter["reason"] = f.Reason
 	}
+	if len(f.InAssociateIDs) > 0 {
+		filter["associate_id"] = bson.M{"$in": f.InAssociateIDs}
+	}
 
 	// impl.Logger.Debug("counting w/ filter:",
 	// 	slog.Any("filter", filter))

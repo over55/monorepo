@@ -32,6 +32,9 @@ func (impl AssociateAwayLogStorerImpl) ListByFilter(ctx context.Context, f *Asso
 	if f.Reason != 0 {
 		filter["reason"] = f.Reason
 	}
+	if len(f.InAssociateIDs) > 0 {
+		filter["associate_id"] = bson.M{"$in": f.InAssociateIDs}
+	}
 
 	// impl.Logger.Debug("listing filter:",
 	// 	slog.Any("filter", filter))
@@ -118,6 +121,9 @@ func (impl AssociateAwayLogStorerImpl) ListAsSelectOptionByFilter(ctx context.Co
 	}
 	if !f.AssociateID.IsZero() {
 		query["associate_id"] = f.AssociateID
+	}
+	if len(f.InAssociateIDs) > 0 {
+		query["associate_id"] = bson.M{"$in": f.InAssociateIDs}
 	}
 
 	if startAfter != "" {

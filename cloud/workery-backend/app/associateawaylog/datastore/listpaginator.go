@@ -24,11 +24,12 @@ type AssociateAwayLogPaginationListFilter struct {
 	SortOrder int8 // 1=ascending | -1=descending
 
 	// Filter related.
-	TenantID    primitive.ObjectID
-	AssociateID primitive.ObjectID
-	Status      int8
-	Reason      int8
-	SearchText  string
+	TenantID       primitive.ObjectID
+	AssociateID    primitive.ObjectID
+	Status         int8
+	Reason         int8
+	SearchText     string
+	InAssociateIDs []primitive.ObjectID
 }
 
 // AssociateAwayLogPaginationListResult represents the paginated list results for

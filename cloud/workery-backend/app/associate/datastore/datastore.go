@@ -248,7 +248,7 @@ type AssociateListFilter struct {
 	HasTaxID         int8
 
 	// IDs filter is used if you know the `ID` values of all the
-	// customers you want to retrieve.
+	// associates you want to retrieve.
 	IDs []primitive.ObjectID
 }
 
