@@ -3,22 +3,8 @@
 import React from "react";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 
-/**
- * Textarea Component
- * Multi-line text input field
- *
- * @param {string} label - Textarea label
- * @param {string} placeholder - Placeholder text
- * @param {string} value - Textarea value
- * @param {function} onChange - Change handler
- * @param {string} error - Error message
- * @param {boolean} disabled - Whether textarea is disabled
- * @param {boolean} required - Whether textarea is required
- * @param {number} rows - Number of visible text rows
- * @param {string} helperText - Helper text below textarea
- * @param {string} className - Additional CSS classes
- */
 function Textarea({
+  id, // Add id prop
   label,
   placeholder,
   value,
@@ -30,15 +16,23 @@ function Textarea({
   helperText,
   className = "",
 }) {
+  // Generate a unique ID if none provided
+  const textareaId =
+    id || `textarea-${Math.random().toString(36).substr(2, 9)}`;
+
   return (
     <div className={`mb-5 ${className}`}>
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label
+          htmlFor={textareaId} // Add htmlFor attribute
+          className="block text-sm font-medium text-gray-700 mb-2"
+        >
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
       )}
       <textarea
+        id={textareaId} // Add id attribute
         placeholder={placeholder}
         value={value}
         onChange={onChange}
@@ -60,6 +54,7 @@ function Textarea({
           ${disabled ? "bg-gray-50 cursor-not-allowed opacity-60" : "bg-white"}
         `}
       />
+      {/* rest of component stays the same */}
       {helperText && !error && (
         <p className="mt-2 text-sm text-gray-500">{helperText}</p>
       )}
