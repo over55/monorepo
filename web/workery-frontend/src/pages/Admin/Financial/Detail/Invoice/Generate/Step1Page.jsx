@@ -30,6 +30,7 @@ import {
   UserGroupIcon,
   BuildingOfficeIcon,
 } from "@heroicons/react/24/outline";
+import { formatDateForDisplay } from "../../../../../../services/Helpers/DateFormatter";
 
 function AdminFinancialGenerateInvoiceStep1Page() {
   const { oid } = useParams();
@@ -85,15 +86,14 @@ function AdminFinancialGenerateInvoiceStep1Page() {
           // Check for existing invoice generation data
           let existingData = invoiceStorage.getInvoiceGenerationData();
 
-          // If we're in edit mode and storage is empty, populate from existing invoice
-          if (
-            isEditMode &&
-            (!existingData || existingData.invoiceId !== oid) &&
-            orderData.invoice
-          ) {
+          // If we're in edit mode and have an existing invoice, ALWAYS populate from it
+          if (isEditMode && orderData.invoice) {
             console.log("Edit mode: Populating storage from existing invoice");
 
             const invoice = orderData.invoice;
+
+            console.log("--->", invoice);
+            console.log("invoiceDate--->", invoice.invoiceDate);
 
             // Create complete data object from existing invoice
             existingData = {
@@ -210,13 +210,21 @@ function AdminFinancialGenerateInvoiceStep1Page() {
                 invoice.associateSignature || orderData.associateName || "",
             };
 
-            // Save to storage
+            // Save to storage - OVERRIDE whatever was there before
             invoiceStorage.saveInvoiceGenerationData(existingData);
+          } else if (
+            !isEditMode &&
+            (!existingData || existingData.invoiceId !== oid)
+          ) {
+            // Not in edit mode and no existing data for this order
+            // This is a new invoice creation - clear any old data
+            invoiceStorage.clearInvoiceGenerationData();
+            existingData = null;
           }
 
           // Initialize form with data
           if (existingData && existingData.invoiceId === oid) {
-            // Use existing wizard data
+            // Use existing wizard data (either from edit mode or continuing wizard)
             setInvoiceId(existingData.invoiceId || oid);
             setInvoiceDate(
               existingData.invoiceDate || orderData.invoiceDate || "",
@@ -584,7 +592,7 @@ function AdminFinancialGenerateInvoiceStep1Page() {
                         type="date"
                         id="invoiceDate"
                         name="invoiceDate"
-                        value={invoiceDate}
+                        value={formatDateForDisplay(invoiceDate)}
                         disabled
                         className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed text-sm sm:text-base"
                       />
