@@ -1,84 +1,125 @@
 // File Path: monorepo/web/workery-frontend/src/services/Storage/TokenStorage.js
 
-/**
- * TokenStorage handles all token-related local storage operations
- */
 export class TokenStorage {
   constructor() {
-    this.ACCESS_TOKEN_KEY = "WORKERY_TOKEN_UTILITY_ACCESS_TOKEN_DATA";
-    this.REFRESH_TOKEN_KEY = "WORKERY_TOKEN_UTILITY_REFRESH_TOKEN_DATA";
+    this.ACCESS_TOKEN_KEY = "WORKERY_ACCESS_TOKEN";
+    this.REFRESH_TOKEN_KEY = "WORKERY_REFRESH_TOKEN";
   }
 
   /**
-   * Saves access token to local storage
-   * @param {string} accessToken
-   */
-  setAccessToken(accessToken) {
-    if (accessToken !== undefined && accessToken !== null) {
-      localStorage.setItem(this.ACCESS_TOKEN_KEY, accessToken);
-      console.log("TokenStorage: saved access token");
-    } else {
-      console.error("TokenStorage: Attempting to set undefined access token");
-    }
-  }
-
-  /**
-   * Saves refresh token to local storage
-   * @param {string} refreshToken
-   */
-  setRefreshToken(refreshToken) {
-    if (refreshToken !== undefined && refreshToken !== null) {
-      localStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
-      console.log("TokenStorage: saved refresh token");
-    } else {
-      console.error("TokenStorage: Attempting to set undefined refresh token");
-    }
-  }
-
-  /**
-   * Gets access token from local storage
+   * Get the current access token
    * @returns {string|null}
    */
   getAccessToken() {
-    return localStorage.getItem(this.ACCESS_TOKEN_KEY);
+    try {
+      const token = localStorage.getItem(this.ACCESS_TOKEN_KEY);
+      // Return null if token is undefined, empty, or "undefined" string
+      if (!token || token === "undefined" || token === "null" || token === "") {
+        return null;
+      }
+      return token;
+    } catch (error) {
+      console.error("TokenStorage: Error getting access token", error);
+      return null;
+    }
   }
 
   /**
-   * Gets refresh token from local storage
+   * Get the current refresh token
    * @returns {string|null}
    */
   getRefreshToken() {
-    return localStorage.getItem(this.REFRESH_TOKEN_KEY);
+    try {
+      const token = localStorage.getItem(this.REFRESH_TOKEN_KEY);
+      // Return null if token is undefined, empty, or "undefined" string
+      if (!token || token === "undefined" || token === "null" || token === "") {
+        return null;
+      }
+      return token;
+    } catch (error) {
+      console.error("TokenStorage: Error getting refresh token", error);
+      return null;
+    }
   }
 
   /**
-   * Clears all tokens from local storage
-   */
-  clearTokens() {
-    localStorage.removeItem(this.ACCESS_TOKEN_KEY);
-    localStorage.removeItem(this.REFRESH_TOKEN_KEY);
-    console.log("TokenStorage: cleared all tokens");
-  }
-
-  /**
-   * Clears entire local storage (used on successful login)
-   */
-  clearAllStorage() {
-    localStorage.clear();
-    console.log("TokenStorage: cleared entire local storage");
-  }
-
-  /**
-   * Saves both tokens at once
+   * Set tokens
    * @param {Object} tokens - { accessToken, refreshToken }
    */
-  setTokens(tokens) {
-    this.setAccessToken(tokens.accessToken);
-    this.setRefreshToken(tokens.refreshToken);
+  setTokens({ accessToken, refreshToken }) {
+    try {
+      if (accessToken) {
+        localStorage.setItem(this.ACCESS_TOKEN_KEY, accessToken);
+      }
+      if (refreshToken) {
+        localStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
+      }
+    } catch (error) {
+      console.error("TokenStorage: Error setting tokens", error);
+    }
   }
 
   /**
-   * Gets both tokens at once
+   * Set access token
+   * @param {string} token
+   */
+  setAccessToken(token) {
+    try {
+      if (token && token !== "undefined" && token !== "null") {
+        localStorage.setItem(this.ACCESS_TOKEN_KEY, token);
+      }
+    } catch (error) {
+      console.error("TokenStorage: Error setting access token", error);
+    }
+  }
+
+  /**
+   * Set refresh token
+   * @param {string} token
+   */
+  setRefreshToken(token) {
+    try {
+      if (token && token !== "undefined" && token !== "null") {
+        localStorage.setItem(this.REFRESH_TOKEN_KEY, token);
+      }
+    } catch (error) {
+      console.error("TokenStorage: Error setting refresh token", error);
+    }
+  }
+
+  /**
+   * Clear all tokens
+   */
+  clearTokens() {
+    try {
+      localStorage.removeItem(this.ACCESS_TOKEN_KEY);
+      localStorage.removeItem(this.REFRESH_TOKEN_KEY);
+      console.log("TokenStorage: cleared all tokens");
+    } catch (error) {
+      console.error("TokenStorage: Error clearing tokens", error);
+    }
+  }
+
+  /**
+   * Clear all storage
+   */
+  clearAllStorage() {
+    this.clearTokens();
+    // Clear any other storage items if needed
+  }
+
+  /**
+   * Check if we have valid tokens
+   * @returns {boolean}
+   */
+  hasValidTokens() {
+    const accessToken = this.getAccessToken();
+    const refreshToken = this.getRefreshToken();
+    return !!(accessToken && refreshToken);
+  }
+
+  /**
+   * Get both tokens
    * @returns {Object} - { accessToken, refreshToken }
    */
   getTokens() {
@@ -86,15 +127,5 @@ export class TokenStorage {
       accessToken: this.getAccessToken(),
       refreshToken: this.getRefreshToken(),
     };
-  }
-
-  /**
-   * Checks if user has valid tokens
-   * @returns {boolean}
-   */
-  hasValidTokens() {
-    const accessToken = this.getAccessToken();
-    const refreshToken = this.getRefreshToken();
-    return !!(accessToken && refreshToken);
   }
 }

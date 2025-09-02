@@ -238,8 +238,9 @@ const SERVICE_DEFINITIONS = {
   // API Services
   api: {
     auth: {
-      factory: (deps) => new AuthAPI(deps.baseURL, deps.endpoints),
-      dependencies: ["baseURL", "endpoints"],
+      factory: (deps) =>
+        new AuthAPI(deps.baseURL, deps.endpoints, deps.tokenStorage),
+      dependencies: ["baseURL", "endpoints", "storage:token"],
       singleton: true,
     },
     version: {

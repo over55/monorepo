@@ -50,19 +50,23 @@ export class AuthManager {
    * @returns {Promise<void>}
    */
   async logout() {
-    try {
-      // Call the logout API endpoint
-      await this.authAPI.logout();
+    console.log("AuthManager.logout: Starting");
 
-      console.log("AuthManager: Logout API call successful");
+    try {
+      // Try to call the backend logout, but don't wait forever
+      await this.authAPI.logout();
+      console.log("AuthManager.logout: API call completed");
     } catch (error) {
-      console.error("AuthManager: Logout API call failed", error);
-      // Continue with local cleanup even if API call fails
-    } finally {
-      // Always clean up local tokens
-      this.tokenStorage.clearTokens();
-      console.log("AuthManager: Cleared tokens after logout");
+      // Log but don't throw - we still want to clear local state
+      console.log(
+        "AuthManager.logout: API call failed, continuing anyway:",
+        error.message,
+      );
     }
+
+    // Always clear tokens regardless of API call result
+    this.tokenStorage.clearTokens();
+    console.log("AuthManager.logout: Tokens cleared, logout complete");
   }
 
   /**

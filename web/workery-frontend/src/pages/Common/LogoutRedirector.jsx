@@ -1,9 +1,8 @@
 // File Path: web/workery-frontend/src/pages/Common/LogoutRedirector.jsx
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router";
 import { useAuthManager, useAccountManager } from "../../services/Services";
-import { Loading } from "../../components/UI";
 import { ArrowRightOnRectangleIcon } from "@heroicons/react/24/outline";
 
 /**
@@ -20,6 +19,9 @@ function LogoutRedirector() {
   const accountManager = useAccountManager();
   const navigate = useNavigate();
 
+  // Use ref to prevent double execution in React StrictMode
+  const logoutInitiated = useRef(false);
+
   const [logoutStatus, setLogoutStatus] = useState({
     message: "Signing out...",
     isComplete: false,
@@ -27,115 +29,114 @@ function LogoutRedirector() {
   });
 
   useEffect(() => {
-    let mounted = true;
+    // Prevent double execution in React StrictMode
+    if (logoutInitiated.current) {
+      console.log("LogoutRedirector: Already running, skipping");
+      return;
+    }
+
+    logoutInitiated.current = true;
 
     const performLogout = async () => {
+      console.log("LogoutRedirector: Starting logout");
+
       try {
-        // Set initial status
-        if (mounted) {
-          setLogoutStatus({
-            message: "Signing out of your account...",
-            isComplete: false,
-            hasError: false,
-          });
-        }
-
-        // Small delay for better UX - allows user to see the logout message
-        await new Promise((resolve) => setTimeout(resolve, 500));
-
-        // Clear any cached account data first
-        if (accountManager && accountManager.clearAllCachedData) {
-          try {
-            accountManager.clearAllCachedData();
-            console.log("LogoutRedirector: Cleared account cache");
-          } catch (error) {
-            console.error(
-              "LogoutRedirector: Error clearing account cache:",
-              error,
-            );
-          }
-        }
-
-        // Clear any other cached data from localStorage
-        // Get all keys that start with WORKERY_ and clear them
-        const keysToRemove = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && key.startsWith("WORKERY_")) {
-            keysToRemove.push(key);
-          }
-        }
-
-        keysToRemove.forEach((key) => {
-          localStorage.removeItem(key);
+        // Update status
+        setLogoutStatus({
+          message: "Signing out of your account...",
+          isComplete: false,
+          hasError: false,
         });
 
-        if (keysToRemove.length > 0) {
-          console.log(
-            `LogoutRedirector: Cleared ${keysToRemove.length} cached items`,
-          );
-        }
-
-        // Clear session storage as well
-        sessionStorage.clear();
-
-        // Perform the actual logout
-        await authManager.logout();
-
-        console.log("LogoutRedirector: Logout successful");
-
-        if (mounted) {
-          setLogoutStatus({
-            message: "You have been successfully signed out. Redirecting...",
-            isComplete: true,
-            hasError: false,
-          });
-        }
-
-        // Short delay before redirect to show success message
+        // Add a small delay for UX
         await new Promise((resolve) => setTimeout(resolve, 500));
-      } catch (error) {
-        console.error("LogoutRedirector: Logout error:", error);
 
-        // Even if the API call fails, we should still clear local data
-        // and redirect to login since the user intended to logout
-        if (mounted) {
-          setLogoutStatus({
-            message: "Completing sign out...",
-            isComplete: false,
-            hasError: true,
-          });
+        console.log("LogoutRedirector: Calling authManager.logout()");
+
+        // Call logout with a timeout to prevent hanging
+        const logoutPromise = authManager.logout();
+        const timeoutPromise = new Promise((resolve) => {
+          setTimeout(() => {
+            console.log("LogoutRedirector: Logout timeout reached");
+            resolve();
+          }, 5000); // 5 second timeout
+        });
+
+        // Wait for either logout to complete or timeout
+        await Promise.race([logoutPromise, timeoutPromise]);
+
+        console.log("LogoutRedirector: authManager.logout() completed");
+
+        // Clear any additional cached data
+        try {
+          // Clear account manager cache if it exists
+          if (accountManager?.clearAllCachedData) {
+            accountManager.clearAllCachedData();
+          }
+
+          // Clear all WORKERY_ prefixed items from localStorage
+          const keysToRemove = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key && key.startsWith("WORKERY_")) {
+              keysToRemove.push(key);
+            }
+          }
+          keysToRemove.forEach((key) => localStorage.removeItem(key));
+
+          // Clear session storage
+          sessionStorage.clear();
+
+          console.log("LogoutRedirector: Cleared all cached data");
+        } catch (error) {
+          console.error("LogoutRedirector: Error clearing cache:", error);
         }
 
-        // Clear tokens even on error
+        // Update status to complete
+        setLogoutStatus({
+          message: "You have been successfully signed out. Redirecting...",
+          isComplete: true,
+          hasError: false,
+        });
+
+        console.log("LogoutRedirector: Success, redirecting in 1 second");
+
+        // Wait a moment before redirecting
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+      } catch (error) {
+        console.error("LogoutRedirector: Error during logout:", error);
+
+        // Still clear tokens on error
         try {
           authManager.clearAuthData();
-        } catch (clearError) {
-          console.error(
-            "LogoutRedirector: Error clearing auth data:",
-            clearError,
-          );
+        } catch (e) {
+          console.error("LogoutRedirector: Error clearing auth data:", e);
         }
 
-        // Brief delay before redirect on error
-        await new Promise((resolve) => setTimeout(resolve, 300));
-      } finally {
-        // Always redirect to login page
-        if (mounted) {
-          // Clear any navigation history state
-          navigate("/login", { replace: true, state: { fromLogout: true } });
-        }
+        setLogoutStatus({
+          message: "Completing sign out...",
+          isComplete: true,
+          hasError: true,
+        });
+
+        // Wait briefly before redirect
+        await new Promise((resolve) => setTimeout(resolve, 500));
       }
+
+      // Always redirect to login
+      console.log("LogoutRedirector: Redirecting to login");
+      navigate("/login", { replace: true, state: { fromLogout: true } });
     };
 
-    // Start the logout process
-    performLogout();
-
-    // Cleanup function
-    return () => {
-      mounted = false;
-    };
-  }, []); // Empty dependency array - run once on mount
+    // Start logout process
+    performLogout().catch((error) => {
+      console.error("LogoutRedirector: Unexpected error:", error);
+      // Force redirect on any unexpected error
+      setTimeout(() => {
+        navigate("/login", { replace: true });
+      }, 1000);
+    });
+  }, []); // Empty dependency array
 
   // Render loading state with logout message
   return (

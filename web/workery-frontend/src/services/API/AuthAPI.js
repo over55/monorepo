@@ -7,9 +7,10 @@ import { camelizeKeys, decamelizeKeys } from "humps";
  * AuthAPI handles all authentication-related API calls
  */
 export class AuthAPI {
-  constructor(baseURL, endpoints) {
+  constructor(baseURL, endpoints, tokenStorage = null) {
     this.baseURL = baseURL;
     this.endpoints = endpoints;
+    this.tokenStorage = tokenStorage;
 
     // Debug log in development
     if (process.env.NODE_ENV === "development") {
@@ -17,6 +18,7 @@ export class AuthAPI {
         baseURL: this.baseURL,
         loginEndpoint: this.endpoints.LOGIN,
         logoutEndpoint: this.endpoints.LOGOUT,
+        hasTokenStorage: !!this.tokenStorage,
       });
     }
   }
@@ -54,18 +56,64 @@ export class AuthAPI {
    * @returns {Promise<null>} - Always resolves to null on success
    */
   async logout() {
+    console.log("AuthAPI.logout: Starting logout process");
+
+    // Always succeed logout - the backend call is optional
+    // The main goal is to clear local state
     try {
-      const apiClient = this._createBasicClient();
+      // Get the access token
+      const accessToken = this.tokenStorage
+        ? this.tokenStorage.getAccessToken()
+        : null;
 
-      // Send empty data object for logout
-      const data = {};
-      await apiClient.post(this.endpoints.LOGOUT, data);
+      console.log("AuthAPI.logout: Token present?", !!accessToken);
 
-      // Logout API typically returns null or empty response
-      return null;
+      // Only try to call backend if we have a token
+      if (
+        accessToken &&
+        accessToken !== "undefined" &&
+        accessToken !== "null"
+      ) {
+        // Create a simple axios request
+        const fullUrl = `${this.baseURL}${this.endpoints.LOGOUT}`;
+        console.log("AuthAPI.logout: Calling", fullUrl);
+
+        // Use a promise with timeout to prevent hanging
+        const timeoutPromise = new Promise((resolve) => {
+          setTimeout(() => {
+            console.log("AuthAPI.logout: Request timed out, continuing anyway");
+            resolve(null);
+          }, 3000); // 3 second timeout
+        });
+
+        const logoutPromise = axios.post(
+          fullUrl,
+          {},
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+              Authorization: `JWT ${accessToken}`,
+            },
+          },
+        );
+
+        // Race between logout and timeout
+        await Promise.race([logoutPromise, timeoutPromise]);
+        console.log("AuthAPI.logout: Backend logout complete");
+      } else {
+        console.log("AuthAPI.logout: No valid token, skipping backend call");
+      }
     } catch (error) {
-      throw this._formatError(error);
+      // Log the error but don't throw it
+      console.log(
+        "AuthAPI.logout: Backend call failed, but continuing:",
+        error.message,
+      );
     }
+
+    console.log("AuthAPI.logout: Logout process complete");
+    return null;
   }
 
   /**
