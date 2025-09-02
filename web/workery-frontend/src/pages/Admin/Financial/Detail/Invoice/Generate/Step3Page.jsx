@@ -1,7 +1,7 @@
 // File Path: web/workery-frontend/src/pages/Admin/Financial/Detail/Invoice/Generate/Step3Page.jsx
 
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router";
+import { useParams, useNavigate, Link, useSearchParams } from "react-router";
 import { useOrderManager } from "../../../../../../services/Services";
 import { InvoiceGenerationStorage } from "../../../../../../services/Storage/InvoiceGenerationStorage";
 import {
@@ -51,6 +51,8 @@ function AdminFinancialGenerateInvoiceStep3Page() {
   const navigate = useNavigate();
   const orderManager = useOrderManager();
   const invoiceStorage = new InvoiceGenerationStorage();
+  const [searchParams] = useSearchParams();
+  const isEditMode = searchParams.get("mode") === "edit";
 
   // Page state
   const [errors, setErrors] = useState({});
@@ -266,7 +268,10 @@ function AdminFinancialGenerateInvoiceStep3Page() {
     invoiceStorage.saveInvoiceGenerationData(updatedData);
 
     // Navigate to step 4
-    navigate(`/admin/financial/${oid}/invoice/generate/step-4`);
+    const nextUrl = isEditMode
+      ? `/admin/financial/${oid}/invoice/generate/step-4?mode=edit`
+      : `/admin/financial/${oid}/invoice/generate/step-4`;
+    navigate(nextUrl);
   };
 
   const handleCancel = () => {
@@ -357,7 +362,7 @@ function AdminFinancialGenerateInvoiceStep3Page() {
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
                 <DocumentPlusIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
-                Generate Invoice
+                {isEditMode ? "Edit Invoice" : "Generate Invoice"}
               </h1>
               <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
                 <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
@@ -925,7 +930,11 @@ function AdminFinancialGenerateInvoiceStep3Page() {
             {/* Form Actions - Responsive */}
             <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 gap-3">
               <Link
-                to={`/admin/financial/${oid}/invoice/generate/step-2`}
+                to={
+                  isEditMode
+                    ? `/admin/financial/${oid}/invoice/generate/step-2?mode=edit`
+                    : `/admin/financial/${oid}/invoice/generate/step-2`
+                }
                 className="order-2 sm:order-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <ChevronLeftIcon className="w-4 h-4 mr-2" />

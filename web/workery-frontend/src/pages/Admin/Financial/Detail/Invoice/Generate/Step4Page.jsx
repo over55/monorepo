@@ -1,7 +1,7 @@
 // File Path: web/workery-frontend/src/pages/Admin/Financial/Detail/Invoice/Generate/Step4Page.jsx
 
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router";
+import { useParams, useNavigate, Link, useSearchParams } from "react-router";
 import { useOrderManager } from "../../../../../../services/Services";
 import { InvoiceGenerationStorage } from "../../../../../../services/Storage/InvoiceGenerationStorage";
 import { ORDER_INVOICE_PAYMENT_METHODS_OPTIONS } from "../../../../../../constants/FieldOptions";
@@ -37,6 +37,8 @@ function AdminFinancialGenerateInvoiceStep4Page() {
   const navigate = useNavigate();
   const orderManager = useOrderManager();
   const invoiceStorage = new InvoiceGenerationStorage();
+  const [searchParams] = useSearchParams();
+  const isEditMode = searchParams.get("mode") === "edit";
 
   // Page state
   const [errors, setErrors] = useState({});
@@ -255,7 +257,10 @@ function AdminFinancialGenerateInvoiceStep4Page() {
   };
 
   const handleBack = () => {
-    navigate(`/admin/financial/${oid}/invoice/generate/step-3`);
+    const backUrl = isEditMode
+      ? `/admin/financial/${oid}/invoice/generate/step-3?mode=edit`
+      : `/admin/financial/${oid}/invoice/generate/step-3`;
+    navigate(backUrl);
   };
 
   const formatCurrency = (value) => {
@@ -387,7 +392,7 @@ function AdminFinancialGenerateInvoiceStep4Page() {
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
                 <DocumentPlusIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
-                Generate Invoice
+                {isEditMode ? "Edit Invoice" : "Generate Invoice"}
               </h1>
               <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
                 <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
@@ -873,7 +878,7 @@ function AdminFinancialGenerateInvoiceStep4Page() {
                     className="order-1 sm:order-2 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 transition-colors"
                   >
                     <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
-                    Submit Invoice
+                    {isEditMode ? "Update Invoice" : "Submit Invoice"}
                   </button>
                 </div>
               </div>

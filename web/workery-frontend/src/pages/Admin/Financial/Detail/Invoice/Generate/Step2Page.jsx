@@ -1,7 +1,7 @@
 // File Path: web/workery-frontend/src/pages/Admin/Financial/Detail/Invoice/Generate/Step2Page.jsx
 
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router";
+import { useParams, useNavigate, Link, useSearchParams } from "react-router";
 import { useOrderManager } from "../../../../../../services/Services";
 import { InvoiceGenerationStorage } from "../../../../../../services/Storage/InvoiceGenerationStorage";
 import {
@@ -32,6 +32,8 @@ function AdminFinancialGenerateInvoiceStep2Page() {
   const navigate = useNavigate();
   const orderManager = useOrderManager();
   const invoiceStorage = new InvoiceGenerationStorage();
+  const [searchParams] = useSearchParams();
+  const isEditMode = searchParams.get("mode") === "edit";
 
   // Page state
   const [errors, setErrors] = useState({});
@@ -297,12 +299,18 @@ function AdminFinancialGenerateInvoiceStep2Page() {
 
     invoiceStorage.saveInvoiceGenerationData(existingData);
 
-    // Navigate to step 3
-    navigate(`/admin/financial/${oid}/invoice/generate/step-3`);
+    // Navigate to step 3, preserving edit mode
+    const nextUrl = isEditMode
+      ? `/admin/financial/${oid}/invoice/generate/step-3?mode=edit`
+      : `/admin/financial/${oid}/invoice/generate/step-3`;
+    navigate(nextUrl);
   };
 
   const handleBack = () => {
-    navigate(`/admin/financial/${oid}/invoice/generate/step-1`);
+    const backUrl = isEditMode
+      ? `/admin/financial/${oid}/invoice/generate/step-1?mode=edit`
+      : `/admin/financial/${oid}/invoice/generate/step-1`;
+    navigate(backUrl);
   };
 
   const handleCancel = () => {
@@ -394,7 +402,7 @@ function AdminFinancialGenerateInvoiceStep2Page() {
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
                 <DocumentPlusIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
-                Generate Invoice
+                {isEditMode ? "Edit Invoice" : "Generate Invoice"}
               </h1>
               <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
                 <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
@@ -822,8 +830,9 @@ function AdminFinancialGenerateInvoiceStep2Page() {
 
             <div className="px-4 sm:px-6 py-4">
               <p className="text-sm text-gray-600">
-                Your invoice generation will be cancelled and your work will be
-                lost. This cannot be undone. Do you want to continue?
+                Your invoice {isEditMode ? "editing" : "generation"} will be
+                cancelled and your work will be lost. This cannot be undone. Do
+                you want to continue?
               </p>
             </div>
 

@@ -1,7 +1,12 @@
 // File Path: web/workery-frontend/src/pages/Admin/Financial/Detail/Invoice/Generate/Step1Page.jsx
 
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router";
+import {
+  useParams,
+  useNavigate,
+  Link,
+  useSearchParams,
+} from "react-router-dom";
 import { useOrderManager } from "../../../../../../services/Services";
 import { InvoiceGenerationStorage } from "../../../../../../services/Storage/InvoiceGenerationStorage";
 import {
@@ -29,8 +34,12 @@ import {
 function AdminFinancialGenerateInvoiceStep1Page() {
   const { oid } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const orderManager = useOrderManager();
   const invoiceStorage = new InvoiceGenerationStorage();
+
+  // Check if we're in edit mode
+  const isEditMode = searchParams.get("mode") === "edit";
 
   // Page state
   const [errors, setErrors] = useState({});
@@ -74,9 +83,138 @@ function AdminFinancialGenerateInvoiceStep1Page() {
           setOrder(orderData);
 
           // Check for existing invoice generation data
-          const existingData = invoiceStorage.getInvoiceGenerationData();
+          let existingData = invoiceStorage.getInvoiceGenerationData();
 
-          // Initialize form with order data or existing wizard data
+          // If we're in edit mode and storage is empty, populate from existing invoice
+          if (
+            isEditMode &&
+            (!existingData || existingData.invoiceId !== oid) &&
+            orderData.invoice
+          ) {
+            console.log("Edit mode: Populating storage from existing invoice");
+
+            const invoice = orderData.invoice;
+
+            // Create complete data object from existing invoice
+            existingData = {
+              invoiceId: invoice.invoiceId || oid,
+              invoiceDate: invoice.invoiceDate || orderData.invoiceDate || "",
+              associateName:
+                invoice.associateName || orderData.associateName || "",
+              associatePhone:
+                invoice.associatePhone || orderData.associatePhone || "",
+              associateTaxId:
+                invoice.invoiceAssociateTax || orderData.associateTaxId || "",
+              customerName: invoice.clientName || orderData.customerName || "",
+              customerAddress:
+                invoice.clientAddress ||
+                orderData.customerFullAddressWithoutPostalCode ||
+                "",
+              customerPhone:
+                invoice.clientPhone || orderData.customerPhone || "",
+              customerEmail:
+                invoice.clientEmail || orderData.customerEmail || "",
+
+              // Line items for Step 2
+              line01Quantity: invoice.line01Qty || 0,
+              line01Description: invoice.line01Desc || "",
+              line01UnitPrice: invoice.line01Price || 0,
+              line01Amount: invoice.line01Amount || 0,
+              line02Quantity: invoice.line02Qty || 0,
+              line02Description: invoice.line02Desc || "",
+              line02UnitPrice: invoice.line02Price || 0,
+              line02Amount: invoice.line02Amount || 0,
+              line03Quantity: invoice.line03Qty || 0,
+              line03Description: invoice.line03Desc || "",
+              line03UnitPrice: invoice.line03Price || 0,
+              line03Amount: invoice.line03Amount || 0,
+              line04Quantity: invoice.line04Qty || 0,
+              line04Description: invoice.line04Desc || "",
+              line04UnitPrice: invoice.line04Price || 0,
+              line04Amount: invoice.line04Amount || 0,
+              line05Quantity: invoice.line05Qty || 0,
+              line05Description: invoice.line05Desc || "",
+              line05UnitPrice: invoice.line05Price || 0,
+              line05Amount: invoice.line05Amount || 0,
+              line06Quantity: invoice.line06Qty || 0,
+              line06Description: invoice.line06Desc || "",
+              line06UnitPrice: invoice.line06Price || 0,
+              line06Amount: invoice.line06Amount || 0,
+              line07Quantity: invoice.line07Qty || 0,
+              line07Description: invoice.line07Desc || "",
+              line07UnitPrice: invoice.line07Price || 0,
+              line07Amount: invoice.line07Amount || 0,
+              line08Quantity: invoice.line08Qty || 0,
+              line08Description: invoice.line08Desc || "",
+              line08UnitPrice: invoice.line08Price || 0,
+              line08Amount: invoice.line08Amount || 0,
+              line09Quantity: invoice.line09Qty || 0,
+              line09Description: invoice.line09Desc || "",
+              line09UnitPrice: invoice.line09Price || 0,
+              line09Amount: invoice.line09Amount || 0,
+              line10Quantity: invoice.line10Qty || 0,
+              line10Description: invoice.line10Desc || "",
+              line10UnitPrice: invoice.line10Price || 0,
+              line10Amount: invoice.line10Amount || 0,
+              line11Quantity: invoice.line11Qty || 0,
+              line11Description: invoice.line11Desc || "",
+              line11UnitPrice: invoice.line11Price || 0,
+              line11Amount: invoice.line11Amount || 0,
+              line12Quantity: invoice.line12Qty || 0,
+              line12Description: invoice.line12Desc || "",
+              line12UnitPrice: invoice.line12Price || 0,
+              line12Amount: invoice.line12Amount || 0,
+              line13Quantity: invoice.line13Qty || 0,
+              line13Description: invoice.line13Desc || "",
+              line13UnitPrice: invoice.line13Price || 0,
+              line13Amount: invoice.line13Amount || 0,
+              line14Quantity: invoice.line14Qty || 0,
+              line14Description: invoice.line14Desc || "",
+              line14UnitPrice: invoice.line14Price || 0,
+              line14Amount: invoice.line14Amount || 0,
+              line15Quantity: invoice.line15Qty || 0,
+              line15Description: invoice.line15Desc || "",
+              line15UnitPrice: invoice.line15Price || 0,
+              line15Amount: invoice.line15Amount || 0,
+
+              // Financial data for Step 3
+              invoiceLabourAmount:
+                invoice.totalLabour || orderData.invoiceLabourAmount || 0,
+              invoiceMaterialAmount:
+                invoice.totalMaterials || orderData.invoiceMaterialAmount || 0,
+              invoiceOtherCostsAmount:
+                invoice.otherCosts || orderData.invoiceOtherCostsAmount || 0,
+              invoiceTaxAmount: invoice.tax || orderData.invoiceTaxAmount || 0,
+              invoiceTotalAmount:
+                invoice.total || orderData.invoiceTotalAmount || 0,
+              invoiceDepositAmount:
+                invoice.deposit || orderData.invoiceDepositAmount || 0,
+              invoiceAmountDue:
+                invoice.amountDue || orderData.invoiceAmountDue || 0,
+              invoiceQuoteDays: invoice.invoiceQuoteDays || 30,
+              invoiceQuoteDate:
+                invoice.invoiceQuoteDate || orderData.completionDate || "",
+              invoiceCustomersApproval:
+                invoice.invoiceCustomersApproval || "Signature",
+              line01Notes: invoice.line01Notes || "",
+              line02Notes: invoice.line02Notes || "",
+              dateClientPaidInvoice:
+                invoice.dateClientPaidInvoice || orderData.completionDate || "",
+              paymentMethods:
+                invoice.paymentMethods || orderData.paymentMethods || [],
+              clientSignature:
+                invoice.clientSignature || orderData.customerName || "",
+              associateSignDate:
+                invoice.associateSignDate || orderData.completionDate || "",
+              associateSignature:
+                invoice.associateSignature || orderData.associateName || "",
+            };
+
+            // Save to storage
+            invoiceStorage.saveInvoiceGenerationData(existingData);
+          }
+
+          // Initialize form with data
           if (existingData && existingData.invoiceId === oid) {
             // Use existing wizard data
             setInvoiceId(existingData.invoiceId || oid);
@@ -107,7 +245,7 @@ function AdminFinancialGenerateInvoiceStep1Page() {
               existingData.customerEmail || orderData.customerEmail || "",
             );
           } else {
-            // Initialize with order data
+            // Initialize with order data (new invoice)
             setInvoiceId(oid);
             setInvoiceDate(orderData.invoiceDate || "");
             setAssociateName(orderData.associateName || "");
@@ -140,7 +278,7 @@ function AdminFinancialGenerateInvoiceStep1Page() {
     return () => {
       mounted = false;
     };
-  }, [oid]);
+  }, [oid, isEditMode]);
 
   const handleNext = () => {
     // Save data to storage
@@ -158,8 +296,11 @@ function AdminFinancialGenerateInvoiceStep1Page() {
 
     invoiceStorage.saveInvoiceGenerationData(invoiceData);
 
-    // Navigate to step 2
-    navigate(`/admin/financial/${oid}/invoice/generate/step-2`);
+    // Navigate to step 2, preserving edit mode if applicable
+    const nextUrl = isEditMode
+      ? `/admin/financial/${oid}/invoice/generate/step-2?mode=edit`
+      : `/admin/financial/${oid}/invoice/generate/step-2`;
+    navigate(nextUrl);
   };
 
   const handleCancel = () => {
@@ -259,7 +400,7 @@ function AdminFinancialGenerateInvoiceStep1Page() {
                 <span className="mx-1 sm:mx-2 text-gray-400">/</span>
                 <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
                   <DocumentPlusIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                  Generate Invoice
+                  {isEditMode ? "Edit Invoice" : "Generate Invoice"}
                 </span>
               </div>
             </li>
@@ -272,7 +413,7 @@ function AdminFinancialGenerateInvoiceStep1Page() {
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
                 <DocumentPlusIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
-                Generate Invoice
+                {isEditMode ? "Edit Invoice" : "Generate Invoice"}
               </h1>
               <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
                 <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
@@ -625,10 +766,9 @@ function AdminFinancialGenerateInvoiceStep1Page() {
                 <p className="text-xs sm:text-sm text-blue-800 flex items-start">
                   <InformationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 mt-0.5" />
                   <span>
-                    The invoice header information is pulled from the order
-                    details. If you need to modify any of these values, please
-                    update them in the financials screen for this job before
-                    generating the invoice.
+                    {isEditMode
+                      ? "You are editing an existing invoice. The header information is populated from the current invoice."
+                      : "The invoice header information is pulled from the order details. If you need to modify any of these values, please update them in the financials screen for this job before generating the invoice."}
                   </span>
                 </p>
               </div>
@@ -681,9 +821,9 @@ function AdminFinancialGenerateInvoiceStep1Page() {
 
             <div className="px-4 sm:px-6 py-4">
               <p className="text-sm text-gray-600">
-                Your invoice generation progress will be cancelled and any
-                unsaved changes will be lost. This cannot be undone. Do you want
-                to continue?
+                Your invoice {isEditMode ? "editing" : "generation"} progress
+                will be cancelled and any unsaved changes will be lost. This
+                cannot be undone. Do you want to continue?
               </p>
             </div>
 

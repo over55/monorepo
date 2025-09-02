@@ -103,7 +103,7 @@ function AdminFinancialInvoiceDetailPage() {
 
   // Handle regenerate invoice click
   const onRegenerateInvoiceClick = () => {
-    navigate(`/admin/financial/${oid}/invoice/generate/step-1`);
+    navigate(`/admin/financial/${oid}/invoice/generate/step-1?mode=edit`);
   };
 
   // Handle invoice download
