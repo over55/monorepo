@@ -22,6 +22,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useStaffManager } from "../../../../../../services/Services";
 import { DateTime } from "luxon";
+import { formatDateTime } from "../../../../../../services/Helpers/DateFormatter";
 
 // Import constants
 const STAFF_STATUS_ACTIVE = 1;
@@ -128,16 +129,6 @@ function AdminStaffDetailCommentListPage() {
   // Refresh handler
   const handleRefresh = () => {
     fetchStaffData(true);
-  };
-
-  // Format helpers
-  const formatDateTime = (dateString) => {
-    if (!dateString) return "-";
-    try {
-      return DateTime.fromISO(dateString).toLocaleString(DateTime.DATETIME_MED);
-    } catch {
-      return dateString;
-    }
   };
 
   const formatLastFetchTime = () => {

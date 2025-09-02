@@ -28,7 +28,7 @@ import {
   useOrderManager,
   useCommentManager,
 } from "../../../../../../services/Services";
-import { formatDateForDisplay } from "../../../../../../services/Helpers/DateFormatter";
+import { formatDateTime } from "../../../../../../services/Helpers/DateFormatter";
 import { ORDER_STATUS_ARCHIVED } from "../../../../../../constants/Order";
 import { DateTime } from "luxon";
 
@@ -191,16 +191,6 @@ function AdminOrderDetailCommentListPage() {
   // Refresh handler
   const handleRefresh = () => {
     doFetchComments(currentCursor, true);
-  };
-
-  // Format helpers
-  const formatDateTime = (dateString) => {
-    if (!dateString) return "-";
-    try {
-      return formatDateForDisplay(dateString);
-    } catch {
-      return dateString;
-    }
   };
 
   const formatLastFetchTime = () => {

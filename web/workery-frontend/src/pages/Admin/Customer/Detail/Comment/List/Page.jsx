@@ -23,6 +23,7 @@ import {
   useAuthManager,
 } from "../../../../../../services/Services";
 import { DateTime } from "luxon";
+import { formatDateTime } from "../../../../../../services/Helpers/DateFormatter";
 
 function AdminCustomerDetailCommentListPage() {
   const { cid } = useParams();
@@ -116,16 +117,6 @@ function AdminCustomerDetailCommentListPage() {
   // Refresh handler
   const handleRefresh = () => {
     fetchCustomerDetail(cid, true);
-  };
-
-  // Format helpers
-  const formatDateTime = (dateString) => {
-    if (!dateString) return "-";
-    try {
-      return DateTime.fromISO(dateString).toLocaleString(DateTime.DATETIME_MED);
-    } catch {
-      return dateString;
-    }
   };
 
   const formatLastFetchTime = () => {

@@ -29,7 +29,10 @@ import {
   useOrderIncidentManager,
   useAuthManager,
 } from "../../../../services/Services";
-import { formatDateForDisplay } from "../../../../services/Helpers/DateFormatter";
+import {
+  formatDateForDisplay,
+  formatDateTime,
+} from "../../../../services/Helpers/DateFormatter";
 
 function AdminOrderIncidentDetailPage() {
   const { oiid } = useParams();

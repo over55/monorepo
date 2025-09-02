@@ -49,7 +49,6 @@ import {
   STAFF_ORGANIZATION_TYPE_OPTIONS_WITH_EMPTY_OPTIONS,
 } from "../../../../constants/Staff";
 import {
-  formatDate,
   formatDateTime,
   formatDateForDisplay,
 } from "../../../../services/Helpers/DateFormatter";

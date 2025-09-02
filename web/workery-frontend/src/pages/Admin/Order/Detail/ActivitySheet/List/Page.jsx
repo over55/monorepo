@@ -25,6 +25,7 @@ import {
   useAuthManager,
 } from "../../../../../../services/Services";
 import { DateTime } from "luxon";
+import { formatDateTime } from "../../../../../../services/Helpers/DateFormatter";
 
 // Constants
 const OrderStatusNew = 1;
@@ -213,16 +214,6 @@ function AdminOrderDetailActivitySheetListPage() {
     setPreviousCursors([]);
     setNextCursor("");
     lastFetchParams.current = null;
-  };
-
-  // Format helpers
-  const formatDateTime = (dateString) => {
-    if (!dateString) return "-";
-    try {
-      return DateTime.fromISO(dateString).toLocaleString(DateTime.DATETIME_MED);
-    } catch {
-      return dateString;
-    }
   };
 
   const formatLastFetchTime = () => {

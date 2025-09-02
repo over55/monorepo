@@ -54,7 +54,10 @@ import {
   ServiceFeeDisplay,
   InsuranceRequirementsDisplay,
 } from "../../../../components/business/displays";
-import { formatDateForDisplay } from "../../../../services/Helpers/DateFormatter";
+import {
+  formatDateForDisplay,
+  formatDateTime,
+} from "../../../../services/Helpers/DateFormatter";
 
 // Constants
 const COMMERCIAL_ASSOCIATE_TYPE_OF_ID = 3;

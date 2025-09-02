@@ -23,7 +23,7 @@ import {
   PlusCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useTaskManager } from "../../../../../../services/Services";
-import { formatDateForDisplay } from "../../../../../../services/Helpers/DateFormatter";
+import { formatDateTime } from "../../../../../../services/Helpers/DateFormatter";
 import { DateTime } from "luxon";
 import {
   ORDER_STATUS_DECLINED,
@@ -191,16 +191,6 @@ function AdminOrderDetailMoreTaskListPage() {
     // Reset pagination when sort changes
     setCurrentPage(1);
     lastFetchParams.current = null;
-  };
-
-  // Format helpers
-  const formatDateTime = (dateString) => {
-    if (!dateString) return "-";
-    try {
-      return DateTime.fromISO(dateString).toLocaleString(DateTime.DATETIME_MED);
-    } catch {
-      return formatDateForDisplay(dateString);
-    }
   };
 
   const formatLastFetchTime = () => {

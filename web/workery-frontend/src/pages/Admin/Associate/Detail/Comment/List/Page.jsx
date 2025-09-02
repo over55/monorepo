@@ -26,6 +26,7 @@ import {
   useCommentManager,
 } from "../../../../../../services/Services";
 import { DateTime } from "luxon";
+import { formatDateTime } from "../../../../../../services/Helpers/DateFormatter";
 
 // Constants for comment belonging types (from backend)
 const BELONGS_TO_CUSTOMER = 1;
@@ -287,16 +288,6 @@ function AdminAssociateDetailCommentListPage() {
     setPreviousCursors([]);
     setNextCursor("");
     lastFetchParams.current = null;
-  };
-
-  // Format helpers
-  const formatDateTime = (dateString) => {
-    if (!dateString) return "-";
-    try {
-      return DateTime.fromISO(dateString).toLocaleString(DateTime.DATETIME_MED);
-    } catch {
-      return dateString;
-    }
   };
 
   const formatLastFetchTime = () => {
