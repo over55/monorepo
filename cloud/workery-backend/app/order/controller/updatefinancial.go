@@ -250,7 +250,7 @@ func (impl *OrderControllerImpl) UpdateFinancialByWJID(ctx context.Context, req 
 		if sf == nil {
 			impl.Logger.Error("service fee does not exist error",
 				slog.Any("service_fee_id", req.InvoiceServiceFeeID))
-			return nil, httperror.NewForBadRequestWithSingleField("invoice_service_fee_id", fmt.Sprintf("service fee does not exist for %v", req.InvoiceServiceFeeID))
+			return nil, httperror.NewForBadRequestWithSingleField("invoice_service_fee_id", "service fee does not exist")
 		}
 
 		// Update model with the requests.
