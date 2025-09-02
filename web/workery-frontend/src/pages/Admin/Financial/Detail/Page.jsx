@@ -26,9 +26,9 @@ import {
   BuildingOfficeIcon,
 } from "@heroicons/react/24/outline";
 import { useOrderManager } from "../../../../services/Services";
-import { DateTime } from "luxon";
 import { ORDER_INVOICE_PAYMENT_METHODS_OPTIONS } from "../../../../constants/FieldOptions";
 import { ORDER_STATUS_ARCHIVED } from "../../../../constants/Order";
+import { formatDate } from "../../../../services/Helpers/DateFormatter";
 
 function AdminFinancialDetailPage() {
   // URL Parameters
@@ -80,24 +80,6 @@ function AdminFinancialDetailPage() {
   const formatCurrency = (amount) => {
     if (amount === null || amount === undefined) return "-";
     return `$${parseFloat(amount).toFixed(2)}`;
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    try {
-      return DateTime.fromISO(dateString).toLocaleString(DateTime.DATE_MED);
-    } catch (error) {
-      return dateString;
-    }
-  };
-
-  const formatDateTime = (dateString) => {
-    if (!dateString) return "-";
-    try {
-      return DateTime.fromISO(dateString).toLocaleString(DateTime.DATETIME_MED);
-    } catch (error) {
-      return dateString;
-    }
   };
 
   const getPaymentMethodsDisplay = (paymentMethods) => {
