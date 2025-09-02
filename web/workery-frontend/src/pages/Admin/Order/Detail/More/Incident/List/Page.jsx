@@ -24,6 +24,7 @@ import {
   useAuthManager,
 } from "../../../../../../../services/Services";
 import { ORDER_INCIDENT_SORT_OPTIONS } from "../../../../../../../constants/FieldOptions";
+import { formatDateForDisplay } from "../../../../../../../services/Helpers/DateFormatter";
 
 function AdminOrderDetailMoreIncidentListPage() {
   const { oid } = useParams();
@@ -106,12 +107,6 @@ function AdminOrderDetailMoreIncidentListPage() {
 
   const onRowClick = (incident) => {
     navigate(`/admin/order/${oid}/more/incident/${incident.id}`);
-  };
-
-  // Format date helper
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString();
   };
 
   // Page size options
@@ -327,7 +322,7 @@ function AdminOrderDetailMoreIncidentListPage() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           <div className="flex items-center">
                             <CalendarIcon className="w-4 h-4 mr-2 text-gray-400" />
-                            {formatDate(incident.createdAt)}
+                            {formatDateForDisplay(incident.createdAt)}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">

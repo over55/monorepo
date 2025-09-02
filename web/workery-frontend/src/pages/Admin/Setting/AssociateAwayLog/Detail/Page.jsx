@@ -21,6 +21,10 @@ import {
   ExclamationCircleIcon,
   MapPinIcon,
 } from "@heroicons/react/24/outline";
+import {
+  formatDateForDisplay,
+  formatDateTime,
+} from "../../../../../services/Helpers/DateFormatter";
 
 const REASON_MAP = {
   1: "Other",
@@ -109,26 +113,6 @@ function SettingAssociateAwayLogDetailPage() {
       return () => clearTimeout(timer);
     }
   }, [success]);
-
-  // Format date helper
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    try {
-      return new Date(dateString).toLocaleDateString();
-    } catch {
-      return dateString;
-    }
-  };
-
-  // Format datetime helper
-  const formatDateTime = (dateString) => {
-    if (!dateString) return "-";
-    try {
-      return new Date(dateString).toLocaleString();
-    } catch {
-      return dateString;
-    }
-  };
 
   // Loading state
   if (loading && !associateAwayLog) {
@@ -349,7 +333,7 @@ function SettingAssociateAwayLogDetailPage() {
                         Start Date
                       </label>
                       <p className="text-gray-900 font-medium text-sm sm:text-base">
-                        {formatDate(associateAwayLog.startDate)}
+                        {formatDateForDisplay(associateAwayLog.startDate)}
                       </p>
                     </div>
 
@@ -364,7 +348,7 @@ function SettingAssociateAwayLogDetailPage() {
                             Further Notice
                           </span>
                         ) : (
-                          formatDate(associateAwayLog.untilDate)
+                          formatDateForDisplay(associateAwayLog.untilDate)
                         )}
                       </p>
                     </div>
@@ -529,13 +513,13 @@ function SettingAssociateAwayLogDetailPage() {
                       </p>
                       <p>
                         <strong>Start Date:</strong>{" "}
-                        {formatDate(associateAwayLog.startDate)}
+                        {formatDateForDisplay(associateAwayLog.startDate)}
                       </p>
                       <p>
                         <strong>Until:</strong>{" "}
                         {associateAwayLog.untilFurtherNotice === 1
                           ? "Further Notice"
-                          : formatDate(associateAwayLog.untilDate)}
+                          : formatDateForDisplay(associateAwayLog.untilDate)}
                       </p>
                     </div>
                   </div>

@@ -34,6 +34,7 @@ import {
   DocumentMagnifyingGlassIcon,
 } from "@heroicons/react/24/outline";
 import { ORDER_INCIDENT_SORT_OPTIONS } from "../../../../constants/FieldOptions";
+import { formatDateForDisplay } from "../../../../services/Helpers/DateFormatter";
 
 // Status constants
 const INCIDENT_STATUS_OPEN = "open";
@@ -300,17 +301,6 @@ function AdminOrderIncidentListPage() {
     return incident.closingReason
       ? "bg-green-100 text-green-800 border border-green-200"
       : "bg-amber-100 text-amber-800 border border-amber-200";
-  };
-
-  // Format date for display
-  const formatDate = (dateString) => {
-    if (!dateString) return "—";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
   };
 
   // Calculate pagination info
@@ -836,7 +826,7 @@ function AdminOrderIncidentListPage() {
                             </td>
                             <td className="px-4 py-4 text-base text-black">
                               <span className="text-lg">
-                                {formatDate(incident.createdAt)}
+                                {formatDateForDisplay(incident.createdAt)}
                               </span>
                             </td>
                             <td className="px-4 py-4 text-base">
@@ -936,7 +926,7 @@ function AdminOrderIncidentListPage() {
                               className="w-5 h-5 mr-2 text-gray-400 flex-shrink-0"
                               aria-hidden="true"
                             />
-                            {formatDate(incident.createdAt)}
+                            {formatDateForDisplay(incident.createdAt)}
                           </div>
                           {incident.description && (
                             <div className="text-sm text-gray-600 line-clamp-2 mt-2">
@@ -1194,7 +1184,7 @@ function AdminOrderIncidentListPage() {
                       <div className="p-3 bg-gray-50 rounded-lg text-sm text-black">
                         <span className="flex items-center">
                           <CalendarDaysIcon className="w-4 h-4 mr-2" />
-                          {formatDate(selectedIncident.createdAt)}
+                          {formatDateForDisplay(selectedIncident.createdAt)}
                         </span>
                       </div>
                     </div>

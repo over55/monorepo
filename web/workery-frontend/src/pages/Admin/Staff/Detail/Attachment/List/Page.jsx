@@ -30,6 +30,7 @@ import {
   useAuthManager,
 } from "../../../../../../services/Services";
 import { ATTACHMENT_OWNERSHIP_TYPE } from "../../../../../../constants/Attachment";
+import { formatDateForDisplay } from "../../../../../../services/Helpers/DateFormatter";
 
 function AdminStaffDetailAttachmentListPage() {
   const { aid } = useParams();
@@ -176,12 +177,6 @@ function AdminStaffDetailAttachmentListPage() {
 
   const onRowClick = (attachment) => {
     navigate(`/admin/staff/${aid}/attachment/${attachment.id}`);
-  };
-
-  // Format date helper
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString();
   };
 
   // Get file type icon
@@ -516,7 +511,7 @@ function AdminStaffDetailAttachmentListPage() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           <div className="flex items-center">
                             <CalendarIcon className="w-4 h-4 mr-2 text-gray-400" />
-                            {formatDate(attachment.createdAt)}
+                            {formatDateForDisplay(attachment.createdAt)}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">

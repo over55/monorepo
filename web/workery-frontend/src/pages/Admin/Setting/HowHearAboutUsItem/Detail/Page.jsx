@@ -27,6 +27,10 @@ import {
   LockClosedIcon,
   HashtagIcon,
 } from "@heroicons/react/24/outline";
+import {
+  formatDateForDisplay,
+  formatDateTime,
+} from "../../../../../services/Helpers/DateFormatter";
 
 function SettingHowHearAboutUsItemDetailPage() {
   const navigate = useNavigate();
@@ -92,16 +96,6 @@ function SettingHowHearAboutUsItemDetailPage() {
       setError(err.message || "Failed to delete item");
       setIsDeleting(false);
       setShowDeleteModal(false);
-    }
-  };
-
-  // Format date helper
-  const formatDate = (dateString) => {
-    if (!dateString) return "Not available";
-    try {
-      return new Date(dateString).toLocaleString();
-    } catch {
-      return "Invalid Date";
     }
   };
 
@@ -503,7 +497,7 @@ function SettingHowHearAboutUsItemDetailPage() {
                             Created:
                           </span>
                           <p className="text-gray-900">
-                            {formatDate(data.createdAt)}
+                            {formatDateForDisplay(data.createdAt)}
                           </p>
                         </div>
                       </div>
@@ -549,7 +543,7 @@ function SettingHowHearAboutUsItemDetailPage() {
                           </span>
                           <p className="text-gray-900">
                             {data.modifiedAt
-                              ? formatDate(data.modifiedAt)
+                              ? formatDateForDisplay(data.modifiedAt)
                               : "Never modified"}
                           </p>
                         </div>

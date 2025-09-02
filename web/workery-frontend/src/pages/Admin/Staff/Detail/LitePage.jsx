@@ -27,6 +27,7 @@ import {
   HowHearAboutUsDisplay,
   TagsDisplay,
 } from "../../../../components/business/displays";
+import { formatDateForDisplay } from "../../../../services/Helpers/DateFormatter";
 
 // Constants
 const STAFF_TYPE_EXECUTIVE = 1;
@@ -129,12 +130,6 @@ function AdminStaffDetailLitePage() {
     const address = formatAddress(staff);
     if (address === "-") return null;
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-  };
-
-  // Format date for display
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString();
   };
 
   // Extract IDs from array of objects
@@ -546,7 +541,7 @@ function AdminStaffDetailLitePage() {
                             <CalendarIcon className="w-3 sm:w-4 h-3 sm:h-4 lg:w-5 lg:h-5 mr-2 text-gray-400" />
                             <span className="font-medium">Created:</span>
                             <span className="ml-2">
-                              {formatDate(staff.createdAt)}
+                              {formatDateForDisplay(staff.createdAt)}
                             </span>
                           </div>
                         )}
@@ -555,7 +550,7 @@ function AdminStaffDetailLitePage() {
                             <CalendarIcon className="w-3 sm:w-4 h-3 sm:h-4 lg:w-5 lg:h-5 mr-2 text-gray-400" />
                             <span className="font-medium">Last Modified:</span>
                             <span className="ml-2">
-                              {formatDate(staff.modifiedAt)}
+                              {formatDateForDisplay(staff.modifiedAt)}
                             </span>
                           </div>
                         )}

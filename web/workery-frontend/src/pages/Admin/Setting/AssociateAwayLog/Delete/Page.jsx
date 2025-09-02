@@ -22,6 +22,10 @@ import {
   ClockIcon,
   DocumentTextIcon,
 } from "@heroicons/react/24/outline";
+import {
+  formatDateForDisplay,
+  formatDateTime,
+} from "../../../../../services/Helpers/DateFormatter";
 
 const REASON_MAP = {
   1: "Other",
@@ -113,26 +117,6 @@ function SettingAssociateAwayLogDeletePage() {
       setLoading(false);
     }
   }, [id]);
-
-  // Format date helper
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    try {
-      return new Date(dateString).toLocaleDateString();
-    } catch {
-      return dateString;
-    }
-  };
-
-  // Format datetime helper
-  const formatDateTime = (dateString) => {
-    if (!dateString) return "-";
-    try {
-      return new Date(dateString).toLocaleString();
-    } catch {
-      return dateString;
-    }
-  };
 
   // Loading state
   if (loading) {
@@ -351,7 +335,7 @@ function SettingAssociateAwayLogDeletePage() {
                           </label>
                           <div className="p-2 bg-white rounded border border-gray-300 flex items-center text-sm sm:text-base">
                             <CalendarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 text-gray-500 flex-shrink-0" />
-                            {formatDate(associateAwayLog.startDate)}
+                            {formatDateForDisplay(associateAwayLog.startDate)}
                           </div>
                         </div>
                       </div>
@@ -370,7 +354,9 @@ function SettingAssociateAwayLogDeletePage() {
                             ) : (
                               <span className="flex items-center">
                                 <CalendarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 text-gray-500 flex-shrink-0" />
-                                {formatDate(associateAwayLog.untilDate)}
+                                {formatDateForDisplay(
+                                  associateAwayLog.untilDate,
+                                )}
                               </span>
                             )}
                           </div>

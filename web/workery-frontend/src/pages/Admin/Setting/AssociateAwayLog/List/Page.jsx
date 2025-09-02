@@ -30,6 +30,7 @@ import {
   DocumentCheckIcon,
 } from "@heroicons/react/24/outline";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
+import { formatDateForDisplay } from "../../../../../services/Helpers/DateFormatter";
 
 // Constants - Updated to match backend
 const SORT_OPTIONS = [
@@ -308,16 +309,6 @@ function SettingAssociateAwayLogListPage() {
       return () => clearTimeout(timer);
     }
   }, [success]);
-
-  // Format date helper
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    try {
-      return new Date(dateString).toLocaleDateString();
-    } catch {
-      return dateString;
-    }
-  };
 
   // Calculate displayed records
   const startRecord = associateAwayLogs.length > 0 ? 1 : 0;
@@ -630,7 +621,7 @@ function SettingAssociateAwayLogListPage() {
                           <td className="px-3 py-4 text-sm text-gray-500">
                             <span className="flex items-center">
                               <CalendarIcon className="w-4 h-4 mr-1 text-gray-400" />
-                              {formatDate(awayLog.startDate)}
+                              {formatDateForDisplay(awayLog.startDate)}
                             </span>
                           </td>
                           <td className="px-3 py-4 text-sm">
@@ -642,12 +633,12 @@ function SettingAssociateAwayLogListPage() {
                             ) : (
                               <span className="text-gray-500 flex items-center">
                                 <CalendarIcon className="w-4 h-4 mr-1 text-gray-400" />
-                                {formatDate(awayLog.untilDate)}
+                                {formatDateForDisplay(awayLog.untilDate)}
                               </span>
                             )}
                           </td>
                           <td className="px-3 py-4 text-sm text-gray-500">
-                            {formatDate(awayLog.createdAt)}
+                            {formatDateForDisplay(awayLog.createdAt)}
                           </td>
                           <td className="px-3 py-4 text-sm">
                             <div className="flex items-center space-x-3">
@@ -771,7 +762,7 @@ function SettingAssociateAwayLogListPage() {
                           </span>
                           <span className="text-gray-900 flex items-center">
                             <CalendarIcon className="w-3 h-3 mr-1 text-gray-400" />
-                            {formatDate(awayLog.startDate)}
+                            {formatDateForDisplay(awayLog.startDate)}
                           </span>
                         </div>
 
@@ -787,7 +778,7 @@ function SettingAssociateAwayLogListPage() {
                           ) : (
                             <span className="text-gray-900 flex items-center">
                               <CalendarIcon className="w-3 h-3 mr-1 text-gray-400" />
-                              {formatDate(awayLog.untilDate)}
+                              {formatDateForDisplay(awayLog.untilDate)}
                             </span>
                           )}
                         </div>
@@ -797,7 +788,7 @@ function SettingAssociateAwayLogListPage() {
                             Created:
                           </span>
                           <span className="text-gray-900">
-                            {formatDate(awayLog.createdAt)}
+                            {formatDateForDisplay(awayLog.createdAt)}
                           </span>
                         </div>
                       </div>

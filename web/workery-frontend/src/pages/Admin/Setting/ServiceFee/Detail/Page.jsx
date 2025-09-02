@@ -24,6 +24,7 @@ import {
   PercentBadgeIcon,
   BanknotesIcon,
 } from "@heroicons/react/24/outline";
+import { formatDateForDisplay } from "../../../../../services/Helpers/DateFormatter";
 
 function SettingServiceFeeDetailPage() {
   const { id } = useParams();
@@ -110,11 +111,6 @@ function SettingServiceFeeDetailPage() {
       setIsDeleting(false);
       setShowDeleteModal(false);
     }
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return "Not available";
-    return new Date(dateString).toLocaleString();
   };
 
   const getStatusBadge = (status) => {
@@ -414,7 +410,7 @@ function SettingServiceFeeDetailPage() {
                             Created:
                           </span>
                           <p className="text-gray-900">
-                            {formatDate(serviceFee.createdAt)}
+                            {formatDateForDisplay(serviceFee.createdAt)}
                           </p>
                         </div>
                       </div>
@@ -462,7 +458,7 @@ function SettingServiceFeeDetailPage() {
                           </span>
                           <p className="text-gray-900">
                             {serviceFee.modifiedAt
-                              ? formatDate(serviceFee.modifiedAt)
+                              ? formatDateForDisplay(serviceFee.modifiedAt)
                               : "Never modified"}
                           </p>
                         </div>

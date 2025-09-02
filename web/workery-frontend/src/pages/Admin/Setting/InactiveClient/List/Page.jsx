@@ -34,6 +34,7 @@ import {
   CUSTOMER_DEACTIVATION_REASON_MAP,
   PAGE_SIZE_OPTIONS,
 } from "../../../../../constants/Customer";
+import { formatDateForDisplay } from "../../../../../services/Helpers/DateFormatter";
 
 const VIEW_TYPE_TABULAR = "tabular";
 const VIEW_TYPE_GRID = "grid";
@@ -226,16 +227,6 @@ function SettingInactiveClientListPage() {
       return reasonOther;
     }
     return CUSTOMER_DEACTIVATION_REASON_MAP[reason] || "Not specified";
-  };
-
-  // Format date for display
-  const formatDate = (dateString) => {
-    if (!dateString) return "—";
-    try {
-      return new Date(dateString).toLocaleDateString();
-    } catch {
-      return dateString;
-    }
   };
 
   // Calculate pagination info
@@ -512,7 +503,7 @@ function SettingInactiveClientListPage() {
                               )}
                             </td>
                             <td className="px-3 py-4 text-sm text-gray-500">
-                              {formatDate(client.modifiedAt)}
+                              {formatDateForDisplay(client.modifiedAt)}
                             </td>
                             <td className="px-3 py-4">
                               <div className="flex items-center justify-center gap-2">
@@ -598,7 +589,7 @@ function SettingInactiveClientListPage() {
                           )}
                           <div className="flex items-center text-xs text-gray-500">
                             <CalendarIcon className="w-4 h-4 mr-2" />
-                            Modified: {formatDate(client.modifiedAt)}
+                            Modified: {formatDateForDisplay(client.modifiedAt)}
                           </div>
                         </div>
 

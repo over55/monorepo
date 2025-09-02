@@ -34,6 +34,7 @@ import {
   ATTACHMENT_TYPES,
   ATTACHMENT_TYPE_NAMES,
 } from "../../../../../../constants/Attachment";
+import { formatDateForDisplay } from "../../../../../../services/Helpers/DateFormatter";
 
 function AdminAssociateDetailAttachmentListPage() {
   const { aid } = useParams();
@@ -226,16 +227,6 @@ function AdminAssociateDetailAttachmentListPage() {
 
   const onRowClick = (attachment) => {
     navigate(`/admin/associate/${aid}/attachment/${attachment.id}`);
-  };
-
-  // Format date helper
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    // Check if it's already formatted (contains month name)
-    if (/[A-Za-z]/.test(dateString) && !dateString.includes("T")) {
-      return dateString;
-    }
-    return new Date(dateString).toLocaleDateString();
   };
 
   // Get file type icon
@@ -576,7 +567,7 @@ function AdminAssociateDetailAttachmentListPage() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                           <div className="flex items-center">
                             <CalendarIcon className="w-4 h-4 mr-2 text-gray-400" />
-                            {formatDate(attachment.createdAt)}
+                            {formatDateForDisplay(attachment.createdAt)}
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm">

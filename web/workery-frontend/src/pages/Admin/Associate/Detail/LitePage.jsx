@@ -31,6 +31,7 @@ import {
   TagsDisplay,
   SkillSetsDisplay,
 } from "../../../../components/business/displays";
+// import { formatDateForDisplay } from "../../../../services/Helpers/DateFormatter";
 
 // Constants
 const COMMERCIAL_ASSOCIATE_TYPE_OF_ID = 3;
@@ -94,12 +95,6 @@ function AdminAssociateDetailLitePage() {
       `${associate.addressLine1 || ""} ${associate.city || ""} ${associate.region || ""} ${associate.postalCode || ""}`.trim();
 
     return address || "-";
-  };
-
-  // Format date for display
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString();
   };
 
   // Format associate status display

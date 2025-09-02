@@ -52,6 +52,7 @@ import {
   ORDER_TYPE_FILTER_OPTIONS,
   DEFAULT_ORDER_LIST_SORT_BY_VALUE,
 } from "../../../../constants/FieldOptions";
+import { formatDateForDisplay } from "../../../../services/Helpers/DateFormatter";
 
 const VIEW_TYPE_TABULAR = "tabular";
 const VIEW_TYPE_GRID = "grid";
@@ -327,12 +328,6 @@ function AdminFinancialListPage() {
       setTimeout(() => setSuccessMessage(""), 3000);
     }
   }, [location]);
-
-  // Format helpers
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    return dateString;
-  };
 
   const formatCurrency = (amount) => {
     if (amount === null || amount === undefined) return "N/A";
@@ -981,12 +976,12 @@ function AdminFinancialListPage() {
                             </td>
                             <td className="px-4 py-4 text-base text-black">
                               <span className="text-lg">
-                                {formatDate(order.assignmentDate)}
+                                {formatDateForDisplay(order.assignmentDate)}
                               </span>
                             </td>
                             <td className="px-4 py-4 text-base text-black">
                               <span className="text-lg">
-                                {formatDate(order.startDate)}
+                                {formatDateForDisplay(order.startDate)}
                               </span>
                             </td>
                             <td className="px-4 py-4 text-base">
@@ -1119,7 +1114,9 @@ function AdminFinancialListPage() {
                               className="w-5 h-5 mr-2 text-gray-400 flex-shrink-0"
                               aria-hidden="true"
                             />
-                            <span>Start: {formatDate(order.startDate)}</span>
+                            <span>
+                              Start: {formatDateForDisplay(order.startDate)}
+                            </span>
                           </div>
                         </div>
 
@@ -1427,7 +1424,7 @@ function AdminFinancialListPage() {
                         Assignment Date:
                       </label>
                       <div className="p-3 bg-gray-50 rounded-lg text-sm text-black">
-                        {formatDate(selectedOrder.assignmentDate)}
+                        {formatDateForDisplay(selectedOrder.assignmentDate)}
                       </div>
                     </div>
 
@@ -1436,7 +1433,7 @@ function AdminFinancialListPage() {
                         Start Date:
                       </label>
                       <div className="p-3 bg-gray-50 rounded-lg text-sm text-black">
-                        {formatDate(selectedOrder.startDate)}
+                        {formatDateForDisplay(selectedOrder.startDate)}
                       </div>
                     </div>
                   </div>

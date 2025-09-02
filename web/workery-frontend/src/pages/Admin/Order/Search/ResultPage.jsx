@@ -31,6 +31,7 @@ import {
   UserGroupIcon,
 } from "@heroicons/react/24/outline";
 import { ExclamationTriangleIcon as ExclamationTriangleIconSolid } from "@heroicons/react/24/solid";
+import { formatDateForDisplay } from "../../../../services/Helpers/DateFormatter";
 
 // Constants for order types and statuses
 const RESIDENTIAL_ORDER_TYPE_OF_ID = 1;
@@ -292,17 +293,6 @@ function AdminOrderSearchResultPage() {
         ? current[key]
         : defaultValue;
     }, obj);
-  };
-
-  // Format date helper
-  const formatDate = (dateString) => {
-    if (!dateString) return "Not set";
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString();
-    } catch {
-      return dateString;
-    }
   };
 
   // Format phone number
@@ -855,7 +845,7 @@ function AdminOrderSearchResultPage() {
                           {startDate && (
                             <div className="flex items-center text-gray-600">
                               <CalendarIcon className="h-4 w-4 mr-2 text-gray-400" />
-                              {formatDate(startDate)}
+                              {formatDateForDisplay(startDate)}
                             </div>
                           )}
 

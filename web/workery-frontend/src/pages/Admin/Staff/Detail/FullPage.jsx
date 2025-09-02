@@ -32,6 +32,10 @@ import {
   TagsDisplay,
   SkillSetsDisplay,
 } from "../../../../components/business/displays";
+import {
+  formatDateForDisplay,
+  formatDateTime,
+} from "../../../../services/Helpers/DateFormatter";
 
 // Constants
 const STAFF_TYPE_MAP = {
@@ -122,17 +126,6 @@ function AdminStaffDetailFullPage() {
     window.scrollTo(0, 0);
     fetchStaff();
   }, [aid]);
-
-  // Helper functions for formatting
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString();
-  };
-
-  const formatDateTime = (dateString) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleString();
-  };
 
   const formatPhone = (phone, extension = null) => {
     if (!phone) return "-";
@@ -392,7 +385,7 @@ function AdminStaffDetailFullPage() {
                 <DetailField label="Last Name" value={staff.lastName} />
                 <DetailField
                   label="Date of Birth"
-                  value={formatDate(staff.birthDate)}
+                  value={formatDateForDisplay(staff.birthDate)}
                 />
 
                 {/* Third Row - Gender */}

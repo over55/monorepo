@@ -29,6 +29,7 @@ import {
   useOrderIncidentManager,
   useAuthManager,
 } from "../../../../services/Services";
+import { formatDateForDisplay } from "../../../../services/Helpers/DateFormatter";
 
 function AdminOrderIncidentDetailPage() {
   const { oiid } = useParams();
@@ -131,18 +132,6 @@ function AdminOrderIncidentDetailPage() {
       default:
         return "Unknown";
     }
-  };
-
-  // Format date for display
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString();
-  };
-
-  // Format datetime for display
-  const formatDateTime = (dateString) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleString();
   };
 
   if (isFetching && !incident) {
@@ -421,7 +410,7 @@ function AdminOrderIncidentDetailPage() {
                         <dd className="text-sm sm:text-base text-gray-900">
                           <span className="inline-flex items-center">
                             <CalendarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 text-gray-400" />
-                            {formatDate(incident.startDate)}
+                            {formatDateForDisplay(incident.startDate)}
                           </span>
                         </dd>
                       </div>

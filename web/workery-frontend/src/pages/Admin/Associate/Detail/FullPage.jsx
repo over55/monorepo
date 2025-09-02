@@ -54,6 +54,7 @@ import {
   ServiceFeeDisplay,
   InsuranceRequirementsDisplay,
 } from "../../../../components/business/displays";
+import { formatDateForDisplay } from "../../../../services/Helpers/DateFormatter";
 
 // Constants
 const COMMERCIAL_ASSOCIATE_TYPE_OF_ID = 3;
@@ -172,17 +173,6 @@ function AdminAssociateDetailFullPage() {
     window.scrollTo(0, 0);
     fetchAssociate();
   }, [aid]);
-
-  // Helper functions for formatting
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString();
-  };
-
-  const formatDateTime = (dateString) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleString();
-  };
 
   const formatPhone = (phone, extension = null) => {
     if (!phone) return "-";
@@ -536,7 +526,7 @@ function AdminAssociateDetailFullPage() {
                         Date of Birth
                       </dt>
                       <dd className="text-base sm:text-lg font-medium text-gray-900">
-                        {formatDate(associate.birthDate)}
+                        {formatDateForDisplay(associate.birthDate)}
                       </dd>
                     </div>
                   </div>
@@ -698,24 +688,28 @@ function AdminAssociateDetailFullPage() {
                 />
                 <DetailField
                   label="Dues Expiry"
-                  value={formatDate(associate.duesDate)}
+                  value={formatDateForDisplay(associate.duesDate)}
                 />
                 <DetailField
                   label="Commercial insurance expiry date"
-                  value={formatDate(associate.commercialInsuranceExpiryDate)}
+                  value={formatDateForDisplay(
+                    associate.commercialInsuranceExpiryDate,
+                  )}
                 />
                 <DetailField
                   label="Auto Insurance Expiry Date"
-                  value={formatDate(associate.autoInsuranceExpiryDate)}
+                  value={formatDateForDisplay(
+                    associate.autoInsuranceExpiryDate,
+                  )}
                 />
                 <DetailField label="WSIB #" value={associate.wsibNumber} />
                 <DetailField
                   label="WSIB Insurance Date"
-                  value={formatDate(associate.wsibInsuranceDate)}
+                  value={formatDateForDisplay(associate.wsibInsuranceDate)}
                 />
                 <DetailField
                   label="Police check date"
-                  value={formatDate(associate.policeCheck)}
+                  value={formatDateForDisplay(associate.policeCheck)}
                 />
                 <DetailField label="HST #" value={associate.taxId} />
                 <DetailField
@@ -829,7 +823,9 @@ function AdminAssociateDetailFullPage() {
                         />
                         <DetailField
                           label="Date of Entry into Country"
-                          value={formatDate(associate.dateOfEntryIntoCountry)}
+                          value={formatDateForDisplay(
+                            associate.dateOfEntryIntoCountry,
+                          )}
                         />
                       </>
                     )}

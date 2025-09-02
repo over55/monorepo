@@ -24,6 +24,10 @@ import {
   CurrencyDollarIcon,
   TagIcon,
 } from "@heroicons/react/24/outline";
+import {
+  formatDateForDisplay,
+  formatDateTime,
+} from "../../../../../services/Helpers/DateFormatter";
 
 function SettingServiceFeeDeletePage() {
   const { id } = useParams();
@@ -106,11 +110,6 @@ function SettingServiceFeeDeletePage() {
       style: "currency",
       currency: "USD",
     }).format(amount);
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return "Not available";
-    return new Date(dateString).toLocaleString();
   };
 
   const getRateDisplay = () => {
@@ -570,7 +569,7 @@ function SettingServiceFeeDeletePage() {
                   Created At:
                 </p>
                 <p className="text-gray-900 ml-5">
-                  {formatDate(serviceFee.createdAt)}
+                  {formatDateForDisplay(serviceFee.createdAt)}
                 </p>
               </div>
               {serviceFee.createdByUserName && (
@@ -591,7 +590,7 @@ function SettingServiceFeeDeletePage() {
                 </p>
                 <p className="text-gray-900 ml-5">
                   {serviceFee.modifiedAt
-                    ? formatDate(serviceFee.modifiedAt)
+                    ? formatDateForDisplay(serviceFee.modifiedAt)
                     : "Never modified"}
                 </p>
               </div>

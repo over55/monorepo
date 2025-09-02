@@ -26,6 +26,7 @@ import {
   BanknotesIcon,
 } from "@heroicons/react/24/outline";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
+import { formatDateForDisplay } from "../../../../../services/Helpers/DateFormatter";
 
 function SettingServiceFeeListPage() {
   const serviceFeeManager = useServiceFeeManager();
@@ -178,11 +179,6 @@ function SettingServiceFeeListPage() {
       style: "currency",
       currency: "USD",
     }).format(amount);
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return "—";
-    return new Date(dateString).toLocaleDateString();
   };
 
   const getRateDisplay = (row) => {
@@ -517,7 +513,7 @@ function SettingServiceFeeListPage() {
                             {getStatusBadge(item.status)}
                           </td>
                           <td className="px-3 py-4 text-sm text-gray-500">
-                            {formatDate(item.createdAt)}
+                            {formatDateForDisplay(item.createdAt)}
                           </td>
                           <td className="px-3 py-4">
                             <div className="flex items-center justify-center gap-2">
@@ -722,7 +718,7 @@ function SettingServiceFeeListPage() {
                       </div>
                       <p className="text-sm text-gray-900">
                         {selectedItem.createdAt
-                          ? formatDate(selectedItem.createdAt)
+                          ? formatDateForDisplay(selectedItem.createdAt)
                           : "Not available"}
                       </p>
                     </div>
@@ -744,7 +740,7 @@ function SettingServiceFeeListPage() {
                           Modified:
                         </div>
                         <p className="text-sm text-gray-900">
-                          {formatDate(selectedItem.modifiedAt)}
+                          {formatDateForDisplay(selectedItem.modifiedAt)}
                         </p>
                       </div>
                     )}

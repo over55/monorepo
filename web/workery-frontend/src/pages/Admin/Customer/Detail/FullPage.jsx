@@ -36,6 +36,10 @@ import {
   HowHearAboutUsDisplay,
   TagsDisplay,
 } from "../../../../components/business/displays";
+import {
+  formatDateForDisplay,
+  formatDateTime,
+} from "../../../../services/Helpers/DateFormatter";
 
 // Constants
 const COMMERCIAL_CUSTOMER_TYPE_OF_ID = 3;
@@ -111,17 +115,6 @@ function AdminCustomerDetailFullPage() {
     window.scrollTo(0, 0);
     fetchCustomer();
   }, [cid]);
-
-  // Helper functions for formatting
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString();
-  };
-
-  const formatDateTime = (dateString) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleString();
-  };
 
   const formatPhone = (phone, extension = null) => {
     if (!phone) return "-";
@@ -432,7 +425,7 @@ function AdminCustomerDetailFullPage() {
                 />
                 <DetailField
                   label="Date of Birth"
-                  value={formatDate(customer.birthDate)}
+                  value={formatDateForDisplay(customer.birthDate)}
                 />
               </DetailSection>
 

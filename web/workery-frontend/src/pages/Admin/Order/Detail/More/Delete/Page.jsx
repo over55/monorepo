@@ -21,6 +21,7 @@ import {
   useOrderManager,
   useAuthManager,
 } from "../../../../../../services/Services";
+import { formatDateForDisplay } from "../../../../../../services/Helpers/DateFormatter";
 
 function AdminOrderDetailMoreDeletePage() {
   // URL Parameters
@@ -114,17 +115,6 @@ function AdminOrderDetailMoreDeletePage() {
       );
       setErrors(error);
       setIsDeleting(false);
-    }
-  };
-
-  // Format date for display
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString();
-    } catch {
-      return dateString;
     }
   };
 
@@ -440,7 +430,7 @@ function AdminOrderDetailMoreDeletePage() {
                       Assignment Date:
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900">
-                      {formatDate(order.assignmentDate)}
+                      {formatDateForDisplay(order.assignmentDate)}
                     </dd>
                   </div>
                 )}
@@ -450,7 +440,7 @@ function AdminOrderDetailMoreDeletePage() {
                       Start Date:
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900">
-                      {formatDate(order.startDate)}
+                      {formatDateForDisplay(order.startDate)}
                     </dd>
                   </div>
                 )}
@@ -460,7 +450,7 @@ function AdminOrderDetailMoreDeletePage() {
                       Completion Date:
                     </dt>
                     <dd className="mt-1 text-sm text-gray-900">
-                      {formatDate(order.completionDate)}
+                      {formatDateForDisplay(order.completionDate)}
                     </dd>
                   </div>
                 )}

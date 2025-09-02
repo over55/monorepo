@@ -34,6 +34,7 @@ import {
   TagsDisplay,
   SkillSetsDisplay,
 } from "../../../../components/business/displays";
+import { formatDateForDisplay } from "../../../../services/Helpers/DateFormatter";
 
 function AdminOrderAddStep4Page() {
   const authManager = useAuthManager();
@@ -124,17 +125,6 @@ function AdminOrderAddStep4Page() {
       mounted = false;
     };
   }, [authManager, navigate, orderData, isSubmitted]);
-
-  // Format date for display
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString();
-    } catch (e) {
-      return dateString;
-    }
-  };
 
   const handleCancelClick = () => {
     setShowCancelWarning(true);
@@ -436,7 +426,7 @@ function AdminOrderAddStep4Page() {
                           </span>
                           <p className="text-xs sm:text-sm text-gray-900 flex items-center">
                             <CalendarIcon className="w-4 h-4 mr-1 text-gray-400" />
-                            {formatDate(orderData.startDate)}
+                            {formatDateForDisplay(orderData.startDate)}
                           </p>
                         </div>
                         <div>

@@ -36,6 +36,7 @@ import {
   ChevronRightIcon,
   SparklesIcon,
 } from "@heroicons/react/24/outline";
+import { formatDateForDisplay } from "../../../services/Helpers/DateFormatter";
 
 // Constants for associate away log reasons
 const REASON_MAP = {
@@ -183,20 +184,6 @@ function AdminDashboardPage() {
       setSelectedBulletin(null);
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  // Format date helper
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    try {
-      return new Date(dateString).toLocaleDateString("en-US", {
-        month: "short",
-        day: "numeric",
-        year: "numeric",
-      });
-    } catch {
-      return dateString;
     }
   };
 
@@ -580,7 +567,7 @@ function AdminDashboardPage() {
                                   <span>
                                     From:{" "}
                                     <span className="font-medium">
-                                      {formatDate(awayLog.startDate)}
+                                      {formatDateForDisplay(awayLog.startDate)}
                                     </span>
                                   </span>
                                 </div>
@@ -594,7 +581,7 @@ function AdminDashboardPage() {
                                   <span className="text-gray-600">
                                     To:{" "}
                                     <span className="font-medium">
-                                      {formatDate(awayLog.untilDate)}
+                                      {formatDateForDisplay(awayLog.untilDate)}
                                     </span>
                                   </span>
                                 )}

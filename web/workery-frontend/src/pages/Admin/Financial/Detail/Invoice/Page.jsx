@@ -24,6 +24,7 @@ import {
   PencilSquareIcon,
   ExclamationCircleIcon,
 } from "@heroicons/react/24/outline";
+import { formatDateForDisplay } from "../../../../../services/Helpers/DateFormatter";
 
 function AdminFinancialInvoiceDetailPage() {
   // URL Parameters
@@ -163,16 +164,6 @@ function AdminFinancialInvoiceDetailPage() {
     return `$${parseFloat(amount)
       .toFixed(2)
       .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}`;
-  };
-
-  // Format date
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    try {
-      return DateTime.fromISO(dateString).toLocaleString(DateTime.DATE_MED);
-    } catch (error) {
-      return dateString;
-    }
   };
 
   // Format phone number
@@ -422,7 +413,7 @@ function AdminFinancialInvoiceDetailPage() {
                         Invoice Date
                       </dt>
                       <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {formatDate(order.invoice.invoiceDate)}
+                        {formatDateForDisplay(order.invoice.invoiceDate)}
                       </dd>
                     </div>
                     <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
