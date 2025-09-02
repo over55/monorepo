@@ -83,29 +83,39 @@ function AdminFinancialGenerateInvoiceStep2Page() {
             return;
           }
 
-          // Initialize line items from existing data or order
+          // Initialize line items from existing data or order invoice
           const initialLineItems = [];
           let lastNonEmptyIndex = 0;
 
           for (let i = 1; i <= 15; i++) {
             const lineNum = String(i).padStart(2, "0");
+
+            // First check existingData (from storage), then fall back to invoice data
+            let quantity = existingData[`line${lineNum}Quantity`];
+            let description = existingData[`line${lineNum}Description`];
+            let unitPrice = existingData[`line${lineNum}UnitPrice`];
+            let amount = existingData[`line${lineNum}Amount`];
+
+            // If not in existingData and we have an invoice, get from invoice (with correct field names)
+            if (quantity === undefined && orderData.invoice) {
+              quantity = orderData.invoice[`line${lineNum}Qty`] || 0;
+            }
+            if (description === undefined && orderData.invoice) {
+              description = orderData.invoice[`line${lineNum}Desc`] || "";
+            }
+            if (unitPrice === undefined && orderData.invoice) {
+              unitPrice = orderData.invoice[`line${lineNum}Price`] || 0;
+            }
+            if (amount === undefined && orderData.invoice) {
+              amount = orderData.invoice[`line${lineNum}Amount`] || 0;
+            }
+
+            // Default to 0/"" if still undefined
             const lineItem = {
-              quantity:
-                existingData[`line${lineNum}Quantity`] ||
-                orderData[`line${lineNum}Quantity`] ||
-                0,
-              description:
-                existingData[`line${lineNum}Description`] ||
-                orderData[`line${lineNum}Description`] ||
-                "",
-              unitPrice:
-                existingData[`line${lineNum}UnitPrice`] ||
-                orderData[`line${lineNum}UnitPrice`] ||
-                0,
-              amount:
-                existingData[`line${lineNum}Amount`] ||
-                orderData[`line${lineNum}Amount`] ||
-                0,
+              quantity: quantity || 0,
+              description: description || "",
+              unitPrice: unitPrice || 0,
+              amount: amount || 0,
             };
 
             initialLineItems.push(lineItem);
@@ -141,7 +151,7 @@ function AdminFinancialGenerateInvoiceStep2Page() {
     return () => {
       mounted = false;
     };
-  }, [oid]);
+  }, [oid, isEditMode]);
 
   const handleLineItemChange = (index, field, value) => {
     const updatedItems = [...lineItems];
@@ -389,7 +399,7 @@ function AdminFinancialGenerateInvoiceStep2Page() {
                 <span className="mx-1 sm:mx-2 text-gray-400">/</span>
                 <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
                   <DocumentPlusIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                  Generate Invoice
+                  {isEditMode ? "Edit Invoice" : "Generate Invoice"}
                 </span>
               </div>
             </li>
