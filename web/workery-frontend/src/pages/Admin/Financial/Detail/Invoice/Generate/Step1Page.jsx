@@ -31,6 +31,10 @@ import {
   BuildingOfficeIcon,
 } from "@heroicons/react/24/outline";
 import { formatDateForDisplay } from "../../../../../../services/Helpers/DateFormatter";
+import {
+  default as DateInput,
+  Date,
+} from "../../../../../../components/UI/Date/Date";
 
 function AdminFinancialGenerateInvoiceStep1Page() {
   const { oid } = useParams();
@@ -91,9 +95,6 @@ function AdminFinancialGenerateInvoiceStep1Page() {
             console.log("Edit mode: Populating storage from existing invoice");
 
             const invoice = orderData.invoice;
-
-            console.log("--->", invoice);
-            console.log("invoiceDate--->", invoice.invoiceDate);
 
             // Create complete data object from existing invoice
             existingData = {
@@ -588,11 +589,11 @@ function AdminFinancialGenerateInvoiceStep1Page() {
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <CalendarIcon className="h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
                       </div>
-                      <input
+                      <Date
                         type="date"
                         id="invoiceDate"
                         name="invoiceDate"
-                        value={formatDateForDisplay(invoiceDate)}
+                        value={invoiceDate}
                         disabled
                         className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed text-sm sm:text-base"
                       />
