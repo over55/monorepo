@@ -28,7 +28,7 @@ import {
 import { useOrderManager } from "../../../../services/Services";
 import { ORDER_INVOICE_PAYMENT_METHODS_OPTIONS } from "../../../../constants/FieldOptions";
 import { ORDER_STATUS_ARCHIVED } from "../../../../constants/Order";
-import { formatDate } from "../../../../services/Helpers/DateFormatter";
+import { formatDateForDisplay } from "../../../../services/Helpers/DateFormatter";
 
 function AdminFinancialDetailPage() {
   // URL Parameters
@@ -365,23 +365,25 @@ function AdminFinancialDetailPage() {
               <DetailSection title="Important Dates" icon={CalendarIcon}>
                 <DetailField
                   label="Order Assignment Date"
-                  value={formatDate(order.assignmentDate)}
+                  value={formatDateForDisplay(order.assignmentDate)}
                 />
                 <DetailField
                   label="Order Start Date"
-                  value={formatDate(order.startDate)}
+                  value={formatDateForDisplay(order.startDate)}
                 />
                 <DetailField
                   label="Order Completion Date"
-                  value={formatDate(order.completionDate)}
+                  value={formatDateForDisplay(order.completionDate)}
                 />
                 <DetailField
                   label="Invoice Date"
-                  value={formatDate(order.invoiceDate)}
+                  value={formatDateForDisplay(order.invoiceDate)}
                 />
                 <DetailField
                   label="Invoice Service Fee Payment Date"
-                  value={formatDate(order.invoiceServiceFeePaymentDate)}
+                  value={formatDateForDisplay(
+                    order.invoiceServiceFeePaymentDate,
+                  )}
                 />
               </DetailSection>
 

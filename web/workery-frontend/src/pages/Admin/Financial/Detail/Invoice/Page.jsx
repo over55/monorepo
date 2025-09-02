@@ -715,7 +715,7 @@ function AdminFinancialInvoiceDetailPage() {
                         Date of Quote Approval
                       </dt>
                       <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {formatDate(order.invoice.invoiceQuoteDate)}
+                        {formatDateForDisplay(order.invoice.invoiceQuoteDate)}
                       </dd>
                     </div>
                     <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
@@ -747,7 +747,9 @@ function AdminFinancialInvoiceDetailPage() {
                         Date Client Paid Invoice
                       </dt>
                       <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {formatDate(order.invoice.dateClientPaidInvoice)}
+                        {formatDateForDisplay(
+                          order.invoice.dateClientPaidInvoice,
+                        )}
                       </dd>
                     </div>
                     <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
@@ -771,7 +773,7 @@ function AdminFinancialInvoiceDetailPage() {
                         Associate Signature Date
                       </dt>
                       <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {formatDate(order.invoice.associateSignDate)}
+                        {formatDateForDisplay(order.invoice.associateSignDate)}
                       </dd>
                     </div>
                     <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
@@ -808,7 +810,7 @@ function AdminFinancialInvoiceDetailPage() {
                         Created At
                       </dt>
                       <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {formatDate(order.invoice.createdAt)}
+                        {formatDateForDisplay(order.invoice.createdAt)}
                       </dd>
                     </div>
                     <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
@@ -824,7 +826,7 @@ function AdminFinancialInvoiceDetailPage() {
                         Modified At
                       </dt>
                       <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {formatDate(order.invoice.modifiedAt)}
+                        {formatDateForDisplay(order.invoice.modifiedAt)}
                       </dd>
                     </div>
                     <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
