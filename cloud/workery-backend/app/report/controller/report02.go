@@ -36,6 +36,18 @@ func (c *ReportControllerImpl) GenerateReport002(ctx context.Context, req *Gener
 		return [][]string{}, err
 	}
 
+	adjustedToDT := req.ToDT
+	if !req.ToDT.IsZero() {
+		// Set to end of day (23:59:59.999999999)
+		adjustedToDT = time.Date(
+			req.ToDT.Year(),
+			req.ToDT.Month(),
+			req.ToDT.Day(),
+			23, 59, 59, 999999999,
+			req.ToDT.Location(),
+		)
+	}
+
 	f := &o_s.OrderPaginationListFilter{
 		Cursor:            "",
 		PageSize:          1_000_000_000, // Unlimited
@@ -43,7 +55,7 @@ func (c *ReportControllerImpl) GenerateReport002(ctx context.Context, req *Gener
 		SortOrder:         o_s.SortOrderDescending,
 		AssociateID:       req.AssociateID,
 		AssignmentDateGTE: req.FromDT,
-		AssignmentDateLTE: req.ToDT,
+		AssignmentDateLTE: adjustedToDT,
 	}
 
 	switch req.Status {
@@ -67,17 +79,25 @@ func (c *ReportControllerImpl) GenerateReport002(ctx context.Context, req *Gener
 		f.Status = req.Status
 	default: // A.K.A. "all"
 		f.Statuses = []int8{
-			// o_s.OrderStatusNew,
-			// o_s.OrderStatusDeclined,
-			// o_s.OrderStatusPending,
-			// o_s.OrderStatusCancelled,
-			// o_s.OrderStatusOngoing,
+			o_s.OrderStatusNew,
+			o_s.OrderStatusDeclined,
+			o_s.OrderStatusPending,
+			o_s.OrderStatusCancelled,
+			o_s.OrderStatusOngoing,
 			o_s.OrderStatusInProgress,
 			o_s.OrderStatusCompletedButUnpaid,
 			o_s.OrderStatusCompletedAndPaid,
-			// o_s.OrderStatusArchived,
+			o_s.OrderStatusArchived,
 		}
 	}
+
+	c.Logger.Debug("report 02 - list orders by filter",
+		slog.Any("Statuses", f.Statuses),
+		slog.Any("Status", f.Status),
+		slog.Any("AssociateID", f.AssociateID),
+		slog.Any("AssignmentDateGTE", f.AssignmentDateGTE),
+		slog.Any("AssignmentDateLTE", f.AssignmentDateLTE),
+	)
 
 	res, err := c.OrderStorer.ListByFilter(ctx, f)
 	if err != nil {
@@ -98,6 +118,7 @@ func (c *ReportControllerImpl) GenerateReport002(ctx context.Context, req *Gener
 		{"To Assignment Date:", toDTStr, "", "", "", "", "", "", "", "", ""},
 		{"Associate Name:", a.Name, "", "", "", "", "", "", "", "", ""},
 		{"Associate No.:", aID, "", "", "", "", "", "", "", "", ""},
+		{"Associate Email:", a.Email, "", "", "", "", "", "", "", "", ""},
 		{"", "", "", "", "", "", "", "", "", "", ""},
 		{"", "", "", "", "", "", "", "", "", "", ""},
 		{
