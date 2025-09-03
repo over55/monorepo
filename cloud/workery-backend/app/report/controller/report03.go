@@ -59,12 +59,12 @@ func (c *ReportControllerImpl) GenerateReport003(ctx context.Context, req *Gener
 
 	// Filter through all the orders that meet our criteria.
 	f := &o_s.OrderPaginationListFilter{
-		Cursor:                          "",
-		PageSize:                        1_000_000_000, // Unlimited
-		SortField:                       "assignment_date",
-		SortOrder:                       o_s.SortOrderDescending,
-		InvoiceServiceFeePaymentDateGTE: req.FromDT,
-		InvoiceServiceFeePaymentDateLTE: adjustedToDT,
+		Cursor:            "",
+		PageSize:          1_000_000_000, // Unlimited
+		SortField:         "assignment_date",
+		SortOrder:         o_s.SortOrderDescending,
+		AssignmentDateGTE: req.FromDT,   // Start of the first day (inclusive)
+		AssignmentDateLTE: adjustedToDT, // End of the last day (inclusive)
 		Statuses: []int8{
 			o_s.OrderStatusNew,
 			o_s.OrderStatusDeclined,
