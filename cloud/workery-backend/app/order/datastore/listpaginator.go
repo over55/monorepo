@@ -84,6 +84,11 @@ type OrderPaginationListFilter struct {
 	CompletionDateGTE time.Time
 	CompletionDateLT  time.Time
 	CompletionDateLTE time.Time
+
+	CreatedAtGT  time.Time
+	CreatedAtGTE time.Time
+	CreatedAtLT  time.Time
+	CreatedAtLTE time.Time
 }
 
 // OrderPaginationLiteListResult represents the paginated list results for

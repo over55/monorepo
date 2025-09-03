@@ -48,12 +48,12 @@ func (c *ReportControllerImpl) GenerateReport004(ctx context.Context, req *Gener
 	}
 
 	f := &o_s.OrderPaginationListFilter{
-		Cursor:            "",
-		PageSize:          1_000_000_000, // Unlimited
-		SortField:         "assignment_date",
-		SortOrder:         o_s.SortOrderDescending,
-		AssignmentDateGTE: req.FromDT,
-		AssignmentDateLTE: adjustedToDT,
+		Cursor:       "",
+		PageSize:     1_000_000_000, // Unlimited
+		SortField:    "created_at",
+		SortOrder:    o_s.SortOrderDescending,
+		CreatedAtGTE: req.FromDT,
+		CreatedAtLTE: adjustedToDT,
 		Statuses: []int8{
 			o_s.OrderStatusCancelled,
 		},
@@ -79,6 +79,7 @@ func (c *ReportControllerImpl) GenerateReport004(ctx context.Context, req *Gener
 		{"", "", ""},
 		{
 			"Job No.",          // 1
+			"Created at",       // 9
 			"Assignment Date",  // 2
 			"Reason",           // 3
 			"Associate No.",    // 4
@@ -86,7 +87,7 @@ func (c *ReportControllerImpl) GenerateReport004(ctx context.Context, req *Gener
 			"Associate Gender", // 6
 			"Associate DOB",    // 7
 			"Associate Age",    // 8
-			"Skill Set(s)",     // 9
+			"Skill Set(s)",     // 10
 		},
 	}
 
@@ -143,15 +144,16 @@ func (c *ReportControllerImpl) GenerateReport004(ctx context.Context, req *Gener
 		//
 
 		row := []string{
-			idStr,                // 1
-			assignmentDateStr,    // 2
-			reason,               // 3
-			associatePublicIDStr, // 4
-			o.AssociateName,      // 5
+			idStr,                            // 1
+			o.CreatedAt.Format("2006-01-02"), // 9
+			assignmentDateStr,                // 2
+			reason,                           // 3
+			associatePublicIDStr,             // 4
+			o.AssociateName,                  // 5
 			a_s.AssociateGenderLabels[o.AssociateGender], // 6
 			associateDOBStr, // 7
 			associateAgeStr, // 8
-			skillSetsStr,    // 9
+			skillSetsStr,    // 10
 		}
 		rows = append(rows, row)
 	}

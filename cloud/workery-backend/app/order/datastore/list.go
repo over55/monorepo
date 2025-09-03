@@ -141,6 +141,18 @@ func (impl OrderStorerImpl) ListByFilter(ctx context.Context, f *OrderPagination
 	if !f.CompletionDateLT.IsZero() {
 		conditions = append(conditions, bson.M{"completion_date": bson.M{"$lt": f.CompletionDateLT}})
 	}
+	if !f.CreatedAtGTE.IsZero() {
+		conditions = append(conditions, bson.M{"created_at": bson.M{"$gte": f.CreatedAtGTE}})
+	}
+	if !f.CreatedAtGT.IsZero() {
+		conditions = append(conditions, bson.M{"created_at": bson.M{"$gt": f.CreatedAtGT}})
+	}
+	if !f.CreatedAtLTE.IsZero() {
+		conditions = append(conditions, bson.M{"created_at": bson.M{"$lte": f.CreatedAtLTE}})
+	}
+	if !f.CreatedAtLT.IsZero() {
+		conditions = append(conditions, bson.M{"created_at": bson.M{"$lt": f.CreatedAtLT}})
+	}
 
 	// Combine conditions with $and operator
 	if len(conditions) > 0 {
