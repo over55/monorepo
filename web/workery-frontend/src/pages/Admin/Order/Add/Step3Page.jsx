@@ -1,6 +1,6 @@
 // File Path: web/workery-frontend/src/pages/Admin/Order/Add/Step3Page.jsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router";
 import {
   useAuthManager,
@@ -38,6 +38,10 @@ function AdminOrderAddStep3Page() {
   const [isLoading, setIsLoading] = useState(false);
   const [showCancelWarning, setShowCancelWarning] = useState(false);
 
+  // Refs for scroll management
+  const errorSectionRef = useRef(null);
+  const hasInitializedRef = useRef(false);
+
   // Get existing order state
   const existingOrder = orderCreationStorage.getOrderCreation();
 
@@ -52,6 +56,10 @@ function AdminOrderAddStep3Page() {
   const [tags, setTags] = useState(existingOrder?.tags || []);
 
   useEffect(() => {
+    // Only run once on mount
+    if (hasInitializedRef.current) return;
+    hasInitializedRef.current = true;
+
     if (!authManager.isAuthenticated()) {
       navigate("/login?unauthorized=true");
       return;
@@ -64,8 +72,9 @@ function AdminOrderAddStep3Page() {
       return;
     }
 
-    window.scrollTo(0, 0);
-  }, [authManager, navigate, existingOrder]);
+    // Only scroll to top on initial mount, not on every render
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, []); // Empty dependency array - only run once on mount
 
   const onSubmitClick = (e) => {
     e.preventDefault();
@@ -86,7 +95,13 @@ function AdminOrderAddStep3Page() {
 
     if (hasErrors) {
       setErrors(newErrors);
-      window.scrollTo(0, 0);
+      // Smooth scroll to error section instead of jumping to top
+      if (errorSectionRef.current) {
+        errorSectionRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }
       return;
     }
 
@@ -107,7 +122,9 @@ function AdminOrderAddStep3Page() {
     setSkillSets(value);
     // Clear error when user selects skill sets
     if (errors.skillSets && value.length > 0) {
-      setErrors((prev) => ({ ...prev, skillSets: undefined }));
+      const newErrors = { ...errors };
+      delete newErrors.skillSets;
+      setErrors(newErrors);
     }
   };
 
@@ -116,11 +133,21 @@ function AdminOrderAddStep3Page() {
   };
 
   const handleDescriptionChange = (e) => {
-    setDescription(e.target.value);
+    const newValue = e.target.value;
+    setDescription(newValue);
     // Clear error when user starts typing
-    if (errors.description) {
-      setErrors((prev) => ({ ...prev, description: undefined }));
+    if (errors.description && newValue.trim() !== "") {
+      const newErrors = { ...errors };
+      delete newErrors.description;
+      setErrors(newErrors);
     }
+  };
+
+  const handleAdditionalCommentChange = (e) => {
+    // Prevent any default behaviors that might cause scrolling
+    e.persist && e.persist();
+    const newValue = e.target.value;
+    setAdditionalComment(newValue);
   };
 
   const handleCancelClick = () => {
@@ -375,21 +402,23 @@ function AdminOrderAddStep3Page() {
           </div>
         )}
 
-        {/* Error Message - Enhanced */}
-        {errors.message && (
-          <div className="mb-6 bg-red-50 border-l-4 border-red-400 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between shadow-sm">
-            <span className="flex items-center">
-              <ExclamationTriangleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-              <span className="text-sm">{errors.message}</span>
-            </span>
-            <button
-              onClick={() => setErrors({})}
-              className="text-red-600 hover:text-red-800 ml-2 transition-colors"
-            >
-              <XMarkIcon className="w-5 h-5" />
-            </button>
-          </div>
-        )}
+        {/* Error Message - Enhanced with ref for scrolling */}
+        <div ref={errorSectionRef}>
+          {errors.message && (
+            <div className="mb-6 bg-red-50 border-l-4 border-red-400 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between shadow-sm">
+              <span className="flex items-center">
+                <ExclamationTriangleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+                <span className="text-sm">{errors.message}</span>
+              </span>
+              <button
+                onClick={() => setErrors({})}
+                className="text-red-600 hover:text-red-800 ml-2 transition-colors"
+              >
+                <XMarkIcon className="w-5 h-5" />
+              </button>
+            </div>
+          )}
+        </div>
 
         {/* Main Content with Dark Header */}
         <div className="bg-white shadow-lg rounded-lg overflow-hidden">
@@ -498,7 +527,7 @@ function AdminOrderAddStep3Page() {
                     </div>
                   </div>
 
-                  {/* Comments Section - Enhanced */}
+                  {/* Comments Section - Enhanced with fixed auto-focus issue */}
                   <div className="border-t pt-6">
                     <div className="flex items-center mb-4">
                       <ChatBubbleLeftRightIcon className="w-5 h-5 mr-2 text-amber-600" />
@@ -508,16 +537,29 @@ function AdminOrderAddStep3Page() {
                     </div>
 
                     <div className="bg-gradient-to-r from-amber-50 to-amber-100 rounded-lg p-4 border border-amber-200">
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <label
+                        htmlFor="additional-comments"
+                        className="block text-sm font-semibold text-gray-700 mb-2"
+                      >
                         Additional Comments (Optional)
                       </label>
                       <textarea
+                        id="additional-comments"
+                        name="additionalComment"
                         value={additionalComment}
-                        onChange={(e) => setAdditionalComment(e.target.value)}
+                        onChange={handleAdditionalCommentChange}
+                        onFocus={(e) => {
+                          // Prevent any scroll behavior on focus
+                          e.preventDefault();
+                        }}
                         placeholder="Any additional comments or special instructions..."
                         rows={4}
                         maxLength={1000}
                         className="w-full px-3 py-2 border border-gray-300 bg-white rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500 resize-none transition-all"
+                        style={{
+                          // Ensure the textarea doesn't cause viewport changes
+                          scrollBehavior: "auto",
+                        }}
                       />
                       <div className="flex justify-between mt-1">
                         <p className="text-xs text-gray-500">
