@@ -59,7 +59,7 @@ function AdminTaskItemOrderCompletionStep3Page() {
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [taxRate, setTaxRate] = useState(0);
-  const [availableServiceFees, setAvailableServiceFees] = useState([]);
+  const [serviceFeeOptions, setServiceFeeOptions] = useState([]);
 
   // Helper functions for date handling
   const formatDateForInput = useCallback((date) => {
@@ -95,11 +95,6 @@ function AdminTaskItemOrderCompletionStep3Page() {
     }
   }, []);
 
-  // Round to two decimal places helper function
-  const roundToTwo = (num) => {
-    return +(Math.round(num + "e+2") + "e-2") || 0;
-  };
-
   // Initialize state with saved values
   const savedState = useState(() => orderCompletionStorage.getState())[0];
 
@@ -115,55 +110,55 @@ function AdminTaskItemOrderCompletionStep3Page() {
   const [invoiceDate, setInvoiceDate] = useState(savedState.invoiceDate);
   const [invoiceIDs, setInvoiceIDs] = useState(savedState.invoiceIDs);
   const [invoiceQuotedLabourAmount, setInvoiceQuotedLabourAmount] = useState(
-    savedState.invoiceQuotedLabourAmount || 0,
+    savedState.invoiceQuotedLabourAmount,
   );
   const [invoiceQuotedMaterialAmount, setInvoiceQuotedMaterialAmount] =
-    useState(savedState.invoiceQuotedMaterialAmount || 0);
+    useState(savedState.invoiceQuotedMaterialAmount);
   const [invoiceQuotedOtherCostsAmount, setInvoiceQuotedOtherCostsAmount] =
-    useState(savedState.invoiceQuotedOtherCostsAmount || 0);
+    useState(savedState.invoiceQuotedOtherCostsAmount);
   const [invoiceTotalQuoteAmount, setInvoiceTotalQuoteAmount] = useState(
-    savedState.invoiceTotalQuoteAmount || 0,
+    savedState.invoiceTotalQuoteAmount,
   );
   const [invoiceLabourAmount, setInvoiceLabourAmount] = useState(
-    savedState.invoiceLabourAmount || 0,
+    savedState.invoiceLabourAmount,
   );
   const [invoiceMaterialAmount, setInvoiceMaterialAmount] = useState(
-    savedState.invoiceMaterialAmount || 0,
+    savedState.invoiceMaterialAmount,
   );
   const [invoiceOtherCostsAmount, setInvoiceOtherCostsAmount] = useState(
-    savedState.invoiceOtherCostsAmount || 0,
+    savedState.invoiceOtherCostsAmount,
   );
   const [invoiceTaxAmount, setInvoiceTaxAmount] = useState(
-    savedState.invoiceTaxAmount || 0,
+    savedState.invoiceTaxAmount,
   );
   const [isCustomTaxAmount, setIsCustomTaxAmount] = useState(
-    savedState.invoiceIsCustomTaxAmount || false,
+    savedState.invoiceIsCustomTaxAmount,
   );
   const [invoiceTotalAmount, setInvoiceTotalAmount] = useState(
-    savedState.invoiceTotalAmount || 0,
+    savedState.invoiceTotalAmount,
   );
   const [invoiceDepositAmount, setInvoiceDepositAmount] = useState(
-    savedState.invoiceDepositAmount || 0,
+    savedState.invoiceDepositAmount,
   );
   const [invoiceAmountDue, setInvoiceAmountDue] = useState(
-    savedState.invoiceAmountDue || 0,
+    savedState.invoiceAmountDue,
   );
   const [invoiceServiceFeeID, setInvoiceServiceFeeID] = useState(
-    savedState.invoiceServiceFeeID || "",
+    savedState.invoiceServiceFeeID,
   );
   const [invoiceServiceFeePercentage, setInvoiceServiceFeePercentage] =
-    useState(savedState.invoiceServiceFeePercentage || 0);
+    useState(savedState.invoiceServiceFeePercentage);
   const [invoiceServiceFeeAmount, setInvoiceServiceFeeAmount] = useState(
-    savedState.invoiceServiceFeeAmount || 0,
+    savedState.invoiceServiceFeeAmount,
   );
   const [invoiceServiceFeePaymentDate, setInvoiceServiceFeePaymentDate] =
     useState(savedState.invoiceServiceFeePaymentDate);
   const [
     invoiceActualServiceFeeAmountPaid,
     setInvoiceActualServiceFeeAmountPaid,
-  ] = useState(savedState.invoiceActualServiceFeeAmountPaid || 0);
+  ] = useState(savedState.invoiceActualServiceFeeAmountPaid);
   const [invoiceBalanceOwingAmount, setInvoiceBalanceOwingAmount] = useState(
-    savedState.invoiceBalanceOwingAmount || 0,
+    savedState.invoiceBalanceOwingAmount,
   );
   const [paymentMethods, setPaymentMethods] = useState(
     savedState.paymentMethods || [],
@@ -172,79 +167,6 @@ function AdminTaskItemOrderCompletionStep3Page() {
   const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
   }, [navigate]);
-
-  // Perform calculations function (from Financial Update page)
-  const performCalculation = useCallback(() => {
-    console.log("performCalculation: calculating...");
-
-    // Quote calculations
-    let quotedLabour = parseFloat(invoiceQuotedLabourAmount) || 0;
-    let quotedMaterial = parseFloat(invoiceQuotedMaterialAmount) || 0;
-    let quotedOther = parseFloat(invoiceQuotedOtherCostsAmount) || 0;
-
-    const totalQuote = quotedLabour + quotedMaterial + quotedOther;
-    setInvoiceTotalQuoteAmount(roundToTwo(totalQuote));
-
-    // Actual calculations
-    let actualLabour = parseFloat(invoiceLabourAmount) || 0;
-    let actualMaterial = parseFloat(invoiceMaterialAmount) || 0;
-    let actualOther = parseFloat(invoiceOtherCostsAmount) || 0;
-    let actualTax = parseFloat(invoiceTaxAmount) || 0;
-
-    // Calculate tax if not custom
-    if (!isCustomTaxAmount && taxRate > 0) {
-      actualTax =
-        (taxRate / 100.0) * (actualLabour + actualMaterial + actualOther);
-      setInvoiceTaxAmount(roundToTwo(actualTax));
-    } else if (!isCustomTaxAmount) {
-      setInvoiceTaxAmount(0);
-      actualTax = 0;
-    }
-
-    const totalAmount = actualLabour + actualMaterial + actualOther + actualTax;
-    setInvoiceTotalAmount(roundToTwo(totalAmount));
-
-    // Service fee calculation - ALWAYS calculate based on current percentage and labour
-    const serviceFeePercent = parseFloat(invoiceServiceFeePercentage) || 0;
-    console.log("Service fee calculation:", {
-      actualLabour,
-      serviceFeePercent,
-      calculation: `${actualLabour} * (${serviceFeePercent} / 100)`,
-    });
-
-    let serviceFeeAmount = actualLabour * (serviceFeePercent / 100);
-    setInvoiceServiceFeeAmount(roundToTwo(serviceFeeAmount));
-
-    // Balance owing calculation - ensure it's never negative
-    let actualServiceFeePaid =
-      parseFloat(invoiceActualServiceFeeAmountPaid) || 0;
-    let balanceOwing = serviceFeeAmount - actualServiceFeePaid;
-
-    // Ensure balance owing is never negative (backend validation requirement)
-    if (balanceOwing < 0) {
-      balanceOwing = 0;
-    }
-
-    setInvoiceBalanceOwingAmount(roundToTwo(balanceOwing));
-
-    // Amount due calculation
-    let deposit = parseFloat(invoiceDepositAmount) || 0;
-    const amountDue = totalAmount - deposit;
-    setInvoiceAmountDue(roundToTwo(amountDue));
-  }, [
-    invoiceQuotedLabourAmount,
-    invoiceQuotedMaterialAmount,
-    invoiceQuotedOtherCostsAmount,
-    invoiceLabourAmount,
-    invoiceMaterialAmount,
-    invoiceOtherCostsAmount,
-    invoiceTaxAmount,
-    isCustomTaxAmount,
-    invoiceDepositAmount,
-    invoiceServiceFeePercentage,
-    invoiceActualServiceFeeAmountPaid,
-    taxRate,
-  ]);
 
   // Fetch initial data
   useEffect(() => {
@@ -270,48 +192,30 @@ function AdminTaskItemOrderCompletionStep3Page() {
           }
         }
 
-        // Fetch available service fees
-        const response = await serviceFeeManager.getServiceFees(
-          {
-            status: 1, // Only get active service fees
-            limit: 100, // Get up to 100 service fees
-            sortBy: "name",
-            sortOrder: "ASC",
-          },
-          onUnauthorized,
-        );
+        const serviceFees =
+          await serviceFeeManager.getServiceFeeSelectOptions(onUnauthorized);
 
         if (mounted) {
           setTask(taskData);
+          setServiceFeeOptions(serviceFees || []);
 
-          if (response && response.results) {
-            setAvailableServiceFees(response.results);
-            console.log("Available Service Fees loaded:", response.results);
+          console.log("Service Fee Options loaded:", serviceFees);
 
-            // Set initial service fee if available from task and not already set
-            if (
-              !savedState.invoiceServiceFeeID &&
-              taskData.associateServiceFeeID
-            ) {
-              const initialServiceFeeId = taskData.associateServiceFeeID;
-              setInvoiceServiceFeeID(initialServiceFeeId);
+          // Set initial service fee if available from task
+          if (!invoiceServiceFeeID && taskData.associateServiceFeeID) {
+            const initialServiceFeeId = taskData.associateServiceFeeID;
+            setInvoiceServiceFeeID(initialServiceFeeId);
 
-              // Find the service fee and set its percentage
-              const initialServiceFee = response.results.find(
-                (fee) => fee.id === initialServiceFeeId,
-              );
+            // Find the service fee and set its percentage
+            const initialServiceFee = serviceFees?.find((sf) => {
+              const sfId = sf.id || sf.value;
+              return String(sfId) === String(initialServiceFeeId);
+            });
 
-              if (initialServiceFee) {
-                const percentage = parseFloat(
-                  initialServiceFee.percentage || 0,
-                );
-                setInvoiceServiceFeePercentage(percentage);
-                console.log("Initial service fee set:", {
-                  id: initialServiceFeeId,
-                  name: initialServiceFee.name,
-                  percentage: percentage,
-                });
-              }
+            if (initialServiceFee) {
+              const percentage = parseFloat(initialServiceFee.percentage || 0);
+              setInvoiceServiceFeePercentage(percentage);
+              console.log("Initial service fee percentage set to:", percentage);
             }
           }
         }
@@ -332,14 +236,83 @@ function AdminTaskItemOrderCompletionStep3Page() {
     return () => {
       mounted = false;
     };
-  }, [tid, onUnauthorized]);
+  }, [tid]); // Minimal dependencies
 
-  // IMPORTANT: Separate useEffect for calculations that always runs
-  // This ensures calculations run whenever any relevant field changes
+  // Simplified calculation function - NOT wrapped in useCallback
+  const performCalculation = () => {
+    console.log("performCalculation: calculating...");
+
+    // Calculate quoted total
+    const quotedLabour = parseFloat(invoiceQuotedLabourAmount || 0);
+    const quotedMaterial = parseFloat(invoiceQuotedMaterialAmount || 0);
+    const quotedOther = parseFloat(invoiceQuotedOtherCostsAmount || 0);
+    const quotedTotal = quotedLabour + quotedMaterial + quotedOther;
+    setInvoiceTotalQuoteAmount(quotedTotal.toFixed(2));
+
+    // Calculate actual amounts
+    const actualLabour = parseFloat(invoiceLabourAmount || 0);
+    const actualMaterial = parseFloat(invoiceMaterialAmount || 0);
+    const actualOther = parseFloat(invoiceOtherCostsAmount || 0);
+
+    // Calculate tax
+    let taxAmount = parseFloat(invoiceTaxAmount || 0);
+    if (!isCustomTaxAmount && taxRate > 0) {
+      const subtotal = actualLabour + actualMaterial + actualOther;
+      taxAmount = (taxRate / 100) * subtotal;
+      setInvoiceTaxAmount(taxAmount.toFixed(2));
+    }
+
+    // Calculate actual total
+    const actualTotal = actualLabour + actualMaterial + actualOther + taxAmount;
+    setInvoiceTotalAmount(actualTotal.toFixed(2));
+
+    // Calculate amount due
+    const deposit = parseFloat(invoiceDepositAmount || 0);
+    const amountDue = actualTotal - deposit;
+    setInvoiceAmountDue(amountDue.toFixed(2));
+
+    // Calculate service fee (ALWAYS based on labour amount only)
+    const serviceFeePercent = parseFloat(invoiceServiceFeePercentage || 0);
+    const serviceFee = actualLabour * (serviceFeePercent / 100);
+    setInvoiceServiceFeeAmount(serviceFee.toFixed(2));
+
+    // Calculate balance owing
+    const actualPaid = parseFloat(invoiceActualServiceFeeAmountPaid || 0);
+    const balanceOwing = serviceFee - actualPaid;
+    setInvoiceBalanceOwingAmount(Math.max(0, balanceOwing).toFixed(2));
+
+    console.log("Calculation complete:", {
+      quotedTotal,
+      actualTotal,
+      amountDue,
+      serviceFee,
+      balanceOwing,
+      labourAmount: actualLabour,
+      serviceFeePercent,
+    });
+  };
+
+  // Single useEffect to trigger calculations whenever ANY relevant field changes
   useEffect(() => {
-    // Always perform calculation when any of these fields change
     performCalculation();
-  }, [performCalculation]);
+  }, [
+    // Quote fields
+    invoiceQuotedLabourAmount,
+    invoiceQuotedMaterialAmount,
+    invoiceQuotedOtherCostsAmount,
+    // Actual fields
+    invoiceLabourAmount,
+    invoiceMaterialAmount,
+    invoiceOtherCostsAmount,
+    invoiceTaxAmount,
+    isCustomTaxAmount,
+    invoiceDepositAmount,
+    // Service fee fields
+    invoiceServiceFeePercentage,
+    invoiceActualServiceFeeAmountPaid,
+    // Tax rate
+    taxRate,
+  ]);
 
   // Handle service fee selection
   const handleServiceFeeChange = (e) => {
@@ -349,29 +322,48 @@ function AdminTaskItemOrderCompletionStep3Page() {
     if (!selectedId) {
       // Clear service fee if nothing selected
       setInvoiceServiceFeePercentage(0);
-      console.log("Service fee cleared");
       return;
     }
 
-    // Find the selected service fee and update percentage
-    const selectedFee = availableServiceFees.find(
-      (fee) => fee.id === selectedId,
-    );
+    // Find the selected service fee option
+    const selected = serviceFeeOptions.find((sf) => {
+      const sfId = sf.id || sf.value;
+      return String(sfId) === String(selectedId);
+    });
 
-    if (selectedFee) {
-      // Ensure percentage is properly set and parsed
-      const percentage = parseFloat(selectedFee.percentage) || 0;
-      setInvoiceServiceFeePercentage(percentage);
+    if (selected) {
+      // Get the percentage from the service fee object
+      let percentage = 0;
 
-      console.log("Service fee selected:", {
+      if (selected.percentage !== undefined && selected.percentage !== null) {
+        percentage = parseFloat(selected.percentage);
+      } else if (
+        selected.percentageValue !== undefined &&
+        selected.percentageValue !== null
+      ) {
+        percentage = parseFloat(selected.percentageValue);
+      } else if (selected.percent !== undefined && selected.percent !== null) {
+        percentage = parseFloat(selected.percent);
+      } else if (selected.rate !== undefined && selected.rate !== null) {
+        percentage = parseFloat(selected.rate);
+      }
+
+      // Ensure we have a valid number
+      if (isNaN(percentage)) {
+        percentage = 0;
+        console.warn("Invalid service fee percentage in:", selected);
+      }
+
+      console.log("Service Fee Selected:", {
         id: selectedId,
-        name: selectedFee.name,
+        selected: selected,
         percentage: percentage,
       });
+
+      setInvoiceServiceFeePercentage(percentage);
     } else {
-      // Clear service fee if not found
-      setInvoiceServiceFeePercentage(0);
       console.warn("Service fee not found for ID:", selectedId);
+      setInvoiceServiceFeePercentage(0);
     }
   };
 
@@ -402,7 +394,6 @@ function AdminTaskItemOrderCompletionStep3Page() {
       return;
     }
 
-    // Save all values to storage with proper rounding
     orderCompletionStorage.updateState({
       hasInputtedFinancials,
       invoicePaidTo,
@@ -410,42 +401,28 @@ function AdminTaskItemOrderCompletionStep3Page() {
       completionDate,
       invoiceDate,
       invoiceIDs: String(invoiceIDs || ""),
-      invoiceQuotedLabourAmount: roundToTwo(
-        parseFloat(invoiceQuotedLabourAmount || 0),
+      invoiceQuotedLabourAmount: parseFloat(invoiceQuotedLabourAmount || 0),
+      invoiceQuotedMaterialAmount: parseFloat(invoiceQuotedMaterialAmount || 0),
+      invoiceQuotedOtherCostsAmount: parseFloat(
+        invoiceQuotedOtherCostsAmount || 0,
       ),
-      invoiceQuotedMaterialAmount: roundToTwo(
-        parseFloat(invoiceQuotedMaterialAmount || 0),
-      ),
-      invoiceQuotedOtherCostsAmount: roundToTwo(
-        parseFloat(invoiceQuotedOtherCostsAmount || 0),
-      ),
-      invoiceTotalQuoteAmount: roundToTwo(
-        parseFloat(invoiceTotalQuoteAmount || 0),
-      ),
-      invoiceLabourAmount: roundToTwo(parseFloat(invoiceLabourAmount || 0)),
-      invoiceMaterialAmount: roundToTwo(parseFloat(invoiceMaterialAmount || 0)),
-      invoiceOtherCostsAmount: roundToTwo(
-        parseFloat(invoiceOtherCostsAmount || 0),
-      ),
-      invoiceTaxAmount: roundToTwo(parseFloat(invoiceTaxAmount || 0)),
+      invoiceTotalQuoteAmount: parseFloat(invoiceTotalQuoteAmount || 0),
+      invoiceLabourAmount: parseFloat(invoiceLabourAmount || 0),
+      invoiceMaterialAmount: parseFloat(invoiceMaterialAmount || 0),
+      invoiceOtherCostsAmount: parseFloat(invoiceOtherCostsAmount || 0),
+      invoiceTaxAmount: parseFloat(invoiceTaxAmount || 0),
       invoiceIsCustomTaxAmount: isCustomTaxAmount,
-      invoiceTotalAmount: roundToTwo(parseFloat(invoiceTotalAmount || 0)),
-      invoiceDepositAmount: roundToTwo(parseFloat(invoiceDepositAmount || 0)),
-      invoiceAmountDue: roundToTwo(parseFloat(invoiceAmountDue || 0)),
+      invoiceTotalAmount: parseFloat(invoiceTotalAmount || 0),
+      invoiceDepositAmount: parseFloat(invoiceDepositAmount || 0),
+      invoiceAmountDue: parseFloat(invoiceAmountDue || 0),
       invoiceServiceFeeID,
-      invoiceServiceFeePercentage: roundToTwo(
-        parseFloat(invoiceServiceFeePercentage || 0),
-      ),
-      invoiceServiceFeeAmount: roundToTwo(
-        parseFloat(invoiceServiceFeeAmount || 0),
-      ),
+      invoiceServiceFeePercentage: parseFloat(invoiceServiceFeePercentage || 0),
+      invoiceServiceFeeAmount: parseFloat(invoiceServiceFeeAmount || 0),
       invoiceServiceFeePaymentDate,
-      invoiceActualServiceFeeAmountPaid: roundToTwo(
-        parseFloat(invoiceActualServiceFeeAmountPaid || 0),
+      invoiceActualServiceFeeAmountPaid: parseFloat(
+        invoiceActualServiceFeeAmountPaid || 0,
       ),
-      invoiceBalanceOwingAmount: roundToTwo(
-        parseFloat(invoiceBalanceOwingAmount || 0),
-      ),
+      invoiceBalanceOwingAmount: parseFloat(invoiceBalanceOwingAmount || 0),
       paymentMethods,
     });
 
@@ -612,7 +589,7 @@ function AdminTaskItemOrderCompletionStep3Page() {
         {errors.general && (
           <div className="mb-4 sm:mb-6 bg-red-50 border border-red-200 text-red-800 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center justify-between">
             <span className="flex items-center text-sm sm:text-base">
-              <ExclamationTriangleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+              <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
               {errors.general}
             </span>
             <button
@@ -1131,11 +1108,21 @@ function AdminTaskItemOrderCompletionStep3Page() {
                         className={`w-full pl-10 pr-3 py-2 border ${errors.invoiceServiceFeeID ? "border-red-500" : "border-gray-300"} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white`}
                       >
                         <option value="">Please select...</option>
-                        {availableServiceFees.map((fee) => (
-                          <option key={fee.id} value={fee.id}>
-                            {fee.name} ({fee.percentage}%)
-                          </option>
-                        ))}
+                        {serviceFeeOptions.map((sf) => {
+                          const sfId = sf.id || sf.value;
+                          const sfLabel = sf.title || sf.label || sf.name;
+                          const sfPercentage =
+                            sf.percentage ||
+                            sf.percent ||
+                            sf.percentageValue ||
+                            sf.rate ||
+                            0;
+                          return (
+                            <option key={sfId} value={sfId}>
+                              {sfLabel} ({sfPercentage}%)
+                            </option>
+                          );
+                        })}
                       </select>
                     </div>
                     {errors.invoiceServiceFeeID && (
@@ -1150,17 +1137,20 @@ function AdminTaskItemOrderCompletionStep3Page() {
                       Service Fee Percentage
                     </label>
                     <div className="relative">
-                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500">%</span>
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <CalculatorIcon className="h-5 w-5 text-gray-400" />
                       </div>
                       <input
                         type="number"
                         step="0.01"
                         value={invoiceServiceFeePercentage}
                         disabled
-                        className="w-full px-3 pr-8 py-2 border border-gray-200 rounded-lg bg-gray-50"
+                        className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg bg-gray-50"
                       />
                     </div>
+                    <p className="mt-1 text-xs text-gray-500">
+                      Percentage applied to labour amount only
+                    </p>
                   </div>
 
                   <div>
@@ -1169,7 +1159,7 @@ function AdminTaskItemOrderCompletionStep3Page() {
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
+                        <CalculatorIcon className="h-5 w-5 text-gray-400" />
                       </div>
                       <input
                         type="number"
@@ -1180,9 +1170,7 @@ function AdminTaskItemOrderCompletionStep3Page() {
                       />
                     </div>
                     <p className="mt-1 text-xs text-gray-500">
-                      Calculated as: ${invoiceLabourAmount} ×{" "}
-                      {invoiceServiceFeePercentage}% = $
-                      {invoiceServiceFeeAmount}
+                      Calculated as: Labour Amount × Service Fee %
                     </p>
                   </div>
 
@@ -1234,7 +1222,7 @@ function AdminTaskItemOrderCompletionStep3Page() {
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
+                        <CalculatorIcon className="h-5 w-5 text-gray-400" />
                       </div>
                       <input
                         type="number"
@@ -1245,9 +1233,7 @@ function AdminTaskItemOrderCompletionStep3Page() {
                       />
                     </div>
                     <p className="mt-1 text-xs text-gray-500">
-                      Required Fee (${invoiceServiceFeeAmount}) - Amount Paid ($
-                      {invoiceActualServiceFeeAmountPaid}) = $
-                      {invoiceBalanceOwingAmount}
+                      Required Service Fee - Actual Amount Paid
                     </p>
                   </div>
                 </div>
