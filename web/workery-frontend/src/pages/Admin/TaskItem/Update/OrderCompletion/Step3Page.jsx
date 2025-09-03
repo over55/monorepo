@@ -199,19 +199,36 @@ function AdminTaskItemOrderCompletionStep3Page() {
           setTask(taskData);
           setServiceFeeOptions(serviceFees || []);
 
-          // Debug log to see service fee structure
-          console.log("Service Fee Options:", serviceFees);
+          console.log("Service Fee Options loaded:", serviceFees);
 
+          // Set initial service fee if available from task
           if (!invoiceServiceFeeID && taskData.associateServiceFeeID) {
-            setInvoiceServiceFeeID(taskData.associateServiceFeeID);
+            const initialServiceFeeId = taskData.associateServiceFeeID;
+            setInvoiceServiceFeeID(initialServiceFeeId);
 
-            // Ensure percentage is properly parsed
-            const percentage = parseFloat(
-              taskData.associateServiceFeePercentage || 0,
-            );
-            setInvoiceServiceFeePercentage(percentage);
+            // Find the service fee and set its percentage
+            const initialServiceFee = serviceFees?.find((sf) => {
+              const sfId = sf.id || sf.value;
+              return String(sfId) === String(initialServiceFeeId);
+            });
 
-            console.log("Initial service fee percentage set to:", percentage);
+            if (initialServiceFee) {
+              const percentage = parseFloat(initialServiceFee.percentage || 0);
+              setInvoiceServiceFeePercentage(percentage);
+              console.log("Initial service fee percentage set to:", percentage);
+
+              // Calculate initial service fee amount if we have labour amount
+              if (invoiceLabourAmount) {
+                const labourAmount = parseFloat(invoiceLabourAmount || 0);
+                const serviceFee = labourAmount * (percentage / 100);
+                setInvoiceServiceFeeAmount(serviceFee.toFixed(2));
+
+                const balanceOwing =
+                  serviceFee -
+                  parseFloat(invoiceActualServiceFeeAmountPaid || 0);
+                setInvoiceBalanceOwingAmount(balanceOwing.toFixed(2));
+              }
+            }
           }
         }
       } catch (error) {
@@ -233,40 +250,13 @@ function AdminTaskItemOrderCompletionStep3Page() {
     };
   }, [tid]); // Minimal dependencies
 
-  // Memoize the calculation function to prevent unnecessary recalculations
-  const performCalculation = useCallback(() => {
-    const quotedTotal =
-      parseFloat(invoiceQuotedLabourAmount || 0) +
-      parseFloat(invoiceQuotedMaterialAmount || 0) +
-      parseFloat(invoiceQuotedOtherCostsAmount || 0);
-    setInvoiceTotalQuoteAmount(quotedTotal.toFixed(2));
-
-    let taxAmount = parseFloat(invoiceTaxAmount || 0);
-    if (!isCustomTaxAmount && taxRate > 0) {
-      const subtotal =
-        parseFloat(invoiceLabourAmount || 0) +
-        parseFloat(invoiceMaterialAmount || 0) +
-        parseFloat(invoiceOtherCostsAmount || 0);
-      taxAmount = (taxRate / 100) * subtotal;
-      setInvoiceTaxAmount(taxAmount.toFixed(2));
-    }
-
-    const actualTotal =
-      parseFloat(invoiceLabourAmount || 0) +
-      parseFloat(invoiceMaterialAmount || 0) +
-      parseFloat(invoiceOtherCostsAmount || 0) +
-      taxAmount;
-    setInvoiceTotalAmount(actualTotal.toFixed(2));
-
-    const amountDue = actualTotal - parseFloat(invoiceDepositAmount || 0);
-    setInvoiceAmountDue(amountDue.toFixed(2));
-
-    // Enhanced service fee calculation with debug logging
+  // Calculate service fee when labour amount or percentage changes
+  const calculateServiceFee = useCallback(() => {
     const labourAmount = parseFloat(invoiceLabourAmount || 0);
     const percentage = parseFloat(invoiceServiceFeePercentage || 0);
     const serviceFee = labourAmount * (percentage / 100);
 
-    console.log("Service Fee Calculation:", {
+    console.log("Calculating Service Fee:", {
       labourAmount,
       percentage,
       calculatedServiceFee: serviceFee,
@@ -277,6 +267,48 @@ function AdminTaskItemOrderCompletionStep3Page() {
     const balanceOwing =
       serviceFee - parseFloat(invoiceActualServiceFeeAmountPaid || 0);
     setInvoiceBalanceOwingAmount(balanceOwing.toFixed(2));
+
+    return serviceFee;
+  }, [
+    invoiceLabourAmount,
+    invoiceServiceFeePercentage,
+    invoiceActualServiceFeeAmountPaid,
+  ]);
+
+  // Memoize the calculation function to prevent unnecessary recalculations
+  const performCalculation = useCallback(() => {
+    // Calculate quoted total
+    const quotedTotal =
+      parseFloat(invoiceQuotedLabourAmount || 0) +
+      parseFloat(invoiceQuotedMaterialAmount || 0) +
+      parseFloat(invoiceQuotedOtherCostsAmount || 0);
+    setInvoiceTotalQuoteAmount(quotedTotal.toFixed(2));
+
+    // Calculate tax
+    let taxAmount = parseFloat(invoiceTaxAmount || 0);
+    if (!isCustomTaxAmount && taxRate > 0) {
+      const subtotal =
+        parseFloat(invoiceLabourAmount || 0) +
+        parseFloat(invoiceMaterialAmount || 0) +
+        parseFloat(invoiceOtherCostsAmount || 0);
+      taxAmount = (taxRate / 100) * subtotal;
+      setInvoiceTaxAmount(taxAmount.toFixed(2));
+    }
+
+    // Calculate actual total
+    const actualTotal =
+      parseFloat(invoiceLabourAmount || 0) +
+      parseFloat(invoiceMaterialAmount || 0) +
+      parseFloat(invoiceOtherCostsAmount || 0) +
+      taxAmount;
+    setInvoiceTotalAmount(actualTotal.toFixed(2));
+
+    // Calculate amount due
+    const amountDue = actualTotal - parseFloat(invoiceDepositAmount || 0);
+    setInvoiceAmountDue(amountDue.toFixed(2));
+
+    // Calculate service fee (this will update the service fee amount and balance owing)
+    calculateServiceFee();
   }, [
     invoiceQuotedLabourAmount,
     invoiceQuotedMaterialAmount,
@@ -287,15 +319,133 @@ function AdminTaskItemOrderCompletionStep3Page() {
     isCustomTaxAmount,
     invoiceTaxAmount,
     invoiceDepositAmount,
-    invoiceServiceFeePercentage,
-    invoiceActualServiceFeeAmountPaid,
     taxRate,
+    calculateServiceFee,
   ]);
 
   // Perform calculations when relevant fields change
   useEffect(() => {
     performCalculation();
   }, [performCalculation]);
+
+  // Handle service fee selection
+  const handleServiceFeeChange = (e) => {
+    const selectedId = e.target.value;
+    setInvoiceServiceFeeID(selectedId);
+
+    if (!selectedId) {
+      // Clear service fee if nothing selected
+      setInvoiceServiceFeePercentage(0);
+      setInvoiceServiceFeeAmount("0.00");
+      setInvoiceBalanceOwingAmount("0.00");
+      return;
+    }
+
+    // Find the selected service fee option
+    const selected = serviceFeeOptions.find((sf) => {
+      const sfId = sf.id || sf.value;
+      return String(sfId) === String(selectedId);
+    });
+
+    if (selected) {
+      // Get the percentage from the service fee object
+      // Try different possible property names
+      let percentage = 0;
+
+      if (selected.percentage !== undefined && selected.percentage !== null) {
+        percentage = parseFloat(selected.percentage);
+      } else if (
+        selected.percentageValue !== undefined &&
+        selected.percentageValue !== null
+      ) {
+        percentage = parseFloat(selected.percentageValue);
+      } else if (selected.percent !== undefined && selected.percent !== null) {
+        percentage = parseFloat(selected.percent);
+      } else if (selected.rate !== undefined && selected.rate !== null) {
+        percentage = parseFloat(selected.rate);
+      }
+
+      // Ensure we have a valid number
+      if (isNaN(percentage)) {
+        percentage = 0;
+        console.warn("Invalid service fee percentage in:", selected);
+      }
+
+      console.log("Service Fee Selected:", {
+        id: selectedId,
+        selected: selected,
+        percentage: percentage,
+      });
+
+      setInvoiceServiceFeePercentage(percentage);
+
+      // Immediately calculate the service fee amount
+      const labourAmount = parseFloat(invoiceLabourAmount || 0);
+      const calculatedServiceFee = labourAmount * (percentage / 100);
+      setInvoiceServiceFeeAmount(calculatedServiceFee.toFixed(2));
+
+      // Calculate balance owing
+      const actualPaid = parseFloat(invoiceActualServiceFeeAmountPaid || 0);
+      const balanceOwing = calculatedServiceFee - actualPaid;
+      setInvoiceBalanceOwingAmount(balanceOwing.toFixed(2));
+
+      console.log("Service Fee Calculation:", {
+        labourAmount,
+        percentage,
+        calculatedServiceFee,
+        actualPaid,
+        balanceOwing,
+      });
+    } else {
+      console.warn("Service fee not found for ID:", selectedId);
+      setInvoiceServiceFeePercentage(0);
+      setInvoiceServiceFeeAmount("0.00");
+      setInvoiceBalanceOwingAmount("0.00");
+    }
+  };
+
+  // Handle labour amount change with immediate service fee recalculation
+  const handleLabourAmountChange = (e) => {
+    const newValue = e.target.value;
+    setInvoiceLabourAmount(newValue);
+
+    // Immediately recalculate service fee when labour amount changes
+    const labourAmount = parseFloat(newValue || 0);
+    const percentage = parseFloat(invoiceServiceFeePercentage || 0);
+    const serviceFee = labourAmount * (percentage / 100);
+
+    setInvoiceServiceFeeAmount(serviceFee.toFixed(2));
+
+    // Also update balance owing
+    const actualPaid = parseFloat(invoiceActualServiceFeeAmountPaid || 0);
+    const balanceOwing = serviceFee - actualPaid;
+    setInvoiceBalanceOwingAmount(balanceOwing.toFixed(2));
+
+    console.log("Labour Amount Changed - Service Fee Update:", {
+      labourAmount,
+      percentage,
+      serviceFee,
+      balanceOwing,
+    });
+  };
+
+  // Handle actual service fee amount paid change
+  const handleActualServiceFeeAmountPaidChange = (e) => {
+    const newValue = e.target.value;
+    setInvoiceActualServiceFeeAmountPaid(newValue);
+
+    // Update balance owing
+    const serviceFee = parseFloat(invoiceServiceFeeAmount || 0);
+    const actualPaid = parseFloat(newValue || 0);
+    const balanceOwing = serviceFee - actualPaid;
+    setInvoiceBalanceOwingAmount(balanceOwing.toFixed(2));
+
+    console.log("Actual Service Fee Paid Changed:", {
+      serviceFee,
+      actualPaid,
+      balanceOwing,
+    });
+  };
 
   const handleSubmit = () => {
     const newErrors = {};
@@ -878,24 +1028,7 @@ function AdminTaskItemOrderCompletionStep3Page() {
                         type="number"
                         step="0.01"
                         value={invoiceLabourAmount}
-                        onChange={(e) => {
-                          const newValue = e.target.value;
-                          setInvoiceLabourAmount(newValue);
-
-                          // Immediately recalculate service fee when labour amount changes
-                          const labourAmount = parseFloat(newValue || 0);
-                          const percentage = parseFloat(
-                            invoiceServiceFeePercentage || 0,
-                          );
-                          const serviceFee = labourAmount * (percentage / 100);
-                          setInvoiceServiceFeeAmount(serviceFee.toFixed(2));
-
-                          // Also update balance owing
-                          const balanceOwing =
-                            serviceFee -
-                            parseFloat(invoiceActualServiceFeeAmountPaid || 0);
-                          setInvoiceBalanceOwingAmount(balanceOwing.toFixed(2));
-                        }}
+                        onChange={handleLabourAmountChange}
                         placeholder="0.00"
                         className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
@@ -1051,85 +1184,25 @@ function AdminTaskItemOrderCompletionStep3Page() {
                       </div>
                       <select
                         value={invoiceServiceFeeID}
-                        onChange={(e) => {
-                          const selectedId = e.target.value;
-                          setInvoiceServiceFeeID(selectedId);
-
-                          // Find the selected service fee option
-                          const selected = serviceFeeOptions.find((opt) => {
-                            const optionId = opt.id || opt.value;
-                            // Handle both string and number comparisons
-                            return String(optionId) === String(selectedId);
-                          });
-
-                          if (selected) {
-                            // Parse the percentage value, handling different possible property names
-                            let percentage = 0;
-
-                            if (
-                              selected.percentage !== undefined &&
-                              selected.percentage !== null
-                            ) {
-                              percentage = parseFloat(selected.percentage);
-                            } else if (
-                              selected.percentageValue !== undefined &&
-                              selected.percentageValue !== null
-                            ) {
-                              percentage = parseFloat(selected.percentageValue);
-                            } else if (
-                              selected.percent !== undefined &&
-                              selected.percent !== null
-                            ) {
-                              percentage = parseFloat(selected.percent);
-                            }
-
-                            // Ensure we have a valid number
-                            if (isNaN(percentage)) {
-                              percentage = 0;
-                              console.warn(
-                                "Invalid service fee percentage:",
-                                selected,
-                              );
-                            }
-
-                            console.log(
-                              "Setting service fee percentage:",
-                              percentage,
-                            );
-                            setInvoiceServiceFeePercentage(percentage);
-
-                            // Immediately calculate the service fee amount
-                            const labourAmount = parseFloat(
-                              invoiceLabourAmount || 0,
-                            );
-                            const calculatedServiceFee =
-                              labourAmount * (percentage / 100);
-                            setInvoiceServiceFeeAmount(
-                              calculatedServiceFee.toFixed(2),
-                            );
-
-                            // Also update balance owing
-                            const balanceOwing =
-                              calculatedServiceFee -
-                              parseFloat(
-                                invoiceActualServiceFeeAmountPaid || 0,
-                              );
-                            setInvoiceBalanceOwingAmount(
-                              balanceOwing.toFixed(2),
-                            );
-                          }
-                        }}
+                        onChange={handleServiceFeeChange}
                         className={`w-full pl-10 pr-3 py-2 border ${errors.invoiceServiceFeeID ? "border-red-500" : "border-gray-300"} rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white`}
                       >
                         <option value="">Please select...</option>
-                        {serviceFeeOptions.map((sf) => (
-                          <option
-                            key={sf.id || sf.value}
-                            value={sf.id || sf.value}
-                          >
-                            {sf.title || sf.label} ({sf.percentage}%)
-                          </option>
-                        ))}
+                        {serviceFeeOptions.map((sf) => {
+                          const sfId = sf.id || sf.value;
+                          const sfLabel = sf.title || sf.label || sf.name;
+                          const sfPercentage =
+                            sf.percentage ||
+                            sf.percent ||
+                            sf.percentageValue ||
+                            sf.rate ||
+                            0;
+                          return (
+                            <option key={sfId} value={sfId}>
+                              {sfLabel} ({sfPercentage}%)
+                            </option>
+                          );
+                        })}
                       </select>
                     </div>
                     {errors.invoiceServiceFeeID && (
@@ -1208,18 +1281,7 @@ function AdminTaskItemOrderCompletionStep3Page() {
                         type="number"
                         step="0.01"
                         value={invoiceActualServiceFeeAmountPaid}
-                        onChange={(e) => {
-                          const newValue = e.target.value;
-                          setInvoiceActualServiceFeeAmountPaid(newValue);
-
-                          // Update balance owing
-                          const serviceFee = parseFloat(
-                            invoiceServiceFeeAmount || 0,
-                          );
-                          const balanceOwing =
-                            serviceFee - parseFloat(newValue || 0);
-                          setInvoiceBalanceOwingAmount(balanceOwing.toFixed(2));
-                        }}
+                        onChange={handleActualServiceFeeAmountPaidChange}
                         placeholder="0.00"
                         className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
