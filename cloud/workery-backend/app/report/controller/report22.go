@@ -23,6 +23,33 @@ type GenerateReport22Request struct {
 }
 
 func (c *ReportControllerImpl) GenerateReport022(ctx context.Context, req *GenerateReport22Request) ([][]string, error) {
+	// IMPORTANT: Date Range Adjustment for Inclusive End Date
+	//
+	// Problem: When users select a date range (e.g., Jan 1 to Jan 31), they expect
+	// to see ALL orders from Jan 31, not just those assigned at midnight (00:00:00).
+	//
+	// The frontend sends dates as beginning-of-day timestamps (00:00:00).
+	// Without adjustment, using LTE (less than or equal) with "Jan 31 00:00:00"
+	// would EXCLUDE all orders assigned during Jan 31 (any time after midnight).
+	//
+	// Solution: Adjust the ToDT to end-of-day (23:59:59.999999999) to include
+	// all orders assigned on the final day of the selected range.
+	//
+	// Example:
+	// - User selects: Jan 1, 2024 to Jan 31, 2024
+	// - Frontend sends: from_dt = "2024-01-01T00:00:00Z", to_dt = "2024-01-31T00:00:00Z"
+	// - We adjust to: from_dt = "2024-01-01T00:00:00Z", to_dt = "2024-01-31T23:59:59Z"
+	// - Result: Includes ALL orders from the entire month of January
+	adjustedToDT := req.ToDT
+	if !req.ToDT.IsZero() {
+		adjustedToDT = time.Date(
+			req.ToDT.Year(),
+			req.ToDT.Month(),
+			req.ToDT.Day(),
+			23, 59, 59, 999999999, // Set to last nanosecond of the day
+			req.ToDT.Location(),
+		)
+	}
 
 	f := &o_s.OrderPaginationListFilter{
 		Cursor:            "",
@@ -30,7 +57,7 @@ func (c *ReportControllerImpl) GenerateReport022(ctx context.Context, req *Gener
 		SortField:         "completion_date",
 		SortOrder:         o_s.SortOrderDescending,
 		CompletionDateGTE: req.FromDT,
-		CompletionDateLTE: req.ToDT,
+		CompletionDateLTE: adjustedToDT,
 		InTagIDs:          req.TagIDs,
 	}
 
