@@ -107,14 +107,6 @@ func (c *ReportControllerImpl) GenerateReport002(ctx context.Context, req *Gener
 		}
 	}
 
-	c.Logger.Debug("report 02 - list orders by filter",
-		slog.Any("Statuses", f.Statuses),
-		slog.Any("Status", f.Status),
-		slog.Any("AssociateID", f.AssociateID),
-		slog.Any("AssignmentDateGTE", f.AssignmentDateGTE),
-		slog.Any("AssignmentDateLTE", f.AssignmentDateLTE),
-	)
-
 	res, err := c.OrderStorer.ListByFilter(ctx, f)
 	if err != nil {
 		c.Logger.Error("database list by filter error", slog.Any("error", err))

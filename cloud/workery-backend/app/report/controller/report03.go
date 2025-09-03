@@ -65,7 +65,26 @@ func (c *ReportControllerImpl) GenerateReport003(ctx context.Context, req *Gener
 		SortOrder:                       o_s.SortOrderDescending,
 		InvoiceServiceFeePaymentDateGTE: req.FromDT,
 		InvoiceServiceFeePaymentDateLTE: adjustedToDT,
+		Statuses: []int8{
+			o_s.OrderStatusNew,
+			o_s.OrderStatusDeclined,
+			o_s.OrderStatusPending,
+			o_s.OrderStatusCancelled,
+			o_s.OrderStatusOngoing,
+			o_s.OrderStatusInProgress,
+			o_s.OrderStatusCompletedButUnpaid,
+			o_s.OrderStatusCompletedAndPaid,
+			o_s.OrderStatusArchived,
+		},
 	}
+
+	c.Logger.Debug("report 03 - list orders by filter",
+		slog.Any("Statuses", f.Statuses),
+		slog.Any("Status", f.Status),
+		slog.Any("InvoiceServiceFeePaymentDateGTE", f.InvoiceServiceFeePaymentDateGTE),
+		slog.Any("InvoiceServiceFeePaymentDateLTE", f.InvoiceServiceFeePaymentDateLTE),
+	)
+
 	list, err := c.OrderStorer.ListByFilter(ctx, f)
 	if err != nil {
 		c.Logger.Error("database list by filter error", slog.Any("error", err))
