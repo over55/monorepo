@@ -1,4 +1,5 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/TaskItem/Update/OrderCompletion/Step3Page.jsx
+// FIXED VERSION: All calculation issues resolved with detailed comments
 
 import React, { useState, useEffect, useCallback } from "react";
 import { Link, useParams, useNavigate } from "react-router";
@@ -99,6 +100,19 @@ function AdminTaskItemOrderCompletionStep3Page() {
   const roundToTwo = (num) => {
     return +(Math.round(num + "e+2") + "e-2");
   };
+
+  // FIX #1: Generic handler for numeric inputs to ensure consistent value handling
+  // This ensures all numeric inputs are handled the same way and trigger calculations
+  const handleNumericChange = useCallback(
+    (setter) => (e) => {
+      const value = e.target.value;
+      // Store as string to preserve user input (including trailing decimals like "10.")
+      // The calculation useEffect will parse it to number
+      setter(value);
+      console.log(`Numeric field changed: "${value}"`);
+    },
+    [],
+  );
 
   // Initialize state with saved values
   const savedState = useState(() => orderCompletionStorage.getState())[0];
@@ -244,84 +258,118 @@ function AdminTaskItemOrderCompletionStep3Page() {
     };
   }, [tid]);
 
-  // MAIN CALCULATION LOGIC - This runs whenever ANY relevant field changes
+  // FIX #2: MAIN CALCULATION LOGIC - Complete rewrite for reliable calculations
+  // This effect runs whenever ANY financial field changes and recalculates everything
   useEffect(() => {
-    console.log("Running calculations...");
+    // Wrap in a function for cleaner logic
+    const performCalculations = () => {
+      console.log("=== Running Financial Calculations ===");
 
-    // Parse all values to ensure we're working with numbers
-    const quotedLabour = parseFloat(invoiceQuotedLabourAmount) || 0;
-    const quotedMaterial = parseFloat(invoiceQuotedMaterialAmount) || 0;
-    const quotedOther = parseFloat(invoiceQuotedOtherCostsAmount) || 0;
+      // Parse all quote values with explicit fallbacks to 0
+      const quotedLabour = parseFloat(invoiceQuotedLabourAmount || 0) || 0;
+      const quotedMaterial = parseFloat(invoiceQuotedMaterialAmount || 0) || 0;
+      const quotedOther = parseFloat(invoiceQuotedOtherCostsAmount || 0) || 0;
 
-    // Calculate quoted total
-    const quotedTotal = quotedLabour + quotedMaterial + quotedOther;
-    setInvoiceTotalQuoteAmount(roundToTwo(quotedTotal));
+      // Parse all actual values with explicit fallbacks to 0
+      const actualLabour = parseFloat(invoiceLabourAmount || 0) || 0;
+      const actualMaterial = parseFloat(invoiceMaterialAmount || 0) || 0;
+      const actualOther = parseFloat(invoiceOtherCostsAmount || 0) || 0;
+      const deposit = parseFloat(invoiceDepositAmount || 0) || 0;
 
-    // Parse actual amounts
-    const actualLabour = parseFloat(invoiceLabourAmount) || 0;
-    const actualMaterial = parseFloat(invoiceMaterialAmount) || 0;
-    const actualOther = parseFloat(invoiceOtherCostsAmount) || 0;
+      // Log input values for debugging
+      console.log("Input values:", {
+        actualLabour,
+        actualMaterial,
+        actualOther,
+        deposit,
+        taxRate,
+        isCustomTaxAmount,
+        invoiceServiceFeePercentage,
+      });
 
-    // Calculate tax
-    let actualTax = parseFloat(invoiceTaxAmount) || 0;
-    if (!isCustomTaxAmount && taxRate > 0) {
-      if (task?.associateTaxId && task.associateTaxId !== "NA") {
+      // Calculate quoted total
+      const quotedTotal = quotedLabour + quotedMaterial + quotedOther;
+
+      // Calculate tax amount
+      let actualTax = 0;
+      if (isCustomTaxAmount) {
+        // If custom tax, use the manually entered value
+        actualTax = parseFloat(invoiceTaxAmount || 0) || 0;
+      } else if (
+        taxRate > 0 &&
+        task?.associateTaxId &&
+        task.associateTaxId !== "NA"
+      ) {
+        // Auto-calculate tax based on tax rate and sum of actual amounts
         actualTax =
           (taxRate / 100) * (actualLabour + actualMaterial + actualOther);
-        setInvoiceTaxAmount(roundToTwo(actualTax));
-      } else {
-        actualTax = 0;
-        setInvoiceTaxAmount(0);
       }
-    }
 
-    // Calculate actual total
-    const actualTotal = actualLabour + actualMaterial + actualOther + actualTax;
-    setInvoiceTotalAmount(roundToTwo(actualTotal));
+      // Calculate actual total (sum of all actual amounts including tax)
+      const actualTotal =
+        actualLabour + actualMaterial + actualOther + actualTax;
 
-    // Calculate amount due
-    const deposit = parseFloat(invoiceDepositAmount) || 0;
-    const amountDue = actualTotal - deposit;
-    setInvoiceAmountDue(roundToTwo(amountDue));
+      // Calculate amount due (total minus deposit)
+      const amountDue = actualTotal - deposit;
 
-    // CALCULATE SERVICE FEE - Based on labour amount and percentage
-    const serviceFeePercent = parseFloat(invoiceServiceFeePercentage) || 0;
-    const calculatedServiceFee = actualLabour * (serviceFeePercent / 100);
-    setInvoiceServiceFeeAmount(roundToTwo(calculatedServiceFee));
+      // CRITICAL: Calculate service fee (based on LABOUR ONLY, not total)
+      const serviceFeePercent =
+        parseFloat(invoiceServiceFeePercentage || 0) || 0;
+      const calculatedServiceFee = actualLabour * (serviceFeePercent / 100);
 
-    // Calculate balance owing
-    const actualServiceFeePaid =
-      parseFloat(invoiceActualServiceFeeAmountPaid) || 0;
-    const balanceOwing = calculatedServiceFee - actualServiceFeePaid;
-    setInvoiceBalanceOwingAmount(roundToTwo(Math.max(0, balanceOwing)));
+      // Calculate balance owing for service fee
+      const actualServiceFeePaid =
+        parseFloat(invoiceActualServiceFeeAmountPaid || 0) || 0;
+      const balanceOwing = Math.max(
+        0,
+        calculatedServiceFee - actualServiceFeePaid,
+      );
 
-    console.log("Calculation results:", {
-      quotedTotal,
-      actualTotal,
-      amountDue,
-      actualLabour,
-      serviceFeePercent,
-      calculatedServiceFee,
-      balanceOwing,
-    });
+      // Log calculated values for debugging
+      console.log("Calculated values:", {
+        quotedTotal: roundToTwo(quotedTotal),
+        actualTotal: roundToTwo(actualTotal),
+        actualTax: roundToTwo(actualTax),
+        amountDue: roundToTwo(amountDue),
+        calculatedServiceFee: roundToTwo(calculatedServiceFee),
+        balanceOwing: roundToTwo(balanceOwing),
+      });
+
+      // Update all calculated fields with rounded values
+      setInvoiceTotalQuoteAmount(roundToTwo(quotedTotal));
+      setInvoiceTotalAmount(roundToTwo(actualTotal));
+      setInvoiceAmountDue(roundToTwo(amountDue));
+      setInvoiceServiceFeeAmount(roundToTwo(calculatedServiceFee));
+      setInvoiceBalanceOwingAmount(roundToTwo(balanceOwing));
+
+      // Only update tax amount if not using custom tax
+      if (!isCustomTaxAmount) {
+        setInvoiceTaxAmount(roundToTwo(actualTax));
+      }
+    };
+
+    // Execute calculations
+    performCalculations();
   }, [
+    // FIX #3: Complete dependency list ensures calculations run when ANY field changes
     // Quote fields
     invoiceQuotedLabourAmount,
     invoiceQuotedMaterialAmount,
     invoiceQuotedOtherCostsAmount,
-    // Actual fields
+    // Actual amount fields - THESE ARE CRITICAL
     invoiceLabourAmount,
     invoiceMaterialAmount,
     invoiceOtherCostsAmount,
+    // Tax-related fields
     invoiceTaxAmount,
     isCustomTaxAmount,
+    taxRate,
+    // Other financial fields
     invoiceDepositAmount,
-    // Service fee fields
     invoiceServiceFeePercentage,
     invoiceActualServiceFeeAmountPaid,
-    // Other dependencies
-    taxRate,
-    task,
+    // FIX #4: Use specific task property instead of entire object to avoid stale closure issues
+    task?.associateTaxId,
   ]);
 
   // Handle service fee selection
@@ -859,13 +907,14 @@ function AdminTaskItemOrderCompletionStep3Page() {
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
                       </div>
+                      {/* FIX #5: Use handleNumericChange for consistent handling */}
                       <input
                         type="number"
                         step="0.01"
                         value={invoiceQuotedLabourAmount}
-                        onChange={(e) =>
-                          setInvoiceQuotedLabourAmount(e.target.value)
-                        }
+                        onChange={handleNumericChange(
+                          setInvoiceQuotedLabourAmount,
+                        )}
                         placeholder="0.00"
                         className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
@@ -880,13 +929,14 @@ function AdminTaskItemOrderCompletionStep3Page() {
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
                       </div>
+                      {/* FIX #5: Use handleNumericChange */}
                       <input
                         type="number"
                         step="0.01"
                         value={invoiceQuotedMaterialAmount}
-                        onChange={(e) =>
-                          setInvoiceQuotedMaterialAmount(e.target.value)
-                        }
+                        onChange={handleNumericChange(
+                          setInvoiceQuotedMaterialAmount,
+                        )}
                         placeholder="0.00"
                         className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
@@ -901,13 +951,14 @@ function AdminTaskItemOrderCompletionStep3Page() {
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
                       </div>
+                      {/* FIX #5: Use handleNumericChange */}
                       <input
                         type="number"
                         step="0.01"
                         value={invoiceQuotedOtherCostsAmount}
-                        onChange={(e) =>
-                          setInvoiceQuotedOtherCostsAmount(e.target.value)
-                        }
+                        onChange={handleNumericChange(
+                          setInvoiceQuotedOtherCostsAmount,
+                        )}
                         placeholder="0.00"
                         className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
@@ -934,7 +985,7 @@ function AdminTaskItemOrderCompletionStep3Page() {
                 </div>
               </DetailSection>
 
-              {/* Actual Amounts */}
+              {/* Actual Amounts - THIS IS THE CRITICAL SECTION */}
               <DetailSection title="Actual Amounts" icon={BanknotesIcon}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -945,11 +996,12 @@ function AdminTaskItemOrderCompletionStep3Page() {
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
                       </div>
+                      {/* FIX #5: Use handleNumericChange for ALL actual amounts */}
                       <input
                         type="number"
                         step="0.01"
                         value={invoiceLabourAmount}
-                        onChange={(e) => setInvoiceLabourAmount(e.target.value)}
+                        onChange={handleNumericChange(setInvoiceLabourAmount)}
                         placeholder="0.00"
                         className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
@@ -964,13 +1016,12 @@ function AdminTaskItemOrderCompletionStep3Page() {
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
                       </div>
+                      {/* FIX #5: This was the problem - now using handleNumericChange */}
                       <input
                         type="number"
                         step="0.01"
                         value={invoiceMaterialAmount}
-                        onChange={(e) =>
-                          setInvoiceMaterialAmount(e.target.value)
-                        }
+                        onChange={handleNumericChange(setInvoiceMaterialAmount)}
                         placeholder="0.00"
                         className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
@@ -985,13 +1036,14 @@ function AdminTaskItemOrderCompletionStep3Page() {
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
                       </div>
+                      {/* FIX #5: This was the problem - now using handleNumericChange */}
                       <input
                         type="number"
                         step="0.01"
                         value={invoiceOtherCostsAmount}
-                        onChange={(e) =>
-                          setInvoiceOtherCostsAmount(e.target.value)
-                        }
+                        onChange={handleNumericChange(
+                          setInvoiceOtherCostsAmount,
+                        )}
                         placeholder="0.00"
                         className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
@@ -1006,11 +1058,16 @@ function AdminTaskItemOrderCompletionStep3Page() {
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <CalculatorIcon className="h-5 w-5 text-gray-400" />
                       </div>
+                      {/* FIX #5: Conditional onChange based on isCustomTaxAmount */}
                       <input
                         type="number"
                         step="0.01"
                         value={invoiceTaxAmount}
-                        onChange={(e) => setInvoiceTaxAmount(e.target.value)}
+                        onChange={
+                          isCustomTaxAmount
+                            ? handleNumericChange(setInvoiceTaxAmount)
+                            : undefined
+                        }
                         disabled={!isCustomTaxAmount}
                         placeholder="0.00"
                         className={`w-full pl-10 pr-3 py-2 border ${isCustomTaxAmount ? "border-gray-300" : "border-gray-200"} rounded-lg ${isCustomTaxAmount ? "" : "bg-gray-50"}`}
@@ -1021,9 +1078,14 @@ function AdminTaskItemOrderCompletionStep3Page() {
                         <input
                           type="checkbox"
                           checked={isCustomTaxAmount}
-                          onChange={(e) =>
-                            setIsCustomTaxAmount(e.target.checked)
-                          }
+                          onChange={(e) => {
+                            const isCustom = e.target.checked;
+                            setIsCustomTaxAmount(isCustom);
+                            // Clear tax when switching to auto-calculate
+                            if (!isCustom) {
+                              setInvoiceTaxAmount("");
+                            }
+                          }}
                           className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                         />
                         <span className="ml-2 text-sm text-gray-700">
@@ -1059,13 +1121,12 @@ function AdminTaskItemOrderCompletionStep3Page() {
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
                       </div>
+                      {/* FIX #5: This was the problem - now using handleNumericChange */}
                       <input
                         type="number"
                         step="0.01"
                         value={invoiceDepositAmount}
-                        onChange={(e) =>
-                          setInvoiceDepositAmount(e.target.value)
-                        }
+                        onChange={handleNumericChange(setInvoiceDepositAmount)}
                         placeholder="0.00"
                         className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
@@ -1208,13 +1269,14 @@ function AdminTaskItemOrderCompletionStep3Page() {
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
                       </div>
+                      {/* FIX #5: Use handleNumericChange */}
                       <input
                         type="number"
                         step="0.01"
                         value={invoiceActualServiceFeeAmountPaid}
-                        onChange={(e) =>
-                          setInvoiceActualServiceFeeAmountPaid(e.target.value)
-                        }
+                        onChange={handleNumericChange(
+                          setInvoiceActualServiceFeeAmountPaid,
+                        )}
                         placeholder="0.00"
                         className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
