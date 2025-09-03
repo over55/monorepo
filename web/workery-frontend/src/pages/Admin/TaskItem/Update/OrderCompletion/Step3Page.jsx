@@ -1,6 +1,6 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/TaskItem/Update/OrderCompletion/Step3Page.jsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { Link, useParams, useNavigate } from "react-router";
 import {
   useTaskManager,
@@ -32,6 +32,21 @@ import {
   InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 
+// Move DetailSection outside to prevent recreation on each render
+const DetailSection = ({ title, icon: Icon, children }) => (
+  <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
+    <div className="px-4 sm:px-6 py-3 sm:py-4">
+      <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
+        <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
+        <span className="truncate">{title}</span>
+      </h3>
+    </div>
+    <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
+      {children}
+    </div>
+  </div>
+);
+
 function AdminTaskItemOrderCompletionStep3Page() {
   const { tid } = useParams();
   const navigate = useNavigate();
@@ -47,7 +62,7 @@ function AdminTaskItemOrderCompletionStep3Page() {
   const [serviceFeeOptions, setServiceFeeOptions] = useState([]);
 
   // Helper functions for date handling
-  const formatDateForInput = (date) => {
+  const formatDateForInput = useCallback((date) => {
     if (!date) return "";
     try {
       if (date instanceof Date && !isNaN(date)) {
@@ -64,9 +79,9 @@ function AdminTaskItemOrderCompletionStep3Page() {
       console.error("Error formatting date:", error);
       return "";
     }
-  };
+  }, []);
 
-  const parseDateFromInput = (value) => {
+  const parseDateFromInput = useCallback((value) => {
     if (!value) return null;
     try {
       const date = new Date(value);
@@ -78,10 +93,12 @@ function AdminTaskItemOrderCompletionStep3Page() {
       console.error("Error parsing date:", error);
       return null;
     }
-  };
+  }, []);
+
+  // Initialize state with saved values
+  const savedState = useState(() => orderCompletionStorage.getState())[0];
 
   // Form state from storage
-  const savedState = orderCompletionStorage.getState();
   const [hasInputtedFinancials, setHasInputtedFinancials] = useState(
     savedState.hasInputtedFinancials,
   );
@@ -147,10 +164,11 @@ function AdminTaskItemOrderCompletionStep3Page() {
     savedState.paymentMethods || [],
   );
 
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
-  };
+  }, [navigate]);
 
+  // Fetch initial data
   useEffect(() => {
     let mounted = true;
 
@@ -181,11 +199,19 @@ function AdminTaskItemOrderCompletionStep3Page() {
           setTask(taskData);
           setServiceFeeOptions(serviceFees || []);
 
+          // Debug log to see service fee structure
+          console.log("Service Fee Options:", serviceFees);
+
           if (!invoiceServiceFeeID && taskData.associateServiceFeeID) {
             setInvoiceServiceFeeID(taskData.associateServiceFeeID);
-            setInvoiceServiceFeePercentage(
+
+            // Ensure percentage is properly parsed
+            const percentage = parseFloat(
               taskData.associateServiceFeePercentage || 0,
             );
+            setInvoiceServiceFeePercentage(percentage);
+
+            console.log("Initial service fee percentage set to:", percentage);
           }
         }
       } catch (error) {
@@ -205,26 +231,10 @@ function AdminTaskItemOrderCompletionStep3Page() {
     return () => {
       mounted = false;
     };
-  }, [tid]);
+  }, [tid]); // Minimal dependencies
 
-  useEffect(() => {
-    performCalculation();
-  }, [
-    invoiceQuotedLabourAmount,
-    invoiceQuotedMaterialAmount,
-    invoiceQuotedOtherCostsAmount,
-    invoiceLabourAmount,
-    invoiceMaterialAmount,
-    invoiceOtherCostsAmount,
-    isCustomTaxAmount,
-    invoiceTaxAmount,
-    invoiceDepositAmount,
-    invoiceServiceFeePercentage,
-    invoiceActualServiceFeeAmountPaid,
-    taxRate,
-  ]);
-
-  const performCalculation = () => {
+  // Memoize the calculation function to prevent unnecessary recalculations
+  const performCalculation = useCallback(() => {
     const quotedTotal =
       parseFloat(invoiceQuotedLabourAmount || 0) +
       parseFloat(invoiceQuotedMaterialAmount || 0) +
@@ -251,15 +261,41 @@ function AdminTaskItemOrderCompletionStep3Page() {
     const amountDue = actualTotal - parseFloat(invoiceDepositAmount || 0);
     setInvoiceAmountDue(amountDue.toFixed(2));
 
-    const serviceFee =
-      parseFloat(invoiceLabourAmount || 0) *
-      (parseFloat(invoiceServiceFeePercentage || 0) / 100);
+    // Enhanced service fee calculation with debug logging
+    const labourAmount = parseFloat(invoiceLabourAmount || 0);
+    const percentage = parseFloat(invoiceServiceFeePercentage || 0);
+    const serviceFee = labourAmount * (percentage / 100);
+
+    console.log("Service Fee Calculation:", {
+      labourAmount,
+      percentage,
+      calculatedServiceFee: serviceFee,
+    });
+
     setInvoiceServiceFeeAmount(serviceFee.toFixed(2));
 
     const balanceOwing =
       serviceFee - parseFloat(invoiceActualServiceFeeAmountPaid || 0);
     setInvoiceBalanceOwingAmount(balanceOwing.toFixed(2));
-  };
+  }, [
+    invoiceQuotedLabourAmount,
+    invoiceQuotedMaterialAmount,
+    invoiceQuotedOtherCostsAmount,
+    invoiceLabourAmount,
+    invoiceMaterialAmount,
+    invoiceOtherCostsAmount,
+    isCustomTaxAmount,
+    invoiceTaxAmount,
+    invoiceDepositAmount,
+    invoiceServiceFeePercentage,
+    invoiceActualServiceFeeAmountPaid,
+    taxRate,
+  ]);
+
+  // Perform calculations when relevant fields change
+  useEffect(() => {
+    performCalculation();
+  }, [performCalculation]);
 
   const handleSubmit = () => {
     const newErrors = {};
@@ -326,21 +362,6 @@ function AdminTaskItemOrderCompletionStep3Page() {
         : `/admin/task/${tid}/order-completion/step-5`,
     );
   };
-
-  // Section Component with Dark Header
-  const DetailSection = ({ title, icon: Icon, children }) => (
-    <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
-      <div className="px-4 sm:px-6 py-3 sm:py-4">
-        <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
-          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
-          <span className="truncate">{title}</span>
-        </h3>
-      </div>
-      <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
-        {children}
-      </div>
-    </div>
-  );
 
   if (isLoading) {
     return (
@@ -857,7 +878,24 @@ function AdminTaskItemOrderCompletionStep3Page() {
                         type="number"
                         step="0.01"
                         value={invoiceLabourAmount}
-                        onChange={(e) => setInvoiceLabourAmount(e.target.value)}
+                        onChange={(e) => {
+                          const newValue = e.target.value;
+                          setInvoiceLabourAmount(newValue);
+
+                          // Immediately recalculate service fee when labour amount changes
+                          const labourAmount = parseFloat(newValue || 0);
+                          const percentage = parseFloat(
+                            invoiceServiceFeePercentage || 0,
+                          );
+                          const serviceFee = labourAmount * (percentage / 100);
+                          setInvoiceServiceFeeAmount(serviceFee.toFixed(2));
+
+                          // Also update balance owing
+                          const balanceOwing =
+                            serviceFee -
+                            parseFloat(invoiceActualServiceFeeAmountPaid || 0);
+                          setInvoiceBalanceOwingAmount(balanceOwing.toFixed(2));
+                        }}
                         placeholder="0.00"
                         className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                       />
@@ -878,6 +916,27 @@ function AdminTaskItemOrderCompletionStep3Page() {
                         value={invoiceMaterialAmount}
                         onChange={(e) =>
                           setInvoiceMaterialAmount(e.target.value)
+                        }
+                        placeholder="0.00"
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Actual Other Costs
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={invoiceOtherCostsAmount}
+                        onChange={(e) =>
+                          setInvoiceOtherCostsAmount(e.target.value)
                         }
                         placeholder="0.00"
                         className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -937,6 +996,45 @@ function AdminTaskItemOrderCompletionStep3Page() {
                       />
                     </div>
                   </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Deposit Amount
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={invoiceDepositAmount}
+                        onChange={(e) =>
+                          setInvoiceDepositAmount(e.target.value)
+                        }
+                        placeholder="0.00"
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Amount Due
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <CalculatorIcon className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={invoiceAmountDue}
+                        disabled
+                        className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg bg-gray-50"
+                      />
+                    </div>
+                  </div>
                 </div>
               </DetailSection>
 
@@ -956,13 +1054,68 @@ function AdminTaskItemOrderCompletionStep3Page() {
                         onChange={(e) => {
                           const selectedId = e.target.value;
                           setInvoiceServiceFeeID(selectedId);
-                          const selected = serviceFeeOptions.find(
-                            (opt) =>
-                              opt.value === selectedId || opt.id === selectedId,
-                          );
+
+                          // Find the selected service fee option
+                          const selected = serviceFeeOptions.find((opt) => {
+                            const optionId = opt.id || opt.value;
+                            // Handle both string and number comparisons
+                            return String(optionId) === String(selectedId);
+                          });
+
                           if (selected) {
-                            setInvoiceServiceFeePercentage(
-                              selected.percentage || 0,
+                            // Parse the percentage value, handling different possible property names
+                            let percentage = 0;
+
+                            if (
+                              selected.percentage !== undefined &&
+                              selected.percentage !== null
+                            ) {
+                              percentage = parseFloat(selected.percentage);
+                            } else if (
+                              selected.percentageValue !== undefined &&
+                              selected.percentageValue !== null
+                            ) {
+                              percentage = parseFloat(selected.percentageValue);
+                            } else if (
+                              selected.percent !== undefined &&
+                              selected.percent !== null
+                            ) {
+                              percentage = parseFloat(selected.percent);
+                            }
+
+                            // Ensure we have a valid number
+                            if (isNaN(percentage)) {
+                              percentage = 0;
+                              console.warn(
+                                "Invalid service fee percentage:",
+                                selected,
+                              );
+                            }
+
+                            console.log(
+                              "Setting service fee percentage:",
+                              percentage,
+                            );
+                            setInvoiceServiceFeePercentage(percentage);
+
+                            // Immediately calculate the service fee amount
+                            const labourAmount = parseFloat(
+                              invoiceLabourAmount || 0,
+                            );
+                            const calculatedServiceFee =
+                              labourAmount * (percentage / 100);
+                            setInvoiceServiceFeeAmount(
+                              calculatedServiceFee.toFixed(2),
+                            );
+
+                            // Also update balance owing
+                            const balanceOwing =
+                              calculatedServiceFee -
+                              parseFloat(
+                                invoiceActualServiceFeeAmountPaid || 0,
+                              );
+                            setInvoiceBalanceOwingAmount(
+                              balanceOwing.toFixed(2),
                             );
                           }
                         }}
@@ -988,6 +1141,24 @@ function AdminTaskItemOrderCompletionStep3Page() {
 
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Service Fee Percentage
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <CalculatorIcon className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={invoiceServiceFeePercentage}
+                        disabled
+                        className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg bg-gray-50"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Required Service Fee Amount
                     </label>
                     <div className="relative">
@@ -998,6 +1169,75 @@ function AdminTaskItemOrderCompletionStep3Page() {
                         type="number"
                         step="0.01"
                         value={invoiceServiceFeeAmount}
+                        disabled
+                        className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg bg-gray-50"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Service Fee Payment Date
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <CalendarIcon className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="date"
+                        value={formatDateForInput(invoiceServiceFeePaymentDate)}
+                        onChange={(e) =>
+                          setInvoiceServiceFeePaymentDate(
+                            parseDateFromInput(e.target.value),
+                          )
+                        }
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Actual Service Fee Amount Paid
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={invoiceActualServiceFeeAmountPaid}
+                        onChange={(e) => {
+                          const newValue = e.target.value;
+                          setInvoiceActualServiceFeeAmountPaid(newValue);
+
+                          // Update balance owing
+                          const serviceFee = parseFloat(
+                            invoiceServiceFeeAmount || 0,
+                          );
+                          const balanceOwing =
+                            serviceFee - parseFloat(newValue || 0);
+                          setInvoiceBalanceOwingAmount(balanceOwing.toFixed(2));
+                        }}
+                        placeholder="0.00"
+                        className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Balance Owing Amount
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <CalculatorIcon className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={invoiceBalanceOwingAmount}
                         disabled
                         className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg bg-gray-50"
                       />
