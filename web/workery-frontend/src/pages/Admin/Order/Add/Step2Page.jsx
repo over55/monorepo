@@ -1,11 +1,12 @@
 // File Path: web/workery-frontend/src/pages/Admin/Order/Add/Step2Page.jsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router";
 import {
   useAuthManager,
   useOrderCreationStorage,
 } from "../../../../services/Services";
+import { DateInput } from "../../../../components/UI";
 import {
   PlusIcon,
   ChevronRightIcon,
@@ -33,6 +34,7 @@ function AdminOrderAddStep2Page() {
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
   const [showCancelWarning, setShowCancelWarning] = useState(false);
+  const errorSectionRef = useRef(null);
 
   // Get existing order state
   const existingOrder = orderCreationStorage.getOrderCreation();
@@ -70,7 +72,13 @@ function AdminOrderAddStep2Page() {
     if (hasErrors) {
       console.log("onSubmitClick: Aborting because of error(s)");
       setErrors(newErrors);
-      window.scrollTo(0, 0);
+      // Smooth scroll to error section instead of jumping to top
+      if (errorSectionRef.current) {
+        errorSectionRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }
       return;
     }
 
@@ -100,6 +108,17 @@ function AdminOrderAddStep2Page() {
     navigate("/admin/orders/add/step-1-search");
   };
 
+  // Handle date change
+  const handleStartDateChange = (value) => {
+    setStartDate(value);
+    // Clear any date-related errors if they exist
+    if (errors.startDate) {
+      const newErrors = { ...errors };
+      delete newErrors.startDate;
+      setErrors(newErrors);
+    }
+  };
+
   // Section Component - Matching Customer Detail styling
   const FormSection = ({ title, icon: Icon, children, description }) => (
     <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
@@ -122,7 +141,8 @@ function AdminOrderAddStep2Page() {
     let mounted = true;
 
     if (mounted) {
-      window.scrollTo(0, 0);
+      // Removed automatic scroll to top to prevent jumping when date is selected
+      // window.scrollTo(0, 0);
 
       if (!authManager.isAuthenticated()) {
         navigate("/login?unauthorized=true");
@@ -314,25 +334,29 @@ function AdminOrderAddStep2Page() {
       </div>
 
       {/* Error Message - Responsive */}
-      {(errors.message || errors.isOngoing || errors.isHomeSupportService) && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base">
-          <div className="flex justify-between items-center">
-            <span className="flex items-center break-words">
-              <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
-              {errors.message ||
-                errors.isOngoing ||
-                errors.isHomeSupportService}
-            </span>
-            <button
-              onClick={() => setErrors({})}
-              className="text-red-700 hover:text-red-900 ml-2 flex-shrink-0"
-              aria-label="Close error message"
-            >
-              <XMarkIcon className="w-4 sm:w-5 h-4 sm:h-5" />
-            </button>
+      <div ref={errorSectionRef}>
+        {(errors.message ||
+          errors.isOngoing ||
+          errors.isHomeSupportService) && (
+          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base">
+            <div className="flex justify-between items-center">
+              <span className="flex items-center break-words">
+                <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+                {errors.message ||
+                  errors.isOngoing ||
+                  errors.isHomeSupportService}
+              </span>
+              <button
+                onClick={() => setErrors({})}
+                className="text-red-700 hover:text-red-900 ml-2 flex-shrink-0"
+                aria-label="Close error message"
+              >
+                <XMarkIcon className="w-4 sm:w-5 h-4 sm:h-5" />
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Main Content */}
       <div className="bg-white shadow-sm rounded-lg">
@@ -376,7 +400,15 @@ function AdminOrderAddStep2Page() {
                       name="isOngoing"
                       value="2"
                       checked={isOngoing === 2}
-                      onChange={(e) => setIsOngoing(parseInt(e.target.value))}
+                      onChange={(e) => {
+                        setIsOngoing(parseInt(e.target.value));
+                        // Clear error when selection is made
+                        if (errors.isOngoing) {
+                          const newErrors = { ...errors };
+                          delete newErrors.isOngoing;
+                          setErrors(newErrors);
+                        }
+                      }}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                     />
                     <div className="ml-3">
@@ -394,7 +426,15 @@ function AdminOrderAddStep2Page() {
                       name="isOngoing"
                       value="1"
                       checked={isOngoing === 1}
-                      onChange={(e) => setIsOngoing(parseInt(e.target.value))}
+                      onChange={(e) => {
+                        setIsOngoing(parseInt(e.target.value));
+                        // Clear error when selection is made
+                        if (errors.isOngoing) {
+                          const newErrors = { ...errors };
+                          delete newErrors.isOngoing;
+                          setErrors(newErrors);
+                        }
+                      }}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                     />
                     <div className="ml-3">
@@ -434,9 +474,15 @@ function AdminOrderAddStep2Page() {
                       name="isHomeSupportService"
                       value="2"
                       checked={isHomeSupportService === 2}
-                      onChange={(e) =>
-                        setIsHomeSupportService(parseInt(e.target.value))
-                      }
+                      onChange={(e) => {
+                        setIsHomeSupportService(parseInt(e.target.value));
+                        // Clear error when selection is made
+                        if (errors.isHomeSupportService) {
+                          const newErrors = { ...errors };
+                          delete newErrors.isHomeSupportService;
+                          setErrors(newErrors);
+                        }
+                      }}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                     />
                     <div className="ml-3">
@@ -454,9 +500,15 @@ function AdminOrderAddStep2Page() {
                       name="isHomeSupportService"
                       value="1"
                       checked={isHomeSupportService === 1}
-                      onChange={(e) =>
-                        setIsHomeSupportService(parseInt(e.target.value))
-                      }
+                      onChange={(e) => {
+                        setIsHomeSupportService(parseInt(e.target.value));
+                        // Clear error when selection is made
+                        if (errors.isHomeSupportService) {
+                          const newErrors = { ...errors };
+                          delete newErrors.isHomeSupportService;
+                          setErrors(newErrors);
+                        }
+                      }}
                       className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
                     />
                     <div className="ml-3">
@@ -472,31 +524,30 @@ function AdminOrderAddStep2Page() {
               </div>
             </FormSection>
 
-            {/* Start Date Section */}
+            {/* Start Date Section - Updated with DateInput component */}
             <FormSection
               title="Schedule Information"
               icon={CalendarIcon}
               description="Optional scheduling details for the job"
             >
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  When should this job start?
-                  <span className="text-gray-500 font-normal ml-1">
-                    (Optional)
-                  </span>
-                </label>
-                <div className="relative max-w-xs">
-                  <input
-                    type="date"
-                    value={startDate}
-                    onChange={(e) => setStartDate(e.target.value)}
-                    className="block w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm sm:text-base"
-                  />
-                  <CalendarIcon className="absolute left-3 top-3 h-4 sm:h-5 w-4 sm:w-5 text-gray-400" />
-                </div>
-                <p className="mt-2 text-xs sm:text-sm text-gray-500">
-                  Leave blank if nothing was specified by the client
-                </p>
+              <div className="max-w-xs">
+                <DateInput
+                  label={
+                    <>
+                      When should this job start?
+                      <span className="text-gray-500 font-normal ml-1">
+                        (Optional)
+                      </span>
+                    </>
+                  }
+                  value={startDate}
+                  onChange={handleStartDateChange}
+                  error={errors.startDate}
+                  helperText="Leave blank if nothing was specified by the client"
+                  placeholder="Select a date"
+                  className="mb-0"
+                  min={new Date().toISOString().split("T")[0]} // Prevent past dates
+                />
               </div>
             </FormSection>
 
