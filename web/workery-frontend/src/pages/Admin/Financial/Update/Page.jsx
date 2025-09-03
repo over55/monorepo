@@ -160,8 +160,14 @@ function AdminFinancialUpdatePage() {
     const totalAmount = actualLabour + actualMaterial + actualOther + actualTax;
     setInvoiceTotalAmount(roundToTwo(totalAmount));
 
-    // Service fee calculation
+    // Service fee calculation - FIXED: Always calculate based on current percentage
     const serviceFeePercent = parseFloat(invoiceServiceFeePercentage) || 0;
+    console.log("Service fee calculation:", {
+      actualLabour,
+      serviceFeePercent,
+      calculation: `${actualLabour} * (${serviceFeePercent} / 100)`,
+    });
+
     let serviceFeeAmount = actualLabour * (serviceFeePercent / 100);
     setInvoiceServiceFeeAmount(roundToTwo(serviceFeeAmount));
 
@@ -453,11 +459,12 @@ function AdminFinancialUpdatePage() {
     };
   }, [orderWJID, onPageLoaded, availableServiceFees]);
 
-  // Recalculate when relevant fields change
+  // FIXED: Separate useEffect for calculations that always runs
+  // This ensures calculations run whenever any relevant field changes
   useEffect(() => {
-    if (financial) {
-      performCalculation();
-    }
+    // Always perform calculation when any of these fields change
+    // Don't depend on 'financial' being set
+    performCalculation();
   }, [
     invoiceQuotedLabourAmount,
     invoiceQuotedMaterialAmount,
@@ -468,7 +475,7 @@ function AdminFinancialUpdatePage() {
     invoiceTaxAmount,
     invoiceIsCustomTaxAmount,
     invoiceDepositAmount,
-    invoiceServiceFeePercentage,
+    invoiceServiceFeePercentage, // This is the key dependency for service fee
     invoiceActualServiceFeeAmountPaid,
     taxRate,
     associateTaxId,
@@ -1546,9 +1553,16 @@ function AdminFinancialUpdatePage() {
 
                         if (selectedFee) {
                           setInvoiceServiceFee(selectedFee);
-                          setInvoiceServiceFeePercentage(
-                            selectedFee.percentage || 0,
-                          );
+                          // FIXED: Ensure percentage is properly set and parsed
+                          const percentage =
+                            parseFloat(selectedFee.percentage) || 0;
+                          setInvoiceServiceFeePercentage(percentage);
+
+                          console.log("Service fee selected:", {
+                            id: selectedId,
+                            name: selectedFee.name,
+                            percentage: percentage,
+                          });
 
                           // Check if it's "Other" option
                           if (
@@ -1561,6 +1575,7 @@ function AdminFinancialUpdatePage() {
                             setInvoiceServiceFeeOther("");
                           }
                         } else {
+                          // Clear service fee if none selected
                           setInvoiceServiceFee(null);
                           setInvoiceServiceFeePercentage(0);
                           setIsInvoiceServiceFeeOther(false);
@@ -1658,7 +1673,7 @@ function AdminFinancialUpdatePage() {
                     </div>
                     <p className="mt-1 text-xs text-gray-500 flex items-center">
                       <CalculatorIcon className="w-3 h-3 mr-1" />
-                      Service fee owed by associate
+                      Service fee owed by associate (labour × percentage)
                     </p>
                   </div>
 
