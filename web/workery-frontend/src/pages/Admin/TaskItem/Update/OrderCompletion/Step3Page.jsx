@@ -1,5 +1,4 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/TaskItem/Update/OrderCompletion/Step3Page.jsx
-// FIXED VERSION: All calculation issues resolved with detailed comments
 
 import React, { useState, useEffect, useCallback } from "react";
 import { Link, useParams, useNavigate } from "react-router";
