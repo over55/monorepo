@@ -165,10 +165,16 @@ function AdminFinancialUpdatePage() {
     let serviceFeeAmount = actualLabour * (serviceFeePercent / 100);
     setInvoiceServiceFeeAmount(roundToTwo(serviceFeeAmount));
 
-    // Balance owing calculation
+    // Balance owing calculation - ensure it's never negative
     let actualServiceFeePaid =
       parseFloat(invoiceActualServiceFeeAmountPaid) || 0;
-    const balanceOwing = serviceFeeAmount - actualServiceFeePaid;
+    let balanceOwing = serviceFeeAmount - actualServiceFeePaid;
+
+    // Ensure balance owing is never negative (backend validation requirement)
+    if (balanceOwing < 0) {
+      balanceOwing = 0;
+    }
+
     setInvoiceBalanceOwingAmount(roundToTwo(balanceOwing));
 
     // Amount due calculation
@@ -409,7 +415,7 @@ function AdminFinancialUpdatePage() {
               financialData.invoiceActualServiceFeeAmountPaid || 0,
             );
             setInvoiceBalanceOwingAmount(
-              financialData.invoiceBalanceOwingAmount || 0,
+              Math.max(0, financialData.invoiceBalanceOwingAmount || 0), // Ensure non-negative
             );
 
             // Set the service fee object if ID exists
@@ -534,8 +540,12 @@ function AdminFinancialUpdatePage() {
     }
 
     // Check if actual paid exceeds service fee amount (would create negative balance)
+    // Allow overpayment but set balance to 0 instead of negative
     if (actualServiceFeePaid > serviceFeeAmount) {
-      validationErrors.invoiceActualServiceFeeAmountPaid = `Service fee paid ($${actualServiceFeePaid}) cannot exceed the service fee amount ($${serviceFeeAmount})`;
+      // This is allowed, but we'll show a warning
+      console.log(
+        `Service fee paid ($${actualServiceFeePaid}) exceeds the service fee amount ($${serviceFeeAmount}). Balance will be set to 0.`,
+      );
     }
 
     // Check if at least one payment method is selected for paid status
@@ -567,8 +577,7 @@ function AdminFinancialUpdatePage() {
       finalPaymentMethods = [1]; // 1 = PaymentMethodOther
     }
 
-    // Handle edge case: when service fee is 0% and backend rejects 0 as "missing"
-    // We'll send a very small positive value that effectively rounds to 0
+    // Calculate final balance owing amount
     let adjustedActualServiceFeePaid = parseFloat(
       invoiceActualServiceFeeAmountPaid,
     );
@@ -576,21 +585,26 @@ function AdminFinancialUpdatePage() {
       invoiceBalanceOwingAmount,
     );
 
-    // If service fee amount is 0 and actual paid is 0, and status is paid
-    // Send a tiny positive value to bypass backend validation bug
+    // Recalculate balance owing to ensure it's never negative
+    const calculatedBalance = serviceFeeAmount - adjustedActualServiceFeePaid;
+    adjustedInvoiceBalanceOwingAmount = Math.max(0, calculatedBalance);
+
+    // Handle edge case: when service fee is 0% and backend rejects 0 as "missing"
+    // We'll send a very small positive value that effectively rounds to 0
     if (
       serviceFeeAmount === 0 &&
       adjustedActualServiceFeePaid === 0 &&
       paymentStatus === ORDER_STATUS_COMPLETED_AND_PAID
     ) {
       adjustedActualServiceFeePaid = 0.001; // Small enough to be negligible
-      adjustedInvoiceBalanceOwingAmount = -0.001; // Corresponding adjustment
+      adjustedInvoiceBalanceOwingAmount = 0; // Keep balance at 0, not negative
 
       console.log(
         "Adjusting zero service fee payment to bypass backend validation:",
         {
           original: invoiceActualServiceFeeAmountPaid,
           adjusted: adjustedActualServiceFeePaid,
+          balance: adjustedInvoiceBalanceOwingAmount,
         },
       );
     }
@@ -632,7 +646,7 @@ function AdminFinancialUpdatePage() {
       invoiceServiceFeePaymentDate: invoiceServiceFeePaymentDate,
       paymentMethods: finalPaymentMethods, // Use the final payment methods with default
       invoiceActualServiceFeeAmountPaid: adjustedActualServiceFeePaid, // Use adjusted value
-      invoiceBalanceOwingAmount: adjustedInvoiceBalanceOwingAmount, // Use adjusted value
+      invoiceBalanceOwingAmount: adjustedInvoiceBalanceOwingAmount, // Use adjusted value (always >= 0)
 
       // Include the order ID if it exists
       orderId: financial.orderId || financial.wjid,
@@ -1726,7 +1740,8 @@ function AdminFinancialUpdatePage() {
                     </div>
                     <p className="mt-1 text-xs text-gray-500 flex items-center">
                       <CalculatorIcon className="w-3 h-3 mr-1" />
-                      Remaining balance to be paid by associate
+                      Remaining balance to be paid by associate (cannot be
+                      negative)
                     </p>
                   </div>
                 </div>
