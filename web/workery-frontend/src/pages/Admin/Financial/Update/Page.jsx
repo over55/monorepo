@@ -1650,7 +1650,9 @@ function AdminFinancialUpdatePage() {
                       </div>
                     </div>
                     <p className="mt-1 text-xs text-gray-500">
-                      Automatically set based on selected service fee
+                      Automatically set based on selected service fee. This
+                      percentage is used to calculate: Labour × Percentage =
+                      Service Fee Amount
                     </p>
                   </div>
 
