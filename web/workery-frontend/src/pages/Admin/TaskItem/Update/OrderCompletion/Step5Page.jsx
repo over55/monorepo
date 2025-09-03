@@ -85,9 +85,11 @@ function AdminTaskItemOrderCompletionStep5Page() {
   }, [tid]);
 
   const handleSubmit = async () => {
+    console.log("handleSubmit triggered.");
     try {
       setIsSubmitting(true);
       setErrors({});
+      console.log("Form data for submission:", formData);
 
       // Validate required fields before submission
       if (
@@ -116,6 +118,7 @@ function AdminTaskItemOrderCompletionStep5Page() {
         }
 
         if (Object.keys(validationErrors).length > 0) {
+          console.log("Validation failed with errors:", validationErrors);
           setErrors(validationErrors);
           window.scrollTo(0, 0);
           return;
@@ -226,7 +229,9 @@ function AdminTaskItemOrderCompletionStep5Page() {
         });
       }
 
+      console.log("Submitting payload:", payload);
       await taskManager.completeOrder(payload, onUnauthorized);
+      console.log("Order completion submitted successfully.");
       orderCompletionStorage.clearState();
       navigate(`/admin/order/${task.orderWjid}`);
     } catch (error) {
@@ -448,7 +453,7 @@ function AdminTaskItemOrderCompletionStep5Page() {
         </div>
 
         {/* Main Content */}
-        {errors.message && (
+        {Object.keys(errors).length > 0 && (
           <div className="mb-4 sm:mb-6 bg-red-50 border border-red-200 text-red-800 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center">
             <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
             <span className="text-xs sm:text-sm">
