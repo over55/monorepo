@@ -232,6 +232,14 @@ func (c *ReportControllerImpl) GenerateReport002(ctx context.Context, req *Gener
 			latestCommentDateStr = latestComment.CreatedAt.Format("2006-01-02")
 		}
 
+		// BUGFIX: If missing `service fee` then add most recent from assocaite.
+		var actualInvoiceServiceFeeName string = o.InvoiceServiceFeeName
+		// var actualInvoiceServiceFeePercentage float64 = o.InvoiceServiceFeePercentage
+		if o.InvoiceServiceFeeName == "" {
+			actualInvoiceServiceFeeName = a.ServiceFeeName
+			// actualInvoiceServiceFeePercentage = a.ServiceFeePercentage
+		}
+
 		//
 		// --- Generate the row ---
 		//
@@ -241,7 +249,7 @@ func (c *ReportControllerImpl) GenerateReport002(ctx context.Context, req *Gener
 			assignmentDateStr,                          // 2
 			completionDateStr,                          // 3
 			invoiceServiceFeePaymentDateStr,            // 4
-			o.InvoiceServiceFeeName,                    // 5
+			actualInvoiceServiceFeeName,                // 5
 			invoiceActualServiceFeeAmountPaidStr,       // 6
 			invoiceServiceFeeAmountStr,                 // 7
 			invoiceLabourAmountStr,                     // 8
