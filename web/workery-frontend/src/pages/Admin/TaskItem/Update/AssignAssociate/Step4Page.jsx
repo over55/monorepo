@@ -97,7 +97,8 @@ function AdminTaskItemAssignAssociateStep4Page() {
       sessionStorage.removeItem("WORKERY_ASSIGN_ASSOCIATE_DATA");
 
       // Show success message (handled by navigate)
-      setForceURL(`/admin/order/${task.orderWjid}`);
+      // setForceURL(`/admin/order/${task.orderWjid}`); // Redirect to order page
+      setForceURL(`/admin/dashboard`); // Redirect to the dashboard.
     } catch (error) {
       console.error("Error assigning associate:", error);
       setErrors(error);
