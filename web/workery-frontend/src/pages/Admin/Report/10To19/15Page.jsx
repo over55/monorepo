@@ -1,9 +1,18 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Admin/Report/10To19/15Page.jsx
+// File Path: src/pages/Admin/Report/10To19/15Page.jsx
+// UIX Upgraded - Uses UIX primitives (Card, Button, Alert, Spinner, Breadcrumb)
 
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { Link, useNavigate } from "react-router";
 import { useReportManager } from "../../../../services/Services";
-import { Card, Button, Alert, Loading } from "../../../../components/UI";
+import {
+  Card,
+  Button,
+  Alert,
+  Spinner,
+  Breadcrumb,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../components/UIX";
 import {
   HomeIcon,
   ChartBarIcon,
@@ -30,6 +39,19 @@ const ASSOCIATE_EXPIRY_DATE_TYPE_OPTIONS = [
 function AdminReport15Page() {
   const navigate = useNavigate();
   const reportManager = useReportManager();
+  const { getThemeClasses } = useUIXTheme();
+
+  // Memoize theme classes
+  const themeClasses = useMemo(() => ({
+    textPrimary: getThemeClasses("text-primary"),
+    textSecondary: getThemeClasses("text-secondary"),
+    textMuted: getThemeClasses("text-muted"),
+    bgCard: getThemeClasses("bg-card"),
+    bgHover: getThemeClasses("bg-hover"),
+    borderPrimary: getThemeClasses("border-primary"),
+    borderSecondary: getThemeClasses("border-secondary"),
+    linkPrimary: getThemeClasses("link-primary"),
+  }), [getThemeClasses]);
 
   // Form state
   const [expiryDateType, setExpiryDateType] = useState(0);
@@ -55,9 +77,16 @@ function AdminReport15Page() {
   }, []);
 
   // Handle unauthorized access
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
-  };
+  }, [navigate]);
+
+  // Breadcrumb items
+  const breadcrumbItems = useMemo(() => [
+    { label: "Dashboard", to: "/admin/dashboard", icon: HomeIcon },
+    { label: "Reports", to: "/admin/reports", icon: ChartBarIcon },
+    { label: "Associate Expiry Dates", icon: CalendarDaysIcon, isActive: true },
+  ], []);
 
   // Validate form
   const validateForm = () => {
@@ -178,76 +207,20 @@ function AdminReport15Page() {
     .slice(0, 5);
 
   if (isLoading) {
-    return <Loading fullScreen message="Loading report settings..." />;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Spinner size="lg" />
+          <p className={`mt-4 ${themeClasses.textSecondary}`}>Loading report settings...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-full xl:max-w-7xl">
       {/* Breadcrumb */}
-      <nav
-        className="flex mb-4 sm:mb-6 lg:mb-8 overflow-x-auto"
-        aria-label="Breadcrumb"
-      >
-        <ol className="inline-flex items-center space-x-1 md:space-x-3 whitespace-nowrap">
-          <li className="inline-flex items-center">
-            <Link
-              to="/admin/dashboard"
-              className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600"
-            >
-              <HomeIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0" />
-              <span className="hidden sm:inline">Dashboard</span>
-              <span className="sm:hidden">Home</span>
-            </Link>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <svg
-                className="w-3 h-3 text-gray-400 mx-1 flex-shrink-0"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 6 10"
-              >
-                <path
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="m1 9 4-4-4-4"
-                />
-              </svg>
-              <Link
-                to="/admin/reports"
-                className="ml-1 text-xs sm:text-sm font-medium text-gray-700 md:ml-2 hover:text-blue-600"
-              >
-                Reports
-              </Link>
-            </div>
-          </li>
-          <li aria-current="page">
-            <div className="flex items-center">
-              <svg
-                className="w-3 h-3 text-gray-400 mx-1 flex-shrink-0"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 6 10"
-              >
-                <path
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="m1 9 4-4-4-4"
-                />
-              </svg>
-              <span className="ml-1 text-xs sm:text-sm font-medium text-gray-500 md:ml-2">
-                Associate Expiry Dates
-              </span>
-            </div>
-          </li>
-        </ol>
-      </nav>
+      <Breadcrumb items={breadcrumbItems} className="mb-4 sm:mb-6 lg:mb-8" />
 
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -255,14 +228,14 @@ function AdminReport15Page() {
         <div className="lg:col-span-2">
           <Card className="h-full">
             {/* Card Header */}
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className={`px-6 py-4 border-b ${themeClasses.borderSecondary}`}>
               <div className="flex items-center">
                 <CalendarDaysIcon className="w-6 h-6 text-orange-600 mr-3" />
                 <div>
-                  <h1 className="text-xl font-semibold text-gray-900">
+                  <h1 className={`text-xl font-semibold ${themeClasses.textPrimary}`}>
                     Associate Expiry Dates Report
                   </h1>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className={`text-sm ${themeClasses.textSecondary} mt-1`}>
                     Track upcoming expiry dates for associate documents and
                     certifications
                   </p>
@@ -339,7 +312,7 @@ function AdminReport15Page() {
                 <div>
                   <label
                     htmlFor="expiryDateType"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+                    className={`block text-sm font-medium ${themeClasses.textSecondary} mb-2`}
                   >
                     What expiry date are you looking for?
                     <span className="text-red-500 ml-1">*</span>
@@ -379,7 +352,7 @@ function AdminReport15Page() {
                     </select>
                     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
                       <svg
-                        className="h-5 w-5 text-gray-400"
+                        className={`h-5 w-5 ${themeClasses.textMuted}`}
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 20 20"
                         fill="currentColor"
@@ -404,14 +377,14 @@ function AdminReport15Page() {
                 <div>
                   <label
                     htmlFor="daysBeforeExpiry"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+                    className={`block text-sm font-medium ${themeClasses.textSecondary} mb-2`}
                   >
                     Days until expiry
                     <span className="text-red-500 ml-1">*</span>
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <CalendarIcon className="h-5 w-5 text-gray-400" />
+                      <CalendarIcon className={`h-5 w-5 ${themeClasses.textMuted}`} />
                     </div>
                     <input
                       type="number"
@@ -445,7 +418,7 @@ function AdminReport15Page() {
                       required
                     />
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className={`mt-1 text-xs ${themeClasses.textMuted}`}>
                     Indicate how many days before the date will expire (0 to 365
                     days)
                   </p>
@@ -461,11 +434,11 @@ function AdminReport15Page() {
                 {expiryDateType > 0 &&
                   daysBeforeExpiry &&
                   !errors.daysBeforeExpiry && (
-                    <div className="bg-orange-50 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">
+                    <div className="bg-orange-50 dark:bg-orange-900/20 rounded-lg p-4">
+                      <h4 className={`text-sm font-medium ${themeClasses.textSecondary} mb-2`}>
                         Report Preview
                       </h4>
-                      <div className="text-sm text-gray-600 space-y-1">
+                      <div className={`text-sm ${themeClasses.textSecondary} space-y-1`}>
                         <p>
                           <span className="font-medium">Document Type:</span>{" "}
                           {
@@ -487,7 +460,7 @@ function AdminReport15Page() {
                   )}
 
                 {/* Form Actions */}
-                <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+                <div className={`flex items-center justify-between pt-6 border-t ${themeClasses.borderSecondary}`}>
                   <Button
                     type="button"
                     variant="outline"
@@ -515,10 +488,10 @@ function AdminReport15Page() {
         <div className="lg:col-span-1">
           {/* Recent Downloads Card */}
           <Card>
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className={`px-6 py-4 border-b ${themeClasses.borderSecondary}`}>
               <div className="flex items-center">
-                <ClockIcon className="w-5 h-5 text-gray-600 mr-2" />
-                <h2 className="text-lg font-semibold text-gray-900">
+                <ClockIcon className={`w-5 h-5 ${themeClasses.textSecondary} mr-2`} />
+                <h2 className={`text-lg font-semibold ${themeClasses.textPrimary}`}>
                   Recent Downloads
                 </h2>
               </div>
@@ -529,29 +502,29 @@ function AdminReport15Page() {
                   {recentDownloads.map((item, index) => (
                     <div
                       key={index}
-                      className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                      className={`p-3 ${themeClasses.bgHover} rounded-lg hover:opacity-80 transition-colors`}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
+                          <p className={`text-sm font-medium ${themeClasses.textPrimary} truncate`}>
                             {item.filename}
                           </p>
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className={`text-xs ${themeClasses.textMuted} mt-1`}>
                             {new Date(item.downloadedAt).toLocaleString()}
                           </p>
                         </div>
-                        <DocumentArrowDownIcon className="w-4 h-4 text-gray-400 flex-shrink-0 ml-2" />
+                        <DocumentArrowDownIcon className={`w-4 h-4 ${themeClasses.textMuted} flex-shrink-0 ml-2`} />
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <DocumentArrowDownIcon className="mx-auto h-12 w-12 text-gray-400" />
-                  <p className="mt-2 text-sm text-gray-500">
+                  <DocumentArrowDownIcon className={`mx-auto h-12 w-12 ${themeClasses.textMuted}`} />
+                  <p className={`mt-2 text-sm ${themeClasses.textMuted}`}>
                     No recent downloads
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className={`text-xs ${themeClasses.textMuted} mt-1`}>
                     Downloaded reports will appear here
                   </p>
                 </div>
@@ -561,8 +534,8 @@ function AdminReport15Page() {
 
           {/* What's Included Card */}
           <Card className="mt-6">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">
+            <div className={`px-6 py-4 border-b ${themeClasses.borderSecondary}`}>
+              <h3 className={`text-lg font-semibold ${themeClasses.textPrimary}`}>
                 What's Included
               </h3>
             </div>
@@ -571,10 +544,10 @@ function AdminReport15Page() {
                 <div className="flex items-start">
                   <UserIcon className="w-5 h-5 text-orange-500 mr-3 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className={`text-sm font-medium ${themeClasses.textPrimary}`}>
                       Associate Details
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className={`text-xs ${themeClasses.textMuted} mt-1`}>
                       Name, contact, and ID information
                     </p>
                   </div>
@@ -582,10 +555,10 @@ function AdminReport15Page() {
                 <div className="flex items-start">
                   <CalendarDaysIcon className="w-5 h-5 text-blue-500 mr-3 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className={`text-sm font-medium ${themeClasses.textPrimary}`}>
                       Expiry Dates
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className={`text-xs ${themeClasses.textMuted} mt-1`}>
                       Exact expiration dates for documents
                     </p>
                   </div>
@@ -593,10 +566,10 @@ function AdminReport15Page() {
                 <div className="flex items-start">
                   <ExclamationCircleIcon className="w-5 h-5 text-red-500 mr-3 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className={`text-sm font-medium ${themeClasses.textPrimary}`}>
                       Days Remaining
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className={`text-xs ${themeClasses.textMuted} mt-1`}>
                       Countdown to expiration
                     </p>
                   </div>
@@ -604,10 +577,10 @@ function AdminReport15Page() {
                 <div className="flex items-start">
                   <ShieldCheckIcon className="w-5 h-5 text-green-500 mr-3 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className={`text-sm font-medium ${themeClasses.textPrimary}`}>
                       Compliance Status
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className={`text-xs ${themeClasses.textMuted} mt-1`}>
                       Current certification status
                     </p>
                   </div>
@@ -618,13 +591,13 @@ function AdminReport15Page() {
 
           {/* Report Tips */}
           <Card className="mt-6">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">
+            <div className={`px-6 py-4 border-b ${themeClasses.borderSecondary}`}>
+              <h3 className={`text-lg font-semibold ${themeClasses.textPrimary}`}>
                 Report Tips
               </h3>
             </div>
             <div className="p-6">
-              <ul className="space-y-3 text-sm text-gray-600">
+              <ul className={`space-y-3 text-sm ${themeClasses.textSecondary}`}>
                 <li className="flex items-start">
                   <span className="text-orange-500 mr-2">•</span>
                   <span>
@@ -656,4 +629,13 @@ function AdminReport15Page() {
   );
 }
 
-export default AdminReport15Page;
+// Wrapper with UIXThemeProvider
+function AdminReport15PageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminReport15Page />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminReport15PageWithProvider;

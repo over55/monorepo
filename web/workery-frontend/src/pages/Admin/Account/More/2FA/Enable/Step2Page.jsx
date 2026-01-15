@@ -1,7 +1,8 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Admin/Account/More/2FA/Enable/Step2Page.jsx
+// File Path: web/workery-frontend/src/pages/Admin/Account/More/2FA/Enable/Step2Page.jsx
+// UIX Upgraded - Uses UIX primitives (Card, Alert, Breadcrumb, Spinner, Button)
 
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router";
 import { QRCodeSVG } from "qrcode.react";
 import {
   LockClosedIcon,
@@ -22,13 +23,12 @@ import {
 import {
   Card,
   Alert,
-  Loading,
   Breadcrumb,
+  Spinner,
   Button,
-  ProgressBar,
-  Input,
-  Textarea,
-} from "../../../../../../components/UI";
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../../../components/UIX";
 import { getRoleRedirectPath } from "../../../../../../constants/Roles";
 import { getAppBaseURL } from "../../../../../../services/Config/APIConfig";
 
@@ -42,6 +42,14 @@ function AccountTwoFactorAuthenticationEnableStep2Page() {
   const authManager = useAuthManager();
   const twoFactorAuthManager = useTwoFactorAuthManager();
   const navigate = useNavigate();
+  const { getThemeClasses } = useUIXTheme();
+
+  // Memoize theme classes
+  const themeClasses = useMemo(() => ({
+    textPrimary: getThemeClasses("text-primary"),
+    textSecondary: getThemeClasses("text-secondary"),
+    linkPrimary: getThemeClasses("link-primary"),
+  }), [getThemeClasses]);
 
   // Component state
   const [currentUser, setCurrentUser] = useState(null);
@@ -51,10 +59,10 @@ function AccountTwoFactorAuthenticationEnableStep2Page() {
   const [copiedField, setCopiedField] = useState("");
 
   // Unauthorized callback
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     authManager.logout();
     navigate("/login?unauthorized=true");
-  };
+  }, [authManager, navigate]);
 
   // Fetch user data and OTP response on mount
   useEffect(() => {
@@ -119,16 +127,16 @@ function AccountTwoFactorAuthenticationEnableStep2Page() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [accountManager, authManager, navigate, onUnauthorized, twoFactorAuthManager]);
 
   // Generate dashboard link
-  const getDashboardLink = () => {
+  const getDashboardLink = useCallback(() => {
     if (!currentUser) return "/dashboard";
     return getRoleRedirectPath(currentUser.roleId || currentUser.role);
-  };
+  }, [currentUser]);
 
   // Copy to clipboard function
-  const copyToClipboard = async (text, fieldName) => {
+  const copyToClipboard = useCallback(async (text, fieldName) => {
     try {
       await navigator.clipboard.writeText(text);
       setCopiedField(fieldName);
@@ -136,86 +144,97 @@ function AccountTwoFactorAuthenticationEnableStep2Page() {
     } catch (err) {
       console.error("Failed to copy:", err);
     }
-  };
+  }, []);
+
+  // Get account name for 2FA app
+  const getAccountName = useCallback(() => {
+    const appDomain = getAppBaseURL().replace(/^https?:\/\//, "");
+    return `${appDomain}: ${currentUser?.email || ""}`;
+  }, [currentUser]);
+
+  // Breadcrumb items
+  const breadcrumbItems = useMemo(() => [
+    {
+      label: "Dashboard",
+      to: getDashboardLink(),
+      icon: Bars3Icon,
+    },
+    {
+      label: "Profile",
+      to: "/admin/account",
+      icon: UserCircleIcon,
+    },
+    {
+      label: "Two-Factor Authentication",
+      to: "/admin/account/more/2fa",
+      icon: ShieldCheckIcon,
+    },
+    {
+      label: "Enable 2FA",
+      icon: LockClosedIcon,
+      isActive: true,
+    },
+  ], [getDashboardLink]);
 
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loading size="lg" text="Loading..." />
-      </div>
+      <Card padding="p-4 sm:p-6 lg:p-8" className="max-w-4xl mx-auto border-0 shadow-none">
+        <Card padding="p-0" className="flex items-center justify-center min-h-[400px] border-0 shadow-none">
+          <div className="text-center">
+            <Spinner size="lg" />
+            <p className="mt-4 text-gray-600">Loading...</p>
+          </div>
+        </Card>
+      </Card>
     );
   }
 
   // Error state
   if (error && !currentUser) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <Alert type="error" dismissible={false}>
+      <Card padding="p-4 sm:p-6 lg:p-8" className="max-w-4xl mx-auto border-0 shadow-none">
+        <Alert type="error" className="mb-4">
           {error}
         </Alert>
-        <div className="mt-4">
-          <Button onClick={() => window.location.reload()}>Retry</Button>
-        </div>
-      </div>
+        <Button variant="primary" onClick={() => window.location.reload()}>
+          Retry
+        </Button>
+      </Card>
     );
   }
 
-  // Breadcrumb items
-  const breadcrumbItems = [
-    {
-      label: "Dashboard",
-      href: getDashboardLink(),
-      icon: Bars3Icon,
-    },
-    {
-      label: "Profile",
-      href: "/admin/account",
-      icon: UserCircleIcon,
-    },
-    {
-      label: "Two-Factor Authentication",
-      href: "/admin/account/more/2fa",
-      icon: ShieldCheckIcon,
-    },
-    {
-      label: "Enable 2FA",
-      icon: LockClosedIcon,
-    },
-  ];
-
-  // Get account name for 2FA app
-  const getAccountName = () => {
-    const appDomain = getAppBaseURL().replace(/^https?:\/\//, "");
-    return `${appDomain}: ${currentUser?.email || ""}`;
-  };
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
-        {/* Breadcrumb Navigation */}
-        <div className="mb-6">
-          <Breadcrumb items={breadcrumbItems} />
-        </div>
+    <Card padding="p-4 sm:p-6 lg:p-8" className="max-w-4xl mx-auto border-0 shadow-none">
+      {/* Breadcrumb */}
+      <Breadcrumb items={breadcrumbItems} className="mb-6" />
 
-        {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-            <UserCircleIcon className="h-8 w-8 mr-3" />
-            Profile
-          </h1>
-          <p className="mt-2 text-gray-600">Two-Factor Authentication Setup</p>
-        </div>
+      {/* Page Header */}
+      <div className="mb-6">
+        <h1 className={`text-2xl md:text-3xl font-bold ${themeClasses.textPrimary} flex items-center`}>
+          <UserCircleIcon className={`w-6 h-6 md:w-8 md:h-8 mr-3 ${themeClasses.linkPrimary}`} />
+          Profile
+        </h1>
+        <p className={`mt-1 text-sm ${themeClasses.textSecondary}`}>
+          Two-Factor Authentication Setup
+        </p>
+      </div>
 
-        {/* Main Card */}
-        <Card>
+      {/* Main Card */}
+      <Card>
+        <div className="px-6 pt-6">
           {/* Progress Indicator */}
           <div className="mb-8">
             <div className="flex justify-between text-sm text-gray-600 mb-2">
               <span>Step 2 of 3</span>
               <span>66%</span>
             </div>
-            <ProgressBar value={66} max={100} color="green" />
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                style={{ width: "66%" }}
+              />
+            </div>
           </div>
 
           {/* Title */}
@@ -225,7 +244,7 @@ function AccountTwoFactorAuthenticationEnableStep2Page() {
 
           {/* Error Alert */}
           {error && (
-            <Alert type="error" dismissible onDismiss={() => setError("")}>
+            <Alert type="error" className="mb-6" dismissible onDismiss={() => setError("")}>
               {error}
             </Alert>
           )}
@@ -290,19 +309,9 @@ function AccountTwoFactorAuthenticationEnableStep2Page() {
                   <Button
                     variant="secondary"
                     onClick={() => copyToClipboard(getAccountName(), "account")}
-                    className="flex items-center"
+                    icon={copiedField === "account" ? CheckIcon : DocumentDuplicateIcon}
                   >
-                    {copiedField === "account" ? (
-                      <>
-                        <CheckIcon className="h-4 w-4 mr-1" />
-                        Copied
-                      </>
-                    ) : (
-                      <>
-                        <DocumentDuplicateIcon className="h-4 w-4 mr-1" />
-                        Copy
-                      </>
-                    )}
+                    {copiedField === "account" ? "Copied" : "Copy"}
                   </Button>
                 </div>
               </div>
@@ -324,19 +333,9 @@ function AccountTwoFactorAuthenticationEnableStep2Page() {
                     onClick={() =>
                       copyToClipboard(otpResponse?.base32 || "", "key")
                     }
-                    className="flex items-center"
+                    icon={copiedField === "key" ? CheckIcon : DocumentDuplicateIcon}
                   >
-                    {copiedField === "key" ? (
-                      <>
-                        <CheckIcon className="h-4 w-4 mr-1" />
-                        Copied
-                      </>
-                    ) : (
-                      <>
-                        <DocumentDuplicateIcon className="h-4 w-4 mr-1" />
-                        Copy
-                      </>
-                    )}
+                    {copiedField === "key" ? "Copied" : "Copy"}
                   </Button>
                 </div>
               </div>
@@ -357,29 +356,36 @@ function AccountTwoFactorAuthenticationEnableStep2Page() {
           </div>
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between items-center pt-6 border-t">
+          <div className="flex justify-between items-center pt-6 border-t pb-6">
             <Button
               variant="secondary"
               onClick={() => navigate("/admin/account/2fa/setup/step-1")}
-              className="flex items-center"
+              icon={ArrowLeftIcon}
             >
-              <ArrowLeftIcon className="h-4 w-4 mr-2" />
               Back to Step 1
             </Button>
 
             <Button
               variant="primary"
               onClick={() => navigate("/admin/account/2fa/setup/step-3")}
-              className="flex items-center"
+              iconRight={ArrowRightIcon}
             >
               Next
-              <ArrowRightIcon className="h-4 w-4 ml-2" />
             </Button>
           </div>
-        </Card>
-      </div>
-    </div>
+        </div>
+      </Card>
+    </Card>
   );
 }
 
-export default AccountTwoFactorAuthenticationEnableStep2Page;
+// Wrapper with UIXThemeProvider
+function AccountTwoFactorAuthenticationEnableStep2PageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AccountTwoFactorAuthenticationEnableStep2Page />
+    </UIXThemeProvider>
+  );
+}
+
+export default AccountTwoFactorAuthenticationEnableStep2PageWithProvider;

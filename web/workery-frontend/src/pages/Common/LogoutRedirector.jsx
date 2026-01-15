@@ -1,3 +1,4 @@
+// UIX Upgraded - Uses UIX primitives (Card, Button, Alert, Spinner, Breadcrumb)
 // File Path: web/workery-frontend/src/pages/Common/LogoutRedirector.jsx
 
 import React, { useEffect, useState, useRef } from "react";

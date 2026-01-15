@@ -1,3 +1,4 @@
+// UIX Upgraded - Uses UIX primitives (Card, Button, Alert, Spinner, Breadcrumb)
 // File Path: monorepo/web/workery-frontend/src/pages/Anonymous/TwoFA/ValidationPage.jsx
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";

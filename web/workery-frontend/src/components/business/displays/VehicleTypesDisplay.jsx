@@ -1,8 +1,8 @@
-// File Path: monorepo/web/workery-frontend/src/components/business/displays/VehicleTypesDisplay.jsx
+// File Path: monorepo/web/frontend/src/components/business/displays/VehicleTypesDisplay.jsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useVehicleTypeManager } from "../../../services/Services";
-import { Badge, Loading } from "../../UI";
+import { Badge, Loading, useUIXTheme } from "../../UIX";
 
 /**
  * Display component for multiple selected vehicle types
@@ -25,15 +25,21 @@ function VehicleTypesDisplay({
   const [displayVehicleTypes, setDisplayVehicleTypes] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { getThemeClasses } = useUIXTheme();
+
+  // Memoize stringified values to use as a stable dependency for detecting array changes
+  const valuesKey = useMemo(() => JSON.stringify(values), [values]);
 
   useEffect(() => {
     let mounted = true;
 
     const fetchDisplayValues = async () => {
       // Debug logging
-      console.log("VehicleTypesDisplay - values received:", values);
-      console.log("VehicleTypesDisplay - values type:", typeof values);
-      console.log("VehicleTypesDisplay - is array?:", Array.isArray(values));
+      if (import.meta.env.DEV) {
+        console.log("VehicleTypesDisplay - values received:", values);
+        console.log("VehicleTypesDisplay - values type:", typeof values);
+        console.log("VehicleTypesDisplay - is array?:", Array.isArray(values));
+      }
 
       // Handle null, undefined, or empty cases
       if (
@@ -43,7 +49,9 @@ function VehicleTypesDisplay({
         values === null ||
         values === undefined
       ) {
-        console.log("VehicleTypesDisplay - No values to display");
+        if (import.meta.env.DEV) {
+          console.log("VehicleTypesDisplay - No values to display");
+        }
         setDisplayVehicleTypes([]);
         return;
       }
@@ -57,7 +65,9 @@ function VehicleTypesDisplay({
           v !== null && v !== undefined && v !== "" && v !== 0 && v !== "0",
       );
 
-      console.log("VehicleTypesDisplay - filtered values:", filteredValues);
+      if (import.meta.env.DEV) {
+        console.log("VehicleTypesDisplay - filtered values:", filteredValues);
+      }
 
       if (filteredValues.length === 0) {
         setDisplayVehicleTypes([]);
@@ -72,7 +82,9 @@ function VehicleTypesDisplay({
         const options =
           await vehicleTypeManager.getVehicleTypeSelectOptions(onUnauthorized);
 
-        console.log("VehicleTypesDisplay - fetched options:", options);
+        if (import.meta.env.DEV) {
+          console.log("VehicleTypesDisplay - fetched options:", options);
+        }
 
         if (mounted && options) {
           // Map the IDs to their labels
@@ -87,10 +99,12 @@ function VehicleTypesDisplay({
                 return optionId === vehicleTypeIdStr;
               });
 
-              console.log(
-                `VehicleTypesDisplay - Mapping vehicle type ID ${vehicleTypeId}:`,
-                matchingOption,
-              );
+              if (import.meta.env.DEV) {
+                console.log(
+                  `VehicleTypesDisplay - Mapping vehicle type ID ${vehicleTypeId}:`,
+                  matchingOption,
+                );
+              }
 
               if (matchingOption) {
                 return {
@@ -103,9 +117,11 @@ function VehicleTypesDisplay({
               } else {
                 // Only show unknown if we have a valid ID
                 if (vehicleTypeIdStr && vehicleTypeIdStr !== "undefined") {
-                  console.warn(
-                    `VehicleTypesDisplay - No match found for vehicle type ID: ${vehicleTypeId}`,
-                  );
+                  if (import.meta.env.DEV) {
+                    console.warn(
+                      `VehicleTypesDisplay - No match found for vehicle type ID: ${vehicleTypeId}`,
+                    );
+                  }
                   return {
                     id: vehicleTypeId,
                     label: `Unknown (ID: ${vehicleTypeId})`,
@@ -116,14 +132,18 @@ function VehicleTypesDisplay({
             })
             .filter(Boolean); // Remove any null values
 
-          console.log(
-            "VehicleTypesDisplay - mapped vehicle types:",
-            mappedVehicleTypes,
-          );
+          if (import.meta.env.DEV) {
+            console.log(
+              "VehicleTypesDisplay - mapped vehicle types:",
+              mappedVehicleTypes,
+            );
+          }
           setDisplayVehicleTypes(mappedVehicleTypes);
         }
       } catch (error) {
-        console.error("Error fetching vehicle type options:", error);
+        if (import.meta.env.DEV) {
+          console.error("Error fetching vehicle type options:", error);
+        }
         if (mounted) {
           setError("Failed to load vehicle types");
           // Fallback to showing IDs only if we have valid values
@@ -145,12 +165,13 @@ function VehicleTypesDisplay({
     return () => {
       mounted = false;
     };
-  }, [JSON.stringify(values), onUnauthorized]); // Use stringified values to detect array changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- valuesKey is a memoized serialization of values to detect array content changes without triggering on reference changes
+  }, [valuesKey, onUnauthorized, vehicleTypeManager]);
 
   if (isLoading) {
     return (
       <div className={`mb-4 ${className}`}>
-        <p className="text-sm font-medium text-gray-700 mb-2">{label}</p>
+        <p className={`text-sm font-medium ${getThemeClasses("text-secondary")} mb-2`}>{label}</p>
         <div className="flex items-center">
           <Loading size="sm" text="Loading vehicle types..." />
         </div>
@@ -160,7 +181,7 @@ function VehicleTypesDisplay({
 
   return (
     <div className={`mb-4 ${className}`}>
-      <p className="text-sm font-medium text-gray-700 mb-2">{label}</p>
+      <p className={`text-sm font-medium ${getThemeClasses("text-secondary")} mb-2`}>{label}</p>
       <div className="flex flex-wrap gap-2">
         {error ? (
           <span className="text-red-600 text-sm">{error}</span>
@@ -171,7 +192,7 @@ function VehicleTypesDisplay({
             </Badge>
           ))
         ) : (
-          <span className="text-gray-400 text-sm">
+          <span className={`${getThemeClasses("text-muted")} text-sm`}>
             No vehicle types selected
           </span>
         )}

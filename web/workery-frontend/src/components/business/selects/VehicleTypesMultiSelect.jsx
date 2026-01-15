@@ -1,7 +1,8 @@
-// File: monorepo/web/workery-frontend/src/components/business/selects/VehicleTypesMultiSelect.jsx
+// File: monorepo/web/frontend/src/components/business/selects/VehicleTypesMultiSelect.jsx
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useVehicleTypeManager } from "../../../services/Services";
+import { useUIXTheme } from "../../UIX";
 import {
   XMarkIcon,
   ChevronDownIcon,
@@ -74,6 +75,7 @@ function VehicleTypesMultiSelect({
   onUnauthorized = null,
 }) {
   const vehicleTypeManager = useVehicleTypeManager();
+  const { getThemeClasses } = useUIXTheme();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [options, setOptions] = useState([]);
@@ -81,15 +83,26 @@ function VehicleTypesMultiSelect({
   const [searchLoading, setSearchLoading] = useState(false);
   const dropdownRef = useRef(null);
   const searchInputRef = useRef(null);
+  const isMounted = useRef(true);
 
   // Track if we're using search results or default options
   const [isSearchMode, setIsSearchMode] = useState(false);
+
+  // Track mounted state
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   // Load default options (without search)
   const loadDefaultOptions = useCallback(async () => {
     setIsLoading(true);
     try {
-      console.log("Loading default vehicle type options");
+      if (import.meta.env.DEV) {
+        console.log("Loading default vehicle type options");
+      }
 
       // For default options, use the select options endpoint
       const vehicleTypeOptions =
@@ -114,11 +127,15 @@ function VehicleTypesMultiSelect({
           label: item.label || item.text || item.name,
         }));
 
-        console.log("Default options loaded:", transformedOptions);
+        if (import.meta.env.DEV) {
+          console.log("Default options loaded:", transformedOptions);
+        }
         setOptions(transformedOptions);
       }
     } catch (error) {
-      console.error("Error loading default vehicle type options:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error loading default vehicle type options:", error);
+      }
       setOptions([]);
     } finally {
       setIsLoading(false);
@@ -139,7 +156,9 @@ function VehicleTypesMultiSelect({
       setIsSearchMode(true);
 
       try {
-        console.log("Searching vehicle types with query:", searchQuery);
+        if (import.meta.env.DEV) {
+          console.log("Searching vehicle types with query:", searchQuery);
+        }
 
         // Use getVehicleTypes with search parameter to get filtered results from backend
         const searchParams = {
@@ -162,13 +181,17 @@ function VehicleTypesMultiSelect({
             label: item.name || item.text,
           }));
 
-          console.log("Search results:", transformedOptions);
+          if (import.meta.env.DEV) {
+            console.log("Search results:", transformedOptions);
+          }
           setOptions(transformedOptions);
         } else {
           setOptions([]);
         }
       } catch (error) {
-        console.error("Error searching vehicle types:", error);
+        if (import.meta.env.DEV) {
+          console.error("Error searching vehicle types:", error);
+        }
         setOptions([]);
       } finally {
         setSearchLoading(false);
@@ -196,10 +219,12 @@ function VehicleTypesMultiSelect({
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-        // Reset search when closing
-        setSearchTerm("");
-        setIsSearchMode(false);
+        if (isMounted.current) {
+          setIsOpen(false);
+          // Reset search when closing
+          setSearchTerm("");
+          setIsSearchMode(false);
+        }
       }
     };
 
@@ -271,9 +296,9 @@ function VehicleTypesMultiSelect({
   }, [disabled, isOpen, options.length, loadDefaultOptions]);
 
   return (
-    <div className={`mb-5 ${className}`}>
+    <div className={className}>
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className={`block text-base sm:text-lg font-semibold mb-3 flex items-center ${getThemeClasses("text-primary")}`}>
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
@@ -284,14 +309,16 @@ function VehicleTypesMultiSelect({
         <div
           onClick={handleDropdownClick}
           className={`
-            min-h-[42px] px-3 py-2
-            border rounded-lg
+            w-full px-5 py-4 text-base sm:text-lg
+            border-2 rounded-xl shadow-sm
             transition-all duration-200
             cursor-pointer
             flex items-center justify-between
-            ${disabled ? "bg-gray-50 cursor-not-allowed opacity-60" : "bg-white"}
-            ${error ? "border-red-500" : "border-gray-300"}
-            ${isOpen ? "ring-2 ring-blue-500 border-blue-500" : ""}
+            placeholder-gray-400
+            min-h-[58px]
+            ${disabled ? `${getThemeClasses("bg-disabled")} cursor-not-allowed opacity-60` : getThemeClasses("bg-primary")}
+            ${error ? "border-red-500" : getThemeClasses("border-secondary")}
+            ${isOpen ? "ring-4 ring-blue-500/20 border-blue-500" : ""}
           `}
         >
           <div className="flex-1 flex flex-wrap gap-1">
@@ -338,9 +365,9 @@ function VehicleTypesMultiSelect({
 
         {/* Dropdown Menu */}
         {isOpen && !disabled && (
-          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+          <div className={`absolute z-50 w-full mt-1 rounded-lg shadow-lg border ${getThemeClasses("bg-primary")} ${getThemeClasses("border-secondary")}`}>
             {/* Search Input */}
-            <div className="p-2 border-b border-gray-200">
+            <div className={`p-3 border-b ${getThemeClasses("border-secondary")}`}>
               <div className="relative">
                 <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
@@ -349,7 +376,7 @@ function VehicleTypesMultiSelect({
                   placeholder="Search vehicle types..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-3 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className={`w-full pl-9 pr-3 py-2 text-sm border-2 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 ${getThemeClasses("border-secondary")} ${getThemeClasses("bg-primary")} ${getThemeClasses("text-primary")}`}
                   onClick={(e) => e.stopPropagation()}
                 />
                 {searchLoading && (
@@ -359,7 +386,8 @@ function VehicleTypesMultiSelect({
                 )}
               </div>
               {isSearchMode && (
-                <div className="mt-1 text-xs text-gray-500">
+                <div className={`mt-2 text-xs flex items-center ${getThemeClasses("text-secondary")}`}>
+                  <div className="animate-spin rounded-full h-3 w-3 border-b border-gray-400 mr-1"></div>
                   Searching: "{searchTerm}"
                 </div>
               )}
@@ -370,7 +398,7 @@ function VehicleTypesMultiSelect({
               {isLoading ? (
                 <div className="px-3 py-4 text-center">
                   <div className="inline-block w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                  <p className="mt-2 text-sm text-gray-500">
+                  <p className={`mt-2 text-sm ${getThemeClasses("text-secondary")}`}>
                     Loading vehicle types...
                   </p>
                 </div>
@@ -383,7 +411,7 @@ function VehicleTypesMultiSelect({
                       onClick={() => toggleOption(option.value)}
                       className={`
                         px-3 py-2 cursor-pointer flex items-center justify-between
-                        hover:bg-gray-50
+                        ${getThemeClasses("hover:bg-hover")}
                         ${isSelected ? "bg-blue-50" : ""}
                       `}
                     >
@@ -391,7 +419,7 @@ function VehicleTypesMultiSelect({
                         className={`text-sm ${
                           isSelected
                             ? "text-blue-700 font-medium"
-                            : "text-gray-700"
+                            : getThemeClasses("text-primary")
                         }`}
                       >
                         {option.label}
@@ -403,7 +431,7 @@ function VehicleTypesMultiSelect({
                   );
                 })
               ) : (
-                <div className="px-3 py-4 text-center text-sm text-gray-500">
+                <div className={`px-3 py-4 text-center text-sm ${getThemeClasses("text-secondary")}`}>
                   {searchLoading
                     ? "Searching..."
                     : searchTerm
@@ -415,7 +443,7 @@ function VehicleTypesMultiSelect({
 
             {/* Results info */}
             {!isLoading && !searchLoading && options.length > 0 && (
-              <div className="px-3 py-2 border-t border-gray-200 text-xs text-gray-500">
+              <div className={`px-3 py-2 border-t text-xs ${getThemeClasses("border-secondary")} ${getThemeClasses("text-secondary")}`}>
                 {isSearchMode
                   ? `Found ${options.length} result${options.length !== 1 ? "s" : ""}`
                   : `${options.length} vehicle type${options.length !== 1 ? "s" : ""} available`}
@@ -426,10 +454,10 @@ function VehicleTypesMultiSelect({
       </div>
 
       {helperText && !error && (
-        <p className="mt-2 text-sm text-gray-500">{helperText}</p>
+        <p className={`mt-2 text-sm ${getThemeClasses("text-secondary")}`}>{helperText}</p>
       )}
       {error && (
-        <p className="mt-2 text-sm text-red-600 flex items-center">{error}</p>
+        <p className="mt-2 text-sm text-red-600 flex items-center animate-fade-in">{error}</p>
       )}
     </div>
   );

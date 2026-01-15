@@ -1,13 +1,20 @@
 // File Path: web/workery-frontend/src/pages/Admin/Setting/NAICS/SearchResult/Page.jsx
+// @uix-page: SettingNAICSSearchResultPage
 
-import React, { useState, useEffect, useRef } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+  memo,
+} from "react";
+import { useNavigate, useSearchParams, Link } from "react-router";
 import { useNAICSManager } from "../../../../../services/Services";
 import {
   MagnifyingGlassIcon,
   BuildingOffice2Icon,
   ArrowLeftIcon,
-  XMarkIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ArrowsUpDownIcon,
@@ -17,688 +24,632 @@ import {
   FolderIcon,
   ChartBarIcon,
   AdjustmentsHorizontalIcon,
-  ExclamationCircleIcon,
+  SparklesIcon,
+  Cog6ToothIcon,
+  HomeIcon,
 } from "@heroicons/react/24/outline";
-import { ExclamationTriangleIcon } from "@heroicons/react/24/solid";
+import {
+  Breadcrumb,
+  PageHeader,
+  Alert,
+  Button,
+  Select,
+  SearchCriteriaPills,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../../components/UIX";
 
 function SettingNAICSSearchResultPage() {
-  const naicsManager = useNAICSManager();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  return (
+    <UIXThemeProvider>
+      <SettingNAICSSearchResultPageContent />
+    </UIXThemeProvider>
+  );
+}
 
-  // URL search parameters
-  const urlSearchText = searchParams.get("q") || "";
-  const urlCode = searchParams.get("c") || "";
-  const urlIndustryTitle = searchParams.get("it") || "";
+const SettingNAICSSearchResultPageContent = memo(
+  function SettingNAICSSearchResultPageContent() {
+    const naicsManager = useNAICSManager();
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const { getThemeClasses } = useUIXTheme();
 
-  // Component state
-  const [naics, setNaics] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+    // URL search parameters
+    const urlSearchText = searchParams.get("q") || "";
+    const urlCode = searchParams.get("c") || "";
+    const urlIndustryTitle = searchParams.get("it") || "";
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const [pageSize, setPageSize] = useState(50);
-  const [hasNextPage, setHasNextPage] = useState(false);
-  const [hasPreviousPage, setHasPreviousPage] = useState(false);
+    // Component state
+    const [naics, setNaics] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
 
-  // Sorting state
-  const [sortBy, setSortBy] = useState("code_str");
-  const [sortOrder, setSortOrder] = useState("ASC");
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
+    const [pageSize, setPageSize] = useState(50);
+    const [hasNextPage, setHasNextPage] = useState(false);
+    const [hasPreviousPage, setHasPreviousPage] = useState(false);
 
-  // Use ref to track if initial load is done
-  const initialLoadDone = useRef(false);
-  const searchTimeoutRef = useRef(null);
+    // Sorting state
+    const [sortBy, setSortBy] = useState("code_str");
+    const [sortOrder, setSortOrder] = useState("ASC");
 
-  const onUnauthorized = () => {
-    navigate("/login?unauthorized=true");
-  };
+    // Use ref to track if initial load is done
+    const initialLoadDone = useRef(false);
+    const searchTimeoutRef = useRef(null);
 
-  const performSearch = async (page = 1, forceRefresh = false) => {
-    // Cancel any pending search
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
+    // Memoize theme classes
+    const themeClasses = useMemo(
+      () => ({
+        bgGradientPrimary: getThemeClasses("bg-gradient-primary") || "bg-gradient-to-br from-gray-50 via-white to-red-50",
+        linkText: getThemeClasses("text-primary") || "text-gray-900",
+        linkHover: getThemeClasses("text-primary-hover") || "hover:bg-gray-50",
+        textMuted: getThemeClasses("text-muted") || "text-gray-500",
+        textPrimary: getThemeClasses("text-primary") || "text-gray-900",
+        accentText: getThemeClasses("text-accent") || "text-red-500",
+        badgeActiveBg: getThemeClasses("badge-active-bg") || "bg-red-100",
+        badgeActiveText: getThemeClasses("badge-active-text") || "text-red-800",
+        badgeInactiveBg: getThemeClasses("badge-inactive-bg") || "bg-gray-100",
+        badgeInactiveText: getThemeClasses("badge-inactive-text") || "text-gray-500",
+        loadingSpinner: getThemeClasses("loading-spinner") || "text-red-600",
+        errorText: getThemeClasses("text-error") || "text-red-600",
+        errorBg: getThemeClasses("bg-error-light") || "bg-red-50",
+        errorBorder: getThemeClasses("border-error") || "border-red-200",
+        focusRing: getThemeClasses("focus-ring") || "focus:ring-red-500",
+        alertInfoBg: getThemeClasses("alert-info-bg") || "bg-blue-50",
+        borderPrimary: getThemeClasses("border-primary") || "border-gray-200",
+        // Decorative blobs
+        blobPrimary: getThemeClasses("blob-primary") || "bg-purple-200",
+        blobSecondary: getThemeClasses("blob-secondary") || "bg-yellow-200",
+        blobTertiary: getThemeClasses("blob-tertiary") || "bg-pink-200",
+        // Card/table styling
+        bgCard: getThemeClasses("bg-card") || "bg-white",
+        borderLight: getThemeClasses("border-light") || "border-gray-100",
+        borderMedium: getThemeClasses("border-medium") || "border-gray-200",
+        tableHeaderBg: getThemeClasses("table-header-bg") || "bg-gray-50",
+      }),
+      [getThemeClasses],
+    );
 
-    setIsLoading(true);
-    setError(null);
+    const onUnauthorized = useCallback(() => {
+      navigate("/login?unauthorized=true");
+    }, [navigate]);
 
-    try {
-      const params = {
-        page,
-        limit: pageSize,
+    const performSearch = useCallback(
+      async (page = 1, forceRefresh = false) => {
+        // Cancel any pending search
+        if (searchTimeoutRef.current) {
+          clearTimeout(searchTimeoutRef.current);
+        }
+
+        setIsLoading(true);
+        setError(null);
+
+        try {
+          const params = {
+            page,
+            limit: pageSize,
+            sortBy,
+            sortOrder,
+          };
+
+          // Add search parameters
+          if (urlSearchText.trim()) {
+            params.search = urlSearchText.trim();
+          }
+          if (urlCode.trim()) {
+            params.code = urlCode.trim();
+          }
+          if (urlIndustryTitle.trim()) {
+            params.industryTitle = urlIndustryTitle.trim();
+          }
+
+          if (import.meta.env.DEV) {
+            console.log("Performing NAICS search with params:", params);
+          }
+
+          const response = await naicsManager.getNAICS(
+            params,
+            onUnauthorized,
+            forceRefresh,
+          );
+
+          setNaics(response.results || []);
+          setTotalCount(response.count || 0);
+          setHasNextPage(response.hasNextPage || false);
+          setHasPreviousPage(page > 1);
+          setCurrentPage(page);
+        } catch (err) {
+          if (import.meta.env.DEV) {
+            console.error("Failed to search NAICS:", err);
+          }
+          setError(err.message || "Failed to search NAICS");
+          setNaics([]);
+        } finally {
+          setIsLoading(false);
+        }
+      },
+      [
+        pageSize,
         sortBy,
         sortOrder,
-      };
-
-      // Add search parameters
-      if (urlSearchText.trim()) {
-        params.search = urlSearchText.trim();
-      }
-      if (urlCode.trim()) {
-        params.code = urlCode.trim();
-      }
-      if (urlIndustryTitle.trim()) {
-        params.industryTitle = urlIndustryTitle.trim();
-      }
-
-      console.log("Performing NAICS search with params:", params);
-
-      const response = await naicsManager.getNAICS(
-        params,
+        urlSearchText,
+        urlCode,
+        urlIndustryTitle,
+        naicsManager,
         onUnauthorized,
-        forceRefresh,
-      );
+      ],
+    );
 
-      setNaics(response.results || []);
-      setTotalCount(response.count || 0);
-      setHasNextPage(response.hasNextPage || false);
-      setHasPreviousPage(page > 1);
-      setCurrentPage(page);
-    } catch (err) {
-      console.error("Failed to search NAICS:", err);
-      setError(err.message || "Failed to search NAICS");
-      setNaics([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handlePreviousPage = () => {
-    if (hasPreviousPage) {
-      performSearch(currentPage - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (hasNextPage) {
-      performSearch(currentPage + 1);
-    }
-  };
-
-  const handleRowClick = (naicsItem) => {
-    navigate(`/admin/settings/naics/${naicsItem.id}/detail`);
-  };
-
-  const handleSortChange = (e) => {
-    const [field, order] = e.target.value.split(",");
-    setSortBy(field);
-    setSortOrder(order);
-    setCurrentPage(1);
-  };
-
-  const handlePageSizeChange = (e) => {
-    setPageSize(parseInt(e.target.value));
-    setCurrentPage(1);
-  };
-
-  // Initial search on mount only
-  useEffect(() => {
-    // Scroll to top when component mounts
-    window.scrollTo(0, 0);
-
-    // Perform initial search with force refresh
-    performSearch(1, true);
-    initialLoadDone.current = true;
-  }, []); // Empty dependency array for mount only
-
-  // Handle sort and pagination changes after initial load
-  useEffect(() => {
-    if (!initialLoadDone.current) {
-      return; // Skip on initial mount
-    }
-
-    // Debounce the search to avoid rapid consecutive calls
-    searchTimeoutRef.current = setTimeout(() => {
-      performSearch(1, false);
-    }, 300);
-
-    // Cleanup timeout on unmount or before next effect
-    return () => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
+    const _handlePreviousPage = useCallback(() => {
+      if (hasPreviousPage) {
+        performSearch(currentPage - 1);
       }
-    };
-  }, [sortBy, sortOrder, pageSize]);
+    }, [hasPreviousPage, currentPage, performSearch]);
 
-  // Build search criteria display
-  const searchCriteria = [];
-  if (urlSearchText)
-    searchCriteria.push({
-      label: "Keywords",
-      value: urlSearchText,
-      icon: MagnifyingGlassIcon,
-    });
-  if (urlCode)
-    searchCriteria.push({ label: "Code", value: urlCode, icon: HashtagIcon });
-  if (urlIndustryTitle)
-    searchCriteria.push({
-      label: "Industry",
-      value: urlIndustryTitle,
-      icon: DocumentTextIcon,
-    });
+    const _handleNextPage = useCallback(() => {
+      if (hasNextPage) {
+        performSearch(currentPage + 1);
+      }
+    }, [hasNextPage, currentPage, performSearch]);
 
-  const totalPages = Math.ceil(totalCount / pageSize);
+    const handleRowClick = useCallback(
+      (naicsItem) => {
+        navigate(`/admin/settings/naics/${naicsItem.id}/detail`);
+      },
+      [navigate],
+    );
 
-  return (
-    <div
-      className="min-h-screen bg-gray-50"
-      style={{
-        minHeight: "100dvh",
-        paddingBottom: "env(keyboard-inset-height, 0px)",
-      }}
-    >
-      <div
-        className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8"
-        style={{
-          paddingBottom:
-            "max(1rem, env(safe-area-inset-bottom), env(keyboard-inset-height, 0px))",
-          paddingLeft: "max(0.75rem, env(safe-area-inset-left))",
-          paddingRight: "max(0.75rem, env(safe-area-inset-right))",
-        }}
-      >
-        {/* Breadcrumb - iOS & Android Optimized */}
-        <nav
-          className="flex mb-4 sm:mb-6 lg:mb-8 overflow-x-auto -webkit-overflow-scrolling-touch"
-          aria-label="Breadcrumb"
-          style={{
-            WebkitOverflowScrolling: "touch",
-            scrollbarWidth: "none",
-            msOverflowStyle: "none",
-          }}
-        >
-          <ol className="inline-flex items-center space-x-1 md:space-x-3 whitespace-nowrap">
-            <li className="inline-flex items-center">
-              <button
-                onClick={() => navigate("/admin/dashboard")}
-                className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors duration-200 min-h-[48px] px-2 py-2 rounded-md touch-manipulation"
-                style={{
-                  WebkitTapHighlightColor: "transparent",
-                  minHeight: "48px",
-                  touchAction: "manipulation",
-                }}
-              >
-                Dashboard
-              </button>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <svg
-                  className="w-3 h-3 text-gray-400 mx-1"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 6 10"
-                >
-                  <path
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="m1 9 4-4-4-4"
-                  />
-                </svg>
-                <button
-                  onClick={() => navigate("/admin/settings")}
-                  className="ml-1 text-xs sm:text-sm font-medium text-gray-700 hover:text-indigo-600 md:ml-2 transition-colors duration-200 min-h-[48px] px-2 py-2 rounded-md touch-manipulation"
-                  style={{
-                    WebkitTapHighlightColor: "transparent",
-                    minHeight: "48px",
-                    touchAction: "manipulation",
-                  }}
-                >
-                  Settings
-                </button>
-              </div>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <svg
-                  className="w-3 h-3 text-gray-400 mx-1"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 6 10"
-                >
-                  <path
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="m1 9 4-4-4-4"
-                  />
-                </svg>
-                <button
-                  onClick={() => navigate("/admin/settings/naics/search")}
-                  className="ml-1 text-xs sm:text-sm font-medium text-gray-700 hover:text-indigo-600 md:ml-2 transition-colors duration-200 min-h-[48px] px-2 py-2 rounded-md touch-manipulation"
-                  style={{
-                    WebkitTapHighlightColor: "transparent",
-                    minHeight: "48px",
-                    touchAction: "manipulation",
-                  }}
-                >
-                  NAICS Search
-                </button>
-              </div>
-            </li>
-            <li aria-current="page">
-              <div className="flex items-center">
-                <svg
-                  className="w-3 h-3 text-gray-400 mx-1"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 6 10"
-                >
-                  <path
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="m1 9 4-4-4-4"
-                  />
-                </svg>
-                <span className="ml-1 text-xs sm:text-sm font-medium text-gray-500 md:ml-2">
-                  Search Results
-                </span>
-              </div>
-            </li>
-          </ol>
-        </nav>
+    const handleSortChange = useCallback((value) => {
+      const [field, order] = value.split(",");
+      setSortBy(field);
+      setSortOrder(order);
+      setCurrentPage(1);
+    }, []);
 
-        {/* Header Section - Improved mobile layout */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col space-y-4 lg:flex-row lg:items-start lg:justify-between lg:space-y-0">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start">
-                <BuildingOffice2Icon className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-600 mr-2 sm:mr-3 flex-shrink-0 mt-1" />
-                <div>
-                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">
-                    North American Industry Classification System
-                  </h1>
-                  <p className="mt-1 sm:mt-2 text-sm sm:text-base lg:text-lg text-gray-600">
-                    Search Results
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="flex-shrink-0">
-              <button
-                onClick={() => navigate("/admin/settings/naics/search")}
-                className="inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-xs sm:text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200 w-full sm:w-auto justify-center min-h-[48px] touch-manipulation"
-                style={{
-                  WebkitTapHighlightColor: "transparent",
-                  minHeight: "48px",
-                  touchAction: "manipulation",
-                }}
-              >
-                <ArrowLeftIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                Back to Search
-              </button>
-            </div>
-          </div>
+    const handlePageSizeChange = useCallback((value) => {
+      setPageSize(parseInt(value));
+      setCurrentPage(1);
+    }, []);
 
-          {/* Search Criteria Display - Improved mobile layout */}
-          {searchCriteria.length > 0 && (
-            <div className="mt-3 sm:mt-4 flex flex-wrap gap-2">
-              {searchCriteria.map((criteria, index) => {
-                const Icon = criteria.icon;
-                return (
-                  <span
-                    key={index}
-                    className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-indigo-100 text-indigo-800"
-                  >
-                    <Icon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
-                    <span className="truncate max-w-[120px] sm:max-w-none">
-                      {criteria.label}: "{criteria.value}"
-                    </span>
-                  </span>
-                );
-              })}
-            </div>
-          )}
+    // Initial search on mount only
+    useEffect(() => {
+      // Scroll to top when component mounts
+      window.scrollTo(0, 0);
+
+      // Perform initial search with force refresh
+      performSearch(1, true);
+      initialLoadDone.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Empty dependency array for mount only - performSearch is intentionally excluded
+
+    // Handle sort and pagination changes after initial load
+    useEffect(() => {
+      if (!initialLoadDone.current) {
+        return; // Skip on initial mount
+      }
+
+      // Debounce the search to avoid rapid consecutive calls
+      searchTimeoutRef.current = setTimeout(() => {
+        performSearch(1, false);
+      }, 300);
+
+      // Cleanup timeout on unmount or before next effect
+      return () => {
+        if (searchTimeoutRef.current) {
+          clearTimeout(searchTimeoutRef.current);
+        }
+      };
+    }, [sortBy, sortOrder, pageSize, performSearch]);
+
+    // Build search criteria display
+    const searchCriteria = useMemo(() => {
+      const criteria = [];
+      if (urlSearchText)
+        criteria.push({
+          label: "Keywords",
+          value: urlSearchText,
+          icon: MagnifyingGlassIcon,
+        });
+      if (urlCode)
+        criteria.push({ label: "Code", value: urlCode, icon: HashtagIcon });
+      if (urlIndustryTitle)
+        criteria.push({
+          label: "Industry",
+          value: urlIndustryTitle,
+          icon: DocumentTextIcon,
+        });
+      return criteria;
+    }, [urlSearchText, urlCode, urlIndustryTitle]);
+
+    const _totalPages = useMemo(
+      () => Math.ceil(totalCount / pageSize),
+      [totalCount, pageSize],
+    );
+
+    return (
+      <div className={`min-h-screen ${themeClasses.bgGradientPrimary}`}>
+        {/* Decorative background elements */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className={`absolute -top-40 -right-40 w-80 h-80 ${themeClasses.blobPrimary} rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob`}></div>
+          <div className={`absolute -bottom-40 -left-40 w-80 h-80 ${themeClasses.blobSecondary} rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000`}></div>
+          <div className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 ${themeClasses.blobTertiary} rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000`}></div>
         </div>
 
-        {/* Error Alert - Improved mobile layout */}
-        {error && (
-          <div className="mb-4 sm:mb-6 bg-red-50 border-l-4 border-red-400 p-3 sm:p-4 rounded-lg">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <ExclamationTriangleIcon className="h-4 w-4 sm:h-5 sm:w-5 text-red-400" />
-              </div>
-              <div className="ml-2 sm:ml-3 flex-1">
-                <p className="text-xs sm:text-sm text-red-800">{error}</p>
-              </div>
-              <div className="ml-auto pl-2 sm:pl-3">
-                <button
-                  onClick={() => setError(null)}
-                  className="inline-flex text-red-400 hover:text-red-500 transition-colors duration-200 p-2 min-h-[48px] min-w-[48px] items-center justify-center rounded-md touch-manipulation"
-                  style={{
-                    WebkitTapHighlightColor: "transparent",
-                    minHeight: "48px",
-                    minWidth: "48px",
-                    touchAction: "manipulation",
-                  }}
-                >
-                  <XMarkIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
+          {/* Breadcrumb */}
+          <Breadcrumb
+            items={[
+              {
+                label: "Dashboard",
+                to: "/admin/dashboard",
+                icon: HomeIcon,
+              },
+              {
+                label: "Settings",
+                to: "/admin/settings",
+                icon: Cog6ToothIcon,
+              },
+              {
+                label: "NAICS Search",
+                to: "/admin/settings/naics/search",
+                icon: BuildingOffice2Icon,
+              },
+              {
+                label: "Search Results",
+                icon: ChartBarIcon,
+                isActive: true,
+              },
+            ]}
+          />
 
-        {/* Main Content */}
-        <div className="bg-white shadow-sm rounded-lg">
-          {/* Results Header - Improved mobile layout */}
-          <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
-            <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center">
-                  <ChartBarIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-indigo-600" />
-                  Search Results
-                </h2>
+          {/* Page Header */}
+          <PageHeader
+            icon={BuildingOffice2Icon}
+            title="NAICS"
+            subtitle="North American Industry Classification System"
+            actions={[
+              <Link
+                key="back"
+                to="/admin/settings/naics/search"
+                className={`inline-flex items-center px-5 py-3 border rounded-xl shadow-sm text-sm sm:text-base font-medium ${themeClasses.linkText} bg-white hover:shadow-md focus:outline-none ${themeClasses.focusRing} transition-all duration-200`}
+              >
+                <ArrowLeftIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-2" />
+                Back to Search
+              </Link>,
+            ]}
+          />
+
+          {/* Search Criteria Display */}
+          <SearchCriteriaPills criteria={searchCriteria} className="mb-8" />
+
+          {/* Error Alert */}
+          {error && (
+            <Alert
+              type="error"
+              enhanced={true}
+              dismissible={true}
+              onDismiss={() => setError(null)}
+            >
+              {error}
+            </Alert>
+          )}
+
+          {/* Main Content - Enhanced with modern design */}
+          <div className={`${themeClasses.bgCard} shadow-xl rounded-2xl overflow-hidden border ${themeClasses.borderLight} hover:shadow-2xl transition-shadow duration-300`}>
+            {/* Results Header - Enhanced styling */}
+            <div
+              className={`px-6 sm:px-8 py-3 sm:py-4 ${themeClasses.bgGradientPrimary}`}
+            >
+              <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center">
+                    <div className="p-2 bg-white/20 rounded-lg mr-3 backdrop-blur-sm">
+                      <ChartBarIcon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                    </div>
+                    Search Results
+                  </h2>
+                  {!isLoading && naics.length > 0 && (
+                    <p
+                      className={`mt-1 text-sm sm:text-base ${themeClasses.textMuted}`}
+                    >
+                      Found{" "}
+                      <span className="font-bold text-white">{totalCount}</span>{" "}
+                      NAICS classifications
+                      {searchCriteria.length > 0 && " matching your criteria"}
+                    </p>
+                  )}
+                </div>
+
+                {/* Filters and Sorting - Enhanced styling */}
                 {!isLoading && naics.length > 0 && (
-                  <p className="mt-1 text-xs sm:text-sm text-gray-600">
-                    Found <span className="font-semibold">{totalCount}</span>{" "}
-                    NAICS classifications
-                    {searchCriteria.length > 0 && " matching your criteria"}
-                  </p>
+                  <div className="flex flex-col xs:flex-row gap-3">
+                    {/* Sort By */}
+                    <div className="flex items-center">
+                      <ArrowsUpDownIcon className="h-5 w-5 text-white/70 mr-2 hidden sm:block" />
+                      <Select
+                        id="sort"
+                        value={`${sortBy},${sortOrder}`}
+                        onChange={handleSortChange}
+                        size="sm"
+                        placeholder={null}
+                        options={[
+                          { value: "code_str,ASC", label: "Code (A-Z)" },
+                          { value: "code_str,DESC", label: "Code (Z-A)" },
+                          { value: "industry_title,ASC", label: "Industry Title (A-Z)" },
+                          { value: "industry_title,DESC", label: "Industry Title (Z-A)" },
+                        ]}
+                      />
+                    </div>
+
+                    {/* Page Size */}
+                    <div className="flex items-center">
+                      <AdjustmentsHorizontalIcon className="h-5 w-5 text-white/70 mr-2 hidden sm:block" />
+                      <Select
+                        id="pageSize"
+                        value={pageSize.toString()}
+                        onChange={handlePageSizeChange}
+                        size="sm"
+                        placeholder={null}
+                        options={[
+                          { value: "25", label: "25 per page" },
+                          { value: "50", label: "50 per page" },
+                          { value: "100", label: "100 per page" },
+                          { value: "200", label: "200 per page" },
+                        ]}
+                      />
+                    </div>
+                  </div>
                 )}
               </div>
+            </div>
 
-              {/* Filters and Sorting - Improved mobile layout */}
-              {!isLoading && naics.length > 0 && (
-                <div className="flex flex-col xs:flex-row gap-2 sm:gap-3">
-                  {/* Sort By */}
-                  <div className="flex items-center">
-                    <label htmlFor="sort" className="sr-only">
-                      Sort by
-                    </label>
-                    <ArrowsUpDownIcon className="h-4 w-4 text-gray-400 mr-2 hidden sm:block" />
-                    <select
-                      id="sort"
-                      value={`${sortBy},${sortOrder}`}
-                      onChange={handleSortChange}
-                      className="block w-full sm:w-auto rounded-lg border-gray-300 py-1.5 pl-3 pr-8 text-xs sm:text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            {/* Results Content */}
+            <div className="overflow-hidden">
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center py-16 sm:py-24">
+                  <div className="relative">
+                    <svg
+                      className={`animate-spin h-12 w-12 sm:h-16 sm:w-16 ${themeClasses.loadingSpinner}`}
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
                     >
-                      <option value="code_str,ASC">Code (A-Z)</option>
-                      <option value="code_str,DESC">Code (Z-A)</option>
-                      <option value="industry_title,ASC">
-                        Industry Title (A-Z)
-                      </option>
-                      <option value="industry_title,DESC">
-                        Industry Title (Z-A)
-                      </option>
-                    </select>
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    <SparklesIcon
+                      className={`absolute top-0 -right-2 h-4 w-4 ${themeClasses.accentText} animate-pulse`}
+                    />
                   </div>
-
-                  {/* Page Size */}
-                  <div className="flex items-center">
-                    <label htmlFor="pageSize" className="sr-only">
-                      Items per page
-                    </label>
-                    <AdjustmentsHorizontalIcon className="h-4 w-4 text-gray-400 mr-2 hidden sm:block" />
-                    <select
-                      id="pageSize"
-                      value={pageSize.toString()}
-                      onChange={handlePageSizeChange}
-                      className="block w-full sm:w-auto rounded-lg border-gray-300 py-1.5 pl-3 pr-8 text-xs sm:text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                    >
-                      <option value="25">25 per page</option>
-                      <option value="50">50 per page</option>
-                      <option value="100">100 per page</option>
-                      <option value="200">200 per page</option>
-                    </select>
-                  </div>
+                  <p
+                    className={`mt-4 text-base sm:text-lg ${themeClasses.textMuted} font-medium`}
+                  >
+                    Searching NAICS database...
+                  </p>
                 </div>
+              ) : naics.length === 0 ? (
+                <div className="text-center py-8 sm:py-12 px-4">
+                  <div
+                    className={`inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 ${themeClasses.badgeInactiveBg} rounded-full mb-4`}
+                  >
+                    <MagnifyingGlassIcon
+                      className={`h-8 w-8 sm:h-10 sm:w-10 ${themeClasses.textMuted}`}
+                    />
+                  </div>
+                  <h3
+                    className={`text-lg sm:text-xl font-bold ${themeClasses.linkText} mb-2`}
+                  >
+                    No NAICS Found
+                  </h3>
+                  <p
+                    className={`text-sm sm:text-base ${themeClasses.textMuted} mb-6 max-w-md mx-auto`}
+                  >
+                    No results were found. Try adjusting your search terms or
+                    using different keywords.
+                  </p>
+                  <Button
+                    variant="primary"
+                    gradient={true}
+                    onClick={() => navigate("/admin/settings/naics/search")}
+                    icon={ArrowLeftIcon}
+                  >
+                    Try New Search
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  {/* Results Table - Enhanced styling */}
+                  <div className="overflow-x-auto">
+                    <table className={`min-w-full divide-y ${themeClasses.borderMedium}`}>
+                      <thead
+                        className={themeClasses.tableHeaderBg}
+                      >
+                        <tr>
+                          <th
+                            scope="col"
+                            className={`px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-bold ${themeClasses.linkText} uppercase tracking-wider`}
+                          >
+                            <div className="flex items-center">
+                              <div
+                                className={`p-1 ${themeClasses.alertInfoBg} rounded mr-2`}
+                              >
+                                <HashtagIcon
+                                  className={`h-4 w-4 ${themeClasses.textPrimary}`}
+                                />
+                              </div>
+                              Code
+                            </div>
+                          </th>
+                          <th
+                            scope="col"
+                            className={`px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-bold ${themeClasses.linkText} uppercase tracking-wider`}
+                          >
+                            <div className="flex items-center">
+                              <div
+                                className={`p-1 ${themeClasses.badgeActiveBg} rounded mr-2`}
+                              >
+                                <BuildingOfficeIcon
+                                  className={`h-4 w-4 ${themeClasses.accentText}`}
+                                />
+                              </div>
+                              Industry Title
+                            </div>
+                          </th>
+                          <th
+                            scope="col"
+                            className={`hidden md:table-cell px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-bold ${themeClasses.linkText} uppercase tracking-wider`}
+                          >
+                            <div className="flex items-center">
+                              <div
+                                className={`p-1 ${themeClasses.alertInfoBg} rounded mr-2`}
+                              >
+                                <FolderIcon
+                                  className={`h-4 w-4 ${themeClasses.textPrimary}`}
+                                />
+                              </div>
+                              Sector
+                            </div>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className={`${themeClasses.bgCard} divide-y ${themeClasses.borderMedium}`}>
+                        {naics.map((naicsItem, index) => (
+                          <tr
+                            key={naicsItem.id || index}
+                            onClick={() => handleRowClick(naicsItem)}
+                            className={`${themeClasses.linkHover} cursor-pointer transition-all duration-200 group`}
+                          >
+                            <td className="px-4 sm:px-6 py-4 sm:py-5 whitespace-nowrap">
+                              <span
+                                className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm sm:text-base font-bold bg-gradient-to-r from-${themeClasses.alertInfoBg} to-${themeClasses.alertInfoBg} ${themeClasses.textPrimary} border ${themeClasses.borderPrimary} group-hover:shadow-sm transition-shadow`}
+                              >
+                                {naicsItem.code}
+                              </span>
+                            </td>
+                            <td className="px-4 sm:px-6 py-4 sm:py-5">
+                              <div
+                                className={`text-sm sm:text-base font-semibold ${themeClasses.linkText} leading-relaxed`}
+                              >
+                                {naicsItem.industryTitle}
+                              </div>
+                              {/* Show sector on mobile as subtitle */}
+                              <div
+                                className={`md:hidden mt-1 text-xs sm:text-sm ${themeClasses.textMuted}`}
+                              >
+                                {naicsItem.sectorCode &&
+                                naicsItem.sectorTitle ? (
+                                  <span>
+                                    <span
+                                      className={`font-semibold ${themeClasses.textPrimary}`}
+                                    >
+                                      {naicsItem.sectorCode}
+                                    </span>{" "}
+                                    - {naicsItem.sectorTitle}
+                                  </span>
+                                ) : (
+                                  naicsItem.sectorTitle || (
+                                    <span
+                                      className={`${themeClasses.textMuted} italic`}
+                                    >
+                                      Not specified
+                                    </span>
+                                  )
+                                )}
+                              </div>
+                            </td>
+                            <td className="hidden md:table-cell px-4 sm:px-6 py-4 sm:py-5">
+                              <div
+                                className={`text-sm sm:text-base ${themeClasses.linkText}`}
+                              >
+                                {naicsItem.sectorCode &&
+                                naicsItem.sectorTitle ? (
+                                  <span>
+                                    <span
+                                      className={`font-bold ${themeClasses.textPrimary}`}
+                                    >
+                                      {naicsItem.sectorCode}
+                                    </span>{" "}
+                                    - {naicsItem.sectorTitle}
+                                  </span>
+                                ) : (
+                                  naicsItem.sectorTitle || (
+                                    <span
+                                      className={`${themeClasses.textMuted} italic`}
+                                    >
+                                      Not specified
+                                    </span>
+                                  )
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               )}
             </div>
           </div>
-
-          {/* Results Content */}
-          <div className="overflow-hidden">
-            {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-12 sm:py-16">
-                <svg
-                  className="animate-spin h-8 w-8 sm:h-10 sm:w-10 text-indigo-600 mb-3 sm:mb-4"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-                <p className="text-sm sm:text-base text-gray-600">
-                  Searching NAICS database...
-                </p>
-              </div>
-            ) : naics.length === 0 ? (
-              <div className="text-center py-12 sm:py-16 px-4">
-                <MagnifyingGlassIcon className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3 sm:mb-4" />
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
-                  No NAICS Found
-                </h3>
-                <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6 max-w-md mx-auto">
-                  No North American Industry Classifications match your search
-                  criteria. Try adjusting your search terms or using different
-                  keywords.
-                </p>
-                <button
-                  onClick={() => navigate("/admin/settings/naics/search")}
-                  className="inline-flex items-center px-3 sm:px-4 py-2 border border-transparent text-xs sm:text-sm font-medium rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
-                >
-                  <ArrowLeftIcon className="h-4 w-4 mr-2" />
-                  Try New Search
-                </button>
-              </div>
-            ) : (
-              <>
-                {/* Results Table - Improved mobile responsiveness */}
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th
-                          scope="col"
-                          className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          <div className="flex items-center">
-                            <HashtagIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                            Code
-                          </div>
-                        </th>
-                        <th
-                          scope="col"
-                          className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          <div className="flex items-center">
-                            <BuildingOfficeIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                            Industry Title
-                          </div>
-                        </th>
-                        <th
-                          scope="col"
-                          className="hidden md:table-cell px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          <div className="flex items-center">
-                            <FolderIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                            Sector
-                          </div>
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {naics.map((naicsItem, index) => (
-                        <tr
-                          key={naicsItem.id || index}
-                          onClick={() => handleRowClick(naicsItem)}
-                          className="hover:bg-gray-50 cursor-pointer transition-colors min-h-[48px] touch-manipulation"
-                          style={{
-                            WebkitTapHighlightColor: "rgba(79, 70, 229, 0.1)",
-                            minHeight: "48px",
-                            touchAction: "manipulation",
-                          }}
-                        >
-                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                            <span className="inline-flex items-center px-2 py-0.5 sm:px-2.5 rounded-md text-xs sm:text-sm font-medium bg-indigo-100 text-indigo-800">
-                              {naicsItem.code}
-                            </span>
-                          </td>
-                          <td className="px-3 sm:px-6 py-3 sm:py-4">
-                            <div className="text-xs sm:text-sm font-medium text-gray-900 leading-tight">
-                              {naicsItem.industryTitle}
-                            </div>
-                            {/* Show sector on mobile as subtitle */}
-                            <div className="md:hidden mt-1 text-xs text-gray-600">
-                              {naicsItem.sectorCode && naicsItem.sectorTitle ? (
-                                <span>
-                                  <span className="font-medium">
-                                    {naicsItem.sectorCode}
-                                  </span>{" "}
-                                  - {naicsItem.sectorTitle}
-                                </span>
-                              ) : (
-                                naicsItem.sectorTitle || (
-                                  <span className="text-gray-400 italic">
-                                    Not specified
-                                  </span>
-                                )
-                              )}
-                            </div>
-                          </td>
-                          <td className="hidden md:table-cell px-3 sm:px-6 py-3 sm:py-4">
-                            <div className="text-xs sm:text-sm text-gray-600">
-                              {naicsItem.sectorCode && naicsItem.sectorTitle ? (
-                                <span>
-                                  <span className="font-medium">
-                                    {naicsItem.sectorCode}
-                                  </span>{" "}
-                                  - {naicsItem.sectorTitle}
-                                </span>
-                              ) : (
-                                naicsItem.sectorTitle || (
-                                  <span className="text-gray-400 italic">
-                                    Not specified
-                                  </span>
-                                )
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Pagination Footer - Improved mobile layout */}
-                {(hasPreviousPage || hasNextPage) && (
-                  <div className="bg-white px-3 sm:px-4 lg:px-6 py-3 flex items-center justify-between border-t border-gray-200">
-                    <div className="flex-1 flex justify-between sm:hidden">
-                      <button
-                        onClick={handlePreviousPage}
-                        disabled={!hasPreviousPage || isLoading}
-                        className="relative inline-flex items-center px-3 py-2 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-                      >
-                        Previous
-                      </button>
-                      <button
-                        onClick={handleNextPage}
-                        disabled={!hasNextPage || isLoading}
-                        className="ml-3 relative inline-flex items-center px-3 py-2 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-                      >
-                        Next
-                      </button>
-                    </div>
-                    <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                      <div>
-                        <p className="text-xs sm:text-sm text-gray-700">
-                          Showing{" "}
-                          <span className="font-medium">
-                            {(currentPage - 1) * pageSize + 1}
-                          </span>{" "}
-                          to{" "}
-                          <span className="font-medium">
-                            {Math.min(currentPage * pageSize, totalCount)}
-                          </span>{" "}
-                          of <span className="font-medium">{totalCount}</span>{" "}
-                          results
-                        </p>
-                      </div>
-                      <div>
-                        <nav
-                          className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                          aria-label="Pagination"
-                        >
-                          <button
-                            onClick={handlePreviousPage}
-                            disabled={!hasPreviousPage || isLoading}
-                            className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-xs sm:text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-                          >
-                            <span className="sr-only">Previous</span>
-                            <ChevronLeftIcon
-                              className="h-4 w-4 sm:h-5 sm:w-5"
-                              aria-hidden="true"
-                            />
-                          </button>
-
-                          {/* Page Numbers */}
-                          <span className="relative inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 bg-white text-xs sm:text-sm font-medium text-gray-700">
-                            Page {currentPage}{" "}
-                            {totalPages > 1 && `of ${totalPages}`}
-                          </span>
-
-                          <button
-                            onClick={handleNextPage}
-                            disabled={!hasNextPage || isLoading}
-                            className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-xs sm:text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
-                          >
-                            <span className="sr-only">Next</span>
-                            <ChevronRightIcon
-                              className="h-4 w-4 sm:h-5 sm:w-5"
-                              aria-hidden="true"
-                            />
-                          </button>
-                        </nav>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
         </div>
 
-        {/* Bottom Action Buttons - Improved mobile layout */}
-        <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row justify-between gap-3 sm:gap-4">
-          <button
-            onClick={() => navigate("/admin/settings/naics/search")}
-            className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-gray-300 shadow-sm text-xs sm:text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
-          >
-            <ArrowLeftIcon className="h-4 w-4 mr-2" />
-            Back to Search
-          </button>
-          <button
-            onClick={() => navigate("/admin/settings")}
-            className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-gray-300 shadow-sm text-xs sm:text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200"
-          >
-            Settings Dashboard
-          </button>
-        </div>
+        <style jsx>{`
+          @keyframes blob {
+            0% {
+              transform: translate(0px, 0px) scale(1);
+            }
+            33% {
+              transform: translate(30px, -50px) scale(1.1);
+            }
+            66% {
+              transform: translate(-20px, 20px) scale(0.9);
+            }
+            100% {
+              transform: translate(0px, 0px) scale(1);
+            }
+          }
+          .animate-blob {
+            animation: blob 7s infinite;
+          }
+          .animation-delay-2000 {
+            animation-delay: 2s;
+          }
+          .animation-delay-4000 {
+            animation-delay: 4s;
+          }
+          @keyframes slideIn {
+            from {
+              opacity: 0;
+              transform: translateY(-10px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+          .animate-slideIn {
+            animation: slideIn 0.3s ease-out;
+          }
+        `}</style>
       </div>
-    </div>
-  );
-}
+    );
+  },
+);
+
+SettingNAICSSearchResultPageContent.displayName =
+  "SettingNAICSSearchResultPageContent";
 
 export default SettingNAICSSearchResultPage;

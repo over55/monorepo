@@ -1,10 +1,12 @@
 // File Path: web/workery-frontend/src/pages/Admin/Financial/Detail/Invoice/Generate/Step4Page.jsx
+// UIX Upgraded - Uses UIX primitives (Spinner, Breadcrumb)
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate, Link, useSearchParams } from "react-router";
 import { useOrderManager } from "../../../../../../services/Services";
 import { InvoiceGenerationStorage } from "../../../../../../services/Storage/InvoiceGenerationStorage";
 import { ORDER_INVOICE_PAYMENT_METHODS_OPTIONS } from "../../../../../../constants/FieldOptions";
+import { Spinner, Breadcrumb, UIXThemeProvider, useUIXTheme } from "../../../../../../components/UIX";
 import {
   ChevronRightIcon,
   ArrowLeftIcon,
@@ -40,6 +42,22 @@ function AdminFinancialGenerateInvoiceStep4Page() {
   const [searchParams] = useSearchParams();
   const isEditMode = searchParams.get("mode") === "edit";
 
+  // UIX Theme
+  const { getThemeClasses } = useUIXTheme();
+  const themeClasses = useMemo(() => ({
+    textPrimary: getThemeClasses("text-primary"),
+    textSecondary: getThemeClasses("text-secondary"),
+    linkPrimary: getThemeClasses("link-primary"),
+  }), [getThemeClasses]);
+
+  // Breadcrumb items
+  const breadcrumbItems = useMemo(() => [
+    { label: "Dashboard", to: "/admin/dashboard", icon: ChartBarIcon },
+    { label: "Financials", to: "/admin/financials", icon: CreditCardIcon },
+    { label: `Order #${oid}`, to: `/admin/financial/${oid}/invoice`, icon: DocumentTextIcon },
+    { label: "Generate Invoice", icon: DocumentPlusIcon, isActive: true },
+  ], [oid]);
+
   // Page state
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
@@ -47,9 +65,9 @@ function AdminFinancialGenerateInvoiceStep4Page() {
   const [order, setOrder] = useState(null);
   const [invoiceData, setInvoiceData] = useState(null);
 
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
-  };
+  }, [navigate]);
 
   // Section Component with Dark Header
   const ReviewSection = ({ title, icon: Icon, editLink, children }) => (
@@ -305,7 +323,7 @@ function AdminFinancialGenerateInvoiceStep4Page() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <Spinner size="lg" />
           <p className="mt-4 text-sm sm:text-base text-gray-600">
             Loading order details...
           </p>
@@ -318,7 +336,7 @@ function AdminFinancialGenerateInvoiceStep4Page() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <Spinner size="lg" />
           <p className="mt-4 text-sm sm:text-base text-gray-600">Loading...</p>
         </div>
       </div>
@@ -330,61 +348,8 @@ function AdminFinancialGenerateInvoiceStep4Page() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {/* Responsive Breadcrumb */}
-        <nav
-          className="flex mb-4 sm:mb-6 overflow-x-auto"
-          aria-label="Breadcrumb"
-        >
-          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
-            <li className="inline-flex items-center">
-              <Link
-                to="/admin/dashboard"
-                className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
-              >
-                <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                <span className="hidden sm:inline">Dashboard</span>
-                <span className="sm:hidden">Dash</span>
-              </Link>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <span className="mx-1 sm:mx-2 text-gray-400">/</span>
-                <Link
-                  to="/admin/financials"
-                  className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
-                >
-                  <span className="inline-flex items-center">
-                    <CreditCardIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                    Financials
-                  </span>
-                </Link>
-              </div>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <span className="mx-1 sm:mx-2 text-gray-400">/</span>
-                <Link
-                  to={`/admin/financial/${oid}/invoice`}
-                  className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
-                >
-                  <span className="inline-flex items-center">
-                    <DocumentTextIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                    Order #{oid}
-                  </span>
-                </Link>
-              </div>
-            </li>
-            <li aria-current="page">
-              <div className="flex items-center">
-                <span className="mx-1 sm:mx-2 text-gray-400">/</span>
-                <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
-                  <DocumentPlusIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                  Generate Invoice
-                </span>
-              </div>
-            </li>
-          </ol>
-        </nav>
+        {/* Breadcrumb */}
+        <Breadcrumb items={breadcrumbItems} className="mb-4 sm:mb-6" />
 
         {/* Page Title - Responsive */}
         <div className="mb-4 sm:mb-6">
@@ -511,7 +476,7 @@ function AdminFinancialGenerateInvoiceStep4Page() {
             {isSubmitting ? (
               <div className="flex items-center justify-center py-8">
                 <div className="text-center">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                  <Spinner size="lg" />
                   <p className="mt-4 text-sm sm:text-base text-gray-600">
                     Generating invoice...
                   </p>
@@ -901,4 +866,12 @@ function AdminFinancialGenerateInvoiceStep4Page() {
   );
 }
 
-export default AdminFinancialGenerateInvoiceStep4Page;
+function AdminFinancialGenerateInvoiceStep4PageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminFinancialGenerateInvoiceStep4Page />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminFinancialGenerateInvoiceStep4PageWithProvider;

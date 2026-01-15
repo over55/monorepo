@@ -1,6 +1,13 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Associate/Search/CriteriaPage.jsx
-import React, { useState, useEffect } from "react";
+// UIX Upgraded - Uses UIX primitives (Breadcrumb, Spinner, UIXThemeProvider)
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
+import {
+  Breadcrumb,
+  Spinner,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../components/UIX";
 import { useAuthManager } from "../../../../services/Services";
 import {
   MagnifyingGlassIcon,
@@ -22,6 +29,26 @@ import {
 function AdminAssociateSearchCriteriaPage() {
   const authManager = useAuthManager();
   const navigate = useNavigate();
+  const { getThemeClasses } = useUIXTheme();
+
+  // Memoize theme classes
+  const themeClasses = useMemo(
+    () => ({
+      pageContainer: getThemeClasses("pageContainer"),
+      contentWrapper: getThemeClasses("contentWrapper"),
+    }),
+    [getThemeClasses],
+  );
+
+  // Memoize breadcrumb items
+  const breadcrumbItems = useMemo(
+    () => [
+      { label: "Dashboard", path: "/admin/dashboard", icon: "ChartBarIcon" },
+      { label: "Associates", path: "/admin/associates" },
+      { label: "Search" },
+    ],
+    [],
+  );
 
   // Form states
   const [errors, setErrors] = useState({});
@@ -101,52 +128,14 @@ function AdminAssociateSearchCriteriaPage() {
   };
 
   if (isFetching) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
+    return <Spinner text="Loading..." />;
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
-        <nav className="flex mb-8" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3">
-            <li className="inline-flex items-center">
-              <Link
-                to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                <ChartBarIcon className="w-4 h-4 mr-2" />
-                Dashboard
-              </Link>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <Link
-                  to="/admin/associates"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
-                >
-                  Associates
-                </Link>
-              </div>
-            </li>
-            <li aria-current="page">
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">
-                  Search
-                </span>
-              </div>
-            </li>
-          </ol>
-        </nav>
+        <Breadcrumb items={breadcrumbItems} />
 
         {/* Header Section */}
         <div className="mb-8">
@@ -424,4 +413,10 @@ function AdminAssociateSearchCriteriaPage() {
   );
 }
 
-export default AdminAssociateSearchCriteriaPage;
+export default function AdminAssociateSearchCriteriaPageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminAssociateSearchCriteriaPage />
+    </UIXThemeProvider>
+  );
+}

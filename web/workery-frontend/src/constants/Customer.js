@@ -13,6 +13,13 @@ export const CUSTOMER_PHONE_TYPE_WORK = 3;
 export const CUSTOMER_STATUS_ACTIVE = 1;
 export const CUSTOMER_STATUS_INACTIVE = 2;
 
+// Customer status object (for components that expect object format)
+export const CUSTOMER_STATUS = {
+  ACTIVE: CUSTOMER_STATUS_ACTIVE,
+  INACTIVE: CUSTOMER_STATUS_INACTIVE,
+  ARCHIVED: CUSTOMER_STATUS_INACTIVE, // Alias for compatibility
+};
+
 // Constants for filtering and sorting
 export const CUSTOMER_STATUS_OPTIONS = [
   { value: "", label: "All Statuses" },

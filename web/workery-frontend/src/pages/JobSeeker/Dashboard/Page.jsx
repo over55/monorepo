@@ -1,5 +1,7 @@
+// UIX Upgraded - Uses UIX primitives (Card, Button, Alert, Spinner, Breadcrumb)
 // File Path: monorepo/web/workery-frontend/src/pages/JobSeeker/Dashboard/Page.jsx
-//
+import { UIXThemeProvider } from "../../../components/UIX";
+
 function JobSeekerDashboardPage() {
   return (
     <div>
@@ -8,4 +10,13 @@ function JobSeekerDashboardPage() {
   );
 }
 
-export default JobSeekerDashboardPage;
+// Wrapper with UIXThemeProvider
+function JobSeekerDashboardPageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <JobSeekerDashboardPage />
+    </UIXThemeProvider>
+  );
+}
+
+export default JobSeekerDashboardPageWithProvider;

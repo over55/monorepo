@@ -1,39 +1,62 @@
 // File Path: web/workery-frontend/src/components/Layout/TopNavbar.jsx
-// Enhanced TopNavbar Component with Combined Mobile Menu and Desktop Collapse Controls
-// Uses hamburger icon for both mobile menu and desktop sidebar collapse
+// Enhanced TopNavbar Component with UIX Theme Support and Profile Dropdown
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { useAuthManager, useAccountManager } from "../../services/Services";
-import { getRoleRedirectPath } from "../../constants/Roles";
-import { Bars3Icon, XMarkIcon } from "@heroicons/react/24/outline";
+import {
+  Bars3Icon,
+  XMarkIcon,
+  QuestionMarkCircleIcon,
+  UserCircleIcon,
+  ArrowRightOnRectangleIcon,
+  ChevronDownIcon,
+} from "@heroicons/react/24/outline";
+import { Modal, Button, useUIXTheme } from "../UIX";
 
 function TopNavbar({
   onMenuToggle,
   isMobile,
   isTablet,
-  isIOS,
-  isAndroid,
   isSidebarOpen,
   sidebarCollapsed,
   onCollapseToggle,
+  onProfileDropdownOpen,
 }) {
   const authManager = useAuthManager();
   const accountManager = useAccountManager();
   const navigate = useNavigate();
   const location = useLocation();
+  const { getThemeClasses } = useUIXTheme();
+
+  const themeClasses = useMemo(
+    () => ({
+      dropdownActive: getThemeClasses("pagination-active"),
+      navBg: getThemeClasses("nav-bg"),
+      navText: getThemeClasses("nav-text"),
+      sidebarHover: getThemeClasses("sidebar-hover"),
+      bgCard: getThemeClasses("bg-card"),
+      borderLight: getThemeClasses("border-light"),
+      textPrimary: getThemeClasses("text-primary"),
+      textSecondary: getThemeClasses("text-secondary"),
+      bgHover: getThemeClasses("bg-hover"),
+    }),
+    [getThemeClasses],
+  );
 
   const [currentUser, setCurrentUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showAccountDropdown, setShowAccountDropdown] = useState(false);
+  const [showLogoutWarning, setShowLogoutWarning] = useState(false);
+  const dropdownMenuTimer = useRef(null);
 
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
-  };
+  }, [navigate]);
 
-  // Determine if we're on mobile/small tablet
-  const shouldShowMobileMenu =
-    isMobile || (isTablet && window.innerWidth < 768);
+  const shouldShowMobileMenu = isMobile || isTablet;
 
+  // Fetch current user
   useEffect(() => {
     let mounted = true;
 
@@ -49,7 +72,9 @@ function TopNavbar({
           setCurrentUser(profile);
         }
       } catch (error) {
-        console.error("Failed to fetch current user:", error);
+        if (import.meta.env.DEV) {
+          console.error("Failed to fetch current user:", error);
+        }
         if (mounted) {
           setCurrentUser(null);
         }
@@ -65,7 +90,40 @@ function TopNavbar({
     return () => {
       mounted = false;
     };
+  }, [location.pathname, authManager, accountManager, onUnauthorized]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      clearTimeout(dropdownMenuTimer.current);
+    };
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest(".account-menu-container")) {
+        setShowAccountDropdown(false);
+      }
+    };
+
+    if (showAccountDropdown) {
+      document.addEventListener("click", handleClickOutside);
+      return () => document.removeEventListener("click", handleClickOutside);
+    }
+  }, [showAccountDropdown]);
+
+  // Close dropdown when navigating
+  useEffect(() => {
+    setShowAccountDropdown(false);
   }, [location.pathname]);
+
+  // Close profile dropdown when sidebar opens on mobile
+  useEffect(() => {
+    if (shouldShowMobileMenu && isSidebarOpen) {
+      setShowAccountDropdown(false);
+    }
+  }, [isSidebarOpen, shouldShowMobileMenu]);
 
   // Paths where navbar should not be shown
   const hiddenPaths = [
@@ -91,37 +149,26 @@ function TopNavbar({
     return null;
   }
 
-  const getDashboardPath = () => {
-    return getRoleRedirectPath(currentUser.roleId) || "/dashboard";
-  };
-
-  // Handle button click - different behavior for mobile vs desktop
   const handleMenuButtonClick = () => {
     if (shouldShowMobileMenu) {
-      onMenuToggle(); // Toggle mobile menu open/close
+      onMenuToggle();
     } else {
-      onCollapseToggle(); // Toggle desktop sidebar collapse
+      onCollapseToggle();
     }
   };
 
-  // Determine which icon to show
   const getMenuIcon = () => {
     if (shouldShowMobileMenu) {
-      // Mobile: Show X when open, hamburger when closed
       return isSidebarOpen ? (
-        <XMarkIcon className="h-6 w-6 transition-transform duration-150" />
+        <XMarkIcon className="h-6 w-6" />
       ) : (
-        <Bars3Icon className="h-6 w-6 transition-transform duration-150" />
+        <Bars3Icon className="h-6 w-6" />
       );
     } else {
-      // Desktop: Always show hamburger icon for collapse/expand
-      return (
-        <Bars3Icon className="h-5 w-5 transition-transform duration-150" />
-      );
+      return <Bars3Icon className="h-5 w-5" />;
     }
   };
 
-  // Get button title based on state
   const getButtonTitle = () => {
     if (shouldShowMobileMenu) {
       return isSidebarOpen ? "Close menu" : "Open menu";
@@ -130,193 +177,202 @@ function TopNavbar({
     }
   };
 
-  // Get button aria-label
-  const getButtonAriaLabel = () => {
-    if (shouldShowMobileMenu) {
-      return isSidebarOpen ? "Close navigation menu" : "Open navigation menu";
-    } else {
-      return sidebarCollapsed
-        ? "Expand sidebar navigation"
-        : "Collapse sidebar navigation";
+  const isActivePath = (path) => {
+    return location.pathname.includes(path);
+  };
+
+  const handleLogoutConfirm = async () => {
+    try {
+      setShowLogoutWarning(false);
+      setShowAccountDropdown(false);
+      navigate("/logout");
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.error("Logout navigation failed:", error);
+      }
+      window.location.href = "/logout";
+    }
+  };
+
+  const handleAccountMenuEnter = () => {
+    if (!shouldShowMobileMenu) {
+      clearTimeout(dropdownMenuTimer.current);
+      setShowAccountDropdown(true);
+    }
+  };
+
+  const handleAccountMenuLeave = () => {
+    if (!shouldShowMobileMenu) {
+      dropdownMenuTimer.current = setTimeout(() => {
+        setShowAccountDropdown(false);
+      }, 200);
     }
   };
 
   return (
-    <nav
-      className="fixed top-0 left-0 right-0 h-[60px] bg-gray-900 text-white
-                    flex items-center justify-between z-[900] shadow-md
-                    /* iOS & Android Safe Area Optimizations */
-                    supports-[padding:max(0px)]:pl-[max(16px,env(safe-area-inset-left))]
-                    supports-[padding:max(0px)]:pr-[max(16px,env(safe-area-inset-right))]
-                    supports-[padding:max(0px)]:pt-[env(safe-area-inset-top)]
-                    /* Cross-platform Performance */
-                    will-change-transform transform-gpu
-                    /* Text Selection & Touch Optimizations */
-                    select-none [-webkit-touch-callout:none] [-webkit-user-select:none]
-                    /* Font Rendering Optimizations */
-                    [-webkit-font-smoothing:antialiased] [-moz-osx-font-smoothing:grayscale]
-                    /* Android Material Design */
-                    [text-rendering:optimizeLegibility] [font-feature-settings:'liga']"
-      style={{
-        /* Cross-platform Safe Area Fallbacks */
-        paddingLeft: "max(16px, env(safe-area-inset-left))",
-        paddingRight: "max(16px, env(safe-area-inset-right))",
-
-        /* iOS Optimizations */
-        WebkitBackfaceVisibility: "hidden",
-        backfaceVisibility: "hidden",
-        WebkitPerspective: 1000,
-        perspective: 1000,
-
-        /* Android Optimizations */
-        paddingTop:
-          "max(env(safe-area-inset-top), env(titlebar-area-height, 0px))",
-        contain: "layout style paint",
-        textRendering: "optimizeLegibility",
-        fontFeatureSettings: '"liga", "kern"',
-        transform: "translateZ(0)",
-        touchAction: "manipulation",
-        WebkitTransform: "translateZ(0)",
-      }}
-    >
-      {/* Left Section */}
-      <div className="flex items-center flex-1 min-w-0">
-        {/* Menu Control Button - Shows for both mobile and desktop */}
-        <button
-          onClick={handleMenuButtonClick}
-          className={`
-            p-2 ml-2 rounded-md hover:bg-white/10 active:bg-white/20
-            transition-all duration-200 touch-manipulation
-            flex items-center justify-center min-w-[44px] min-h-[44px]
-            /* Cross-platform Touch Optimizations */
-            select-none [-webkit-touch-callout:none] [-webkit-user-select:none]
-            [-webkit-tap-highlight-color:transparent] focus:bg-white/10
-            /* iOS Optimizations */
-            will-change-transform transform-gpu active:scale-95
-            /* Android Material Design */
-            relative overflow-hidden
-            before:absolute before:inset-0 before:bg-white/20 before:rounded-md
-            before:scale-0 before:transition-transform before:duration-300
-            active:before:scale-100
-            ${shouldShowMobileMenu ? "" : "hidden lg:flex"}
-          `}
-          title={getButtonTitle()}
-          aria-label={getButtonAriaLabel()}
-          style={{
-            /* iOS Optimizations */
-            WebkitBackfaceVisibility: "hidden",
-            backfaceVisibility: "hidden",
-
-            /* Android Optimizations */
-            outline: "none",
-            contain: "layout style paint",
-            touchAction: "manipulation",
-            transform: "translateZ(0)",
-            WebkitTransform: "translateZ(0)",
-          }}
-        >
-          {getMenuIcon()}
-        </button>
-
-        {/* Logo Container - responsive positioning */}
-        <div
-          className={`
-          flex-1 flex justify-center
-          ${shouldShowMobileMenu ? "" : "lg:justify-start lg:ml-4"}
-          ${!shouldShowMobileMenu && !sidebarCollapsed ? "lg:ml-[280px] xl:ml-[300px]" : ""}
-          ${!shouldShowMobileMenu && sidebarCollapsed ? "lg:ml-[100px] xl:ml-[120px]" : ""}
-        `}
-        >
-          <Link
-            to={getDashboardPath()}
-            className="inline-block py-2 focus:outline-none focus:ring-2 focus:ring-white/50 rounded
-                       /* Cross-platform Touch Optimizations */
-                       [-webkit-tap-highlight-color:transparent] select-none
-                       [-webkit-touch-callout:none] [-webkit-user-select:none]
-                       /* iOS Optimizations */
-                       active:opacity-80 transition-opacity duration-150
-                       /* Android Material Design */
-                       relative overflow-hidden
-                       before:absolute before:inset-0 before:bg-white/10 before:rounded
-                       before:scale-0 before:transition-transform before:duration-200
-                       active:before:scale-100"
-            style={{
-              /* iOS Optimizations */
-              WebkitBackfaceVisibility: "hidden",
-              backfaceVisibility: "hidden",
-
-              /* Android Optimizations */
-              touchAction: "manipulation",
-              contain: "layout style paint",
-              transform: "translateZ(0)",
-              WebkitTransform: "translateZ(0)",
-            }}
+    <>
+      <nav className={`fixed top-0 left-0 right-0 h-[60px] ${themeClasses.navBg} ${themeClasses.navText} flex items-center justify-between z-50 shadow-md`}>
+        {/* Left Section */}
+        <div className="flex items-center flex-1 min-w-0 px-4">
+          {/* Menu Control Button */}
+          <button
+            onClick={handleMenuButtonClick}
+            className={`p-2 rounded-md ${themeClasses.sidebarHover} cursor-pointer transition-colors duration-200 flex items-center justify-center min-w-[44px] min-h-[44px]`}
+            title={getButtonTitle()}
+            aria-label={getButtonTitle()}
           >
-            <img
-              src="/img/compressed-logo.png"
-              alt="Workery Logo"
-              className="h-8 w-auto sm:h-9 md:h-10 transition-all duration-200
-                         /* Cross-platform Image Optimizations */
-                         [-webkit-user-drag:none] [-webkit-touch-callout:none]
-                         will-change-transform transform-gpu
-                         /* Android Optimizations */
-                         [image-rendering:crisp-edges] [image-rendering:-webkit-optimize-contrast]
-                         relative z-10"
-              draggable="false"
-              style={{
-                /* iOS Optimizations */
-                WebkitBackfaceVisibility: "hidden",
-                backfaceVisibility: "hidden",
+            {getMenuIcon()}
+          </button>
 
-                /* Android Optimizations */
-                imageRendering: "crisp-edges",
-                transform: "translateZ(0)",
-                WebkitTransform: "translateZ(0)",
-                contain: "layout style paint",
-              }}
-            />
-          </Link>
+          {/* Logo Container */}
+          <div
+            className={`
+              flex-1 flex
+              ${isMobile ? "justify-center" : "justify-start ml-4"}
+            `}
+          >
+            <span className="text-white font-bold text-lg sm:text-xl">
+              Workery
+            </span>
+          </div>
+
+          {/* Spacer for mobile */}
+          {isMobile && <div className="w-[52px]" />}
         </div>
 
-        {/* Spacer for mobile to balance hamburger menu */}
-        {shouldShowMobileMenu && <div className="w-[52px]" />}
-      </div>
-
-      {/* Right Section - User Welcome */}
-      <div className="flex items-center gap-2 sm:gap-4 px-3 sm:px-5 min-w-0">
+        {/* Right Section - User Account Menu */}
         <div
-          className="text-xs sm:text-sm text-gray-300 truncate
-                        /* Cross-platform Text Optimizations */
-                        select-none [-webkit-touch-callout:none] [-webkit-user-select:none]
-                        /* iOS Font Rendering */
-                        [-webkit-font-smoothing:antialiased] [-moz-osx-font-smoothing:grayscale]
-                        /* Android Font Rendering */
-                        [text-rendering:optimizeLegibility] [font-feature-settings:'liga']"
-          style={{
-            /* Android Text Optimizations */
-            textRendering: "optimizeLegibility",
-            fontFeatureSettings: '"liga", "kern"',
-            contain: "layout style paint",
-          }}
+          className="account-menu-container relative px-3 sm:px-5"
+          onMouseEnter={handleAccountMenuEnter}
+          onMouseLeave={handleAccountMenuLeave}
         >
-          {/* Mobile: Show just first name or "User" */}
-          <span className="sm:hidden">{currentUser.firstName || "User"}</span>
+          <button
+            onClick={() => {
+              if (shouldShowMobileMenu) {
+                const newState = !showAccountDropdown;
+                setShowAccountDropdown(newState);
+                if (newState && onProfileDropdownOpen) {
+                  onProfileDropdownOpen();
+                }
+              }
+            }}
+            className={`flex items-center gap-1 text-xs sm:text-sm ${themeClasses.navText} opacity-80 hover:opacity-100 ${themeClasses.sidebarHover} transition-colors duration-200 cursor-pointer py-2 px-2 rounded-md`}
+          >
+            <span className="sm:hidden">{currentUser.firstName || "User"}</span>
+            <span className="hidden sm:inline md:hidden">
+              Hi,{" "}
+              {currentUser.firstName ||
+                currentUser.email?.split("@")[0] ||
+                "User"}
+            </span>
+            <span className="hidden md:inline">
+              Welcome, {currentUser.firstName || currentUser.email}
+            </span>
+            <ChevronDownIcon
+              className={`h-3 w-3 sm:h-4 sm:w-4 transition-transform duration-200 ${
+                showAccountDropdown ? "rotate-180" : ""
+              }`}
+            />
+          </button>
 
-          {/* Tablet: Show "Hi, [Name]" */}
-          <span className="hidden sm:inline md:hidden">
-            Hi,{" "}
-            {currentUser.firstName ||
-              currentUser.email?.split("@")[0] ||
-              "User"}
-          </span>
+          {/* Mobile Overlay */}
+          {isMobile && showAccountDropdown && (
+            <div
+              className="fixed inset-0 bg-black bg-opacity-50 z-[999]"
+              style={{ top: "60px", touchAction: "none" }}
+              onClick={() => setShowAccountDropdown(false)}
+            />
+          )}
 
-          {/* Desktop: Show full welcome message */}
-          <span className="hidden md:inline">
-            Welcome, {currentUser.firstName || currentUser.email}
-          </span>
+          {/* Dropdown Menu */}
+          {showAccountDropdown && (
+            <div
+              className={`
+                ${isMobile
+                  ? `fixed left-0 right-0 top-[60px] w-full ${themeClasses.bgCard} shadow-2xl border-b ${themeClasses.borderLight} py-2`
+                  : `absolute right-0 top-full w-48 ${themeClasses.bgCard} rounded-md shadow-2xl border ${themeClasses.borderLight} py-1 mt-1`
+                }
+              `}
+              style={{
+                zIndex: isMobile ? 1000 : 9999999,
+              }}
+            >
+              <Link
+                to="/help"
+                onClick={() => setShowAccountDropdown(false)}
+                className={`
+                  flex items-center transition-colors duration-200 cursor-pointer
+                  ${isMobile ? "px-4 py-3 text-base" : "px-4 py-2 text-sm"}
+                  ${
+                    isActivePath("/help")
+                      ? themeClasses.dropdownActive
+                      : `${themeClasses.textPrimary} ${themeClasses.bgHover}`
+                  }
+                `}
+              >
+                <QuestionMarkCircleIcon className={`${isMobile ? "h-6 w-6" : "h-5 w-5"} mr-3 flex-shrink-0`} />
+                <span>Help</span>
+              </Link>
+
+              <Link
+                to="/admin/account"
+                onClick={() => setShowAccountDropdown(false)}
+                className={`
+                  flex items-center transition-colors duration-200 cursor-pointer
+                  ${isMobile ? "px-4 py-3 text-base" : "px-4 py-2 text-sm"}
+                  ${
+                    isActivePath("/account")
+                      ? themeClasses.dropdownActive
+                      : `${themeClasses.textPrimary} ${themeClasses.bgHover}`
+                  }
+                `}
+              >
+                <UserCircleIcon className={`${isMobile ? "h-6 w-6" : "h-5 w-5"} mr-3 flex-shrink-0`} />
+                <span>My Profile</span>
+              </Link>
+
+              <hr className={`my-1 border ${themeClasses.borderLight}`} />
+
+              <button
+                onClick={() => {
+                  setShowAccountDropdown(false);
+                  setShowLogoutWarning(true);
+                }}
+                className={`flex items-center w-full ${isMobile ? "px-4 py-3 text-base" : "px-4 py-2 text-sm"} ${themeClasses.textPrimary} ${themeClasses.bgHover} cursor-pointer transition-colors duration-200`}
+              >
+                <ArrowRightOnRectangleIcon className={`${isMobile ? "h-6 w-6" : "h-5 w-5"} mr-3 flex-shrink-0`} />
+                <span>Sign Off</span>
+              </button>
+            </div>
+          )}
         </div>
-      </div>
-    </nav>
+      </nav>
+
+      {/* Logout Confirmation Modal */}
+      <Modal
+        isOpen={showLogoutWarning}
+        onClose={() => setShowLogoutWarning(false)}
+        title="Are you sure?"
+        footer={
+          <div className="flex justify-end space-x-3">
+            <Button
+              variant="secondary"
+              onClick={() => setShowLogoutWarning(false)}
+            >
+              No
+            </Button>
+            <Button variant="success" onClick={handleLogoutConfirm}>
+              Yes
+            </Button>
+          </div>
+        }
+      >
+        <p>
+          You are about to log out of the system and you'll need to log in again
+          next time. Are you sure you want to continue?
+        </p>
+      </Modal>
+    </>
   );
 }
 

@@ -1,7 +1,15 @@
-// File Path: web/workery-frontend/src/pages/Admin/Order/Detail/ActivitySheet/List/Page.jsx
-
-import React, { useState, useEffect, useCallback, useRef } from "react";
+// UIX Upgraded - Uses UIX primitives (Card, Button, Alert, Spinner, Breadcrumb)
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router";
+import {
+  Card,
+  Button,
+  Alert,
+  Spinner,
+  Breadcrumb,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../../../components/UIX";
 import {
   ChartBarIcon,
   WrenchScrewdriverIcon,
@@ -732,4 +740,13 @@ function AdminOrderDetailActivitySheetListPage() {
   );
 }
 
-export default AdminOrderDetailActivitySheetListPage;
+// Wrapper with UIXThemeProvider
+function AdminOrderDetailActivitySheetListPageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminOrderDetailActivitySheetListPage />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminOrderDetailActivitySheetListPageWithProvider;

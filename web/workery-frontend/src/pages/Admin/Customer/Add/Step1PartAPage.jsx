@@ -1,8 +1,16 @@
-// File Path: web/workery-frontend/src/pages/Admin/Customer/Add/Step1PartAPage.jsx
-
-import React, { useState, useEffect } from "react";
+// UIX Upgraded - Uses UIX primitives (Card, Button, Alert, Spinner, Breadcrumb)
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 import { useCustomerManager } from "../../../../services/Services";
+import {
+  Card,
+  Button,
+  Alert,
+  Spinner,
+  Breadcrumb,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../components/UIX";
 import {
   UserPlusIcon,
   ChevronRightIcon,
@@ -470,4 +478,13 @@ function AdminCustomerAddStep1PartAPage() {
   );
 }
 
-export default AdminCustomerAddStep1PartAPage;
+// Wrapper with UIXThemeProvider
+function AdminCustomerAddStep1PartAPageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminCustomerAddStep1PartAPage />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminCustomerAddStep1PartAPageWithProvider;

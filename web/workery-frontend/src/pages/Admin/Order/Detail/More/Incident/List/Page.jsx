@@ -1,7 +1,15 @@
-// File Path: web/workery-frontend/src/pages/Admin/Order/Detail/More/Incident/List/Page.jsx
-
-import React, { useState, useEffect } from "react";
+// UIX Upgraded - Uses UIX primitives (Card, Button, Alert, Spinner, Breadcrumb)
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate, useParams } from "react-router";
+import {
+  Card,
+  Button,
+  Alert,
+  Spinner,
+  Breadcrumb,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../../../../components/UIX";
 import {
   ChartBarIcon,
   WrenchIcon,
@@ -438,4 +446,13 @@ function AdminOrderDetailMoreIncidentListPage() {
   );
 }
 
-export default AdminOrderDetailMoreIncidentListPage;
+// Wrapper with UIXThemeProvider
+function AdminOrderDetailMoreIncidentListPageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminOrderDetailMoreIncidentListPage />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminOrderDetailMoreIncidentListPageWithProvider;

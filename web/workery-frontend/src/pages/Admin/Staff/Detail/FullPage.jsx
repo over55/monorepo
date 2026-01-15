@@ -1,14 +1,14 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Staff/Detail/FullPage.jsx
+// UIX Upgraded - Uses DetailFullView whole page component
+// @uix-page: AdminStaffDetailFullPage
 
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useNavigate, useParams } from "react-router";
 import {
   ChartBarIcon,
-  UserGroupIcon,
   InformationCircleIcon,
   PencilSquareIcon,
   ChevronLeftIcon,
-  EnvelopeIcon,
   PhoneIcon,
   MapPinIcon,
   BuildingOfficeIcon,
@@ -16,8 +16,6 @@ import {
   XCircleIcon,
   ArchiveBoxIcon,
   ClipboardDocumentListIcon,
-  ChatBubbleLeftRightIcon,
-  PaperClipIcon,
   EllipsisHorizontalIcon,
   UserIcon,
   ExclamationTriangleIcon,
@@ -25,8 +23,9 @@ import {
   ComputerDesktopIcon,
   UserCircleIcon,
   GlobeAltIcon,
+  NoSymbolIcon,
 } from "@heroicons/react/24/outline";
-import { useStaffManager, useAuthManager } from "../../../../services/Services";
+import { useStaffManager } from "../../../../services/Services";
 import {
   HowHearAboutUsDisplay,
   TagsDisplay,
@@ -36,6 +35,7 @@ import {
   formatDateForDisplay,
   formatDateTime,
 } from "../../../../services/Helpers/DateFormatter";
+import { DetailFullView, InfoCard, Badge, UIXThemeProvider, useUIXTheme } from "../../../../components/UIX";
 
 // Constants
 const STAFF_TYPE_MAP = {
@@ -72,25 +72,69 @@ const ORGANIZATION_TYPE_MAP = {
   4: "Other",
 };
 
-function AdminStaffDetailFullPage() {
+// Detail Section Component - themed version
+const DetailSection = ({ title, icon: Icon, children, themeClasses }) => (
+  <div className={`${themeClasses.sectionHeaderBg} rounded-lg shadow-sm mb-4 sm:mb-6`}>
+    <div className="px-4 sm:px-6 py-3 sm:py-4">
+      <h3 className={`text-base sm:text-lg font-semibold ${themeClasses.sectionHeaderText} flex items-center`}>
+        <Icon className={`w-4 sm:w-5 h-4 sm:h-5 mr-2 ${themeClasses.sectionHeaderIcon} flex-shrink-0`} />
+        <span className="truncate">{title}</span>
+      </h3>
+    </div>
+    <div className={`${themeClasses.bgCard} border-2 border-t-0 ${themeClasses.sectionBorder} rounded-b-lg p-4 sm:p-6`}>
+      <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+        {children}
+      </dl>
+    </div>
+  </div>
+);
+
+// Detail Field Component - themed version
+const DetailField = ({ label, value, fullWidth = false, themeClasses }) => (
+  <div className={fullWidth ? "lg:col-span-2" : ""}>
+    <dt className={`text-xs sm:text-sm font-semibold ${themeClasses.textSecondary} mb-1`}>
+      {label}
+    </dt>
+    <dd className={`text-base sm:text-lg font-medium ${themeClasses.textPrimary} break-words`}>
+      {value || "-"}
+    </dd>
+  </div>
+);
+
+function AdminStaffDetailFullPageContent() {
   const { aid } = useParams();
   const staffManager = useStaffManager();
-  const authManager = useAuthManager();
   const navigate = useNavigate();
+  const { getThemeClasses } = useUIXTheme();
+
+  // Memoize theme classes
+  const themeClasses = useMemo(() => ({
+    textPrimary: getThemeClasses("text-primary"),
+    textSecondary: getThemeClasses("text-secondary"),
+    textMuted: getThemeClasses("text-muted"),
+    linkPrimary: getThemeClasses("link-primary"),
+    bgCard: getThemeClasses("bg-card"),
+    bgMuted: getThemeClasses("bg-muted"),
+    sectionHeaderBg: getThemeClasses("section-header-bg"),
+    sectionHeaderText: getThemeClasses("section-header-text"),
+    sectionHeaderIcon: getThemeClasses("section-header-icon"),
+    sectionBorder: getThemeClasses("section-border"),
+    iconSuccess: getThemeClasses("icon-success"),
+    iconDanger: getThemeClasses("icon-danger"),
+  }), [getThemeClasses]);
 
   // State management
   const [staff, setStaff] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Handle unauthorized access
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
-  };
+  }, [navigate]);
 
   // Fetch staff data
-  const fetchStaff = async () => {
+  const fetchStaff = useCallback(() => {
     if (!aid) return;
 
     setLoading(true);
@@ -98,36 +142,32 @@ function AdminStaffDetailFullPage() {
 
     staffManager.getStaffDetailWithCallbacks(
       aid,
-      onFetchSuccess,
-      onFetchError,
-      onFetchDone,
+      (response) => {
+        console.log("Staff detail fetched successfully:", response);
+        setStaff(response);
+      },
+      (errorResponse) => {
+        console.error("Error fetching staff detail:", errorResponse);
+        setError(
+          errorResponse.message ||
+            "Failed to load staff details. Please try again.",
+        );
+      },
+      () => {
+        setLoading(false);
+      },
       onUnauthorized,
     );
-  };
-
-  const onFetchSuccess = (response) => {
-    console.log("Staff detail fetched successfully:", response);
-    setStaff(response);
-  };
-
-  const onFetchError = (error) => {
-    console.error("Error fetching staff detail:", error);
-    setError(
-      error.message || "Failed to load staff details. Please try again.",
-    );
-  };
-
-  const onFetchDone = () => {
-    setLoading(false);
-  };
+  }, [aid, staffManager, onUnauthorized]);
 
   // Initial data load
   useEffect(() => {
     window.scrollTo(0, 0);
     fetchStaff();
-  }, [aid]);
+  }, [fetchStaff]);
 
-  const formatPhone = (phone, extension = null) => {
+  // Helper functions
+  const formatPhone = useCallback((phone, extension = null) => {
     if (!phone) return "-";
     const cleaned = phone.replace(/\D/g, "");
     if (cleaned.length === 10) {
@@ -135,643 +175,528 @@ function AdminStaffDetailFullPage() {
       return extension ? `${formatted} ext. ${extension}` : formatted;
     }
     return phone;
-  };
+  }, []);
 
-  const formatMultiSelect = (selectedValues, options) => {
+  const formatMultiSelect = useCallback((selectedValues, options) => {
     if (!selectedValues || selectedValues.length === 0) return "-";
     return selectedValues
       .map((value) => options[value] || `Unknown (${value})`)
       .join(", ");
-  };
+  }, []);
 
-  const formatAddress = (staff) => {
-    if (!staff) return "-";
+  const formatAddress = useCallback((staffData) => {
+    if (!staffData) return "-";
     const parts = [];
-    if (staff.addressLine1) parts.push(staff.addressLine1);
-    if (staff.addressLine2) parts.push(staff.addressLine2);
-    if (staff.city) parts.push(staff.city);
-    if (staff.region) parts.push(staff.region);
-    if (staff.postalCode) parts.push(staff.postalCode);
-    if (staff.country) parts.push(staff.country);
+    if (staffData.addressLine1) parts.push(staffData.addressLine1);
+    if (staffData.addressLine2) parts.push(staffData.addressLine2);
+    if (staffData.city) parts.push(staffData.city);
+    if (staffData.region) parts.push(staffData.region);
+    if (staffData.postalCode) parts.push(staffData.postalCode);
+    if (staffData.country) parts.push(staffData.country);
     return parts.length > 0 ? parts.join(", ") : "-";
-  };
+  }, []);
 
-  const getGoogleMapsUrl = (staff) => {
-    if (!staff) return null;
-    const address = formatAddress(staff);
+  const getGoogleMapsUrl = useCallback((staffData) => {
+    if (!staffData) return null;
+    const address = formatAddress(staffData);
     if (address === "-") return null;
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-  };
+  }, [formatAddress]);
 
-  // Extract IDs from array of objects
-  const extractIds = (items) => {
+  const extractIds = useCallback((items) => {
     if (!items || !Array.isArray(items)) return [];
     return items.map((item) => item.id || item.value).filter(Boolean);
-  };
+  }, []);
 
-  // Section Component - Updated with dark header styling
-  const DetailSection = ({ title, icon: Icon, children }) => (
-    <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
-      <div className="px-4 sm:px-6 py-3 sm:py-4">
-        <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
-          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
-          <span className="truncate">{title}</span>
-        </h3>
-      </div>
-      <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
-        <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-          {children}
-        </dl>
-      </div>
-    </div>
-  );
+  // Memoize breadcrumb items
+  const breadcrumbItems = useMemo(() => [
+    {
+      label: "Dashboard",
+      to: "/admin/dashboard",
+      icon: ChartBarIcon,
+    },
+    {
+      label: "Staff",
+      to: "/admin/staff",
+      icon: UserCircleIcon,
+    },
+    {
+      label: "Detail",
+      icon: InformationCircleIcon,
+      isActive: true,
+    },
+  ], []);
 
-  // Detail Field Component - Updated for consistency
-  const DetailField = ({ label, value, fullWidth = false }) => (
-    <div className={fullWidth ? "lg:col-span-2" : ""}>
-      <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-1">
-        {label}
-      </dt>
-      <dd className="text-base sm:text-lg font-medium text-gray-900 break-words">
-        {value || "-"}
-      </dd>
-    </div>
-  );
+  // Memoize header config
+  const headerConfig = useMemo(() => ({
+    title: "Full Details",
+    icon: ClipboardDocumentListIcon,
+    loadingText: "Loading staff details...",
+    notFoundTitle: "Staff Member Not Found",
+    notFoundMessage: "The staff member you're looking for doesn't exist or you don't have permission to view it.",
+    notFoundAction: {
+      label: "Back to Staff",
+      icon: ChevronLeftIcon,
+      onClick: () => navigate("/admin/staff"),
+    },
+  }), [navigate]);
 
-  if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-sm sm:text-base text-gray-600">
-              Loading staff details...
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Memoize tabs
+  const tabs = useMemo(() => {
+    if (!staff) return [];
+    return [
+      { label: "Summary", to: `/admin/staff/${staff.id}` },
+      { label: "Detail", to: `/admin/staff/${staff.id}/detail`, isActive: true },
+      { label: "Comments", to: `/admin/staff/${staff.id}/comments` },
+      { label: "Attachments", to: `/admin/staff/${staff.id}/attachments` },
+      { label: "More", to: `/admin/staff/${staff.id}/more`, icon: EllipsisHorizontalIcon },
+    ];
+  }, [staff]);
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-      {/* Responsive Breadcrumb */}
-      <nav
-        className="flex mb-4 sm:mb-6 overflow-x-auto"
-        aria-label="Breadcrumb"
-      >
-        <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
-          <li className="inline-flex items-center">
-            <Link
-              to="/admin/dashboard"
-              className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
-            >
-              <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-              <span className="hidden sm:inline">Dashboard</span>
-              <span className="sm:hidden">Dash</span>
-            </Link>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
-              <Link
-                to="/admin/staff"
-                className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
-              >
-                <span className="inline-flex items-center">
-                  <UserCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                  Staff
-                </span>
-              </Link>
+  // Memoize action buttons
+  const actionButtons = useMemo(() => {
+    if (!staff) return [];
+    return [
+      {
+        variant: "outline",
+        label: "Back",
+        icon: ChevronLeftIcon,
+        onClick: () => navigate("/admin/staff"),
+      },
+      {
+        variant: "secondary",
+        label: "Edit",
+        icon: PencilSquareIcon,
+        disabled: staff.status === 2,
+        onClick: () => navigate(`/admin/staff/${aid}/edit`),
+      },
+    ];
+  }, [staff, navigate, aid]);
+
+  // Memoize alerts configuration
+  const alerts = useMemo(() => ({
+    archived: {
+      message: "This staff member is archived",
+      icon: ArchiveBoxIcon,
+    },
+    banned: {
+      message: "This staff member is banned",
+      icon: NoSymbolIcon,
+    },
+  }), []);
+
+  // Memoize content sections
+  const contentSections = useMemo(() => {
+    if (!staff) return [];
+
+    return [
+      // Personal Information Section
+      {
+        type: "detailSection",
+        component: (
+          <DetailSection title="Personal Information" icon={UserIcon} themeClasses={themeClasses}>
+            <DetailField
+              label="Type"
+              value={STAFF_TYPE_MAP[staff.type] || "-"}
+              themeClasses={themeClasses}
+            />
+            <DetailField label="First Name" value={staff.firstName} themeClasses={themeClasses} />
+            <DetailField label="Last Name" value={staff.lastName} themeClasses={themeClasses} />
+            <DetailField
+              label="Date of Birth"
+              value={formatDateForDisplay(staff.birthDate)}
+              themeClasses={themeClasses}
+            />
+            <DetailField
+              label="Gender"
+              value={
+                staff.gender ? (
+                  <>
+                    {GENDER_MAP[staff.gender] || "Unknown"}
+                    {staff.gender === 1 &&
+                      staff.genderOther &&
+                      ` - ${staff.genderOther}`}
+                  </>
+                ) : (
+                  "-"
+                )
+              }
+              themeClasses={themeClasses}
+            />
+            <DetailField
+              label="Description"
+              value={staff.description}
+              fullWidth
+              themeClasses={themeClasses}
+            />
+            <div>
+              <TagsDisplay
+                values={extractIds(staff.tags)}
+                onUnauthorized={onUnauthorized}
+              />
             </div>
-          </li>
-          <li aria-current="page">
-            <div className="flex items-center">
-              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
-              <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
-                <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                Detail
-              </span>
-            </div>
-          </li>
-        </ol>
-      </nav>
-
-      {/* Page Title - Responsive */}
-      <div className="mb-4 sm:mb-6">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
-              <UserCircleIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
-              Staff Member
-            </h1>
-            <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
-              <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
-              View complete staff information
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Status Alerts - Responsive */}
-      {staff && staff.status === 2 && (
-        <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center text-sm sm:text-base">
-          <ArchiveBoxIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
-          This staff member is archived
-        </div>
-      )}
-
-      {/* Error Display - Responsive */}
-      {error && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base">
-          <div className="flex justify-between items-center">
-            <span className="break-words">{error}</span>
-            <button
-              onClick={() => setError(null)}
-              className="text-red-700 hover:text-red-900 ml-2 flex-shrink-0"
-            >
-              ×
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <div className="bg-white shadow-sm rounded-lg">
-        {staff && (
-          <>
-            {/* Header with Actions - Responsive */}
-            <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200">
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
-                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 flex items-center">
-                  <ClipboardDocumentListIcon className="w-5 sm:w-7 h-5 sm:h-7 mr-2 text-blue-600 flex-shrink-0" />
-                  Full Details
-                </h2>
-                <div className="flex gap-2 sm:gap-3">
-                  <Link to="/admin/staff" className="flex-1 sm:flex-initial">
-                    <button className="w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-transparent rounded-lg text-sm sm:text-base font-medium text-white bg-gray-600 hover:bg-gray-700 transition-colors">
-                      <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
-                      Back
-                    </button>
-                  </Link>
-                  <Link
-                    to={`/admin/staff/${aid}/edit`}
-                    className="flex-1 sm:flex-initial"
-                  >
-                    <button
-                      disabled={staff.status === 2}
-                      className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-transparent rounded-lg text-sm sm:text-base font-medium transition-colors ${
-                        staff.status === 2
-                          ? "text-gray-400 bg-gray-200 cursor-not-allowed"
-                          : "text-white bg-amber-600 hover:bg-amber-700"
-                      }`}
-                    >
-                      <PencilSquareIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
-                      Edit
-                    </button>
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            {/* Tab Navigation - Responsive with horizontal scroll on mobile */}
-            <div className="border-b border-gray-200">
-              <div className="px-4 sm:px-6">
-                <nav className="-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide">
-                  <Link
-                    to={`/admin/staff/${staff.id}`}
-                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
-                  >
-                    Summary
-                  </Link>
-                  <div className="border-b-2 border-blue-600 py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-blue-600 whitespace-nowrap">
-                    Detail
-                  </div>
-                  <Link
-                    to={`/admin/staff/${staff.id}/comments`}
-                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
-                  >
-                    Comments
-                  </Link>
-                  <Link
-                    to={`/admin/staff/${staff.id}/attachments`}
-                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
-                  >
-                    Attachments
-                  </Link>
-                  <Link
-                    to={`/admin/staff/${staff.id}/more`}
-                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center whitespace-nowrap"
-                  >
-                    More
-                    <EllipsisHorizontalIcon className="w-4 sm:w-5 h-4 sm:h-5 ml-1" />
-                  </Link>
-                </nav>
-              </div>
-            </div>
-
-            {/* Detail Sections - Responsive */}
-            <div className="p-4 sm:p-6">
-              {/* Personal Information */}
-              <DetailSection title="Personal Information" icon={UserIcon}>
-                {/* First Row - Names and Type */}
-                <DetailField
-                  label="Type"
-                  value={STAFF_TYPE_MAP[staff.type] || "-"}
+            {staff.skillSets && staff.skillSets.length > 0 && (
+              <div>
+                <SkillSetsDisplay
+                  values={extractIds(staff.skillSets)}
+                  onUnauthorized={onUnauthorized}
                 />
-                <DetailField label="First Name" value={staff.firstName} />
-
-                {/* Second Row - Last Name and Date of Birth */}
-                <DetailField label="Last Name" value={staff.lastName} />
+              </div>
+            )}
+          </DetailSection>
+        ),
+      },
+      // Company Information (Conditional - for Frontline staff)
+      {
+        type: "conditional",
+        condition: staff.type === 3,
+        component: (
+          <DetailSection title="Company Information" icon={BuildingOfficeIcon} themeClasses={themeClasses}>
+            <DetailField
+              label="Company Name"
+              value={staff.organizationName}
+              themeClasses={themeClasses}
+            />
+            <DetailField
+              label="Company Type"
+              value={ORGANIZATION_TYPE_MAP[staff.organizationType]}
+              themeClasses={themeClasses}
+            />
+          </DetailSection>
+        ),
+      },
+      // Contact Point Section
+      {
+        type: "detailSection",
+        component: (
+          <DetailSection title="Contact Point" icon={PhoneIcon} themeClasses={themeClasses}>
+            <DetailField
+              label="Email"
+              value={
+                staff.email ? (
+                  <a
+                    href={`mailto:${staff.email}`}
+                    className={`${themeClasses.linkPrimary} break-all`}
+                  >
+                    {staff.email}
+                  </a>
+                ) : (
+                  "-"
+                )
+              }
+              themeClasses={themeClasses}
+            />
+            <DetailField
+              label="I agree to receive electronic email"
+              value={
+                staff.isOkToEmail ? (
+                  <span className={`inline-flex items-center ${themeClasses.iconSuccess}`}>
+                    <CheckCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                    Yes
+                  </span>
+                ) : (
+                  <span className={`inline-flex items-center ${themeClasses.iconDanger}`}>
+                    <XCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                    No
+                  </span>
+                )
+              }
+              themeClasses={themeClasses}
+            />
+            <DetailField
+              label="Phone"
+              value={
+                staff.phone ? (
+                  <a
+                    href={`tel:${staff.phone}`}
+                    className={themeClasses.linkPrimary}
+                  >
+                    {formatPhone(staff.phone)}
+                  </a>
+                ) : (
+                  "-"
+                )
+              }
+              themeClasses={themeClasses}
+            />
+            <DetailField
+              label="Phone Type"
+              value={PHONE_TYPE_MAP[staff.phoneType]}
+              themeClasses={themeClasses}
+            />
+            {staff.otherPhone && (
+              <>
                 <DetailField
-                  label="Date of Birth"
-                  value={formatDateForDisplay(staff.birthDate)}
-                />
-
-                {/* Third Row - Gender */}
-                <DetailField
-                  label="Gender"
+                  label="Other Phone (Optional)"
                   value={
-                    staff.gender ? (
-                      <>
-                        {GENDER_MAP[staff.gender] || "Unknown"}
-                        {staff.gender === 1 &&
-                          staff.genderOther &&
-                          ` - ${staff.genderOther}`}
-                      </>
-                    ) : (
-                      "-"
-                    )
+                    <a
+                      href={`tel:${staff.otherPhone}`}
+                      className={themeClasses.linkPrimary}
+                    >
+                      {formatPhone(staff.otherPhone)}
+                    </a>
                   }
+                  themeClasses={themeClasses}
                 />
-
-                {/* Fourth Row - Description */}
                 <DetailField
-                  label="Description"
-                  value={staff.description}
-                  fullWidth
+                  label="Other Phone Type (Optional)"
+                  value={PHONE_TYPE_MAP[staff.otherPhoneType]}
+                  themeClasses={themeClasses}
                 />
-
-                {/* Fifth Row - Tags and Skills */}
-                <div>
-                  <TagsDisplay
-                    values={extractIds(staff.tags)}
-                    onUnauthorized={onUnauthorized}
-                  />
-                </div>
-                {staff.skillSets && staff.skillSets.length > 0 && (
+              </>
+            )}
+            <DetailField
+              label="I agree to receive texts to my phone"
+              value={
+                staff.isOkToText ? (
+                  <span className={`inline-flex items-center ${themeClasses.iconSuccess}`}>
+                    <CheckCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                    Yes
+                  </span>
+                ) : (
+                  <span className={`inline-flex items-center ${themeClasses.iconDanger}`}>
+                    <XCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                    No
+                  </span>
+                )
+              }
+              themeClasses={themeClasses}
+            />
+          </DetailSection>
+        ),
+      },
+      // Address Section
+      {
+        type: "detailSection",
+        component: (
+          <DetailSection title="Address" icon={MapPinIcon} themeClasses={themeClasses}>
+            <DetailField
+              label="Location"
+              value={
+                formatAddress(staff) !== "-" ? (
+                  <a
+                    href={getGoogleMapsUrl(staff)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`${themeClasses.linkPrimary} break-words`}
+                  >
+                    {formatAddress(staff)}
+                  </a>
+                ) : (
+                  "-"
+                )
+              }
+              fullWidth
+              themeClasses={themeClasses}
+            />
+          </DetailSection>
+        ),
+      },
+      // Account Section
+      {
+        type: "detailSection",
+        component: (
+          <DetailSection title="Account" icon={GlobeAltIcon} themeClasses={themeClasses}>
+            <DetailField
+              label="Is active"
+              value={
+                <Badge variant={staff.status === 1 ? "success" : "secondary"}>
+                  {staff.status === 1 ? "Active" : "Archived"}
+                </Badge>
+              }
+              themeClasses={themeClasses}
+            />
+            <DetailField
+              label="Preferred Language"
+              value={staff.preferredLanguage || "English"}
+              themeClasses={themeClasses}
+            />
+          </DetailSection>
+        ),
+      },
+      // Emergency Contact Section
+      {
+        type: "detailSection",
+        component: (
+          <DetailSection title="Emergency Contact" icon={ExclamationTriangleIcon} themeClasses={themeClasses}>
+            <DetailField label="Name" value={staff.emergencyContactName} themeClasses={themeClasses} />
+            <DetailField
+              label="Relationship"
+              value={staff.emergencyContactRelationship}
+              themeClasses={themeClasses}
+            />
+            <DetailField
+              label="Telephone"
+              value={
+                staff.emergencyContactTelephone ? (
+                  <a
+                    href={`tel:${staff.emergencyContactTelephone}`}
+                    className={themeClasses.linkPrimary}
+                  >
+                    {formatPhone(staff.emergencyContactTelephone)}
+                  </a>
+                ) : (
+                  "-"
+                )
+              }
+              themeClasses={themeClasses}
+            />
+            <DetailField
+              label="Alternate Telephone"
+              value={
+                staff.emergencyContactAlternativeTelephone ? (
+                  <a
+                    href={`tel:${staff.emergencyContactAlternativeTelephone}`}
+                    className={themeClasses.linkPrimary}
+                  >
+                    {formatPhone(staff.emergencyContactAlternativeTelephone)}
+                  </a>
+                ) : (
+                  "-"
+                )
+              }
+              themeClasses={themeClasses}
+            />
+          </DetailSection>
+        ),
+      },
+      // Internal Metrics Section
+      {
+        type: "detailSection",
+        component: (
+          <DetailSection title="Internal Metrics" icon={ChartPieIcon} themeClasses={themeClasses}>
+            <div>
+              <dt className={`text-xs sm:text-sm font-semibold ${themeClasses.textSecondary} mb-1`}>
+                How did they discover us?
+              </dt>
+              <dd className={`text-base sm:text-lg font-medium ${themeClasses.textPrimary}`}>
+                {staff.isHowDidYouHearAboutUsOther ? (
                   <div>
-                    <SkillSetsDisplay
-                      values={extractIds(staff.skillSets)}
+                    <HowHearAboutUsDisplay
+                      value={
+                        staff.howDidYouHearAboutUsId ||
+                        staff.howDidYouHearAboutUsID
+                      }
                       onUnauthorized={onUnauthorized}
                     />
-                  </div>
-                )}
-              </DetailSection>
-
-              {/* Company Information (for Frontline staff type) */}
-              {staff.type === 3 && (
-                <DetailSection
-                  title="Company Information"
-                  icon={BuildingOfficeIcon}
-                >
-                  <DetailField
-                    label="Company Name"
-                    value={staff.organizationName}
-                  />
-                  <DetailField
-                    label="Company Type"
-                    value={ORGANIZATION_TYPE_MAP[staff.organizationType]}
-                  />
-                </DetailSection>
-              )}
-
-              {/* Contact Point */}
-              <DetailSection title="Contact Point" icon={PhoneIcon}>
-                <DetailField
-                  label="Email"
-                  value={
-                    staff.email ? (
-                      <a
-                        href={`mailto:${staff.email}`}
-                        className="text-blue-600 hover:text-blue-700 break-all"
-                      >
-                        {staff.email}
-                      </a>
-                    ) : (
-                      "-"
-                    )
-                  }
-                />
-                <DetailField
-                  label="I agree to receive electronic email"
-                  value={
-                    staff.isOkToEmail ? (
-                      <span className="inline-flex items-center text-green-700">
-                        <CheckCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                        Yes
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center text-red-700">
-                        <XCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                        No
-                      </span>
-                    )
-                  }
-                />
-                <DetailField
-                  label="Phone"
-                  value={
-                    staff.phone ? (
-                      <a
-                        href={`tel:${staff.phone}`}
-                        className="text-blue-600 hover:text-blue-700"
-                      >
-                        {formatPhone(staff.phone)}
-                      </a>
-                    ) : (
-                      "-"
-                    )
-                  }
-                />
-                <DetailField
-                  label="Phone Type"
-                  value={PHONE_TYPE_MAP[staff.phoneType]}
-                />
-                {staff.otherPhone && (
-                  <>
-                    <DetailField
-                      label="Other Phone (Optional)"
-                      value={
-                        <a
-                          href={`tel:${staff.otherPhone}`}
-                          className="text-blue-600 hover:text-blue-700"
-                        >
-                          {formatPhone(staff.otherPhone)}
-                        </a>
-                      }
-                    />
-                    <DetailField
-                      label="Other Phone Type (Optional)"
-                      value={PHONE_TYPE_MAP[staff.otherPhoneType]}
-                    />
-                  </>
-                )}
-                <DetailField
-                  label="I agree to receive texts to my phone"
-                  value={
-                    staff.isOkToText ? (
-                      <span className="inline-flex items-center text-green-700">
-                        <CheckCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                        Yes
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center text-red-700">
-                        <XCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                        No
-                      </span>
-                    )
-                  }
-                />
-              </DetailSection>
-
-              {/* Address */}
-              <DetailSection title="Address" icon={MapPinIcon}>
-                <DetailField
-                  label="Location"
-                  value={
-                    formatAddress(staff) !== "-" ? (
-                      <a
-                        href={getGoogleMapsUrl(staff)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-700 break-words"
-                      >
-                        {formatAddress(staff)}
-                      </a>
-                    ) : (
-                      "-"
-                    )
-                  }
-                  fullWidth
-                />
-              </DetailSection>
-
-              {/* Account */}
-              <DetailSection title="Account" icon={GlobeAltIcon}>
-                <DetailField
-                  label="Is active"
-                  value={
-                    <span
-                      className={`inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        staff.status === 1
-                          ? "bg-green-100 text-green-800"
-                          : "bg-gray-100 text-gray-800"
-                      }`}
-                    >
-                      {staff.status === 1 ? "Active" : "Archived"}
-                    </span>
-                  }
-                />
-                <DetailField
-                  label="Preferred Language"
-                  value={staff.preferredLanguage || "English"}
-                />
-              </DetailSection>
-
-              {/* Emergency Contact */}
-              <DetailSection
-                title="Emergency Contact"
-                icon={ExclamationTriangleIcon}
-              >
-                <DetailField label="Name" value={staff.emergencyContactName} />
-                <DetailField
-                  label="Relationship"
-                  value={staff.emergencyContactRelationship}
-                />
-                <DetailField
-                  label="Telephone"
-                  value={
-                    staff.emergencyContactTelephone ? (
-                      <a
-                        href={`tel:${staff.emergencyContactTelephone}`}
-                        className="text-blue-600 hover:text-blue-700"
-                      >
-                        {formatPhone(staff.emergencyContactTelephone)}
-                      </a>
-                    ) : (
-                      "-"
-                    )
-                  }
-                />
-                <DetailField
-                  label="Alternate Telephone"
-                  value={
-                    staff.emergencyContactAlternativeTelephone ? (
-                      <a
-                        href={`tel:${staff.emergencyContactAlternativeTelephone}`}
-                        className="text-blue-600 hover:text-blue-700"
-                      >
-                        {formatPhone(
-                          staff.emergencyContactAlternativeTelephone,
-                        )}
-                      </a>
-                    ) : (
-                      "-"
-                    )
-                  }
-                />
-              </DetailSection>
-
-              {/* Internal Metrics */}
-              <DetailSection title="Internal Metrics" icon={ChartPieIcon}>
-                <div>
-                  <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-1">
-                    How did they discover us?
-                  </dt>
-                  <dd className="text-base sm:text-lg font-medium text-gray-900">
-                    {staff.isHowDidYouHearAboutUsOther ? (
-                      <div>
-                        <HowHearAboutUsDisplay
-                          value={
-                            staff.howDidYouHearAboutUsId ||
-                            staff.howDidYouHearAboutUsID
-                          }
-                          onUnauthorized={onUnauthorized}
-                        />
-                        {staff.howDidYouHearAboutUsOther && (
-                          <div className="mt-1 text-base sm:text-lg italic text-gray-600">
-                            Other: {staff.howDidYouHearAboutUsOther}
-                          </div>
-                        )}
+                    {staff.howDidYouHearAboutUsOther && (
+                      <div className={`mt-1 text-base sm:text-lg italic ${themeClasses.textMuted}`}>
+                        Other: {staff.howDidYouHearAboutUsOther}
                       </div>
-                    ) : (
-                      <HowHearAboutUsDisplay
-                        value={
-                          staff.howDidYouHearAboutUsId ||
-                          staff.howDidYouHearAboutUsID
-                        }
-                        onUnauthorized={onUnauthorized}
-                      />
                     )}
-                  </dd>
-                </div>
-                <DetailField
-                  label="Join date"
-                  value={formatDateTime(staff.joinDate)}
-                />
-                <DetailField
-                  label="Do you identify as belonging to any of the following groups?"
-                  value={formatMultiSelect(
-                    staff.identifyAs,
-                    IDENTIFY_AS_OPTIONS,
-                  )}
-                  fullWidth
-                />
-              </DetailSection>
-
-              {/* System */}
-              <DetailSection title="System" icon={ComputerDesktopIcon}>
-                <DetailField
-                  label="ID"
-                  value={
-                    <span className="font-mono text-xs sm:text-sm bg-gray-100 px-1 sm:px-2 py-0.5 sm:py-1 rounded break-all">
-                      {staff.publicId || staff.id || "-"}
-                    </span>
-                  }
-                />
-                <DetailField
-                  label="Created at"
-                  value={formatDateTime(staff.createdAt)}
-                />
-                <DetailField
-                  label="Created by"
-                  value={staff.createdByUserName}
-                />
-                <DetailField
-                  label="Created from"
-                  value={
-                    staff.createdFromIpAddress && (
-                      <span className="font-mono text-xs sm:text-sm break-all">
-                        {staff.createdFromIpAddress}
-                      </span>
-                    )
-                  }
-                />
-                <DetailField
-                  label="Modified at"
-                  value={formatDateTime(staff.modifiedAt)}
-                />
-                <DetailField
-                  label="Modified by"
-                  value={staff.modifiedByUserName}
-                />
-                <DetailField
-                  label="Modified from"
-                  value={
-                    staff.modifiedFromIpAddress && (
-                      <span className="font-mono text-xs sm:text-sm break-all">
-                        {staff.modifiedFromIpAddress}
-                      </span>
-                    )
-                  }
-                />
-              </DetailSection>
-
-              {/* Action Buttons - Responsive */}
-              <div className="flex flex-col sm:flex-row sm:justify-between items-stretch sm:items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 gap-3">
-                <Link to="/admin/staff" className="order-2 sm:order-1">
-                  <button className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-transparent rounded-lg text-sm sm:text-base font-medium text-white bg-gray-600 hover:bg-gray-700 transition-colors">
-                    <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
-                    Back to Staff
-                  </button>
-                </Link>
-
-                <div className="flex gap-2 sm:gap-3 order-1 sm:order-2">
-                  <Link
-                    to={`/admin/staff/${aid}/edit`}
-                    className="flex-1 sm:flex-initial"
-                  >
-                    <button
-                      disabled={staff.status === 2}
-                      className={`w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-transparent rounded-lg text-sm sm:text-base font-medium transition-colors ${
-                        staff.status === 2
-                          ? "text-gray-400 bg-gray-200 cursor-not-allowed"
-                          : "text-white bg-amber-600 hover:bg-amber-700"
-                      }`}
-                    >
-                      <PencilSquareIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
-                      Edit Staff
-                    </button>
-                  </Link>
-                </div>
-              </div>
+                  </div>
+                ) : (
+                  <HowHearAboutUsDisplay
+                    value={
+                      staff.howDidYouHearAboutUsId ||
+                      staff.howDidYouHearAboutUsID
+                    }
+                    onUnauthorized={onUnauthorized}
+                  />
+                )}
+              </dd>
             </div>
-          </>
-        )}
+            <DetailField
+              label="Join date"
+              value={formatDateTime(staff.joinDate)}
+              themeClasses={themeClasses}
+            />
+            <DetailField
+              label="Do you identify as belonging to any of the following groups?"
+              value={formatMultiSelect(
+                staff.identifyAs,
+                IDENTIFY_AS_OPTIONS,
+              )}
+              fullWidth
+              themeClasses={themeClasses}
+            />
+          </DetailSection>
+        ),
+      },
+      // System Section
+      {
+        type: "detailSection",
+        component: (
+          <DetailSection title="System" icon={ComputerDesktopIcon} themeClasses={themeClasses}>
+            <DetailField
+              label="ID"
+              value={
+                <span className={`font-mono text-xs sm:text-sm ${themeClasses.bgMuted} px-1 sm:px-2 py-0.5 sm:py-1 rounded break-all`}>
+                  {staff.publicId || staff.id || "-"}
+                </span>
+              }
+              themeClasses={themeClasses}
+            />
+            <DetailField
+              label="Created at"
+              value={formatDateTime(staff.createdAt)}
+              themeClasses={themeClasses}
+            />
+            <DetailField
+              label="Created by"
+              value={staff.createdByUserName}
+              themeClasses={themeClasses}
+            />
+            <DetailField
+              label="Created from"
+              value={
+                staff.createdFromIpAddress && (
+                  <span className="font-mono text-xs sm:text-sm break-all">
+                    {staff.createdFromIpAddress}
+                  </span>
+                )
+              }
+              themeClasses={themeClasses}
+            />
+            <DetailField
+              label="Modified at"
+              value={formatDateTime(staff.modifiedAt)}
+              themeClasses={themeClasses}
+            />
+            <DetailField
+              label="Modified by"
+              value={staff.modifiedByUserName}
+              themeClasses={themeClasses}
+            />
+            <DetailField
+              label="Modified from"
+              value={
+                staff.modifiedFromIpAddress && (
+                  <span className="font-mono text-xs sm:text-sm break-all">
+                    {staff.modifiedFromIpAddress}
+                  </span>
+                )
+              }
+              themeClasses={themeClasses}
+            />
+          </DetailSection>
+        ),
+      },
+    ];
+  }, [staff, themeClasses, formatAddress, getGoogleMapsUrl, formatPhone, formatMultiSelect, extractIds, onUnauthorized]);
 
-        {!staff && !loading && (
-          <div className="px-4 sm:px-6 py-8 sm:py-16 text-center">
-            <div className="inline-flex items-center justify-center w-12 sm:w-16 h-12 sm:h-16 bg-gray-100 rounded-full mb-4">
-              <UserCircleIcon className="w-6 sm:w-8 h-6 sm:h-8 text-gray-400" />
-            </div>
-            <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
-              Staff Member Not Found
-            </h3>
-            <p className="text-sm sm:text-base text-gray-500 mb-4 sm:mb-6">
-              The staff member you're looking for doesn't exist or you don't
-              have permission to view it.
-            </p>
-            <Link to="/admin/staff">
-              <button className="inline-flex items-center px-3 sm:px-4 py-2 border border-transparent rounded-lg text-xs sm:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-                <ChevronLeftIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
-                Back to Staff
-              </button>
-            </Link>
-          </div>
-        )}
-      </div>
-    </div>
+  return (
+    <DetailFullView
+      entityData={staff}
+      breadcrumbItems={breadcrumbItems}
+      headerConfig={headerConfig}
+      contentSections={contentSections}
+      actionButtons={actionButtons}
+      tabs={tabs}
+      alerts={alerts}
+      isLoading={loading}
+      error={error}
+      onErrorClose={() => setError(null)}
+    />
+  );
+}
+
+// Wrapper with UIXThemeProvider
+function AdminStaffDetailFullPage() {
+  return (
+    <UIXThemeProvider>
+      <AdminStaffDetailFullPageContent />
+    </UIXThemeProvider>
   );
 }
 

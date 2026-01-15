@@ -1,7 +1,12 @@
-// File Path: web/workery-frontend/src/pages/Admin/Customer/Detail/Order/List/Page.jsx
-
-import React, { useState, useEffect, useCallback, useRef } from "react";
+// UIX Upgraded - Uses UIX primitives (Card, Alert, Button, Breadcrumb, Spinner, etc.)
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Link, useNavigate, useParams } from "react-router";
+import {
+  Breadcrumb,
+  Spinner,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../../../components/UIX";
 import {
   ChartBarIcon,
   UserGroupIcon,
@@ -62,6 +67,27 @@ function AdminCustomerDetailOrderListPage() {
   const orderManager = useOrderManager();
   const customerManager = useCustomerManager();
   const authManager = useAuthManager();
+  const { getThemeClasses } = useUIXTheme();
+
+  // Memoized theme classes
+  const themeClasses = useMemo(
+    () => ({
+      textPrimary: getThemeClasses("text-primary"),
+      textSecondary: getThemeClasses("text-secondary"),
+      linkPrimary: getThemeClasses("link-primary"),
+    }),
+    [getThemeClasses],
+  );
+
+  // Memoized breadcrumb items
+  const breadcrumbItems = useMemo(
+    () => [
+      { label: "Dashboard", path: "/admin/dashboard", icon: "chart-bar" },
+      { label: "Customers", path: "/admin/customers", icon: "user" },
+      { label: "Detail", icon: "information-circle" },
+    ],
+    [],
+  );
 
   // Component states
   const [errors, setErrors] = useState({});
@@ -102,9 +128,9 @@ function AdminCustomerDetailOrderListPage() {
     };
   }, [sortByValue, status, pageSize, createdAtGTE]);
 
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
-  };
+  }, [navigate]);
 
   // Fetch customer details
   const fetchCustomerDetail = async () => {
@@ -398,10 +424,7 @@ function AdminCustomerDetailOrderListPage() {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading customer orders...</p>
-          </div>
+          <Spinner size="lg" />
         </div>
       </div>
     );

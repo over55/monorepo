@@ -1,21 +1,23 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Admin/OrderHistory/TeamJobHistoryView.jsx
+// File Path: web/workery-frontend/src/pages/Admin/OrderHistory/TeamJobHistoryView.jsx
+// UIX Upgraded - Uses UIX primitives (Card, Alert, Button, Breadcrumb, Spinner)
 
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { Link, useNavigate } from "react-router";
 import {
   Card,
-  Button,
   Alert,
-  Table,
+  Button,
   Breadcrumb,
-  Loading,
-} from "../../../components/UI";
+  Spinner,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../components/UIX";
 import {
   ChartBarIcon,
   UserGroupIcon,
   ArrowLeftIcon,
   ChevronRightIcon,
-  HomeIcon,
+  InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useJobHistoryManager } from "../../../services/Services";
 import { formatDateForDisplay } from "../../../services/Helpers/DateFormatter";
@@ -23,15 +25,23 @@ import { formatDateForDisplay } from "../../../services/Helpers/DateFormatter";
 function AdminTeamJobHistoryListView() {
   const navigate = useNavigate();
   const jobHistoryManager = useJobHistoryManager();
+  const { getThemeClasses } = useUIXTheme();
 
   const [jobHistoryData, setJobHistoryData] = useState(null);
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(true);
 
+  // Memoize theme classes
+  const themeClasses = useMemo(() => ({
+    textPrimary: getThemeClasses("text-primary"),
+    textSecondary: getThemeClasses("text-secondary"),
+    linkPrimary: getThemeClasses("link-primary"),
+  }), [getThemeClasses]);
+
   // Unauthorized callback
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
-  };
+  }, [navigate]);
 
   // Fetch job history data
   useEffect(() => {
@@ -76,136 +86,165 @@ function AdminTeamJobHistoryListView() {
     return () => {
       mounted = false;
     };
-  }, []);
-
-  // Prepare table columns
-  const columns = [
-    {
-      header: "Job #",
-      accessor: "wjid",
-      render: (value, row) => (
-        <Link
-          to={`/admin/order/${row.wjid}`}
-          className="text-blue-600 hover:text-blue-800 underline"
-        >
-          {value}
-        </Link>
-      ),
-    },
-    {
-      header: "Client Name",
-      accessor: "customerName",
-    },
-    {
-      header: "Associate Name",
-      accessor: "associateName",
-    },
-    {
-      header: "Created",
-      accessor: "modifiedAt",
-      render: (value) => formatDateForDisplay(value),
-    },
-    {
-      header: "",
-      accessor: "actions",
-      render: (value, row) => (
-        <Link
-          to={`/admin/order/${row.wjid}`}
-          className="text-blue-600 hover:text-blue-800 flex items-center"
-        >
-          View
-          <ChevronRightIcon className="h-4 w-4 ml-1" />
-        </Link>
-      ),
-    },
-  ];
+  }, [jobHistoryManager, onUnauthorized]);
 
   // Breadcrumb items
-  const breadcrumbItems = [
+  const breadcrumbItems = useMemo(() => [
     {
       label: "Dashboard",
-      href: "/admin/dashboard",
-      icon: HomeIcon,
+      to: "/admin/dashboard",
+      icon: ChartBarIcon,
     },
     {
       label: "Job History (Launchpad)",
-      href: "/admin/job-history",
+      to: "/admin/job-history",
       icon: ChartBarIcon,
     },
     {
       label: "Team Job History",
       icon: UserGroupIcon,
+      isActive: true,
     },
-  ];
+  ], []);
 
   // Get the job history items from the response
   const jobHistoryItems = jobHistoryData?.teamJobHistory || [];
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Breadcrumb */}
       <Breadcrumb items={breadcrumbItems} className="mb-6" />
 
-      {/* Page Title */}
+      {/* Page Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-          <UserGroupIcon className="h-8 w-8 mr-3" />
+        <h1 className={`text-2xl md:text-3xl font-bold ${themeClasses.textPrimary} flex items-center`}>
+          <UserGroupIcon className={`w-6 h-6 md:w-8 md:h-8 mr-3 ${themeClasses.linkPrimary}`} />
           Team Job History
         </h1>
-        <hr className="mt-4 border-gray-300" />
+        <p className={`mt-1 text-sm ${themeClasses.textSecondary} flex items-center`}>
+          <InformationCircleIcon className="w-4 h-4 mr-1" />
+          View your team's recent job history
+        </p>
       </div>
 
       {/* Main Content */}
-      <Card className="p-6">
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold text-gray-800 flex items-center mb-2">
-            <ChartBarIcon className="h-5 w-5 mr-2" />
+      <Card>
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900 flex items-center">
+            <ChartBarIcon className={`w-5 h-5 mr-2 ${themeClasses.linkPrimary}`} />
             List
           </h2>
-          <p className="text-gray-600">Maximum of 5 orders are listed here:</p>
+          <p className="text-sm text-gray-600 mt-1">Maximum of 5 orders are listed here</p>
         </div>
 
-        {/* Error Display */}
-        {errors.general && (
-          <Alert type="error" className="mb-6">
-            {errors.general}
-          </Alert>
-        )}
+        <div className="p-6">
+          {/* Error Display */}
+          {errors.general && (
+            <Alert type="error" className="mb-6" dismissible onDismiss={() => setErrors({})}>
+              {errors.general}
+            </Alert>
+          )}
 
-        {/* Loading State */}
-        {isLoading ? (
-          <div className="py-8">
-            <Loading size="lg" text="Loading team job history..." />
+          {/* Loading State */}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <Spinner size="lg" />
+                <p className="mt-4 text-gray-600">Loading team job history...</p>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Data Table */}
+              {jobHistoryItems.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Job #
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Client Name
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Associate Name
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Created
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          {/* Actions */}
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {jobHistoryItems.map((row, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <Link
+                              to={`/admin/order/${row.wjid}`}
+                              className="text-blue-600 hover:text-blue-800 underline"
+                            >
+                              {row.wjid}
+                            </Link>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-gray-900">
+                            {row.customerName}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-gray-900">
+                            {row.associateName}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {formatDateForDisplay(row.modifiedAt)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm">
+                            <Link
+                              to={`/admin/order/${row.wjid}`}
+                              className="text-blue-600 hover:text-blue-800 flex items-center"
+                            >
+                              View
+                              <ChevronRightIcon className="h-4 w-4 ml-1" />
+                            </Link>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="py-12 text-center">
+                  <UserGroupIcon className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Team Job History</h3>
+                  <p className="text-gray-500">No team job history found.</p>
+                </div>
+              )}
+            </>
+          )}
+
+          {/* Navigation Buttons */}
+          <div className="flex justify-start pt-6 mt-6 border-t border-gray-200">
+            <Button
+              onClick={() => navigate("/admin/job-history")}
+              variant="secondary"
+            >
+              <ArrowLeftIcon className="h-4 w-4 mr-2" />
+              Back to Job History (Launchpad)
+            </Button>
           </div>
-        ) : (
-          <>
-            {/* Data Table */}
-            {jobHistoryItems.length > 0 ? (
-              <div className="overflow-x-auto">
-                <Table columns={columns} data={jobHistoryItems} />
-              </div>
-            ) : (
-              <div className="py-8 text-center text-gray-500">
-                <p>No team job history found.</p>
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Navigation Buttons */}
-        <div className="flex justify-between pt-6 mt-6 border-t">
-          <Button
-            onClick={() => navigate("/admin/job-history")}
-            variant="secondary"
-            className="flex items-center"
-          >
-            <ArrowLeftIcon className="h-4 w-4 mr-2" />
-            Back to Job History (Launchpad)
-          </Button>
         </div>
       </Card>
     </div>
   );
 }
 
-export default AdminTeamJobHistoryListView;
+// Wrapper with UIXThemeProvider
+function AdminTeamJobHistoryListViewWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminTeamJobHistoryListView />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminTeamJobHistoryListViewWithProvider;

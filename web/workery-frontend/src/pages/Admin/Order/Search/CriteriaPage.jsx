@@ -1,8 +1,18 @@
 // File Path: web/workery-frontend/src/pages/Admin/Order/Search/CriteriaPage.jsx
+// UIX Upgraded - Uses UIX primitives (Card, Alert, Spinner, Breadcrumb, Button)
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 import { useAuthManager } from "../../../../services/Services";
+import {
+  Card,
+  Alert,
+  Spinner,
+  Breadcrumb,
+  Button,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../components/UIX";
 import {
   MagnifyingGlassIcon,
   WrenchScrewdriverIcon,
@@ -26,6 +36,21 @@ import {
 function AdminOrderSearchCriteriaPage() {
   const authManager = useAuthManager();
   const navigate = useNavigate();
+  const { getThemeClasses } = useUIXTheme();
+
+  // Memoize theme classes
+  const themeClasses = useMemo(() => ({
+    textPrimary: getThemeClasses("text-primary"),
+    textSecondary: getThemeClasses("text-secondary"),
+    linkPrimary: getThemeClasses("link-primary"),
+  }), [getThemeClasses]);
+
+  // Breadcrumb items
+  const breadcrumbItems = useMemo(() => [
+    { label: "Dashboard", to: "/admin/dashboard", icon: ChartBarIcon },
+    { label: "Orders", to: "/admin/orders", icon: WrenchScrewdriverIcon },
+    { label: "Search", icon: MagnifyingGlassIcon, isActive: true },
+  ], []);
 
   // Form states
   const [errors, setErrors] = useState({});
@@ -157,7 +182,7 @@ function AdminOrderSearchCriteriaPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <Spinner size="lg" />
           <p className="mt-4 text-gray-600">Loading...</p>
         </div>
       </div>
@@ -168,90 +193,41 @@ function AdminOrderSearchCriteriaPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
-        <nav className="flex mb-8" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3">
-            <li className="inline-flex items-center">
-              <Link
-                to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                <ChartBarIcon className="w-4 h-4 mr-2" />
-                Dashboard
-              </Link>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <Link
-                  to="/admin/orders"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
-                >
-                  Orders
-                </Link>
-              </div>
-            </li>
-            <li aria-current="page">
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">
-                  Search
-                </span>
-              </div>
-            </li>
-          </ol>
-        </nav>
+        <Breadcrumb items={breadcrumbItems} className="mb-8" />
 
         {/* Header Section */}
         <div className="mb-8">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <div className="flex items-center">
-                <WrenchScrewdriverIcon className="h-8 w-8 text-blue-600 mr-3" />
-                <h1 className="text-3xl font-bold text-gray-900">
+                <WrenchScrewdriverIcon className={`h-8 w-8 mr-3 ${themeClasses.linkPrimary}`} />
+                <h1 className={`text-3xl font-bold ${themeClasses.textPrimary}`}>
                   Search Orders
                 </h1>
               </div>
-              <p className="mt-2 text-lg text-gray-600 ml-11">
+              <p className={`mt-2 text-lg ${themeClasses.textSecondary} ml-11`}>
                 Find existing orders in your database
               </p>
             </div>
-            <button
-              onClick={() => navigate("/admin/orders")}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-            >
+            <Button variant="outline" onClick={() => navigate("/admin/orders")}>
               <ArrowLeftIcon className="h-4 w-4 mr-2" />
               Back to Orders
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* Error Alert */}
         {errors.message && (
-          <div className="mb-6 bg-red-50 border-l-4 border-red-400 p-4 rounded-lg">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <ExclamationTriangleIcon className="h-5 w-5 text-red-400" />
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-800">{errors.message}</p>
-              </div>
-              <div className="ml-auto pl-3">
-                <button
-                  onClick={() => setErrors({})}
-                  className="inline-flex text-red-400 hover:text-red-500"
-                >
-                  <XMarkIcon className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-          </div>
+          <Alert type="error" className="mb-6" dismissible onDismiss={() => setErrors({})}>
+            {errors.message}
+          </Alert>
         )}
 
         {/* Main Search Form */}
-        <div className="bg-white shadow-sm rounded-lg">
+        <Card>
           <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-              <MagnifyingGlassIcon className="h-5 w-5 mr-2 text-blue-600" />
+            <h2 className={`text-xl font-semibold ${themeClasses.textPrimary} flex items-center`}>
+              <MagnifyingGlassIcon className={`h-5 w-5 mr-2 ${themeClasses.linkPrimary}`} />
               Search Criteria
             </h2>
             <p className="mt-1 text-sm text-gray-600">
@@ -527,68 +503,37 @@ function AdminOrderSearchCriteriaPage() {
             {/* Action Buttons */}
             <div className="flex justify-between items-center">
               <div className="flex space-x-3">
-                <button
-                  type="button"
-                  onClick={onCancelClick}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
+                <Button variant="outline" type="button" onClick={onCancelClick}>
                   <ArrowLeftIcon className="h-4 w-4 mr-2" />
                   Back
-                </button>
-                <button
-                  type="button"
-                  onClick={handleClearForm}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
+                </Button>
+                <Button variant="outline" type="button" onClick={handleClearForm}>
                   <XMarkIcon className="h-4 w-4 mr-2" />
                   Clear
-                </button>
+                </Button>
               </div>
 
-              <button
+              <Button
+                variant="primary"
                 type="submit"
                 disabled={isFetching}
-                className="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                loading={isFetching}
               >
-                {isFetching ? (
-                  <>
-                    <svg
-                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
-                    Searching...
-                  </>
-                ) : (
+                {isFetching ? "Searching..." : (
                   <>
                     <MagnifyingGlassIcon className="h-4 w-4 mr-2" />
                     Search
                   </>
                 )}
-              </button>
+              </Button>
             </div>
           </form>
-        </div>
+        </Card>
 
         {/* Search Tips */}
-        <div className="mt-6 bg-white shadow-sm rounded-lg">
+        <Card className="mt-6">
           <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+            <h3 className={`text-lg font-semibold ${themeClasses.textPrimary} flex items-center`}>
               <LightBulbIcon className="w-5 h-5 mr-2 text-yellow-500" />
               Search Tips
             </h3>
@@ -616,10 +561,19 @@ function AdminOrderSearchCriteriaPage() {
               </li>
             </ul>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );
 }
 
-export default AdminOrderSearchCriteriaPage;
+// Wrapper with UIXThemeProvider
+function AdminOrderSearchCriteriaPageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminOrderSearchCriteriaPage />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminOrderSearchCriteriaPageWithProvider;

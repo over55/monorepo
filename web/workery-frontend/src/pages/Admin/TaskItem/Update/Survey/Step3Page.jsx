@@ -1,11 +1,19 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Admin/TaskItem/Update/Survey/Step3Page.jsx
-
-import React, { useState, useEffect } from "react";
+// UIX Upgraded - Uses UIX primitives (Card, Button, Alert, Spinner, Breadcrumb)
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import {
   useTaskManager,
   useSurveyStorage,
 } from "../../../../../services/Services";
+import {
+  Card,
+  Button,
+  Alert,
+  Spinner,
+  Breadcrumb,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../../components/UIX";
 import {
   ChartBarIcon,
   ChevronRightIcon,
@@ -31,7 +39,7 @@ const TASK_ITEM_NO_SURVEY_CONDUCTED_REASON_OPTIONS = [
   { value: 4, label: "Client no longer with company" },
 ];
 
-export default function AdminTaskItemSurveyStep3Page() {
+function AdminTaskItemSurveyStep3Page() {
   const { tid } = useParams();
   const navigate = useNavigate();
   const taskManager = useTaskManager();
@@ -597,3 +605,14 @@ export default function AdminTaskItemSurveyStep3Page() {
     </div>
   );
 }
+
+// Wrapper with UIXThemeProvider
+function AdminTaskItemSurveyStep3PageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminTaskItemSurveyStep3Page />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminTaskItemSurveyStep3PageWithProvider;

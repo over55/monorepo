@@ -1,8 +1,16 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Admin/TaskItem/Update/Survey/Step1Page.jsx
-
-import React, { useState, useEffect } from "react";
+// UIX Upgraded - Uses UIX primitives (Card, Button, Alert, Spinner, Breadcrumb)
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, Navigate, useParams } from "react-router";
 import { useTaskManager } from "../../../../../services/Services";
+import {
+  Card,
+  Button,
+  Alert,
+  Spinner,
+  Breadcrumb,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../../components/UIX";
 import {
   VehicleTypesDisplay,
   TagsDisplay,
@@ -692,4 +700,13 @@ function AdminTaskItemSurveyStep1Page() {
   );
 }
 
-export default AdminTaskItemSurveyStep1Page;
+// Wrapper with UIXThemeProvider
+function AdminTaskItemSurveyStep1PageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminTaskItemSurveyStep1Page />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminTaskItemSurveyStep1PageWithProvider;

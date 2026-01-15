@@ -1,7 +1,14 @@
 // File Path: web/workery-frontend/src/pages/Admin/Associate/Detail/More/2FA/Page.jsx
+// UIX Upgraded - Uses UIX primitives (Breadcrumb, Spinner, UIXThemeProvider)
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate, useParams } from "react-router";
+import {
+  Breadcrumb,
+  Spinner,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../../../components/UIX";
 import {
   ChartBarIcon,
   UserGroupIcon,
@@ -29,6 +36,33 @@ function AdminAssociateDetailMore2FAPage() {
 
   // Services
   const associateManager = useAssociateManager();
+  const { getThemeClasses } = useUIXTheme();
+
+  // Memoize theme classes
+  const themeClasses = useMemo(
+    () => ({
+      pageContainer: getThemeClasses("pageContainer"),
+      contentWrapper: getThemeClasses("contentWrapper"),
+    }),
+    [getThemeClasses],
+  );
+
+  // Memoize onUnauthorized callback
+  const onUnauthorized = useCallback(() => {
+    navigate("/login?unauthorized=true");
+  }, [navigate]);
+
+  // Memoize breadcrumb items
+  const breadcrumbItems = useMemo(
+    () => [
+      { label: "Dashboard", path: "/admin/dashboard", icon: "ChartBarIcon" },
+      { label: "Associates", path: "/admin/associates" },
+      { label: "Detail", path: `/admin/associate/${aid}` },
+      { label: "More", path: `/admin/associate/${aid}/more` },
+      { label: "Two-Factor Authentication" },
+    ],
+    [aid],
+  );
 
   // Component states
   const [errors, setErrors] = useState({});
@@ -36,11 +70,6 @@ function AdminAssociateDetailMore2FAPage() {
   const [associate, setAssociate] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
-
-  // Unauthorized callback
-  const onUnauthorized = () => {
-    navigate("/login?unauthorized=true");
-  };
 
   // Load associate details
   useEffect(() => {
@@ -117,16 +146,7 @@ function AdminAssociateDetailMore2FAPage() {
 
   // Render loading state
   if (isFetching && !associate) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading associate details...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <Spinner text="Loading associate details..." />;
   }
 
   // Render error state
@@ -134,70 +154,7 @@ function AdminAssociateDetailMore2FAPage() {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Breadcrumb */}
-        <nav className="flex mb-6" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3">
-            <li className="inline-flex items-center">
-              <Link
-                to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                <ChartBarIcon className="w-4 h-4 mr-2" />
-                Dashboard
-              </Link>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <span className="mx-2 text-gray-400">/</span>
-                <Link
-                  to="/admin/associates"
-                  className="text-sm font-medium text-gray-700 hover:text-blue-600"
-                >
-                  <span className="inline-flex items-center">
-                    <UserGroupIcon className="w-4 h-4 mr-2" />
-                    Associates
-                  </span>
-                </Link>
-              </div>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <span className="mx-2 text-gray-400">/</span>
-                <Link
-                  to={`/admin/associate/${aid}`}
-                  className="text-sm font-medium text-gray-700 hover:text-blue-600"
-                >
-                  <span className="inline-flex items-center">
-                    <InformationCircleIcon className="w-4 h-4 mr-2" />
-                    Detail
-                  </span>
-                </Link>
-              </div>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <span className="mx-2 text-gray-400">/</span>
-                <Link
-                  to={`/admin/associate/${aid}/more`}
-                  className="text-sm font-medium text-gray-700 hover:text-blue-600"
-                >
-                  <span className="inline-flex items-center">
-                    <CogIcon className="w-4 h-4 mr-2" />
-                    More
-                  </span>
-                </Link>
-              </div>
-            </li>
-            <li aria-current="page">
-              <div className="flex items-center">
-                <span className="mx-2 text-gray-400">/</span>
-                <span className="text-sm font-medium text-gray-500 inline-flex items-center">
-                  <DevicePhoneMobileIcon className="w-4 h-4 mr-2" />
-                  Two-Factor Authentication
-                </span>
-              </div>
-            </li>
-          </ol>
-        </nav>
+        <Breadcrumb items={breadcrumbItems} />
 
         <div className="bg-white shadow-sm rounded-lg overflow-hidden">
           <div className="px-6 py-16 text-center">
@@ -225,70 +182,7 @@ function AdminAssociateDetailMore2FAPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Breadcrumb */}
-      <nav className="flex mb-6" aria-label="Breadcrumb">
-        <ol className="inline-flex items-center space-x-1 md:space-x-3">
-          <li className="inline-flex items-center">
-            <Link
-              to="/admin/dashboard"
-              className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
-            >
-              <ChartBarIcon className="w-4 h-4 mr-2" />
-              Dashboard
-            </Link>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <Link
-                to="/admin/associates"
-                className="text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                <span className="inline-flex items-center">
-                  <UserGroupIcon className="w-4 h-4 mr-2" />
-                  Associates
-                </span>
-              </Link>
-            </div>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <Link
-                to={`/admin/associate/${aid}`}
-                className="text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                <span className="inline-flex items-center">
-                  <InformationCircleIcon className="w-4 h-4 mr-2" />
-                  Detail
-                </span>
-              </Link>
-            </div>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <Link
-                to={`/admin/associate/${aid}/more`}
-                className="text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                <span className="inline-flex items-center">
-                  <CogIcon className="w-4 h-4 mr-2" />
-                  More
-                </span>
-              </Link>
-            </div>
-          </li>
-          <li aria-current="page">
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <span className="text-sm font-medium text-gray-500 inline-flex items-center">
-                <DevicePhoneMobileIcon className="w-4 h-4 mr-2" />
-                Two-Factor Authentication
-              </span>
-            </div>
-          </li>
-        </ol>
-      </nav>
+      <Breadcrumb items={breadcrumbItems} />
 
       {/* Page Title */}
       <div className="mb-6">
@@ -533,4 +427,10 @@ function AdminAssociateDetailMore2FAPage() {
   );
 }
 
-export default AdminAssociateDetailMore2FAPage;
+export default function AdminAssociateDetailMore2FAPageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminAssociateDetailMore2FAPage />
+    </UIXThemeProvider>
+  );
+}

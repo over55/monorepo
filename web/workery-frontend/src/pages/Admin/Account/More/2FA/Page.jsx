@@ -1,6 +1,7 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Admin/Account/More/2FA/Page.jsx
+// File Path: web/workery-frontend/src/pages/Admin/Account/More/2FA/Page.jsx
+// UIX Upgraded - Uses UIX primitives (Card, Alert, Breadcrumb, Spinner, Button, Modal)
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Link, useNavigate } from "react-router";
 import {
   ShieldCheckIcon,
@@ -23,19 +24,14 @@ import {
 import {
   Card,
   Alert,
-  Loading,
   Breadcrumb,
+  Spinner,
   Button,
   Modal,
-  EmptyState,
-} from "../../../../../components/UI";
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../../components/UIX";
 import {
-  EXECUTIVE_ROLE_ID,
-  MANAGEMENT_ROLE_ID,
-  FRONTLINE_ROLE_ID,
-  ASSOCIATE_ROLE_ID,
-  ASSOCIATE_JOB_SEEKER_ROLE_ID,
-  CUSTOMER_ROLE_ID,
   getRoleRedirectPath,
 } from "../../../../../constants/Roles";
 
@@ -49,6 +45,14 @@ function AccountTwoFactorAuthenticationPage() {
   const authManager = useAuthManager();
   const twoFactorAuthManager = useTwoFactorAuthManager();
   const navigate = useNavigate();
+  const { getThemeClasses } = useUIXTheme();
+
+  // Memoize theme classes
+  const themeClasses = useMemo(() => ({
+    textPrimary: getThemeClasses("text-primary"),
+    textSecondary: getThemeClasses("text-secondary"),
+    linkPrimary: getThemeClasses("link-primary"),
+  }), [getThemeClasses]);
 
   // Component state
   const [currentUser, setCurrentUser] = useState(null);
@@ -59,10 +63,10 @@ function AccountTwoFactorAuthenticationPage() {
   const [isDisabling, setIsDisabling] = useState(false);
 
   // Unauthorized callback
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     authManager.logout();
     navigate("/login?unauthorized=true");
-  };
+  }, [authManager, navigate]);
 
   // Fetch user data on mount
   useEffect(() => {
@@ -104,7 +108,7 @@ function AccountTwoFactorAuthenticationPage() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [accountManager, authManager, navigate, onUnauthorized]);
 
   // Clear messages after timeout
   useEffect(() => {
@@ -117,13 +121,13 @@ function AccountTwoFactorAuthenticationPage() {
   }, [successMessage]);
 
   // Generate dashboard link based on user role
-  const getDashboardLink = () => {
+  const getDashboardLink = useCallback(() => {
     if (!currentUser) return "/dashboard";
     return getRoleRedirectPath(currentUser.roleId || currentUser.role);
-  };
+  }, [currentUser]);
 
   // Handle disable 2FA
-  const handleDisable2FA = async () => {
+  const handleDisable2FA = useCallback(async () => {
     try {
       setIsDisabling(true);
       setError("");
@@ -147,167 +151,170 @@ function AccountTwoFactorAuthenticationPage() {
     } finally {
       setIsDisabling(false);
     }
-  };
+  }, [twoFactorAuthManager, onUnauthorized]);
 
   // Handle enable 2FA navigation
-  const handleEnable2FA = () => {
+  const handleEnable2FA = useCallback(() => {
     navigate("/admin/account/2fa/setup/step-1");
-  };
+  }, [navigate]);
+
+  // Check if 2FA is enabled
+  const is2FAEnabled = useMemo(() => {
+    return currentUser?.otpEnabled === true || currentUser?.otpEnabled === 1;
+  }, [currentUser]);
+
+  // Breadcrumb items
+  const breadcrumbItems = useMemo(() => [
+    {
+      label: "Dashboard",
+      to: getDashboardLink(),
+      icon: Bars3Icon,
+    },
+    {
+      label: "Profile",
+      to: "/admin/account",
+      icon: UserCircleIcon,
+    },
+    {
+      label: "Two-Factor Authentication",
+      icon: ShieldCheckIcon,
+      isActive: true,
+    },
+  ], [getDashboardLink]);
 
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loading size="lg" text="Loading 2FA settings..." />
-      </div>
+      <Card padding="p-4 sm:p-6 lg:p-8" className="max-w-7xl mx-auto border-0 shadow-none">
+        <Card padding="p-0" className="flex items-center justify-center min-h-[400px] border-0 shadow-none">
+          <div className="text-center">
+            <Spinner size="lg" />
+            <p className="mt-4 text-gray-600">Loading 2FA settings...</p>
+          </div>
+        </Card>
+      </Card>
     );
   }
 
   // Error state (full page)
   if (error && !currentUser) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <Alert type="error" dismissible={false}>
+      <Card padding="p-4 sm:p-6 lg:p-8" className="max-w-7xl mx-auto border-0 shadow-none">
+        <Alert type="error" className="mb-4">
           {error}
         </Alert>
-        <div className="mt-4">
-          <Button onClick={() => window.location.reload()}>Retry</Button>
-        </div>
-      </div>
+        <Button variant="primary" onClick={() => window.location.reload()}>
+          Retry
+        </Button>
+      </Card>
     );
   }
 
   // No user state
   if (!currentUser) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <EmptyState
-          icon={UserCircleIcon}
-          title="No user data available"
-          description="Please log in to access 2FA settings"
-          action={
-            <Button onClick={() => navigate("/login")}>Go to Login</Button>
-          }
-        />
-      </div>
+      <Card padding="p-4 sm:p-6 lg:p-8" className="max-w-7xl mx-auto border-0 shadow-none">
+        <div className="text-center py-12">
+          <ExclamationTriangleIcon className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No user data available
+          </h3>
+          <p className="text-gray-500 mb-6">
+            Please log in to access 2FA settings
+          </p>
+          <Button variant="primary" onClick={() => navigate("/login")}>
+            Go to Login
+          </Button>
+        </div>
+      </Card>
     );
   }
 
-  // Breadcrumb items
-  const breadcrumbItems = [
-    {
-      label: "Dashboard",
-      href: getDashboardLink(),
-      icon: Bars3Icon,
-    },
-    {
-      label: "Profile",
-      href: "/admin/account",
-      icon: UserCircleIcon,
-    },
-    {
-      label: "Two-Factor Authentication",
-      icon: ShieldCheckIcon,
-    },
-  ];
-
-  // Check if 2FA is enabled
-  const is2FAEnabled =
-    currentUser.otpEnabled === true || currentUser.otpEnabled === 1;
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
-        {/* Breadcrumb Navigation */}
-        <div className="mb-6">
-          <Breadcrumb items={breadcrumbItems} />
+    <Card padding="p-4 sm:p-6 lg:p-8" className="max-w-7xl mx-auto border-0 shadow-none">
+      {/* Breadcrumb */}
+      <Breadcrumb items={breadcrumbItems} className="mb-6" />
+
+      {/* Page Header */}
+      <div className="mb-6">
+        <h1 className={`text-2xl md:text-3xl font-bold ${themeClasses.textPrimary} flex items-center`}>
+          <UserCircleIcon className={`w-6 h-6 md:w-8 md:h-8 mr-3 ${themeClasses.linkPrimary}`} />
+          Profile
+        </h1>
+        <p className={`mt-1 text-sm ${themeClasses.textSecondary}`}>
+          Manage your two-factor authentication settings
+        </p>
+      </div>
+
+      {/* Success Message */}
+      {successMessage && (
+        <Alert
+          type="success"
+          className="mb-6"
+          dismissible
+          onDismiss={() => setSuccessMessage("")}
+        >
+          {successMessage}
+        </Alert>
+      )}
+
+      {/* Error Message */}
+      {error && (
+        <Alert type="error" className="mb-6" dismissible onDismiss={() => setError("")}>
+          {error}
+        </Alert>
+      )}
+
+      {/* Tabs Navigation */}
+      <div className="mb-8">
+        <nav className="flex space-x-1 bg-white rounded-lg shadow p-1">
+          <Link
+            to="/admin/account"
+            className="px-4 py-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
+          >
+            Detail
+          </Link>
+          <span className="px-4 py-2 rounded-md bg-blue-500 text-white font-medium flex items-center">
+            More
+            <EllipsisHorizontalIcon className="h-4 w-4 ml-2" />
+          </span>
+        </nav>
+      </div>
+
+      {/* Main Content Card */}
+      <Card className="mb-8">
+        {/* Card Header */}
+        <div className="px-6 py-5 border-b border-gray-200 flex justify-between items-start">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+              <ShieldCheckIcon className={`w-5 h-5 mr-2 ${themeClasses.linkPrimary}`} />
+              Two-Factor Authentication Status
+            </h2>
+          </div>
+          <div>
+            {is2FAEnabled ? (
+              <Button
+                variant="danger"
+                onClick={() => setShowDisableModal(true)}
+                disabled={currentUser.status === 2}
+                icon={LockOpenIcon}
+              >
+                Disable
+              </Button>
+            ) : (
+              <Button
+                variant="success"
+                onClick={handleEnable2FA}
+                disabled={currentUser.status === 2}
+                icon={LockClosedIcon}
+              >
+                Enable
+              </Button>
+            )}
+          </div>
         </div>
 
-        {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-            <UserCircleIcon className="h-8 w-8 mr-3" />
-            Profile
-          </h1>
-          <p className="mt-2 text-gray-600">
-            Manage your two-factor authentication settings
-          </p>
-        </div>
-
-        {/* Success Message */}
-        {successMessage && (
-          <div className="mb-6">
-            <Alert
-              type="success"
-              dismissible
-              onDismiss={() => setSuccessMessage("")}
-            >
-              {successMessage}
-            </Alert>
-          </div>
-        )}
-
-        {/* Error Message */}
-        {error && (
-          <div className="mb-6">
-            <Alert type="error" dismissible onDismiss={() => setError("")}>
-              {error}
-            </Alert>
-          </div>
-        )}
-
-        {/* Tabs Navigation */}
-        <div className="mb-8">
-          <nav className="flex space-x-1 bg-white rounded-lg shadow p-1">
-            <Link
-              to="/admin/account"
-              className="px-4 py-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-colors"
-            >
-              Detail
-            </Link>
-
-            <span className="px-4 py-2 rounded-md bg-blue-500 text-white font-medium flex items-center">
-              More
-              <EllipsisHorizontalIcon className="h-4 w-4 ml-2" />
-            </span>
-          </nav>
-        </div>
-
-        {/* Main Content Card */}
-        <Card className="mb-8">
-          {/* Card Header */}
-          <div className="flex justify-between items-start mb-6">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-                <ShieldCheckIcon className="h-5 w-5 mr-2" />
-                Two-Factor Authentication Status
-              </h2>
-            </div>
-            <div>
-              {is2FAEnabled ? (
-                <Button
-                  variant="danger"
-                  onClick={() => setShowDisableModal(true)}
-                  disabled={currentUser.status === 2}
-                  className="flex items-center"
-                >
-                  <LockOpenIcon className="h-4 w-4 mr-2" />
-                  Disable
-                </Button>
-              ) : (
-                <Button
-                  variant="success"
-                  onClick={handleEnable2FA}
-                  disabled={currentUser.status === 2}
-                  className="flex items-center"
-                >
-                  <LockClosedIcon className="h-4 w-4 mr-2" />
-                  Enable
-                </Button>
-              )}
-            </div>
-          </div>
-
+        <div className="p-6">
           {/* Status Display */}
           {is2FAEnabled ? (
             <div className="bg-green-50 border border-green-200 rounded-lg p-8 text-center">
@@ -334,64 +341,55 @@ function AccountTwoFactorAuthenticationPage() {
               <Button
                 variant="primary"
                 onClick={handleEnable2FA}
-                className="inline-flex items-center"
+                icon={ShieldCheckIcon}
+                iconRight={ArrowRightIcon}
               >
-                <ShieldCheckIcon className="h-5 w-5 mr-2" />
                 Enable 2FA Now
-                <ArrowRightIcon className="h-4 w-4 ml-2" />
               </Button>
             </div>
           )}
 
           {/* Additional Information */}
-          <div className="mt-8 p-4 bg-blue-50 rounded-lg">
-            <h4 className="font-semibold text-blue-900 mb-2 flex items-center">
-              <ShieldCheckIcon className="h-5 w-5 mr-2" />
-              What is Two-Factor Authentication?
-            </h4>
-            <p className="text-sm text-blue-700">
+          <Alert type="info" className="mt-8">
+            <strong>What is Two-Factor Authentication?</strong>
+            <p className="mt-2">
               Two-factor authentication (2FA) adds an extra layer of security to
               your account. In addition to your password, you'll need to enter a
               code from your mobile device to sign in. This helps protect your
               account even if your password is compromised.
             </p>
-          </div>
-        </Card>
+          </Alert>
+        </div>
+      </Card>
 
-        {/* Bottom Navigation */}
-        <div className="flex justify-between items-center">
-          <Button
-            variant="ghost"
-            onClick={() => navigate(getDashboardLink())}
-            className="flex items-center"
-          >
-            <ArrowLeftIcon className="h-4 w-4 mr-2" />
+      {/* Bottom Navigation */}
+      <div className="flex justify-between items-center">
+        <Link to={getDashboardLink()}>
+          <Button variant="secondary" icon={ArrowLeftIcon}>
             Back to Dashboard
           </Button>
+        </Link>
 
-          {/* Secondary Action Button */}
-          {is2FAEnabled ? (
-            <Button
-              variant="danger"
-              onClick={() => setShowDisableModal(true)}
-              disabled={currentUser.status === 2}
-              className="flex items-center"
-            >
-              <LockOpenIcon className="h-4 w-4 mr-2" />
-              Disable 2FA
-            </Button>
-          ) : (
-            <Button
-              variant="success"
-              onClick={handleEnable2FA}
-              disabled={currentUser.status === 2}
-              className="flex items-center"
-            >
-              <LockClosedIcon className="h-4 w-4 mr-2" />
-              Enable 2FA
-            </Button>
-          )}
-        </div>
+        {/* Secondary Action Button */}
+        {is2FAEnabled ? (
+          <Button
+            variant="danger"
+            onClick={() => setShowDisableModal(true)}
+            disabled={currentUser.status === 2}
+            icon={LockOpenIcon}
+          >
+            Disable 2FA
+          </Button>
+        ) : (
+          <Button
+            variant="success"
+            onClick={handleEnable2FA}
+            disabled={currentUser.status === 2}
+            icon={LockClosedIcon}
+          >
+            Enable 2FA
+          </Button>
+        )}
       </div>
 
       {/* Disable 2FA Confirmation Modal */}
@@ -399,35 +397,7 @@ function AccountTwoFactorAuthenticationPage() {
         isOpen={showDisableModal}
         onClose={() => setShowDisableModal(false)}
         title="Disable Two-Factor Authentication?"
-        footer={
-          <div className="flex justify-end space-x-3">
-            <Button
-              variant="secondary"
-              onClick={() => setShowDisableModal(false)}
-              disabled={isDisabling}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="danger"
-              onClick={handleDisable2FA}
-              disabled={isDisabling}
-              className="flex items-center"
-            >
-              {isDisabling ? (
-                <>
-                  <Loading size="sm" className="mr-2" />
-                  Disabling...
-                </>
-              ) : (
-                <>
-                  <LockOpenIcon className="h-4 w-4 mr-2" />
-                  Confirm Disable
-                </>
-              )}
-            </Button>
-          </div>
-        }
+        size="md"
       >
         <div className="space-y-4">
           <div className="flex items-start">
@@ -450,14 +420,48 @@ function AccountTwoFactorAuthenticationPage() {
 
           {/* Show error in modal if any */}
           {error && (
-            <Alert type="error" dismissible={false}>
+            <Alert type="error">
               {error}
             </Alert>
           )}
         </div>
+
+        <div className="flex justify-end space-x-3 mt-6 pt-4 border-t">
+          <Button
+            variant="secondary"
+            onClick={() => setShowDisableModal(false)}
+            disabled={isDisabling}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="danger"
+            onClick={handleDisable2FA}
+            disabled={isDisabling}
+            icon={isDisabling ? null : LockOpenIcon}
+          >
+            {isDisabling ? (
+              <span className="flex items-center">
+                <Spinner size="sm" className="mr-2" />
+                Disabling...
+              </span>
+            ) : (
+              "Confirm Disable"
+            )}
+          </Button>
+        </div>
       </Modal>
-    </div>
+    </Card>
   );
 }
 
-export default AccountTwoFactorAuthenticationPage;
+// Wrapper with UIXThemeProvider
+function AccountTwoFactorAuthenticationPageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AccountTwoFactorAuthenticationPage />
+    </UIXThemeProvider>
+  );
+}
+
+export default AccountTwoFactorAuthenticationPageWithProvider;

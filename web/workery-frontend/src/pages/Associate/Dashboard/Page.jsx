@@ -1,8 +1,15 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Associate/Dashboard/Page.jsx
-
-import React from "react";
+// UIX Upgraded - Uses UIX primitives (Card, Button, Alert, Spinner, Breadcrumb)
+import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
-import { Card, Breadcrumb, Alert } from "../../../components/UI";
+import {
+  Card,
+  Breadcrumb,
+  Alert,
+  Button,
+  Spinner,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../components/UIX";
 import {
   HomeIcon,
   BriefcaseIcon,
@@ -426,4 +433,13 @@ function AssociateDashboardPage() {
   );
 }
 
-export default AssociateDashboardPage;
+// Wrapper with UIXThemeProvider
+function AssociateDashboardPageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AssociateDashboardPage />
+    </UIXThemeProvider>
+  );
+}
+
+export default AssociateDashboardPageWithProvider;

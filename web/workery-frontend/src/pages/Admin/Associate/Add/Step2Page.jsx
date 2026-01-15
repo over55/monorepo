@@ -1,35 +1,46 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Admin/Associate/Add/Step2Page.jsx
+// File Path: web/workery-frontend/src/pages/Admin/Associate/Add/Step2Page.jsx
+// UIX Upgraded - Uses WizardFormStep whole page component
+// @uix-page: AdminAssociateAddStep2Page
 
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router";
+import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
+import { useNavigate } from "react-router";
 import {
   useAuthManager,
   useAccountManager,
 } from "../../../../services/Services";
 import {
+  WizardFormStep,
+  SelectionCard,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../components/UIX";
+import {
   UserPlusIcon,
-  ChevronRightIcon,
-  XMarkIcon,
-  ArrowLeftIcon,
-  ChartBarIcon,
-  WrenchScrewdriverIcon,
-  ExclamationCircleIcon,
   HomeIcon,
   BuildingOffice2Icon,
-  ArrowRightIcon,
   UserGroupIcon,
-  InformationCircleIcon,
-  CheckIcon,
-  SparklesIcon,
 } from "@heroicons/react/24/outline";
 
 const RESIDENTIAL_ASSOCIATE_TYPE_OF_ID = 2;
 const COMMERCIAL_ASSOCIATE_TYPE_OF_ID = 3;
 
-function AdminAssociateAddStep2Page() {
+// Wizard configuration
+const WIZARD_STEPS = [
+  { title: "Search" },
+  { title: "Type" },
+  { title: "Contact" },
+  { title: "Address" },
+  { title: "Account" },
+  { title: "Metrics" },
+  { title: "Comments" },
+];
+
+// Memoized content component
+const Step2Content = memo(function Step2Content() {
   const authManager = useAuthManager();
   const accountManager = useAccountManager();
   const navigate = useNavigate();
+  const { getThemeClasses } = useUIXTheme();
 
   // Component states
   const [errors, setErrors] = useState({});
@@ -37,29 +48,31 @@ function AdminAssociateAddStep2Page() {
   const [currentUser, setCurrentUser] = useState(null);
   const [selectedType, setSelectedType] = useState(null);
 
+  // Memoize onUnauthorized callback
+  const onUnauthorized = useCallback(() => {
+    navigate("/login?unauthorized=true");
+  }, [navigate]);
+
   // Check authentication
   useEffect(() => {
     if (!authManager.isAuthenticated()) {
       navigate("/login");
       return;
     }
-
-    // Fetch current user for country info
+    window.scrollTo(0, 0);
     fetchCurrentUser();
   }, [authManager, navigate]);
 
   const fetchCurrentUser = async () => {
     try {
-      const user = await accountManager.getAccountDetail(() =>
-        navigate("/login?unauthorized=true"),
-      );
+      const user = await accountManager.getAccountDetail(onUnauthorized);
       setCurrentUser(user);
     } catch (error) {
       console.error("Failed to fetch current user:", error);
     }
   };
 
-  const onSelectType = (typeId) => {
+  const onSelectType = useCallback((typeId) => {
     // Set visual selection state
     setSelectedType(typeId);
 
@@ -101,342 +114,86 @@ function AdminAssociateAddStep2Page() {
       // Navigate to next step
       navigate("/admin/associates/add/step-3");
     }, 300);
-  };
+  }, [currentUser, navigate]);
 
   // Handle cancel
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     setShowCancelWarning(true);
-  };
+  }, []);
 
   // Confirm cancel
-  const handleConfirmCancel = () => {
+  const handleConfirmCancel = useCallback(() => {
     setShowCancelWarning(false);
     navigate("/admin/associates/add/step-1-search");
-  };
+  }, [navigate]);
 
-  // Section Component with Dark Header Pattern
-  const DetailSection = ({ title, icon: Icon, children, description }) => (
-    <div className="bg-gray-700 rounded-lg shadow-sm mb-6">
-      <div className="px-4 sm:px-6 py-3 sm:py-4">
-        <h2 className="text-base sm:text-lg font-semibold text-white flex items-center">
-          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
-          <span className="truncate">{title}</span>
-        </h2>
-        {description && (
-          <p className="mt-1 text-xs sm:text-sm text-gray-300">{description}</p>
-        )}
-      </div>
-      <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg">
-        {children}
-      </div>
-    </div>
-  );
+  // Handle back
+  const handleBack = useCallback(() => {
+    navigate("/admin/associates/add/step-1-search");
+  }, [navigate]);
+
+  // Associate type selection options
+  const associateTypeOptions = useMemo(() => [
+    {
+      title: "Individual",
+      description: "For individual contractors and service providers",
+      icon: HomeIcon,
+      buttonLabel: "Select Individual",
+      onClick: () => onSelectType(RESIDENTIAL_ASSOCIATE_TYPE_OF_ID),
+      variant: "success",
+      selected: selectedType === RESIDENTIAL_ASSOCIATE_TYPE_OF_ID,
+    },
+    {
+      title: "Commercial",
+      description: "For businesses and commercial providers",
+      icon: BuildingOffice2Icon,
+      buttonLabel: "Select Commercial",
+      onClick: () => onSelectType(COMMERCIAL_ASSOCIATE_TYPE_OF_ID),
+      variant: "primary",
+      selected: selectedType === COMMERCIAL_ASSOCIATE_TYPE_OF_ID,
+    },
+  ], [onSelectType, selectedType]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {/* Responsive Breadcrumb */}
-        <nav className="flex mb-4 overflow-x-auto" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
-            <li className="inline-flex items-center">
-              <Link
-                to="/admin/dashboard"
-                className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
-              >
-                <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                <span className="hidden sm:inline">Dashboard</span>
-                <span className="sm:hidden">Dash</span>
-              </Link>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-3 sm:w-4 h-3 sm:h-4 text-gray-400 mx-1 sm:mx-2" />
-                <Link
-                  to="/admin/associates"
-                  className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
-                >
-                  <span className="inline-flex items-center">
-                    <WrenchScrewdriverIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                    <span className="hidden sm:inline">Associates</span>
-                    <span className="sm:hidden">Assoc</span>
-                  </span>
-                </Link>
-              </div>
-            </li>
-            <li aria-current="page">
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-3 sm:w-4 h-3 sm:h-4 text-gray-400 mx-1 sm:mx-2" />
-                <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
-                  <UserPlusIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                  Add
-                </span>
-              </div>
-            </li>
-          </ol>
-        </nav>
-
-        {/* Page Title - Responsive */}
-        <div className="mb-6">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center">
-            <UserPlusIcon className="w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
-            Add New Associate
-          </h1>
-          <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
-            <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
-            Select the type of associate you want to create
-          </p>
+    <>
+      <WizardFormStep
+        wizardSteps={WIZARD_STEPS}
+        currentStep={2}
+        wizardTitle="Add New Associate"
+        wizardIcon={UserPlusIcon}
+        stepTitle="Select Associate Type"
+        stepSubtitle="Choose the appropriate category for this associate"
+        stepIcon={UserGroupIcon}
+        showFormCard={true}
+        showActions={false}
+        contentMaxWidth="4xl"
+        errors={errors}
+        onCancel={handleCancel}
+        onBack={handleBack}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {associateTypeOptions.map((option, index) => (
+            <SelectionCard
+              key={index}
+              title={option.title}
+              description={option.description}
+              icon={option.icon}
+              buttonLabel={option.buttonLabel}
+              onClick={option.onClick}
+              variant={option.variant}
+              selected={option.selected}
+            />
+          ))}
         </div>
+      </WizardFormStep>
 
-        {/* Wizard Steps - Mobile First Responsive Design */}
-        <div className="mb-6">
-          {/* Mobile View - Simplified */}
-          <div className="md:hidden bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full">
-                  <span className="text-white font-semibold text-sm">2</span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">
-                    Step 2: Type
-                  </p>
-                  <p className="text-xs text-gray-500">Select Associate Type</p>
-                </div>
-              </div>
-              <div className="text-xs text-gray-500">2 of 7</div>
-            </div>
-          </div>
-
-          {/* Desktop View - Full Wizard */}
-          <div className="hidden md:flex items-center justify-center overflow-x-auto">
-            <div className="flex items-center min-w-max">
-              {/* Step 1 - Complete */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
-                  <CheckIcon className="w-6 h-6 text-white" />
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">Search</p>
-                  <p className="text-xs text-gray-500">Complete</p>
-                </div>
-              </div>
-
-              <div className="mx-2 w-12 h-0.5 bg-green-600"></div>
-
-              {/* Step 2 - Active */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
-                  <span className="text-white font-semibold">2</span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">Type</p>
-                  <p className="text-xs text-gray-500">Select Type</p>
-                </div>
-              </div>
-
-              {/* Remaining Steps */}
-              {[
-                { num: 3, title: "Contact", subtitle: "Basic Info" },
-                { num: 4, title: "Address", subtitle: "Location" },
-                { num: 5, title: "Account", subtitle: "Settings" },
-                { num: 6, title: "Metrics", subtitle: "Performance" },
-                { num: 7, title: "Comments", subtitle: "Notes" },
-              ].map((step) => (
-                <React.Fragment key={step.num}>
-                  <div className="mx-2 w-12 h-0.5 bg-gray-300"></div>
-                  <div className="flex items-center">
-                    <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
-                      <span className="text-gray-600 font-semibold">
-                        {step.num}
-                      </span>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-500">
-                        {step.title}
-                      </p>
-                      <p className="text-xs text-gray-400">{step.subtitle}</p>
-                    </div>
-                  </div>
-                </React.Fragment>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Error Message */}
-        {errors.message && (
-          <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center justify-between">
-            <span className="flex items-center text-xs sm:text-sm">
-              <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
-              <span>{errors.message}</span>
-            </span>
-            <button
-              onClick={() => setErrors({})}
-              className="text-red-600 hover:text-red-800 ml-2 flex-shrink-0"
-            >
-              <XMarkIcon className="w-4 sm:w-5 h-4 sm:h-5" />
-            </button>
-          </div>
-        )}
-
-        {/* Main Content with Dark Header */}
-        <DetailSection
-          title="Select Associate Type"
-          icon={UserGroupIcon}
-          description="Choose the appropriate category for this associate"
-        >
-          <div className="p-4 sm:p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 max-w-4xl mx-auto">
-              {/* Individual/Residential Card */}
-              <div
-                className={`relative group cursor-pointer transform transition-all duration-300 ${
-                  selectedType === RESIDENTIAL_ASSOCIATE_TYPE_OF_ID
-                    ? "scale-105 ring-4 ring-green-500 ring-opacity-50"
-                    : "hover:scale-105"
-                }`}
-                onClick={() => onSelectType(RESIDENTIAL_ASSOCIATE_TYPE_OF_ID)}
-              >
-                <div
-                  className={`bg-white border-2 rounded-xl overflow-hidden transition-all duration-300 ${
-                    selectedType === RESIDENTIAL_ASSOCIATE_TYPE_OF_ID
-                      ? "border-green-500 shadow-2xl"
-                      : "border-gray-200 hover:border-green-500 hover:shadow-xl"
-                  }`}
-                >
-                  {/* Card Header with Gradient */}
-                  <div className="bg-gradient-to-br from-green-400 via-green-500 to-green-600 p-6 sm:p-8 text-center relative overflow-hidden">
-                    {/* Background Pattern */}
-                    <div className="absolute inset-0 bg-black opacity-10"></div>
-                    <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
-                    <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
-
-                    {/* Icon Container */}
-                    <div className="relative">
-                      <div className="bg-white/20 backdrop-blur-sm rounded-full w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 mx-auto flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300">
-                        <HomeIcon className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 text-white" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Card Body */}
-                  <div className="p-4 sm:p-6">
-                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 flex items-center justify-center">
-                      <HomeIcon className="w-5 h-5 mr-2 text-green-600" />
-                      Individual
-                    </h3>
-                    <p className="text-sm sm:text-base text-gray-600 text-center mb-4">
-                      For individual contractors and service providers
-                    </p>
-
-                    <button
-                      className={`w-full inline-flex items-center justify-center px-3 sm:px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-all duration-300`}
-                    >
-                      Select Individual
-                      <ArrowRightIcon className="w-4 h-4 ml-2" />
-                    </button>
-                  </div>
-
-                  {/* Selected Indicator */}
-                  {selectedType === RESIDENTIAL_ASSOCIATE_TYPE_OF_ID && (
-                    <div className="absolute top-3 right-3 bg-green-500 text-white p-2 rounded-full animate-bounce">
-                      <CheckIcon className="w-5 h-5" />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Commercial Card */}
-              <div
-                className={`relative group cursor-pointer transform transition-all duration-300 ${
-                  selectedType === COMMERCIAL_ASSOCIATE_TYPE_OF_ID
-                    ? "scale-105 ring-4 ring-blue-500 ring-opacity-50"
-                    : "hover:scale-105"
-                }`}
-                onClick={() => onSelectType(COMMERCIAL_ASSOCIATE_TYPE_OF_ID)}
-              >
-                <div
-                  className={`bg-white border-2 rounded-xl overflow-hidden transition-all duration-300 ${
-                    selectedType === COMMERCIAL_ASSOCIATE_TYPE_OF_ID
-                      ? "border-blue-500 shadow-2xl"
-                      : "border-gray-200 hover:border-blue-500 hover:shadow-xl"
-                  }`}
-                >
-                  {/* Card Header with Gradient */}
-                  <div className="bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 p-6 sm:p-8 text-center relative overflow-hidden">
-                    {/* Background Pattern */}
-                    <div className="absolute inset-0 bg-black opacity-10"></div>
-                    <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
-                    <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-white/10 rounded-full blur-3xl"></div>
-
-                    {/* Icon Container */}
-                    <div className="relative">
-                      <div className="bg-white/20 backdrop-blur-sm rounded-full w-16 h-16 sm:w-20 sm:h-20 lg:w-24 lg:h-24 mx-auto flex items-center justify-center mb-3 sm:mb-4 group-hover:scale-110 transition-transform duration-300">
-                        <BuildingOffice2Icon className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 text-white" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Card Body */}
-                  <div className="p-4 sm:p-6">
-                    <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2 flex items-center justify-center">
-                      <BuildingOffice2Icon className="w-5 h-5 mr-2 text-blue-600" />
-                      Commercial
-                    </h3>
-                    <p className="text-sm sm:text-base text-gray-600 text-center mb-4">
-                      For businesses and commercial providers
-                    </p>
-
-                    <button
-                      className={`w-full inline-flex items-center justify-center px-3 sm:px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-all duration-300`}
-                    >
-                      Select Commercial
-                      <ArrowRightIcon className="w-4 h-4 ml-2" />
-                    </button>
-                  </div>
-
-                  {/* Selected Indicator */}
-                  {selectedType === COMMERCIAL_ASSOCIATE_TYPE_OF_ID && (
-                    <div className="absolute top-3 right-3 bg-blue-500 text-white p-2 rounded-full animate-bounce">
-                      <CheckIcon className="w-5 h-5" />
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Cancel Button */}
-            <div className="mt-6 sm:mt-8 flex justify-center">
-              <button
-                onClick={handleCancel}
-                className="inline-flex items-center px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                <XMarkIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
-                Cancel
-              </button>
-            </div>
-          </div>
-        </DetailSection>
-
-        {/* Back Link */}
-        <div className="mt-6">
-          <Link
-            to="/admin/associates/add/step-1-search"
-            className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 transition-colors"
-          >
-            <ArrowLeftIcon className="w-4 h-4 mr-1" />
-            Back to Search
-          </Link>
-        </div>
-      </div>
-
-      {/* Cancel Confirmation Modal with Dark Header */}
+      {/* Cancel Confirmation Modal */}
       {showCancelWarning && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-lg max-w-md w-full shadow-xl">
             <div className="bg-gray-700 px-4 sm:px-6 py-3 sm:py-4 rounded-t-lg">
-              <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
-                <ExclamationCircleIcon className="h-4 sm:h-5 w-4 sm:w-5 mr-2 text-amber-400 flex-shrink-0" />
-                <span className="truncate">Are you sure?</span>
+              <h3 className="text-base sm:text-lg font-semibold text-white">
+                Are you sure?
               </h3>
             </div>
 
@@ -464,7 +221,17 @@ function AdminAssociateAddStep2Page() {
           </div>
         </div>
       )}
-    </div>
+    </>
+  );
+});
+
+Step2Content.displayName = 'Step2Content';
+
+function AdminAssociateAddStep2Page() {
+  return (
+    <UIXThemeProvider>
+      <Step2Content />
+    </UIXThemeProvider>
   );
 }
 

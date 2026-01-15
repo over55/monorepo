@@ -1,11 +1,19 @@
-// File Path: web/workery-frontend/src/pages/Admin/Order/Add/Step2FromLaunchpadPage.jsx
-
-import React, { useState, useEffect } from "react";
+// UIX Upgraded - Uses UIX primitives (Card, Button, Alert, Spinner, Breadcrumb)
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useSearchParams, useNavigate } from "react-router";
 import {
   useAuthManager,
   useOrderCreationStorage,
 } from "../../../../services/Services";
+import {
+  Card,
+  Button,
+  Alert,
+  Spinner,
+  Breadcrumb,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../components/UIX";
 import { ClipboardDocumentListIcon } from "@heroicons/react/24/outline";
 
 function AdminOrderAddStep2FromLaunchpadPage() {
@@ -133,4 +141,13 @@ function AdminOrderAddStep2FromLaunchpadPage() {
   );
 }
 
-export default AdminOrderAddStep2FromLaunchpadPage;
+// Wrapper with UIXThemeProvider
+function AdminOrderAddStep2FromLaunchpadPageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminOrderAddStep2FromLaunchpadPage />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminOrderAddStep2FromLaunchpadPageWithProvider;

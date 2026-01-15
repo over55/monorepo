@@ -1,8 +1,8 @@
-// File Path: monorepo/web/workery-frontend/src/components/business/displays/TagsDisplay.jsx
+// File Path: monorepo/web/frontend/src/components/business/displays/TagsDisplay.jsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useTagManager } from "../../../services/Services";
-import { Badge, Loading } from "../../UI";
+import { Badge, Loading, useUIXTheme } from "../../UIX";
 
 /**
  * Display component for multiple selected tags
@@ -21,19 +21,25 @@ function TagsDisplay({
   onUnauthorized = null,
   variant = "success",
 }) {
+  const { getThemeClasses } = useUIXTheme();
   const tagManager = useTagManager();
   const [displayTags, setDisplayTags] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Memoize stringified values to use as a stable dependency for detecting array changes
+  const valuesKey = useMemo(() => JSON.stringify(values), [values]);
 
   useEffect(() => {
     let mounted = true;
 
     const fetchDisplayValues = async () => {
       // Debug logging
-      console.log("TagsDisplay - values received:", values);
-      console.log("TagsDisplay - values type:", typeof values);
-      console.log("TagsDisplay - is array?:", Array.isArray(values));
+      if (import.meta.env.DEV) {
+        console.log("TagsDisplay - values received:", values);
+        console.log("TagsDisplay - values type:", typeof values);
+        console.log("TagsDisplay - is array?:", Array.isArray(values));
+      }
 
       // Handle null, undefined, or empty cases
       if (
@@ -43,7 +49,9 @@ function TagsDisplay({
         values === null ||
         values === undefined
       ) {
-        console.log("TagsDisplay - No values to display");
+        if (import.meta.env.DEV) {
+          console.log("TagsDisplay - No values to display");
+        }
         setDisplayTags([]);
         return;
       }
@@ -57,7 +65,9 @@ function TagsDisplay({
           v !== null && v !== undefined && v !== "" && v !== 0 && v !== "0",
       );
 
-      console.log("TagsDisplay - filtered values:", filteredValues);
+      if (import.meta.env.DEV) {
+        console.log("TagsDisplay - filtered values:", filteredValues);
+      }
 
       if (filteredValues.length === 0) {
         setDisplayTags([]);
@@ -71,7 +81,9 @@ function TagsDisplay({
         // Fetch tag options from the API/cache
         const options = await tagManager.getTagSelectOptions(onUnauthorized);
 
-        console.log("TagsDisplay - fetched options:", options);
+        if (import.meta.env.DEV) {
+          console.log("TagsDisplay - fetched options:", options);
+        }
 
         if (mounted && options) {
           // Map the IDs to their labels
@@ -86,10 +98,12 @@ function TagsDisplay({
                 return optionId === tagIdStr;
               });
 
-              console.log(
-                `TagsDisplay - Mapping tag ID ${tagId}:`,
-                matchingOption,
-              );
+              if (import.meta.env.DEV) {
+                console.log(
+                  `TagsDisplay - Mapping tag ID ${tagId}:`,
+                  matchingOption,
+                );
+              }
 
               if (matchingOption) {
                 return {
@@ -102,9 +116,11 @@ function TagsDisplay({
               } else {
                 // Only show unknown if we have a valid ID
                 if (tagIdStr && tagIdStr !== "undefined") {
-                  console.warn(
-                    `TagsDisplay - No match found for tag ID: ${tagId}`,
-                  );
+                  if (import.meta.env.DEV) {
+                    console.warn(
+                      `TagsDisplay - No match found for tag ID: ${tagId}`,
+                    );
+                  }
                   return { id: tagId, label: `Unknown (ID: ${tagId})` };
                 }
                 return null;
@@ -112,11 +128,15 @@ function TagsDisplay({
             })
             .filter(Boolean); // Remove any null values
 
-          console.log("TagsDisplay - mapped tags:", mappedTags);
+          if (import.meta.env.DEV) {
+            console.log("TagsDisplay - mapped tags:", mappedTags);
+          }
           setDisplayTags(mappedTags);
         }
       } catch (error) {
-        console.error("Error fetching tag options:", error);
+        if (import.meta.env.DEV) {
+          console.error("Error fetching tag options:", error);
+        }
         if (mounted) {
           setError("Failed to load tags");
           // Fallback to showing IDs only if we have valid values
@@ -138,12 +158,13 @@ function TagsDisplay({
     return () => {
       mounted = false;
     };
-  }, [JSON.stringify(values), onUnauthorized]); // Use stringified values to detect array changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- valuesKey is a memoized serialization of values to detect array content changes without triggering on reference changes
+  }, [valuesKey, onUnauthorized, tagManager]);
 
   if (isLoading) {
     return (
       <div className={`mb-4 ${className}`}>
-        <p className="text-sm font-medium text-gray-700 mb-2">{label}</p>
+        <p className={`text-sm font-medium ${getThemeClasses("text-secondary")} mb-2`}>{label}</p>
         <div className="flex items-center">
           <Loading size="sm" text="Loading tags..." />
         </div>
@@ -153,7 +174,7 @@ function TagsDisplay({
 
   return (
     <div className={`mb-4 ${className}`}>
-      <p className="text-sm font-medium text-gray-700 mb-2">{label}</p>
+      <p className={`text-sm font-medium ${getThemeClasses("text-secondary")} mb-2`}>{label}</p>
       <div className="flex flex-wrap gap-2">
         {error ? (
           <span className="text-red-600 text-sm">{error}</span>
@@ -164,7 +185,7 @@ function TagsDisplay({
             </Badge>
           ))
         ) : (
-          <span className="text-gray-400 text-sm">No tags selected</span>
+          <span className={`${getThemeClasses("text-muted")} text-sm`}>No tags selected</span>
         )}
       </div>
     </div>

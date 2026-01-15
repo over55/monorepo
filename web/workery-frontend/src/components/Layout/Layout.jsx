@@ -1,9 +1,12 @@
 // File Path: web/workery-frontend/src/components/Layout/Layout.jsx
-// Enhanced Responsive Layout Component with Unified Menu Controls
+// Enhanced Responsive Layout Component with UIX Theme Support
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import TopNavbar from "./TopNavbar";
 import Sidebar from "./Sidebar";
+import { useInactivityTimeout } from "../../hooks/useInactivityTimeout";
+import { useAccountManager } from "../../services/Services";
+import { useUIXTheme } from "../UIX/themes/useUIXTheme";
 
 function Layout({ children }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -14,6 +17,34 @@ function Layout({ children }) {
   const [isAndroid, setIsAndroid] = useState(false);
   const [iosKeyboardHeight, setIosKeyboardHeight] = useState(0);
   const [androidKeyboardVisible, setAndroidKeyboardVisible] = useState(false);
+
+  const accountManager = useAccountManager();
+  const { switchTheme, getThemeClasses } = useUIXTheme();
+
+  // Initialize inactivity timeout - auto-logout after 15 minutes of inactivity
+  useInactivityTimeout(15 * 60 * 1000, true);
+
+  // Load user's theme preference on mount
+  useEffect(() => {
+    const loadThemePreference = async () => {
+      try {
+        const userProfile = await accountManager.getAccountDetail();
+        if (userProfile?.themePreference) {
+          if (import.meta.env.DEV) {
+            console.log("Layout: Applying user's saved theme preference:", userProfile.themePreference);
+          }
+          switchTheme(userProfile.themePreference);
+        }
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          console.error("Layout: Failed to load theme preference:", error);
+        }
+      }
+    };
+
+    loadThemePreference();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // iOS detection function
   const detectIOS = () => {
@@ -28,8 +59,8 @@ function Layout({ children }) {
     return /Android/.test(navigator.userAgent);
   };
 
-  // Enhanced device detection with iOS and Android support
-  const updateDeviceType = () => {
+  // Enhanced device detection with iOS and Android support (memoized)
+  const updateDeviceType = useCallback(() => {
     const width = window.innerWidth;
     const mobile = width < 768;
     const tablet = width >= 768 && width < 1024;
@@ -42,7 +73,7 @@ function Layout({ children }) {
     setIsAndroid(android);
 
     return { mobile, tablet, ios, android };
-  };
+  }, []);
 
   // Check localStorage for sidebar collapsed state
   useEffect(() => {
@@ -52,22 +83,19 @@ function Layout({ children }) {
     if (savedState === "true" && !mobile) {
       setSidebarCollapsed(true);
     }
-  }, []);
+  }, [updateDeviceType]);
 
   // iOS-specific optimizations
   useEffect(() => {
     if (!isIOS) return;
 
-    // Fix iOS viewport height issues
     const setIOSViewportHeight = () => {
       const vh = window.innerHeight * 0.01;
       document.documentElement.style.setProperty("--vh", `${vh}px`);
     };
 
-    // iOS keyboard handling
     const handleIOSKeyboard = () => {
-      const initialViewport =
-        window.visualViewport?.height || window.innerHeight;
+      const initialViewport = window.visualViewport?.height || window.innerHeight;
 
       const onViewportChange = () => {
         if (window.visualViewport) {
@@ -79,22 +107,18 @@ function Layout({ children }) {
 
       if (window.visualViewport) {
         window.visualViewport.addEventListener("resize", onViewportChange);
-        return () =>
-          window.visualViewport.removeEventListener("resize", onViewportChange);
+        return () => window.visualViewport.removeEventListener("resize", onViewportChange);
       }
     };
 
-    // Prevent iOS bounce/overscroll
     const preventBounce = (e) => {
       if (e.target.closest(".sidebar-content, .main-content")) return;
       e.preventDefault();
     };
 
-    // Apply iOS fixes
     setIOSViewportHeight();
     const keyboardCleanup = handleIOSKeyboard();
 
-    // Prevent zoom on double tap
     let lastTouchEnd = 0;
     const preventZoom = (e) => {
       const now = Date.now();
@@ -104,7 +128,6 @@ function Layout({ children }) {
       lastTouchEnd = now;
     };
 
-    // Add event listeners
     window.addEventListener("resize", setIOSViewportHeight);
     document.addEventListener("touchend", preventZoom, { passive: false });
     document.addEventListener("touchmove", preventBounce, { passive: false });
@@ -121,14 +144,11 @@ function Layout({ children }) {
   useEffect(() => {
     if (!isAndroid) return;
 
-    // Android viewport height fixes for Chrome Mobile
     const setAndroidViewportHeight = () => {
-      // Chrome on Android has dynamic toolbar behavior
       const vh = window.innerHeight * 0.01;
       document.documentElement.style.setProperty("--android-vh", `${vh}px`);
     };
 
-    // Android keyboard detection (different approach than iOS)
     const handleAndroidKeyboard = () => {
       const initialHeight = window.innerHeight;
       let resizeTimer;
@@ -138,14 +158,10 @@ function Layout({ children }) {
         resizeTimer = setTimeout(() => {
           const currentHeight = window.innerHeight;
           const heightDifference = initialHeight - currentHeight;
-
-          // Android keyboard typically reduces viewport by 150px+
           const keyboardVisible = heightDifference > 150;
           setAndroidKeyboardVisible(keyboardVisible);
-
-          // Update viewport height
           setAndroidViewportHeight();
-        }, 100); // Debounce for performance
+        }, 100);
       };
 
       window.addEventListener("resize", onResize);
@@ -155,14 +171,10 @@ function Layout({ children }) {
       };
     };
 
-    // Android Chrome scroll behavior optimization
     const optimizeAndroidScroll = () => {
-      // Prevent overscroll in Android Chrome
       const preventOverscroll = (e) => {
         const target = e.target;
-        const scrollableParent = target.closest(
-          ".scrollable, .main-content, .sidebar-content",
-        );
+        const scrollableParent = target.closest(".scrollable, .main-content, .sidebar-content");
 
         if (!scrollableParent) {
           e.preventDefault();
@@ -178,9 +190,7 @@ function Layout({ children }) {
         }
       };
 
-      // Android-specific touch optimizations
       const optimizeTouch = () => {
-        // Improve scrolling performance on Android
         document.body.style.touchAction = "pan-y";
         document.body.style.overscrollBehavior = "none";
       };
@@ -193,7 +203,6 @@ function Layout({ children }) {
       };
     };
 
-    // Apply Android fixes
     setAndroidViewportHeight();
     const keyboardCleanup = handleAndroidKeyboard();
     const scrollCleanup = optimizeAndroidScroll();
@@ -212,71 +221,75 @@ function Layout({ children }) {
     };
 
     window.addEventListener("storage", handleStorageChange);
-    // Also listen for custom event for same-tab updates
     window.addEventListener("sidebarCollapsedChanged", handleStorageChange);
 
     return () => {
       window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener(
-        "sidebarCollapsedChanged",
-        handleStorageChange,
-      );
+      window.removeEventListener("sidebarCollapsedChanged", handleStorageChange);
     };
   }, []);
 
-  // Enhanced resize handler with iOS and Android detection
+  // Resize handler with proper dependencies
   useEffect(() => {
     const handleResize = () => {
-      const { mobile, ios, android } = updateDeviceType();
+      const width = window.innerWidth;
+      const wasMobile = isMobile;
+      const mobile = width < 768;
+      const tablet = width >= 768 && width < 1024;
 
-      // Close sidebar when switching to mobile
-      if (mobile && isSidebarOpen) {
-        setIsSidebarOpen(false);
-      }
+      setIsMobile(mobile);
+      setIsTablet(tablet);
+      setIsIOS(detectIOS());
+      setIsAndroid(detectAndroid());
 
-      // Reset collapsed state on mobile
-      if (mobile) {
+      setIsSidebarOpen(currentIsOpen => {
+        if (!wasMobile && mobile && currentIsOpen) {
+          return false;
+        }
+        return currentIsOpen;
+      });
+
+      if (!wasMobile && mobile) {
         setSidebarCollapsed(false);
       }
     };
 
-    // Set initial state
     handleResize();
-
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, [isSidebarOpen]);
+  }, [isMobile]);
 
-  const handleMenuToggle = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
+  const handleMenuToggle = useCallback(() => {
+    setIsSidebarOpen(current => !current);
+  }, []);
 
-  const handleSidebarClose = () => {
+  const handleSidebarClose = useCallback(() => {
     setIsSidebarOpen(false);
-  };
+  }, []);
 
-  // Handle collapse toggle for desktop view
-  const handleCollapseToggle = () => {
-    const newCollapsedState = !sidebarCollapsed;
-    setSidebarCollapsed(newCollapsedState);
-    localStorage.setItem("sidebarCollapsed", newCollapsedState.toString());
-    window.dispatchEvent(new Event("sidebarCollapsedChanged"));
-  };
+  const handleProfileDropdownOpen = useCallback(() => {
+    if (isMobile || isTablet) {
+      setIsSidebarOpen(false);
+    }
+  }, [isMobile, isTablet]);
 
-  // Calculate sidebar margins based on device type and state
+  const handleCollapseToggle = useCallback(() => {
+    setSidebarCollapsed(current => {
+      const newCollapsedState = !current;
+      localStorage.setItem("sidebarCollapsed", newCollapsedState.toString());
+      window.dispatchEvent(new Event("sidebarCollapsedChanged"));
+      return newCollapsedState;
+    });
+  }, []);
+
   const getSidebarMargin = () => {
     if (isMobile) return "";
-
     if (isTablet) {
-      // Tablet: smaller sidebar widths
       return sidebarCollapsed ? "ml-12" : "ml-48";
     }
-
-    // Desktop: full sidebar widths
     return sidebarCollapsed ? "ml-16" : "ml-64";
   };
 
-  // Calculate responsive padding based on device
   const getContentPadding = () => {
     if (isMobile) {
       return "px-3 sm:px-4 py-4";
@@ -284,14 +297,13 @@ function Layout({ children }) {
     if (isTablet) {
       return "px-4 md:px-6 py-5";
     }
-    // Desktop and larger screens
     return "px-4 sm:px-6 lg:px-8 py-6";
   };
 
   return (
     <div
       className={`
-        min-h-screen bg-gray-50
+        min-h-screen ${getThemeClasses('bg-page')}
         ${isIOS ? "ios-layout" : ""}
         ${isAndroid ? "android-layout" : ""}
       `}
@@ -313,7 +325,6 @@ function Layout({ children }) {
         }),
       }}
     >
-      {/* Top Navigation Bar - Enhanced with collapse controls */}
       <TopNavbar
         onMenuToggle={handleMenuToggle}
         isMobile={isMobile}
@@ -323,9 +334,9 @@ function Layout({ children }) {
         isSidebarOpen={isSidebarOpen}
         sidebarCollapsed={sidebarCollapsed}
         onCollapseToggle={handleCollapseToggle}
+        onProfileDropdownOpen={handleProfileDropdownOpen}
       />
 
-      {/* Sidebar - Simplified without header */}
       <Sidebar
         isOpen={isSidebarOpen}
         onClose={handleSidebarClose}
@@ -337,7 +348,6 @@ function Layout({ children }) {
         isAndroid={isAndroid}
       />
 
-      {/* Main Content Area - iOS keyboard aware and Android optimized */}
       <main
         className={`
           pt-[60px] transition-all duration-300 ease-in-out
@@ -347,10 +357,9 @@ function Layout({ children }) {
         `}
         style={{
           ...(isIOS && {
-            minHeight:
-              iosKeyboardHeight > 0
-                ? `calc(var(--vh, 1vh) * 100 - 60px - ${iosKeyboardHeight}px)`
-                : "calc(var(--vh, 1vh) * 100 - 60px)",
+            minHeight: iosKeyboardHeight > 0
+              ? `calc(var(--vh, 1vh) * 100 - 60px - ${iosKeyboardHeight}px)`
+              : "calc(var(--vh, 1vh) * 100 - 60px)",
             WebkitOverflowScrolling: "touch",
             overflowY: "auto",
           }),
@@ -363,20 +372,17 @@ function Layout({ children }) {
             touchAction: "pan-y",
             overscrollBehavior: "contain",
           }),
-          ...(!isIOS &&
-            !isAndroid && {
-              minHeight: "calc(100vh - 60px)",
-            }),
+          ...(!isIOS && !isAndroid && {
+            minHeight: "calc(100vh - 60px)",
+          }),
         }}
       >
-        {/* Responsive margin based on device and sidebar state */}
         <div
           className={`
             transition-all duration-300 ease-in-out
             ${getSidebarMargin()}
           `}
         >
-          {/* Content Container with iOS and Android optimizations */}
           <div
             className={`
             ${getContentPadding()}
@@ -386,25 +392,21 @@ function Layout({ children }) {
             ${isMobile ? "min-h-[calc(100vh-120px)]" : "min-h-[calc(100vh-80px)]"}
           `}
             style={{
-              ...(isIOS &&
-                isMobile && {
-                  minHeight:
-                    iosKeyboardHeight > 0
-                      ? `calc(var(--vh, 1vh) * 100 - 180px - ${iosKeyboardHeight}px)`
-                      : "calc(var(--vh, 1vh) * 100 - 120px)",
-                  touchAction: "pan-y",
-                }),
-              ...(isAndroid &&
-                isMobile && {
-                  minHeight: androidKeyboardVisible
-                    ? "calc(var(--android-vh, 1vh) * 40)"
-                    : "calc(var(--android-vh, 1vh) * 100 - 120px)",
-                  touchAction: "pan-y",
-                  overscrollBehavior: "contain",
-                }),
+              ...(isIOS && isMobile && {
+                minHeight: iosKeyboardHeight > 0
+                  ? `calc(var(--vh, 1vh) * 100 - 180px - ${iosKeyboardHeight}px)`
+                  : "calc(var(--vh, 1vh) * 100 - 120px)",
+                touchAction: "pan-y",
+              }),
+              ...(isAndroid && isMobile && {
+                minHeight: androidKeyboardVisible
+                  ? "calc(var(--android-vh, 1vh) * 40)"
+                  : "calc(var(--android-vh, 1vh) * 100 - 120px)",
+                touchAction: "pan-y",
+                overscrollBehavior: "contain",
+              }),
             }}
           >
-            {/* Responsive container for content */}
             <div
               className={`
               w-full
@@ -418,19 +420,8 @@ function Layout({ children }) {
         </div>
       </main>
 
-      {/* Mobile overlay when sidebar is open */}
-      {isMobile && isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity duration-300"
-          onClick={handleSidebarClose}
-          aria-label="Close sidebar"
-        />
-      )}
-
-      {/* iOS and Android specific styles */}
       {(isIOS || isAndroid) && (
         <style>{`
-          /* iOS Optimizations */
           .ios-layout {
             -webkit-user-select: none;
             -webkit-touch-callout: none;
@@ -455,7 +446,6 @@ function Layout({ children }) {
             }
           }
 
-          /* Android Optimizations */
           .android-layout {
             -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
             -webkit-font-smoothing: antialiased;
@@ -475,7 +465,6 @@ function Layout({ children }) {
             transform: translateZ(0);
           }
 
-          /* Android Chrome specific fixes */
           @media screen and (-webkit-device-pixel-ratio: 1) {
             .android-layout {
               -webkit-transform: translateZ(0);
@@ -483,26 +472,22 @@ function Layout({ children }) {
             }
           }
 
-          /* Android keyboard adjustments */
           .android-layout.keyboard-visible {
             height: auto !important;
             min-height: auto !important;
           }
 
-          /* Improve Android scroll performance */
           .android-layout .scrollable {
             -webkit-overflow-scrolling: touch;
             transform: translateZ(0);
             will-change: scroll-position;
           }
 
-          /* Android-specific button optimizations */
           .android-layout button {
             -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1);
             touch-action: manipulation;
           }
 
-          /* Android Chrome address bar handling */
           @media screen and (max-width: 768px) {
             .android-layout {
               height: 100vh;

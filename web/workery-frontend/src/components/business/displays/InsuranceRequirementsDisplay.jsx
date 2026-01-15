@@ -1,8 +1,8 @@
-// File Path: monorepo/web/workery-frontend/src/components/business/displays/InsuranceRequirementsDisplay.jsx
+// File Path: monorepo/web/frontend/src/components/business/displays/InsuranceRequirementsDisplay.jsx
 
 import React, { useState, useEffect } from "react";
 import { useInsuranceRequirementManager } from "../../../services/Services";
-import { Badge, Loading } from "../../UI";
+import { Badge, Loading, useUIXTheme } from "../../UIX";
 
 /**
  * Display component for multiple selected insurance requirements
@@ -25,18 +25,21 @@ function InsuranceRequirementsDisplay({
   const [displayRequirements, setDisplayRequirements] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { getThemeClasses } = useUIXTheme();
 
   useEffect(() => {
     let mounted = true;
 
     const fetchDisplayValues = async () => {
       // Debug logging
-      console.log("InsuranceRequirementsDisplay - values received:", values);
-      console.log("InsuranceRequirementsDisplay - values type:", typeof values);
-      console.log(
-        "InsuranceRequirementsDisplay - is array?:",
-        Array.isArray(values),
-      );
+      if (import.meta.env.DEV) {
+        console.log("InsuranceRequirementsDisplay - values received:", values);
+        console.log("InsuranceRequirementsDisplay - values type:", typeof values);
+        console.log(
+          "InsuranceRequirementsDisplay - is array?:",
+          Array.isArray(values),
+        );
+      }
 
       // Handle null, undefined, or empty cases
       if (
@@ -46,7 +49,9 @@ function InsuranceRequirementsDisplay({
         values === null ||
         values === undefined
       ) {
-        console.log("InsuranceRequirementsDisplay - No values to display");
+        if (import.meta.env.DEV) {
+          console.log("InsuranceRequirementsDisplay - No values to display");
+        }
         setDisplayRequirements([]);
         return;
       }
@@ -60,10 +65,12 @@ function InsuranceRequirementsDisplay({
           v !== null && v !== undefined && v !== "" && v !== 0 && v !== "0",
       );
 
-      console.log(
-        "InsuranceRequirementsDisplay - filtered values:",
-        filteredValues,
-      );
+      if (import.meta.env.DEV) {
+        console.log(
+          "InsuranceRequirementsDisplay - filtered values:",
+          filteredValues,
+        );
+      }
 
       if (filteredValues.length === 0) {
         setDisplayRequirements([]);
@@ -80,7 +87,9 @@ function InsuranceRequirementsDisplay({
             onUnauthorized,
           );
 
-        console.log("InsuranceRequirementsDisplay - fetched options:", options);
+        if (import.meta.env.DEV) {
+          console.log("InsuranceRequirementsDisplay - fetched options:", options);
+        }
 
         if (mounted && options) {
           // Map the IDs to their labels
@@ -95,10 +104,12 @@ function InsuranceRequirementsDisplay({
                 return optionId === requirementIdStr;
               });
 
-              console.log(
-                `InsuranceRequirementsDisplay - Mapping requirement ID ${requirementId}:`,
-                matchingOption,
-              );
+              if (import.meta.env.DEV) {
+                console.log(
+                  `InsuranceRequirementsDisplay - Mapping requirement ID ${requirementId}:`,
+                  matchingOption,
+                );
+              }
 
               if (matchingOption) {
                 return {
@@ -111,9 +122,11 @@ function InsuranceRequirementsDisplay({
               } else {
                 // Only show unknown if we have a valid ID
                 if (requirementIdStr && requirementIdStr !== "undefined") {
-                  console.warn(
-                    `InsuranceRequirementsDisplay - No match found for requirement ID: ${requirementId}`,
-                  );
+                  if (import.meta.env.DEV) {
+                    console.warn(
+                      `InsuranceRequirementsDisplay - No match found for requirement ID: ${requirementId}`,
+                    );
+                  }
                   return {
                     id: requirementId,
                     label: `Unknown (ID: ${requirementId})`,
@@ -124,14 +137,18 @@ function InsuranceRequirementsDisplay({
             })
             .filter(Boolean); // Remove any null values
 
-          console.log(
-            "InsuranceRequirementsDisplay - mapped requirements:",
-            mappedRequirements,
-          );
+          if (import.meta.env.DEV) {
+            console.log(
+              "InsuranceRequirementsDisplay - mapped requirements:",
+              mappedRequirements,
+            );
+          }
           setDisplayRequirements(mappedRequirements);
         }
       } catch (error) {
-        console.error("Error fetching insurance requirement options:", error);
+        if (import.meta.env.DEV) {
+          console.error("Error fetching insurance requirement options:", error);
+        }
         if (mounted) {
           setError("Failed to load insurance requirements");
           // Fallback to showing IDs only if we have valid values
@@ -153,12 +170,13 @@ function InsuranceRequirementsDisplay({
     return () => {
       mounted = false;
     };
-  }, [JSON.stringify(values), onUnauthorized]); // Use stringified values to detect array changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- insuranceRequirementManager is a stable singleton from DI container; values is serialized for deep comparison of arrays
+  }, [JSON.stringify(values), onUnauthorized]);
 
   if (isLoading) {
     return (
       <div className={`mb-4 ${className}`}>
-        <p className="text-sm font-medium text-gray-700 mb-2">{label}</p>
+        <p className={`text-sm font-medium ${getThemeClasses("text-secondary")} mb-2`}>{label}</p>
         <div className="flex items-center">
           <Loading size="sm" text="Loading insurance requirements..." />
         </div>
@@ -168,7 +186,7 @@ function InsuranceRequirementsDisplay({
 
   return (
     <div className={`mb-4 ${className}`}>
-      <p className="text-sm font-medium text-gray-700 mb-2">{label}</p>
+      <p className={`text-sm font-medium ${getThemeClasses("text-secondary")} mb-2`}>{label}</p>
       <div className="flex flex-wrap gap-2">
         {error ? (
           <span className="text-red-600 text-sm">{error}</span>
@@ -179,7 +197,7 @@ function InsuranceRequirementsDisplay({
             </Badge>
           ))
         ) : (
-          <span className="text-gray-400 text-sm">
+          <span className={`${getThemeClasses("text-muted")} text-sm`}>
             No insurance requirements selected
           </span>
         )}

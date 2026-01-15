@@ -1,415 +1,159 @@
 // File Path: web/workery-frontend/src/pages/Admin/Customer/Detail/More/Unarchive/Page.jsx
+// UIX Upgraded - Uses EntityActionConfirmationPage whole page component
+// @uix-page: AdminCustomerDetailMoreUnarchivePage
 
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import React, { useCallback } from "react";
+import { useParams } from "react-router";
 import {
   ChartBarIcon,
-  UserGroupIcon,
-  ArchiveBoxXMarkIcon,
-  ChevronLeftIcon,
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
-  XMarkIcon,
-  EllipsisHorizontalIcon,
   UserIcon,
+  ArchiveBoxXMarkIcon,
+  ExclamationTriangleIcon,
+  EllipsisHorizontalIcon,
+  EnvelopeIcon,
+  PhoneIcon,
+  InformationCircleIcon,
 } from "@heroicons/react/24/outline";
-import {
-  useCustomerManager,
-  useAuthManager,
-} from "../../../../../../services/Services";
+import { useCustomerManager } from "../../../../../../services/Services";
+import { EntityActionConfirmationPage, UIXThemeProvider } from "../../../../../../components/UIX";
 
 function AdminCustomerDetailMoreUnarchivePage() {
   const { cid } = useParams();
   const customerManager = useCustomerManager();
-  const authManager = useAuthManager();
-  const navigate = useNavigate();
 
-  // State management
-  const [customer, setCustomer] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(null);
-  const [confirmationText, setConfirmationText] = useState("");
-  const [showSuccess, setShowSuccess] = useState(false);
+  // Fetch entity function
+  const fetchEntity = useCallback(
+    async (entityId, onSuccess, onError, onDone, onUnauthorized) => {
+      try {
+        const data = await customerManager.getCustomerDetail(entityId, onUnauthorized);
+        onSuccess(data);
+      } catch (error) {
+        onError(error);
+      } finally {
+        onDone();
+      }
+    },
+    [customerManager],
+  );
 
-  // Handle unauthorized access
-  const onUnauthorized = () => {
-    navigate("/login?unauthorized=true");
+  // Execute action function (unarchive)
+  const executeAction = useCallback(
+    async (entityId, onSuccess, onError, onDone, onUnauthorized) => {
+      try {
+        await customerManager.archiveCustomer(entityId, onUnauthorized);
+        onSuccess();
+      } catch (error) {
+        onError(error);
+      } finally {
+        onDone();
+      }
+    },
+    [customerManager],
+  );
+
+  // Breadcrumb items
+  const breadcrumbItems = [
+    { label: "Dashboard", to: "/admin/dashboard", icon: ChartBarIcon },
+    { label: "Customers", to: "/admin/customers", icon: UserIcon },
+    { label: "Detail", to: `/admin/customer/${cid}`, icon: InformationCircleIcon },
+    { label: "More", to: `/admin/customer/${cid}/more`, icon: EllipsisHorizontalIcon },
+    { label: "Unarchive", icon: ArchiveBoxXMarkIcon, isActive: true },
+  ];
+
+  // Page configuration
+  const pageConfig = {
+    title: "Unarchive Customer",
+    subtitle: "Restore this customer from archive",
+    icon: ArchiveBoxXMarkIcon,
+    actionIcon: ArchiveBoxXMarkIcon,
+    loadingText: "Loading customer details...",
   };
 
-  // Fetch customer data
-  const fetchCustomer = async () => {
-    if (!cid) return;
-
-    if (!authManager.isAuthenticated()) {
-      navigate("/login");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      // Using callback-based approach from original code
-      await customerManager.getCustomerDetailWithCallbacks(
-        cid,
-        (customerData) => {
-          // Check if customer is actually archived
-          if (customerData.status !== 2) {
-            setError("This customer is not archived and cannot be unarchived.");
-          }
-          setCustomer(customerData);
-        },
-        (errorData) => {
-          console.error("Failed to fetch customer:", errorData);
-          setError("Failed to load customer details. Please try again.");
-        },
-        () => {
-          setLoading(false);
-        },
-        onUnauthorized,
-      );
-    } catch (err) {
-      console.error("Failed to fetch customer:", err);
-      setError("Failed to load customer details. Please try again.");
-      setLoading(false);
-    }
+  // Warning configuration
+  const warningConfig = {
+    title: "Unarchive Customer - Are you sure?",
+    description: "You are about to unarchive this customer. This means:",
+    consequences: [
+      "This customer will become active again",
+      "They will be able to access the system",
+      "They will appear in active customer searches",
+      "All previous settings and permissions will be restored",
+      "They will be able to create new work orders",
+    ],
+    confirmationText: "Are you sure you would like to continue?",
+    warningType: "amber",
   };
 
-  // Handle unarchive submission
-  const handleUnarchive = async () => {
-    if (confirmationText !== "UNARCHIVE") {
-      setError("Please type UNARCHIVE to confirm this action.");
-      return;
-    }
-
-    setSubmitting(true);
-    setError(null);
-
-    try {
-      // Using callback-based approach for consistency with original code
-      // Note: The same archiveCustomer API is used, which toggles the archive status
-      await customerManager.archiveCustomerWithCallbacks(
-        cid,
-        (response) => {
-          // Success callback
-          setShowSuccess(true);
-
-          // Redirect after showing success message
-          setTimeout(() => {
-            navigate("/admin/customers");
-          }, 2000);
-        },
-        (errorData) => {
-          // Error callback
-          console.error("Failed to unarchive customer:", errorData);
-          const errorMessage =
-            typeof errorData === "object" && errorData.general
-              ? errorData.general
-              : "Failed to unarchive customer. Please try again.";
-          setError(errorMessage);
-          setSubmitting(false);
-        },
-        () => {
-          // Done callback
-          if (!showSuccess) {
-            setSubmitting(false);
-          }
-        },
-        onUnauthorized,
-      );
-    } catch (err) {
-      console.error("Failed to unarchive customer:", err);
-      setError("Failed to unarchive customer. Please try again.");
-      setSubmitting(false);
-    }
-  };
-
-  // Initial data load
-  useEffect(() => {
-    window.scrollTo(0, 0);
-    fetchCustomer();
-  }, [cid]);
-
-  if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading customer details...</p>
+  // Render entity information
+  const renderEntityInfo = useCallback(
+    (customer) => (
+      <div className="bg-gray-50 rounded-lg p-6 mb-6">
+        <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <UserIcon className="w-5 h-5 mr-2 text-gray-600" />
+          Customer Information
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex items-center">
+            <span className="font-medium text-gray-700 mr-2">Name:</span>
+            <span className="text-gray-900">
+              {customer.name || `${customer.firstName} ${customer.lastName}`}
+            </span>
+          </div>
+          <div className="flex items-center">
+            <span className="font-medium text-gray-700 mr-2">Current Status:</span>
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+              <ArchiveBoxXMarkIcon className="w-3 h-3 mr-1" />
+              Archived
+            </span>
+          </div>
+          <div className="flex items-center">
+            <EnvelopeIcon className="w-4 h-4 mr-2 text-gray-400" />
+            <span className="font-medium text-gray-700 mr-2">Email:</span>
+            <span className="text-gray-900">{customer.email || "-"}</span>
+          </div>
+          <div className="flex items-center">
+            <PhoneIcon className="w-4 h-4 mr-2 text-gray-400" />
+            <span className="font-medium text-gray-700 mr-2">Phone:</span>
+            <span className="text-gray-900">{customer.phone || "-"}</span>
           </div>
         </div>
       </div>
-    );
-  }
+    ),
+    [],
+  );
+
+  // Status alerts
+  const statusAlerts = [
+    {
+      condition: (entity) => entity?.status !== 2,
+      type: "warning",
+      message: "This customer is not archived and cannot be unarchived.",
+      icon: ExclamationTriangleIcon,
+    },
+  ];
+
+  // Check if action is disabled (only allow if customer is archived - status 2)
+  const isActionDisabled = useCallback((entity) => entity?.status !== 2, []);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      {/* Breadcrumb */}
-      <nav className="flex mb-6" aria-label="Breadcrumb">
-        <ol className="inline-flex items-center space-x-1 md:space-x-3">
-          <li className="inline-flex items-center">
-            <Link
-              to="/admin/dashboard"
-              className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
-            >
-              <ChartBarIcon className="w-4 h-4 mr-2" />
-              Dashboard
-            </Link>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <Link
-                to="/admin/customers"
-                className="text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                <span className="inline-flex items-center">
-                  <UserIcon className="w-4 h-4 mr-2" />
-                  Customers
-                </span>
-              </Link>
-            </div>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <Link
-                to={`/admin/customer/${cid}/detail`}
-                className="text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                Detail
-              </Link>
-            </div>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <Link
-                to={`/admin/customer/${cid}/more`}
-                className="text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                <span className="inline-flex items-center">
-                  <EllipsisHorizontalIcon className="w-4 h-4 mr-2" />
-                  More
-                </span>
-              </Link>
-            </div>
-          </li>
-          <li aria-current="page">
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <span className="text-sm font-medium text-gray-500 inline-flex items-center">
-                <ArchiveBoxXMarkIcon className="w-4 h-4 mr-2" />
-                Unarchive
-              </span>
-            </div>
-          </li>
-        </ol>
-      </nav>
-
-      {/* Page Title */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center">
-              <ArchiveBoxXMarkIcon className="w-6 h-6 md:w-8 md:h-8 mr-3 text-blue-600" />
-              Unarchive Customer
-            </h1>
-            <p className="mt-1 text-sm text-gray-600 flex items-center">
-              <ExclamationTriangleIcon className="w-4 h-4 mr-1" />
-              Restore this customer from archive
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Success Alert */}
-      {showSuccess && (
-        <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center">
-          <CheckCircleIcon className="w-5 h-5 mr-2" />
-          Customer successfully unarchived! Redirecting...
-        </div>
-      )}
-
-      {/* Error Display */}
-      {error && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-          <div className="flex justify-between items-center">
-            <span className="flex items-center">
-              <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
-              {error}
-            </span>
-            <button
-              onClick={() => setError(null)}
-              className="text-red-700 hover:text-red-900"
-            >
-              <XMarkIcon className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-        {customer && (
-          <>
-            {/* Content Section */}
-            <div className="px-4 sm:px-6 py-6">
-              {/* Additional Status Warnings */}
-              {customer.isBanned && (
-                <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center">
-                  <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
-                  This customer is currently banned
-                </div>
-              )}
-
-              {/* Warning Message */}
-              <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-4">
-                <div className="flex">
-                  <ExclamationTriangleIcon className="w-5 h-5 text-amber-600 mr-3 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <h3 className="text-sm font-medium text-amber-900 mb-2">
-                      Important: Unarchiving Consequences
-                    </h3>
-                    <ul className="text-sm text-amber-700 space-y-1 list-disc list-inside">
-                      <li>This customer will become active again</li>
-                      <li>They will be able to create new work orders</li>
-                      <li>They will appear in active customer searches</li>
-                      <li>All previous settings and data will be restored</li>
-                      <li>They will exist in the list again</li>
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-              {/* Customer Information */}
-              <div className="mb-6 bg-gray-50 rounded-lg p-4">
-                <h3 className="text-lg font-medium text-gray-900 mb-3">
-                  Customer Information
-                </h3>
-                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Name</dt>
-                    <dd className="mt-1 text-sm text-gray-900">
-                      {customer.name ||
-                        `${customer.firstName || ""} ${customer.lastName || ""}`.trim() ||
-                        "-"}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Email</dt>
-                    <dd className="mt-1 text-sm text-gray-900">
-                      {customer.email || "-"}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">Phone</dt>
-                    <dd className="mt-1 text-sm text-gray-900">
-                      {customer.phone || "-"}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-sm font-medium text-gray-500">
-                      Current Status
-                    </dt>
-                    <dd className="mt-1">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        <ArchiveBoxXMarkIcon className="w-3 h-3 mr-1" />
-                        Archived
-                      </span>
-                    </dd>
-                  </div>
-                </dl>
-              </div>
-
-              {/* Confirmation Section */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Type{" "}
-                  <span className="font-mono bg-gray-100 px-2 py-1 rounded">
-                    UNARCHIVE
-                  </span>{" "}
-                  to confirm
-                </label>
-                <input
-                  type="text"
-                  value={confirmationText}
-                  onChange={(e) => setConfirmationText(e.target.value)}
-                  placeholder="Type UNARCHIVE here"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  disabled={submitting}
-                />
-                <p className="mt-2 text-sm text-gray-500">
-                  This action will restore the customer to active status and
-                  make them visible again.
-                </p>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={handleUnarchive}
-                  disabled={submitting || confirmationText !== "UNARCHIVE"}
-                  className={`flex-1 sm:flex-none inline-flex items-center justify-center px-6 py-3 border rounded-lg text-base font-medium transition-colors ${
-                    submitting || confirmationText !== "UNARCHIVE"
-                      ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                      : "border-transparent text-white bg-green-600 hover:bg-green-700"
-                  }`}
-                >
-                  {submitting ? (
-                    <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                      Unarchiving...
-                    </>
-                  ) : (
-                    <>
-                      <ArchiveBoxXMarkIcon className="w-5 h-5 mr-2" />
-                      Unarchive Customer
-                    </>
-                  )}
-                </button>
-
-                <Link
-                  to={`/admin/customer/${cid}/more`}
-                  className="flex-1 sm:flex-none"
-                >
-                  <button
-                    disabled={submitting}
-                    className="w-full inline-flex items-center justify-center px-6 py-3 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <XMarkIcon className="w-5 h-5 mr-2" />
-                    Cancel
-                  </button>
-                </Link>
-              </div>
-            </div>
-          </>
-        )}
-
-        {!customer && !loading && (
-          <div className="px-6 py-16 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
-              <UserIcon className="w-8 h-8 text-gray-400" />
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Customer Not Found
-            </h3>
-            <p className="text-gray-500 mb-6">
-              The customer you're looking for doesn't exist or you don't have
-              permission to view it.
-            </p>
-            <Link to="/admin/customers">
-              <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-                <ChevronLeftIcon className="w-4 h-4 mr-2" />
-                Back to Customers
-              </button>
-            </Link>
-          </div>
-        )}
-      </div>
-    </div>
+    <UIXThemeProvider>
+      <EntityActionConfirmationPage
+        entityType="customer"
+        entityId={cid}
+        actionType="unarchive"
+        fetchEntity={fetchEntity}
+        executeAction={executeAction}
+        breadcrumbItems={breadcrumbItems}
+        pageConfig={pageConfig}
+        renderEntityInfo={renderEntityInfo}
+        warningConfig={warningConfig}
+        statusAlerts={statusAlerts}
+        isActionDisabled={isActionDisabled}
+        returnPath={`/admin/customer/${cid}/more`}
+        successRedirectPath={`/admin/customer/${cid}/detail`}
+        successRedirectDelay={2000}
+      />
+    </UIXThemeProvider>
   );
 }
 

@@ -1,4 +1,4 @@
-// File Path: monorepo/web/workery-frontend/src/components/business/displays/index.js
+// File Path: monorepo/web/frontend/src/components/business/displays/index.js
 
 export { default as HowHearAboutUsDisplay } from "./HowHearAboutUsDisplay";
 export { default as TagsDisplay } from "./TagsDisplay";

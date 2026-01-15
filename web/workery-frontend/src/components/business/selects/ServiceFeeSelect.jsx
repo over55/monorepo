@@ -1,7 +1,7 @@
-// File: monorepo/web/workery-frontend/src/components/business/selects/ServiceFeeSelect.jsx
+// File: monorepo/web/frontend/src/components/business/selects/ServiceFeeSelect.jsx
 
 import React, { useState, useEffect } from "react";
-import { Select, FormGroup, Loading } from "../../UI";
+import { Select, FormGroup, Loading, useUIXTheme } from "../../UIX";
 import { useServiceFeeManager } from "../../../services/Services";
 
 /**
@@ -33,10 +33,12 @@ function ServiceFeeSelect({
   placeholder = "Please select",
 }) {
   const serviceFeeManager = useServiceFeeManager();
+  const { getThemeClasses } = useUIXTheme();
   const [options, setOptions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
 
+  // Fetch options only once on mount (serviceFeeManager is stable)
   useEffect(() => {
     let mounted = true;
 
@@ -68,23 +70,11 @@ function ServiceFeeSelect({
             }));
 
           setOptions(validOptions);
-
-          // Check if current value is "Other" option after options are loaded
-          if (value && onOtherDetected) {
-            const selectedOption = validOptions.find(
-              (opt) => String(opt.value) === String(value),
-            );
-            if (
-              selectedOption &&
-              selectedOption.label &&
-              selectedOption.label.toLowerCase() === "other"
-            ) {
-              onOtherDetected(true);
-            }
-          }
         }
       } catch (error) {
-        console.error("Error fetching service fee options:", error);
+        if (import.meta.env.DEV) {
+          console.error("Error fetching service fee options:", error);
+        }
         if (mounted) {
           setFetchError(
             "Failed to load service fee options. Please try again.",
@@ -104,11 +94,29 @@ function ServiceFeeSelect({
     return () => {
       mounted = false;
     };
-  }, [onUnauthorized]);
+  }, [serviceFeeManager]);
 
-  const handleChange = (e) => {
-    const selectedValue = e.target.value;
+  // Check if current value is "Other" option when value or options change
+  useEffect(() => {
+    if (value && onOtherDetected && options.length > 0) {
+      const selectedOption = options.find(
+        (opt) => String(opt.value) === String(value),
+      );
+      if (selectedOption?.label?.toLowerCase() === "other") {
+        onOtherDetected(true);
+      }
+    }
+  }, [value, options, onOtherDetected]);
 
+  // Auto-select first option when options are loaded and no value is set
+  useEffect(() => {
+    if (options.length > 0 && !value && onChange) {
+      onChange(String(options[0].value));
+    }
+  }, [options, value, onChange]);
+
+  // Note: Select component passes the value directly to onChange, NOT the event
+  const handleChange = (selectedValue) => {
     // Check if "Other" was selected
     if (options.length > 0 && onOtherDetected) {
       const selectedOption = options.find(
@@ -132,16 +140,7 @@ function ServiceFeeSelect({
     return (
       <FormGroup label={label} required={required} className={className}>
         <div
-          style={{
-            padding: "10px",
-            border: "1px solid #ddd",
-            borderRadius: "4px",
-            backgroundColor: "#f9f9f9",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            minHeight: "42px",
-          }}
+          className={`p-2.5 border rounded ${getThemeClasses("border-secondary")} ${getThemeClasses("bg-disabled")} flex items-center justify-center min-h-[42px]`}
         >
           <Loading size="sm" text="Loading service fees..." />
         </div>
@@ -158,7 +157,7 @@ function ServiceFeeSelect({
       error={error || fetchError}
       disabled={disabled}
       required={required}
-      placeholder={placeholder}
+      placeholder=""
       helperText={helperText}
       className={className}
     />

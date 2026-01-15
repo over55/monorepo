@@ -54,6 +54,7 @@ function PlaceholderPage({ title, description }) {
 // Root/Executive pages
 import RootDashboardPage from "./pages/Root/Dashboard/Page";
 import RootTenantListPage from "./pages/Root/Tenant/List/Page";
+import RootTenantAddPage from "./pages/Root/Tenant/Add/Page";
 import RootTenantDetailPage from "./pages/Root/Tenant/Detail/Page";
 import RootTenantUpdatePage from "./pages/Root/Tenant/Update/Page";
 import ToTenantRedirector from "./pages/Root/ToTenant/Redirector";
@@ -70,14 +71,17 @@ import SettingVehicleTypeCreatePage from "./pages/Admin/Setting/VehicleType/Crea
 import SettingVehicleTypeListPage from "./pages/Admin/Setting/VehicleType/List/Page";
 import SettingVehicleTypeDetailPage from "./pages/Admin/Setting/VehicleType/Detail/Page";
 import SettingVehicleTypeUpdatePage from "./pages/Admin/Setting/VehicleType/Update/Page";
+import SettingVehicleTypeDeletePage from "./pages/Admin/Setting/VehicleType/Delete/Page";
 import SettingTagCreatePage from "./pages/Admin/Setting/Tag/Create/Page";
 import SettingTagListPage from "./pages/Admin/Setting/Tag/List/Page";
 import SettingTagDetailPage from "./pages/Admin/Setting/Tag/Detail/Page";
 import SettingTagUpdatePage from "./pages/Admin/Setting/Tag/Update/Page";
+import SettingTagDeletePage from "./pages/Admin/Setting/Tag/Delete/Page";
 import SettingSkillSetCreatePage from "./pages/Admin/Setting/SkillSet/Create/Page";
 import SettingSkillSetListPage from "./pages/Admin/Setting/SkillSet/List/Page";
 import SettingSkillSetDetailPage from "./pages/Admin/Setting/SkillSet/Detail/Page";
 import SettingSkillSetUpdatePage from "./pages/Admin/Setting/SkillSet/Update/Page";
+import SettingSkillSetDeletePage from "./pages/Admin/Setting/SkillSet/Delete/Page";
 import SettingServiceFeeCreatePage from "./pages/Admin/Setting/ServiceFee/Create/Page";
 import SettingServiceFeeListPage from "./pages/Admin/Setting/ServiceFee/List/Page";
 import SettingServiceFeeDetailPage from "./pages/Admin/Setting/ServiceFee/Detail/Page";
@@ -91,16 +95,20 @@ import SettingInsuranceRequirementCreatePage from "./pages/Admin/Setting/Insuran
 import SettingInsuranceRequirementListPage from "./pages/Admin/Setting/InsuranceRequirement/List/Page";
 import SettingInsuranceRequirementDetailPage from "./pages/Admin/Setting/InsuranceRequirement/Detail/Page";
 import SettingInsuranceRequirementUpdatePage from "./pages/Admin/Setting/InsuranceRequirement/Update/Page";
+import SettingInsuranceRequirementDeletePage from "./pages/Admin/Setting/InsuranceRequirement/Delete/Page";
 import SettingInactiveClientListPage from "./pages/Admin/Setting/InactiveClient/List/Page";
 import SettingInactiveClientUpdatePage from "./pages/Admin/Setting/InactiveClient/Update/Page";
+import SettingTaxPage from "./pages/Admin/Setting/Tax/Page";
 import SettingHowHearAboutUsItemCreatePage from "./pages/Admin/Setting/HowHearAboutUsItem/Create/Page";
 import SettingHowHearAboutUsItemListPage from "./pages/Admin/Setting/HowHearAboutUsItem/List/Page";
 import SettingHowHearAboutUsItemDetailPage from "./pages/Admin/Setting/HowHearAboutUsItem/Detail/Page";
 import SettingHowHearAboutUsItemUpdatePage from "./pages/Admin/Setting/HowHearAboutUsItem/Update/Page";
+import SettingHowHearAboutUsItemDeletePage from "./pages/Admin/Setting/HowHearAboutUsItem/Delete/Page";
 import SettingBulletinCreatePage from "./pages/Admin/Setting/Bulletin/Create/Page";
 import SettingBulletinListPage from "./pages/Admin/Setting/Bulletin/List/Page";
 import SettingBulletinDetailPage from "./pages/Admin/Setting/Bulletin/Detail/Page";
 import SettingBulletinUpdatePage from "./pages/Admin/Setting/Bulletin/Update/Page";
+import SettingBulletinDeletePage from "./pages/Admin/Setting/Bulletin/Delete/Page";
 import SettingAssociateAwayLogListPage from "./pages/Admin/Setting/AssociateAwayLog/List/Page";
 import SettingAssociateAwayLogDetailPage from "./pages/Admin/Setting/AssociateAwayLog/Detail/Page";
 import SettingAssociateAwayLogCreatePage from "./pages/Admin/Setting/AssociateAwayLog/Create/Page";
@@ -451,6 +459,7 @@ function AppRouter() {
             {/* Root/Executive routes (NO LAYOUT) */}
             <Route path="/root/dashboard" element={<RootDashboardPage />} />
             <Route path="/root/tenants" element={<RootTenantListPage />} />
+            <Route path="/root/tenant/add" element={<RootTenantAddPage />} />
             <Route
               path="/root/tenant/:tid"
               element={<RootTenantDetailPage />}
@@ -2232,6 +2241,14 @@ function AppRouter() {
               }
             />
             <Route
+              path="/admin/settings/bulletin/:id/delete"
+              element={
+                <Layout>
+                  <SettingBulletinDeletePage />
+                </Layout>
+              }
+            />
+            <Route
               path="/admin/settings/skill-sets"
               element={
                 <Layout>
@@ -2264,6 +2281,14 @@ function AppRouter() {
               }
             />
             <Route
+              path="/admin/settings/skill-set/:id/delete"
+              element={
+                <Layout>
+                  <SettingSkillSetDeletePage />
+                </Layout>
+              }
+            />
+            <Route
               path="/admin/settings/tags"
               element={
                 <Layout>
@@ -2292,6 +2317,14 @@ function AppRouter() {
               element={
                 <Layout>
                   <SettingTagUpdatePage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/settings/tag/:id/delete"
+              element={
+                <Layout>
+                  <SettingTagDeletePage />
                 </Layout>
               }
             />
@@ -2371,6 +2404,14 @@ function AppRouter() {
               }
             />
             <Route
+              path="/admin/settings/insurance-requirement/:id/delete"
+              element={
+                <Layout>
+                  <SettingInsuranceRequirementDeletePage />
+                </Layout>
+              }
+            />
+            <Route
               path="/admin/settings/service-fees"
               element={
                 <Layout>
@@ -2443,6 +2484,14 @@ function AppRouter() {
               }
             />
             <Route
+              path="/admin/settings/vehicle-type/:id/delete"
+              element={
+                <Layout>
+                  <SettingVehicleTypeDeletePage />
+                </Layout>
+              }
+            />
+            <Route
               path="/admin/settings/how-hear-about-us-items"
               element={
                 <Layout>
@@ -2471,6 +2520,14 @@ function AppRouter() {
               element={
                 <Layout>
                   <SettingHowHearAboutUsItemUpdatePage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/settings/how-hear-about-us-item/:id/delete"
+              element={
+                <Layout>
+                  <SettingHowHearAboutUsItemDeletePage />
                 </Layout>
               }
             />
@@ -2519,6 +2576,14 @@ function AppRouter() {
               element={
                 <Layout>
                   <SettingInactiveClientUpdatePage />
+                </Layout>
+              }
+            />
+            <Route
+              path="/admin/settings/tax"
+              element={
+                <Layout>
+                  <SettingTaxPage />
                 </Layout>
               }
             />

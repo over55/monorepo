@@ -1,6 +1,7 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/TaskItem/Operation/Close/Page.jsx
+// UIX Upgraded - Uses UIX primitives (Spinner, Breadcrumb, UIXThemeProvider)
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import {
   ChartBarIcon,
@@ -20,6 +21,7 @@ import {
   useAuthManager,
 } from "../../../../../services/Services";
 import { TASK_ITEM_CLOSE_REASON_OPTIONS_WITH_EMPTY_OPTION } from "../../../../../constants/FieldOptions";
+import { Spinner, Breadcrumb, UIXThemeProvider, useUIXTheme } from "../../../../../components/UIX";
 
 function AdminTaskItemCloseOperationPage() {
   const navigate = useNavigate();
@@ -29,6 +31,15 @@ function AdminTaskItemCloseOperationPage() {
 
   const taskManager = useTaskManager();
   const authManager = useAuthManager();
+
+  // UIX Theme
+  const { theme } = useUIXTheme();
+  const themeClasses = useMemo(() => ({
+    container: theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900',
+    card: theme === 'dark' ? 'bg-gray-800' : 'bg-white',
+    text: theme === 'dark' ? 'text-gray-100' : 'text-gray-900',
+    textMuted: theme === 'dark' ? 'text-gray-400' : 'text-gray-600',
+  }), [theme]);
 
   // State management
   const [isLoading, setIsLoading] = useState(false);
@@ -46,10 +57,17 @@ function AdminTaskItemCloseOperationPage() {
   const [describeTheComment, setDescribeTheComment] = useState("");
 
   // Authorization callback
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     authManager.logout();
     navigate("/login?unauthorized=true");
-  };
+  }, [authManager, navigate]);
+
+  // Memoized breadcrumb items
+  const breadcrumbItems = useMemo(() => [
+    { label: "Dashboard", path: "/admin/dashboard", icon: ChartBarIcon },
+    { label: "Tasks", path: "/admin/tasks", icon: ClipboardDocumentCheckIcon },
+    { label: "Close Operation", icon: StopIcon },
+  ], []);
 
   // Fetch task details
   useEffect(() => {
@@ -178,10 +196,7 @@ function AdminTaskItemCloseOperationPage() {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading task details...</p>
-          </div>
+          <Spinner size="lg" label="Loading task details..." />
         </div>
       </div>
     );
@@ -190,42 +205,7 @@ function AdminTaskItemCloseOperationPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Breadcrumb */}
-      <nav className="flex mb-6" aria-label="Breadcrumb">
-        <ol className="inline-flex items-center space-x-1 md:space-x-3">
-          <li className="inline-flex items-center">
-            <Link
-              to="/admin/dashboard"
-              className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
-            >
-              <ChartBarIcon className="w-4 h-4 mr-2" />
-              Dashboard
-            </Link>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <Link
-                to="/admin/tasks"
-                className="text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                <span className="inline-flex items-center">
-                  <ClipboardDocumentCheckIcon className="w-4 h-4 mr-2" />
-                  Tasks
-                </span>
-              </Link>
-            </div>
-          </li>
-          <li aria-current="page">
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <span className="text-sm font-medium text-gray-500 inline-flex items-center">
-                <StopIcon className="w-4 h-4 mr-2" />
-                Close Operation
-              </span>
-            </div>
-          </li>
-        </ol>
-      </nav>
+      <Breadcrumb items={breadcrumbItems} />
 
       {/* Page Title */}
       <div className="mb-6">
@@ -593,4 +573,12 @@ function AdminTaskItemCloseOperationPage() {
   );
 }
 
-export default AdminTaskItemCloseOperationPage;
+function AdminTaskItemCloseOperationPageWithTheme() {
+  return (
+    <UIXThemeProvider>
+      <AdminTaskItemCloseOperationPage />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminTaskItemCloseOperationPageWithTheme;

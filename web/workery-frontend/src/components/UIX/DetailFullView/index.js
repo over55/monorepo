@@ -1,0 +1,1 @@
+export { default as DetailFullView } from './DetailFullView.jsx';

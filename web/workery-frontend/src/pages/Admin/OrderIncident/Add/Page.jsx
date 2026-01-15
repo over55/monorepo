@@ -1,6 +1,7 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/OrderIncident/Add/Page.jsx
+// UIX Upgraded - Uses UIX primitives (Breadcrumb, Spinner, UIXThemeProvider, useUIXTheme)
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 import {
   useOrderIncidentManager,
@@ -14,6 +15,12 @@ import {
   ORDER_INCIDENT_INIATOR_STAFF,
 } from "../../../../constants/OrderIncident";
 import {
+  Breadcrumb,
+  Spinner,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../components/UIX";
+import {
   MagnifyingGlassIcon,
   XMarkIcon,
   ExclamationTriangleIcon,
@@ -22,9 +29,7 @@ import {
   FireIcon,
   PlusCircleIcon,
   CalendarIcon,
-  UserGroupIcon,
   DocumentTextIcon,
-  ChatBubbleLeftRightIcon,
   ClipboardDocumentListIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -37,6 +42,15 @@ function AdminOrderIncidentAddPage() {
   const orderManager = useOrderManager();
   const authManager = useAuthManager();
   const navigate = useNavigate();
+  const { getThemeClasses } = useUIXTheme();
+
+  // Memoize theme classes
+  const themeClasses = useMemo(() => ({
+    textPrimary: getThemeClasses("text-primary"),
+    textSecondary: getThemeClasses("text-secondary"),
+    bgCard: getThemeClasses("bg-card"),
+    cardBorder: getThemeClasses("card-border"),
+  }), [getThemeClasses]);
 
   // Component states
   const [errors, setErrors] = useState({});
@@ -61,9 +75,28 @@ function AdminOrderIncidentAddPage() {
   // Use ref for search timer to avoid stale closures
   const searchTimerRef = useRef(null);
 
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
-  };
+  }, [navigate]);
+
+  // Memoize breadcrumb items
+  const breadcrumbItems = useMemo(() => [
+    {
+      label: "Dashboard",
+      to: "/admin/dashboard",
+      icon: ChartBarIcon,
+    },
+    {
+      label: "Incidents",
+      to: "/admin/order-incidents",
+      icon: FireIcon,
+    },
+    {
+      label: "New",
+      icon: PlusCircleIcon,
+      isActive: true,
+    },
+  ], []);
 
   // Helper function to safely get field values from order object
   const getFieldValue = (obj, path, defaultValue = "") => {
@@ -351,47 +384,8 @@ function AdminOrderIncidentAddPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {/* Enhanced Breadcrumb */}
-        <nav
-          className="flex mb-4 bg-white rounded-lg shadow-sm p-2 sm:p-3"
-          aria-label="Breadcrumb"
-        >
-          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-wrap">
-            <li className="inline-flex items-center">
-              <Link
-                to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
-              >
-                <ChartBarIcon className="w-4 h-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Dashboard</span>
-                <span className="sm:hidden">Dash</span>
-              </Link>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-4 h-4 text-gray-400" />
-                <Link
-                  to="/admin/order-incidents"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors md:ml-2"
-                >
-                  <span className="inline-flex items-center">
-                    <FireIcon className="w-4 h-4 mr-1 sm:mr-2" />
-                    Incidents
-                  </span>
-                </Link>
-              </div>
-            </li>
-            <li aria-current="page">
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-4 h-4 text-gray-400" />
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
-                  <PlusCircleIcon className="w-4 h-4 mr-1 sm:mr-2" />
-                  New
-                </span>
-              </div>
-            </li>
-          </ol>
-        </nav>
+        {/* Breadcrumb */}
+        <Breadcrumb items={breadcrumbItems} />
 
         {/* Success Message */}
         {showSuccessMessage && (
@@ -740,7 +734,7 @@ function AdminOrderIncidentAddPage() {
               >
                 {isSubmitting ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    <Spinner size="sm" className="mr-2" />
                     Submitting...
                   </>
                 ) : (
@@ -809,7 +803,7 @@ function AdminOrderIncidentAddPage() {
                   {isLoadingOrders ? (
                     <div className="flex items-center justify-center py-12">
                       <div className="text-center">
-                        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto"></div>
+                        <Spinner size="lg" />
                         <p className="mt-3 text-sm text-gray-600">
                           Searching orders...
                         </p>
@@ -949,4 +943,13 @@ function AdminOrderIncidentAddPage() {
   );
 }
 
-export default AdminOrderIncidentAddPage;
+// Wrapper with UIXThemeProvider
+function AdminOrderIncidentAddPageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminOrderIncidentAddPage />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminOrderIncidentAddPageWithProvider;

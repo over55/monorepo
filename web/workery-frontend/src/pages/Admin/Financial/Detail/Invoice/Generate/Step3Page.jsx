@@ -1,6 +1,7 @@
 // File Path: web/workery-frontend/src/pages/Admin/Financial/Detail/Invoice/Generate/Step3Page.jsx
+// UIX Upgraded - Uses UIX primitives (Card, Alert, Spinner, Modal, Breadcrumb, Button)
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate, Link, useSearchParams } from "react-router";
 import { useOrderManager } from "../../../../../../services/Services";
 import { InvoiceGenerationStorage } from "../../../../../../services/Storage/InvoiceGenerationStorage";
@@ -30,6 +31,16 @@ import {
   ORDER_INVOICE_QUOTE_VALIDITY_OPTIONS,
 } from "../../../../../../constants/FieldOptions";
 import { DateInput } from "../../../../../../components/UI";
+import {
+  Card,
+  Alert,
+  Spinner,
+  Modal,
+  Breadcrumb,
+  Button,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../../../components/UIX";
 
 // Move DetailSection outside the main component to prevent recreation on every render
 const DetailSection = ({ title, icon: Icon, children }) => (
@@ -53,12 +64,20 @@ function AdminFinancialGenerateInvoiceStep3Page() {
   const invoiceStorage = new InvoiceGenerationStorage();
   const [searchParams] = useSearchParams();
   const isEditMode = searchParams.get("mode") === "edit";
+  const { getThemeClasses } = useUIXTheme();
 
   // Page state
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
   const [order, setOrder] = useState(null);
   const [showCancelWarning, setShowCancelWarning] = useState(false);
+
+  // Memoize theme classes
+  const themeClasses = useMemo(() => ({
+    textPrimary: getThemeClasses("text-primary"),
+    textSecondary: getThemeClasses("text-secondary"),
+    linkPrimary: getThemeClasses("link-primary"),
+  }), [getThemeClasses]);
 
   // Form state
   const [invoiceLabourAmount, setInvoiceLabourAmount] = useState(0);
@@ -284,16 +303,41 @@ function AdminFinancialGenerateInvoiceStep3Page() {
     navigate(`/admin/financial/${oid}/invoice`);
   };
 
+  // Breadcrumb items
+  const breadcrumbItems = useMemo(() => [
+    {
+      label: "Dashboard",
+      to: "/admin/dashboard",
+      icon: ChartBarIcon,
+    },
+    {
+      label: "Financials",
+      to: "/admin/financials",
+      icon: CreditCardIcon,
+    },
+    {
+      label: `Order #${oid}`,
+      to: `/admin/financial/${oid}/invoice`,
+      icon: DocumentTextIcon,
+    },
+    {
+      label: "Generate Invoice",
+      icon: DocumentPlusIcon,
+      isActive: true,
+    },
+  ], [oid]);
+
   if (isFetching || !order) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="flex items-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <span className="ml-3 text-sm sm:text-base text-gray-600">
-            Loading order details...
-          </span>
-        </div>
-      </div>
+      <Card padding="p-4 sm:p-6 lg:p-8" className="max-w-7xl mx-auto border-0 shadow-none">
+        <Breadcrumb items={breadcrumbItems} className="mb-6" />
+        <Card padding="p-0" className="flex items-center justify-center min-h-[400px] border-0 shadow-none">
+          <div className="text-center">
+            <Spinner size="lg" />
+            <p className="mt-4 text-gray-600">Loading order details...</p>
+          </div>
+        </Card>
+      </Card>
     );
   }
 
@@ -977,42 +1021,52 @@ function AdminFinancialGenerateInvoiceStep3Page() {
       </div>
 
       {/* Cancel Confirmation Modal */}
-      {showCancelWarning && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-                <ExclamationCircleIcon className="h-5 w-5 mr-2 text-amber-600" />
-                Are you sure?
-              </h3>
-            </div>
+      <Modal
+        isOpen={showCancelWarning}
+        onClose={() => setShowCancelWarning(false)}
+        title="Are you sure?"
+        size="md"
+      >
+        <div className="space-y-4">
+          <Alert type="warning" className="mb-4">
+            <ExclamationCircleIcon className="h-5 w-5 mr-2 inline" />
+            Your invoice generation will be cancelled and your work will be
+            lost. This cannot be undone.
+          </Alert>
 
-            <div className="px-4 sm:px-6 py-4">
-              <p className="text-sm text-gray-600">
-                Your invoice generation will be cancelled and your work will be
-                lost. This cannot be undone. Do you want to continue?
-              </p>
-            </div>
+          <p className="text-sm text-gray-600">
+            Do you want to continue?
+          </p>
 
-            <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row justify-end gap-3">
-              <button
-                onClick={() => setShowCancelWarning(false)}
-                className="order-2 sm:order-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 w-full sm:w-auto transition-colors"
-              >
-                No, Keep Working
-              </button>
-              <button
-                onClick={handleConfirmCancel}
-                className="order-1 sm:order-2 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 w-full sm:w-auto transition-colors"
-              >
-                Yes, Cancel
-              </button>
-            </div>
+          <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-gray-200">
+            <Button
+              variant="secondary"
+              onClick={() => setShowCancelWarning(false)}
+              className="order-2 sm:order-1"
+            >
+              No, Keep Working
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleConfirmCancel}
+              className="order-1 sm:order-2"
+            >
+              Yes, Cancel
+            </Button>
           </div>
         </div>
-      )}
+      </Modal>
     </div>
   );
 }
 
-export default AdminFinancialGenerateInvoiceStep3Page;
+// Wrapper with UIXThemeProvider
+function AdminFinancialGenerateInvoiceStep3PageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminFinancialGenerateInvoiceStep3Page />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminFinancialGenerateInvoiceStep3PageWithProvider;

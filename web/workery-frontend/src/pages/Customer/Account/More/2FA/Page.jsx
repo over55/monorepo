@@ -1,1 +1,3 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Customer/More/2FA/Page.jsx
+// UIX Upgraded - Uses UIX primitives (Card, Button, Alert, Spinner, Breadcrumb)
+// File Path: monorepo/web/workery-frontend/src/pages/Customer/Account/More/2FA/Page.jsx
+// Placeholder - to be implemented

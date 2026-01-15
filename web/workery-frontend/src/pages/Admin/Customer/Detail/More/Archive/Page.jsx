@@ -1,150 +1,30 @@
 // File Path: web/workery-frontend/src/pages/Admin/Customer/Detail/More/Archive/Page.jsx
+// UIX Upgraded - Uses EntityActionConfirmationPage whole page component
+// @uix-page: AdminCustomerDetailMoreArchivePage
 
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import React, { useCallback } from "react";
+import { useParams } from "react-router";
 import {
   ChartBarIcon,
-  UserGroupIcon,
+  UserIcon,
   InformationCircleIcon,
-  ChevronLeftIcon,
   ArchiveBoxIcon,
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
-  XMarkIcon,
   EllipsisHorizontalIcon,
   EnvelopeIcon,
   PhoneIcon,
-  UserIcon,
   BuildingOfficeIcon,
   HomeIcon,
 } from "@heroicons/react/24/outline";
-import {
-  useCustomerManager,
-  useAuthManager,
-} from "../../../../../../services/Services";
+import { useCustomerManager } from "../../../../../../services/Services";
+import { EntityActionConfirmationPage, UIXThemeProvider } from "../../../../../../components/UIX";
 
 // Constants
 const COMMERCIAL_CUSTOMER_TYPE_OF_ID = 3;
 const RESIDENTIAL_CUSTOMER_TYPE_OF_ID = 2;
 
 function AdminCustomerDetailMoreArchivePage() {
-  // URL Parameters
   const { cid } = useParams();
-
-  // Navigation
-  const navigate = useNavigate();
-
-  // Services
   const customerManager = useCustomerManager();
-  const authManager = useAuthManager();
-
-  // Component states
-  const [errors, setErrors] = useState({});
-  const [isFetching, setFetching] = useState(false);
-  const [customer, setCustomer] = useState(null);
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-
-  // Unauthorized callback
-  const onUnauthorized = () => {
-    navigate("/login?unauthorized=true");
-  };
-
-  // Load customer details
-  useEffect(() => {
-    let mounted = true;
-
-    const fetchCustomer = async () => {
-      if (!authManager.isAuthenticated()) {
-        navigate("/login");
-        return;
-      }
-
-      setFetching(true);
-      setErrors({});
-
-      try {
-        // Using callback-based approach from existing code
-        await customerManager.getCustomerDetailWithCallbacks(
-          cid,
-          (customerData) => {
-            if (mounted) {
-              setCustomer(customerData);
-            }
-          },
-          (error) => {
-            if (mounted) {
-              console.error("Failed to fetch customer:", error);
-              setErrors(error);
-            }
-          },
-          () => {
-            if (mounted) {
-              setFetching(false);
-            }
-          },
-          onUnauthorized,
-        );
-      } catch (error) {
-        if (mounted) {
-          console.error("Failed to fetch customer:", error);
-          setErrors({ general: "Failed to load customer information" });
-          setFetching(false);
-        }
-      }
-    };
-
-    if (cid) {
-      fetchCustomer();
-    } else {
-      setErrors({ general: "Customer ID is required" });
-      setFetching(false);
-    }
-
-    return () => {
-      mounted = false;
-    };
-  }, [cid, customerManager, authManager, navigate]);
-
-  // Handle archive confirmation
-  const handleConfirmArchive = async () => {
-    setShowConfirmModal(false);
-    setErrors({});
-    setFetching(true);
-
-    try {
-      // Using callback-based approach for consistency
-      await customerManager.archiveCustomerWithCallbacks(
-        cid,
-        (response) => {
-          // Success callback
-          setSuccessMessage("Customer has been successfully archived");
-
-          // Navigate to customers list after a short delay
-          setTimeout(() => {
-            navigate("/admin/customers");
-          }, 2000);
-        },
-        (error) => {
-          // Error callback
-          console.error("Failed to archive customer:", error);
-          setErrors(error);
-          setFetching(false);
-        },
-        () => {
-          // Done callback
-          if (!successMessage) {
-            setFetching(false);
-          }
-        },
-        onUnauthorized,
-      );
-    } catch (error) {
-      console.error("Failed to archive customer:", error);
-      setErrors({ general: "Failed to archive customer" });
-      setFetching(false);
-    }
-  };
 
   // Format phone number for display
   const formatPhone = (phone) => {
@@ -176,345 +56,168 @@ function AdminCustomerDetailMoreArchivePage() {
     }
   };
 
-  // Render loading state
-  if (isFetching && !customer) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading customer details...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Fetch entity function
+  const fetchEntity = useCallback(
+    async (entityId, onSuccess, onError, onDone, onUnauthorized) => {
+      try {
+        const data = await customerManager.getCustomerDetail(entityId, onUnauthorized);
+        onSuccess(data);
+      } catch (error) {
+        onError(error);
+      } finally {
+        onDone();
+      }
+    },
+    [customerManager],
+  );
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      {/* Breadcrumb */}
-      <nav className="flex mb-6" aria-label="Breadcrumb">
-        <ol className="inline-flex items-center space-x-1 md:space-x-3">
-          <li className="inline-flex items-center">
-            <Link
-              to="/admin/dashboard"
-              className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
-            >
-              <ChartBarIcon className="w-4 h-4 mr-2" />
-              Dashboard
-            </Link>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <Link
-                to="/admin/customers"
-                className="text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                <span className="inline-flex items-center">
-                  <UserGroupIcon className="w-4 h-4 mr-2" />
-                  Customers
-                </span>
-              </Link>
-            </div>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <Link
-                to={`/admin/customer/${cid}`}
-                className="text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                <span className="inline-flex items-center">
-                  <InformationCircleIcon className="w-4 h-4 mr-2" />
-                  Detail
-                </span>
-              </Link>
-            </div>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <Link
-                to={`/admin/customer/${cid}/more`}
-                className="text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                <span className="inline-flex items-center">
-                  <EllipsisHorizontalIcon className="w-4 h-4 mr-2" />
-                  More
-                </span>
-              </Link>
-            </div>
-          </li>
-          <li aria-current="page">
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <span className="text-sm font-medium text-gray-500 inline-flex items-center">
-                <ArchiveBoxIcon className="w-4 h-4 mr-2" />
-                Archive
-              </span>
-            </div>
-          </li>
-        </ol>
-      </nav>
+  // Execute action function
+  const executeAction = useCallback(
+    async (entityId, onSuccess, onError, onDone, onUnauthorized) => {
+      try {
+        await customerManager.archiveCustomer(entityId, onUnauthorized);
+        onSuccess();
+      } catch (error) {
+        onError(error);
+      } finally {
+        onDone();
+      }
+    },
+    [customerManager],
+  );
 
-      {/* Page Title */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center">
-              <UserGroupIcon className="w-6 h-6 md:w-8 md:h-8 mr-3 text-blue-600" />
-              Customer: {customer?.firstName} {customer?.lastName}
-            </h1>
-            <p className="mt-1 text-sm text-gray-600 flex items-center">
-              <ArchiveBoxIcon className="w-4 h-4 mr-1" />
-              Archive Customer
-            </p>
-          </div>
-        </div>
-      </div>
+  // Breadcrumb items
+  const breadcrumbItems = [
+    {
+      label: "Dashboard",
+      to: "/admin/dashboard",
+      icon: ChartBarIcon,
+    },
+    {
+      label: "Customers",
+      to: "/admin/customers",
+      icon: UserIcon,
+    },
+    {
+      label: "Detail",
+      to: `/admin/customer/${cid}`,
+      icon: InformationCircleIcon,
+    },
+    {
+      label: "More",
+      to: `/admin/customer/${cid}/more`,
+      icon: EllipsisHorizontalIcon,
+    },
+    {
+      label: "Archive",
+      icon: ArchiveBoxIcon,
+      isActive: true,
+    },
+  ];
 
-      {/* Success Message */}
-      {successMessage && (
-        <div className="mb-4 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg flex items-center">
-          <CheckCircleIcon className="w-5 h-5 mr-2" />
-          {successMessage}
-        </div>
-      )}
+  // Page configuration
+  const pageConfig = {
+    title: "Customer",
+    subtitle: "Archive Customer",
+    icon: UserIcon,
+    actionIcon: ArchiveBoxIcon,
+    loadingText: "Loading customer details...",
+  };
 
-      {/* Error Messages */}
-      {errors && Object.keys(errors).length > 0 && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-          <div className="flex justify-between items-center">
-            <span className="flex items-center">
-              <XMarkIcon className="w-5 h-5 mr-2" />
-              {errors.general ||
-                errors.message ||
-                errors.detail ||
-                "An error occurred. Please try again."}
+  // Warning configuration
+  const warningConfig = {
+    title: "Archive Customer - Are you sure?",
+    description: "You are about to archive this customer. This means:",
+    consequences: [
+      "The customer will no longer appear in the active customers list",
+      "The customer will not be able to log in to their account",
+      "All current orders and history will remain but the customer cannot place new orders",
+      "This action can be undone by contacting a system administrator",
+    ],
+    confirmationText: "Are you sure you would like to continue?",
+    warningType: "amber",
+  };
+
+  // Render entity information
+  const renderEntityInfo = useCallback(
+    (customer) => (
+      <div className="bg-gray-50 rounded-lg p-6 mb-6">
+        <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <UserIcon className="w-5 h-5 mr-2 text-gray-600" />
+          Customer Information
+        </h4>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="flex items-center">
+            <span className="font-medium text-gray-700 mr-2">Name:</span>
+            <span className="text-gray-900">
+              {customer.firstName} {customer.lastName}
             </span>
-            <button
-              onClick={() => setErrors({})}
-              className="text-red-700 hover:text-red-900"
-            >
-              <XMarkIcon className="w-5 h-5" />
-            </button>
           </div>
-        </div>
-      )}
-
-      {/* Customer Status Banners */}
-      {customer?.status === 2 && (
-        <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg flex items-center">
-          <InformationCircleIcon className="w-5 h-5 mr-2" />
-          Customer is already archived
-        </div>
-      )}
-      {customer?.isBanned && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center">
-          <ExclamationTriangleIcon className="w-5 h-5 mr-2" />
-          Customer is banned
-        </div>
-      )}
-
-      {/* Main Content */}
-      <div className="bg-white shadow-sm rounded-lg overflow-hidden">
-        <div className="p-6">
-          {/* Warning Message */}
-          <div className="mb-6 bg-amber-50 border border-amber-200 rounded-lg p-6">
-            <div className="flex items-start">
-              <ExclamationTriangleIcon className="w-6 h-6 text-amber-600 mt-1 mr-3 flex-shrink-0" />
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-amber-900 mb-2">
-                  Archive Customer - Are you sure?
-                </h3>
-                <p className="text-amber-800 mb-3">
-                  You are about to <strong>archive</strong> this customer. This
-                  means:
-                </p>
-                <ul className="space-y-2 text-amber-700 ml-4">
-                  <li className="flex items-start">
-                    <span className="inline-block w-2 h-2 bg-amber-600 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
-                    The customer will no longer appear in the active customers
-                    list
-                  </li>
-                  <li className="flex items-start">
-                    <span className="inline-block w-2 h-2 bg-amber-600 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
-                    The customer will not be able to log in to their account
-                  </li>
-                  <li className="flex items-start">
-                    <span className="inline-block w-2 h-2 bg-amber-600 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
-                    All current orders and history will remain but the customer
-                    cannot place new orders
-                  </li>
-                  <li className="flex items-start">
-                    <span className="inline-block w-2 h-2 bg-amber-600 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
-                    This action can be undone by contacting a system
-                    administrator
-                  </li>
-                </ul>
-                <p className="mt-4 font-semibold text-amber-900">
-                  Are you sure you would like to continue?
-                </p>
-              </div>
-            </div>
+          <div className="flex items-center">
+            <span className="font-medium text-gray-700 mr-2">Status:</span>
+            {getStatusDisplay(customer.status)}
           </div>
-
-          {/* Customer Information */}
-          {customer && (
-            <div className="bg-gray-50 rounded-lg p-6 mb-6">
-              <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <UserIcon className="w-5 h-5 mr-2 text-gray-600" />
-                Customer Information
-              </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex items-center">
-                  <span className="font-medium text-gray-700 mr-2">Name:</span>
-                  <span className="text-gray-900">
-                    {customer.firstName} {customer.lastName}
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <span className="font-medium text-gray-700 mr-2">
-                    Status:
-                  </span>
-                  {getStatusDisplay(customer.status)}
-                </div>
-                <div className="flex items-center">
-                  <EnvelopeIcon className="w-4 h-4 mr-2 text-gray-400" />
-                  <span className="font-medium text-gray-700 mr-2">Email:</span>
-                  <span className="text-gray-900">{customer.email}</span>
-                </div>
-                <div className="flex items-center">
-                  <PhoneIcon className="w-4 h-4 mr-2 text-gray-400" />
-                  <span className="font-medium text-gray-700 mr-2">Phone:</span>
-                  <span className="text-gray-900">
-                    {formatPhone(customer.phone)}
-                  </span>
-                </div>
-                {customer.typeOf && (
-                  <div className="flex items-center">
-                    {customer.typeOf === COMMERCIAL_CUSTOMER_TYPE_OF_ID ? (
-                      <BuildingOfficeIcon className="w-4 h-4 mr-2 text-gray-400" />
-                    ) : customer.typeOf === RESIDENTIAL_CUSTOMER_TYPE_OF_ID ? (
-                      <HomeIcon className="w-4 h-4 mr-2 text-gray-400" />
-                    ) : (
-                      <UserIcon className="w-4 h-4 mr-2 text-gray-400" />
-                    )}
-                    <span className="font-medium text-gray-700 mr-2">
-                      Type:
-                    </span>
-                    <span className="text-gray-900">
-                      {getTypeDisplay(customer.typeOf)}
-                    </span>
-                  </div>
-                )}
-              </div>
+          <div className="flex items-center">
+            <EnvelopeIcon className="w-4 h-4 mr-2 text-gray-400" />
+            <span className="font-medium text-gray-700 mr-2">Email:</span>
+            <span className="text-gray-900">{customer.email}</span>
+          </div>
+          <div className="flex items-center">
+            <PhoneIcon className="w-4 h-4 mr-2 text-gray-400" />
+            <span className="font-medium text-gray-700 mr-2">Phone:</span>
+            <span className="text-gray-900">{formatPhone(customer.phone)}</span>
+          </div>
+          {customer.type && (
+            <div className="flex items-center">
+              {customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID ? (
+                <BuildingOfficeIcon className="w-4 h-4 mr-2 text-gray-400" />
+              ) : customer.type === RESIDENTIAL_CUSTOMER_TYPE_OF_ID ? (
+                <HomeIcon className="w-4 h-4 mr-2 text-gray-400" />
+              ) : (
+                <UserIcon className="w-4 h-4 mr-2 text-gray-400" />
+              )}
+              <span className="font-medium text-gray-700 mr-2">Type:</span>
+              <span className="text-gray-900">{getTypeDisplay(customer.type)}</span>
             </div>
           )}
-
-          {/* Action Buttons */}
-          <div className="flex flex-col sm:flex-row justify-between gap-4">
-            <Link to={`/admin/customer/${cid}/more`}>
-              <button
-                disabled={isFetching}
-                className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronLeftIcon className="w-4 h-4 mr-2" />
-                Back to More
-              </button>
-            </Link>
-
-            <button
-              onClick={() => setShowConfirmModal(true)}
-              disabled={isFetching || customer?.status === 2}
-              className={`w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 border rounded-lg text-sm font-medium transition-colors ${
-                customer?.status === 2
-                  ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                  : "border-red-300 text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              }`}
-            >
-              <ArchiveBoxIcon className="w-4 h-4 mr-2" />
-              {isFetching
-                ? "Processing..."
-                : customer?.status === 2
-                  ? "Already Archived"
-                  : "Confirm and Archive"}
-            </button>
-          </div>
         </div>
       </div>
+    ),
+    [],
+  );
 
-      {/* Confirmation Modal */}
-      {showConfirmModal && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            {/* Background overlay */}
-            <div
-              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-              onClick={() => setShowConfirmModal(false)}
-            ></div>
+  // Status alerts
+  const statusAlerts = [
+    {
+      condition: (entity) => entity?.status === 2,
+      type: "warning",
+      message: "This customer is already archived",
+      icon: ArchiveBoxIcon,
+    },
+  ];
 
-            {/* Modal panel */}
-            <div className="relative transform overflow-hidden rounded-lg bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
-              <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                <div className="sm:flex sm:items-start">
-                  <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                    <ExclamationTriangleIcon
-                      className="h-6 w-6 text-red-600"
-                      aria-hidden="true"
-                    />
-                  </div>
-                  <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-                    <h3 className="text-lg font-semibold leading-6 text-gray-900">
-                      Confirm Archive
-                    </h3>
-                    <div className="mt-2">
-                      <p className="text-sm text-gray-500">
-                        <strong>Final Confirmation</strong>
-                      </p>
-                      <p className="mt-2 text-sm text-gray-500">
-                        You are about to archive{" "}
-                        <strong>
-                          {customer?.firstName} {customer?.lastName}
-                        </strong>
-                        .
-                      </p>
-                      <p className="mt-2 text-sm text-gray-500">
-                        This action will remove the customer from all active
-                        lists and prevent them from logging in. The action can
-                        only be reversed by a system administrator.
-                      </p>
-                      <p className="mt-3 text-sm font-medium text-red-600">
-                        Are you absolutely sure you want to proceed?
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                <button
-                  type="button"
-                  onClick={handleConfirmArchive}
-                  disabled={isFetching}
-                  className="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isFetching ? "Archiving..." : "Yes, Archive"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowConfirmModal(false)}
-                  disabled={isFetching}
-                  className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+  // Check if action is disabled
+  const isActionDisabled = useCallback((entity) => entity?.status === 2, []);
+
+  return (
+    <UIXThemeProvider>
+      <EntityActionConfirmationPage
+        entityType="customer"
+        entityId={cid}
+        actionType="archive"
+        fetchEntity={fetchEntity}
+        executeAction={executeAction}
+        breadcrumbItems={breadcrumbItems}
+        pageConfig={pageConfig}
+        renderEntityInfo={renderEntityInfo}
+        warningConfig={warningConfig}
+        statusAlerts={statusAlerts}
+        isActionDisabled={isActionDisabled}
+        returnPath={`/admin/customer/${cid}/more`}
+        successRedirectPath="/admin/customers"
+        successRedirectDelay={2000}
+      />
+    </UIXThemeProvider>
   );
 }
 

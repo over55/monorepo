@@ -1,6 +1,7 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Admin/Account/More/2FA/BackupCodeGenerate/Page.jsx
+// File Path: web/workery-frontend/src/pages/Admin/Account/More/2FA/BackupCodeGenerate/Page.jsx
+// UIX Upgraded - Uses UIX primitives (Card, Alert, Breadcrumb, Spinner, Button)
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import {
   KeyIcon,
@@ -21,10 +22,12 @@ import {
 import {
   Card,
   Alert,
-  Loading,
   Breadcrumb,
+  Spinner,
   Button,
-} from "../../../../../../components/UI";
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../../../components/UIX";
 import { getRoleRedirectPath } from "../../../../../../constants/Roles";
 
 /**
@@ -37,9 +40,17 @@ function AccountTwoFactorAuthenticationBackupCodePage() {
   const authManager = useAuthManager();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { getThemeClasses } = useUIXTheme();
 
   // Get backup code from URL params
   const backupCode = searchParams.get("v");
+
+  // Memoize theme classes
+  const themeClasses = useMemo(() => ({
+    textPrimary: getThemeClasses("text-primary"),
+    textSecondary: getThemeClasses("text-secondary"),
+    linkPrimary: getThemeClasses("link-primary"),
+  }), [getThemeClasses]);
 
   // Component state
   const [currentUser, setCurrentUser] = useState(null);
@@ -49,10 +60,10 @@ function AccountTwoFactorAuthenticationBackupCodePage() {
   const [downloaded, setDownloaded] = useState(false);
 
   // Unauthorized callback
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     authManager.logout();
     navigate("/login?unauthorized=true");
-  };
+  }, [authManager, navigate]);
 
   // Fetch user data on mount
   useEffect(() => {
@@ -74,7 +85,7 @@ function AccountTwoFactorAuthenticationBackupCodePage() {
           // Try to get from session storage
           const storedCode = sessionStorage.getItem("WORKERY_2FA_BACKUP_CODE");
           if (!storedCode) {
-            navigate("/admin/account/2fa");
+            navigate("/admin/account/more/2fa");
             return;
           }
         }
@@ -110,16 +121,16 @@ function AccountTwoFactorAuthenticationBackupCodePage() {
     return () => {
       mounted = false;
     };
-  }, [backupCode]);
+  }, [backupCode, accountManager, authManager, navigate, onUnauthorized]);
 
   // Generate dashboard link
-  const getDashboardLink = () => {
+  const getDashboardLink = useCallback(() => {
     if (!currentUser) return "/dashboard";
     return getRoleRedirectPath(currentUser.roleId || currentUser.role);
-  };
+  }, [currentUser]);
 
   // Copy backup code to clipboard
-  const handleCopyCode = async () => {
+  const handleCopyCode = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(backupCode);
       setCopied(true);
@@ -128,10 +139,10 @@ function AccountTwoFactorAuthenticationBackupCodePage() {
       console.error("Failed to copy:", err);
       setError("Failed to copy backup code. Please copy it manually.");
     }
-  };
+  }, [backupCode]);
 
   // Download backup code as text file
-  const handleDownloadCode = () => {
+  const handleDownloadCode = useCallback(() => {
     try {
       const content = `Workery 2FA Backup Code
 ==============================
@@ -166,97 +177,97 @@ IMPORTANT INSTRUCTIONS:
       console.error("Failed to download:", err);
       setError("Failed to download backup code. Please copy it manually.");
     }
-  };
+  }, [backupCode, currentUser]);
 
   // Handle confirmation and navigation
-  const handleConfirm = () => {
-    navigate("/admin/account/2fa");
-  };
+  const handleConfirm = useCallback(() => {
+    navigate("/admin/account/more/2fa");
+  }, [navigate]);
+
+  // Breadcrumb items
+  const breadcrumbItems = useMemo(() => [
+    {
+      label: "Dashboard",
+      to: getDashboardLink(),
+      icon: Bars3Icon,
+    },
+    {
+      label: "Profile",
+      to: "/admin/account",
+      icon: UserCircleIcon,
+    },
+    {
+      label: "2FA",
+      to: "/admin/account/more/2fa",
+      icon: ShieldCheckIcon,
+    },
+    {
+      label: "Backup Code",
+      icon: KeyIcon,
+      isActive: true,
+    },
+  ], [getDashboardLink]);
 
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loading size="lg" text="Loading..." />
-      </div>
+      <Card padding="p-4 sm:p-6 lg:p-8" className="max-w-4xl mx-auto border-0 shadow-none">
+        <Card padding="p-0" className="flex items-center justify-center min-h-[400px] border-0 shadow-none">
+          <div className="text-center">
+            <Spinner size="lg" />
+            <p className="mt-4 text-gray-600">Loading...</p>
+          </div>
+        </Card>
+      </Card>
     );
   }
 
   // No backup code state
   if (!backupCode && !error) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <Alert type="error" dismissible={false}>
+      <Card padding="p-4 sm:p-6 lg:p-8" className="max-w-4xl mx-auto border-0 shadow-none">
+        <Alert type="error" className="mb-4">
           No backup code found. Please enable 2FA again.
         </Alert>
-        <div className="mt-4">
-          <Button onClick={() => navigate("/admin/account/2fa")}>
-            Go to 2FA Settings
-          </Button>
-        </div>
-      </div>
+        <Button variant="primary" onClick={() => navigate("/admin/account/more/2fa")}>
+          Go to 2FA Settings
+        </Button>
+      </Card>
     );
   }
 
-  // Breadcrumb items
-  const breadcrumbItems = [
-    {
-      label: "Dashboard",
-      href: getDashboardLink(),
-      icon: Bars3Icon,
-    },
-    {
-      label: "Profile",
-      href: "/admin/account",
-      icon: UserCircleIcon,
-    },
-    {
-      label: "2FA",
-      href: "/admin/account/2fa",
-      icon: ShieldCheckIcon,
-    },
-    {
-      label: "Backup Code",
-      icon: KeyIcon,
-    },
-  ];
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
-        {/* Breadcrumb Navigation */}
-        <div className="mb-6">
-          <Breadcrumb items={breadcrumbItems} />
-        </div>
+    <Card padding="p-4 sm:p-6 lg:p-8" className="max-w-4xl mx-auto border-0 shadow-none">
+      {/* Breadcrumb */}
+      <Breadcrumb items={breadcrumbItems} className="mb-6" />
 
-        {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-            <UserCircleIcon className="h-8 w-8 mr-3" />
-            Profile
-          </h1>
-          <p className="mt-2 text-gray-600">
-            Two-Factor Authentication Backup Code
-          </p>
-        </div>
+      {/* Page Header */}
+      <div className="mb-6">
+        <h1 className={`text-2xl md:text-3xl font-bold ${themeClasses.textPrimary} flex items-center`}>
+          <UserCircleIcon className={`w-6 h-6 md:w-8 md:h-8 mr-3 ${themeClasses.linkPrimary}`} />
+          Profile
+        </h1>
+        <p className={`mt-1 text-sm ${themeClasses.textSecondary}`}>
+          Two-Factor Authentication Backup Code
+        </p>
+      </div>
 
-        {/* Main Card */}
-        <Card>
+      {/* Main Card */}
+      <Card>
+        <div className="p-6">
           {/* Success Message */}
-          <div className="mb-6">
-            <Alert type="success" dismissible={false}>
-              <div className="flex items-start">
-                <CheckCircleIcon className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
-                <div>
-                  <strong>Successfully Enabled 2FA!</strong>
-                  <p className="mt-1">
-                    Two-factor authentication has been successfully enabled for
-                    your account.
-                  </p>
-                </div>
+          <Alert type="success" className="mb-6">
+            <div className="flex items-start">
+              <CheckCircleIcon className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+              <div>
+                <strong>Successfully Enabled 2FA!</strong>
+                <p className="mt-1">
+                  Two-factor authentication has been successfully enabled for
+                  your account.
+                </p>
               </div>
-            </Alert>
-          </div>
+            </div>
+          </Alert>
 
           {/* Title */}
           <div className="text-center mb-8">
@@ -271,11 +282,9 @@ IMPORTANT INSTRUCTIONS:
 
           {/* Error Alert */}
           {error && (
-            <div className="mb-6">
-              <Alert type="error" dismissible onDismiss={() => setError("")}>
-                {error}
-              </Alert>
-            </div>
+            <Alert type="error" className="mb-6" dismissible onDismiss={() => setError("")}>
+              {error}
+            </Alert>
           )}
 
           {/* Instructions */}
@@ -314,38 +323,18 @@ IMPORTANT INSTRUCTIONS:
                   <Button
                     variant="secondary"
                     onClick={handleCopyCode}
-                    className="flex items-center"
+                    icon={copied ? CheckIcon : DocumentDuplicateIcon}
                     title="Copy to clipboard"
                   >
-                    {copied ? (
-                      <>
-                        <CheckIcon className="h-4 w-4 mr-1" />
-                        Copied
-                      </>
-                    ) : (
-                      <>
-                        <DocumentDuplicateIcon className="h-4 w-4 mr-1" />
-                        Copy
-                      </>
-                    )}
+                    {copied ? "Copied" : "Copy"}
                   </Button>
                   <Button
                     variant="secondary"
                     onClick={handleDownloadCode}
-                    className="flex items-center"
+                    icon={downloaded ? CheckIcon : ArrowDownTrayIcon}
                     title="Download as text file"
                   >
-                    {downloaded ? (
-                      <>
-                        <CheckIcon className="h-4 w-4 mr-1" />
-                        Downloaded
-                      </>
-                    ) : (
-                      <>
-                        <ArrowDownTrayIcon className="h-4 w-4 mr-1" />
-                        Download
-                      </>
-                    )}
+                    {downloaded ? "Downloaded" : "Download"}
                   </Button>
                 </div>
               </div>
@@ -356,22 +345,24 @@ IMPORTANT INSTRUCTIONS:
           </div>
 
           {/* Security Tips */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
-            <h3 className="font-semibold text-blue-900 mb-2 flex items-center">
-              <LockClosedIcon className="h-5 w-5 mr-2" />
-              Security Tips
-            </h3>
-            <ul className="text-sm text-blue-800 space-y-1 list-disc list-inside">
-              <li>Store this code offline (printed or written down)</li>
-              <li>Keep it separate from your password</li>
-              <li>Don't store it in plain text on your computer</li>
-              <li>Consider using a password manager's secure notes feature</li>
-              <li>Never share this code via email or messaging apps</li>
-            </ul>
-          </div>
+          <Alert type="info" className="mb-8">
+            <div className="flex items-start">
+              <LockClosedIcon className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+              <div>
+                <strong>Security Tips</strong>
+                <ul className="mt-2 text-sm space-y-1 list-disc list-inside">
+                  <li>Store this code offline (printed or written down)</li>
+                  <li>Keep it separate from your password</li>
+                  <li>Don't store it in plain text on your computer</li>
+                  <li>Consider using a password manager's secure notes feature</li>
+                  <li>Never share this code via email or messaging apps</li>
+                </ul>
+              </div>
+            </div>
+          </Alert>
 
           {/* Confirmation Section */}
-          <div className="bg-gray-50 rounded-lg p-6 text-center">
+          <div className="bg-gray-50 rounded-lg p-6 text-center mb-6">
             <p className="text-gray-700 mb-4">
               Please confirm that you have safely stored your backup code before
               proceeding.
@@ -379,15 +370,14 @@ IMPORTANT INSTRUCTIONS:
             <Button
               variant="primary"
               onClick={handleConfirm}
-              className="inline-flex items-center"
+              icon={CheckCircleIcon}
             >
-              <CheckCircleIcon className="h-5 w-5 mr-2" />I have saved my backup
-              code
+              I have saved my backup code
             </Button>
           </div>
 
           {/* Additional Information */}
-          <div className="mt-8 pt-6 border-t border-gray-200">
+          <div className="pt-6 border-t border-gray-200">
             <h3 className="font-semibold text-gray-900 mb-2">
               What happens next?
             </h3>
@@ -419,10 +409,19 @@ IMPORTANT INSTRUCTIONS:
               </li>
             </ul>
           </div>
-        </Card>
-      </div>
-    </div>
+        </div>
+      </Card>
+    </Card>
   );
 }
 
-export default AccountTwoFactorAuthenticationBackupCodePage;
+// Wrapper with UIXThemeProvider
+function AccountTwoFactorAuthenticationBackupCodePageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AccountTwoFactorAuthenticationBackupCodePage />
+    </UIXThemeProvider>
+  );
+}
+
+export default AccountTwoFactorAuthenticationBackupCodePageWithProvider;

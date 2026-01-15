@@ -1,5 +1,7 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Customer/Search/ResultPage.jsx
-import React, { useState, useEffect } from "react";
+// UIX Upgraded - Uses UIX primitives (Card, Alert, Button, Breadcrumb, Spinner, etc.)
+
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { DateTime } from "luxon";
 import {
@@ -29,11 +31,18 @@ import {
   FunnelIcon,
   UserIcon,
   ChevronDownIcon,
-  BriefcaseIcon,
-  DocumentTextIcon,
   NoSymbolIcon,
 } from "@heroicons/react/24/outline";
 import { ExclamationTriangleIcon as ExclamationTriangleIconSolid } from "@heroicons/react/24/solid";
+import {
+  Alert,
+  Breadcrumb,
+  Spinner,
+  Modal,
+  Button,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../components/UIX";
 
 // Constants for customer types and statuses - matching old implementation
 const RESIDENTIAL_CUSTOMER_TYPE_OF_ID = 1;
@@ -77,6 +86,14 @@ function AdminCustomerSearchResultPage() {
   const customerManager = useCustomerManager();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { getThemeClasses } = useUIXTheme();
+
+  // Memoize theme classes
+  const themeClasses = useMemo(() => ({
+    textPrimary: getThemeClasses("text-primary"),
+    textSecondary: getThemeClasses("text-secondary"),
+    linkPrimary: getThemeClasses("link-primary"),
+  }), [getThemeClasses]);
 
   // Extract search parameters from URL
   const firstName = searchParams.get("fn") || "";
@@ -96,12 +113,41 @@ function AdminCustomerSearchResultPage() {
   const [previousCursors, setPreviousCursors] = useState([]);
   const [nextCursor, setNextCursor] = useState("");
   const [currentCursor, setCurrentCursor] = useState("");
-  const [sortByValue, setSortByValue] = useState("last_name,ASC"); // Default sort by last name
-  const [status, setStatus] = useState(isActive ? 1 : 0); // 1 for active only, 0 for all
-  const [typeOf, setTypeOf] = useState(0); // 0 for all types
+  const [sortByValue, setSortByValue] = useState("last_name,ASC");
+  const [status, setStatus] = useState(isActive ? 1 : 0);
+  const [typeOf, setTypeOf] = useState(0);
   const [createdAtGTE, setCreatedAtGTE] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+
+  // Unauthorized callback
+  const onUnauthorized = useCallback(() => {
+    navigate("/login?unauthorized=true");
+  }, [navigate]);
+
+  // Memoize breadcrumb items
+  const breadcrumbItems = useMemo(() => [
+    {
+      label: "Dashboard",
+      to: "/admin/dashboard",
+      icon: ChartBarIcon,
+    },
+    {
+      label: "Customers",
+      to: "/admin/customers",
+      icon: UserGroupIcon,
+    },
+    {
+      label: "Search",
+      to: "/admin/customers/search",
+      icon: MagnifyingGlassIcon,
+    },
+    {
+      label: "Results",
+      icon: MagnifyingGlassIcon,
+      isActive: true,
+    },
+  ], []);
 
   // Check authentication on mount
   useEffect(() => {
@@ -135,7 +181,7 @@ function AdminCustomerSearchResultPage() {
   };
 
   // Fetch customers list
-  const fetchList = () => {
+  const fetchList = useCallback(() => {
     setFetching(true);
     setErrors({});
 
@@ -153,21 +199,21 @@ function AdminCustomerSearchResultPage() {
       currentCursor,
     });
 
-    // Build filters map for API call - using exact same format as old code
+    // Build filters map for API call
     const params = new Map();
     params.set("page_size", pageSize);
-    params.set("sort_field", "last_name"); // Default sort field
+    params.set("sort_field", "last_name");
 
     if (currentCursor !== "") {
       params.set("cursor", currentCursor);
     }
 
-    // Sort parameters - matching old implementation
+    // Sort parameters
     const sortArray = sortByValue.split(",");
     params.set("sort_field", sortArray[0]);
     params.set("sort_order", sortArray[1]);
 
-    // Search parameters from URL - using snake_case as backend expects
+    // Search parameters from URL
     if (firstName !== undefined && firstName !== null && firstName !== "") {
       params.set("first_name", firstName);
     }
@@ -216,10 +262,24 @@ function AdminCustomerSearchResultPage() {
       onCustomerListSuccess,
       onCustomerListError,
       onCustomerListDone,
-      () => navigate("/login?unauthorized=true"),
+      onUnauthorized,
       true, // Force refresh to bypass cache
     );
-  };
+  }, [
+    firstName,
+    lastName,
+    email,
+    phone,
+    organizationName,
+    status,
+    typeOf,
+    createdAtGTE,
+    sortByValue,
+    pageSize,
+    currentCursor,
+    customerManager,
+    onUnauthorized,
+  ]);
 
   // Fetch list when parameters change
   useEffect(() => {
@@ -247,7 +307,7 @@ function AdminCustomerSearchResultPage() {
   ]);
 
   // Handle pagination
-  const onNextClicked = (e) => {
+  const onNextClicked = () => {
     console.log("onNextClicked: Going to next page");
     const arr = [...previousCursors];
     arr.push(currentCursor);
@@ -255,7 +315,7 @@ function AdminCustomerSearchResultPage() {
     setCurrentCursor(nextCursor);
   };
 
-  const onPreviousClicked = (e) => {
+  const onPreviousClicked = () => {
     console.log("onPreviousClicked: Going to previous page");
     const arr = [...previousCursors];
     const previousCursor = arr.pop();
@@ -264,7 +324,7 @@ function AdminCustomerSearchResultPage() {
   };
 
   // Archive callback handlers
-  const onCustomerDeleteSuccess = (response) => {
+  const onCustomerDeleteSuccess = () => {
     console.log("onCustomerDeleteSuccess: Starting...");
 
     // Update notification
@@ -312,7 +372,7 @@ function AdminCustomerSearchResultPage() {
       onCustomerDeleteSuccess,
       onCustomerDeleteError,
       onCustomerDeleteDone,
-      () => navigate("/login?unauthorized=true"),
+      onUnauthorized,
     );
   };
 
@@ -328,38 +388,40 @@ function AdminCustomerSearchResultPage() {
   };
 
   // Build search criteria display
-  const searchCriteria = [];
-  if (firstName)
-    searchCriteria.push({
-      label: "First Name",
-      value: firstName,
-      icon: UserIcon,
+  const searchCriteria = useMemo(() => {
+    const criteria = [];
+    if (firstName)
+      criteria.push({
+        label: "First Name",
+        value: firstName,
+        icon: UserIcon,
+      });
+    if (lastName)
+      criteria.push({
+        label: "Last Name",
+        value: lastName,
+        icon: UserIcon,
+      });
+    if (email)
+      criteria.push({ label: "Email", value: email, icon: EnvelopeIcon });
+    if (phone)
+      criteria.push({ label: "Phone", value: phone, icon: PhoneIcon });
+    if (organizationName)
+      criteria.push({
+        label: "Organization",
+        value: organizationName,
+        icon: BuildingOffice2Icon,
+      });
+    criteria.push({
+      label: "Status",
+      value: isActive ? "Active Only" : "All",
+      icon: CheckCircleIcon,
     });
-  if (lastName)
-    searchCriteria.push({
-      label: "Last Name",
-      value: lastName,
-      icon: UserIcon,
-    });
-  if (email)
-    searchCriteria.push({ label: "Email", value: email, icon: EnvelopeIcon });
-  if (phone)
-    searchCriteria.push({ label: "Phone", value: phone, icon: PhoneIcon });
-  if (organizationName)
-    searchCriteria.push({
-      label: "Organization",
-      value: organizationName,
-      icon: BuildingOffice2Icon,
-    });
-  searchCriteria.push({
-    label: "Status",
-    value: isActive ? "Active Only" : "All",
-    icon: CheckCircleIcon,
-  });
+    return criteria;
+  }, [firstName, lastName, email, phone, organizationName, isActive]);
 
   // Handle sort change
   const handleSortChange = (e) => {
-    const [field, order] = e.target.value.split(",");
     setSortByValue(e.target.value);
   };
 
@@ -383,7 +445,7 @@ function AdminCustomerSearchResultPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <Spinner size="lg" />
           <p className="mt-4 text-gray-600">Loading search results...</p>
         </div>
       </div>
@@ -394,61 +456,19 @@ function AdminCustomerSearchResultPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
-        <nav className="flex mb-8" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3">
-            <li className="inline-flex items-center">
-              <Link
-                to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                <ChartBarIcon className="w-4 h-4 mr-2" />
-                Dashboard
-              </Link>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <Link
-                  to="/admin/customers"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
-                >
-                  Customers
-                </Link>
-              </div>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <Link
-                  to="/admin/customers/search"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
-                >
-                  Search
-                </Link>
-              </div>
-            </li>
-            <li aria-current="page">
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">
-                  Results
-                </span>
-              </div>
-            </li>
-          </ol>
-        </nav>
+        <Breadcrumb items={breadcrumbItems} className="mb-8" />
 
         {/* Header Section */}
         <div className="mb-8">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <div className="flex items-center">
-                <UserGroupIcon className="h-8 w-8 text-blue-600 mr-3" />
-                <h1 className="text-3xl font-bold text-gray-900">
+                <UserGroupIcon className={`h-8 w-8 ${themeClasses.linkPrimary} mr-3`} />
+                <h1 className={`text-3xl font-bold ${themeClasses.textPrimary}`}>
                   Search Results
                 </h1>
               </div>
-              <p className="mt-2 text-lg text-gray-600 ml-11">
+              <p className={`mt-2 text-lg ${themeClasses.textSecondary} ml-11`}>
                 Customer search results
               </p>
             </div>
@@ -482,45 +502,17 @@ function AdminCustomerSearchResultPage() {
 
         {/* Success/Error Messages */}
         {successMessage && (
-          <div className="mb-6 bg-green-50 border-l-4 border-green-400 p-4 rounded-lg">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <CheckCircleIcon className="h-5 w-5 text-green-400" />
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-green-800">{successMessage}</p>
-              </div>
-              <div className="ml-auto pl-3">
-                <button
-                  onClick={() => setSuccessMessage("")}
-                  className="inline-flex text-green-400 hover:text-green-500"
-                >
-                  <XMarkIcon className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-          </div>
+          <Alert type="success" className="mb-6" dismissible onDismiss={() => setSuccessMessage("")}>
+            <CheckCircleIcon className="h-5 w-5 mr-2 inline" />
+            {successMessage}
+          </Alert>
         )}
 
         {errors.message && (
-          <div className="mb-6 bg-red-50 border-l-4 border-red-400 p-4 rounded-lg">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <ExclamationTriangleIconSolid className="h-5 w-5 text-red-400" />
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-800">{errors.message}</p>
-              </div>
-              <div className="ml-auto pl-3">
-                <button
-                  onClick={() => setErrors({})}
-                  className="inline-flex text-red-400 hover:text-red-500"
-                >
-                  <XMarkIcon className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-          </div>
+          <Alert type="error" className="mb-6" dismissible onDismiss={() => setErrors({})}>
+            <ExclamationTriangleIconSolid className="h-5 w-5 mr-2 inline" />
+            {errors.message}
+          </Alert>
         )}
 
         {/* Main Content */}
@@ -529,12 +521,12 @@ function AdminCustomerSearchResultPage() {
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-                  <MagnifyingGlassIcon className="h-5 w-5 mr-2 text-blue-600" />
+                <h2 className={`text-xl font-semibold ${themeClasses.textPrimary} flex items-center`}>
+                  <MagnifyingGlassIcon className={`h-5 w-5 mr-2 ${themeClasses.linkPrimary}`} />
                   Results
                 </h2>
                 {!isFetching && customers && customers.results && (
-                  <p className="mt-1 text-sm text-gray-600">
+                  <p className={`mt-1 text-sm ${themeClasses.textSecondary}`}>
                     Found <span className="font-semibold">{totalCount}</span>{" "}
                     customers
                     {searchCriteria.length > 0 && " matching your criteria"}
@@ -656,27 +648,8 @@ function AdminCustomerSearchResultPage() {
           <div className="p-6">
             {isFetching ? (
               <div className="flex flex-col items-center justify-center py-16">
-                <svg
-                  className="animate-spin h-10 w-10 text-blue-600 mb-4"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-                <p className="text-gray-600">Updating results...</p>
+                <Spinner size="lg" />
+                <p className="mt-4 text-gray-600">Updating results...</p>
               </div>
             ) : customers &&
               customers.results &&
@@ -919,95 +892,72 @@ function AdminCustomerSearchResultPage() {
       </div>
 
       {/* Delete Confirmation Modal */}
-      {selectedCustomerForDeletion && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                <ExclamationTriangleIcon className="h-5 w-5 mr-2 text-amber-600" />
-                Archive Customer
-              </h3>
-            </div>
+      <Modal
+        isOpen={!!selectedCustomerForDeletion}
+        onClose={() => setSelectedCustomerForDeletion(null)}
+        title="Archive Customer"
+      >
+        {selectedCustomerForDeletion && (
+          <>
+            <p className="text-sm text-gray-600 mb-4">
+              You are about to <strong>archive</strong> this customer. It will
+              no longer appear on your dashboard. This action can be undone
+              but you'll need to contact the system administrator. Are you
+              sure you would like to continue?
+            </p>
 
-            <div className="px-6 py-4">
-              <p className="text-sm text-gray-600 mb-4">
-                You are about to <strong>archive</strong> this customer. It will
-                no longer appear on your dashboard. This action can be undone
-                but you'll need to contact the system administrator. Are you
-                sure you would like to continue?
+            <div className="p-4 bg-amber-50 rounded-lg border-l-4 border-amber-500 mb-4">
+              <p className="text-sm font-medium text-gray-700">
+                <strong>Name:</strong>{" "}
+                {selectedCustomerForDeletion.type ===
+                COMMERCIAL_CUSTOMER_TYPE_OF_ID
+                  ? selectedCustomerForDeletion.organizationName ||
+                    `${selectedCustomerForDeletion.firstName} ${selectedCustomerForDeletion.lastName}`
+                  : `${selectedCustomerForDeletion.firstName} ${selectedCustomerForDeletion.lastName}`}
               </p>
-
-              <div className="p-4 bg-amber-50 rounded-lg border-l-4 border-amber-500">
-                <p className="text-sm font-medium text-gray-700">
-                  <strong>Name:</strong>{" "}
-                  {selectedCustomerForDeletion.type ===
-                  COMMERCIAL_CUSTOMER_TYPE_OF_ID
-                    ? selectedCustomerForDeletion.organizationName ||
-                      `${selectedCustomerForDeletion.firstName} ${selectedCustomerForDeletion.lastName}`
-                    : `${selectedCustomerForDeletion.firstName} ${selectedCustomerForDeletion.lastName}`}
+              {selectedCustomerForDeletion.email && (
+                <p className="text-sm text-gray-600 mt-1">
+                  <strong>Email:</strong> {selectedCustomerForDeletion.email}
                 </p>
-                {selectedCustomerForDeletion.email && (
-                  <p className="text-sm text-gray-600 mt-1">
-                    <strong>Email:</strong> {selectedCustomerForDeletion.email}
-                  </p>
-                )}
-                {selectedCustomerForDeletion.isBanned && (
-                  <p className="text-sm text-red-600 mt-1">
-                    <strong>Status:</strong> This customer is currently banned
-                  </p>
-                )}
-              </div>
+              )}
+              {selectedCustomerForDeletion.isBanned && (
+                <p className="text-sm text-red-600 mt-1">
+                  <strong>Status:</strong> This customer is currently banned
+                </p>
+              )}
             </div>
 
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
-              <button
+            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+              <Button
+                variant="secondary"
                 onClick={() => setSelectedCustomerForDeletion(null)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
                 onClick={onDeleteConfirmButtonClick}
                 disabled={isFetching}
-                className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                loading={isFetching}
+                icon={ArchiveBoxIcon}
               >
-                {isFetching ? (
-                  <>
-                    <svg
-                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Archiving...
-                  </>
-                ) : (
-                  <>
-                    <ArchiveBoxIcon className="h-4 w-4 mr-2" />
-                    Confirm Archive
-                  </>
-                )}
-              </button>
+                {isFetching ? "Archiving..." : "Confirm Archive"}
+              </Button>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Modal>
     </div>
   );
 }
 
-export default AdminCustomerSearchResultPage;
+// Wrapper with UIXThemeProvider
+function AdminCustomerSearchResultPageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminCustomerSearchResultPage />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminCustomerSearchResultPageWithProvider;

@@ -1,6 +1,8 @@
 // File Path: web/workery-frontend/src/pages/Admin/Customer/Add/Step6Page.jsx
+// UIX Upgraded - Uses WizardFormStep whole page component
+// @uix-page: AdminCustomerAddStep6Page
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
 import { Link, useNavigate } from "react-router";
 import {
   useAuthManager,
@@ -8,29 +10,39 @@ import {
 } from "../../../../services/Services";
 import {
   UserPlusIcon,
-  ChevronRightIcon,
-  ArrowLeftIcon,
-  CheckIcon,
-  ChartBarIcon,
-  UserGroupIcon,
-  ExclamationCircleIcon,
-  PencilSquareIcon,
   UserIcon,
   MapPinIcon,
-  ChartBarSquareIcon,
-  CheckCircleIcon,
-  PhoneIcon,
   ChartPieIcon,
+  CheckCircleIcon,
+  PencilSquareIcon,
+  TruckIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
+import {
+  WizardFormStep,
+  DataField,
+  Alert,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../components/UIX";
 import {
   HowHearAboutUsDisplay,
   TagsDisplay,
 } from "../../../../components/business/displays";
-
 import {
   COMMERCIAL_CUSTOMER_TYPE_OF_ID,
   CLIENT_PHONE_TYPE_WORK,
 } from "../../../../constants/Customer";
+
+// Wizard configuration
+const WIZARD_STEPS = [
+  { title: "Search" },
+  { title: "Type" },
+  { title: "Contact" },
+  { title: "Address" },
+  { title: "Metrics" },
+  { title: "Review" },
+];
 
 // Options for display
 const CLIENT_TYPE_OPTIONS = [
@@ -46,9 +58,9 @@ const CLIENT_ORGANIZATION_TYPE_OPTIONS = [
 ];
 
 const CLIENT_PHONE_TYPE_OPTIONS = [
-  { value: 1, label: "Work" },
-  { value: 2, label: "Home" },
-  { value: 3, label: "Mobile" },
+  { value: 1, label: "Mobile" },
+  { value: 2, label: "Work" },
+  { value: 3, label: "Home" },
 ];
 
 const GENDER_OPTIONS = [
@@ -57,13 +69,79 @@ const GENDER_OPTIONS = [
   { value: 3, label: "Female" },
 ];
 
-function AdminCustomerAddStep6Page() {
+// Review Section Component with Edit Link
+const ReviewSection = memo(function ReviewSection({
+  title,
+  icon: Icon,
+  children,
+  editLink,
+  hasError = false,
+  themeClasses = {},
+}) {
+  const sectionHeaderBg = themeClasses.sectionHeaderBg || "bg-gray-700 dark:bg-gray-800";
+  const sectionHeaderText = themeClasses.sectionHeaderText || "text-white";
+  const linkPrimary = themeClasses.linkPrimary || "text-blue-300 hover:text-blue-200";
+  const bgCard = themeClasses.bgCard || "bg-white dark:bg-gray-900";
+  const errorRing = themeClasses.errorRing || "ring-red-500 dark:ring-red-400";
+  const errorText = themeClasses.errorText || "text-red-300 dark:text-red-400";
+  const errorTextHover = themeClasses.errorTextHover || "text-red-300 hover:text-red-200 dark:text-red-400 dark:hover:text-red-300";
+
+  return (
+    <div
+      className={`${sectionHeaderBg} rounded-lg shadow-sm mb-6 ${hasError ? `ring-2 ${errorRing}` : ""}`}
+    >
+      <div className="px-4 sm:px-6 py-3 sm:py-4">
+        <div className="flex items-center justify-between">
+          <h3 className={`text-base sm:text-lg font-semibold ${sectionHeaderText} flex items-center`}>
+            <Icon
+              className={`w-4 sm:w-5 h-4 sm:h-5 mr-2 ${hasError ? errorText : linkPrimary} flex-shrink-0`}
+            />
+            <span className="truncate">{title}</span>
+            {hasError && (
+              <ExclamationTriangleIcon className={`w-4 sm:w-5 h-4 sm:h-5 ml-2 ${errorText}`} />
+            )}
+          </h3>
+          {editLink && (
+            <Link
+              to={editLink}
+              className={`inline-flex items-center text-xs sm:text-sm ${hasError ? errorTextHover : linkPrimary}`}
+            >
+              <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+              {hasError ? "Fix" : "Edit"}
+            </Link>
+          )}
+        </div>
+      </div>
+      <div className={`${bgCard} border-2 border-t-0 ${sectionHeaderBg} rounded-b-lg p-4 sm:p-6`}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+});
+
+// Memoized content component
+const Step6Content = memo(function Step6Content() {
   const authManager = useAuthManager();
   const customerManager = useCustomerManager();
   const navigate = useNavigate();
+  const { getThemeClasses } = useUIXTheme();
+
+  // Memoized theme classes for ReviewSection
+  const themeClasses = useMemo(() => ({
+    bgCard: getThemeClasses('bg-card') || 'bg-white dark:bg-gray-900',
+    linkPrimary: getThemeClasses('link-primary') || 'text-blue-300 hover:text-blue-200',
+    sectionHeaderBg: getThemeClasses('form-card-header-bg') || 'bg-gray-700 dark:bg-gray-800',
+    sectionHeaderText: getThemeClasses('form-card-header-text') || 'text-white',
+    errorRing: getThemeClasses('error-ring') || 'ring-red-500 dark:ring-red-400',
+    errorText: getThemeClasses('error-text') || 'text-red-300 dark:text-red-400',
+    errorTextHover: getThemeClasses('error-text-hover') || 'text-red-300 hover:text-red-200 dark:text-red-400 dark:hover:text-red-300',
+  }), [getThemeClasses]);
 
   // Component states
   const [errors, setErrors] = useState({});
+  const [fieldErrors, setFieldErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [customerData, setCustomerData] = useState(null);
 
@@ -75,72 +153,60 @@ function AdminCustomerAddStep6Page() {
     }
 
     loadCustomerState();
+    window.scrollTo(0, 0);
   }, [authManager, navigate]);
 
-  const loadCustomerState = () => {
+  const loadCustomerState = useCallback(() => {
     try {
-      const existing = sessionStorage.getItem(
-        "WORKERY_CUSTOMER_CREATION_STATE",
-      );
+      const existing = sessionStorage.getItem("WORKERY_CUSTOMER_CREATION_STATE");
       if (existing) {
         const customerState = JSON.parse(existing);
         setCustomerData(customerState);
       } else {
-        // No state found, redirect back to step 1
         navigate("/admin/customers/add/step-1");
       }
     } catch (error) {
       console.error("Error loading customer state:", error);
       navigate("/admin/customers/add/step-1");
     }
-  };
+  }, [navigate]);
 
-  const onSubmitClick = async (e) => {
-    e.preventDefault();
-    setErrors({});
-    setIsLoading(true);
+  const onUnauthorized = useCallback(() => {
+    navigate("/login?unauthorized=true");
+  }, [navigate]);
 
-    try {
-      if (!customerData) {
-        throw new Error("No customer data found");
-      }
+  // Map backend field errors to sections for highlighting
+  const getSectionWithError = useCallback((fieldName) => {
+    const contactFields = ["email", "firstName", "lastName", "phone", "phoneType", "organizationName", "organizationType"];
+    const addressFields = ["addressLine1", "city", "region", "postalCode", "country"];
+    const metricsFields = ["tags", "howDidYouHearAboutUsID", "gender", "birthDate", "joinDate"];
 
-      // Process the data for API submission
-      const processedData = processCustomerData(customerData);
+    if (contactFields.includes(fieldName)) return "contact";
+    if (addressFields.includes(fieldName)) return "address";
+    if (metricsFields.includes(fieldName)) return "metrics";
 
-      console.log("Submitting customer data:", processedData);
+    return null;
+  }, []);
 
-      // Submit to API
-      const response = await customerManager.createCustomer(processedData, () =>
-        navigate("/login?unauthorized=true"),
-      );
+  // Check if a section has errors
+  const sectionHasErrors = useCallback(
+    (section) => {
+      const fieldsInSection = {
+        contact: ["email", "firstName", "lastName", "phone", "phoneType", "organizationName", "organizationType"],
+        address: ["addressLine1", "city", "region", "postalCode", "country"],
+        shipping: ["shippingAddressLine1", "shippingCity", "shippingRegion", "shippingPostalCode"],
+        metrics: ["tags", "howDidYouHearAboutUsID", "gender", "birthDate", "joinDate"],
+      };
 
-      console.log("Customer created successfully:", response);
+      return fieldsInSection[section]?.some((field) => fieldErrors[field]);
+    },
+    [fieldErrors]
+  );
 
-      // Clear the session storage
-      sessionStorage.removeItem("WORKERY_CUSTOMER_CREATION_STATE");
-
-      // Show success message and redirect
-      navigate(`/admin/customer/${response.id}`, {
-        state: { successMessage: "Customer created successfully!" },
-      });
-    } catch (error) {
-      console.error("Failed to create customer:", error);
-      const errorMessage =
-        error.message ||
-        "An unexpected error occurred while creating the customer.";
-      setErrors({ message: errorMessage });
-      window.scrollTo(0, 0);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const processCustomerData = (data) => {
-    // Create a payload with the customer data
+  const processCustomerData = useCallback((data) => {
     const payload = { ...data };
 
-    // Clean up tags - ensure they are valid MongoDB ObjectID strings
+    // Clean up tags
     if (payload.tags && Array.isArray(payload.tags)) {
       payload.tags = payload.tags.filter(
         (tag) =>
@@ -150,10 +216,8 @@ function AdminCustomerAddStep6Page() {
           tag !== "0" &&
           tag !== 0 &&
           typeof tag === "string" &&
-          tag.length === 24, // MongoDB ObjectIDs are 24 characters
+          tag.length === 24,
       );
-
-      // If no valid tags remain, set to empty array
       if (payload.tags.length === 0) {
         payload.tags = [];
       }
@@ -172,14 +236,11 @@ function AdminCustomerAddStep6Page() {
       payload.birthDate = new Date(payload.birthDate).toISOString();
     }
 
-    // Convert numeric fields to ensure they are integers
+    // Convert numeric fields
     if (payload.type !== undefined) {
       payload.type = parseInt(payload.type);
     }
-    if (
-      payload.organizationType !== undefined &&
-      payload.organizationType !== 0
-    ) {
+    if (payload.organizationType !== undefined && payload.organizationType !== 0) {
       payload.organizationType = parseInt(payload.organizationType);
     }
     if (payload.phoneType !== undefined) {
@@ -195,497 +256,381 @@ function AdminCustomerAddStep6Page() {
       payload.genderOther = "";
     }
 
-    // IMPORTANT: Keep howDidYouHearAboutUsID as a string (MongoDB ObjectID)
+    // Keep howDidYouHearAboutUsID as string
     if (payload.howDidYouHearAboutUsID) {
       payload.howDidYouHearAboutUsID = String(payload.howDidYouHearAboutUsID);
     }
 
-    // Remove the isHowDidYouHearAboutUsOther field if it's false
+    // Remove flags
     if (payload.isHowDidYouHearAboutUsOther === false) {
       delete payload.isHowDidYouHearAboutUsOther;
     }
 
-    // Remove empty/zero values for optional numeric fields
+    // Remove empty/zero values
     if (payload.organizationType === 0) delete payload.organizationType;
     if (payload.otherPhoneType === 0) delete payload.otherPhoneType;
 
     return payload;
-  };
+  }, []);
 
-  // Review Section Component with Dark Header
-  const ReviewSection = ({ title, icon: Icon, children, editLink }) => (
-    <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
-      <div className="px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
-        <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
-          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
-          <span className="truncate">{title}</span>
-        </h3>
-        {editLink && (
-          <Link
-            to={editLink}
-            className="inline-flex items-center text-xs sm:text-sm text-blue-200 hover:text-blue-100"
-          >
-            <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-            Edit
-          </Link>
-        )}
-      </div>
-      <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
-        {children}
-      </div>
-    </div>
-  );
+  const handleSubmit = useCallback(async () => {
+    setIsLoading(true);
+    setErrors({});
+    setFieldErrors({});
 
-  // Detail Field Component
-  const DetailField = ({ label, value, fullWidth = false }) => (
-    <div className={fullWidth ? "lg:col-span-2" : ""}>
-      <dt className="text-xs sm:text-sm font-medium text-gray-500 mb-1">
-        {label}
-      </dt>
-      <dd className="text-sm sm:text-base font-medium text-gray-900 break-words">
-        {value || "-"}
-      </dd>
-    </div>
-  );
+    try {
+      if (!customerData) {
+        throw new Error("No customer data found");
+      }
 
-  const getTypeLabel = (type) => {
+      const processedData = processCustomerData(customerData);
+
+      if (import.meta.env.DEV) {
+        console.log("Submitting customer data:", processedData);
+      }
+
+      const response = await customerManager.createCustomer(processedData, onUnauthorized);
+
+      if (import.meta.env.DEV) {
+        console.log("Customer created successfully:", response);
+      }
+
+      sessionStorage.removeItem("WORKERY_CUSTOMER_CREATION_STATE");
+      navigate(`/admin/customer/${response.id}`, {
+        state: { successMessage: "Customer created successfully!" },
+      });
+    } catch (error) {
+      console.error("Failed to create customer:", error);
+
+      let errorDetails = {};
+      let generalError = null;
+
+      if (error && typeof error === "object") {
+        const knownFields = [
+          "email", "firstName", "lastName", "phone", "phoneType",
+          "addressLine1", "city", "region", "postalCode", "country",
+          "organizationName", "organizationType",
+          "tags", "howDidYouHearAboutUsID", "gender", "birthDate", "joinDate",
+        ];
+
+        Object.keys(error).forEach((field) => {
+          if (knownFields.includes(field)) {
+            errorDetails[field] = Array.isArray(error[field])
+              ? error[field].join(", ")
+              : error[field];
+          }
+        });
+
+        if (error.message) {
+          generalError = error.message;
+        } else if (error.detail) {
+          generalError = error.detail;
+        } else if (error.error) {
+          generalError = error.error;
+        } else if (Object.keys(errorDetails).length === 0) {
+          generalError =
+            typeof error === "string"
+              ? error
+              : "An error occurred while creating the customer. Please review your information and try again.";
+        }
+      } else if (typeof error === "string") {
+        generalError = error;
+      } else {
+        generalError = "An unexpected error occurred. Please try again.";
+      }
+
+      setFieldErrors(errorDetails);
+
+      if (generalError && Object.keys(errorDetails).length === 0) {
+        setErrors({ message: generalError });
+      } else if (Object.keys(errorDetails).length > 0) {
+        const errorSections = new Set();
+        Object.keys(errorDetails).forEach((field) => {
+          const section = getSectionWithError(field);
+          if (section) errorSections.add(section);
+        });
+
+        const sectionNames = {
+          contact: "Contact Information",
+          address: "Address Information",
+          metrics: "Metrics Information",
+        };
+
+        const sectionsWithErrors = Array.from(errorSections)
+          .map((s) => sectionNames[s])
+          .filter(Boolean);
+
+        const errorMessage =
+          sectionsWithErrors.length > 0
+            ? `Please fix the errors in the following sections: ${sectionsWithErrors.join(", ")}`
+            : "Please fix the validation errors below";
+
+        setErrors({ message: errorMessage });
+      }
+
+      window.scrollTo(0, 0);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [customerData, processCustomerData, customerManager, onUnauthorized, navigate, getSectionWithError]);
+
+  // Handle cancel
+  const handleCancel = useCallback(() => {
+    navigate("/admin/customers");
+  }, [navigate]);
+
+  // Handle back
+  const handleBack = useCallback(() => {
+    navigate("/admin/customers/add/step-5");
+  }, [navigate]);
+
+  // Format helpers
+  const getTypeLabel = useCallback((type) => {
     const option = CLIENT_TYPE_OPTIONS.find((opt) => opt.value === type);
-    return option ? option.label : "Unknown";
-  };
+    return option ? option.label : "-";
+  }, []);
 
-  const getOrganizationTypeLabel = (type) => {
-    const option = CLIENT_ORGANIZATION_TYPE_OPTIONS.find(
-      (opt) => opt.value === type,
-    );
-    return option ? option.label : "Unknown";
-  };
+  const getOrganizationTypeLabel = useCallback((type) => {
+    const option = CLIENT_ORGANIZATION_TYPE_OPTIONS.find((opt) => opt.value === type);
+    return option ? option.label : "-";
+  }, []);
 
-  const getPhoneTypeLabel = (phoneType) => {
-    const option = CLIENT_PHONE_TYPE_OPTIONS.find(
-      (opt) => opt.value === phoneType,
-    );
-    return option ? option.label : "Unknown";
-  };
+  const getPhoneTypeLabel = useCallback((phoneType) => {
+    const option = CLIENT_PHONE_TYPE_OPTIONS.find((opt) => opt.value === phoneType);
+    return option ? option.label : "-";
+  }, []);
 
-  const getGenderLabel = (gender) => {
+  const getGenderLabel = useCallback((gender) => {
     const option = GENDER_OPTIONS.find((opt) => opt.value === gender);
-    return option ? option.label : "Unknown";
-  };
+    return option ? option.label : "-";
+  }, []);
 
-  // Helper function to parse array values
-  const parseArrayValue = (value) => {
+  const parseArrayValue = useCallback((value) => {
     if (!value) return [];
     if (Array.isArray(value)) return value;
     if (typeof value === "string") {
-      return value
-        .split(",")
-        .map((id) => id.trim())
-        .filter(Boolean);
+      return value.split(",").map((id) => id.trim()).filter(Boolean);
     }
     return [];
-  };
+  }, []);
+
+  // Action buttons
+  const actions = useMemo(
+    () => [
+      {
+        label: "Cancel",
+        variant: "outline",
+        onClick: handleCancel,
+      },
+      {
+        label: isLoading ? "Submitting..." : "Submit",
+        variant: "success",
+        onClick: handleSubmit,
+        disabled: isLoading,
+        loading: isLoading,
+        icon: CheckCircleIcon,
+      },
+    ],
+    [handleCancel, handleSubmit, isLoading]
+  );
 
   if (!customerData) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        <span className="ml-3 text-gray-600">Loading...</span>
-      </div>
-    );
+    return null;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {/* Breadcrumb */}
-        <nav className="flex mb-4" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3">
-            <li className="inline-flex items-center">
-              <Link
-                to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                <ChartBarIcon className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Dashboard</span>
-              </Link>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <Link
-                  to="/admin/customers"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
-                >
-                  <span className="inline-flex items-center">
-                    <UserGroupIcon className="w-4 h-4 mr-2" />
-                    <span className="hidden sm:inline">Customers</span>
-                  </span>
-                </Link>
-              </div>
-            </li>
-            <li aria-current="page">
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
-                  <UserPlusIcon className="w-4 h-4 mr-2" />
-                  Add
-                </span>
-              </div>
-            </li>
-          </ol>
-        </nav>
+    <WizardFormStep
+      wizardSteps={WIZARD_STEPS}
+      currentStep={6}
+      wizardTitle="Add New Customer"
+      wizardIcon={UserPlusIcon}
+      stepTitle="Review & Submit"
+      stepSubtitle="Review and submit new customer"
+      stepIcon={CheckCircleIcon}
+      showFormCard={false}
+      contentMaxWidth="7xl"
+      errors={errors}
+      isLoading={isLoading}
+      actions={actions}
+      onCancel={handleCancel}
+      onBack={handleBack}
+      actionLayout="end"
+    >
+      <div className="space-y-6">
+        {/* Review Instructions */}
+        <Alert type="info" icon={CheckCircleIcon}>
+          Please carefully review the following customer details. If everything looks correct,
+          click the <strong>Submit</strong> button to create the new customer.
+        </Alert>
 
-        {/* Page Title */}
-        <div className="mb-6">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
-            <UserPlusIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
-            Add New Customer
-          </h1>
-          <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
-            <CheckCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
-            Step 6: Review and submit
-          </p>
-        </div>
-
-        {/* Wizard Steps - Responsive Design */}
-        <div className="mb-6">
-          <div className="overflow-x-auto pb-2">
-            <div className="flex items-center justify-start lg:justify-center min-w-max">
-              {/* Steps 1-5 Complete */}
-              {[1, 2, 3, 4, 5].map((step, index) => (
-                <React.Fragment key={step}>
-                  <div className="flex items-center">
-                    <div className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-green-600 rounded-full">
-                      <CheckIcon className="w-4 h-4 lg:w-6 lg:h-6 text-white" />
-                    </div>
-                    <div className="ml-2 lg:ml-3">
-                      <p className="text-xs lg:text-sm font-medium text-gray-900">
-                        {step === 1 && "Search"}
-                        {step === 2 && "Type"}
-                        {step === 3 && "Contact"}
-                        {step === 4 && "Address"}
-                        {step === 5 && "Metrics"}
-                      </p>
-                      <p className="text-xs text-gray-500 hidden xl:block">
-                        Complete
-                      </p>
-                    </div>
-                  </div>
-                  {index < 5 && (
-                    <div className="mx-1 lg:mx-2 w-8 lg:w-12 h-0.5 bg-green-600"></div>
-                  )}
-                </React.Fragment>
+        {/* Field errors display */}
+        {Object.keys(fieldErrors).length > 0 && (
+          <Alert type="error">
+            <ul className="list-disc list-inside">
+              {Object.entries(fieldErrors).map(([field, error]) => (
+                <li key={field}>
+                  <strong>{field}:</strong> {error}
+                </li>
               ))}
+            </ul>
+          </Alert>
+        )}
 
-              {/* Step 6 - Active */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-blue-600 rounded-full">
-                  <span className="text-white font-semibold text-sm lg:text-base">
-                    6
-                  </span>
-                </div>
-                <div className="ml-2 lg:ml-3">
-                  <p className="text-xs lg:text-sm font-medium text-gray-900">
-                    Review
-                  </p>
-                  <p className="text-xs text-gray-500 hidden xl:block">
-                    Submit
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        {/* Contact Information Section */}
+        <ReviewSection
+          title="Contact Information"
+          icon={UserIcon}
+          editLink="/admin/customers/add/step-3"
+          hasError={sectionHasErrors("contact")}
+          themeClasses={themeClasses}
+        >
+          <DataField label="Type" value={getTypeLabel(customerData.type)} />
 
-        {/* Main Content */}
-        <div className="bg-white shadow-sm rounded-lg">
-          {/* Dark Header */}
-          <div className="bg-gray-700 rounded-t-lg">
-            <div className="px-4 sm:px-6 py-3 sm:py-4">
-              <h2 className="text-base sm:text-lg font-semibold text-white flex items-center">
-                <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
-                Review and Submit
-              </h2>
-            </div>
-          </div>
+          {customerData.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID && (
+            <>
+              <DataField label="Organization Name" value={customerData.organizationName} />
+              <DataField label="Organization Type" value={getOrganizationTypeLabel(customerData.organizationType)} />
+            </>
+          )}
 
-          {/* Content with Border */}
-          <div className="border-x-2 border-b-2 border-gray-700 rounded-b-lg p-4 sm:p-6">
-            <p className="text-sm sm:text-base text-gray-600 mb-6">
-              Please carefully review the following customer details. If
-              everything looks correct, click the <strong>Submit</strong> button
-              to create the new customer.
-            </p>
+          <DataField label="First Name" value={customerData.firstName} />
+          <DataField label="Last Name" value={customerData.lastName} />
+          <DataField label="Email" value={customerData.email || "Not provided"} />
+          <DataField
+            label="Phone"
+            value={`${customerData.phone} (${getPhoneTypeLabel(customerData.phoneType)})`}
+          />
 
-            {errors.message && (
-              <div className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center">
-                <ExclamationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-                <span className="text-sm sm:text-base">{errors.message}</span>
-              </div>
+          {customerData.phoneType === CLIENT_PHONE_TYPE_WORK && customerData.phoneExtension && (
+            <DataField label="Phone Extension" value={customerData.phoneExtension} />
+          )}
+
+          <DataField label="OK to Email" value={customerData.isOkToEmail ? "Yes" : "No"} />
+          <DataField label="OK to Text" value={customerData.isOkToText ? "Yes" : "No"} />
+
+          {customerData.otherPhone && (
+            <>
+              <DataField
+                label="Other Phone"
+                value={`${customerData.otherPhone} (${getPhoneTypeLabel(customerData.otherPhoneType)})`}
+              />
+              {customerData.otherPhoneType === CLIENT_PHONE_TYPE_WORK && customerData.otherPhoneExtension && (
+                <DataField label="Other Phone Extension" value={customerData.otherPhoneExtension} />
+              )}
+            </>
+          )}
+        </ReviewSection>
+
+        {/* Address Information Section */}
+        <ReviewSection
+          title="Address Information"
+          icon={MapPinIcon}
+          editLink="/admin/customers/add/step-4"
+          hasError={sectionHasErrors("address")}
+          themeClasses={themeClasses}
+        >
+          <DataField label="Address" value={customerData.addressLine1} />
+          {customerData.addressLine2 && (
+            <DataField label="Address Line 2" value={customerData.addressLine2} />
+          )}
+          <DataField label="City" value={customerData.city} />
+          <DataField label="Province/Territory" value={customerData.region} />
+          <DataField label="Postal Code" value={customerData.postalCode} />
+          <DataField label="Country" value={customerData.country} />
+        </ReviewSection>
+
+        {/* Shipping Address Section (if applicable) */}
+        {customerData.hasShippingAddress && (
+          <ReviewSection
+            title="Shipping Address"
+            icon={TruckIcon}
+            editLink="/admin/customers/add/step-4"
+            hasError={sectionHasErrors("shipping")}
+            themeClasses={themeClasses}
+          >
+            <DataField label="Name" value={customerData.shippingName} />
+            <DataField label="Phone" value={customerData.shippingPhone} />
+            <DataField label="Address" value={customerData.shippingAddressLine1} />
+            {customerData.shippingAddressLine2 && (
+              <DataField label="Address Line 2" value={customerData.shippingAddressLine2} />
             )}
+            <DataField label="City" value={customerData.shippingCity} />
+            <DataField label="Province/Territory" value={customerData.shippingRegion} />
+            <DataField label="Postal Code" value={customerData.shippingPostalCode} />
+            <DataField label="Country" value={customerData.shippingCountry} />
+          </ReviewSection>
+        )}
 
-            {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                <span className="ml-3 text-gray-600">Creating customer...</span>
-              </div>
-            ) : (
-              <div className="space-y-0">
-                {/* Contact Information Section */}
-                <ReviewSection
-                  title="Contact Information"
-                  icon={UserIcon}
-                  editLink="/admin/customers/add/step-3"
-                >
-                  <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                    <DetailField
-                      label="Type"
-                      value={getTypeLabel(customerData.type)}
-                    />
+        {/* Metrics Information Section */}
+        <ReviewSection
+          title="Metrics Information"
+          icon={ChartPieIcon}
+          editLink="/admin/customers/add/step-5"
+          hasError={sectionHasErrors("metrics")}
+          themeClasses={themeClasses}
+        >
+          {customerData.tags && customerData.tags.length > 0 && (
+            <div className="lg:col-span-2 mb-2">
+              <TagsDisplay
+                values={parseArrayValue(customerData.tags)}
+                label="Tags"
+                variant="success"
+                onUnauthorized={onUnauthorized}
+              />
+            </div>
+          )}
 
-                    {customerData.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID && (
-                      <>
-                        <DetailField
-                          label="Organization Name"
-                          value={customerData.organizationName}
-                        />
-                        <DetailField
-                          label="Organization Type"
-                          value={getOrganizationTypeLabel(
-                            customerData.organizationType,
-                          )}
-                        />
-                      </>
-                    )}
+          {customerData.howDidYouHearAboutUsID && (
+            <div className="lg:col-span-2">
+              <HowHearAboutUsDisplay
+                value={customerData.howDidYouHearAboutUsID}
+                label="How did you hear about us?"
+                onUnauthorized={onUnauthorized}
+              />
+            </div>
+          )}
 
-                    <DetailField
-                      label="First Name"
-                      value={customerData.firstName}
-                    />
-                    <DetailField
-                      label="Last Name"
-                      value={customerData.lastName}
-                    />
-                    <DetailField
-                      label="Email"
-                      value={customerData.email || "Not provided"}
-                    />
-                    <DetailField
-                      label="Phone"
-                      value={`${customerData.phone} (${getPhoneTypeLabel(customerData.phoneType)})`}
-                    />
+          {customerData.howDidYouHearAboutUsOther && (
+            <DataField
+              label="How did you hear about us? (Other)"
+              value={customerData.howDidYouHearAboutUsOther}
+              fullWidth
+            />
+          )}
 
-                    {customerData.phoneType === CLIENT_PHONE_TYPE_WORK &&
-                      customerData.phoneExtension && (
-                        <DetailField
-                          label="Phone Extension"
-                          value={customerData.phoneExtension}
-                        />
-                      )}
+          <DataField label="Gender" value={getGenderLabel(customerData.gender)} />
 
-                    <DetailField
-                      label="OK to Email"
-                      value={customerData.isOkToEmail ? "Yes" : "No"}
-                    />
-                    <DetailField
-                      label="OK to Text"
-                      value={customerData.isOkToText ? "Yes" : "No"}
-                    />
+          {customerData.gender === 1 && customerData.genderOther && (
+            <DataField label="Gender (Other)" value={customerData.genderOther} />
+          )}
 
-                    {customerData.otherPhone && (
-                      <>
-                        <DetailField
-                          label="Other Phone"
-                          value={`${customerData.otherPhone} (${getPhoneTypeLabel(customerData.otherPhoneType)})`}
-                        />
-                        {customerData.otherPhoneType ===
-                          CLIENT_PHONE_TYPE_WORK &&
-                          customerData.otherPhoneExtension && (
-                            <DetailField
-                              label="Other Phone Extension"
-                              value={customerData.otherPhoneExtension}
-                            />
-                          )}
-                      </>
-                    )}
-                  </dl>
-                </ReviewSection>
+          {customerData.birthDate && (
+            <DataField label="Birth Date" value={customerData.birthDate} />
+          )}
 
-                {/* Address Information Section */}
-                <ReviewSection
-                  title="Address Information"
-                  icon={MapPinIcon}
-                  editLink="/admin/customers/add/step-4"
-                >
-                  <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                    <DetailField
-                      label="Address"
-                      value={customerData.addressLine1}
-                    />
-                    {customerData.addressLine2 && (
-                      <DetailField
-                        label="Address Line 2"
-                        value={customerData.addressLine2}
-                      />
-                    )}
-                    <DetailField label="City" value={customerData.city} />
-                    <DetailField
-                      label="Province/Territory"
-                      value={customerData.region}
-                    />
-                    <DetailField
-                      label="Postal Code"
-                      value={customerData.postalCode}
-                    />
-                    <DetailField label="Country" value={customerData.country} />
-                  </dl>
+          <DataField label="Join Date" value={customerData.joinDate} />
+          <DataField label="Preferred Language" value={customerData.preferredLanguage} />
 
-                  {customerData.hasShippingAddress && (
-                    <div className="mt-6 pt-6 border-t border-gray-200">
-                      <p className="text-sm font-semibold text-gray-700 mb-4">
-                        Shipping Address
-                      </p>
-                      <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                        <DetailField
-                          label="Name"
-                          value={customerData.shippingName}
-                        />
-                        <DetailField
-                          label="Phone"
-                          value={customerData.shippingPhone}
-                        />
-                        <DetailField
-                          label="Address"
-                          value={customerData.shippingAddressLine1}
-                        />
-                        {customerData.shippingAddressLine2 && (
-                          <DetailField
-                            label="Address Line 2"
-                            value={customerData.shippingAddressLine2}
-                          />
-                        )}
-                        <DetailField
-                          label="City"
-                          value={customerData.shippingCity}
-                        />
-                        <DetailField
-                          label="Province/Territory"
-                          value={customerData.shippingRegion}
-                        />
-                        <DetailField
-                          label="Postal Code"
-                          value={customerData.shippingPostalCode}
-                        />
-                        <DetailField
-                          label="Country"
-                          value={customerData.shippingCountry}
-                        />
-                      </dl>
-                    </div>
-                  )}
-                </ReviewSection>
-
-                {/* Metrics Information Section */}
-                <ReviewSection
-                  title="Metrics Information"
-                  icon={ChartPieIcon}
-                  editLink="/admin/customers/add/step-5"
-                >
-                  {/* Tags Display */}
-                  {customerData.tags && customerData.tags.length > 0 && (
-                    <div className="mb-4">
-                      <TagsDisplay
-                        values={parseArrayValue(customerData.tags)}
-                        label="Tags"
-                        variant="success"
-                      />
-                    </div>
-                  )}
-
-                  {/* How Heard About Us Display */}
-                  {customerData.howDidYouHearAboutUsID && (
-                    <div className="mb-4">
-                      <HowHearAboutUsDisplay
-                        value={customerData.howDidYouHearAboutUsID}
-                        label="How did you hear about us?"
-                      />
-                    </div>
-                  )}
-
-                  {/* Other Metrics */}
-                  <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                    {customerData.howDidYouHearAboutUsOther && (
-                      <DetailField
-                        label="How did you hear about us? (Other)"
-                        value={customerData.howDidYouHearAboutUsOther}
-                        fullWidth
-                      />
-                    )}
-
-                    <DetailField
-                      label="Gender"
-                      value={getGenderLabel(customerData.gender)}
-                    />
-
-                    {customerData.gender === 1 && customerData.genderOther && (
-                      <DetailField
-                        label="Gender (Other)"
-                        value={customerData.genderOther}
-                      />
-                    )}
-
-                    {customerData.birthDate && (
-                      <DetailField
-                        label="Birth Date"
-                        value={customerData.birthDate}
-                      />
-                    )}
-
-                    <DetailField
-                      label="Join Date"
-                      value={customerData.joinDate}
-                    />
-                    <DetailField
-                      label="Preferred Language"
-                      value={customerData.preferredLanguage}
-                    />
-                  </dl>
-
-                  {customerData.additionalComment && (
-                    <div className="mt-6 pt-6 border-t">
-                      <DetailField
-                        label="Additional Comments"
-                        value={customerData.additionalComment}
-                        fullWidth
-                      />
-                    </div>
-                  )}
-                </ReviewSection>
-
-                {/* Form Actions */}
-                <div className="flex flex-col sm:flex-row gap-3 mt-6">
-                  <Link
-                    to="/admin/customers/add/step-5"
-                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-                  >
-                    <ArrowLeftIcon className="w-4 h-4 mr-2" />
-                    Back
-                  </Link>
-                  <button
-                    onClick={onSubmitClick}
-                    disabled={isLoading}
-                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
-                  >
-                    <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
-                    Submit
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+          {customerData.additionalComment && (
+            <DataField
+              label="Additional Comments"
+              value={customerData.additionalComment}
+              fullWidth
+            />
+          )}
+        </ReviewSection>
       </div>
-    </div>
+    </WizardFormStep>
+  );
+});
+
+Step6Content.displayName = "Step6Content";
+
+function AdminCustomerAddStep6Page() {
+  return (
+    <UIXThemeProvider>
+      <Step6Content />
+    </UIXThemeProvider>
   );
 }
 

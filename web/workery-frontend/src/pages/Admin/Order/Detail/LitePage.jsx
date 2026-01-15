@@ -1,6 +1,8 @@
 // File Path: web/workery-frontend/src/pages/Admin/Order/Detail/LitePage.jsx
+// UIX Upgraded - Uses DetailLiteView whole page component
+// @uix-page: AdminOrderDetailLitePage
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import {
   ChartBarIcon,
@@ -8,7 +10,6 @@ import {
   InformationCircleIcon,
   PencilSquareIcon,
   ChevronLeftIcon,
-  EnvelopeIcon,
   PhoneIcon,
   MapPinIcon,
   BuildingOfficeIcon,
@@ -19,16 +20,10 @@ import {
   EllipsisHorizontalIcon,
   UserIcon,
   XMarkIcon,
-  ExclamationTriangleIcon,
   ArrowRightIcon,
   CurrencyDollarIcon,
-  DocumentTextIcon,
-  CalendarDaysIcon,
-  ChatBubbleLeftRightIcon,
-  PaperClipIcon,
-  CheckCircleIcon,
-  ClockIcon,
-  ExclamationCircleIcon,
+  NoSymbolIcon,
+  XCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useOrderManager, useAuthManager } from "../../../../services/Services";
 import {
@@ -50,6 +45,14 @@ import {
   STAFF_TYPE_MANAGEMENT,
   STAFF_TYPE_EXECUTIVE,
 } from "../../../../constants/Staff";
+import {
+  ORDER_STATUS_COMPLETED_BUT_UNPAID,
+  ORDER_STATUS_COMPLETED_AND_PAID,
+  ORDER_STATUS_ARCHIVED,
+  ORDER_STATUS_CANCELLED,
+  ORDER_STATUS_DECLINED,
+} from "../../../../constants/Order";
+import { DetailLiteView } from "../../../../components/UIX";
 
 // Constants
 const OrderStatusNew = 1;
@@ -61,6 +64,19 @@ const OrderStatusInProgress = 6;
 const OrderStatusCompletedButUnpaid = 7;
 const OrderStatusCompletedAndPaid = 8;
 const OrderStatusArchived = 9;
+
+// Phone type mappings
+const CLIENT_PHONE_TYPE_OF_MAP = {
+  1: "Work",
+  2: "Home",
+  3: "Mobile",
+};
+
+const ASSOCIATE_PHONE_TYPE_OF_MAP = {
+  1: "Work",
+  2: "Home",
+  3: "Mobile",
+};
 
 function AdminOrderDetailLitePage() {
   const { oid } = useParams();
@@ -75,12 +91,12 @@ function AdminOrderDetailLitePage() {
   const [currentUser, setCurrentUser] = useState(null);
 
   // Handle unauthorized access
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
-  };
+  }, [navigate]);
 
   // Helper function to get task update URL based on type
-  const getTaskUpdateURL = (taskId, taskType) => {
+  const getTaskUpdateURL = useCallback((taskId, taskType) => {
     if (!taskType) {
       console.warn("Task type not available for task:", taskId);
       return `/admin/task/${taskId}/assign-associate/step-1`;
@@ -101,10 +117,10 @@ function AdminOrderDetailLitePage() {
         console.warn("Unknown task type:", taskType);
         return `/admin/task/${taskId}/assign-associate/step-1`;
     }
-  };
+  }, []);
 
   // Extract IDs from array of objects
-  const extractIds = (items) => {
+  const extractIds = useCallback((items) => {
     if (!items || !Array.isArray(items)) return [];
     return items
       .map((item) => {
@@ -114,10 +130,10 @@ function AdminOrderDetailLitePage() {
         return item.id || item.value || item.skillSetId || item.tagId;
       })
       .filter(Boolean);
-  };
+  }, []);
 
   // Fetch order data
-  const fetchOrder = async () => {
+  const fetchOrder = useCallback(async () => {
     if (!oid) return;
 
     setLoading(true);
@@ -132,16 +148,16 @@ function AdminOrderDetailLitePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [oid, orderManager, onUnauthorized]);
 
   // Fetch current user data
-  const fetchCurrentUser = async () => {
+  const fetchCurrentUser = useCallback(async () => {
     try {
       setCurrentUser({ role: STAFF_TYPE_MANAGEMENT });
     } catch (err) {
       console.error("Failed to fetch current user:", err);
     }
-  };
+  }, []);
 
   // Initial data load
   useEffect(() => {
@@ -154,27 +170,27 @@ function AdminOrderDetailLitePage() {
 
     fetchOrder();
     fetchCurrentUser();
-  }, [oid]);
+  }, [oid, authManager, navigate, fetchOrder, fetchCurrentUser]);
 
   // Format phone number for display
-  const formatPhone = (phone, extension = null) => {
+  const formatPhone = useCallback((phone, extension = null) => {
     if (!phone) return "-";
     const formatted = phone.replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3");
     return extension ? `${formatted} ext. ${extension}` : formatted;
-  };
+  }, []);
 
   // Format address for display
-  const formatAddress = (order) => {
-    if (!order) return "-";
+  const formatAddress = useCallback((orderData) => {
+    if (!orderData) return "-";
     const address =
-      order.customerFullAddressWithoutPostalCode ||
-      `${order.customerAddressLine1 || ""} ${order.customerCity || ""} ${order.customerRegion || ""}`.trim();
+      orderData.customerFullAddressWithoutPostalCode ||
+      `${orderData.customerAddressLine1 || ""} ${orderData.customerCity || ""} ${orderData.customerRegion || ""}`.trim();
 
     return address || "-";
-  };
+  }, []);
 
   // Get order status text and style
-  const getOrderStatus = (status) => {
+  const getOrderStatus = useCallback((status) => {
     const statusConfig = {
       [OrderStatusNew]: {
         text: "New",
@@ -239,549 +255,397 @@ function AdminOrderDetailLitePage() {
         border: "border-gray-200",
       }
     );
-  };
+  }, []);
 
   // Get order type text
-  const getOrderTypeText = (type) => {
+  const getOrderTypeText = useCallback((type) => {
     const typeMap = {
       1: "Residential",
       2: "Commercial",
     };
     return typeMap[type] || "Unknown";
-  };
+  }, []);
 
-  // Phone type mappings
-  const CLIENT_PHONE_TYPE_OF_MAP = {
-    1: "Work",
-    2: "Home",
-    3: "Mobile",
-  };
+  // Computed values
+  const isArchived = useMemo(() => order?.status === OrderStatusArchived, [order]);
+  const hasAssociateAssigned = useMemo(() => order && order.associatePublicId !== 0, [order]);
+  const hasPendingTask = useMemo(() => {
+    return order?.latestPendingTaskId && order.latestPendingTaskId !== "000000000000000000000000";
+  }, [order]);
+  const canViewFinancials = useMemo(() => {
+    return (order?.status === OrderStatusCompletedButUnpaid ||
+      order?.status === OrderStatusCompletedAndPaid) &&
+      (currentUser?.role === STAFF_TYPE_MANAGEMENT ||
+        currentUser?.role === STAFF_TYPE_EXECUTIVE);
+  }, [order, currentUser]);
+  const hasAssociateInfo = useMemo(() => {
+    return order?.associateId &&
+      order.associateId !== "" &&
+      order.associateId !== "000000000000000000000000";
+  }, [order]);
 
-  const ASSOCIATE_PHONE_TYPE_OF_MAP = {
-    1: "Work",
-    2: "Home",
-    3: "Mobile",
-  };
+  // Memoize breadcrumb items
+  const breadcrumbItems = useMemo(() => [
+    { label: "Dashboard", to: "/admin/dashboard", icon: ChartBarIcon },
+    { label: "Orders", to: "/admin/orders", icon: WrenchScrewdriverIcon },
+    { label: "Detail", icon: InformationCircleIcon, isActive: true },
+  ], []);
 
-  if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-sm sm:text-base text-gray-600">
-              Loading order details...
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // Memoize header config
+  const headerConfig = useMemo(() => ({
+    title: "Summary",
+    icon: ClipboardDocumentListIcon,
+    loadingText: "Loading order details...",
+    notFoundTitle: "Order Not Found",
+    notFoundMessage: "The order you're looking for doesn't exist or you don't have permission to view it.",
+    notFoundAction: {
+      label: "Back to Orders",
+      icon: ChevronLeftIcon,
+      onClick: () => navigate("/admin/orders"),
+    },
+  }), [navigate]);
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-      {/* Responsive Breadcrumb */}
-      <nav
-        className="flex mb-4 sm:mb-6 overflow-x-auto"
-        aria-label="Breadcrumb"
-      >
-        <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
-          <li className="inline-flex items-center">
-            <Link
-              to="/admin/dashboard"
-              className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
-            >
-              <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-              <span className="hidden sm:inline">Dashboard</span>
-              <span className="sm:hidden">Dash</span>
-            </Link>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
-              <Link
-                to="/admin/orders"
-                className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
-              >
-                <span className="inline-flex items-center">
-                  <WrenchScrewdriverIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                  Orders
-                </span>
-              </Link>
-            </div>
-          </li>
-          <li aria-current="page">
-            <div className="flex items-center">
-              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
-              <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
-                <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                Detail
-              </span>
-            </div>
-          </li>
-        </ol>
-      </nav>
+  // Memoize tabs
+  const tabs = useMemo(() => {
+    if (!order) return [];
+    return [
+      { label: "Summary", to: `/admin/order/${order.wjid}`, isActive: true },
+      { label: "Detail", to: `/admin/order/${order.wjid}/full` },
+      { label: "Activity Sheets", to: `/admin/order/${order.wjid}/activity-sheets` },
+      { label: "Tasks", to: `/admin/order/${order.wjid}/tasks` },
+      { label: "Comments", to: `/admin/order/${order.wjid}/comments` },
+      { label: "Attachments", to: `/admin/order/${order.wjid}/attachments` },
+      { label: "More", to: `/admin/order/${order.wjid}/more`, icon: EllipsisHorizontalIcon },
+    ];
+  }, [order]);
 
-      {/* Page Title - Responsive */}
-      <div className="mb-4 sm:mb-6">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+  // Memoize action buttons
+  const actionButtons = useMemo(() => {
+    if (!order) return [];
+
+    const buttons = [
+      {
+        variant: "outline",
+        label: "Back",
+        icon: ChevronLeftIcon,
+        onClick: () => navigate("/admin/orders"),
+      },
+    ];
+
+    if (hasAssociateAssigned) {
+      buttons.push({
+        variant: "secondary",
+        label: "Unassign",
+        icon: UserIcon,
+        disabled: isArchived,
+        onClick: () => navigate(`/admin/order/${oid}/more/unassign`),
+      });
+    }
+
+    buttons.push({
+      variant: "danger",
+      label: "Close",
+      icon: XMarkIcon,
+      disabled: isArchived,
+      onClick: () => navigate(`/admin/order/${oid}/more/close`),
+    });
+
+    buttons.push({
+      variant: "warning",
+      label: "Edit",
+      icon: PencilSquareIcon,
+      disabled: isArchived,
+      onClick: () => navigate(`/admin/order/${oid}/edit`),
+    });
+
+    if (hasPendingTask) {
+      buttons.push({
+        variant: "primary",
+        label: "Go to Task",
+        iconRight: ArrowRightIcon,
+        disabled: isArchived,
+        onClick: () => navigate(getTaskUpdateURL(order.latestPendingTaskId, order.latestPendingTaskType)),
+      });
+    }
+
+    if (canViewFinancials) {
+      buttons.push({
+        variant: "primary",
+        label: "Financials",
+        icon: CurrencyDollarIcon,
+        disabled: isArchived,
+        onClick: () => navigate(`/admin/financial/${oid}`),
+        className: "bg-cyan-600 hover:bg-cyan-700",
+      });
+    }
+
+    return buttons;
+  }, [order, navigate, oid, hasAssociateAssigned, isArchived, hasPendingTask, canViewFinancials, getTaskUpdateURL]);
+
+  // Memoize alerts configuration
+  const alerts = useMemo(() => ({
+    archived: {
+      message: "This order is archived",
+      icon: ArchiveBoxIcon,
+    },
+    cancelled: {
+      message: "This order is cancelled",
+      icon: NoSymbolIcon,
+    },
+    declined: {
+      message: "This order has been declined",
+      icon: XCircleIcon,
+    },
+  }), []);
+
+  // Memoize field sections
+  const fieldSections = useMemo(() => {
+    if (!order) return [];
+
+    const statusInfo = getOrderStatus(order.status);
+
+    return [
+      // Primary column - Job Info
+      {
+        column: "primary",
+        component: (
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
-              <WrenchScrewdriverIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
-              Order
-            </h1>
-            <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
-              <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
-              View order information
-            </p>
-          </div>
-        </div>
-      </div>
+            {/* Job ID and Status Header */}
+            <div className="bg-gray-50 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4 lg:mb-5">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+                  Job #{order.wjid}
+                </h3>
+                <div
+                  className={`inline-flex items-center px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium ${statusInfo.bg} ${statusInfo.color} ${statusInfo.border} border`}
+                >
+                  {statusInfo.text}
+                </div>
+              </div>
+            </div>
 
-      {/* Status Alerts - Responsive */}
-      {order && order.status === OrderStatusArchived && (
-        <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center text-sm sm:text-base">
-          <ArchiveBoxIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
-          This order is archived
-        </div>
-      )}
-
-      {/* Error Display - Responsive */}
-      {error && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base">
-          <div className="flex justify-between items-center">
-            <span className="break-words">{error}</span>
-            <button
-              onClick={() => setError(null)}
-              className="text-red-700 hover:text-red-900 ml-2 flex-shrink-0"
-            >
-              ×
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <div className="shadow-sm">
-        {order && (
-          <div className="bg-gray-700 rounded-lg">
-            {/* Header with Actions - Responsive with Dark Background */}
-            <div className="px-4 sm:px-6 py-4 sm:py-5">
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
-                <h2 className="text-xl sm:text-2xl font-semibold text-white flex items-center">
-                  <ClipboardDocumentListIcon className="w-5 sm:w-7 h-5 sm:h-7 mr-2 text-blue-300 flex-shrink-0" />
-                  Summary
-                </h2>
-                <div className="flex flex-wrap gap-2 sm:gap-3">
-                  <Link to="/admin/orders" className="flex-1 sm:flex-initial">
-                    <button className="w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base font-medium text-[#222222] bg-[#f6f6f6] hover:bg-gray-200 transition-colors">
-                      <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
-                      Back
-                    </button>
-                  </Link>
-                  {order.associatePublicId !== 0 && (
+            {/* Client Information */}
+            <div className="border-t border-gray-200 pt-4 sm:pt-6 mb-4 sm:mb-6">
+              <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-3 sm:mb-4">
+                Client Information
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                <div className="flex items-start">
+                  <UserIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 text-gray-400 mt-0.5 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm font-medium text-gray-500">
+                      Name
+                    </p>
                     <Link
-                      to={`/admin/order/${oid}/more/unassign`}
-                      className="flex-1 sm:flex-initial"
+                      to={`/admin/customer/${order.customerId}`}
+                      className="text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium inline-flex items-center"
                     >
-                      <button
-                        disabled={order.status === OrderStatusArchived}
-                        className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
-                          order.status === OrderStatusArchived
-                            ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                            : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
-                        }`}
-                      >
-                        <UserIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
-                        Unassign
-                      </button>
+                      {order.customerName}
+                      <ArrowTopRightOnSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 ml-1" />
                     </Link>
-                  )}
-                  <Link
-                    to={`/admin/order/${oid}/more/close`}
-                    className="flex-1 sm:flex-initial"
-                  >
-                    <button
-                      disabled={order.status === OrderStatusArchived}
-                      className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
-                        order.status === OrderStatusArchived
-                          ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                          : "border-red-600 text-white bg-red-600 hover:bg-red-700"
-                      }`}
-                    >
-                      <XMarkIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
-                      Close
-                    </button>
-                  </Link>
-                  <Link
-                    to={`/admin/order/${oid}/edit`}
-                    className="flex-1 sm:flex-initial"
-                  >
-                    <button
-                      disabled={order.status === OrderStatusArchived}
-                      className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
-                        order.status === OrderStatusArchived
-                          ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                          : "border-amber-600 text-white bg-amber-600 hover:bg-amber-700"
-                      }`}
-                    >
-                      <PencilSquareIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
-                      Edit
-                    </button>
-                  </Link>
-                  {order.latestPendingTaskId &&
-                    order.latestPendingTaskId !==
-                      "000000000000000000000000" && (
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <PhoneIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 text-gray-400 mt-0.5 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm font-medium text-gray-500">
+                      Phone ({CLIENT_PHONE_TYPE_OF_MAP[order.customerPhoneType]})
+                    </p>
+                    {order.customerPhone ? (
+                      <a
+                        href={`tel:${order.customerPhone}`}
+                        className="text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium"
+                      >
+                        {formatPhone(
+                          order.customerPhone,
+                          order.customerPhoneType === CLIENT_PHONE_TYPE_WORK
+                            ? order.customerPhoneExtension
+                            : null,
+                        )}
+                      </a>
+                    ) : (
+                      <span className="text-sm sm:text-base text-gray-500">
+                        No phone
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-start md:col-span-2">
+                  <MapPinIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 text-gray-400 mt-0.5 flex-shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm font-medium text-gray-500">
+                      Address
+                    </p>
+                    <span className="text-sm sm:text-base text-gray-900">
+                      {formatAddress(order)}
+                    </span>
+                    {order.customerFullAddressUrl && (
+                      <a
+                        href={order.customerFullAddressUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="ml-2 inline-flex items-center text-blue-600 hover:text-blue-700"
+                      >
+                        <ArrowTopRightOnSquareIcon className="w-3 sm:w-4 h-3 sm:h-4" />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Associate Information (if assigned) */}
+            {hasAssociateInfo && (
+              <div className="border-t border-gray-200 pt-4 sm:pt-6 mb-4 sm:mb-6">
+                <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-3 sm:mb-4">
+                  Associate Information
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="flex items-start">
+                    <UserIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs sm:text-sm font-medium text-gray-500">
+                        Name
+                      </p>
+                      <Link
+                        to={`/admin/associate/${order.associateId}`}
+                        className="text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium inline-flex items-center"
+                      >
+                        {order.associateName}
+                        <ArrowTopRightOnSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 ml-1" />
+                      </Link>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <PhoneIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs sm:text-sm font-medium text-gray-500">
+                        Phone ({ASSOCIATE_PHONE_TYPE_OF_MAP[order.associatePhoneType]})
+                      </p>
+                      {order.associatePhone ? (
+                        <a
+                          href={`tel:${order.associatePhone}`}
+                          className="text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium"
+                        >
+                          {formatPhone(
+                            order.associatePhone,
+                            order.associatePhoneType === ASSOCIATE_PHONE_TYPE_WORK
+                              ? order.associatePhoneExtension
+                              : null,
+                          )}
+                        </a>
+                      ) : (
+                        <span className="text-sm sm:text-base text-gray-500">
+                          No phone
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Job Details */}
+            <div className="border-t border-gray-200 pt-4 sm:pt-6">
+              <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-3 sm:mb-4">
+                Job Details
+              </h4>
+              <div className="space-y-3 sm:space-y-4">
+                <div className="flex items-start">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm font-medium text-gray-500">
+                      Job Type
+                    </p>
+                    <div className="flex items-center mt-1">
+                      {order.type === 1 ? (
+                        <HomeIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600" />
+                      ) : (
+                        <BuildingOfficeIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600" />
+                      )}
+                      <span className="text-sm sm:text-base text-gray-900 font-medium">
+                        {getOrderTypeText(order.type)}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm font-medium text-gray-500">
+                      Description
+                    </p>
+                    <div className="mt-1 text-sm sm:text-base text-gray-900 whitespace-pre-wrap">
+                      {order.description || "No description provided"}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-start">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm font-medium text-gray-500 mb-2">
+                      Skills Required
+                    </p>
+                    <SkillSetsDisplay
+                      values={extractIds(order.skillSets)}
+                      onUnauthorized={onUnauthorized}
+                    />
+                  </div>
+                </div>
+                {hasPendingTask && (
+                  <div className="flex items-start">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs sm:text-sm font-medium text-gray-500 mb-2">
+                        Required Task
+                      </p>
                       <Link
                         to={getTaskUpdateURL(
                           order.latestPendingTaskId,
                           order.latestPendingTaskType,
                         )}
-                        className="flex-1 sm:flex-initial"
                       >
-                        <button
-                          disabled={order.status === OrderStatusArchived}
-                          className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
-                            order.status === OrderStatusArchived
-                              ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                              : "border-green-600 text-white bg-green-600 hover:bg-green-700"
-                          }`}
-                        >
-                          <span className="hidden sm:inline">Go to Task</span>
-                          <span className="sm:hidden">Task</span>
-                          <ArrowRightIcon className="w-4 sm:w-5 h-4 sm:h-5 ml-1 sm:ml-2" />
+                        <button className="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 border border-blue-300 rounded-md text-xs sm:text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors">
+                          {order.latestPendingTaskTitle}
+                          <ArrowRightIcon className="w-3 sm:w-4 h-3 sm:h-4 ml-1 sm:ml-2" />
                         </button>
                       </Link>
-                    )}
-                  {(order.status === OrderStatusCompletedButUnpaid ||
-                    order.status === OrderStatusCompletedAndPaid) &&
-                    (currentUser?.role === STAFF_TYPE_MANAGEMENT ||
-                      currentUser?.role === STAFF_TYPE_EXECUTIVE) && (
-                      <Link
-                        to={`/admin/financial/${oid}`}
-                        className="flex-1 sm:flex-initial"
-                      >
-                        <button
-                          disabled={order.status === OrderStatusArchived}
-                          className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
-                            order.status === OrderStatusArchived
-                              ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                              : "border-cyan-600 text-white bg-cyan-600 hover:bg-cyan-700"
-                          }`}
-                        >
-                          <CurrencyDollarIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
-                          <span className="hidden sm:inline">Financials</span>
-                          <span className="sm:hidden">Finance</span>
-                        </button>
-                      </Link>
-                    )}
-                </div>
-              </div>
-            </div>
-
-            {/* Tab Navigation - Responsive with horizontal scroll on mobile */}
-            <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg">
-              <div className="px-4 sm:px-6 border-b border-gray-200">
-                <nav className="-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide">
-                  <div className="border-b-2 border-blue-600 py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-blue-600 whitespace-nowrap">
-                    Summary
-                  </div>
-                  <Link
-                    to={`/admin/order/${order.wjid}/full`}
-                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
-                  >
-                    Detail
-                  </Link>
-                  <Link
-                    to={`/admin/order/${order.wjid}/activity-sheets`}
-                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
-                  >
-                    Activity Sheets
-                  </Link>
-                  <Link
-                    to={`/admin/order/${order.wjid}/tasks`}
-                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
-                  >
-                    Tasks
-                  </Link>
-                  <Link
-                    to={`/admin/order/${order.wjid}/comments`}
-                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
-                  >
-                    Comments
-                  </Link>
-                  <Link
-                    to={`/admin/order/${order.wjid}/attachments`}
-                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
-                  >
-                    Attachments
-                  </Link>
-                  <Link
-                    to={`/admin/order/${order.wjid}/more`}
-                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center whitespace-nowrap"
-                  >
-                    More
-                    <EllipsisHorizontalIcon className="w-4 sm:w-5 h-4 sm:h-5 ml-1" />
-                  </Link>
-                </nav>
-              </div>
-
-              {/* Order Summary Content - Optimized for Responsiveness */}
-              <div className="py-4 sm:py-6 md:py-8 lg:py-10 px-4 sm:px-6 lg:px-8">
-                <div className="space-y-4 sm:space-y-6">
-                  {/* Job ID and Status Header */}
-                  <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-900">
-                        Job #{order.wjid}
-                      </h3>
-                      <div
-                        className={`inline-flex items-center px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium ${getOrderStatus(order.status).bg} ${getOrderStatus(order.status).color} ${getOrderStatus(order.status).border} border`}
-                      >
-                        {getOrderStatus(order.status).text}
-                      </div>
                     </div>
                   </div>
-
-                  {/* Client Information */}
-                  <div className="border-t border-gray-200 pt-4 sm:pt-6">
-                    <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-3 sm:mb-4">
-                      Client Information
-                    </h4>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                      <div className="flex items-start">
-                        <UserIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 text-gray-400 mt-0.5 flex-shrink-0" />
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs sm:text-sm font-medium text-gray-500">
-                            Name
-                          </p>
-                          <Link
-                            to={`/admin/customer/${order.customerId}`}
-                            className="text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium inline-flex items-center"
-                          >
-                            {order.customerName}
-                            <ArrowTopRightOnSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 ml-1" />
-                          </Link>
-                        </div>
-                      </div>
-                      <div className="flex items-start">
-                        <PhoneIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 text-gray-400 mt-0.5 flex-shrink-0" />
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs sm:text-sm font-medium text-gray-500">
-                            Phone (
-                            {CLIENT_PHONE_TYPE_OF_MAP[order.customerPhoneType]})
-                          </p>
-                          {order.customerPhone ? (
-                            <a
-                              href={`tel:${order.customerPhone}`}
-                              className="text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium"
-                            >
-                              {formatPhone(
-                                order.customerPhone,
-                                order.customerPhoneType ===
-                                  CLIENT_PHONE_TYPE_WORK
-                                  ? order.customerPhoneExtension
-                                  : null,
-                              )}
-                            </a>
-                          ) : (
-                            <span className="text-sm sm:text-base text-gray-500">
-                              No phone
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-start md:col-span-2">
-                        <MapPinIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 text-gray-400 mt-0.5 flex-shrink-0" />
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs sm:text-sm font-medium text-gray-500">
-                            Address
-                          </p>
-                          <span className="text-sm sm:text-base text-gray-900">
-                            {formatAddress(order)}
-                          </span>
-                          {order.customerFullAddressUrl && (
-                            <a
-                              href={order.customerFullAddressUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="ml-2 inline-flex items-center text-blue-600 hover:text-blue-700"
-                            >
-                              <ArrowTopRightOnSquareIcon className="w-3 sm:w-4 h-3 sm:h-4" />
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Associate Information (if assigned) */}
-                  {order.associateId &&
-                    order.associateId !== "" &&
-                    order.associateId !== "000000000000000000000000" && (
-                      <div className="border-t border-gray-200 pt-4 sm:pt-6">
-                        <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-3 sm:mb-4">
-                          Associate Information
-                        </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-                          <div className="flex items-start">
-                            <UserIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 text-gray-400 mt-0.5 flex-shrink-0" />
-                            <div className="min-w-0 flex-1">
-                              <p className="text-xs sm:text-sm font-medium text-gray-500">
-                                Name
-                              </p>
-                              <Link
-                                to={`/admin/associate/${order.associateId}`}
-                                className="text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium inline-flex items-center"
-                              >
-                                {order.associateName}
-                                <ArrowTopRightOnSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 ml-1" />
-                              </Link>
-                            </div>
-                          </div>
-                          <div className="flex items-start">
-                            <PhoneIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 text-gray-400 mt-0.5 flex-shrink-0" />
-                            <div className="min-w-0 flex-1">
-                              <p className="text-xs sm:text-sm font-medium text-gray-500">
-                                Phone (
-                                {
-                                  ASSOCIATE_PHONE_TYPE_OF_MAP[
-                                    order.associatePhoneType
-                                  ]
-                                }
-                                )
-                              </p>
-                              {order.associatePhone ? (
-                                <a
-                                  href={`tel:${order.associatePhone}`}
-                                  className="text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium"
-                                >
-                                  {formatPhone(
-                                    order.associatePhone,
-                                    order.associatePhoneType ===
-                                      ASSOCIATE_PHONE_TYPE_WORK
-                                      ? order.associatePhoneExtension
-                                      : null,
-                                  )}
-                                </a>
-                              ) : (
-                                <span className="text-sm sm:text-base text-gray-500">
-                                  No phone
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                  {/* Job Details */}
-                  <div className="border-t border-gray-200 pt-4 sm:pt-6">
-                    <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-3 sm:mb-4">
-                      Job Details
-                    </h4>
-                    <div className="space-y-3 sm:space-y-4">
-                      <div className="flex items-start">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs sm:text-sm font-medium text-gray-500">
-                            Job Type
-                          </p>
-                          <div className="flex items-center mt-1">
-                            {order.type === 1 ? (
-                              <HomeIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600" />
-                            ) : (
-                              <BuildingOfficeIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600" />
-                            )}
-                            <span className="text-sm sm:text-base text-gray-900 font-medium">
-                              {getOrderTypeText(order.type)}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-start">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs sm:text-sm font-medium text-gray-500">
-                            Description
-                          </p>
-                          <div className="mt-1 text-sm sm:text-base text-gray-900 whitespace-pre-wrap">
-                            {order.description || "No description provided"}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="flex items-start">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs sm:text-sm font-medium text-gray-500 mb-2">
-                            Skills Required
-                          </p>
-                          <SkillSetsDisplay
-                            values={extractIds(order.skillSets)}
-                            onUnauthorized={onUnauthorized}
-                          />
-                        </div>
-                      </div>
-                      <div className="flex items-start">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-xs sm:text-sm font-medium text-gray-500 mb-2">
-                            Tags
-                          </p>
-                          <TagsDisplay
-                            values={extractIds(order.tags)}
-                            onUnauthorized={onUnauthorized}
-                          />
-                        </div>
-                      </div>
-                      {order.latestPendingTaskId &&
-                        order.latestPendingTaskId !==
-                          "000000000000000000000000" && (
-                          <div className="flex items-start">
-                            <div className="min-w-0 flex-1">
-                              <p className="text-xs sm:text-sm font-medium text-gray-500 mb-2">
-                                Required Task
-                              </p>
-                              <Link
-                                to={getTaskUpdateURL(
-                                  order.latestPendingTaskId,
-                                  order.latestPendingTaskType,
-                                )}
-                              >
-                                <button className="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 border border-blue-300 rounded-md text-xs sm:text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors">
-                                  {order.latestPendingTaskTitle}
-                                  <ArrowRightIcon className="w-3 sm:w-4 h-3 sm:h-4 ml-1 sm:ml-2" />
-                                </button>
-                              </Link>
-                            </div>
-                          </div>
-                        )}
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
-        )}
-
-        {!order && !loading && (
-          <div className="px-4 sm:px-6 py-8 sm:py-16 text-center">
-            <div className="inline-flex items-center justify-center w-12 sm:w-16 h-12 sm:h-16 bg-gray-100 rounded-full mb-4">
-              <WrenchScrewdriverIcon className="w-6 sm:w-8 h-6 sm:h-8 text-gray-400" />
+        ),
+      },
+      // Secondary column - Tags
+      {
+        column: "secondary",
+        component: (
+          <div className="space-y-3 sm:space-y-4 lg:space-y-6">
+            {/* Tags */}
+            <div>
+              <TagsDisplay
+                values={extractIds(order.tags)}
+                label="Tags"
+                onUnauthorized={onUnauthorized}
+              />
             </div>
-            <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
-              Order Not Found
-            </h3>
-            <p className="text-sm sm:text-base text-gray-500 mb-4 sm:mb-6">
-              The order you're looking for doesn't exist or you don't have
-              permission to view it.
-            </p>
-            <Link to="/admin/orders">
-              <button className="inline-flex items-center px-3 sm:px-4 py-2 border border-blue-600 rounded-lg text-xs sm:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-                <ChevronLeftIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
-                Back to Orders
-              </button>
-            </Link>
           </div>
-        )}
-      </div>
-    </div>
+        ),
+      },
+    ];
+  }, [order, formatAddress, formatPhone, getOrderStatus, getOrderTypeText, extractIds, onUnauthorized, hasAssociateInfo, hasPendingTask, getTaskUpdateURL]);
+
+  return (
+    <DetailLiteView
+      entityData={order}
+      breadcrumbItems={breadcrumbItems}
+      headerConfig={headerConfig}
+      fieldSections={fieldSections}
+      actionButtons={actionButtons}
+      tabs={tabs}
+      alerts={alerts}
+      isLoading={loading}
+      error={error}
+      onErrorClose={() => setError(null)}
+    />
   );
 }
 

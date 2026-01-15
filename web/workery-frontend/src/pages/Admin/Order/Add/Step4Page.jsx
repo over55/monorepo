@@ -1,6 +1,8 @@
 // File Path: web/workery-frontend/src/pages/Admin/Order/Add/Step4Page.jsx
+// UIX Upgraded - Uses WizardFormStep whole page component
+// @uix-page: AdminOrderAddStep4Page
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo, memo } from "react";
 import { Link, useNavigate } from "react-router";
 import {
   useAuthManager,
@@ -8,27 +10,24 @@ import {
   useOrderManager,
 } from "../../../../services/Services";
 import {
-  ChevronRightIcon,
-  ArrowLeftIcon,
-  CheckIcon,
-  ChartBarIcon,
-  WrenchScrewdriverIcon,
+  WizardFormStep,
+  FormCard,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../components/UIX";
+import {
   PlusCircleIcon,
-  ExclamationTriangleIcon,
-  PencilSquareIcon,
+  CheckCircleIcon,
   UserIcon,
   ClipboardDocumentIcon,
   CalendarIcon,
-  CheckCircleIcon,
+  PencilSquareIcon,
+  CheckIcon,
   XMarkIcon,
-  SparklesIcon,
-  ClockIcon,
   HomeIcon,
-  TagIcon,
   AcademicCapIcon,
+  TagIcon,
   ChatBubbleBottomCenterTextIcon,
-  DocumentCheckIcon,
-  RocketLaunchIcon,
 } from "@heroicons/react/24/outline";
 import {
   TagsDisplay,
@@ -36,12 +35,37 @@ import {
 } from "../../../../components/business/displays";
 import { formatDateForDisplay } from "../../../../services/Helpers/DateFormatter";
 
-function AdminOrderAddStep4Page() {
+// Wizard configuration
+const WIZARD_STEPS = [
+  { title: "Search" },
+  { title: "Details" },
+  { title: "Skills" },
+  { title: "Review" },
+];
+
+// Memoized DataField helper component
+const DataField = memo(({ label, value, icon: Icon, error }) => (
+  <div>
+    <span className="text-xs sm:text-sm font-medium text-gray-500 flex items-center">
+      {Icon && <Icon className="w-4 h-4 mr-1 text-gray-400" />}
+      {label}
+    </span>
+    <p className="text-sm sm:text-base text-gray-900 mt-0.5">{value || "—"}</p>
+    {error && <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">{error}</p>}
+  </div>
+));
+
+DataField.displayName = 'DataField';
+
+// Memoized content component
+const Step4Content = memo(function Step4Content() {
   const authManager = useAuthManager();
   const orderCreationStorage = useOrderCreationStorage();
   const orderManager = useOrderManager();
   const navigate = useNavigate();
+  const { getThemeClasses } = useUIXTheme();
 
+  // Component states
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [showCancelWarning, setShowCancelWarning] = useState(false);
@@ -50,18 +74,31 @@ function AdminOrderAddStep4Page() {
   // Get existing order state
   const orderData = orderCreationStorage.getOrderCreation();
 
-  const onUnauthorized = () => {
-    navigate("/login?unauthorized=true");
-  };
+  // Check authentication and order state
+  useEffect(() => {
+    if (!authManager.isAuthenticated()) {
+      navigate("/login?unauthorized=true");
+      return;
+    }
 
-  const onSubmitClick = async (e) => {
-    e.preventDefault();
-    console.log("onSubmitClick: Beginning...");
+    if (isSubmitted) {
+      return;
+    }
+
+    if (!orderData || !orderData.customerId) {
+      navigate("/admin/orders/add/step-1-search");
+      return;
+    }
+
+    window.scrollTo(0, 0);
+  }, [authManager, navigate, orderData, isSubmitted]);
+
+  // Handle form submission
+  const handleSubmit = useCallback(async () => {
     setIsLoading(true);
     setErrors({});
 
     try {
-      // Prepare the payload
       const payload = {
         customerId: orderData.customerId,
         description: orderData.description,
@@ -73,19 +110,13 @@ function AdminOrderAddStep4Page() {
         tags: orderData.tags,
       };
 
-      console.log("onSubmitClick: payload:", payload);
-
-      // Create the order
-      const response = await orderManager.createOrder(payload, onUnauthorized);
-
-      console.log("Order created successfully:", response);
+      const response = await orderManager.createOrder(payload, () => {
+        navigate("/login?unauthorized=true");
+      });
 
       setIsSubmitted(true);
-
-      // Clear the order creation state
       orderCreationStorage.clearOrderCreation();
 
-      // Redirect to the order detail page
       navigate(`/admin/order/${response.wjid || response.id}`, {
         state: { successMessage: "Order created successfully!" },
       });
@@ -96,472 +127,282 @@ function AdminOrderAddStep4Page() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [orderData, orderManager, orderCreationStorage, navigate]);
 
-  useEffect(() => {
-    let mounted = true;
-
-    if (mounted) {
-      window.scrollTo(0, 0);
-
-      if (!authManager.isAuthenticated()) {
-        navigate("/login?unauthorized=true");
-        return;
-      }
-
-      if (isSubmitted) {
-        return;
-      }
-
-      // Check if we have order state
-      if (!orderData || !orderData.customerId) {
-        // No customer selected, redirect to step 1
-        navigate("/admin/orders/add/step-1-search");
-        return;
-      }
-    }
-
-    return () => {
-      mounted = false;
-    };
-  }, [authManager, navigate, orderData, isSubmitted]);
-
-  const handleCancelClick = () => {
+  // Handle cancel
+  const handleCancel = useCallback(() => {
     setShowCancelWarning(true);
-  };
+  }, []);
 
-  const handleConfirmCancel = () => {
+  const handleConfirmCancel = useCallback(() => {
+    setShowCancelWarning(false);
     orderCreationStorage.clearOrderCreation();
     navigate("/admin/orders");
-  };
+  }, [orderCreationStorage, navigate]);
+
+  // Handle back
+  const handleBack = useCallback(() => {
+    navigate("/admin/orders/add/step-3");
+  }, [navigate]);
+
+  // Action buttons
+  const actions = useMemo(() => [
+    {
+      label: "Cancel",
+      variant: "outline",
+      onClick: handleCancel,
+    },
+    {
+      label: isLoading ? "Submitting..." : "Submit Order",
+      variant: "primary",
+      onClick: handleSubmit,
+      disabled: isLoading,
+      loading: isLoading,
+    },
+  ], [handleCancel, handleSubmit, isLoading]);
 
   if (!orderData) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        <span className="ml-3 text-gray-600">Loading order data...</span>
-      </div>
+      <WizardFormStep
+        wizardSteps={WIZARD_STEPS}
+        currentStep={4}
+        wizardTitle="New Order"
+        wizardIcon={PlusCircleIcon}
+        stepTitle="Review & Submit"
+        stepSubtitle="Loading..."
+        stepIcon={CheckCircleIcon}
+        isLoading={true}
+      />
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        {/* Enhanced Breadcrumb */}
-        <nav
-          className="flex mb-4 bg-white rounded-lg shadow-sm p-2 sm:p-3"
-          aria-label="Breadcrumb"
-        >
-          <ol className="inline-flex items-center space-x-1 md:space-x-3">
-            <li className="inline-flex items-center">
+    <>
+      <WizardFormStep
+        wizardSteps={WIZARD_STEPS}
+        currentStep={4}
+        wizardTitle="New Order"
+        wizardIcon={PlusCircleIcon}
+        stepTitle="Review & Submit"
+        stepSubtitle="Please review the order details before submitting"
+        stepIcon={CheckCircleIcon}
+        showFormCard={false}
+        contentMaxWidth="7xl"
+        errors={errors}
+        isLoading={isLoading}
+        actions={actions}
+        onCancel={handleCancel}
+        onBack={handleBack}
+        actionLayout="end"
+      >
+        <div className="space-y-8">
+          {/* Customer Information Section */}
+          <FormCard
+            title="Customer Information"
+            subtitle="Selected customer for this order"
+            icon={UserIcon}
+            maxWidth="7xl"
+            headerAction={
               <Link
-                to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
+                to="/admin/orders/add/step-1-search"
+                className="inline-flex items-center text-xs sm:text-sm text-blue-300 hover:text-white transition-colors"
               >
-                <ChartBarIcon className="w-4 h-4 mr-2" />
-                <span className="hidden sm:inline">Dashboard</span>
+                <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                Edit
               </Link>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <Link
-                  to="/admin/orders"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors md:ml-2"
-                >
-                  <span className="inline-flex items-center">
-                    <WrenchScrewdriverIcon className="w-4 h-4 mr-2" />
-                    <span className="hidden sm:inline">Orders</span>
-                  </span>
-                </Link>
-              </div>
-            </li>
-            <li aria-current="page">
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
-                  <PlusCircleIcon className="w-4 h-4 mr-2" />
-                  Add
-                </span>
-              </div>
-            </li>
-          </ol>
-        </nav>
-
-        {/* Enhanced Page Title */}
-        <div className="mb-6 bg-white rounded-lg shadow-sm p-4 sm:p-6">
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 flex items-center">
-            <PlusCircleIcon className="w-6 sm:w-7 h-6 sm:h-7 mr-2 sm:mr-3 text-blue-600" />
-            Add New Order
-          </h1>
-          <p className="mt-1 text-sm text-gray-600 flex items-center">
-            <DocumentCheckIcon className="w-4 h-4 mr-1" />
-            Step 4: Review and submit your order
-          </p>
-        </div>
-
-        {/* Enhanced Wizard Steps */}
-        <div className="mb-6 bg-white rounded-lg shadow-sm p-4">
-          {/* Desktop/Tablet View */}
-          <div className="hidden md:flex items-center justify-center overflow-x-auto">
-            <div className="flex items-center">
-              {/* Steps 1-3 Complete */}
-              {[1, 2, 3].map((step, index) => (
-                <React.Fragment key={step}>
-                  <div className="flex items-center">
-                    <div className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-green-600 rounded-full shadow-lg">
-                      <CheckIcon className="w-4 h-4 lg:w-6 lg:h-6 text-white" />
-                    </div>
-                    <div className="ml-2 lg:ml-3">
-                      <p className="text-xs lg:text-sm font-medium text-gray-900">
-                        {step === 1 && "Search"}
-                        {step === 2 && "Customer"}
-                        {step === 3 && "Details"}
-                      </p>
-                      <p className="text-xs text-gray-500 hidden xl:block">
-                        Complete
-                      </p>
-                    </div>
-                  </div>
-                  {index < 3 && (
-                    <div className="mx-1 lg:mx-2 w-8 lg:w-12 h-0.5 bg-green-600"></div>
-                  )}
-                </React.Fragment>
-              ))}
-
-              {/* Step 4 - Active */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-8 h-8 lg:w-10 lg:h-10 bg-blue-600 rounded-full shadow-lg animate-pulse">
-                  <span className="text-white font-semibold text-sm lg:text-base">
-                    4
-                  </span>
-                </div>
-                <div className="ml-2 lg:ml-3">
-                  <p className="text-xs lg:text-sm font-medium text-gray-900">
-                    Review
-                  </p>
-                  <p className="text-xs text-gray-500 hidden xl:block">
-                    Submit
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile View */}
-          <div className="md:hidden">
-            <div className="flex items-center justify-between px-4">
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full shadow-lg animate-pulse">
-                  <span className="text-white font-semibold">4</span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">
-                    Step 4 of 4
-                  </p>
-                  <p className="text-xs text-gray-500">Review & Submit</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-gray-500">Progress</p>
-                <div className="flex items-center mt-1">
-                  <div className="flex">
-                    {[1, 2, 3].map((step) => (
-                      <div
-                        key={step}
-                        className="w-2 h-2 bg-green-600 rounded-full mr-1"
-                      ></div>
-                    ))}
-                    <div className="w-2 h-2 bg-blue-600 rounded-full animate-pulse"></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Cancel Warning Modal - Enhanced */}
-        {showCancelWarning && (
-          <div className="fixed inset-0 bg-gray-600 bg-opacity-50 backdrop-blur-sm overflow-y-auto h-full w-full z-50">
-            <div className="relative top-20 mx-auto p-5 border w-96 shadow-2xl rounded-xl bg-white">
-              <div className="mt-3">
-                <div className="flex items-center mb-4">
-                  <ExclamationTriangleIcon className="w-6 h-6 text-yellow-500 mr-2" />
-                  <h3 className="text-lg font-medium text-gray-900">
-                    Are you sure?
-                  </h3>
-                </div>
-                <p className="text-sm text-gray-500 mb-4">
-                  Your Order record will be cancelled and your work will be
-                  lost. This cannot be undone. Do you want to continue?
+            }
+          >
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <span className="text-xs sm:text-sm font-medium text-gray-500">Customer:</span>
+                <p className="text-sm sm:text-base text-gray-900">
+                  <Link
+                    to={`/admin/customer/${orderData.customerId}`}
+                    target="_blank"
+                    className="text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                  >
+                    {orderData.customerFirstName} {orderData.customerLastName}
+                  </Link>
                 </p>
-                <div className="flex justify-end space-x-3">
-                  <button
-                    onClick={() => setShowCancelWarning(false)}
-                    className="px-4 py-2 bg-gray-300 text-gray-800 text-sm font-medium rounded-md hover:bg-gray-400 transition-all transform hover:scale-105"
-                  >
-                    No
-                  </button>
-                  <button
-                    onClick={handleConfirmCancel}
-                    className="px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white text-sm font-medium rounded-md hover:from-green-700 hover:to-green-800 transition-all transform hover:scale-105 shadow-lg"
-                  >
-                    Yes
-                  </button>
+              </div>
+            </div>
+          </FormCard>
+
+          {/* Order Details Section */}
+          <FormCard
+            title="Order Details"
+            subtitle="Job type and scheduling information"
+            icon={ClipboardDocumentIcon}
+            maxWidth="7xl"
+            headerAction={
+              <Link
+                to="/admin/orders/add/step-2"
+                className="inline-flex items-center text-xs sm:text-sm text-blue-300 hover:text-white transition-colors"
+              >
+                <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                Edit
+              </Link>
+            }
+          >
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <DataField
+                  label="Start Date"
+                  value={formatDateForDisplay(orderData.startDate)}
+                  icon={CalendarIcon}
+                />
+                <div>
+                  <span className="text-xs sm:text-sm font-medium text-gray-500">Is Ongoing:</span>
+                  <p className="text-sm mt-0.5">
+                    {orderData.isOngoing === 1 ? (
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <CheckIcon className="w-3 h-3 mr-1" />
+                        Yes - Ongoing
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        <XMarkIcon className="w-3 h-3 mr-1" />
+                        No - One Time
+                      </span>
+                    )}
+                  </p>
+                </div>
+                <div>
+                  <span className="text-xs sm:text-sm font-medium text-gray-500">Home Support Service:</span>
+                  <p className="text-sm mt-0.5">
+                    {orderData.isHomeSupportService === 1 ? (
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <HomeIcon className="w-3 h-3 mr-1" />
+                        Yes
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                        <XMarkIcon className="w-3 h-3 mr-1" />
+                        No
+                      </span>
+                    )}
+                  </p>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          </FormCard>
 
-        {/* Main Content with Dark Header */}
-        <div className="bg-white shadow-lg rounded-lg overflow-hidden">
-          <div className="px-4 sm:px-6 py-4 bg-gradient-to-r from-gray-800 to-gray-700">
-            <h2 className="text-base sm:text-lg font-semibold text-white flex items-center">
-              <CheckCircleIcon className="w-5 h-5 mr-2 text-green-400" />
-              Review and Submit
-            </h2>
-            <p className="mt-1 text-xs sm:text-sm text-gray-300">
-              Please review the order details before submitting
-            </p>
-          </div>
+          {/* Job Description Section */}
+          <FormCard
+            title="Job Description"
+            subtitle="Work requirements and details"
+            icon={ClipboardDocumentIcon}
+            maxWidth="7xl"
+            headerAction={
+              <Link
+                to="/admin/orders/add/step-3"
+                className="inline-flex items-center text-xs sm:text-sm text-blue-300 hover:text-white transition-colors"
+              >
+                <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                Edit
+              </Link>
+            }
+          >
+            <div className="space-y-4">
+              {orderData.description && (
+                <div>
+                  <span className="text-xs sm:text-sm font-medium text-gray-500 flex items-center mb-1">
+                    Description:
+                  </span>
+                  <div className="text-sm text-gray-900 bg-gray-50 p-3 rounded border border-gray-200">
+                    <p className="whitespace-pre-wrap">{orderData.description}</p>
+                  </div>
+                </div>
+              )}
 
-          <div className="p-4 sm:p-6">
-            <div className="mb-6 bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm sm:text-base text-blue-800 flex items-start">
-                <SparklesIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
-                <span>
-                  Please review the following order summary before submitting.
-                  If everything looks correct, click the
-                  <strong> Submit Order</strong> button to create the new order.
-                </span>
+              {orderData.skillSets && orderData.skillSets.length > 0 && (
+                <div>
+                  <span className="text-xs sm:text-sm font-medium text-gray-500 flex items-center mb-2">
+                    <AcademicCapIcon className="w-4 h-4 mr-1" />
+                    Required Skills:
+                  </span>
+                  <SkillSetsDisplay
+                    values={orderData.skillSets}
+                    label=""
+                    variant="primary"
+                    onUnauthorized={() => navigate("/login?unauthorized=true")}
+                  />
+                </div>
+              )}
+
+              {orderData.tags && orderData.tags.length > 0 && (
+                <div>
+                  <span className="text-xs sm:text-sm font-medium text-gray-500 flex items-center mb-2">
+                    <TagIcon className="w-4 h-4 mr-1" />
+                    Tags:
+                  </span>
+                  <TagsDisplay
+                    values={orderData.tags}
+                    label=""
+                    variant="success"
+                    onUnauthorized={() => navigate("/login?unauthorized=true")}
+                  />
+                </div>
+              )}
+
+              {orderData.additionalComment && (
+                <div>
+                  <span className="text-xs sm:text-sm font-medium text-gray-500 flex items-center mb-1">
+                    <ChatBubbleBottomCenterTextIcon className="w-4 h-4 mr-1" />
+                    Additional Comments:
+                  </span>
+                  <div className="text-sm text-gray-900 bg-amber-50 p-3 rounded border border-amber-200">
+                    <p className="whitespace-pre-wrap">{orderData.additionalComment}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </FormCard>
+        </div>
+      </WizardFormStep>
+
+      {/* Cancel Confirmation Modal */}
+      {showCancelWarning && (
+        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg max-w-md w-full">
+            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
+              <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+                Are you sure?
+              </h3>
+            </div>
+            <div className="px-4 sm:px-6 py-4">
+              <p className="text-xs sm:text-sm text-gray-600">
+                Your Order record will be cancelled and your work will be lost. This cannot be undone. Do you want to continue?
               </p>
             </div>
-
-            {errors.message && (
-              <div className="mb-6 bg-red-50 border-l-4 border-red-400 text-red-800 px-4 py-3 rounded-lg flex items-center">
-                <ExclamationTriangleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-                <span className="text-sm sm:text-base">{errors.message}</span>
-              </div>
-            )}
-            {errors.detail && (
-              <div className="mb-6 bg-red-50 border-l-4 border-red-400 text-red-800 px-4 py-3 rounded-lg flex items-center">
-                <ExclamationTriangleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
-                <span className="text-sm sm:text-base">{errors.detail}</span>
-              </div>
-            )}
-
-            {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-12">
-                <RocketLaunchIcon className="w-16 h-16 text-blue-600 mb-4 animate-bounce" />
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                <p className="mt-4 text-lg text-gray-600 font-medium">
-                  Creating order...
-                </p>
-                <p className="mt-2 text-sm text-gray-500">
-                  Please wait while we process your request
-                </p>
-              </div>
-            ) : (
-              <div className="max-w-3xl mx-auto">
-                <div className="space-y-6 sm:space-y-8">
-                  {/* Customer Information Section */}
-                  <div className="bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg p-4 sm:p-6 border border-purple-200">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
-                        <UserIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-purple-600" />
-                        Customer Information
-                      </h3>
-                      <Link
-                        to="/admin/orders/add/step-2"
-                        className="inline-flex items-center text-xs sm:text-sm text-purple-600 hover:text-purple-800 transition-colors"
-                      >
-                        <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                        Edit
-                      </Link>
-                    </div>
-
-                    <div className="bg-white rounded-lg p-3 sm:p-4 space-y-2">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Customer:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900">
-                            <Link
-                              to={`/admin/customer/${orderData.customerId}`}
-                              target="_blank"
-                              className="text-blue-600 hover:text-blue-800 font-medium transition-colors"
-                            >
-                              {orderData.customerFirstName}{" "}
-                              {orderData.customerLastName}
-                            </Link>
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Order Details Section */}
-                  <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4 sm:p-6 border border-blue-200">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
-                        <ClipboardDocumentIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600" />
-                        Order Details
-                      </h3>
-                      <Link
-                        to="/admin/orders/add/step-3"
-                        className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800 transition-colors"
-                      >
-                        <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                        Edit
-                      </Link>
-                    </div>
-
-                    <div className="bg-white rounded-lg p-3 sm:p-4 space-y-3">
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-3">
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Start Date:
-                          </span>
-                          <p className="text-xs sm:text-sm text-gray-900 flex items-center">
-                            <CalendarIcon className="w-4 h-4 mr-1 text-gray-400" />
-                            {formatDateForDisplay(orderData.startDate)}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Is Ongoing:
-                          </span>
-                          <p className="text-xs sm:text-sm">
-                            {orderData.isOngoing === 1 ? (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                <CheckIcon className="w-3 h-3 mr-1" />
-                                Yes
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                <XMarkIcon className="w-3 h-3 mr-1" />
-                                No
-                              </span>
-                            )}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-xs sm:text-sm font-medium text-gray-500">
-                            Is Home Support Service:
-                          </span>
-                          <p className="text-xs sm:text-sm">
-                            {orderData.isHomeSupportService === 1 ? (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                <HomeIcon className="w-3 h-3 mr-1" />
-                                Yes
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                <XMarkIcon className="w-3 h-3 mr-1" />
-                                No
-                              </span>
-                            )}
-                          </p>
-                        </div>
-                      </div>
-
-                      {orderData.description && (
-                        <div className="mt-3">
-                          <span className="text-xs sm:text-sm font-medium text-gray-500 flex items-center mb-1">
-                            <ClipboardDocumentIcon className="w-4 h-4 mr-1" />
-                            Description:
-                          </span>
-                          <div className="mt-1 text-xs sm:text-sm text-gray-900 bg-gray-50 p-3 rounded border border-gray-200">
-                            <p className="whitespace-pre-wrap">
-                              {orderData.description}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Skill Sets Display */}
-                      {orderData.skillSets &&
-                        orderData.skillSets.length > 0 && (
-                          <div className="mt-3 bg-purple-50 rounded-lg p-3 border border-purple-200">
-                            <span className="text-xs sm:text-sm font-medium text-gray-500 flex items-center mb-2">
-                              <AcademicCapIcon className="w-4 h-4 mr-1 text-purple-600" />
-                              Required Skills:
-                            </span>
-                            <SkillSetsDisplay
-                              values={orderData.skillSets}
-                              label=""
-                              variant="primary"
-                              onUnauthorized={onUnauthorized}
-                            />
-                          </div>
-                        )}
-
-                      {orderData.additionalComment && (
-                        <div className="mt-3">
-                          <span className="text-xs sm:text-sm font-medium text-gray-500 flex items-center mb-1">
-                            <ChatBubbleBottomCenterTextIcon className="w-4 h-4 mr-1" />
-                            Additional Comments:
-                          </span>
-                          <div className="mt-1 text-xs sm:text-sm text-gray-900 bg-amber-50 p-3 rounded border border-amber-200">
-                            <p className="whitespace-pre-wrap">
-                              {orderData.additionalComment}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Tags Display */}
-                      {orderData.tags && orderData.tags.length > 0 && (
-                        <div className="mt-3 bg-green-50 rounded-lg p-3 border border-green-200">
-                          <span className="text-xs sm:text-sm font-medium text-gray-500 flex items-center mb-2">
-                            <TagIcon className="w-4 h-4 mr-1 text-green-600" />
-                            Tags:
-                          </span>
-                          <TagsDisplay
-                            values={orderData.tags}
-                            label=""
-                            variant="success"
-                            onUnauthorized={onUnauthorized}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Form Actions - Enhanced */}
-                <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row gap-3 pt-6 border-t-2 border-gray-200">
-                  <button
-                    onClick={handleCancelClick}
-                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all transform hover:scale-105"
-                  >
-                    <XMarkIcon className="w-4 h-4 mr-2" />
-                    Cancel
-                  </button>
-                  <Link
-                    to="/admin/orders/add/step-3"
-                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-all transform hover:scale-105"
-                  >
-                    <ArrowLeftIcon className="w-4 h-4 mr-2" />
-                    Back
-                  </Link>
-                  <button
-                    onClick={onSubmitClick}
-                    disabled={isLoading}
-                    className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-green-600 to-green-700 rounded-lg hover:from-green-700 hover:to-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105 shadow-lg"
-                  >
-                    <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
-                    {isLoading ? "Submitting..." : "Submit Order"}
-                  </button>
-                </div>
-              </div>
-            )}
+            <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-col-reverse sm:flex-row sm:justify-end gap-3 rounded-b-lg">
+              <button
+                onClick={() => setShowCancelWarning(false)}
+                className="w-full sm:w-auto px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                No, Keep Working
+              </button>
+              <button
+                onClick={handleConfirmCancel}
+                className="w-full sm:w-auto px-4 py-2 text-xs sm:text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Yes, Cancel
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      )}
+    </>
+  );
+});
+
+Step4Content.displayName = 'Step4Content';
+
+function AdminOrderAddStep4Page() {
+  return (
+    <UIXThemeProvider>
+      <Step4Content />
+    </UIXThemeProvider>
   );
 }
 

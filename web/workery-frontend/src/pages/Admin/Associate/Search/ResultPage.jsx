@@ -1,6 +1,13 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Associate/Search/ResultPage.jsx
-import React, { useState, useEffect } from "react";
+// UIX Upgraded - Uses UIX primitives (Breadcrumb, Spinner, UIXThemeProvider)
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
+import {
+  Breadcrumb,
+  Spinner,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../components/UIX";
 import { DateTime } from "luxon";
 import {
   useAuthManager,
@@ -76,6 +83,32 @@ function AdminAssociateSearchResultPage() {
   const associateManager = useAssociateManager();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { getThemeClasses } = useUIXTheme();
+
+  // Memoize theme classes
+  const themeClasses = useMemo(
+    () => ({
+      pageContainer: getThemeClasses("pageContainer"),
+      contentWrapper: getThemeClasses("contentWrapper"),
+    }),
+    [getThemeClasses],
+  );
+
+  // Memoize onUnauthorized callback
+  const onUnauthorized = useCallback(() => {
+    navigate("/login?unauthorized=true");
+  }, [navigate]);
+
+  // Memoize breadcrumb items
+  const breadcrumbItems = useMemo(
+    () => [
+      { label: "Dashboard", path: "/admin/dashboard", icon: "ChartBarIcon" },
+      { label: "Associates", path: "/admin/associates" },
+      { label: "Search", path: "/admin/associates/search" },
+      { label: "Results" },
+    ],
+    [],
+  );
 
   // Extract search parameters from URL
   const firstName = searchParams.get("fn") || "";
@@ -215,7 +248,7 @@ function AdminAssociateSearchResultPage() {
       onAssociateListSuccess,
       onAssociateListError,
       onAssociateListDone,
-      () => navigate("/login?unauthorized=true"),
+      onUnauthorized,
       true, // Force refresh to bypass cache
     );
   };
@@ -311,7 +344,7 @@ function AdminAssociateSearchResultPage() {
       onAssociateDeleteSuccess,
       onAssociateDeleteError,
       onAssociateDeleteDone,
-      () => navigate("/login?unauthorized=true"),
+      onUnauthorized,
     );
   };
 
@@ -379,63 +412,14 @@ function AdminAssociateSearchResultPage() {
   );
 
   if (isFetching && !associates) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading search results...</p>
-        </div>
-      </div>
-    );
+    return <Spinner text="Loading search results..." />
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
-        <nav className="flex mb-8" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3">
-            <li className="inline-flex items-center">
-              <Link
-                to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                <ChartBarIcon className="w-4 h-4 mr-2" />
-                Dashboard
-              </Link>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <Link
-                  to="/admin/associates"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
-                >
-                  Associates
-                </Link>
-              </div>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <Link
-                  to="/admin/associates/search"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
-                >
-                  Search
-                </Link>
-              </div>
-            </li>
-            <li aria-current="page">
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">
-                  Results
-                </span>
-              </div>
-            </li>
-          </ol>
-        </nav>
+        <Breadcrumb items={breadcrumbItems} />
 
         {/* Header Section */}
         <div className="mb-8">
@@ -654,29 +638,7 @@ function AdminAssociateSearchResultPage() {
           {/* Results Content */}
           <div className="p-6">
             {isFetching ? (
-              <div className="flex flex-col items-center justify-center py-16">
-                <svg
-                  className="animate-spin h-10 w-10 text-blue-600 mb-4"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-                <p className="text-gray-600">Updating results...</p>
-              </div>
+              <Spinner text="Updating results..." />
             ) : associates &&
               associates.results &&
               associates.results.length > 0 ? (
@@ -998,4 +960,10 @@ function AdminAssociateSearchResultPage() {
   );
 }
 
-export default AdminAssociateSearchResultPage;
+export default function AdminAssociateSearchResultPageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminAssociateSearchResultPage />
+    </UIXThemeProvider>
+  );
+}

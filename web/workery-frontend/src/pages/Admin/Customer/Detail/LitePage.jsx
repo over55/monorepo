@@ -1,10 +1,12 @@
 // File Path: web/workery-frontend/src/pages/Admin/Customer/Detail/LitePage.jsx
+// UIX Upgraded - Uses DetailLiteView whole page component
+// @uix-page: AdminCustomerDetailLitePage
 
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useNavigate, useParams } from "react-router";
 import {
   ChartBarIcon,
-  UserGroupIcon,
+  UserIcon,
   InformationCircleIcon,
   PencilSquareIcon,
   ChevronLeftIcon,
@@ -13,31 +15,34 @@ import {
   MapPinIcon,
   BuildingOfficeIcon,
   HomeIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  NoSymbolIcon,
   ArchiveBoxIcon,
   ArrowTopRightOnSquareIcon,
   ClipboardDocumentListIcon,
   EllipsisHorizontalIcon,
   PlusCircleIcon,
-  TagIcon,
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-  NoSymbolIcon,
 } from "@heroicons/react/24/outline";
-import {
-  useCustomerManager,
-  useAuthManager,
-} from "../../../../services/Services";
+import { useCustomerManager } from "../../../../services/Services";
 import { TagsDisplay } from "../../../../components/business/displays";
+import { DetailLiteView } from "../../../../components/UIX";
 
 // Constants
 const COMMERCIAL_CUSTOMER_TYPE_OF_ID = 3;
 const RESIDENTIAL_CUSTOMER_TYPE_OF_ID = 2;
+const CUSTOMER_STATUS_ACTIVE = 1;
+const CUSTOMER_STATUS_ARCHIVED = 2;
+
+const CUSTOMER_TYPE_MAP = {
+  1: "Unassigned",
+  2: "Residential",
+  3: "Commercial",
+};
 
 function AdminCustomerDetailLitePage() {
   const { cid } = useParams();
   const customerManager = useCustomerManager();
-  const authManager = useAuthManager();
   const navigate = useNavigate();
 
   // State management
@@ -46,12 +51,12 @@ function AdminCustomerDetailLitePage() {
   const [error, setError] = useState(null);
 
   // Handle unauthorized access
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
-  };
+  }, [navigate]);
 
   // Fetch customer data
-  const fetchCustomer = async () => {
+  const fetchCustomer = useCallback(async () => {
     if (!cid) return;
 
     setLoading(true);
@@ -69,39 +74,133 @@ function AdminCustomerDetailLitePage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [cid, customerManager, onUnauthorized]);
 
   // Initial data load
   useEffect(() => {
     window.scrollTo(0, 0);
     fetchCustomer();
-  }, [cid]);
+  }, [fetchCustomer]);
 
   // Format phone number for display
-  const formatPhone = (phone) => {
+  const formatPhone = useCallback((phone) => {
     if (!phone) return "-";
-    return phone.replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3");
-  };
+    const cleaned = phone.replace(/\D/g, "");
+    if (cleaned.length === 10) {
+      return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
+    }
+    return phone;
+  }, []);
 
   // Format address for display
-  const formatAddress = (customer) => {
-    if (!customer) return "-";
+  const formatAddress = useCallback((customerData) => {
+    if (!customerData) return "-";
     const address =
-      customer.fullAddressWithPostalCode ||
-      `${customer.addressLine1 || ""} ${customer.city || ""} ${customer.region || ""} ${customer.postalCode || ""}`.trim();
-
+      customerData.fullAddressWithPostalCode ||
+      `${customerData.addressLine1 || ""} ${customerData.city || ""} ${customerData.region || ""} ${customerData.postalCode || ""}`.trim();
     return address || "-";
-  };
+  }, []);
+
+  // Get Google Maps URL
+  const getGoogleMapsUrl = useCallback((customerData) => {
+    if (!customerData) return null;
+    return customerData.fullAddressUrl || null;
+  }, []);
 
   // Extract IDs from array of objects
-  const extractIds = (items) => {
+  const extractIds = useCallback((items) => {
     if (!items || !Array.isArray(items)) return [];
     return items.map((item) => item.id || item.value).filter(Boolean);
-  };
+  }, []);
 
-  // Format customer status display
-  const formatStatus = (customer) => {
-    if (customer.isBanned) {
+  // Memoize breadcrumb items
+  const breadcrumbItems = useMemo(() => [
+    {
+      label: "Dashboard",
+      to: "/admin/dashboard",
+      icon: ChartBarIcon,
+    },
+    {
+      label: "Customers",
+      to: "/admin/customers",
+      icon: UserIcon,
+    },
+    {
+      label: "Detail",
+      icon: InformationCircleIcon,
+      isActive: true,
+    },
+  ], []);
+
+  // Memoize header config
+  const headerConfig = useMemo(() => ({
+    title: "Summary",
+    icon: ClipboardDocumentListIcon,
+    loadingText: "Loading customer details...",
+    notFoundTitle: "Customer Not Found",
+    notFoundMessage: "The customer you're looking for doesn't exist or you don't have permission to view it.",
+    notFoundAction: {
+      label: "Back to Customers",
+      icon: ChevronLeftIcon,
+      onClick: () => navigate("/admin/customers"),
+    },
+  }), [navigate]);
+
+  // Memoize tabs
+  const tabs = useMemo(() => {
+    if (!customer) return [];
+    return [
+      { label: "Summary", to: `/admin/customer/${customer.id}`, isActive: true },
+      { label: "Detail", to: `/admin/customer/${customer.id}/detail` },
+      { label: "Orders", to: `/admin/customer/${customer.id}/orders` },
+      { label: "Comments", to: `/admin/customer/${customer.id}/comments` },
+      { label: "Attachments", to: `/admin/customer/${customer.id}/attachments` },
+      { label: "More", to: `/admin/customer/${customer.id}/more`, icon: EllipsisHorizontalIcon },
+    ];
+  }, [customer]);
+
+  // Memoize action buttons
+  const actionButtons = useMemo(() => {
+    if (!customer) return [];
+    return [
+      {
+        variant: "outline",
+        label: "Back",
+        icon: ChevronLeftIcon,
+        onClick: () => navigate("/admin/customers"),
+      },
+      {
+        variant: "secondary",
+        label: "Edit",
+        icon: PencilSquareIcon,
+        disabled: customer.status === CUSTOMER_STATUS_ARCHIVED,
+        onClick: () => navigate(`/admin/customer/${cid}/edit`),
+      },
+      {
+        variant: "primary",
+        label: "New Order",
+        icon: PlusCircleIcon,
+        external: true,
+        onClick: () => window.open(`/admin/orders/add/step-2-from-launchpad?id=${cid}&fn=${customer.firstName}&ln=${customer.lastName}`, '_blank'),
+      },
+    ];
+  }, [customer, navigate, cid]);
+
+  // Memoize alerts configuration
+  const alerts = useMemo(() => ({
+    archived: {
+      message: "This customer is archived",
+      icon: ArchiveBoxIcon,
+    },
+    banned: {
+      message: "This customer is banned",
+      icon: NoSymbolIcon,
+    },
+  }), []);
+
+  // Format status display
+  const formatStatus = useCallback((customerData) => {
+    if (customerData.isBanned) {
       return (
         <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-medium bg-red-100 text-red-800">
           <XCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
@@ -109,7 +208,7 @@ function AdminCustomerDetailLitePage() {
         </span>
       );
     }
-    if (customer.status === 1) {
+    if (customerData.status === CUSTOMER_STATUS_ACTIVE) {
       return (
         <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-medium bg-green-100 text-green-800">
           <CheckCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
@@ -119,355 +218,151 @@ function AdminCustomerDetailLitePage() {
     }
     return (
       <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-medium bg-gray-100 text-gray-800">
-        Inactive
+        Archived
       </span>
     );
-  };
+  }, []);
 
-  if (loading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-sm sm:text-base text-gray-600">
-              Loading customer details...
-            </p>
+  // Memoize field sections
+  const fieldSections = useMemo(() => {
+    if (!customer) return [];
+
+    return [
+      // Primary column - Basic Info
+      {
+        column: "primary",
+        component: (
+          <div>
+            {/* Name/Organization */}
+            <div className="mb-3 sm:mb-4 lg:mb-5">
+              {customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID && (
+                <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 flex items-center justify-center xl:justify-start mb-2">
+                  <BuildingOfficeIcon className="w-5 sm:w-6 h-5 sm:h-6 lg:w-8 lg:h-8 mr-2 lg:mr-3 text-blue-600 flex-shrink-0" />
+                  <span className="break-words">
+                    {customer.organizationName}
+                  </span>
+                </h2>
+              )}
+              <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-gray-800 flex items-center justify-center xl:justify-start">
+                {customer.type === RESIDENTIAL_CUSTOMER_TYPE_OF_ID && (
+                  <HomeIcon className="w-4 sm:w-5 h-4 sm:h-5 lg:w-7 lg:h-7 mr-2 text-blue-600 flex-shrink-0" />
+                )}
+                <span className="break-words">
+                  {customer.name ||
+                    `${customer.firstName} ${customer.lastName}`}
+                </span>
+              </h3>
+              <div className="mt-2 text-sm lg:text-base text-gray-600">
+                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs lg:text-sm font-medium bg-blue-100 text-blue-800">
+                  {CUSTOMER_TYPE_MAP[customer.type] || "Unknown"}
+                </span>
+              </div>
+            </div>
+
+            {/* Address */}
+            <div className="flex items-start text-sm sm:text-base lg:text-lg text-gray-600 mb-3 sm:mb-4 lg:mb-5 justify-center xl:justify-start">
+              <MapPinIcon className="w-4 sm:w-5 h-4 sm:h-5 lg:w-6 lg:h-6 mr-2 mt-0.5 flex-shrink-0 text-gray-400" />
+              <div className="min-w-0 flex-1">
+                <span className="break-words">
+                  {formatAddress(customer)}
+                </span>
+                {getGoogleMapsUrl(customer) && (
+                  <a
+                    href={getGoogleMapsUrl(customer)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="ml-2 inline-flex items-center text-blue-600 hover:text-blue-700"
+                  >
+                    <ArrowTopRightOnSquareIcon className="w-3 sm:w-4 h-3 sm:h-4" />
+                  </a>
+                )}
+              </div>
+            </div>
+
+            {/* Email & Phone */}
+            <div className="space-y-2 sm:space-y-3">
+              <div className="flex items-center text-sm sm:text-base lg:text-lg justify-center xl:justify-start">
+                <EnvelopeIcon className="w-4 sm:w-5 h-4 sm:h-5 lg:w-6 lg:h-6 mr-2 sm:mr-3 text-gray-400 flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  {customer.email ? (
+                    <a
+                      href={`mailto:${customer.email}`}
+                      className="text-blue-600 hover:text-blue-700 font-medium break-all"
+                    >
+                      {customer.email}
+                    </a>
+                  ) : (
+                    <span className="text-gray-500">No email</span>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center text-sm sm:text-base lg:text-lg justify-center xl:justify-start">
+                <PhoneIcon className="w-4 sm:w-5 h-4 sm:h-5 lg:w-6 lg:h-6 mr-2 sm:mr-3 text-gray-400 flex-shrink-0" />
+                <div className="min-w-0 flex-1">
+                  {customer.phone ? (
+                    <a
+                      href={`tel:${customer.phone}`}
+                      className="text-blue-600 hover:text-blue-700 font-medium"
+                    >
+                      {formatPhone(customer.phone)}
+                    </a>
+                  ) : (
+                    <span className="text-gray-500">No phone</span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Type & Status */}
+            <div className="mt-3 sm:mt-4 lg:mt-5 space-y-2 sm:space-y-3">
+              <div className="flex items-center text-sm sm:text-base lg:text-lg justify-center xl:justify-start">
+                <ClipboardDocumentListIcon className="w-4 sm:w-5 h-4 sm:h-5 lg:w-6 lg:h-6 mr-2 sm:mr-3 text-gray-400 flex-shrink-0" />
+                <span className="text-gray-600 mr-2">Type:</span>
+                <span className="font-medium">
+                  {CUSTOMER_TYPE_MAP[customer.type] || "Unknown"}
+                </span>
+              </div>
+              <div className="flex items-center text-sm sm:text-base lg:text-lg justify-center xl:justify-start">
+                <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 lg:w-6 lg:h-6 mr-2 sm:mr-3 text-gray-400 flex-shrink-0" />
+                <span className="text-gray-600 mr-2">Status:</span>
+                {formatStatus(customer)}
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
-    );
-  }
+        ),
+      },
+      // Secondary column - Tags
+      {
+        column: "secondary",
+        component: (
+          <div className="space-y-3 sm:space-y-4 lg:space-y-6">
+            {/* Tags */}
+            <div>
+              <TagsDisplay
+                values={extractIds(customer.tags)}
+                label="Tags"
+                onUnauthorized={onUnauthorized}
+              />
+            </div>
+          </div>
+        ),
+      },
+    ];
+  }, [customer, formatAddress, getGoogleMapsUrl, formatPhone, formatStatus, extractIds, onUnauthorized]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-      {/* Responsive Breadcrumb */}
-      <nav
-        className="flex mb-4 sm:mb-6 overflow-x-auto"
-        aria-label="Breadcrumb"
-      >
-        <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
-          <li className="inline-flex items-center">
-            <Link
-              to="/admin/dashboard"
-              className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
-            >
-              <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-              <span className="hidden sm:inline">Dashboard</span>
-              <span className="sm:hidden">Dash</span>
-            </Link>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
-              <Link
-                to="/admin/customers"
-                className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
-              >
-                <span className="inline-flex items-center">
-                  <UserGroupIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                  Customers
-                </span>
-              </Link>
-            </div>
-          </li>
-          <li aria-current="page">
-            <div className="flex items-center">
-              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
-              <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
-                <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                Detail
-              </span>
-            </div>
-          </li>
-        </ol>
-      </nav>
-
-      {/* Page Title - Responsive */}
-      <div className="mb-4 sm:mb-6">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
-              <UserGroupIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
-              Customer
-            </h1>
-            <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
-              <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
-              View customer information
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Status Alerts - Responsive */}
-      {customer && customer.status === 2 && (
-        <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center text-sm sm:text-base">
-          <ArchiveBoxIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
-          This customer is archived
-        </div>
-      )}
-      {customer && customer.isBanned && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center text-sm sm:text-base">
-          <NoSymbolIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
-          This customer is banned
-        </div>
-      )}
-
-      {/* Error Display - Responsive */}
-      {error && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base">
-          <div className="flex justify-between items-center">
-            <span className="break-words">{error}</span>
-            <button
-              onClick={() => setError(null)}
-              className="text-red-700 hover:text-red-900 ml-2 flex-shrink-0"
-            >
-              ×
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Main Content */}
-      <div className="shadow-sm">
-        {customer && (
-          <div className="bg-gray-700 rounded-lg">
-            {/* Header with Actions - Responsive with Dark Background */}
-            <div className="px-4 sm:px-6 py-4 sm:py-5">
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
-                <h2 className="text-xl sm:text-2xl font-semibold text-white flex items-center">
-                  <ClipboardDocumentListIcon className="w-5 sm:w-7 h-5 sm:h-7 mr-2 text-blue-300 flex-shrink-0" />
-                  Summary
-                </h2>
-                <div className="flex gap-2 sm:gap-3">
-                  <Link
-                    to="/admin/customers"
-                    className="flex-1 sm:flex-initial"
-                  >
-                    <button className="w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base font-medium text-[#222222] bg-[#f6f6f6] hover:bg-gray-200 transition-colors">
-                      <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
-                      Back
-                    </button>
-                  </Link>
-                  <Link
-                    to={`/admin/customer/${cid}/edit`}
-                    className="flex-1 sm:flex-initial"
-                  >
-                    <button
-                      disabled={customer.status === 2}
-                      className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
-                        customer.status === 2
-                          ? "border-gray-200 text-gray-400 bg-gray-50 cursor-not-allowed"
-                          : "border-amber-600 text-white bg-amber-600 hover:bg-amber-700"
-                      }`}
-                    >
-                      <PencilSquareIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
-                      Edit
-                    </button>
-                  </Link>
-                  <Link
-                    to={`/admin/orders/add/step-2-from-launchpad?id=${cid}&fn=${customer.firstName}&ln=${customer.lastName}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex-1 sm:flex-initial"
-                  >
-                    <button className="w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-green-600 text-white bg-green-600 hover:bg-green-700 rounded-lg text-sm sm:text-base font-medium transition-colors">
-                      <PlusCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
-                      <span className="hidden sm:inline">New Order</span>
-                      <span className="sm:hidden">Order</span>
-                      <ArrowTopRightOnSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 ml-1" />
-                    </button>
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            {/* Tab Navigation - Responsive with horizontal scroll on mobile */}
-            <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg">
-              <div className="px-4 sm:px-6 border-b border-gray-200">
-                <nav className="-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide">
-                  <div className="border-b-2 border-blue-600 py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-blue-600 whitespace-nowrap">
-                    Summary
-                  </div>
-                  <Link
-                    to={`/admin/customer/${customer.id}/detail`}
-                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
-                  >
-                    Detail
-                  </Link>
-                  <Link
-                    to={`/admin/customer/${customer.id}/orders`}
-                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
-                  >
-                    Orders
-                  </Link>
-                  <Link
-                    to={`/admin/customer/${customer.id}/comments`}
-                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
-                  >
-                    Comments
-                  </Link>
-                  <Link
-                    to={`/admin/customer/${customer.id}/attachments`}
-                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
-                  >
-                    Attachments
-                  </Link>
-                  <Link
-                    to={`/admin/customer/${customer.id}/more`}
-                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center whitespace-nowrap"
-                  >
-                    More
-                    <EllipsisHorizontalIcon className="w-4 sm:w-5 h-4 sm:h-5 ml-1" />
-                  </Link>
-                </nav>
-              </div>
-
-              {/* Customer Summary Layout - Optimized for Responsiveness */}
-              <div className="py-4 sm:py-6 md:py-8 lg:py-10 px-4 sm:px-6 lg:px-8">
-                {/* Responsive Layout - Stacked on mobile/tablet, side-by-side on larger screens */}
-                <div className="flex flex-col xl:flex-row gap-4 sm:gap-6 lg:gap-8 xl:gap-12 items-center xl:items-start justify-center max-w-6xl mx-auto">
-                  {/* Main Content Container */}
-                  <div className="flex-1 w-full xl:flex xl:gap-8 space-y-4 sm:space-y-6 xl:space-y-0">
-                    {/* Basic Info Column */}
-                    <div className="xl:flex-1 xl:min-w-0 text-center xl:text-left">
-                      {/* Name/Organization */}
-                      <div className="mb-3 sm:mb-4 lg:mb-5">
-                        {customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID && (
-                          <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 flex items-center justify-center xl:justify-start mb-2">
-                            <BuildingOfficeIcon className="w-5 sm:w-6 h-5 sm:h-6 lg:w-8 lg:h-8 mr-2 lg:mr-3 text-blue-600 flex-shrink-0" />
-                            <span className="break-words">
-                              {customer.organizationName}
-                            </span>
-                          </h2>
-                        )}
-                        <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-gray-800 flex items-center justify-center xl:justify-start">
-                          {customer.type ===
-                            RESIDENTIAL_CUSTOMER_TYPE_OF_ID && (
-                            <HomeIcon className="w-4 sm:w-5 h-4 sm:h-5 lg:w-7 lg:h-7 mr-2 text-blue-600 flex-shrink-0" />
-                          )}
-                          <span className="break-words">
-                            {customer.firstName} {customer.lastName}
-                          </span>
-                        </h3>
-                      </div>
-
-                      {/* Address */}
-                      <div className="flex items-start text-sm sm:text-base lg:text-lg text-gray-600 mb-3 sm:mb-4 lg:mb-5 justify-center xl:justify-start">
-                        <MapPinIcon className="w-4 sm:w-5 h-4 sm:h-5 lg:w-6 lg:h-6 mr-2 mt-0.5 flex-shrink-0 text-gray-400" />
-                        <div className="min-w-0 flex-1">
-                          <span className="break-words">
-                            {formatAddress(customer)}
-                          </span>
-                          {customer.fullAddressUrl && (
-                            <a
-                              href={customer.fullAddressUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="ml-2 inline-flex items-center text-blue-600 hover:text-blue-700"
-                            >
-                              <ArrowTopRightOnSquareIcon className="w-3 sm:w-4 h-3 sm:h-4" />
-                            </a>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Email & Phone */}
-                      <div className="space-y-2 sm:space-y-3">
-                        <div className="flex items-center text-sm sm:text-base lg:text-lg justify-center xl:justify-start">
-                          <EnvelopeIcon className="w-4 sm:w-5 h-4 sm:h-5 lg:w-6 lg:h-6 mr-2 sm:mr-3 text-gray-400 flex-shrink-0" />
-                          <div className="min-w-0 flex-1">
-                            {customer.email ? (
-                              <a
-                                href={`mailto:${customer.email}`}
-                                className="text-blue-600 hover:text-blue-700 font-medium break-all"
-                              >
-                                {customer.email}
-                              </a>
-                            ) : (
-                              <span className="text-gray-500">No email</span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center text-sm sm:text-base lg:text-lg justify-center xl:justify-start">
-                          <PhoneIcon className="w-4 sm:w-5 h-4 sm:h-5 lg:w-6 lg:h-6 mr-2 sm:mr-3 text-gray-400 flex-shrink-0" />
-                          <div className="min-w-0 flex-1">
-                            {customer.phone ? (
-                              <a
-                                href={`tel:${customer.phone}`}
-                                className="text-blue-600 hover:text-blue-700 font-medium"
-                              >
-                                {formatPhone(customer.phone)}
-                              </a>
-                            ) : (
-                              <span className="text-gray-500">No phone</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Type & Status */}
-                      <div className="mt-3 sm:mt-4 lg:mt-5 space-y-2 sm:space-y-3">
-                        <div className="flex items-center text-sm sm:text-base lg:text-lg justify-center xl:justify-start">
-                          <ClipboardDocumentListIcon className="w-4 sm:w-5 h-4 sm:h-5 lg:w-6 lg:h-6 mr-2 sm:mr-3 text-gray-400 flex-shrink-0" />
-                          <span className="text-gray-600 mr-2">Type:</span>
-                          <span className="font-medium">
-                            {customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID
-                              ? "Commercial"
-                              : customer.type ===
-                                  RESIDENTIAL_CUSTOMER_TYPE_OF_ID
-                                ? "Residential"
-                                : "Unassigned"}
-                          </span>
-                        </div>
-                        <div className="flex items-center text-sm sm:text-base lg:text-lg justify-center xl:justify-start">
-                          <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 lg:w-6 lg:h-6 mr-2 sm:mr-3 text-gray-400 flex-shrink-0" />
-                          <span className="text-gray-600 mr-2">Status:</span>
-                          {formatStatus(customer)}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Tags Column */}
-                    <div className="xl:flex-1 xl:min-w-0 space-y-3 sm:space-y-4 lg:space-y-6 text-center xl:text-left">
-                      {/* Tags */}
-                      <div>
-                        <TagsDisplay
-                          values={extractIds(customer.tags)}
-                          label="Tags"
-                          onUnauthorized={onUnauthorized}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {!customer && !loading && (
-          <div className="px-4 sm:px-6 py-8 sm:py-16 text-center">
-            <div className="inline-flex items-center justify-center w-12 sm:w-16 h-12 sm:h-16 bg-gray-100 rounded-full mb-4">
-              <UserGroupIcon className="w-6 sm:w-8 h-6 sm:h-8 text-gray-400" />
-            </div>
-            <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
-              Customer Not Found
-            </h3>
-            <p className="text-sm sm:text-base text-gray-500 mb-4 sm:mb-6">
-              The customer you're looking for doesn't exist or you don't have
-              permission to view it.
-            </p>
-            <Link to="/admin/customers">
-              <button className="inline-flex items-center px-3 sm:px-4 py-2 border border-blue-600 rounded-lg text-xs sm:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-                <ChevronLeftIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
-                Back to Customers
-              </button>
-            </Link>
-          </div>
-        )}
-      </div>
-    </div>
+    <DetailLiteView
+      entityData={customer}
+      breadcrumbItems={breadcrumbItems}
+      headerConfig={headerConfig}
+      fieldSections={fieldSections}
+      actionButtons={actionButtons}
+      tabs={tabs}
+      alerts={alerts}
+      isLoading={loading}
+      error={error}
+      onErrorClose={() => setError(null)}
+    />
   );
 }
 

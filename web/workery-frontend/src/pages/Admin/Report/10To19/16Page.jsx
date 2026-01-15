@@ -1,9 +1,19 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Admin/Report/10To19/16Page.jsx
+// File Path: src/pages/Admin/Report/10To19/16Page.jsx
+// UIX Upgraded - Uses UIX primitives (Card, Button, Alert, Spinner, Breadcrumb)
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useReportManager } from "../../../../services/Services";
-import { Card, Button, Alert, Loading } from "../../../../components/UI";
+import {
+  Card,
+  Button,
+  Alert,
+  Loading,
+  Spinner,
+  Breadcrumb,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../components/UIX";
 import {
   HomeIcon,
   ChartBarIcon,
@@ -33,6 +43,39 @@ const USER_TYPE_OPTIONS = [
 function AdminReport16Page() {
   const navigate = useNavigate();
   const reportManager = useReportManager();
+  const { getThemeClasses } = useUIXTheme();
+
+  // Memoize theme classes for performance
+  const themeClasses = useMemo(
+    () => ({
+      textPrimary: getThemeClasses("text-primary"),
+      textSecondary: getThemeClasses("text-secondary"),
+      textMuted: getThemeClasses("text-muted"),
+      bgCard: getThemeClasses("bg-card"),
+      bgHover: getThemeClasses("bg-hover"),
+      borderPrimary: getThemeClasses("border-primary"),
+      borderSecondary: getThemeClasses("border-secondary"),
+      inputBg: getThemeClasses("input-bg"),
+      inputBorder: getThemeClasses("input-border"),
+      inputText: getThemeClasses("input-text"),
+      linkPrimary: getThemeClasses("link-primary"),
+    }),
+    [getThemeClasses],
+  );
+
+  // Breadcrumb items
+  const breadcrumbItems = useMemo(
+    () => [
+      { label: "Dashboard", to: "/admin/dashboard", icon: HomeIcon },
+      { label: "Reports", to: "/admin/reports", icon: ChartBarIcon },
+      {
+        label: "How Users Find Us (Long)",
+        icon: GlobeAltIcon,
+        isActive: true,
+      },
+    ],
+    [],
+  );
 
   // Form state
   const [fromDate, setFromDate] = useState("");
@@ -71,9 +114,9 @@ function AdminReport16Page() {
   }, []);
 
   // Handle unauthorized access
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
-  };
+  }, [navigate]);
 
   // Validate form
   const validateForm = () => {
@@ -237,70 +280,7 @@ function AdminReport16Page() {
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-full xl:max-w-7xl">
       {/* Breadcrumb */}
-      <nav
-        className="flex mb-4 sm:mb-6 lg:mb-8 overflow-x-auto"
-        aria-label="Breadcrumb"
-      >
-        <ol className="inline-flex items-center space-x-1 md:space-x-3 whitespace-nowrap">
-          <li className="inline-flex items-center">
-            <Link
-              to="/admin/dashboard"
-              className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600"
-            >
-              <HomeIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0" />
-              <span className="hidden sm:inline">Dashboard</span>
-              <span className="sm:hidden">Home</span>
-            </Link>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <svg
-                className="w-3 h-3 text-gray-400 mx-1 flex-shrink-0"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 6 10"
-              >
-                <path
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="m1 9 4-4-4-4"
-                />
-              </svg>
-              <Link
-                to="/admin/reports"
-                className="ml-1 text-xs sm:text-sm font-medium text-gray-700 md:ml-2 hover:text-blue-600"
-              >
-                Reports
-              </Link>
-            </div>
-          </li>
-          <li aria-current="page">
-            <div className="flex items-center">
-              <svg
-                className="w-3 h-3 text-gray-400 mx-1 flex-shrink-0"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 6 10"
-              >
-                <path
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="m1 9 4-4-4-4"
-                />
-              </svg>
-              <span className="ml-1 text-xs sm:text-sm font-medium text-gray-500 md:ml-2">
-                How Users Find Us (Long)
-              </span>
-            </div>
-          </li>
-        </ol>
-      </nav>
+      <Breadcrumb items={breadcrumbItems} className="mb-4 sm:mb-6 lg:mb-8" />
 
       {/* Main Content */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -308,14 +288,14 @@ function AdminReport16Page() {
         <div className="lg:col-span-2">
           <Card className="h-full">
             {/* Card Header */}
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className={`px-6 py-4 border-b ${themeClasses.borderSecondary}`}>
               <div className="flex items-center">
                 <GlobeAltIcon className="w-6 h-6 text-indigo-600 mr-3" />
                 <div>
-                  <h1 className="text-xl font-semibold text-gray-900">
+                  <h1 className={`text-xl font-semibold ${themeClasses.textPrimary}`}>
                     How Users Find Us (Long) Report
                   </h1>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className={`text-sm ${themeClasses.textSecondary} mt-1`}>
                     Detailed report on how users discovered our services
                   </p>
                 </div>
@@ -394,14 +374,14 @@ function AdminReport16Page() {
                   <div>
                     <label
                       htmlFor="fromDate"
-                      className="block text-sm font-medium text-gray-700 mb-2"
+                      className={`block text-sm font-medium ${themeClasses.textSecondary} mb-2`}
                     >
                       From Date
                       <span className="text-red-500 ml-1">*</span>
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <CalendarIcon className="h-5 w-5 text-gray-400" />
+                        <CalendarIcon className={`h-5 w-5 ${themeClasses.textMuted}`} />
                       </div>
                       <input
                         type="date"
@@ -414,16 +394,17 @@ function AdminReport16Page() {
                           border rounded-lg
                           transition-all duration-200
                           focus:outline-none focus:ring-2 focus:ring-offset-1
+                          ${themeClasses.inputBg} ${themeClasses.inputText}
                           ${
                             errors.fromDate
                               ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
-                              : "border-gray-300 focus:border-blue-500 focus:ring-blue-500/20"
+                              : `${themeClasses.inputBorder} focus:border-blue-500 focus:ring-blue-500/20`
                           }
                         `}
                         required
                       />
                     </div>
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className={`mt-1 text-xs ${themeClasses.textMuted}`}>
                       Refers to user join date
                     </p>
                     {errors.fromDate && (
@@ -438,14 +419,14 @@ function AdminReport16Page() {
                   <div>
                     <label
                       htmlFor="toDate"
-                      className="block text-sm font-medium text-gray-700 mb-2"
+                      className={`block text-sm font-medium ${themeClasses.textSecondary} mb-2`}
                     >
                       To Date
                       <span className="text-red-500 ml-1">*</span>
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <CalendarIcon className="h-5 w-5 text-gray-400" />
+                        <CalendarIcon className={`h-5 w-5 ${themeClasses.textMuted}`} />
                       </div>
                       <input
                         type="date"
@@ -458,16 +439,17 @@ function AdminReport16Page() {
                           border rounded-lg
                           transition-all duration-200
                           focus:outline-none focus:ring-2 focus:ring-offset-1
+                          ${themeClasses.inputBg} ${themeClasses.inputText}
                           ${
                             errors.toDate
                               ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
-                              : "border-gray-300 focus:border-blue-500 focus:ring-blue-500/20"
+                              : `${themeClasses.inputBorder} focus:border-blue-500 focus:ring-blue-500/20`
                           }
                         `}
                         required
                       />
                     </div>
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className={`mt-1 text-xs ${themeClasses.textMuted}`}>
                       Refers to user join date
                     </p>
                     {errors.toDate && (
@@ -483,14 +465,14 @@ function AdminReport16Page() {
                 <div>
                   <label
                     htmlFor="userType"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+                    className={`block text-sm font-medium ${themeClasses.textSecondary} mb-2`}
                   >
                     What type of user to filter by?
                     <span className="text-red-500 ml-1">*</span>
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <UsersIcon className="h-5 w-5 text-gray-400" />
+                      <UsersIcon className={`h-5 w-5 ${themeClasses.textMuted}`} />
                     </div>
                     <select
                       id="userType"
@@ -508,12 +490,13 @@ function AdminReport16Page() {
                       }}
                       className={`
                         w-full pl-10 pr-10 py-2.5 border rounded-lg
-                        transition-all duration-200 appearance-none bg-white
+                        transition-all duration-200 appearance-none
                         focus:outline-none focus:ring-2 focus:ring-offset-1
+                        ${themeClasses.inputBg} ${themeClasses.inputText}
                         ${
                           errors.userType
                             ? "border-red-500 focus:border-red-500 focus:ring-red-500/20"
-                            : "border-gray-300 focus:border-blue-500 focus:ring-blue-500/20"
+                            : `${themeClasses.inputBorder} focus:border-blue-500 focus:ring-blue-500/20`
                         }
                       `}
                       required
@@ -526,7 +509,7 @@ function AdminReport16Page() {
                     </select>
                     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2">
                       <svg
-                        className="h-5 w-5 text-gray-400"
+                        className={`h-5 w-5 ${themeClasses.textMuted}`}
                         xmlns="http://www.w3.org/2000/svg"
                         viewBox="0 0 20 20"
                         fill="currentColor"
@@ -539,7 +522,7 @@ function AdminReport16Page() {
                       </svg>
                     </div>
                   </div>
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className={`mt-1 text-xs ${themeClasses.textMuted}`}>
                     Select the user category to include in the report
                   </p>
                   {errors.userType && (
@@ -555,11 +538,11 @@ function AdminReport16Page() {
                   toDate &&
                   userType &&
                   !Object.keys(errors).length && (
-                    <div className="bg-indigo-50 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-gray-700 mb-2">
+                    <div className="bg-indigo-50 dark:bg-indigo-900/20 rounded-lg p-4">
+                      <h4 className={`text-sm font-medium ${themeClasses.textSecondary} mb-2`}>
                         Report Preview
                       </h4>
-                      <div className="text-sm text-gray-600 space-y-1">
+                      <div className={`text-sm ${themeClasses.textSecondary} space-y-1`}>
                         <p>
                           <span className="font-medium">Date Range:</span>{" "}
                           {new Date(fromDate).toLocaleDateString()} to{" "}
@@ -580,7 +563,7 @@ function AdminReport16Page() {
                   )}
 
                 {/* Form Actions */}
-                <div className="flex items-center justify-between pt-6 border-t border-gray-200">
+                <div className={`flex items-center justify-between pt-6 border-t ${themeClasses.borderSecondary}`}>
                   <Button
                     type="button"
                     variant="outline"
@@ -608,10 +591,10 @@ function AdminReport16Page() {
         <div className="lg:col-span-1">
           {/* Recent Downloads Card */}
           <Card>
-            <div className="px-6 py-4 border-b border-gray-200">
+            <div className={`px-6 py-4 border-b ${themeClasses.borderSecondary}`}>
               <div className="flex items-center">
-                <ClockIcon className="w-5 h-5 text-gray-600 mr-2" />
-                <h2 className="text-lg font-semibold text-gray-900">
+                <ClockIcon className={`w-5 h-5 ${themeClasses.textSecondary} mr-2`} />
+                <h2 className={`text-lg font-semibold ${themeClasses.textPrimary}`}>
                   Recent Downloads
                 </h2>
               </div>
@@ -622,29 +605,29 @@ function AdminReport16Page() {
                   {recentDownloads.map((item, index) => (
                     <div
                       key={index}
-                      className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                      className={`p-3 ${themeClasses.bgHover} rounded-lg hover:opacity-80 transition-colors`}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
+                          <p className={`text-sm font-medium ${themeClasses.textPrimary} truncate`}>
                             {item.filename}
                           </p>
-                          <p className="text-xs text-gray-500 mt-1">
+                          <p className={`text-xs ${themeClasses.textMuted} mt-1`}>
                             {new Date(item.downloadedAt).toLocaleString()}
                           </p>
                         </div>
-                        <DocumentArrowDownIcon className="w-4 h-4 text-gray-400 flex-shrink-0 ml-2" />
+                        <DocumentArrowDownIcon className={`w-4 h-4 ${themeClasses.textMuted} flex-shrink-0 ml-2`} />
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="text-center py-8">
-                  <DocumentArrowDownIcon className="mx-auto h-12 w-12 text-gray-400" />
-                  <p className="mt-2 text-sm text-gray-500">
+                  <DocumentArrowDownIcon className={`mx-auto h-12 w-12 ${themeClasses.textMuted}`} />
+                  <p className={`mt-2 text-sm ${themeClasses.textMuted}`}>
                     No recent downloads
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className={`text-xs ${themeClasses.textMuted} mt-1`}>
                     Downloaded reports will appear here
                   </p>
                 </div>
@@ -654,8 +637,8 @@ function AdminReport16Page() {
 
           {/* What's Included Card */}
           <Card className="mt-6">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">
+            <div className={`px-6 py-4 border-b ${themeClasses.borderSecondary}`}>
+              <h3 className={`text-lg font-semibold ${themeClasses.textPrimary}`}>
                 What's Included
               </h3>
             </div>
@@ -664,10 +647,10 @@ function AdminReport16Page() {
                 <div className="flex items-start">
                   <UserIcon className="w-5 h-5 text-indigo-500 mr-3 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className={`text-sm font-medium ${themeClasses.textPrimary}`}>
                       User Information
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className={`text-xs ${themeClasses.textMuted} mt-1`}>
                       Complete user details and demographics
                     </p>
                   </div>
@@ -675,10 +658,10 @@ function AdminReport16Page() {
                 <div className="flex items-start">
                   <GlobeAltIcon className="w-5 h-5 text-blue-500 mr-3 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className={`text-sm font-medium ${themeClasses.textPrimary}`}>
                       Referral Sources
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className={`text-xs ${themeClasses.textMuted} mt-1`}>
                       How users discovered your services
                     </p>
                   </div>
@@ -686,10 +669,10 @@ function AdminReport16Page() {
                 <div className="flex items-start">
                   <CalendarDaysIcon className="w-5 h-5 text-green-500 mr-3 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className={`text-sm font-medium ${themeClasses.textPrimary}`}>
                       Join Dates
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className={`text-xs ${themeClasses.textMuted} mt-1`}>
                       When users registered or joined
                     </p>
                   </div>
@@ -697,10 +680,10 @@ function AdminReport16Page() {
                 <div className="flex items-start">
                   <ChartPieIcon className="w-5 h-5 text-purple-500 mr-3 mt-0.5" />
                   <div>
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className={`text-sm font-medium ${themeClasses.textPrimary}`}>
                       Marketing Channels
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className={`text-xs ${themeClasses.textMuted} mt-1`}>
                       Breakdown by acquisition channel
                     </p>
                   </div>
@@ -711,13 +694,13 @@ function AdminReport16Page() {
 
           {/* Report Tips */}
           <Card className="mt-6">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900">
+            <div className={`px-6 py-4 border-b ${themeClasses.borderSecondary}`}>
+              <h3 className={`text-lg font-semibold ${themeClasses.textPrimary}`}>
                 Report Tips
               </h3>
             </div>
             <div className="p-6">
-              <ul className="space-y-3 text-sm text-gray-600">
+              <ul className={`space-y-3 text-sm ${themeClasses.textSecondary}`}>
                 <li className="flex items-start">
                   <span className="text-indigo-500 mr-2">•</span>
                   <span>
@@ -759,4 +742,13 @@ function AdminReport16Page() {
   );
 }
 
-export default AdminReport16Page;
+// Wrapper with UIXThemeProvider
+function AdminReport16PageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminReport16Page />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminReport16PageWithProvider;

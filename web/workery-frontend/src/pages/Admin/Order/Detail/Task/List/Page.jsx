@@ -1,7 +1,18 @@
 // File Path: web/workery-frontend/src/pages/Admin/Order/Detail/Task/List/Page.jsx
+// UIX Upgraded - Uses UIX primitives (Card, Alert, Spinner, Breadcrumb, Tabs, Button)
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Link, useParams, useNavigate } from "react-router";
+import {
+  Card,
+  Alert,
+  Spinner,
+  Breadcrumb,
+  Tabs,
+  Button,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../../../components/UIX";
 import {
   ChartBarIcon,
   WrenchScrewdriverIcon,
@@ -42,6 +53,33 @@ function AdminOrderDetailMoreTaskListPage() {
   const { oid } = useParams();
   const navigate = useNavigate();
   const taskManager = useTaskManager();
+  const { getThemeClasses } = useUIXTheme();
+
+  // Memoize theme classes
+  const themeClasses = useMemo(() => ({
+    textPrimary: getThemeClasses("text-primary"),
+    textSecondary: getThemeClasses("text-secondary"),
+    linkPrimary: getThemeClasses("link-primary"),
+  }), [getThemeClasses]);
+
+  // Breadcrumb items
+  const breadcrumbItems = useMemo(() => [
+    { label: "Dashboard", to: "/admin/dashboard", icon: ChartBarIcon },
+    { label: "Orders", to: "/admin/orders", icon: WrenchScrewdriverIcon },
+    { label: `Order #${oid}`, to: `/admin/order/${oid}`, icon: InformationCircleIcon },
+    { label: "Tasks", icon: CheckCircleIcon, isActive: true },
+  ], [oid]);
+
+  // Tab items
+  const tabItems = useMemo(() => [
+    { label: "Summary", to: `/admin/order/${oid}` },
+    { label: "Detail", to: `/admin/order/${oid}/full` },
+    { label: "Activity Sheets", to: `/admin/order/${oid}/activity-sheets` },
+    { label: "Tasks", to: `/admin/order/${oid}/tasks`, isActive: true },
+    { label: "Comments", to: `/admin/order/${oid}/comments` },
+    { label: "Attachments", to: `/admin/order/${oid}/attachments` },
+    { label: "More", to: `/admin/order/${oid}/more`, icon: EllipsisHorizontalIcon },
+  ], [oid]);
 
   // Use refs to track if initial load has happened
   const hasInitialLoad = useRef(false);
@@ -273,12 +311,13 @@ function AdminOrderDetailMoreTaskListPage() {
   if (isFetching && taskList.results.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex items-center justify-center min-h-[400px]">
+        <Breadcrumb items={breadcrumbItems} className="mb-6" />
+        <Card padding="p-0" className="flex items-center justify-center min-h-[400px] border-0 shadow-none">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <Spinner size="lg" />
             <p className="mt-4 text-gray-600">Loading order tasks...</p>
           </div>
-        </div>
+        </Card>
       </div>
     );
   }
@@ -286,52 +325,17 @@ function AdminOrderDetailMoreTaskListPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Breadcrumb */}
-      <nav className="flex mb-6" aria-label="Breadcrumb">
-        <ol className="inline-flex items-center space-x-1 md:space-x-3">
-          <li className="inline-flex items-center">
-            <Link
-              to="/admin/dashboard"
-              className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
-            >
-              <ChartBarIcon className="w-4 h-4 mr-2" />
-              Dashboard
-            </Link>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <Link
-                to="/admin/orders"
-                className="text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                <span className="inline-flex items-center">
-                  <WrenchScrewdriverIcon className="w-4 h-4 mr-2" />
-                  Orders
-                </span>
-              </Link>
-            </div>
-          </li>
-          <li aria-current="page">
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <span className="text-sm font-medium text-gray-500 inline-flex items-center">
-                <InformationCircleIcon className="w-4 h-4 mr-2" />
-                Detail
-              </span>
-            </div>
-          </li>
-        </ol>
-      </nav>
+      <Breadcrumb items={breadcrumbItems} className="mb-6" />
 
       {/* Page Title */}
       <div className="mb-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-              <WrenchScrewdriverIcon className="w-8 h-8 mr-3 text-blue-600" />
+            <h1 className={`text-3xl font-bold ${themeClasses.textPrimary} flex items-center`}>
+              <WrenchScrewdriverIcon className={`w-8 h-8 mr-3 ${themeClasses.linkPrimary}`} />
               Order #{oid}
             </h1>
-            <p className="mt-1 text-sm text-gray-600 flex items-center">
+            <p className={`mt-1 text-sm ${themeClasses.textSecondary} flex items-center`}>
               <InformationCircleIcon className="w-4 h-4 mr-1" />
               View and manage tasks
             </p>
@@ -348,41 +352,24 @@ function AdminOrderDetailMoreTaskListPage() {
           ORDER_STATUS_COMPLETED_AND_PAID,
           ORDER_STATUS_ARCHIVED,
         ].includes(order.status) && (
-          <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg flex items-center">
-            <ArchiveBoxIcon className="w-5 h-5 mr-2" />
+          <Alert type="info" className="mb-4" icon={ArchiveBoxIcon}>
             This order is not actionable
-          </div>
+          </Alert>
         )}
 
       {/* Top Alert Message */}
       {topAlertMessage && (
-        <div
-          className={`mb-4 px-4 py-3 rounded-lg ${
-            topAlertStatus === "success"
-              ? "bg-green-50 border border-green-200 text-green-700"
-              : "bg-red-50 border border-red-200 text-red-700"
-          }`}
+        <Alert
+          type={topAlertStatus === "success" ? "success" : "error"}
+          className="mb-4"
+          dismissible
+          onDismiss={() => {
+            setTopAlertMessage("");
+            setTopAlertStatus("");
+          }}
         >
-          <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              {topAlertStatus === "success" ? (
-                <CheckCircleIcon className="w-5 h-5 mr-2" />
-              ) : (
-                <XCircleIcon className="w-5 h-5 mr-2" />
-              )}
-              <span>{topAlertMessage}</span>
-            </div>
-            <button
-              onClick={() => {
-                setTopAlertMessage("");
-                setTopAlertStatus("");
-              }}
-              className="text-current hover:opacity-70"
-            >
-              ×
-            </button>
-          </div>
-        </div>
+          {topAlertMessage}
+        </Alert>
       )}
 
       {/* Error Display */}
@@ -390,41 +377,30 @@ function AdminOrderDetailMoreTaskListPage() {
         typeof errors === "object" &&
         Object.keys(errors).length > 0 &&
         !topAlertMessage && (
-          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            <div className="flex items-start">
-              <ExclamationTriangleIcon className="w-5 h-5 mr-2 mt-0.5" />
-              <div className="flex-1">
-                <strong>Error:</strong>
-                {typeof errors === "string" ? (
-                  <p className="mt-1">{errors}</p>
-                ) : (
-                  <ul className="mt-2 list-disc list-inside">
-                    {Object.entries(errors).map(([key, value]) => (
-                      <li key={key}>
-                        {key === "general" ? value : `${key}: ${value}`}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-              <button
-                onClick={() => setErrors({})}
-                className="text-red-700 hover:text-red-900 ml-3"
-              >
-                ×
-              </button>
-            </div>
-          </div>
+          <Alert type="error" className="mb-4" dismissible onDismiss={() => setErrors({})}>
+            <strong>Error:</strong>
+            {typeof errors === "string" ? (
+              <p className="mt-1">{errors}</p>
+            ) : (
+              <ul className="mt-2 list-disc list-inside">
+                {Object.entries(errors).map(([key, value]) => (
+                  <li key={key}>
+                    {key === "general" ? value : `${key}: ${value}`}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Alert>
         )}
 
       {/* Main Content */}
-      <div className="bg-white shadow-sm rounded-lg">
+      <Card>
         {/* Header with Title and Refresh Button */}
         <div className="px-6 py-5 border-b border-gray-200">
           <div className="flex justify-between items-center flex-wrap gap-4">
             <div className="flex items-center gap-4">
-              <h2 className="text-2xl font-semibold text-gray-900 flex items-center">
-                <CheckCircleIcon className="w-7 h-7 mr-2 text-blue-600" />
+              <h2 className={`text-2xl font-semibold ${themeClasses.textPrimary} flex items-center`}>
+                <CheckCircleIcon className={`w-7 h-7 mr-2 ${themeClasses.linkPrimary}`} />
                 Tasks
               </h2>
               {lastFetchTime && (
@@ -434,64 +410,20 @@ function AdminOrderDetailMoreTaskListPage() {
                 </span>
               )}
             </div>
-            <button
+            <Button
+              variant="outline"
               onClick={handleRefresh}
               disabled={isRefreshing}
-              className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
+              loading={isRefreshing}
             >
-              <ArrowPathIcon
-                className={`w-5 h-5 mr-2 ${isRefreshing ? "animate-spin" : ""}`}
-              />
+              <ArrowPathIcon className={`w-5 h-5 mr-2 ${isRefreshing ? "animate-spin" : ""}`} />
               {isRefreshing ? "Refreshing..." : "Refresh"}
-            </button>
+            </Button>
           </div>
         </div>
 
         {/* Tab Navigation */}
-        <div className="px-6 border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
-            <Link
-              to={`/admin/order/${oid}`}
-              className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            >
-              Summary
-            </Link>
-            <Link
-              to={`/admin/order/${oid}/full`}
-              className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            >
-              Detail
-            </Link>
-            <Link
-              to={`/admin/order/${oid}/activity-sheets`}
-              className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            >
-              Activity Sheets
-            </Link>
-            <div className="border-b-2 border-blue-600 py-4 px-1 text-base font-medium text-blue-600">
-              Tasks
-            </div>
-            <Link
-              to={`/admin/order/${oid}/comments`}
-              className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            >
-              Comments
-            </Link>
-            <Link
-              to={`/admin/order/${oid}/attachments`}
-              className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            >
-              Attachments
-            </Link>
-            <Link
-              to={`/admin/order/${oid}/more`}
-              className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center"
-            >
-              More
-              <EllipsisHorizontalIcon className="w-5 h-5 ml-1" />
-            </Link>
-          </nav>
-        </div>
+        <Tabs items={tabItems} className="px-6" />
 
         <div className="p-6">
           {/* Sort Controls */}
@@ -515,7 +447,7 @@ function AdminOrderDetailMoreTaskListPage() {
           {isFetching || isRefreshing ? (
             <div className="flex items-center justify-center py-12">
               <div className="text-center">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mx-auto"></div>
+                <Spinner size="lg" />
                 <p className="mt-4 text-gray-600">
                   {isRefreshing ? "Refreshing tasks..." : "Loading tasks..."}
                 </p>
@@ -724,16 +656,25 @@ function AdminOrderDetailMoreTaskListPage() {
           {/* Action Buttons */}
           <div className="flex justify-start mt-8 pt-6 border-t border-gray-200">
             <Link to={`/admin/order/${oid}`}>
-              <button className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+              <Button variant="outline">
                 <ChevronLeftIcon className="w-5 h-5 mr-2" />
                 Back to Order
-              </button>
+              </Button>
             </Link>
           </div>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
 
-export default AdminOrderDetailMoreTaskListPage;
+// Wrapper with UIXThemeProvider
+function AdminOrderDetailMoreTaskListPageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminOrderDetailMoreTaskListPage />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminOrderDetailMoreTaskListPageWithProvider;

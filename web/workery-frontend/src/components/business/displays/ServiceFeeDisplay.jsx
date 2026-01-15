@@ -1,8 +1,8 @@
-// File Path: monorepo/web/workery-frontend/src/components/business/displays/ServiceFeeDisplay.jsx
+// File Path: monorepo/web/frontend/src/components/business/displays/ServiceFeeDisplay.jsx
 
 import React, { useState, useEffect } from "react";
 import { useServiceFeeManager } from "../../../services/Services";
-import { Loading } from "../../UI";
+import { Loading, useUIXTheme } from "../../UIX";
 
 /**
  * Display component for Service Fee value
@@ -25,6 +25,7 @@ function ServiceFeeDisplay({
   const [displayValue, setDisplayValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { getThemeClasses } = useUIXTheme();
 
   useEffect(() => {
     let mounted = true;
@@ -74,7 +75,9 @@ function ServiceFeeDisplay({
           }
         }
       } catch (error) {
-        console.error("Error fetching service fee option:", error);
+        if (import.meta.env.DEV) {
+          console.error("Error fetching service fee option:", error);
+        }
         if (mounted) {
           setError("Failed to load service fee");
           setDisplayValue(`ID: ${value}`);
@@ -91,12 +94,13 @@ function ServiceFeeDisplay({
     return () => {
       mounted = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- serviceFeeManager is a stable singleton from DI container
   }, [value, onUnauthorized, showAmount]);
 
   if (isLoading) {
     return (
       <div className={`mb-4 ${className}`}>
-        <p className="text-sm font-medium text-gray-700 mb-1">{label}</p>
+        <p className={`text-sm font-medium ${getThemeClasses("text-secondary")} mb-1`}>{label}</p>
         <div className="flex items-center">
           <Loading size="sm" text="Loading..." />
         </div>
@@ -106,12 +110,12 @@ function ServiceFeeDisplay({
 
   return (
     <div className={`mb-4 ${className}`}>
-      <p className="text-sm font-medium text-gray-700 mb-1">{label}</p>
-      <p className="text-sm text-gray-900">
+      <p className={`text-sm font-medium ${getThemeClasses("text-secondary")} mb-1`}>{label}</p>
+      <p className={`text-sm ${getThemeClasses("text-primary")}`}>
         {error ? (
           <span className="text-red-600">{error}</span>
         ) : (
-          displayValue || <span className="text-gray-400">Not specified</span>
+          displayValue || <span className={getThemeClasses("text-muted")}>Not specified</span>
         )}
       </p>
     </div>

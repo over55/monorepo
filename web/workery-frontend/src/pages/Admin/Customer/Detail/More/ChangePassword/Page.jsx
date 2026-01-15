@@ -1,6 +1,5 @@
-// File Path: web/workery-frontend/src/pages/Admin/Customer/Detail/More/ChangePassword/Page.jsx
-
-import React, { useState, useEffect } from "react";
+// UIX Upgraded - Uses UIX primitives (Card, Alert, Button, Breadcrumb, Spinner, etc.)
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate, useParams } from "react-router";
 import {
   useCustomerManager,
@@ -15,7 +14,9 @@ import {
   Breadcrumb,
   Modal,
   Input,
-} from "../../../../../../components/UI";
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../../../components/UIX";
 import axios from "axios";
 
 function AdminCustomerDetailMoreChangePasswordPage() {
@@ -23,6 +24,17 @@ function AdminCustomerDetailMoreChangePasswordPage() {
   const navigate = useNavigate();
   const customerManager = useCustomerManager();
   const authManager = useAuthManager();
+  const { getThemeClasses } = useUIXTheme();
+
+  // Memoized theme classes
+  const themeClasses = useMemo(
+    () => ({
+      textPrimary: getThemeClasses("text-primary"),
+      textSecondary: getThemeClasses("text-secondary"),
+      linkPrimary: getThemeClasses("link-primary"),
+    }),
+    [getThemeClasses],
+  );
 
   const [customer, setCustomer] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -36,9 +48,20 @@ function AdminCustomerDetailMoreChangePasswordPage() {
   const [password, setPassword] = useState("");
   const [passwordRepeated, setPasswordRepeated] = useState("");
 
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
-  };
+  }, [navigate]);
+
+  // Memoized breadcrumb items
+  const breadcrumbItems = useMemo(
+    () => [
+      { label: "Dashboard", path: "/admin/dashboard", icon: "chart-bar" },
+      { label: "Customers", path: "/admin/customers", icon: "users" },
+      { label: "Detail (More)", path: `/admin/customer/${cid}/more`, icon: "information-circle" },
+      { label: "Password", icon: "key" },
+    ],
+    [cid],
+  );
 
   // Fetch customer details
   useEffect(() => {
@@ -262,13 +285,6 @@ function AdminCustomerDetailMoreChangePasswordPage() {
     );
   }
 
-  const breadcrumbItems = [
-    { label: "Dashboard", path: "/admin/dashboard", icon: "📊" },
-    { label: "Customers", path: "/admin/customers", icon: "👤" },
-    { label: "Detail (More)", path: `/admin/customer/${cid}/more`, icon: "ℹ️" },
-    { label: "Password", icon: "🔑" },
-  ];
-
   return (
     <div style={globalStyles.container}>
       <Breadcrumb items={breadcrumbItems} />
@@ -320,7 +336,7 @@ function AdminCustomerDetailMoreChangePasswordPage() {
             name="password"
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(value) => setPassword(value)}
             placeholder="Enter new password"
             error={errors.password}
             required
@@ -332,7 +348,7 @@ function AdminCustomerDetailMoreChangePasswordPage() {
             name="passwordRepeated"
             type="password"
             value={passwordRepeated}
-            onChange={(e) => setPasswordRepeated(e.target.value)}
+            onChange={(value) => setPasswordRepeated(value)}
             placeholder="Enter password again"
             error={errors.passwordRepeated}
             required
@@ -424,4 +440,12 @@ function AdminCustomerDetailMoreChangePasswordPage() {
   );
 }
 
-export default AdminCustomerDetailMoreChangePasswordPage;
+function AdminCustomerDetailMoreChangePasswordPageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminCustomerDetailMoreChangePasswordPage />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminCustomerDetailMoreChangePasswordPageWithProvider;

@@ -1,7 +1,8 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Admin/Account/More/2FA/Enable/Step1Page.jsx
+// File Path: web/workery-frontend/src/pages/Admin/Account/More/2FA/Enable/Step1Page.jsx
+// UIX Upgraded - Uses UIX primitives (Card, Alert, Breadcrumb, Spinner, Button)
 
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router";
 import {
   LockClosedIcon,
   ShieldCheckIcon,
@@ -22,11 +23,12 @@ import {
 import {
   Card,
   Alert,
-  Loading,
   Breadcrumb,
+  Spinner,
   Button,
-  ProgressBar,
-} from "../../../../../../components/UI";
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../../../components/UIX";
 import { getRoleRedirectPath } from "../../../../../../constants/Roles";
 
 /**
@@ -39,6 +41,14 @@ function AccountTwoFactorAuthenticationEnableStep1Page() {
   const authManager = useAuthManager();
   const twoFactorAuthManager = useTwoFactorAuthManager();
   const navigate = useNavigate();
+  const { getThemeClasses } = useUIXTheme();
+
+  // Memoize theme classes
+  const themeClasses = useMemo(() => ({
+    textPrimary: getThemeClasses("text-primary"),
+    textSecondary: getThemeClasses("text-secondary"),
+    linkPrimary: getThemeClasses("link-primary"),
+  }), [getThemeClasses]);
 
   // Component state
   const [currentUser, setCurrentUser] = useState(null);
@@ -47,10 +57,10 @@ function AccountTwoFactorAuthenticationEnableStep1Page() {
   const [error, setError] = useState("");
 
   // Unauthorized callback
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     authManager.logout();
     navigate("/login?unauthorized=true");
-  };
+  }, [authManager, navigate]);
 
   // Fetch user data on mount
   useEffect(() => {
@@ -115,86 +125,97 @@ function AccountTwoFactorAuthenticationEnableStep1Page() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [accountManager, authManager, navigate, onUnauthorized, twoFactorAuthManager]);
 
   // Generate dashboard link
-  const getDashboardLink = () => {
+  const getDashboardLink = useCallback(() => {
     if (!currentUser) return "/dashboard";
     return getRoleRedirectPath(currentUser.roleId || currentUser.role);
-  };
+  }, [currentUser]);
+
+  // Breadcrumb items
+  const breadcrumbItems = useMemo(() => [
+    {
+      label: "Dashboard",
+      to: getDashboardLink(),
+      icon: Bars3Icon,
+    },
+    {
+      label: "Profile",
+      to: "/admin/account",
+      icon: UserCircleIcon,
+    },
+    {
+      label: "Two-Factor Authentication",
+      to: "/admin/account/more/2fa",
+      icon: ShieldCheckIcon,
+    },
+    {
+      label: "Enable 2FA",
+      icon: LockClosedIcon,
+      isActive: true,
+    },
+  ], [getDashboardLink]);
 
   // Loading state
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loading size="lg" text="Loading..." />
-      </div>
+      <Card padding="p-4 sm:p-6 lg:p-8" className="max-w-4xl mx-auto border-0 shadow-none">
+        <Card padding="p-0" className="flex items-center justify-center min-h-[400px] border-0 shadow-none">
+          <div className="text-center">
+            <Spinner size="lg" />
+            <p className="mt-4 text-gray-600">Loading...</p>
+          </div>
+        </Card>
+      </Card>
     );
   }
 
   // Error state
   if (error && !currentUser) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <Alert type="error" dismissible={false}>
+      <Card padding="p-4 sm:p-6 lg:p-8" className="max-w-4xl mx-auto border-0 shadow-none">
+        <Alert type="error" className="mb-4">
           {error}
         </Alert>
-        <div className="mt-4">
-          <Button onClick={() => window.location.reload()}>Retry</Button>
-        </div>
-      </div>
+        <Button variant="primary" onClick={() => window.location.reload()}>
+          Retry
+        </Button>
+      </Card>
     );
   }
 
-  // Breadcrumb items
-  const breadcrumbItems = [
-    {
-      label: "Dashboard",
-      href: getDashboardLink(),
-      icon: Bars3Icon,
-    },
-    {
-      label: "Profile",
-      href: "/admin/account",
-      icon: UserCircleIcon,
-    },
-    {
-      label: "Two-Factor Authentication",
-      href: "/admin/account/more/2fa",
-      icon: ShieldCheckIcon,
-    },
-    {
-      label: "Enable 2FA",
-      icon: LockClosedIcon,
-    },
-  ];
-
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-6 max-w-4xl">
-        {/* Breadcrumb Navigation */}
-        <div className="mb-6">
-          <Breadcrumb items={breadcrumbItems} />
-        </div>
+    <Card padding="p-4 sm:p-6 lg:p-8" className="max-w-4xl mx-auto border-0 shadow-none">
+      {/* Breadcrumb */}
+      <Breadcrumb items={breadcrumbItems} className="mb-6" />
 
-        {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-            <UserCircleIcon className="h-8 w-8 mr-3" />
-            Profile
-          </h1>
-          <p className="mt-2 text-gray-600">Two-Factor Authentication Setup</p>
-        </div>
+      {/* Page Header */}
+      <div className="mb-6">
+        <h1 className={`text-2xl md:text-3xl font-bold ${themeClasses.textPrimary} flex items-center`}>
+          <UserCircleIcon className={`w-6 h-6 md:w-8 md:h-8 mr-3 ${themeClasses.linkPrimary}`} />
+          Profile
+        </h1>
+        <p className={`mt-1 text-sm ${themeClasses.textSecondary}`}>
+          Two-Factor Authentication Setup
+        </p>
+      </div>
 
-        {/* Main Card */}
-        <Card>
-          {/* Progress Indicator */}
+      {/* Main Card */}
+      <Card>
+        {/* Progress Indicator */}
+        <div className="px-6 pt-6">
           <div className="mb-8">
             <div className="flex justify-between text-sm text-gray-600 mb-2">
               <span>Step 1 of 3</span>
               <span>33%</span>
             </div>
-            <ProgressBar value={33} max={100} color="green" />
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                style={{ width: "33%" }}
+              />
+            </div>
           </div>
 
           {/* Title */}
@@ -204,7 +225,7 @@ function AccountTwoFactorAuthenticationEnableStep1Page() {
 
           {/* Error Alert */}
           {error && (
-            <Alert type="error" dismissible onDismiss={() => setError("")}>
+            <Alert type="error" className="mb-6" dismissible onDismiss={() => setError("")}>
               {error}
             </Alert>
           )}
@@ -217,27 +238,29 @@ function AccountTwoFactorAuthenticationEnableStep1Page() {
               wizard will help you get set up with 2FA.
             </p>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <h3 className="font-semibold text-blue-900 mb-2 flex items-center">
-                <InformationCircleIcon className="h-5 w-5 mr-2" />
-                Recommended Setup
-              </h3>
-              <p className="text-blue-800 mb-2">
-                To make initial 2FA setup easier, we encourage you to:
-              </p>
-              <ul className="list-disc list-inside text-blue-800 space-y-1">
-                <li className="flex items-start">
-                  <ComputerDesktopIcon className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
-                  <span>Login on a desktop device</span>
-                </li>
-                <li className="flex items-start">
-                  <DevicePhoneMobileIcon className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
-                  <span>
-                    Use your mobile phone to scan the QR code and complete setup
-                  </span>
-                </li>
-              </ul>
-            </div>
+            <Alert type="info" className="mb-6">
+              <div className="flex items-start">
+                <InformationCircleIcon className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold mb-2">Recommended Setup</h3>
+                  <p className="mb-2">
+                    To make initial 2FA setup easier, we encourage you to:
+                  </p>
+                  <ul className="space-y-1">
+                    <li className="flex items-start">
+                      <ComputerDesktopIcon className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
+                      <span>Login on a desktop device</span>
+                    </li>
+                    <li className="flex items-start">
+                      <DevicePhoneMobileIcon className="h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
+                      <span>
+                        Use your mobile phone to scan the QR code and complete setup
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </Alert>
 
             <p className="text-gray-700 mb-4">
               To begin, please download any of the following applications for
@@ -273,7 +296,7 @@ function AccountTwoFactorAuthenticationEnableStep1Page() {
                     href="https://apps.apple.com/ca/app/google-authenticator/id388497605"
                     target="_blank"
                     rel="noreferrer"
-                    className="text-blue-600 hover:text-blue-700 flex items-center"
+                    className={`${themeClasses.linkPrimary} flex items-center`}
                   >
                     Visit App Store
                     <ArrowTopRightOnSquareIcon className="h-4 w-4 ml-1" />
@@ -287,7 +310,7 @@ function AccountTwoFactorAuthenticationEnableStep1Page() {
                     href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&pli=1"
                     target="_blank"
                     rel="noreferrer"
-                    className="text-blue-600 hover:text-blue-700 flex items-center"
+                    className={`${themeClasses.linkPrimary} flex items-center`}
                   >
                     Visit Google Play
                     <ArrowTopRightOnSquareIcon className="h-4 w-4 ml-1" />
@@ -308,7 +331,7 @@ function AccountTwoFactorAuthenticationEnableStep1Page() {
                   href="https://chromewebstore.google.com/detail/authenticator/bhghoamapcdpbohphigoooaddinpkbai?pli=1"
                   target="_blank"
                   rel="noreferrer"
-                  className="text-blue-600 hover:text-blue-700 flex items-center"
+                  className={`${themeClasses.linkPrimary} flex items-center`}
                 >
                   Visit Chrome Web Store
                   <ArrowTopRightOnSquareIcon className="h-4 w-4 ml-1" />
@@ -318,39 +341,44 @@ function AccountTwoFactorAuthenticationEnableStep1Page() {
           </div>
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between items-center pt-6 border-t">
+          <div className="flex justify-between items-center pt-6 border-t pb-6">
             <Button
               variant="secondary"
               onClick={() => navigate("/admin/account/more/2fa")}
-              className="flex items-center"
+              icon={ArrowLeftIcon}
             >
-              <ArrowLeftIcon className="h-4 w-4 mr-2" />
               Cancel
             </Button>
 
             <Button
               variant="primary"
               onClick={() => navigate("/admin/account/2fa/setup/step-2")}
-              className="flex items-center"
+              iconRight={ArrowRightIcon}
               disabled={isGeneratingOTP}
             >
               {isGeneratingOTP ? (
-                <>
-                  <Loading size="sm" className="mr-2" />
+                <span className="flex items-center">
+                  <Spinner size="sm" className="mr-2" />
                   Generating...
-                </>
+                </span>
               ) : (
-                <>
-                  Next
-                  <ArrowRightIcon className="h-4 w-4 ml-2" />
-                </>
+                "Next"
               )}
             </Button>
           </div>
-        </Card>
-      </div>
-    </div>
+        </div>
+      </Card>
+    </Card>
   );
 }
 
-export default AccountTwoFactorAuthenticationEnableStep1Page;
+// Wrapper with UIXThemeProvider
+function AccountTwoFactorAuthenticationEnableStep1PageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AccountTwoFactorAuthenticationEnableStep1Page />
+    </UIXThemeProvider>
+  );
+}
+
+export default AccountTwoFactorAuthenticationEnableStep1PageWithProvider;

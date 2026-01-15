@@ -1,7 +1,7 @@
-// File: monorepo/web/workery-frontend/src/components/business/selects/HowHearAboutUsSelect.jsx
+// File: monorepo/web/frontend/src/components/business/selects/HowHearAboutUsSelect.jsx
 
 import React, { useState, useEffect } from "react";
-import { Select, FormGroup, Loading } from "../../UI";
+import { Select, FormGroup, Loading, useUIXTheme } from "../../UIX";
 import { useHowHearAboutUsItemManager } from "../../../services/Services";
 
 /**
@@ -31,6 +31,7 @@ function HowHearAboutUsSelect({
   onUnauthorized = null,
 }) {
   const howHearManager = useHowHearAboutUsItemManager();
+  const { getThemeClasses } = useUIXTheme();
   const [options, setOptions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
@@ -56,7 +57,9 @@ function HowHearAboutUsSelect({
           setOptions(formattedOptions);
         }
       } catch (error) {
-        console.error("Error fetching how hear options:", error);
+        if (import.meta.env.DEV) {
+          console.error("Error fetching how hear options:", error);
+        }
         if (mounted) {
           setFetchError("Failed to load options. Please try again.");
           // Set fallback options on error
@@ -81,11 +84,9 @@ function HowHearAboutUsSelect({
     return () => {
       mounted = false;
     };
-  }, [onUnauthorized]);
+  }, [howHearManager, onUnauthorized]);
 
-  const handleChange = (e) => {
-    const selectedValue = e.target.value;
-
+  const handleChange = (selectedValue) => {
     // Check if "Other" was selected
     if (options.length > 0 && onOtherDetected) {
       const selectedOption = options.find(
@@ -109,16 +110,7 @@ function HowHearAboutUsSelect({
     return (
       <FormGroup label={label} required={required} className={className}>
         <div
-          style={{
-            padding: "10px",
-            border: "1px solid #ddd",
-            borderRadius: "4px",
-            backgroundColor: "#f9f9f9",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            minHeight: "42px",
-          }}
+          className={`p-2.5 border rounded ${getThemeClasses("border-secondary")} ${getThemeClasses("bg-disabled")} flex items-center justify-center min-h-[42px]`}
         >
           <Loading size="sm" text="Loading options..." />
         </div>

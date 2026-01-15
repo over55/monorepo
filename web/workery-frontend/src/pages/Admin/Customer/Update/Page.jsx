@@ -1,6 +1,7 @@
 // File Path: web/workery-frontend/src/pages/Admin/Customer/Update/Page.jsx
+// UIX Upgraded - Uses UIX primitives (Card, Alert, Button, Breadcrumb, Spinner, etc.)
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import {
   ChartBarIcon,
@@ -16,10 +17,7 @@ import {
   ChartPieIcon,
   ComputerDesktopIcon,
   EllipsisHorizontalIcon,
-  ChatBubbleLeftRightIcon,
-  PaperClipIcon,
   ExclamationTriangleIcon,
-  PhoneIcon,
   ArchiveBoxIcon,
   NoSymbolIcon,
 } from "@heroicons/react/24/outline";
@@ -33,7 +31,17 @@ import {
   RESIDENTIAL_CUSTOMER_TYPE_OF_ID,
   CLIENT_PHONE_TYPE_WORK,
 } from "../../../../constants/Customer";
-import { DateInput, Input, Select, Checkbox } from "../../../../components/UI";
+import {
+  DatePicker,
+  Input,
+  Select,
+  Checkbox,
+  Breadcrumb,
+  Spinner,
+  Alert,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../components/UIX";
 
 // Option configurations
 const CLIENT_TYPE_OPTIONS = [
@@ -103,7 +111,7 @@ const formatErrorsForAlert = (errors) => {
         .replace(/([A-Z])/g, " $1")
         .replace(/^./, (str) => str.toUpperCase())
         .trim();
-      errorList.push(`• ${fieldName}: ${message}`);
+      errorList.push(`${fieldName}: ${message}`);
     }
   }
 
@@ -129,6 +137,14 @@ function AdminCustomerUpdatePage() {
   const { cid } = useParams();
   const navigate = useNavigate();
   const customerManager = useCustomerManager();
+  const { getThemeClasses } = useUIXTheme();
+
+  // Memoize theme classes
+  const themeClasses = useMemo(() => ({
+    textPrimary: getThemeClasses("text-primary"),
+    textSecondary: getThemeClasses("text-secondary"),
+    linkPrimary: getThemeClasses("link-primary"),
+  }), [getThemeClasses]);
 
   // State management
   const [isLoading, setIsLoading] = useState(true);
@@ -180,9 +196,33 @@ function AdminCustomerUpdatePage() {
   });
 
   // Handle unauthorized access
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
-  };
+  }, [navigate]);
+
+  // Memoize breadcrumb items
+  const breadcrumbItems = useMemo(() => [
+    {
+      label: "Dashboard",
+      to: "/admin/dashboard",
+      icon: ChartBarIcon,
+    },
+    {
+      label: "Customers",
+      to: "/admin/customers",
+      icon: UserGroupIcon,
+    },
+    {
+      label: "Detail",
+      to: `/admin/customer/${cid}`,
+      icon: InformationCircleIcon,
+    },
+    {
+      label: "Update",
+      icon: PencilSquareIcon,
+      isActive: true,
+    },
+  ], [cid]);
 
   // Fetch customer details
   useEffect(() => {
@@ -291,7 +331,7 @@ function AdminCustomerUpdatePage() {
     return () => {
       mounted = false;
     };
-  }, [cid, customerManager, navigate]);
+  }, [cid, customerManager, onUnauthorized]);
 
   const handleInputChange = (field, value) => {
     setCustomerData((prev) => ({
@@ -555,9 +595,10 @@ function AdminCustomerUpdatePage() {
   if (isLoading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
+        <Breadcrumb items={breadcrumbItems} className="mb-6" />
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <Spinner size="lg" />
             <p className="mt-4 text-sm sm:text-base text-gray-600">
               Loading customer details...
             </p>
@@ -569,71 +610,18 @@ function AdminCustomerUpdatePage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-      {/* Responsive Breadcrumb */}
-      <nav
-        className="flex mb-4 sm:mb-6 overflow-x-auto"
-        aria-label="Breadcrumb"
-      >
-        <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
-          <li className="inline-flex items-center">
-            <Link
-              to="/admin/dashboard"
-              className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
-            >
-              <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-              <span className="hidden sm:inline">Dashboard</span>
-              <span className="sm:hidden">Dash</span>
-            </Link>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
-              <Link
-                to="/admin/customers"
-                className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
-              >
-                <span className="inline-flex items-center">
-                  <UserGroupIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                  Customers
-                </span>
-              </Link>
-            </div>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
-              <Link
-                to={`/admin/customer/${cid}`}
-                className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
-              >
-                <span className="inline-flex items-center">
-                  <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                  Detail
-                </span>
-              </Link>
-            </div>
-          </li>
-          <li aria-current="page">
-            <div className="flex items-center">
-              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
-              <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
-                <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                Update
-              </span>
-            </div>
-          </li>
-        </ol>
-      </nav>
+      {/* Breadcrumb */}
+      <Breadcrumb items={breadcrumbItems} className="mb-4 sm:mb-6" />
 
       {/* Page Title - Responsive */}
       <div className="mb-4 sm:mb-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
-              <UserGroupIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
+            <h1 className={`text-2xl sm:text-3xl font-bold ${themeClasses.textPrimary} flex items-center`}>
+              <UserGroupIcon className={`w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 ${themeClasses.linkPrimary} flex-shrink-0`} />
               Customer
             </h1>
-            <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+            <p className={`mt-1 text-xs sm:text-sm ${themeClasses.textSecondary} flex items-center`}>
               <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
               Update customer information
             </p>
@@ -643,55 +631,37 @@ function AdminCustomerUpdatePage() {
 
       {/* Status Alerts - Responsive */}
       {customer && customer.status === 2 && (
-        <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center text-sm sm:text-base">
-          <ArchiveBoxIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+        <Alert type="info" className="mb-4">
+          <ArchiveBoxIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 inline flex-shrink-0" />
           This customer is archived
-        </div>
+        </Alert>
       )}
       {customer && customer.isBanned && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center text-sm sm:text-base">
-          <NoSymbolIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+        <Alert type="error" className="mb-4">
+          <NoSymbolIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 inline flex-shrink-0" />
           This customer is banned
-        </div>
+        </Alert>
       )}
 
       {/* Alert Messages - Responsive */}
       {alert && (
-        <div
-          className={`mb-4 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base ${
-            alert.type === "success"
-              ? "bg-green-50 border border-green-200 text-green-700"
-              : "bg-red-50 border border-red-200 text-red-700"
-          }`}
+        <Alert
+          type={alert.type}
+          className="mb-4"
+          dismissible
+          onDismiss={() => setAlert(null)}
         >
-          <div className="flex justify-between">
-            <div className="flex-1">
-              <div className="flex items-start">
-                {alert.type === "success" ? (
-                  <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 mt-0.5" />
-                ) : (
-                  <ExclamationTriangleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 mt-0.5" />
-                )}
-                <div className="flex-1">
-                  <span className="font-medium">{alert.message}</span>
-                  {alert.details && alert.details.length > 0 && (
-                    <div className="mt-2 text-xs sm:text-sm">
-                      {alert.details.map((detail, index) => (
-                        <div key={index}>{detail}</div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-            <button
-              onClick={() => setAlert(null)}
-              className="text-current hover:opacity-70 ml-4 text-lg sm:text-xl"
-            >
-              ×
-            </button>
+          <div className="flex-1">
+            <span className="font-medium">{alert.message}</span>
+            {alert.details && alert.details.length > 0 && (
+              <ul className="mt-2 text-xs sm:text-sm list-disc list-inside">
+                {alert.details.map((detail, index) => (
+                  <li key={index}>{detail}</li>
+                ))}
+              </ul>
+            )}
           </div>
-        </div>
+        </Alert>
       )}
 
       {/* Main Content */}
@@ -699,8 +669,8 @@ function AdminCustomerUpdatePage() {
         {/* Header with Actions - Responsive */}
         <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
-            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 flex items-center">
-              <PencilSquareIcon className="w-5 sm:w-7 h-5 sm:h-7 mr-2 text-blue-600 flex-shrink-0" />
+            <h2 className={`text-xl sm:text-2xl font-semibold ${themeClasses.textPrimary} flex items-center`}>
+              <PencilSquareIcon className={`w-5 sm:w-7 h-5 sm:h-7 mr-2 ${themeClasses.linkPrimary} flex-shrink-0`} />
               Update Customer
             </h2>
             <Link to={`/admin/customer/${cid}`} className="flex-shrink-0">
@@ -764,8 +734,8 @@ function AdminCustomerUpdatePage() {
               <Select
                 label="Customer Type"
                 value={customerData.type}
-                onChange={(e) =>
-                  handleInputChange("type", parseInt(e.target.value))
+                onChange={(value) =>
+                  handleInputChange("type", parseInt(value))
                 }
                 options={CLIENT_TYPE_OPTIONS}
                 error={errors.type}
@@ -782,8 +752,8 @@ function AdminCustomerUpdatePage() {
                 <Input
                   label="Organization Name"
                   value={customerData.organizationName}
-                  onChange={(e) =>
-                    handleInputChange("organizationName", e.target.value)
+                  onChange={(value) =>
+                    handleInputChange("organizationName", value)
                   }
                   error={errors.organizationName}
                   required
@@ -792,10 +762,10 @@ function AdminCustomerUpdatePage() {
                 <Select
                   label="Organization Type"
                   value={customerData.organizationType}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     handleInputChange(
                       "organizationType",
-                      parseInt(e.target.value),
+                      parseInt(value),
                     )
                   }
                   options={CLIENT_ORGANIZATION_TYPE_OPTIONS}
@@ -808,7 +778,7 @@ function AdminCustomerUpdatePage() {
               <Input
                 label="First Name"
                 value={customerData.firstName}
-                onChange={(e) => handleInputChange("firstName", e.target.value)}
+                onChange={(value) => handleInputChange("firstName", value)}
                 error={errors.firstName}
                 required
               />
@@ -816,7 +786,7 @@ function AdminCustomerUpdatePage() {
               <Input
                 label="Last Name"
                 value={customerData.lastName}
-                onChange={(e) => handleInputChange("lastName", e.target.value)}
+                onChange={(value) => handleInputChange("lastName", value)}
                 error={errors.lastName}
                 required
               />
@@ -827,7 +797,7 @@ function AdminCustomerUpdatePage() {
                 label="Email"
                 type="email"
                 value={customerData.email}
-                onChange={(e) => handleInputChange("email", e.target.value)}
+                onChange={(value) => handleInputChange("email", value)}
                 error={errors.email}
                 helperText="Optional - a temporary email will be generated if not provided"
               />
@@ -846,7 +816,7 @@ function AdminCustomerUpdatePage() {
                 label="Phone"
                 type="tel"
                 value={customerData.phone}
-                onChange={(e) => handleInputChange("phone", e.target.value)}
+                onChange={(value) => handleInputChange("phone", value)}
                 error={errors.phone}
                 required
               />
@@ -854,8 +824,8 @@ function AdminCustomerUpdatePage() {
               <Select
                 label="Phone Type"
                 value={customerData.phoneType}
-                onChange={(e) =>
-                  handleInputChange("phoneType", parseInt(e.target.value))
+                onChange={(value) =>
+                  handleInputChange("phoneType", parseInt(value))
                 }
                 options={CLIENT_PHONE_TYPE_OPTIONS}
                 error={errors.phoneType}
@@ -867,8 +837,8 @@ function AdminCustomerUpdatePage() {
                 <Input
                   label="Phone Extension"
                   value={customerData.phoneExtension}
-                  onChange={(e) =>
-                    handleInputChange("phoneExtension", e.target.value)
+                  onChange={(value) =>
+                    handleInputChange("phoneExtension", value)
                   }
                   error={errors.phoneExtension}
                 />
@@ -888,8 +858,8 @@ function AdminCustomerUpdatePage() {
                 label="Other Phone (Optional)"
                 type="tel"
                 value={customerData.otherPhone}
-                onChange={(e) =>
-                  handleInputChange("otherPhone", e.target.value)
+                onChange={(value) =>
+                  handleInputChange("otherPhone", value)
                 }
                 error={errors.otherPhone}
               />
@@ -897,8 +867,8 @@ function AdminCustomerUpdatePage() {
               <Select
                 label="Other Phone Type"
                 value={customerData.otherPhoneType}
-                onChange={(e) =>
-                  handleInputChange("otherPhoneType", parseInt(e.target.value))
+                onChange={(value) =>
+                  handleInputChange("otherPhoneType", parseInt(value))
                 }
                 options={CLIENT_PHONE_TYPE_OPTIONS}
                 error={errors.otherPhoneType}
@@ -910,8 +880,8 @@ function AdminCustomerUpdatePage() {
                 <Input
                   label="Other Phone Extension"
                   value={customerData.otherPhoneExtension}
-                  onChange={(e) =>
-                    handleInputChange("otherPhoneExtension", e.target.value)
+                  onChange={(value) =>
+                    handleInputChange("otherPhoneExtension", value)
                   }
                   error={errors.otherPhoneExtension}
                 />
@@ -944,8 +914,8 @@ function AdminCustomerUpdatePage() {
                   <Input
                     label="Country"
                     value={customerData.country}
-                    onChange={(e) =>
-                      handleInputChange("country", e.target.value)
+                    onChange={(value) =>
+                      handleInputChange("country", value)
                     }
                     error={errors.country}
                     required
@@ -954,8 +924,8 @@ function AdminCustomerUpdatePage() {
                   <Select
                     label="Province/Territory"
                     value={customerData.region}
-                    onChange={(e) =>
-                      handleInputChange("region", e.target.value)
+                    onChange={(value) =>
+                      handleInputChange("region", value)
                     }
                     options={REGION_OPTIONS}
                     error={errors.region}
@@ -965,7 +935,7 @@ function AdminCustomerUpdatePage() {
                   <Input
                     label="City"
                     value={customerData.city}
-                    onChange={(e) => handleInputChange("city", e.target.value)}
+                    onChange={(value) => handleInputChange("city", value)}
                     error={errors.city}
                     required
                   />
@@ -973,8 +943,8 @@ function AdminCustomerUpdatePage() {
                   <Input
                     label="Address Line 1"
                     value={customerData.addressLine1}
-                    onChange={(e) =>
-                      handleInputChange("addressLine1", e.target.value)
+                    onChange={(value) =>
+                      handleInputChange("addressLine1", value)
                     }
                     error={errors.addressLine1}
                     required
@@ -983,8 +953,8 @@ function AdminCustomerUpdatePage() {
                   <Input
                     label="Address Line 2 (Optional)"
                     value={customerData.addressLine2}
-                    onChange={(e) =>
-                      handleInputChange("addressLine2", e.target.value)
+                    onChange={(value) =>
+                      handleInputChange("addressLine2", value)
                     }
                     error={errors.addressLine2}
                   />
@@ -992,8 +962,8 @@ function AdminCustomerUpdatePage() {
                   <Input
                     label="Postal Code"
                     value={customerData.postalCode}
-                    onChange={(e) =>
-                      handleInputChange("postalCode", e.target.value)
+                    onChange={(value) =>
+                      handleInputChange("postalCode", value)
                     }
                     error={errors.postalCode}
                     required
@@ -1012,8 +982,8 @@ function AdminCustomerUpdatePage() {
                     <Input
                       label="Name"
                       value={customerData.shippingName}
-                      onChange={(e) =>
-                        handleInputChange("shippingName", e.target.value)
+                      onChange={(value) =>
+                        handleInputChange("shippingName", value)
                       }
                       placeholder="The name to contact for this shipping address"
                       error={errors.shippingName}
@@ -1024,8 +994,8 @@ function AdminCustomerUpdatePage() {
                       label="Phone"
                       type="tel"
                       value={customerData.shippingPhone}
-                      onChange={(e) =>
-                        handleInputChange("shippingPhone", e.target.value)
+                      onChange={(value) =>
+                        handleInputChange("shippingPhone", value)
                       }
                       placeholder="The contact phone number for this shipping address"
                       error={errors.shippingPhone}
@@ -1035,8 +1005,8 @@ function AdminCustomerUpdatePage() {
                     <Input
                       label="Country"
                       value={customerData.shippingCountry}
-                      onChange={(e) =>
-                        handleInputChange("shippingCountry", e.target.value)
+                      onChange={(value) =>
+                        handleInputChange("shippingCountry", value)
                       }
                       error={errors.shippingCountry}
                       required
@@ -1045,8 +1015,8 @@ function AdminCustomerUpdatePage() {
                     <Select
                       label="Province/Territory"
                       value={customerData.shippingRegion}
-                      onChange={(e) =>
-                        handleInputChange("shippingRegion", e.target.value)
+                      onChange={(value) =>
+                        handleInputChange("shippingRegion", value)
                       }
                       options={REGION_OPTIONS}
                       error={errors.shippingRegion}
@@ -1056,8 +1026,8 @@ function AdminCustomerUpdatePage() {
                     <Input
                       label="City"
                       value={customerData.shippingCity}
-                      onChange={(e) =>
-                        handleInputChange("shippingCity", e.target.value)
+                      onChange={(value) =>
+                        handleInputChange("shippingCity", value)
                       }
                       error={errors.shippingCity}
                       required
@@ -1066,10 +1036,10 @@ function AdminCustomerUpdatePage() {
                     <Input
                       label="Address Line 1"
                       value={customerData.shippingAddressLine1}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         handleInputChange(
                           "shippingAddressLine1",
-                          e.target.value,
+                          value,
                         )
                       }
                       error={errors.shippingAddressLine1}
@@ -1079,10 +1049,10 @@ function AdminCustomerUpdatePage() {
                     <Input
                       label="Address Line 2 (Optional)"
                       value={customerData.shippingAddressLine2}
-                      onChange={(e) =>
+                      onChange={(value) =>
                         handleInputChange(
                           "shippingAddressLine2",
-                          e.target.value,
+                          value,
                         )
                       }
                       error={errors.shippingAddressLine2}
@@ -1091,8 +1061,8 @@ function AdminCustomerUpdatePage() {
                     <Input
                       label="Postal Code"
                       value={customerData.shippingPostalCode}
-                      onChange={(e) =>
-                        handleInputChange("shippingPostalCode", e.target.value)
+                      onChange={(value) =>
+                        handleInputChange("shippingPostalCode", value)
                       }
                       error={errors.shippingPostalCode}
                       required
@@ -1130,10 +1100,10 @@ function AdminCustomerUpdatePage() {
                 <Input
                   label="How did you hear about us? (Other)"
                   value={customerData.howDidYouHearAboutUsOther}
-                  onChange={(e) =>
+                  onChange={(value) =>
                     handleInputChange(
                       "howDidYouHearAboutUsOther",
-                      e.target.value,
+                      value,
                     )
                   }
                   error={errors.howDidYouHearAboutUsOther}
@@ -1145,14 +1115,14 @@ function AdminCustomerUpdatePage() {
                 <Select
                   label="Gender"
                   value={customerData.gender}
-                  onChange={(e) =>
-                    handleInputChange("gender", parseInt(e.target.value))
+                  onChange={(value) =>
+                    handleInputChange("gender", parseInt(value))
                   }
                   options={GENDER_OPTIONS}
                   error={errors.gender}
                 />
 
-                <DateInput
+                <DatePicker
                   label="Birth Date (Optional)"
                   value={customerData.birthDate}
                   onChange={(value) => handleInputChange("birthDate", value)}
@@ -1167,15 +1137,15 @@ function AdminCustomerUpdatePage() {
                 <Input
                   label="Gender (Other)"
                   value={customerData.genderOther}
-                  onChange={(e) =>
-                    handleInputChange("genderOther", e.target.value)
+                  onChange={(value) =>
+                    handleInputChange("genderOther", value)
                   }
                   error={errors.genderOther}
                   required
                 />
               )}
 
-              <DateInput
+              <DatePicker
                 label="Join Date (Optional)"
                 value={customerData.joinDate}
                 onChange={(value) => handleInputChange("joinDate", value)}
@@ -1193,8 +1163,8 @@ function AdminCustomerUpdatePage() {
               <Select
                 label="Preferred Language"
                 value={customerData.preferredLanguage}
-                onChange={(e) =>
-                  handleInputChange("preferredLanguage", e.target.value)
+                onChange={(value) =>
+                  handleInputChange("preferredLanguage", value)
                 }
                 options={LANGUAGE_OPTIONS}
                 error={errors.preferredLanguage}
@@ -1233,4 +1203,13 @@ function AdminCustomerUpdatePage() {
   );
 }
 
-export default AdminCustomerUpdatePage;
+// Wrapper with UIXThemeProvider
+function AdminCustomerUpdatePageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminCustomerUpdatePage />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminCustomerUpdatePageWithProvider;

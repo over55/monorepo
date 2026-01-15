@@ -1,13 +1,23 @@
 // File Path: web/workery-frontend/src/pages/Admin/Setting/Page.jsx
+// UIX Upgraded - Uses UIX primitives (Card, Button, Alert, Spinner, Modal, Breadcrumb)
 
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useCallback, useMemo, memo } from "react";
+import { Link, useNavigate } from "react-router";
 import {
   useAccountManager,
   useTenantManager,
 } from "../../../services/Services";
 import {
-  HomeIcon,
+  Breadcrumb,
+  PageHeader,
+  Alert,
+  UIXThemeProvider,
+  ThemeSelector,
+  useUIXTheme,
+  Card,
+  Loading,
+} from "../../../components/UIX";
+import {
   Cog6ToothIcon,
   NewspaperIcon,
   AcademicCapIcon,
@@ -21,474 +31,427 @@ import {
   BanknotesIcon,
   BuildingOfficeIcon,
   BuildingOffice2Icon,
-  ArrowRightIcon,
-  XMarkIcon,
-  CheckIcon,
-  ExclamationTriangleIcon,
+  ChevronRightIcon,
+  ChartBarIcon,
 } from "@heroicons/react/24/outline";
 
+// Theme-aware gradient configurations for settings cards
+// These map the current theme to specific visual styles
+const THEME_GRADIENTS = {
+  blue: "linear-gradient(135deg, #172554 0%, #1e3a8a 100%)",
+  red: "linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%)",
+  purple: "linear-gradient(135deg, #581c87 0%, #7c3aed 100%)",
+  green: "linear-gradient(135deg, #14532d 0%, #16a34a 100%)",
+  charcoal: "linear-gradient(135deg, #0f172a 0%, #475569 100%)",
+  dark: "linear-gradient(135deg, #1f2937 0%, #374151 100%)",
+};
+
+const THEME_HOVER_COLORS = {
+  blue: "group-hover:text-blue-600",
+  red: "group-hover:text-red-600",
+  purple: "group-hover:text-purple-600",
+  green: "group-hover:text-green-600",
+  charcoal: "group-hover:text-slate-600",
+  dark: "group-hover:text-blue-400",
+};
+
+const THEME_BUTTON_GRADIENTS = {
+  blue: "bg-gradient-to-r from-gray-50 to-blue-50 hover:from-blue-50 hover:to-blue-100",
+  red: "bg-gradient-to-r from-gray-50 to-red-50 hover:from-red-50 hover:to-red-100",
+  purple:
+    "bg-gradient-to-r from-gray-50 to-purple-50 hover:from-purple-50 hover:to-purple-100",
+  green:
+    "bg-gradient-to-r from-gray-50 to-green-50 hover:from-green-50 hover:to-green-100",
+  charcoal:
+    "bg-gradient-to-r from-gray-50 to-slate-50 hover:from-slate-50 hover:to-slate-100",
+  dark:
+    "bg-gradient-to-r from-gray-700 to-gray-600 hover:from-gray-600 hover:to-gray-500",
+};
+
+const THEME_BUTTON_TEXT_COLORS = {
+  blue: "text-gray-700 hover:text-blue-950",
+  red: "text-gray-700 hover:text-red-950",
+  purple: "text-gray-700 hover:text-purple-950",
+  green: "text-gray-700 hover:text-green-950",
+  charcoal: "text-gray-700 hover:text-slate-950",
+  dark: "text-gray-100 hover:text-white",
+};
+
+// Move static settings items outside component
+const SETTINGS_ITEMS = [
+  {
+    title: "Office News",
+    description: "Modify office news items.",
+    icon: NewspaperIcon,
+    path: "/admin/settings/bulletins",
+  },
+  {
+    title: "Skill Sets",
+    description: "Modify the skill sets.",
+    icon: AcademicCapIcon,
+    path: "/admin/settings/skill-sets",
+  },
+  {
+    title: "Tags",
+    description: "Manage system tags and labels.",
+    icon: TagIcon,
+    path: "/admin/settings/tags",
+  },
+  {
+    title: "Associate News",
+    description: "Modify associate news items.",
+    icon: MegaphoneIcon,
+    path: "/admin/settings/associate-away-logs",
+  },
+  {
+    title: "Insurance Requirements",
+    description: "Modify insurance settings.",
+    icon: ScaleIcon,
+    path: "/admin/settings/insurance-requirements",
+  },
+  {
+    title: "Service Fees",
+    description: "Modify service fee settings.",
+    icon: CreditCardIcon,
+    path: "/admin/settings/service-fees",
+  },
+  {
+    title: "Deactivated Clients",
+    description: "Modify inactive customers.",
+    icon: UserMinusIcon,
+    path: "/admin/settings/inactive-clients",
+  },
+  {
+    title: "Vehicle Types",
+    description: "Modify vehicle types for associates.",
+    icon: TruckIcon,
+    path: "/admin/settings/vehicle-types",
+  },
+  {
+    title: "How did you hear?",
+    description: "List how users discovered us and referral sources.",
+    icon: PhoneIcon,
+    path: "/admin/settings/how-hear-about-us-items",
+  },
+  {
+    title: "Tax Settings",
+    description: "Change how tax gets applied system wide.",
+    icon: BanknotesIcon,
+    path: "/admin/settings/tax",
+  },
+  {
+    title: "National Occupational Classification",
+    description: "Search NOC's in the system.",
+    icon: BuildingOfficeIcon,
+    path: "/admin/settings/noc/search",
+  },
+  {
+    title: "North America Industry Classification System",
+    description: "Search NAICS's in the system.",
+    icon: BuildingOffice2Icon,
+    path: "/admin/settings/naics/search",
+  },
+];
+
+const BREADCRUMB_ITEMS = [
+  {
+    label: "Dashboard",
+    to: "/admin/dashboard",
+    icon: ChartBarIcon,
+  },
+  {
+    label: "Settings",
+    icon: Cog6ToothIcon,
+    isActive: true,
+  },
+];
+
 function SettingDashboardPage() {
-  const accountManager = useAccountManager();
-  const tenantManager = useTenantManager();
-  const navigate = useNavigate();
+  return (
+    <UIXThemeProvider>
+      <SettingDashboardPageContent />
+    </UIXThemeProvider>
+  );
+}
 
-  const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [currentUser, setCurrentUser] = useState(null);
-  const [tenant, setTenant] = useState(null);
-  const [showTaxSettingModal, setShowTaxSettingModal] = useState(false);
+const SettingDashboardPageContent = memo(
+  function SettingDashboardPageContent() {
+    const accountManager = useAccountManager();
+    const tenantManager = useTenantManager();
+    const navigate = useNavigate();
+    const { getThemeClasses, currentTheme } = useUIXTheme();
 
-  const onUnauthorized = () => {
-    navigate("/login?unauthorized=true");
-  };
+    const [errors, setErrors] = useState({});
+    const [isLoading, setIsLoading] = useState(false);
+    const [currentUser, setCurrentUser] = useState(null);
+    const [tenant, setTenant] = useState(null);
 
-  const fetchCurrentUser = async () => {
-    try {
-      const userData = await accountManager.getAccountDetail(onUnauthorized);
-      setCurrentUser(userData);
-      return userData;
-    } catch (error) {
-      console.error("Settings: Failed to fetch current user:", error);
-      setErrors({ user: error.message || "Failed to load user details" });
-      throw error;
-    }
-  };
+    // Memoize theme classes to prevent multiple calls on each render
+    const themeClasses = useMemo(
+      () => ({
+        bgGradientPrimary: getThemeClasses("bg-gradient-primary"),
+        bgPrimary: getThemeClasses("bg-primary"),
+        bgSecondary: getThemeClasses("bg-secondary"),
+        textPrimary: getThemeClasses("text-primary"),
+        textSecondary: getThemeClasses("text-secondary"),
+        border: getThemeClasses("border"),
+      }),
+      [getThemeClasses],
+    );
 
-  const fetchTenantDetail = async (tenantId) => {
-    try {
-      const tenantData = await tenantManager.getTenantDetail(
-        tenantId,
-        onUnauthorized,
-      );
-      setTenant(tenantData);
-      console.log("Settings: Tenant detail fetched successfully:", {
-        id: tenantData.id,
-        name: tenantData.name,
-      });
-    } catch (error) {
-      console.error("Settings: Failed to fetch tenant:", error);
-      setErrors({ tenant: error.message || "Failed to load tenant details" });
-    }
-  };
+    // Memoize handlers
+    const onUnauthorized = useCallback(() => {
+      navigate("/login?unauthorized=true");
+    }, [navigate]);
 
-  useEffect(() => {
-    let mounted = true;
-
-    const initializeData = async () => {
-      if (!mounted) return;
-
-      setIsLoading(true);
-      setErrors({});
-
+    const fetchCurrentUser = useCallback(async () => {
       try {
-        // First get current user
-        const userData = await fetchCurrentUser();
+        const userData = await accountManager.getAccountDetail(onUnauthorized);
+        if (import.meta.env.DEV) {
+          console.log("Settings: Current user data:", userData);
+        }
+        setCurrentUser(userData);
+        return userData;
+      } catch (error) {
+        if (import.meta.env.DEV) {
+          console.error("Settings: Failed to fetch current user:", error);
+        }
+        setErrors({ user: error.message || "Failed to load user details" });
+        throw error;
+      }
+    }, [accountManager, onUnauthorized]);
 
-        if (!mounted) return;
+    const fetchTenantDetail = useCallback(
+      async (tenantId) => {
+        try {
+          const tenantData = await tenantManager.getTenantDetail(
+            tenantId,
+            onUnauthorized,
+          );
+          setTenant(tenantData);
+          if (import.meta.env.DEV) {
+            console.log("Settings: Tenant detail fetched successfully:", {
+              id: tenantData.id,
+              name: tenantData.name,
+            });
+          }
+        } catch (error) {
+          if (import.meta.env.DEV) {
+            console.error("Settings: Failed to fetch tenant:", error);
+          }
+          setErrors({
+            tenant: error.message || "Failed to load tenant details",
+          });
+        }
+      },
+      [tenantManager, onUnauthorized],
+    );
 
-        // Then get tenant details using user's tenant ID
-        if (userData && userData.tenantId) {
-          await fetchTenantDetail(userData.tenantId);
-        } else {
-          setErrors({ tenant: "User does not have a valid tenant ID" });
+    // Memoize error handlers
+    const handleCloseUserError = useCallback(() => {
+      setErrors((prev) => ({ ...prev, user: null }));
+    }, []);
+
+    const handleCloseTenantError = useCallback(() => {
+      setErrors((prev) => ({ ...prev, tenant: null }));
+    }, []);
+
+    const handleCloseThemeError = useCallback(() => {
+      setErrors((prev) => ({ ...prev, theme: null }));
+    }, []);
+
+    const handleThemeChange = useCallback(async (newTheme) => {
+      try {
+        if (import.meta.env.DEV) {
+          console.log("Settings: Saving theme preference to backend:", newTheme);
+        }
+        // Try to save to backend if the method exists
+        if (accountManager.updateThemePreference) {
+          await accountManager.updateThemePreference(newTheme, onUnauthorized);
+          if (import.meta.env.DEV) {
+            console.log("Settings: Theme preference saved successfully");
+          }
         }
       } catch (error) {
-        console.error("Settings: Failed to initialize data:", error);
-      } finally {
-        if (mounted) {
-          setIsLoading(false);
+        if (import.meta.env.DEV) {
+          console.error("Settings: Failed to save theme preference:", error);
         }
+        // Show error to user but don't block theme change in UI
+        setErrors((prev) => ({
+          ...prev,
+          theme: "Theme changed locally but failed to save to your profile. Please try again later.",
+        }));
       }
-    };
+    }, [accountManager, onUnauthorized]);
 
-    window.scrollTo(0, 0);
-    initializeData();
+    useEffect(() => {
+      let mounted = true;
 
-    return () => {
-      mounted = false;
-    };
-  }, []);
+      const initializeData = async () => {
+        if (!mounted) return;
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen px-4">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 text-sm sm:text-base">
-            Loading Settings...
-          </p>
-        </div>
-      </div>
-    );
-  }
+        setIsLoading(true);
+        setErrors({});
 
-  const settingsItems = [
-    {
-      title: "Office News",
-      description: "Modify office news items.",
-      icon: NewspaperIcon,
-      path: "/admin/settings/bulletins",
-    },
-    {
-      title: "Skill Sets",
-      description: "Modify the skill sets.",
-      icon: AcademicCapIcon,
-      path: "/admin/settings/skill-sets",
-    },
-    {
-      title: "Tags",
-      description: "Manage system tags and labels.",
-      icon: TagIcon,
-      path: "/admin/settings/tags",
-    },
-    {
-      title: "Associate News",
-      description: "Modify associate news items.",
-      icon: MegaphoneIcon,
-      path: "/admin/settings/associate-away-logs",
-    },
-    {
-      title: "Insurance Requirements",
-      description: "Modify insurance settings.",
-      icon: ScaleIcon,
-      path: "/admin/settings/insurance-requirements",
-    },
-    {
-      title: "Service Fees",
-      description: "Modify service fee settings.",
-      icon: CreditCardIcon,
-      path: "/admin/settings/service-fees",
-    },
-    {
-      title: "Deactivated Clients",
-      description: "Modify inactive customers.",
-      icon: UserMinusIcon,
-      path: "/admin/settings/inactive-clients",
-    },
-    {
-      title: "Vehicle Types",
-      description: "Modify vehicle types for associates.",
-      icon: TruckIcon,
-      path: "/admin/settings/vehicle-types",
-    },
-    {
-      title: "How did you hear?",
-      description: "List how users discovered us and referral sources.",
-      icon: PhoneIcon,
-      path: "/admin/settings/how-hear-about-us-items",
-    },
-    {
-      title: "Tax Settings",
-      description: "Change how tax gets applied system wide.",
-      icon: BanknotesIcon,
-      action: () => setShowTaxSettingModal(true),
-    },
-    {
-      title: "National Occupational Classification",
-      description: "Search NOC's in the system.",
-      icon: BuildingOfficeIcon,
-      path: "/admin/settings/noc/search",
-    },
-    {
-      title: "North America Industry Classification System",
-      description: "Search NAICS's in the system.",
-      icon: BuildingOffice2Icon,
-      path: "/admin/settings/naics/search",
-    },
-  ];
+        try {
+          // First get current user
+          const userData = await fetchCurrentUser();
 
-  return (
-    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 max-w-full xl:max-w-7xl">
-      {/* Breadcrumb */}
-      <nav
-        className="flex mb-4 sm:mb-6 lg:mb-8 overflow-x-auto"
-        aria-label="Breadcrumb"
-      >
-        <ol className="inline-flex items-center space-x-1 md:space-x-3 whitespace-nowrap">
-          <li className="inline-flex items-center">
-            <Link
-              to="/admin/dashboard"
-              className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600"
-            >
-              <HomeIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 flex-shrink-0" />
-              <span className="hidden sm:inline">Dashboard</span>
-              <span className="sm:hidden">Home</span>
-            </Link>
-          </li>
-          <li aria-current="page">
-            <div className="flex items-center">
-              <svg
-                className="w-3 h-3 text-gray-400 mx-1 flex-shrink-0"
-                aria-hidden="true"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 6 10"
-              >
-                <path
-                  stroke="currentColor"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="m1 9 4-4-4-4"
-                />
-              </svg>
-              <span className="ml-1 text-xs sm:text-sm font-medium text-gray-500 md:ml-2">
-                Settings
-              </span>
-            </div>
-          </li>
-        </ol>
-      </nav>
+          if (!mounted) return;
 
-      {/* Error Alerts */}
-      {errors.user && (
-        <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg flex items-start">
-          <ExclamationTriangleIcon className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
-          <span className="text-red-800 text-xs sm:text-sm">{errors.user}</span>
-        </div>
-      )}
-      {errors.tenant && (
-        <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg flex items-start">
-          <ExclamationTriangleIcon className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
-          <span className="text-red-800 text-xs sm:text-sm">
-            {errors.tenant}
-          </span>
-        </div>
-      )}
-
-      {/* Main Settings Card */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
-          <div className="flex items-center">
-            <Cog6ToothIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700 mr-2" />
-            <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
-              Settings
-            </h1>
-          </div>
-        </div>
-
-        <div className="p-4 sm:p-6">
-          <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
-            Configure and manage your system settings. Click on any option below
-            to modify specific settings.
-          </p>
-
-          {/* Settings Grid - Optimized for all screen sizes */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 xl:gap-6">
-            {settingsItems.map((item, index) => {
-              const IconComponent = item.icon;
-              return (
-                <div
-                  key={index}
-                  className="group bg-white rounded-lg shadow-sm border-2 border-slate-700 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex flex-col"
-                >
-                  {/* Icon Header - Responsive sizing */}
-                  <div className="bg-gradient-to-br from-slate-600 to-slate-700 p-4 sm:p-6 lg:p-8 text-white flex justify-center">
-                    <IconComponent className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 xl:w-16 xl:h-16" />
-                  </div>
-
-                  {/* Content - Flex grow to push button down */}
-                  <div className="p-3 sm:p-4 flex-grow flex flex-col">
-                    <h3 className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 mb-1.5 sm:mb-2 min-h-[40px] sm:min-h-[48px] lg:min-h-[56px] line-clamp-2">
-                      {item.title}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 mb-3 sm:mb-4">
-                      {item.description}
-                    </p>
-                  </div>
-
-                  {/* Footer Button - Always at bottom */}
-                  <div className="border-t border-gray-200">
-                    {item.path ? (
-                      <Link
-                        to={item.path}
-                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-blue-600 text-white flex items-center justify-center gap-1.5 sm:gap-2 hover:bg-blue-700 transition-colors duration-200 font-medium text-xs sm:text-sm"
-                      >
-                        View
-                        <ArrowRightIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-                      </Link>
-                    ) : (
-                      <button
-                        onClick={item.action}
-                        className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-blue-600 text-white flex items-center justify-center gap-1.5 sm:gap-2 hover:bg-blue-700 transition-colors duration-200 font-medium text-xs sm:text-sm"
-                      >
-                        View
-                        <ArrowRightIcon className="w-3 h-3 sm:w-4 sm:h-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      {/* Tax Settings Modal */}
-      {tenant && (
-        <TaxSettingModal
-          currentUser={currentUser}
-          tenant={tenant}
-          showModal={showTaxSettingModal}
-          setShowModal={setShowTaxSettingModal}
-          onSuccess={() => {
-            console.log("Tax settings updated successfully");
-            // Optionally refresh tenant data
-            if (currentUser && currentUser.tenantId) {
-              fetchTenantDetail(currentUser.tenantId);
-            }
-          }}
-        />
-      )}
-    </div>
-  );
-}
-
-// Tax Setting Modal Component
-function TaxSettingModal({
-  currentUser,
-  tenant,
-  showModal,
-  setShowModal,
-  onSuccess,
-}) {
-  const tenantManager = useTenantManager();
-  const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [taxRate, setTaxRate] = useState(tenant?.taxRate || 0);
-
-  const onUnauthorized = () => {
-    window.location.href = "/login?unauthorized=true";
-  };
-
-  const handleSave = async () => {
-    setIsLoading(true);
-    setErrors({});
-
-    try {
-      const taxRateData = {
-        tenantId: currentUser.tenantId,
-        taxRate: parseFloat(taxRate),
+          // Then get tenant details using user's tenant ID
+          if (userData && userData.tenantId) {
+            await fetchTenantDetail(userData.tenantId);
+          } else {
+            setErrors({ tenant: "User does not have a valid tenant ID" });
+          }
+        } catch (error) {
+          if (import.meta.env.DEV) {
+            console.error("Settings: Failed to initialize data:", error);
+          }
+        } finally {
+          if (mounted) {
+            setIsLoading(false);
+          }
+        }
       };
 
-      await tenantManager.updateTaxRate(taxRateData, onUnauthorized);
+      window.scrollTo(0, 0);
+      initializeData();
 
-      onSuccess();
-      setShowModal(false);
-    } catch (error) {
-      console.error("Failed to update tax rate:", error);
-      setErrors({ submit: error.message || "Failed to update tax rate" });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      return () => {
+        mounted = false;
+      };
+    }, [fetchCurrentUser, fetchTenantDetail]);
 
-  const handleClose = () => {
-    setErrors({});
-    setTaxRate(tenant?.taxRate || 0);
-    setShowModal(false);
-  };
-
-  useEffect(() => {
-    if (showModal && tenant) {
-      setTaxRate(tenant.taxRate || 0);
-    }
-  }, [showModal, tenant]);
-
-  if (!showModal) return null;
-
-  return (
-    <>
-      {/* Modal Backdrop */}
-      <div
-        className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity"
-        onClick={handleClose}
-      />
-
-      {/* Modal Content - Responsive sizing */}
-      <div className="fixed inset-0 z-50 overflow-y-auto">
-        <div className="flex min-h-full items-center justify-center p-4">
-          <div className="relative bg-white rounded-lg shadow-xl w-full max-w-[90vw] sm:max-w-md">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 sm:p-5 border-b border-gray-200">
-              <div className="flex items-center">
-                <BanknotesIcon className="w-5 h-5 sm:w-6 sm:h-6 text-gray-700 mr-2" />
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900">
-                  Tax Settings
-                </h3>
-              </div>
-              <button
-                onClick={handleClose}
-                className="text-gray-400 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg p-1"
-              >
-                <XMarkIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-              </button>
+    // Memoize settings cards rendering
+    const settingsCards = useMemo(() => {
+      return SETTINGS_ITEMS.map((item, index) => {
+        const IconComponent = item.icon;
+        return (
+          <Card
+            key={index}
+            padding="p-0"
+            className={`group ${themeClasses.bgPrimary} rounded-2xl shadow-lg ${themeClasses.border} overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col`}
+          >
+            {/* Icon Header with theme-aware gradient */}
+            <div
+              className="p-6 text-white flex justify-center relative overflow-hidden"
+              style={{ background: THEME_GRADIENTS[currentTheme] || THEME_GRADIENTS.blue }}
+            >
+              <div className="absolute inset-0 bg-white opacity-10 transform -skew-y-6 translate-y-12" />
+              <IconComponent className="w-12 h-12 relative z-10 group-hover:scale-110 transition-transform duration-300" />
             </div>
 
-            {/* Modal Body */}
-            <div className="p-4 sm:p-6">
-              {errors.submit && (
-                <div className="mb-3 sm:mb-4 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg flex items-start">
-                  <ExclamationTriangleIcon className="w-4 h-4 sm:w-5 sm:h-5 text-red-600 mr-2 flex-shrink-0 mt-0.5" />
-                  <span className="text-red-800 text-xs sm:text-sm">
-                    {errors.submit}
-                  </span>
-                </div>
+            {/* Content */}
+            <div className="p-5 flex-grow flex flex-col">
+              <h3
+                className={`text-lg font-extrabold ${themeClasses.textPrimary} mb-2 transition-colors duration-200 ${THEME_HOVER_COLORS[currentTheme] || THEME_HOVER_COLORS.blue}`}
+              >
+                {item.title}
+              </h3>
+              <p className={`text-sm ${themeClasses.textSecondary} line-clamp-3 mb-4 flex-grow`}>
+                {item.description}
+              </p>
+            </div>
+
+            {/* Footer Button */}
+            <div className={`border-t ${themeClasses.border}`}>
+              {item.path && (
+                <Link
+                  to={item.path}
+                  className={`w-full p-4 ${THEME_BUTTON_GRADIENTS[currentTheme] || THEME_BUTTON_GRADIENTS.blue} flex items-center justify-between ${THEME_BUTTON_TEXT_COLORS[currentTheme] || THEME_BUTTON_TEXT_COLORS.blue} transition-all duration-200 font-extrabold`}
+                >
+                  <span>Manage Settings</span>
+                  <ChevronRightIcon className="w-5 h-5 group-hover:translate-x-1 transition-transform duration-200" />
+                </Link>
               )}
-
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
-                  Tax Rate
-                </label>
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  max="100"
-                  value={taxRate}
-                  onChange={(e) => setTaxRate(e.target.value)}
-                  placeholder="Enter tax rate"
-                  disabled={isLoading}
-                  className="w-full px-2.5 sm:px-3 py-1.5 sm:py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed text-xs sm:text-sm"
-                />
-                <p className="mt-1 text-[10px] sm:text-xs text-gray-500">
-                  Tax rate applied to every order if the user has a tax account
-                </p>
-              </div>
             </div>
+          </Card>
+        );
+      });
+    }, [currentTheme, themeClasses]);
 
-            {/* Modal Footer */}
-            <div className="flex justify-end gap-2 sm:gap-3 px-4 sm:px-6 py-3 sm:py-4 border-t border-gray-200">
-              <button
-                onClick={handleClose}
-                disabled={isLoading}
-                className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={isLoading}
-                className="px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
-              >
-                {isLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-3 w-3 sm:h-4 sm:w-4 border-b-2 border-white mr-1.5 sm:mr-2"></div>
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <CheckIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
-                    Save
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </>
-  );
-}
+    if (isLoading) {
+      return (
+        <Card
+          padding="p-4"
+          className={`min-h-screen ${themeClasses.bgGradientPrimary} flex items-center justify-center shadow-none border-0`}
+        >
+          <Loading size="lg" text="Loading Settings..." />
+        </Card>
+      );
+    }
+
+    return (
+      <Card
+        padding="p-0"
+        className={`min-h-screen ${themeClasses.bgGradientPrimary} shadow-none border-0`}
+      >
+        {/* Decorative background elements - using theme-aware opacity */}
+        <Card padding="p-0" className="fixed inset-0 overflow-hidden pointer-events-none shadow-none border-0 bg-transparent">
+          <Card padding="p-0" className={`absolute -top-40 -right-40 w-80 h-80 ${themeClasses.bgSecondary} rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob shadow-none border-0`} />
+          <Card padding="p-0" className={`absolute -bottom-40 -left-40 w-80 h-80 ${themeClasses.bgSecondary} rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000 shadow-none border-0`} />
+          <Card padding="p-0" className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 ${themeClasses.bgSecondary} rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000 shadow-none border-0`} />
+        </Card>
+
+        <Card padding="p-0" className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12 shadow-none border-0 bg-transparent">
+          {/* Breadcrumb */}
+          <Breadcrumb items={BREADCRUMB_ITEMS} />
+
+          <PageHeader
+            icon={Cog6ToothIcon}
+            title="System Settings"
+          />
+
+          {/* Theme Selector */}
+          <Card className={`mb-8 ${themeClasses.bgPrimary} shadow-lg rounded-xl ${themeClasses.border}`}>
+            <ThemeSelector onThemeChange={handleThemeChange} />
+          </Card>
+
+          {/* Error Alerts */}
+          {errors.user && (
+            <Alert
+              type="error"
+              message={errors.user}
+              onClose={handleCloseUserError}
+              className="mb-6"
+            />
+          )}
+          {errors.tenant && (
+            <Alert
+              type="error"
+              message={errors.tenant}
+              onClose={handleCloseTenantError}
+              className="mb-6"
+            />
+          )}
+          {errors.theme && (
+            <Alert
+              type="warning"
+              message={errors.theme}
+              onClose={handleCloseThemeError}
+              className="mb-6"
+            />
+          )}
+
+          {/* Settings Grid Container */}
+          <Card className={`${themeClasses.bgPrimary} shadow-xl rounded-2xl overflow-hidden ${themeClasses.border} hover:shadow-2xl transition-shadow duration-300`}>
+            <Card padding="p-6 sm:p-8" className="shadow-none border-0 bg-transparent">
+              {/* Settings Grid - Optimized for all screen sizes */}
+              <Card padding="p-0" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 shadow-none border-0 bg-transparent">
+                {settingsCards}
+              </Card>
+            </Card>
+          </Card>
+        </Card>
+
+      </Card>
+    );
+  },
+);
+
+// Set display name for React DevTools
+SettingDashboardPageContent.displayName = "SettingDashboardPageContent";
 
 export default SettingDashboardPage;

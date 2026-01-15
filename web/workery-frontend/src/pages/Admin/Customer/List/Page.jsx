@@ -1,39 +1,23 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Admin/Customer/List/Page.jsx
+// File Path: web/workery-frontend/src/pages/Admin/Customer/List/Page.jsx
+// UIX Upgraded - Uses UniversalListPage whole page component
+// @uix-page: AdminCustomerListPage
 
-import React, { useState, useEffect, useCallback } from "react";
-import { Link, useNavigate, useLocation } from "react-router";
-import {
-  useCustomerManager,
-  useAuthManager,
-} from "../../../../services/Services";
+import React, { useMemo } from "react";
+import { Link } from "react-router";
+import { useCustomerManager } from "../../../../services/Services";
 import {
   UserGroupIcon,
   PlusIcon,
   MagnifyingGlassIcon,
-  FunnelIcon,
-  ArrowPathIcon,
   ChevronRightIcon,
-  XMarkIcon,
-  ArchiveBoxIcon,
-  PencilSquareIcon,
   EyeIcon,
-  ExclamationTriangleIcon,
   ChartBarIcon,
-  ClipboardDocumentListIcon,
-  CheckCircleIcon,
-  UserIcon,
   EnvelopeIcon,
   PhoneIcon,
-  BuildingOfficeIcon,
   BuildingOffice2Icon,
   HomeIcon,
-  InformationCircleIcon,
-  Squares2X2Icon,
-  TableCellsIcon,
-  ChevronLeftIcon,
-  ShieldExclamationIcon,
 } from "@heroicons/react/24/outline";
-import { ChevronDownIcon } from "@heroicons/react/20/solid";
+import { UniversalListPage, Card, Button, ViewButton } from "../../../../components/UIX";
 
 // Constants for filtering and sorting
 const CUSTOMER_STATUS_OPTIONS = [
@@ -63,1246 +47,263 @@ const PAGE_SIZE_OPTIONS = [
   { value: 250, label: "250 per page" },
 ];
 
-const VIEW_TYPE_TABULAR = "tabular";
-const VIEW_TYPE_GRID = "grid";
-
 // Customer type constants
-const UNASSIGNED_CUSTOMER_TYPE_OF_ID = 1;
-const RESIDENTIAL_CUSTOMER_TYPE_OF_ID = 2;
 const COMMERCIAL_CUSTOMER_TYPE_OF_ID = 3;
 
 function AdminCustomerListPage() {
   const customerManager = useCustomerManager();
-  const authManager = useAuthManager();
-  const navigate = useNavigate();
-  const location = useLocation();
 
-  // State management
-  const [customers, setCustomers] = useState([]);
-  const [totalCount, setTotalCount] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [successMessage, setSuccessMessage] = useState("");
+  // Memoize the config to prevent unnecessary re-renders
+  const config = useMemo(() => ({
+    // Entity information
+    entityName: "Customer",
+    entityNamePlural: "Customers",
+    icon: UserGroupIcon,
+    title: "Customers Management",
+    subtitle: "Manage your customers and their information",
 
-  // Pagination state using cursor-based approach
-  const [currentCursor, setCurrentCursor] = useState("");
-  const [nextCursor, setNextCursor] = useState("");
-  const [hasNextPage, setHasNextPage] = useState(false);
-  const [cursorHistory, setCursorHistory] = useState([]);
-  const [pageSize, setPageSize] = useState(50);
-
-  // Filter and search state
-  const [searchQuery, setSearchQuery] = useState("");
-  const [tempSearchQuery, setTempSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("1"); // Default to active
-  const [typeFilter, setTypeFilter] = useState("");
-  const [sortBy, setSortBy] = useState("lexical_name,ASC");
-  const [viewType, setViewType] = useState(VIEW_TYPE_TABULAR);
-  const [showFilters, setShowFilters] = useState(false);
-
-  // Additional customer-specific filters
-  const [joinDateGte, setJoinDateGte] = useState("");
-
-  // Delete confirmation modal
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [customerToDelete, setCustomerToDelete] = useState(null);
-
-  // Handle unauthorized access
-  const onUnauthorized = () => {
-    navigate("/login?unauthorized=true");
-  };
-
-  // Fetch customers using the manager
-  const fetchCustomers = useCallback(
-    async (cursor = "", isNavigatingBack = false) => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        // Build params using Map for legacy filtersMap approach
-        const filtersMap = new Map();
-
-        // Add cursor if provided
-        if (cursor) {
-          filtersMap.set("cursor", cursor);
-        }
-
-        // Use the correct parameter name for page size
-        filtersMap.set("page_size", pageSize.toString());
-
-        // Add sorting
-        if (sortBy) {
-          const [sortField, sortOrder] = sortBy.split(",");
-          filtersMap.set("sort_field", sortField);
-          // Backend expects specific format
-          filtersMap.set("sort_order", sortOrder === "DESC" ? "DESC" : "ASC");
-        }
-
-        // Add search
-        if (searchQuery.trim()) {
-          filtersMap.set("search", searchQuery.trim());
-        }
-
-        // Add filters
-        if (statusFilter) {
-          filtersMap.set("status", statusFilter);
-        }
-        if (typeFilter) {
-          filtersMap.set("type", typeFilter);
-        }
-        if (joinDateGte) {
-          const date = new Date(joinDateGte);
-          filtersMap.set("join_date_gte", date.getTime().toString());
-        }
-
-        // Use the manager method
-        const response = await customerManager.getCustomersWithFiltersMap(
-          filtersMap,
-          onUnauthorized,
-          true, // force refresh
-        );
-
-        setCustomers(response.results || []);
-        setTotalCount(response.count || 0);
-
-        // Handle pagination response
-        if (
-          response.nextCursor !== undefined &&
-          response.nextCursor !== null &&
-          response.nextCursor !== ""
-        ) {
-          setNextCursor(response.nextCursor);
-          setHasNextPage(true);
-        } else {
-          setNextCursor("");
-          setHasNextPage(false);
-        }
-
-        // Alternative: Check if hasNextPage is explicitly set
-        if (response.hasNextPage !== undefined) {
-          setHasNextPage(response.hasNextPage);
-        }
-
-        // Update current cursor if not navigating back
-        if (!isNavigatingBack) {
-          setCurrentCursor(cursor);
-        }
-      } catch (err) {
-        console.error("Failed to fetch customers:", err);
-        setError("Failed to load customers. Please try again.");
-      } finally {
-        setLoading(false);
-      }
+    // Routes
+    routes: {
+      search: "/admin/customers/search",
+      create: "/admin/customers/add/step-1-search",
+      detail: "/admin/customer/:id",
     },
-    [
-      pageSize,
-      sortBy,
-      searchQuery,
-      statusFilter,
-      typeFilter,
-      joinDateGte,
-      customerManager,
-      onUnauthorized,
+
+    // Action buttons
+    createLabel: "Add Customer",
+    createIcon: PlusIcon,
+    searchIcon: MagnifyingGlassIcon,
+
+    // Breadcrumb
+    breadcrumbItems: [
+      {
+        label: "Dashboard",
+        to: "/admin/dashboard",
+        icon: ChartBarIcon,
+      },
+      {
+        label: "Customers",
+        icon: UserGroupIcon,
+        isActive: true,
+      },
     ],
-  );
 
-  // Handle search
-  const handleSearch = () => {
-    setSearchQuery(tempSearchQuery);
-    // Reset pagination when searching
-    setCursorHistory([]);
-    setCurrentCursor("");
-    setNextCursor("");
-    setHasNextPage(false);
-    fetchCustomers("");
-  };
-
-  const handleSearchKeyPress = (e) => {
-    if (e.key === "Enter") {
-      handleSearch();
-    }
-  };
-
-  // Handle filter changes
-  const handleFilterChange = useCallback(() => {
-    // Reset pagination when filters change
-    setCursorHistory([]);
-    setCurrentCursor("");
-    setNextCursor("");
-    setHasNextPage(false);
-    fetchCustomers("");
-  }, [fetchCustomers]);
-
-  // Pagination handlers
-  const handleNextPage = () => {
-    if (hasNextPage && nextCursor) {
-      // Push current cursor to history for "Previous" functionality
-      setCursorHistory((prev) => [...prev, currentCursor]);
-      // Fetch next page
-      fetchCustomers(nextCursor);
-    }
-  };
-
-  const handlePreviousPage = () => {
-    if (cursorHistory.length > 0) {
-      // Pop the last cursor from history
-      const newHistory = [...cursorHistory];
-      const previousCursor = newHistory.pop();
-      // Update history
-      setCursorHistory(newHistory);
-      // Fetch previous page
-      fetchCustomers(previousCursor || "", true);
-    }
-  };
-
-  // Handle page size change
-  const handlePageSizeChange = (e) => {
-    const newPageSize = parseInt(e.target.value);
-    setPageSize(newPageSize);
-    // Reset pagination when page size changes
-    setCursorHistory([]);
-    setCurrentCursor("");
-    setNextCursor("");
-    setHasNextPage(false);
-  };
-
-  // Effect to refetch when pageSize changes
-  useEffect(() => {
-    if (pageSize) {
-      fetchCustomers("");
-    }
-  }, [pageSize]);
-
-  // Handle sort change
-  const handleSortChange = (e) => {
-    setSortBy(e.target.value);
-    // Reset pagination when sort changes
-    setCursorHistory([]);
-    setCurrentCursor("");
-    setNextCursor("");
-    setHasNextPage(false);
-    setTimeout(() => fetchCustomers(""), 0);
-  };
-
-  // Handle delete customer
-  const handleDeleteCustomer = async () => {
-    if (!customerToDelete) return;
-
-    try {
-      setLoading(true);
-      await customerManager.deleteCustomer(customerToDelete.id, onUnauthorized);
-
-      // Refresh the current page
-      fetchCustomers(currentCursor);
-
-      // Reset delete state
-      setShowDeleteModal(false);
-      setCustomerToDelete(null);
-      setSuccessMessage("Customer archived successfully");
-
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccessMessage(""), 3000);
-    } catch (err) {
-      console.error("Failed to delete customer:", err);
-      setError("Failed to delete customer. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Clear filters
-  const clearFilters = useCallback(() => {
-    setSearchQuery("");
-    setTempSearchQuery("");
-    setStatusFilter("1");
-    setTypeFilter("");
-    setSortBy("lexical_name,ASC");
-    setJoinDateGte("");
-    setCursorHistory([]);
-    setCurrentCursor("");
-    setNextCursor("");
-    setHasNextPage(false);
-    setShowFilters(false);
-    fetchCustomers("");
-  }, [fetchCustomers]);
-
-  // Initial data load
-  useEffect(() => {
-    fetchCustomers("");
-  }, []);
-
-  // Handle success message from navigation state
-  useEffect(() => {
-    if (location.state?.successMessage) {
-      setSuccessMessage(location.state.successMessage);
-      // Clear the state
-      window.history.replaceState({}, document.title);
-      // Clear success message after 3 seconds
-      setTimeout(() => setSuccessMessage(""), 3000);
-    }
-  }, [location]);
-
-  // Format customer type for display
-  const getCustomerTypeDisplay = (type) => {
-    switch (type) {
-      case COMMERCIAL_CUSTOMER_TYPE_OF_ID:
-        return "Commercial";
-      case RESIDENTIAL_CUSTOMER_TYPE_OF_ID:
-        return "Residential";
-      case UNASSIGNED_CUSTOMER_TYPE_OF_ID:
-        return "Unassigned";
-      default:
-        return "Unknown";
-    }
-  };
-
-  // Get badge color for customer type
-  const getTypeBadgeColor = (customerType) => {
-    switch (customerType) {
-      case COMMERCIAL_CUSTOMER_TYPE_OF_ID:
-        return "bg-blue-100 text-blue-800 border border-blue-200";
-      case RESIDENTIAL_CUSTOMER_TYPE_OF_ID:
-        return "bg-green-100 text-green-800 border border-green-200";
-      case UNASSIGNED_CUSTOMER_TYPE_OF_ID:
-        return "bg-gray-100 text-gray-800 border border-gray-200";
-      default:
-        return "bg-gray-100 text-gray-800 border border-gray-200";
-    }
-  };
-
-  // Get status badge color
-  const getStatusBadgeColor = (customer) => {
-    if (customer.isBanned) {
-      return "bg-red-100 text-red-800 border border-red-200";
-    }
-    return customer.status === 1
-      ? "bg-green-100 text-green-800 border border-green-200"
-      : "bg-gray-100 text-gray-800 border border-gray-200";
-  };
-
-  // Calculate pagination info
-  const hasPreviousPage = cursorHistory.length > 0;
-  const currentPageNumber = cursorHistory.length + 1;
-
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumb */}
-        <nav className="flex mb-8" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3">
-            <li className="inline-flex items-center">
-              <Link
-                to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 rounded-md px-1"
-              >
-                <ChartBarIcon className="w-4 h-4 mr-2" aria-hidden="true" />
-                Dashboard
-              </Link>
-            </li>
-            <li aria-current="page">
-              <div className="flex items-center">
-                <ChevronRightIcon
-                  className="w-5 h-5 text-gray-400"
-                  aria-hidden="true"
-                />
-                <span className="ml-1 text-sm font-medium text-black md:ml-2 inline-flex items-center">
-                  <UserGroupIcon className="w-4 h-4 mr-2" aria-hidden="true" />
-                  Customers
-                </span>
-              </div>
-            </li>
-          </ol>
-        </nav>
-
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-black flex items-center">
-            <UserGroupIcon
-              className="w-8 h-8 mr-3 text-blue-600"
-              aria-hidden="true"
-            />
-            Customers Management
-          </h1>
-        </div>
-
-        {/* Success/Error Messages */}
-        {successMessage && (
-          <div
-            className="mb-6 bg-green-50 border border-green-200 text-green-800 px-4 py-3 rounded-lg flex items-center justify-between"
-            role="alert"
-            aria-live="polite"
+    // Table columns for tabular view
+    columns: [
+      {
+        key: "name",
+        label: "Name",
+        render: (customer) => (
+          <Link
+            to={`/admin/customer/${customer.id}`}
+            className="text-blue-600 hover:text-blue-800 font-medium flex items-center"
           >
-            <span className="flex items-center">
-              <CheckCircleIcon className="w-5 h-5 mr-2" aria-hidden="true" />
-              {successMessage}
-            </span>
-            <button
-              onClick={() => setSuccessMessage("")}
-              className="text-green-600 hover:text-green-800 focus:outline-none focus:ring-2 focus:ring-green-500 rounded-md p-1"
-              aria-label="Dismiss success message"
-            >
-              <XMarkIcon className="w-5 h-5" />
-            </button>
-          </div>
-        )}
-
-        {error && (
-          <div
-            className="mb-6 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-lg flex items-center justify-between"
-            role="alert"
-            aria-live="assertive"
-          >
-            <span className="flex items-center">
-              <ExclamationTriangleIcon
-                className="w-5 h-5 mr-2"
-                aria-hidden="true"
-              />
-              {error}
-            </span>
-            <button
-              onClick={() => setError(null)}
-              className="text-red-600 hover:text-red-800 focus:outline-none focus:ring-2 focus:ring-red-500 rounded-md p-1"
-              aria-label="Dismiss error message"
-            >
-              <XMarkIcon className="w-5 h-5" />
-            </button>
-          </div>
-        )}
-
-        {/* Main Content Card */}
-        <div className="bg-white shadow-sm rounded-lg border border-gray-200">
-          {/* Card Header */}
-          <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-black flex items-center">
-              <ClipboardDocumentListIcon
-                className="w-5 h-5 mr-2 text-gray-600"
-                aria-hidden="true"
-              />
-              Customer List
-            </h2>
-            <div className="flex items-center gap-2">
-              {/* View Type Toggle */}
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setViewType(VIEW_TYPE_TABULAR)}
-                  className={`p-2 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500 ${
-                    viewType === VIEW_TYPE_TABULAR
-                      ? "text-blue-600"
-                      : "text-black hover:text-gray-600"
-                  }`}
-                  aria-pressed={viewType === VIEW_TYPE_TABULAR}
-                  aria-label="Table view"
-                >
-                  <TableCellsIcon className="w-6 h-6" aria-hidden="true" />
-                </button>
-                <button
-                  onClick={() => setViewType(VIEW_TYPE_GRID)}
-                  className={`p-2 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-blue-500 ${
-                    viewType === VIEW_TYPE_GRID
-                      ? "text-blue-600"
-                      : "text-black hover:text-gray-600"
-                  }`}
-                  aria-pressed={viewType === VIEW_TYPE_GRID}
-                  aria-label="Grid view"
-                >
-                  <Squares2X2Icon className="w-6 h-6" aria-hidden="true" />
-                </button>
-              </div>
-              <button
-                onClick={() => navigate("/admin/customers/search")}
-                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-              >
-                <MagnifyingGlassIcon
-                  className="w-5 h-5 mr-1"
-                  aria-hidden="true"
-                />
-                Advanced Search
-              </button>
-              <button
-                onClick={() => navigate("/admin/customers/add/step-1-search")}
-                className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
-              >
-                <PlusIcon className="w-5 h-5 mr-1" aria-hidden="true" />
-                Add Customer
-              </button>
-            </div>
-          </div>
-
-          {/* Filters Section */}
-          <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-black flex items-center">
-                <FunnelIcon
-                  className="w-4 h-4 mr-2 text-gray-600"
-                  aria-hidden="true"
-                />
-                Filter & Search
-              </h3>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={`text-sm font-medium flex items-center px-3 py-1 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    showFilters
-                      ? "text-blue-700 bg-blue-50"
-                      : "text-gray-600 hover:text-gray-800"
-                  }`}
-                  aria-expanded={showFilters}
-                  aria-controls="extended-filters"
-                >
-                  {showFilters ? (
-                    <ChevronDownIcon
-                      className="w-4 h-4 mr-1"
-                      aria-hidden="true"
-                    />
-                  ) : (
-                    <PlusIcon className="w-4 h-4 mr-1" aria-hidden="true" />
-                  )}
-                  {showFilters ? "Hide" : "Show"} All Filters
-                </button>
-                <button
-                  onClick={clearFilters}
-                  className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md px-2 py-1"
-                >
-                  <XMarkIcon className="w-4 h-4 mr-1" aria-hidden="true" />
-                  Clear Filters
-                </button>
-                <button
-                  onClick={() => fetchCustomers(currentCursor)}
-                  className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md px-2 py-1"
-                  aria-label="Refresh customer list"
-                >
-                  <ArrowPathIcon className="w-4 h-4 mr-1" aria-hidden="true" />
-                  Refresh
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {/* Search */}
-              <div className="lg:col-span-1">
-                <label
-                  htmlFor="search-input"
-                  className="block text-sm font-medium text-black mb-1"
-                >
-                  Search
-                </label>
-                <div className="relative">
-                  <input
-                    id="search-input"
-                    type="text"
-                    value={tempSearchQuery}
-                    onChange={(e) => setTempSearchQuery(e.target.value)}
-                    placeholder="Search customers..."
-                    className="w-full px-3 py-2 pr-10 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black placeholder-gray-500"
-                    onKeyPress={handleSearchKeyPress}
-                    aria-label="Search customers"
-                  />
-                  <button
-                    onClick={handleSearch}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
-                    aria-label="Submit search"
-                  >
-                    <MagnifyingGlassIcon className="w-5 h-5" />
-                  </button>
-                </div>
-              </div>
-
-              {/* Sort By */}
-              <div>
-                <label
-                  htmlFor="sort-select"
-                  className="block text-sm font-medium text-black mb-1"
-                >
-                  Sort By
-                </label>
-                <div className="relative">
-                  <select
-                    id="sort-select"
-                    value={sortBy}
-                    onChange={handleSortChange}
-                    className="w-full px-3 py-2 pr-10 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white text-black"
-                    aria-label="Sort customers by"
-                  >
-                    {CUSTOMER_SORT_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDownIcon
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
-                    aria-hidden="true"
-                  />
-                </div>
-              </div>
-
-              {/* Status Filter */}
-              <div>
-                <label
-                  htmlFor="status-select"
-                  className="block text-sm font-medium text-black mb-1"
-                >
-                  Status
-                </label>
-                <div className="relative">
-                  <select
-                    id="status-select"
-                    value={statusFilter}
-                    onChange={(e) => {
-                      setStatusFilter(e.target.value);
-                      setTimeout(() => handleFilterChange(), 0);
-                    }}
-                    className="w-full px-3 py-2 pr-10 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white text-black"
-                    aria-label="Filter by status"
-                  >
-                    {CUSTOMER_STATUS_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDownIcon
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
-                    aria-hidden="true"
-                  />
-                </div>
-              </div>
-
-              {/* Type Filter */}
-              <div>
-                <label
-                  htmlFor="type-select"
-                  className="block text-sm font-medium text-black mb-1"
-                >
-                  Type
-                </label>
-                <div className="relative">
-                  <select
-                    id="type-select"
-                    value={typeFilter}
-                    onChange={(e) => {
-                      setTypeFilter(e.target.value);
-                      setTimeout(() => handleFilterChange(), 0);
-                    }}
-                    className="w-full px-3 py-2 pr-10 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white text-black"
-                    aria-label="Filter by type"
-                  >
-                    {CUSTOMER_TYPE_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDownIcon
-                    className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
-                    aria-hidden="true"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Extended Filters */}
-            {showFilters && (
-              <div
-                id="extended-filters"
-                className="mt-4 p-4 bg-white rounded-lg border border-gray-200"
-              >
-                <h4 className="text-sm font-medium text-black mb-3">
-                  Additional Filters
-                </h4>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label
-                      htmlFor="join-date-input"
-                      className="block text-sm font-medium text-black mb-1"
-                    >
-                      Join Date (From)
-                    </label>
-                    <input
-                      id="join-date-input"
-                      type="date"
-                      value={joinDateGte}
-                      onChange={(e) => {
-                        setJoinDateGte(e.target.value);
-                        setTimeout(() => handleFilterChange(), 0);
-                      }}
-                      className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-black"
-                      aria-label="Filter by join date from"
-                    />
-                  </div>
-
-                  <div>
-                    <label
-                      htmlFor="page-size-select"
-                      className="block text-sm font-medium text-black mb-1"
-                    >
-                      Items per page
-                    </label>
-                    <div className="relative">
-                      <select
-                        id="page-size-select"
-                        value={pageSize}
-                        onChange={handlePageSizeChange}
-                        className="w-full px-3 py-2 pr-10 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white text-black"
-                        aria-label="Number of items per page"
-                      >
-                        {PAGE_SIZE_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                      <ChevronDownIcon
-                        className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
-                        aria-hidden="true"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Content Section */}
-          <div className="px-6 py-4">
-            {loading && !customers.length ? (
-              <div
-                className="flex items-center justify-center py-12"
-                role="status"
-                aria-live="polite"
-              >
-                <div
-                  className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"
-                  aria-hidden="true"
-                ></div>
-                <span className="ml-3 text-gray-600">Loading customers...</span>
-              </div>
-            ) : customers.length > 0 ? (
+            {customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID ? (
               <>
-                {/* Results count */}
-                <div className="mb-4 text-sm text-black" aria-live="polite">
-                  Showing <strong>{customers.length}</strong> customers
-                  {totalCount > 0 && ` of ${totalCount} total`}
-                  {searchQuery && ` (filtered by "${searchQuery}")`}
-                </div>
-
-                {/* List Display */}
-                {viewType === VIEW_TYPE_TABULAR ? (
-                  /* Table View */
-                  <div
-                    className="overflow-x-auto"
-                    role="region"
-                    aria-label="Customers table"
-                  >
-                    <table className="min-w-full">
-                      <thead className="bg-gray-700">
-                        <tr>
-                          <th
-                            scope="col"
-                            className="px-4 py-3 text-left text-sm font-medium text-white uppercase tracking-wider rounded-tl-lg"
-                          >
-                            Name
-                          </th>
-                          <th
-                            scope="col"
-                            className="px-4 py-3 text-left text-sm font-medium text-white uppercase tracking-wider"
-                          >
-                            Phone
-                          </th>
-                          <th
-                            scope="col"
-                            className="px-4 py-3 text-left text-sm font-medium text-white uppercase tracking-wider"
-                          >
-                            Email
-                          </th>
-                          <th
-                            scope="col"
-                            className="px-4 py-3 text-center text-sm font-medium text-white uppercase tracking-wider rounded-tr-lg"
-                          >
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200">
-                        {customers.map((customer, index) => (
-                          <tr
-                            key={customer.id}
-                            className={`${index % 2 === 0 ? "bg-white" : "bg-zinc-200"} hover:bg-blue-50 cursor-pointer focus-within:bg-blue-50`}
-                            onClick={() =>
-                              navigate(`/admin/customer/${customer.id}`)
-                            }
-                            tabIndex={0}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" || e.key === " ") {
-                                e.preventDefault();
-                                navigate(`/admin/customer/${customer.id}`);
-                              }
-                            }}
-                            role="row"
-                            aria-label={`View details for ${customer.organizationName || `${customer.firstName} ${customer.lastName}`}`}
-                          >
-                            <td className="px-4 py-4 text-base">
-                              <Link
-                                to={`/admin/customer/${customer.id}`}
-                                onClick={(e) => e.stopPropagation()}
-                                className="text-blue-600 hover:text-blue-800 font-medium flex items-center focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md px-1"
-                              >
-                                {customer.type ===
-                                COMMERCIAL_CUSTOMER_TYPE_OF_ID ? (
-                                  <>
-                                    <BuildingOffice2Icon
-                                      className="w-5 h-5 mr-2 flex-shrink-0"
-                                      aria-hidden="true"
-                                    />
-                                    <span className="text-lg">
-                                      {customer.organizationName ||
-                                        `${customer.firstName} ${customer.lastName}`}
-                                    </span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <HomeIcon
-                                      className="w-5 h-5 mr-2 flex-shrink-0"
-                                      aria-hidden="true"
-                                    />
-                                    <span className="text-lg">
-                                      {customer.firstName} {customer.lastName}
-                                    </span>
-                                  </>
-                                )}
-                              </Link>
-                            </td>
-                            <td className="px-4 py-4 text-base text-black">
-                              {customer.phone ? (
-                                <span className="flex items-center text-lg">
-                                  <PhoneIcon
-                                    className="w-5 h-5 mr-2 text-gray-400"
-                                    aria-hidden="true"
-                                  />
-                                  {customer.phone}
-                                </span>
-                              ) : (
-                                <span className="text-gray-400 italic text-lg">
-                                  —
-                                </span>
-                              )}
-                            </td>
-                            <td className="px-4 py-4 text-base text-black">
-                              {customer.email ? (
-                                <a
-                                  href={`mailto:${customer.email}`}
-                                  onClick={(e) => e.stopPropagation()}
-                                  className="flex items-center hover:text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md px-1"
-                                  aria-label={`Send email to ${customer.email}`}
-                                >
-                                  <EnvelopeIcon
-                                    className="w-5 h-5 mr-2 text-gray-400"
-                                    aria-hidden="true"
-                                  />
-                                  <span className="text-lg">
-                                    {customer.email}
-                                  </span>
-                                </a>
-                              ) : (
-                                <span className="text-gray-400 italic text-lg">
-                                  —
-                                </span>
-                              )}
-                            </td>
-                            <td className="px-4 py-4">
-                              <div className="flex items-center justify-center">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    navigate(`/admin/customer/${customer.id}`);
-                                  }}
-                                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                                  aria-label={`View details for ${customer.organizationName || `${customer.firstName} ${customer.lastName}`}`}
-                                >
-                                  <EyeIcon
-                                    className="w-4 h-4 mr-1.5"
-                                    aria-hidden="true"
-                                  />
-                                  View
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                ) : (
-                  /* Grid View */
-                  <div
-                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
-                    role="list"
-                  >
-                    {customers.map((customer) => (
-                      <div
-                        key={customer.id}
-                        className={`bg-white border-2 rounded-lg p-5 hover:shadow-md transition-shadow cursor-pointer focus-within:shadow-md ${
-                          customer.isBanned
-                            ? "border-red-300 bg-red-50"
-                            : "border-zinc-300"
-                        }`}
-                        onClick={() =>
-                          navigate(`/admin/customer/${customer.id}`)
-                        }
-                        tabIndex={0}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" || e.key === " ") {
-                            e.preventDefault();
-                            navigate(`/admin/customer/${customer.id}`);
-                          }
-                        }}
-                        role="listitem"
-                        aria-label={`Customer card for ${customer.organizationName || `${customer.firstName} ${customer.lastName}`}`}
-                      >
-                        <div className="mb-4">
-                          <h3 className="text-lg font-semibold text-black">
-                            <Link
-                              to={`/admin/customer/${customer.id}`}
-                              onClick={(e) => e.stopPropagation()}
-                              className="text-blue-600 hover:text-blue-800 flex items-start focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-md"
-                            >
-                              {customer.type ===
-                              COMMERCIAL_CUSTOMER_TYPE_OF_ID ? (
-                                <>
-                                  <BuildingOffice2Icon
-                                    className="w-6 h-6 mr-2 flex-shrink-0 mt-0.5"
-                                    aria-hidden="true"
-                                  />
-                                  <span className="text-xl">
-                                    {customer.organizationName ||
-                                      `${customer.firstName} ${customer.lastName}`}
-                                  </span>
-                                </>
-                              ) : (
-                                <>
-                                  <HomeIcon
-                                    className="w-6 h-6 mr-2 flex-shrink-0 mt-0.5"
-                                    aria-hidden="true"
-                                  />
-                                  <span className="text-xl">
-                                    {customer.firstName} {customer.lastName}
-                                  </span>
-                                </>
-                              )}
-                            </Link>
-                          </h3>
-                        </div>
-
-                        <div className="space-y-2 text-base text-black mb-4">
-                          {customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID &&
-                            customer.organizationName && (
-                              <div className="text-base">
-                                <strong className="text-black">Contact:</strong>{" "}
-                                {customer.firstName} {customer.lastName}
-                              </div>
-                            )}
-                          {customer.email && (
-                            <div className="flex items-center text-lg">
-                              <EnvelopeIcon
-                                className="w-5 h-5 mr-2 text-gray-400 flex-shrink-0"
-                                aria-hidden="true"
-                              />
-                              <span className="truncate">{customer.email}</span>
-                            </div>
-                          )}
-                          {customer.phone && (
-                            <div className="flex items-center text-lg">
-                              <PhoneIcon
-                                className="w-5 h-5 mr-2 text-gray-400 flex-shrink-0"
-                                aria-hidden="true"
-                              />
-                              {customer.phone}
-                            </div>
-                          )}
-                          {customer.addressLine1 && (
-                            <div className="text-sm text-gray-600 mt-2">
-                              {customer.addressLine1}
-                              {customer.city && `, ${customer.city}`}
-                              {customer.region && `, ${customer.region}`}
-                            </div>
-                          )}
-                        </div>
-
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/admin/customer/${customer.id}`);
-                          }}
-                          className="w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                          aria-label={`View details for ${customer.organizationName || `${customer.firstName} ${customer.lastName}`}`}
-                        >
-                          View Details
-                          <ChevronRightIcon
-                            className="w-4 h-4 ml-1"
-                            aria-hidden="true"
-                          />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Pagination */}
-                <nav
-                  className="mt-6 flex items-center justify-between border-t border-gray-200 pt-4"
-                  aria-label="Pagination"
-                >
-                  <div className="flex-1 flex justify-between sm:hidden">
-                    <button
-                      onClick={handlePreviousPage}
-                      disabled={!hasPreviousPage}
-                      className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      aria-label="Go to previous page"
-                    >
-                      Previous
-                    </button>
-                    <button
-                      onClick={handleNextPage}
-                      disabled={!hasNextPage}
-                      className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      aria-label="Go to next page"
-                    >
-                      Next
-                    </button>
-                  </div>
-                  <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                    <div>
-                      <p className="text-sm text-black" aria-live="polite">
-                        Page{" "}
-                        <span className="font-medium">{currentPageNumber}</span>
-                        {totalCount > 0 && (
-                          <>
-                            {" "}
-                            of{" "}
-                            <span className="font-medium">
-                              {Math.ceil(totalCount / pageSize)}
-                            </span>
-                          </>
-                        )}
-                        {totalCount > 0 && (
-                          <span className="ml-2 text-gray-600">
-                            ({totalCount} total customers)
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                    <div>
-                      <div
-                        className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                        role="group"
-                      >
-                        <button
-                          onClick={handlePreviousPage}
-                          disabled={!hasPreviousPage}
-                          className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          aria-label="Go to previous page"
-                        >
-                          <span className="sr-only">Previous</span>
-                          <ChevronLeftIcon
-                            className="h-5 w-5"
-                            aria-hidden="true"
-                          />
-                        </button>
-                        <span
-                          className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-black"
-                          aria-current="page"
-                        >
-                          Page {currentPageNumber}
-                        </span>
-                        <button
-                          onClick={handleNextPage}
-                          disabled={!hasNextPage}
-                          className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed focus:z-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          aria-label="Go to next page"
-                        >
-                          <span className="sr-only">Next</span>
-                          <ChevronRightIcon
-                            className="h-5 w-5"
-                            aria-hidden="true"
-                          />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </nav>
+                <BuildingOffice2Icon className="w-5 h-5 mr-2 flex-shrink-0" />
+                <span className="text-lg">
+                  {customer.organizationName || `${customer.firstName} ${customer.lastName}`}
+                </span>
               </>
             ) : (
-              /* No Results */
-              <div className="text-center py-12">
-                <UserGroupIcon
-                  className="mx-auto h-12 w-12 text-gray-400"
-                  aria-hidden="true"
-                />
-                <h3 className="mt-2 text-sm font-medium text-black">
-                  No Customers Found
-                </h3>
-                <p className="mt-1 text-sm text-gray-600">
-                  {searchQuery ||
-                  statusFilter !== "1" ||
-                  typeFilter ||
-                  joinDateGte
-                    ? "No customers match your current filters. Try adjusting your search criteria."
-                    : "No customers have been added yet."}
-                </p>
-                <div className="mt-6 flex justify-center gap-3">
-                  {(searchQuery ||
-                    statusFilter !== "1" ||
-                    typeFilter ||
-                    joinDateGte) && (
-                    <button
-                      onClick={clearFilters}
-                      className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                    >
-                      Clear Filters
-                    </button>
-                  )}
-                  <button
-                    onClick={() =>
-                      navigate("/admin/customers/add/step-1-search")
-                    }
-                    className="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500"
-                  >
-                    <PlusIcon className="w-5 h-5 mr-2" aria-hidden="true" />
-                    Add First Customer
-                  </button>
-                </div>
+              <>
+                <HomeIcon className="w-5 h-5 mr-2 flex-shrink-0" />
+                <span className="text-lg">
+                  {customer.firstName} {customer.lastName}
+                </span>
+              </>
+            )}
+          </Link>
+        ),
+      },
+      {
+        key: "phone",
+        label: "Phone",
+        render: (customer) =>
+          customer.phone ? (
+            <span className="flex items-center text-lg">
+              <PhoneIcon className="w-5 h-5 mr-2 text-gray-400" />
+              {customer.phone}
+            </span>
+          ) : (
+            <span className="text-gray-400 italic text-lg">—</span>
+          ),
+      },
+      {
+        key: "email",
+        label: "Email",
+        render: (customer) =>
+          customer.email ? (
+            <a
+              href={`mailto:${customer.email}`}
+              className="flex items-center hover:text-blue-600"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <EnvelopeIcon className="w-5 h-5 mr-2 text-gray-400" />
+              <span className="text-lg">{customer.email}</span>
+            </a>
+          ) : (
+            <span className="text-gray-400 italic text-lg">—</span>
+          ),
+      },
+      {
+        key: "actions",
+        label: "Actions",
+        align: "center",
+        render: (customer) => (
+          <ViewButton
+            to={`/admin/customer/${customer.id}`}
+            text="View"
+            icon={EyeIcon}
+          />
+        ),
+      },
+    ],
+
+    // Filter options
+    statusOptions: CUSTOMER_STATUS_OPTIONS,
+    typeOptions: CUSTOMER_TYPE_OPTIONS,
+    typeFilterLabel: "Type",
+    sortOptions: CUSTOMER_SORT_OPTIONS,
+    pageSizeOptions: PAGE_SIZE_OPTIONS,
+    searchPlaceholder: "Search customers...",
+
+    // Default values
+    defaultStatus: "1", // Active
+    defaultType: "",
+    defaultSort: "lexical_name",
+    defaultSortOrder: "ASC",
+    defaultPageSize: 50,
+    defaultViewType: "tabular",
+
+    // Empty state
+    emptyState: {
+      title: "No Customers Found",
+      filterDescription: "No customers match your current filters. Try adjusting your search criteria.",
+      emptyDescription: "No customers have been added yet.",
+      actionLabel: "Add First Customer",
+    },
+
+    // Data fetching
+    fetchData: async (params, onUnauthorized, forceRefresh) => {
+      const response = await customerManager.getCustomersWithFiltersMap(
+        params,
+        onUnauthorized,
+        forceRefresh
+      );
+      return response;
+    },
+
+    // Build API parameters
+    buildParams: ({ pageSize, currentCursor, sortBy, sortOrder, status, type, searchQuery }) => {
+      const filtersMap = new Map();
+
+      if (currentCursor) {
+        filtersMap.set("cursor", currentCursor);
+      }
+
+      filtersMap.set("page_size", pageSize.toString());
+
+      if (sortBy) {
+        filtersMap.set("sort_field", sortBy);
+        filtersMap.set("sort_order", sortOrder === "DESC" ? "DESC" : "ASC");
+      }
+
+      if (searchQuery && searchQuery.trim()) {
+        filtersMap.set("search", searchQuery.trim());
+      }
+
+      if (status) {
+        filtersMap.set("status", status);
+      }
+
+      if (type) {
+        filtersMap.set("type", type);
+      }
+
+      return filtersMap;
+    },
+
+    // Custom grid item renderer
+    renderGridItem: (customer, navigate) => (
+      <Card
+        className={`hover:shadow-lg transition-shadow cursor-pointer ${
+          customer.isBanned ? "border-red-300 bg-red-50" : ""
+        }`}
+        onClick={() => navigate(`/admin/customer/${customer.id}`)}
+      >
+        <div className="p-5">
+          <div className="mb-4">
+            <h3 className="text-lg font-semibold">
+              <Link
+                to={`/admin/customer/${customer.id}`}
+                onClick={(e) => e.stopPropagation()}
+                className="text-blue-600 hover:text-blue-800 flex items-start"
+              >
+                {customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID ? (
+                  <>
+                    <BuildingOffice2Icon className="w-6 h-6 mr-2 flex-shrink-0 mt-0.5" />
+                    <span className="text-xl">
+                      {customer.organizationName || `${customer.firstName} ${customer.lastName}`}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <HomeIcon className="w-6 h-6 mr-2 flex-shrink-0 mt-0.5" />
+                    <span className="text-xl">
+                      {customer.firstName} {customer.lastName}
+                    </span>
+                  </>
+                )}
+              </Link>
+            </h3>
+          </div>
+
+          <div className="space-y-2 text-base mb-4">
+            {customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID && customer.organizationName && (
+              <div className="text-base">
+                <strong>Contact:</strong> {customer.firstName} {customer.lastName}
+              </div>
+            )}
+            {customer.email && (
+              <div className="flex items-center text-lg">
+                <EnvelopeIcon className="w-5 h-5 mr-2 text-gray-400 flex-shrink-0" />
+                <span className="truncate">{customer.email}</span>
+              </div>
+            )}
+            {customer.phone && (
+              <div className="flex items-center text-lg">
+                <PhoneIcon className="w-5 h-5 mr-2 text-gray-400 flex-shrink-0" />
+                {customer.phone}
+              </div>
+            )}
+            {customer.addressLine1 && (
+              <div className="text-sm text-gray-600 mt-2">
+                {customer.addressLine1}
+                {customer.city && `, ${customer.city}`}
+                {customer.region && `, ${customer.region}`}
               </div>
             )}
           </div>
-        </div>
 
-        {/* Delete Confirmation Modal */}
-        {showDeleteModal && customerToDelete && (
-          <div
-            className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50"
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="modal-title"
+          <Button
+            variant="primary"
+            size="md"
+            className="w-full"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/admin/customer/${customer.id}`);
+            }}
           >
-            <div
-              className="bg-white rounded-lg max-w-md w-full"
-              role="document"
-            >
-              <div className="px-6 py-4 border-b border-gray-200">
-                <h3
-                  id="modal-title"
-                  className="text-lg font-semibold text-black flex items-center"
-                >
-                  <ExclamationTriangleIcon
-                    className="w-5 h-5 mr-2 text-amber-600"
-                    aria-hidden="true"
-                  />
-                  Archive Customer
-                </h3>
-              </div>
+            View Details
+            <ChevronRightIcon className="w-4 h-4 ml-1" />
+          </Button>
+        </div>
+      </Card>
+    ),
+  }), [customerManager]);
 
-              <div className="px-6 py-4">
-                <p className="text-sm text-black mb-4">
-                  Are you sure you want to archive this customer? They will no
-                  longer appear in active lists.
-                </p>
-
-                <div className="p-4 bg-amber-50 rounded-lg border-l-4 border-amber-500">
-                  <p className="text-sm font-medium text-black mb-1">
-                    <strong>Name:</strong>{" "}
-                    {customerToDelete.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID
-                      ? customerToDelete.organizationName ||
-                        `${customerToDelete.firstName} ${customerToDelete.lastName}`
-                      : `${customerToDelete.firstName} ${customerToDelete.lastName}`}
-                  </p>
-                  {customerToDelete.email && (
-                    <p className="text-sm text-black mt-1">
-                      <strong>Email:</strong> {customerToDelete.email}
-                    </p>
-                  )}
-                  <p className="text-sm text-black mt-1">
-                    <strong>Type:</strong>{" "}
-                    {getCustomerTypeDisplay(customerToDelete.type)}
-                  </p>
-                  {customerToDelete.isBanned && (
-                    <p className="text-sm text-red-600 mt-1 font-medium">
-                      <strong>Status:</strong> BANNED
-                    </p>
-                  )}
-                </div>
-
-                <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <p className="text-xs text-blue-800 flex items-start">
-                    <InformationCircleIcon
-                      className="w-4 h-4 mr-1 flex-shrink-0"
-                      aria-hidden="true"
-                    />
-                    <span>
-                      <strong>Note:</strong> This action can be undone by a
-                      system administrator. The customer's data will be
-                      preserved.
-                    </span>
-                  </p>
-                </div>
-              </div>
-
-              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
-                <button
-                  onClick={() => {
-                    setShowDeleteModal(false);
-                    setCustomerToDelete(null);
-                  }}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDeleteCustomer}
-                  disabled={loading}
-                  className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-red-500"
-                >
-                  {loading ? (
-                    <>
-                      <svg
-                        className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      Archiving...
-                    </>
-                  ) : (
-                    <>
-                      <ArchiveBoxIcon
-                        className="w-4 h-4 mr-2"
-                        aria-hidden="true"
-                      />
-                      Archive Customer
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+  return <UniversalListPage config={config} />;
 }
 
 export default AdminCustomerListPage;

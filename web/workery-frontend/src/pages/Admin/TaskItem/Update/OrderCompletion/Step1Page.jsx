@@ -1,11 +1,13 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/TaskItem/Update/OrderCompletion/Step1Page.jsx
+// UIX Upgraded - Uses UIX primitives (Spinner, Breadcrumb, UIXThemeProvider)
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useParams, useNavigate } from "react-router";
 import {
   useTaskManager,
   useOrderCompletionStorage,
 } from "../../../../../services/Services";
+import { Spinner, Breadcrumb, UIXThemeProvider, useUIXTheme } from "../../../../../components/UIX";
 import {
   CLIENT_PHONE_TYPE_OF_MAP,
   ASSOCIATE_PHONE_TYPE_OF_MAP,
@@ -37,13 +39,29 @@ function AdminTaskItemOrderCompletionStep1Page() {
   const taskManager = useTaskManager();
   const orderCompletionStorage = useOrderCompletionStorage();
 
+  // UIX Theme
+  const { theme } = useUIXTheme();
+  const themeClasses = useMemo(() => ({
+    container: theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900',
+    card: theme === 'dark' ? 'bg-gray-800' : 'bg-white',
+    text: theme === 'dark' ? 'text-gray-100' : 'text-gray-900',
+    textMuted: theme === 'dark' ? 'text-gray-400' : 'text-gray-600',
+  }), [theme]);
+
+  // Memoized breadcrumb items
+  const breadcrumbItems = useMemo(() => [
+    { label: "Dashboard", path: "/admin/dashboard", icon: ChartBarIcon },
+    { label: "Tasks", path: "/admin/tasks", icon: ClipboardDocumentCheckIcon },
+    { label: "Order Completion", icon: DocumentTextIcon },
+  ], []);
+
   const [task, setTask] = useState(null);
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(true);
 
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
-  };
+  }, [navigate]);
 
   useEffect(() => {
     let mounted = true;
@@ -110,12 +128,7 @@ function AdminTaskItemOrderCompletionStep1Page() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-3 text-sm sm:text-base text-gray-600">
-            Loading task details...
-          </p>
-        </div>
+        <Spinner size="lg" label="Loading task details..." />
       </div>
     );
   }
@@ -123,47 +136,8 @@ function AdminTaskItemOrderCompletionStep1Page() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {/* Responsive Breadcrumb */}
-        <nav
-          className="flex mb-4 sm:mb-6 overflow-x-auto"
-          aria-label="Breadcrumb"
-        >
-          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
-            <li className="inline-flex items-center">
-              <Link
-                to="/admin/dashboard"
-                className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
-              >
-                <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                <span className="hidden sm:inline">Dashboard</span>
-                <span className="sm:hidden">Dash</span>
-              </Link>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
-                <Link
-                  to="/admin/tasks"
-                  className="ml-1 text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
-                >
-                  <span className="inline-flex items-center">
-                    <ClipboardDocumentCheckIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
-                    Tasks
-                  </span>
-                </Link>
-              </div>
-            </li>
-            <li aria-current="page">
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
-                <span className="ml-1 text-xs sm:text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center whitespace-nowrap">
-                  <DocumentTextIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
-                  Order Completion
-                </span>
-              </div>
-            </li>
-          </ol>
-        </nav>
+        {/* Breadcrumb */}
+        <Breadcrumb items={breadcrumbItems} />
 
         {/* Page Title - Responsive */}
         <div className="mb-4 sm:mb-6">
@@ -579,4 +553,12 @@ function AdminTaskItemOrderCompletionStep1Page() {
   );
 }
 
-export default AdminTaskItemOrderCompletionStep1Page;
+function AdminTaskItemOrderCompletionStep1PageWithTheme() {
+  return (
+    <UIXThemeProvider>
+      <AdminTaskItemOrderCompletionStep1Page />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminTaskItemOrderCompletionStep1PageWithTheme;

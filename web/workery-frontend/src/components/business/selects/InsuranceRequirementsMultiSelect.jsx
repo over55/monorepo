@@ -1,7 +1,8 @@
-// File: monorepo/web/workery-frontend/src/components/business/selects/InsuranceRequirementsMultiSelect.jsx
+// File: monorepo/web/frontend/src/components/business/selects/InsuranceRequirementsMultiSelect.jsx
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useInsuranceRequirementManager } from "../../../services/Services";
+import { useUIXTheme } from "../../UIX";
 import {
   XMarkIcon,
   ChevronDownIcon,
@@ -74,6 +75,7 @@ function InsuranceRequirementsMultiSelect({
   onUnauthorized = null,
 }) {
   const insuranceRequirementManager = useInsuranceRequirementManager();
+  const { getThemeClasses } = useUIXTheme();
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [options, setOptions] = useState([]);
@@ -81,23 +83,42 @@ function InsuranceRequirementsMultiSelect({
   const [searchLoading, setSearchLoading] = useState(false);
   const dropdownRef = useRef(null);
   const searchInputRef = useRef(null);
+  const isMounted = useRef(true);
 
   // Track if we're using search results or default options
   const [isSearchMode, setIsSearchMode] = useState(false);
 
-  // Clean the value to ensure no empty strings
+  // Track mounted state
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  // Clean the value to ensure no empty strings and extract IDs from objects
   const cleanValue = (val) => {
     if (!val || !Array.isArray(val)) return [];
-    return val.filter(
-      (v) => v !== null && v !== undefined && v !== "" && v !== "0" && v !== 0,
-    );
+    return val
+      .map((v) => {
+        // If value is an object, extract the ID
+        if (v && typeof v === "object") {
+          return v.id || v.value;
+        }
+        return v;
+      })
+      .filter(
+        (v) => v !== null && v !== undefined && v !== "" && v !== "0" && v !== 0,
+      );
   };
 
   // Load default options (without search)
   const loadDefaultOptions = useCallback(async () => {
     setIsLoading(true);
     try {
-      console.log("Loading default insurance requirement options");
+      if (import.meta.env.DEV) {
+        console.log("Loading default insurance requirement options");
+      }
 
       // For default options, use the select options endpoint
       const insuranceRequirementOptions =
@@ -122,14 +143,18 @@ function InsuranceRequirementsMultiSelect({
           label: item.label || item.text || item.name,
         }));
 
-        console.log("Default options loaded:", transformedOptions);
+        if (import.meta.env.DEV) {
+          console.log("Default options loaded:", transformedOptions);
+        }
         setOptions(transformedOptions);
       }
     } catch (error) {
-      console.error(
-        "Error loading default insurance requirement options:",
-        error,
-      );
+      if (import.meta.env.DEV) {
+        console.error(
+          "Error loading default insurance requirement options:",
+          error,
+        );
+      }
       setOptions([]);
     } finally {
       setIsLoading(false);
@@ -150,10 +175,12 @@ function InsuranceRequirementsMultiSelect({
       setIsSearchMode(true);
 
       try {
-        console.log(
-          "Searching insurance requirements with query:",
-          searchQuery,
-        );
+        if (import.meta.env.DEV) {
+          console.log(
+            "Searching insurance requirements with query:",
+            searchQuery,
+          );
+        }
 
         // Use getInsuranceRequirements with search parameter to get filtered results from backend
         const searchParams = {
@@ -177,13 +204,17 @@ function InsuranceRequirementsMultiSelect({
             label: item.name || item.text,
           }));
 
-          console.log("Search results:", transformedOptions);
+          if (import.meta.env.DEV) {
+            console.log("Search results:", transformedOptions);
+          }
           setOptions(transformedOptions);
         } else {
           setOptions([]);
         }
       } catch (error) {
-        console.error("Error searching insurance requirements:", error);
+        if (import.meta.env.DEV) {
+          console.error("Error searching insurance requirements:", error);
+        }
         setOptions([]);
       } finally {
         setSearchLoading(false);
@@ -211,10 +242,12 @@ function InsuranceRequirementsMultiSelect({
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-        // Reset search when closing
-        setSearchTerm("");
-        setIsSearchMode(false);
+        if (isMounted.current) {
+          setIsOpen(false);
+          // Reset search when closing
+          setSearchTerm("");
+          setIsSearchMode(false);
+        }
       }
     };
 
@@ -233,8 +266,10 @@ function InsuranceRequirementsMultiSelect({
 
   // Get selected option labels
   const getSelectedLabels = () => {
+    // Clean value first to extract IDs from any objects
+    const cleanedValues = cleanValue(value);
     // For selected items, we need to check both current options and cached data
-    return value
+    return cleanedValues
       .map((selectedValue) => {
         const option = options.find((opt) => opt.value === selectedValue);
         if (option) {
@@ -296,7 +331,7 @@ function InsuranceRequirementsMultiSelect({
   return (
     <div className={`mb-5 ${className}`}>
       {label && (
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className={`block text-base sm:text-lg font-semibold mb-3 flex items-center ${getThemeClasses("text-primary")}`}>
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
@@ -307,14 +342,16 @@ function InsuranceRequirementsMultiSelect({
         <div
           onClick={handleDropdownClick}
           className={`
-            min-h-[42px] px-3 py-2
-            border rounded-lg
+            w-full px-5 py-4 text-base sm:text-lg
+            border-2 rounded-xl shadow-sm
             transition-all duration-200
             cursor-pointer
             flex items-center justify-between
-            ${disabled ? "bg-gray-50 cursor-not-allowed opacity-60" : "bg-white"}
-            ${error ? "border-red-500" : "border-gray-300"}
-            ${isOpen ? "ring-2 ring-blue-500 border-blue-500" : ""}
+            placeholder-gray-400
+            min-h-[58px]
+            ${disabled ? `${getThemeClasses("bg-disabled")} cursor-not-allowed opacity-60` : getThemeClasses("bg-primary")}
+            ${error ? "border-red-500" : getThemeClasses("border-secondary")}
+            ${isOpen ? "ring-4 ring-blue-500/20 border-blue-500" : ""}
           `}
         >
           <div className="flex-1 flex flex-wrap gap-1">
@@ -361,9 +398,9 @@ function InsuranceRequirementsMultiSelect({
 
         {/* Dropdown Menu */}
         {isOpen && !disabled && (
-          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg">
+          <div className={`absolute z-50 w-full mt-1 rounded-lg shadow-lg border ${getThemeClasses("bg-primary")} ${getThemeClasses("border-secondary")}`}>
             {/* Search Input */}
-            <div className="p-2 border-b border-gray-200">
+            <div className={`p-2 border-b ${getThemeClasses("border-secondary")}`}>
               <div className="relative">
                 <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
@@ -372,7 +409,7 @@ function InsuranceRequirementsMultiSelect({
                   placeholder="Search insurance requirements..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-9 pr-3 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className={`w-full pl-9 pr-3 py-2 text-sm border-2 rounded-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200 ${getThemeClasses("border-secondary")} ${getThemeClasses("bg-primary")} ${getThemeClasses("text-primary")}`}
                   onClick={(e) => e.stopPropagation()}
                 />
                 {searchLoading && (
@@ -382,7 +419,8 @@ function InsuranceRequirementsMultiSelect({
                 )}
               </div>
               {isSearchMode && (
-                <div className="mt-1 text-xs text-gray-500">
+                <div className={`mt-2 text-xs flex items-center ${getThemeClasses("text-secondary")}`}>
+                  <div className="animate-spin rounded-full h-3 w-3 border-b border-gray-400 mr-1"></div>
                   Searching: "{searchTerm}"
                 </div>
               )}
@@ -393,7 +431,7 @@ function InsuranceRequirementsMultiSelect({
               {isLoading ? (
                 <div className="px-3 py-4 text-center">
                   <div className="inline-block w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                  <p className="mt-2 text-sm text-gray-500">
+                  <p className={`mt-2 text-sm ${getThemeClasses("text-secondary")}`}>
                     Loading insurance requirements...
                   </p>
                 </div>
@@ -406,7 +444,7 @@ function InsuranceRequirementsMultiSelect({
                       onClick={() => toggleOption(option.value)}
                       className={`
                         px-3 py-2 cursor-pointer flex items-center justify-between
-                        hover:bg-gray-50
+                        ${getThemeClasses("hover:bg-hover")}
                         ${isSelected ? "bg-blue-50" : ""}
                       `}
                     >
@@ -414,7 +452,7 @@ function InsuranceRequirementsMultiSelect({
                         className={`text-sm ${
                           isSelected
                             ? "text-blue-700 font-medium"
-                            : "text-gray-700"
+                            : getThemeClasses("text-primary")
                         }`}
                       >
                         {option.label}
@@ -426,7 +464,7 @@ function InsuranceRequirementsMultiSelect({
                   );
                 })
               ) : (
-                <div className="px-3 py-4 text-center text-sm text-gray-500">
+                <div className={`px-3 py-4 text-center text-sm ${getThemeClasses("text-secondary")}`}>
                   {searchLoading
                     ? "Searching..."
                     : searchTerm
@@ -438,7 +476,7 @@ function InsuranceRequirementsMultiSelect({
 
             {/* Results info */}
             {!isLoading && !searchLoading && options.length > 0 && (
-              <div className="px-3 py-2 border-t border-gray-200 text-xs text-gray-500">
+              <div className={`px-3 py-2 border-t text-xs ${getThemeClasses("border-secondary")} ${getThemeClasses("text-secondary")}`}>
                 {isSearchMode
                   ? `Found ${options.length} result${options.length !== 1 ? "s" : ""}`
                   : `${options.length} insurance requirement${options.length !== 1 ? "s" : ""} available`}
@@ -449,10 +487,10 @@ function InsuranceRequirementsMultiSelect({
       </div>
 
       {helperText && !error && (
-        <p className="mt-2 text-sm text-gray-500">{helperText}</p>
+        <p className={`mt-2 text-sm ${getThemeClasses("text-secondary")}`}>{helperText}</p>
       )}
       {error && (
-        <p className="mt-2 text-sm text-red-600 flex items-center">{error}</p>
+        <p className="mt-2 text-sm text-red-600 flex items-center animate-fade-in">{error}</p>
       )}
     </div>
   );

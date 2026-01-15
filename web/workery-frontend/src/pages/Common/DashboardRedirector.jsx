@@ -1,3 +1,4 @@
+// UIX Upgraded - Uses UIX primitives (Card, Button, Alert, Spinner, Breadcrumb)
 // File Path: web/workery-frontend/src/pages/Common/DashboardRedirector.jsx
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router";

@@ -1,7 +1,18 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Order/Update/Page.jsx
+// UIX Upgraded - Uses UIX primitives (Card, Alert, Spinner, Breadcrumb, Tabs, Button)
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate, useParams } from "react-router";
+import {
+  Card,
+  Alert,
+  Spinner,
+  Breadcrumb,
+  Tabs,
+  Button,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../components/UIX";
 import {
   ChartBarIcon,
   WrenchScrewdriverIcon,
@@ -51,6 +62,33 @@ function AdminOrderUpdatePage() {
   const tagManager = useTagManager();
   const navigate = useNavigate();
   const { oid } = useParams();
+  const { getThemeClasses } = useUIXTheme();
+
+  // Memoize theme classes
+  const themeClasses = useMemo(() => ({
+    textPrimary: getThemeClasses("text-primary"),
+    textSecondary: getThemeClasses("text-secondary"),
+    linkPrimary: getThemeClasses("link-primary"),
+  }), [getThemeClasses]);
+
+  // Breadcrumb items
+  const breadcrumbItems = useMemo(() => [
+    { label: "Dashboard", to: "/admin/dashboard", icon: ChartBarIcon },
+    { label: "Orders", to: "/admin/orders", icon: WrenchScrewdriverIcon },
+    { label: `#${oid}`, to: `/admin/order/${oid}`, icon: InformationCircleIcon },
+    { label: "Update", icon: PencilSquareIcon, isActive: true },
+  ], [oid]);
+
+  // Tab items
+  const tabItems = useMemo(() => [
+    { label: "Summary", to: `/admin/order/${oid}` },
+    { label: "Detail", to: `/admin/order/${oid}/detail` },
+    { label: "Tasks", to: `/admin/order/${oid}/tasks` },
+    { label: "Activity", to: `/admin/order/${oid}/activity` },
+    { label: "Comments", to: `/admin/order/${oid}/comments` },
+    { label: "Attachments", to: `/admin/order/${oid}/attachments` },
+    { label: "More", to: `/admin/order/${oid}/more`, icon: EllipsisHorizontalIcon },
+  ], [oid]);
 
   // State
   const [errors, setErrors] = useState({});
@@ -71,9 +109,9 @@ function AdminOrderUpdatePage() {
   const [skillSetOptions, setSkillSetOptions] = useState([]);
   const [tagOptions, setTagOptions] = useState([]);
 
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
-  };
+  }, [navigate]);
 
   // Fetch order details
   const fetchOrder = async () => {
@@ -278,14 +316,15 @@ function AdminOrderUpdatePage() {
   if (isFetching) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        <div className="flex items-center justify-center min-h-[400px]">
+        <Breadcrumb items={breadcrumbItems} className="mb-4 sm:mb-6" />
+        <Card padding="p-0" className="flex items-center justify-center min-h-[400px] border-0 shadow-none">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <Spinner size="lg" />
             <p className="mt-4 text-sm sm:text-base text-gray-600">
               Loading order details...
             </p>
           </div>
-        </div>
+        </Card>
       </div>
     );
   }
@@ -293,70 +332,17 @@ function AdminOrderUpdatePage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
       {/* Responsive Breadcrumb */}
-      <nav
-        className="flex mb-4 sm:mb-6 overflow-x-auto"
-        aria-label="Breadcrumb"
-      >
-        <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
-          <li className="inline-flex items-center">
-            <Link
-              to="/admin/dashboard"
-              className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
-            >
-              <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-              <span className="hidden sm:inline">Dashboard</span>
-              <span className="sm:hidden">Dash</span>
-            </Link>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
-              <Link
-                to="/admin/orders"
-                className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
-              >
-                <span className="inline-flex items-center">
-                  <WrenchScrewdriverIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                  Orders
-                </span>
-              </Link>
-            </div>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
-              <Link
-                to={`/admin/order/${oid}`}
-                className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
-              >
-                <span className="inline-flex items-center">
-                  <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                  #{oid}
-                </span>
-              </Link>
-            </div>
-          </li>
-          <li aria-current="page">
-            <div className="flex items-center">
-              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
-              <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
-                <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                Update
-              </span>
-            </div>
-          </li>
-        </ol>
-      </nav>
+      <Breadcrumb items={breadcrumbItems} className="mb-4 sm:mb-6" />
 
       {/* Page Title - Responsive */}
       <div className="mb-4 sm:mb-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
-              <WrenchScrewdriverIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
+            <h1 className={`text-2xl sm:text-3xl font-bold ${themeClasses.textPrimary} flex items-center`}>
+              <WrenchScrewdriverIcon className={`w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 ${themeClasses.linkPrimary} flex-shrink-0`} />
               Order
             </h1>
-            <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+            <p className={`mt-1 text-xs sm:text-sm ${themeClasses.textSecondary} flex items-center`}>
               <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
               Update order information
             </p>
@@ -366,114 +352,43 @@ function AdminOrderUpdatePage() {
 
       {/* Status Alerts - Responsive */}
       {order && order.status === 2 && (
-        <div className="mb-4 bg-amber-50 border border-amber-200 text-amber-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center text-sm sm:text-base">
-          <ArchiveBoxIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+        <Alert type="warning" className="mb-4" icon={ArchiveBoxIcon}>
           This order is archived
-        </div>
+        </Alert>
       )}
 
       {/* Alert Messages - Responsive */}
       {alert && (
-        <div
-          className={`mb-4 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base ${
-            alert.type === "success"
-              ? "bg-green-50 border border-green-200 text-green-700"
-              : alert.type === "info"
-                ? "bg-blue-50 border border-blue-200 text-blue-700"
-                : "bg-red-50 border border-red-200 text-red-700"
-          }`}
+        <Alert
+          type={alert.type}
+          className="mb-4"
+          dismissible
+          onDismiss={() => setAlert(null)}
         >
-          <div className="flex justify-between">
-            <div className="flex-1">
-              <div className="flex items-start">
-                {alert.type === "success" ? (
-                  <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 mt-0.5" />
-                ) : alert.type === "info" ? (
-                  <InformationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 mt-0.5" />
-                ) : (
-                  <ExclamationTriangleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 mt-0.5" />
-                )}
-                <span className="font-medium">{alert.message}</span>
-              </div>
-            </div>
-            <button
-              onClick={() => setAlert(null)}
-              className="text-current hover:opacity-70 ml-4 text-lg sm:text-xl"
-            >
-              ×
-            </button>
-          </div>
-        </div>
+          {alert.message}
+        </Alert>
       )}
 
       {/* Main Content */}
-      <div className="bg-white shadow-sm rounded-lg">
+      <Card>
         {/* Header with Actions - Responsive */}
         <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
-            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 flex items-center">
-              <PencilSquareIcon className="w-5 sm:w-7 h-5 sm:h-7 mr-2 text-blue-600 flex-shrink-0" />
+            <h2 className={`text-xl sm:text-2xl font-semibold ${themeClasses.textPrimary} flex items-center`}>
+              <PencilSquareIcon className={`w-5 sm:w-7 h-5 sm:h-7 mr-2 ${themeClasses.linkPrimary} flex-shrink-0`} />
               Update Order #{oid}
             </h2>
             <Link to={`/admin/order/${oid}`} className="flex-shrink-0">
-              <button className="w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+              <Button variant="outline">
                 <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                 Back to Detail
-              </button>
+              </Button>
             </Link>
           </div>
         </div>
 
         {/* Tab Navigation - Responsive with horizontal scroll */}
-        <div className="border-b border-gray-200">
-          <div className="px-4 sm:px-6">
-            <nav className="-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide">
-              <Link
-                to={`/admin/order/${oid}`}
-                className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
-              >
-                Summary
-              </Link>
-              <Link
-                to={`/admin/order/${oid}/detail`}
-                className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
-              >
-                Detail
-              </Link>
-              <Link
-                to={`/admin/order/${oid}/tasks`}
-                className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
-              >
-                Tasks
-              </Link>
-              <Link
-                to={`/admin/order/${oid}/activity`}
-                className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
-              >
-                Activity
-              </Link>
-              <Link
-                to={`/admin/order/${oid}/comments`}
-                className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
-              >
-                Comments
-              </Link>
-              <Link
-                to={`/admin/order/${oid}/attachments`}
-                className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
-              >
-                Attachments
-              </Link>
-              <Link
-                to={`/admin/order/${oid}/more`}
-                className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center whitespace-nowrap"
-              >
-                More
-                <EllipsisHorizontalIcon className="w-4 sm:w-5 h-4 sm:h-5 ml-1" />
-              </Link>
-            </nav>
-          </div>
-        </div>
+        <Tabs items={tabItems} className="px-4 sm:px-6" />
 
         {order && (
           <form onSubmit={onSubmitClick} className="p-4 sm:p-6">
@@ -743,33 +658,36 @@ function AdminOrderUpdatePage() {
             {/* Form Actions - Responsive */}
             <div className="flex flex-col sm:flex-row sm:justify-between items-stretch sm:items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 gap-3">
               <Link to={`/admin/order/${oid}`} className="order-2 sm:order-1">
-                <button
-                  type="button"
-                  className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
-                >
+                <Button variant="outline" type="button">
                   <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                   Back to Detail
-                </button>
+                </Button>
               </Link>
 
-              <button
+              <Button
+                variant="success"
                 type="submit"
                 disabled={order.status === 2 || isSubmitting}
-                className={`order-1 sm:order-2 inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-transparent rounded-lg text-sm sm:text-base font-medium text-white transition-colors ${
-                  order.status === 2 || isSubmitting
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-green-600 hover:bg-green-700"
-                }`}
+                loading={isSubmitting}
               >
                 <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
                 {isSubmitting ? "Saving..." : "Save Changes"}
-              </button>
+              </Button>
             </div>
           </form>
         )}
-      </div>
+      </Card>
     </div>
   );
 }
 
-export default AdminOrderUpdatePage;
+// Wrapper with UIXThemeProvider
+function AdminOrderUpdatePageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminOrderUpdatePage />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminOrderUpdatePageWithProvider;

@@ -1,3 +1,4 @@
+// UIX Upgraded - Uses UIX primitives (Card, Button, Alert, Spinner, Breadcrumb)
 // File Path: monorepo/web/workery-frontend/src/pages/Anonymous/TwoFA/Step1Page.jsx
 import React, { useEffect } from "react";
 import { Link, useNavigate } from "react-router";

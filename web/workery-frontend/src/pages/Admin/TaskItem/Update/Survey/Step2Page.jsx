@@ -1,8 +1,16 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Admin/TaskItem/Update/Survey/Step2Page.jsx
-
-import React, { useState, useEffect } from "react";
+// UIX Upgraded - Uses UIX primitives (Card, Button, Alert, Spinner, Breadcrumb)
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { useSurveyStorage } from "../../../../../services/Services";
+import {
+  Card,
+  Button,
+  Alert,
+  Spinner,
+  Breadcrumb,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../../components/UIX";
 import {
   ChevronRightIcon,
   XMarkIcon,
@@ -55,7 +63,7 @@ const DetailSection = ({
   );
 };
 
-export default function AdminTaskItemSurveyStep2Page() {
+function AdminTaskItemSurveyStep2Page() {
   const { tid } = useParams();
   const navigate = useNavigate();
   const surveyStorage = useSurveyStorage();
@@ -952,3 +960,14 @@ export default function AdminTaskItemSurveyStep2Page() {
     </div>
   );
 }
+
+// Wrapper with UIXThemeProvider
+function AdminTaskItemSurveyStep2PageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminTaskItemSurveyStep2Page />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminTaskItemSurveyStep2PageWithProvider;

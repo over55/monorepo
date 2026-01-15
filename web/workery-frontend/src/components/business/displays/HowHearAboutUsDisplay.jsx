@@ -1,8 +1,8 @@
-// File: monorepo/web/workery-frontend/src/components/business/displays/HowHearAboutUsDisplay.jsx
+// File: monorepo/web/frontend/src/components/business/displays/HowHearAboutUsDisplay.jsx
 
 import React, { useState, useEffect } from "react";
 import { useHowHearAboutUsItemManager } from "../../../services/Services";
-import { Badge, Loading } from "../../UI";
+import { Badge, Loading, useUIXTheme } from "../../UIX";
 
 /**
  * Display component for "How did you hear about us?" value
@@ -12,13 +12,16 @@ import { Badge, Loading } from "../../UI";
  * @param {string} label - Custom label (defaults to "How did you hear about us?")
  * @param {string} className - Additional CSS classes
  * @param {function} onUnauthorized - Callback for unauthorized errors
+ * @param {boolean} useDetailStructure - Whether to use dt/dd structure (default true, set false when inside existing dl)
  */
 function HowHearAboutUsDisplay({
   value,
   label = "How did you hear about us?",
   className = "",
   onUnauthorized = null,
+  useDetailStructure = true,
 }) {
+  const { getThemeClasses } = useUIXTheme();
   const howHearManager = useHowHearAboutUsItemManager();
   const [displayValue, setDisplayValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -54,7 +57,9 @@ function HowHearAboutUsDisplay({
           }
         }
       } catch (error) {
-        console.error("Error fetching how hear option:", error);
+        if (import.meta.env.DEV) {
+          console.error("Error fetching how hear option:", error);
+        }
         if (mounted) {
           setError("Failed to load option");
           setDisplayValue(`ID: ${value}`);
@@ -71,31 +76,56 @@ function HowHearAboutUsDisplay({
     return () => {
       mounted = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- howHearManager is a stable singleton from DI container
   }, [value, onUnauthorized]);
 
   if (isLoading) {
-    return (
-      <div className={`mb-4 ${className}`}>
-        <p className="text-sm font-medium text-gray-700 mb-1">{label}</p>
-        <div className="flex items-center">
-          <Loading size="sm" text="Loading..." />
+    if (useDetailStructure) {
+      return (
+        <div className={className}>
+          <dt className={`text-sm sm:text-base font-semibold ${getThemeClasses("text-secondary")} mb-2`}>{label}</dt>
+          <dd className={`text-base sm:text-lg font-medium ${getThemeClasses("text-primary")} break-words leading-relaxed`}>
+            <div className="flex items-center">
+              <Loading size="sm" text="Loading..." />
+            </div>
+          </dd>
         </div>
-      </div>
-    );
+      );
+    } else {
+      return (
+        <div className={className}>
+          <div className="flex items-center">
+            <Loading size="sm" text="Loading..." />
+          </div>
+        </div>
+      );
+    }
   }
 
-  return (
-    <div className={`mb-4 ${className}`}>
-      <p className="text-sm font-medium text-gray-700 mb-1">{label}</p>
-      <p className="text-sm text-gray-900">
+  if (useDetailStructure) {
+    return (
+      <div className={className}>
+        <dt className={`text-sm sm:text-base font-semibold ${getThemeClasses("text-secondary")} mb-2`}>{label}</dt>
+        <dd className={`text-base sm:text-lg font-medium ${getThemeClasses("text-primary")} break-words leading-relaxed`}>
+          {error ? (
+            <span className="text-red-600">{error}</span>
+          ) : (
+            displayValue || <span className={`${getThemeClasses("text-muted")} italic`}>Not specified</span>
+          )}
+        </dd>
+      </div>
+    );
+  } else {
+    return (
+      <div className={className}>
         {error ? (
           <span className="text-red-600">{error}</span>
         ) : (
-          displayValue || <span className="text-gray-400">Not specified</span>
+          displayValue || <span className={`${getThemeClasses("text-muted")} italic`}>Not specified</span>
         )}
-      </p>
-    </div>
-  );
+      </div>
+    );
+  }
 }
 
 export default HowHearAboutUsDisplay;

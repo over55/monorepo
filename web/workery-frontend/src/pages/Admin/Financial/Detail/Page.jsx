@@ -1,7 +1,9 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Financial/Detail/Page.jsx
+// UIX Upgraded - Uses UIX primitives (Spinner, Breadcrumb)
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useParams, useNavigate } from "react-router";
+import { Spinner, Breadcrumb, UIXThemeProvider, useUIXTheme } from "../../../../components/UIX";
 import {
   ChartBarIcon,
   CreditCardIcon,
@@ -38,6 +40,21 @@ function AdminFinancialDetailPage() {
   // Service hooks
   const orderManager = useOrderManager();
 
+  // UIX Theme
+  const { getThemeClasses } = useUIXTheme();
+  const themeClasses = useMemo(() => ({
+    textPrimary: getThemeClasses("text-primary"),
+    textSecondary: getThemeClasses("text-secondary"),
+    linkPrimary: getThemeClasses("link-primary"),
+  }), [getThemeClasses]);
+
+  // Breadcrumb items
+  const breadcrumbItems = useMemo(() => [
+    { label: "Dashboard", to: "/admin/dashboard", icon: ChartBarIcon },
+    { label: "Financials", to: "/admin/financials", icon: CreditCardIcon },
+    { label: "Detail", icon: InformationCircleIcon, isActive: true },
+  ], []);
+
   // Component states
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -45,9 +62,9 @@ function AdminFinancialDetailPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Handle unauthorized access
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
-  };
+  }, [navigate]);
 
   // Fetch order details
   const fetchOrderDetails = async () => {
@@ -153,7 +170,7 @@ function AdminFinancialDetailPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <Spinner size="lg" />
             <p className="mt-4 text-sm sm:text-base text-gray-600">
               Loading financial details...
             </p>
@@ -165,47 +182,8 @@ function AdminFinancialDetailPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-      {/* Responsive Breadcrumb */}
-      <nav
-        className="flex mb-4 sm:mb-6 overflow-x-auto"
-        aria-label="Breadcrumb"
-      >
-        <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
-          <li className="inline-flex items-center">
-            <Link
-              to="/admin/dashboard"
-              className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
-            >
-              <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-              <span className="hidden sm:inline">Dashboard</span>
-              <span className="sm:hidden">Dash</span>
-            </Link>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
-              <Link
-                to="/admin/financials"
-                className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
-              >
-                <span className="inline-flex items-center">
-                  <CreditCardIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                  Financials
-                </span>
-              </Link>
-            </div>
-          </li>
-          <li aria-current="page">
-            <div className="flex items-center">
-              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
-              <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
-                <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                Detail
-              </span>
-            </div>
-          </li>
-        </ol>
-      </nav>
+      {/* Breadcrumb */}
+      <Breadcrumb items={breadcrumbItems} className="mb-4 sm:mb-6" />
 
       {/* Page Title - Responsive */}
       <div className="mb-4 sm:mb-6">
@@ -517,4 +495,12 @@ function AdminFinancialDetailPage() {
   );
 }
 
-export default AdminFinancialDetailPage;
+function AdminFinancialDetailPageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminFinancialDetailPage />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminFinancialDetailPageWithProvider;

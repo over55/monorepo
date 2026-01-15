@@ -1,10 +1,12 @@
 // File Path: web/workery-frontend/src/pages/Admin/Financial/Detail/Invoice/Page.jsx
+// UIX Upgraded - Uses UIX primitives (Spinner, Breadcrumb)
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useParams, useNavigate } from "react-router";
 import { useOrderManager } from "../../../../../services/Services";
 import { DateTime } from "luxon";
 import { ORDER_STATUS_ARCHIVED } from "../../../../../constants/Order";
+import { Spinner, Breadcrumb, UIXThemeProvider, useUIXTheme } from "../../../../../components/UIX";
 import {
   CLIENT_PHONE_TYPE_OF_MAP,
   ORDER_INVOICE_PAYMENT_METHODS_OPTIONS,
@@ -34,6 +36,22 @@ function AdminFinancialInvoiceDetailPage() {
   // Service hooks
   const orderManager = useOrderManager();
 
+  // UIX Theme
+  const { getThemeClasses } = useUIXTheme();
+  const themeClasses = useMemo(() => ({
+    textPrimary: getThemeClasses("text-primary"),
+    textSecondary: getThemeClasses("text-secondary"),
+    linkPrimary: getThemeClasses("link-primary"),
+  }), [getThemeClasses]);
+
+  // Breadcrumb items
+  const breadcrumbItems = useMemo(() => [
+    { label: "Dashboard", to: "/admin/dashboard", icon: ChartBarIcon },
+    { label: "Financials", to: "/admin/financials", icon: CurrencyDollarIcon },
+    { label: `Order #${oid}`, to: `/admin/financial/${oid}`, icon: ClipboardDocumentListIcon },
+    { label: "Invoice", icon: DocumentTextIcon, isActive: true },
+  ], [oid]);
+
   // Component states
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
@@ -42,9 +60,9 @@ function AdminFinancialInvoiceDetailPage() {
   const [isDownloading, setIsDownloading] = useState(false);
 
   // Handle unauthorized access
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
-  };
+  }, [navigate]);
 
   // Fetch order details
   useEffect(() => {
@@ -221,7 +239,7 @@ function AdminFinancialInvoiceDetailPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <Spinner size="lg" />
             <p className="mt-4 text-gray-600">Loading invoice details...</p>
           </div>
         </div>
@@ -232,56 +250,7 @@ function AdminFinancialInvoiceDetailPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Breadcrumb */}
-      <nav className="flex mb-6" aria-label="Breadcrumb">
-        <ol className="inline-flex items-center space-x-1 md:space-x-3">
-          <li className="inline-flex items-center">
-            <Link
-              to="/admin/dashboard"
-              className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
-            >
-              <ChartBarIcon className="w-4 h-4 mr-2" />
-              Dashboard
-            </Link>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <Link
-                to="/admin/financials"
-                className="text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                <span className="inline-flex items-center">
-                  <CurrencyDollarIcon className="w-4 h-4 mr-2" />
-                  Financials
-                </span>
-              </Link>
-            </div>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <Link
-                to={`/admin/financial/${oid}`}
-                className="text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                <span className="inline-flex items-center">
-                  <ClipboardDocumentListIcon className="w-4 h-4 mr-2" />
-                  Order #{oid}
-                </span>
-              </Link>
-            </div>
-          </li>
-          <li aria-current="page">
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <span className="text-sm font-medium text-gray-500 inline-flex items-center">
-                <DocumentTextIcon className="w-4 h-4 mr-2" />
-                Invoice
-              </span>
-            </div>
-          </li>
-        </ol>
-      </nav>
+      <Breadcrumb items={breadcrumbItems} className="mb-6" />
 
       {/* Page Title */}
       <div className="mb-6">
@@ -885,4 +854,12 @@ function AdminFinancialInvoiceDetailPage() {
   );
 }
 
-export default AdminFinancialInvoiceDetailPage;
+function AdminFinancialInvoiceDetailPageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminFinancialInvoiceDetailPage />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminFinancialInvoiceDetailPageWithProvider;

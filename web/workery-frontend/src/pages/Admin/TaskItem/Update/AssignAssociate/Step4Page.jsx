@@ -1,8 +1,10 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/TaskItem/Update/AssignAssociate/Step4Page.jsx
+// UIX Upgraded - Uses UIX primitives (Spinner, Breadcrumb, UIXThemeProvider)
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, Navigate, useParams } from "react-router";
 import { useTaskManager } from "../../../../../services/Services";
+import { Spinner, Breadcrumb, UIXThemeProvider, useUIXTheme } from "../../../../../components/UIX";
 import {
   TagsDisplay,
   SkillSetsDisplay,
@@ -40,6 +42,22 @@ function AdminTaskItemAssignAssociateStep4Page() {
   // Services
   const taskManager = useTaskManager();
 
+  // UIX Theme
+  const { theme } = useUIXTheme();
+  const themeClasses = useMemo(() => ({
+    container: theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900',
+    card: theme === 'dark' ? 'bg-gray-800' : 'bg-white',
+    text: theme === 'dark' ? 'text-gray-100' : 'text-gray-900',
+    textMuted: theme === 'dark' ? 'text-gray-400' : 'text-gray-600',
+  }), [theme]);
+
+  // Memoized breadcrumb items
+  const breadcrumbItems = useMemo(() => [
+    { label: "Dashboard", path: "/admin/dashboard", icon: ChartBarIcon },
+    { label: "Tasks", path: "/admin/tasks", icon: ClipboardDocumentListIcon },
+    { label: "Review & Submit", icon: DocumentCheckIcon },
+  ], []);
+
   // Component states
   const [task, setTask] = useState(null);
   const [errors, setErrors] = useState({});
@@ -49,9 +67,9 @@ function AdminTaskItemAssignAssociateStep4Page() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Event handling
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     setForceURL("/login?unauthorized=true");
-  };
+  }, []);
 
   // Helper function to extract IDs from array of objects
   const extractIds = (items) => {
@@ -202,8 +220,7 @@ function AdminTaskItemAssignAssociateStep4Page() {
   if (isFetching || !task || !assignmentData) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        <span className="ml-3 text-gray-600">Loading...</span>
+        <Spinner size="lg" label="Loading..." />
       </div>
     );
   }
@@ -211,47 +228,8 @@ function AdminTaskItemAssignAssociateStep4Page() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {/* Responsive Breadcrumb */}
-        <nav
-          className="flex mb-4 sm:mb-6 overflow-x-auto"
-          aria-label="Breadcrumb"
-        >
-          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
-            <li className="inline-flex items-center">
-              <Link
-                to="/admin/dashboard"
-                className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
-              >
-                <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                <span className="hidden sm:inline">Dashboard</span>
-                <span className="sm:hidden">Dash</span>
-              </Link>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <span className="mx-1 sm:mx-2 text-gray-400">/</span>
-                <Link
-                  to="/admin/tasks"
-                  className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
-                >
-                  <span className="inline-flex items-center">
-                    <ClipboardDocumentListIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                    Tasks
-                  </span>
-                </Link>
-              </div>
-            </li>
-            <li aria-current="page">
-              <div className="flex items-center">
-                <span className="mx-1 sm:mx-2 text-gray-400">/</span>
-                <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
-                  <DocumentCheckIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                  Review & Submit
-                </span>
-              </div>
-            </li>
-          </ol>
-        </nav>
+        {/* Breadcrumb */}
+        <Breadcrumb items={breadcrumbItems} />
 
         {/* Page Title - Responsive */}
         <div className="mb-4 sm:mb-6">
@@ -382,10 +360,7 @@ function AdminTaskItemAssignAssociateStep4Page() {
 
             {isSubmitting ? (
               <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-blue-600"></div>
-                <span className="ml-3 text-gray-600 text-sm sm:text-base">
-                  Submitting assignment...
-                </span>
+                <Spinner size="lg" label="Submitting assignment..." />
               </div>
             ) : (
               <div>
@@ -663,4 +638,12 @@ function AdminTaskItemAssignAssociateStep4Page() {
   );
 }
 
-export default AdminTaskItemAssignAssociateStep4Page;
+function AdminTaskItemAssignAssociateStep4PageWithTheme() {
+  return (
+    <UIXThemeProvider>
+      <AdminTaskItemAssignAssociateStep4Page />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminTaskItemAssignAssociateStep4PageWithTheme;

@@ -1,7 +1,8 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Admin/Account/Update/Page.jsx
+// File Path: web/workery-frontend/src/pages/Admin/Account/Update/Page.jsx
+// UIX Upgraded - Uses UIX primitives (Card, Alert, Breadcrumb, Spinner, Button)
 
-import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { Link, useNavigate } from "react-router";
 import {
   useAccountManager,
   useAuthManager,
@@ -11,39 +12,25 @@ import {
 } from "../../../../services/Services";
 import {
   Card,
-  Button,
   Alert,
-  Loading,
   Breadcrumb,
-  Input,
-  Select,
-  Checkbox,
-  Textarea,
-  DateInput,
-  FormGroup,
-  FormSection,
-  Badge,
-  MultiSelect,
-} from "../../../../components/UI";
+  Spinner,
+  Button,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../components/UIX";
 import {
   UserCircleIcon,
   PencilIcon,
-  ArrowLeftIcon,
+  ChevronLeftIcon,
   HomeIcon,
   CheckCircleIcon,
-  XCircleIcon,
   IdentificationIcon,
   MapPinIcon,
   PhoneIcon,
-  EnvelopeIcon,
-  UserGroupIcon,
-  ShieldCheckIcon,
   ExclamationTriangleIcon,
   ChartBarIcon,
-  CogIcon,
-  GlobeAltIcon,
   BriefcaseIcon,
-  CalendarIcon,
   InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 import {
@@ -51,11 +38,6 @@ import {
   MANAGEMENT_ROLE_ID,
   FRONTLINE_ROLE_ID,
 } from "../../../../constants/Roles";
-import {
-  STAFF_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS,
-  STAFF_ORGANIZATION_TYPE_OPTIONS_WITH_EMPTY_OPTIONS,
-  STAFF_GENDER_OTHER,
-} from "../../../../constants/Staff";
 import { ASSOCIATE_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS } from "../../../../constants/Associate";
 import { ensureISODateForAPI } from "../../../../services/Helpers/DateFormatter";
 
@@ -132,6 +114,7 @@ function AdminAccountUpdatePage() {
   const vehicleTypeManager = useVehicleTypeManager();
   const howHearManager = useHowHearAboutUsItemManager();
   const navigate = useNavigate();
+  const { getThemeClasses } = useUIXTheme();
 
   // State
   const [currentUser, setCurrentUser] = useState(null);
@@ -210,6 +193,20 @@ function AdminAccountUpdatePage() {
   const [vehicleTypeOptions, setVehicleTypeOptions] = useState([]);
   const [howHearOptions, setHowHearOptions] = useState([]);
 
+  // Memoize theme classes
+  const themeClasses = useMemo(() => ({
+    textPrimary: getThemeClasses("text-primary"),
+    textSecondary: getThemeClasses("text-secondary"),
+    linkPrimary: getThemeClasses("link-primary"),
+    bgMuted: getThemeClasses("bg-muted"),
+  }), [getThemeClasses]);
+
+  // Handle unauthorized access
+  const onUnauthorized = useCallback(() => {
+    authManager.clearAllTokens();
+    navigate("/login?unauthorized=true");
+  }, [authManager, navigate]);
+
   // Check authentication
   useEffect(() => {
     if (!authManager.isAuthenticated()) {
@@ -225,11 +222,6 @@ function AdminAccountUpdatePage() {
       try {
         setIsLoading(true);
         setErrors({});
-
-        const onUnauthorized = () => {
-          authManager.clearAllTokens();
-          navigate("/login?unauthorized=true");
-        };
 
         // Fetch account details
         const profileData =
@@ -409,10 +401,11 @@ function AdminAccountUpdatePage() {
     tagManager,
     vehicleTypeManager,
     howHearManager,
+    onUnauthorized,
   ]);
 
   // Handle form submission
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
 
     setIsSaving(true);
@@ -420,11 +413,6 @@ function AdminAccountUpdatePage() {
     setSuccessMessage("");
 
     try {
-      const onUnauthorized = () => {
-        authManager.clearAllTokens();
-        navigate("/login?unauthorized=true");
-      };
-
       // Prepare update payload
       let payload = {
         firstName: firstName.trim(),
@@ -503,7 +491,7 @@ function AdminAccountUpdatePage() {
       }
 
       // Submit update
-      const response = await accountManager.updateAccount(
+      await accountManager.updateAccount(
         payload,
         onUnauthorized,
       );
@@ -523,25 +511,54 @@ function AdminAccountUpdatePage() {
     } finally {
       setIsSaving(false);
     }
-  };
+  }, [
+    firstName, lastName, email, phone, otherPhone, otherPhoneType, otherPhoneExtension,
+    isOkToText, faxNumber, country, region, city, hasShippingAddress, currentUser,
+    phoneType, phoneExtension, isOkToEmail, agreePromotionsEmail, addressLine1,
+    addressLine2, postalCode, shippingName, shippingPhone, shippingCountry,
+    shippingRegion, shippingCity, shippingAddressLine1, shippingAddressLine2,
+    shippingPostalCode, limitSpecial, policeCheck, driversLicenseClass,
+    vehicleTypes, emergencyContactName, emergencyContactRelationship,
+    emergencyContactTelephone, emergencyContactAlternativeTelephone, description,
+    preferredLanguage, tags, gender, genderOther, birthDate, howDidYouHearAboutUsId,
+    isHowDidYouHearAboutUsOther, howDidYouHearAboutUsOther, identifyAs,
+    accountManager, onUnauthorized, navigate,
+  ]);
+
+  // Breadcrumb items
+  const breadcrumbItems = useMemo(() => [
+    { label: "Dashboard", to: "/admin/dashboard", icon: HomeIcon },
+    { label: "My Profile", to: "/admin/account", icon: UserCircleIcon },
+    { label: "Edit", icon: PencilIcon, isActive: true },
+  ], []);
 
   // Loading state
   if (isLoading) {
-    return <Loading fullScreen message="Loading account details..." />;
+    return (
+      <Card padding="p-4 sm:p-6 lg:p-8" className="max-w-4xl mx-auto border-0 shadow-none">
+        <Breadcrumb items={breadcrumbItems} className="mb-6" />
+        <Card padding="p-0" className="flex items-center justify-center min-h-[400px] border-0 shadow-none">
+          <div className="text-center">
+            <Spinner size="lg" />
+            <p className="mt-4 text-gray-600">Loading account details...</p>
+          </div>
+        </Card>
+      </Card>
+    );
   }
 
   // No data state
   if (!currentUser) {
     return (
-      <div className="min-h-screen bg-gray-50 p-8">
-        <Alert type="warning">No account data found</Alert>
-        <Link to="/admin/account" className="mt-4">
-          <Button variant="secondary">
-            <ArrowLeftIcon className="h-4 w-4 mr-2" />
+      <Card padding="p-4 sm:p-6 lg:p-8" className="max-w-4xl mx-auto border-0 shadow-none">
+        <Breadcrumb items={breadcrumbItems} className="mb-6" />
+        <Alert type="warning" className="mb-4">No account data found</Alert>
+        <Link to="/admin/account">
+          <Button variant="secondary" icon={ChevronLeftIcon}>
             Back to Profile
           </Button>
         </Link>
-      </div>
+      </Card>
     );
   }
 
@@ -549,779 +566,1108 @@ function AdminAccountUpdatePage() {
   const isExecutive = currentUser.role === EXECUTIVE_ROLE_ID;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumb */}
-        <Breadcrumb
-          items={[
-            { label: "Dashboard", href: "/admin/dashboard", icon: HomeIcon },
-            {
-              label: "My Profile",
-              href: "/admin/account",
-              icon: UserCircleIcon,
-            },
-            { label: "Edit", icon: PencilIcon },
-          ]}
-        />
+    <Card padding="p-4 sm:p-6 lg:p-8" className="max-w-4xl mx-auto border-0 shadow-none">
+      {/* Breadcrumb */}
+      <Breadcrumb items={breadcrumbItems} className="mb-6" />
 
-        {/* Page Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-            <PencilIcon className="w-8 h-8 mr-3 text-gray-700" />
-            Edit Profile
-          </h1>
-          <p className="mt-2 text-gray-600">Update your account information</p>
-          {isExecutive && (
-            <Alert type="info" className="mt-4">
-              <InformationCircleIcon className="h-5 w-5" />
-              Note: As an Executive user, some fields are restricted and cannot
-              be edited.
-            </Alert>
-          )}
-        </div>
-
-        {/* Success Message */}
-        {successMessage && (
-          <Alert type="success" className="mb-6">
-            <CheckCircleIcon className="h-5 w-5" />
-            {successMessage}
+      {/* Page Header */}
+      <div className="mb-8">
+        <h1 className={`text-2xl md:text-3xl font-bold ${themeClasses.textPrimary} flex items-center`}>
+          <PencilIcon className={`w-6 h-6 md:w-8 md:h-8 mr-3 ${themeClasses.linkPrimary}`} />
+          Edit Profile
+        </h1>
+        <p className={`mt-2 ${themeClasses.textSecondary}`}>
+          Update your account information
+        </p>
+        {isExecutive && (
+          <Alert type="info" className="mt-4" icon={InformationCircleIcon}>
+            Note: As an Executive user, some fields are restricted and cannot be edited.
           </Alert>
         )}
+      </div>
 
-        {/* Error Message */}
-        {errors.general && (
-          <Alert type="error" className="mb-6">
-            <XCircleIcon className="h-5 w-5" />
-            {errors.general}
-          </Alert>
-        )}
+      {/* Success Message */}
+      {successMessage && (
+        <Alert type="success" className="mb-6" icon={CheckCircleIcon}>
+          {successMessage}
+        </Alert>
+      )}
 
-        {/* Form */}
-        <form onSubmit={handleSubmit}>
-          {/* Personal Information */}
-          <Card className="mb-6">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-800 flex items-center">
-                <IdentificationIcon className="h-5 w-5 mr-2 text-gray-600" />
-                Personal Information
-              </h2>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormGroup>
-                  <Input
-                    label="First Name"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
-                    required
-                    error={errors.firstName}
-                    placeholder="Enter your first name"
-                  />
-                </FormGroup>
+      {/* Error Message */}
+      {errors.general && (
+        <Alert type="error" className="mb-6">
+          {errors.general}
+        </Alert>
+      )}
 
-                <FormGroup>
-                  <Input
-                    label="Last Name"
-                    value={lastName}
-                    onChange={(e) => setLastName(e.target.value)}
-                    required
-                    error={errors.lastName}
-                    placeholder="Enter your last name"
-                  />
-                </FormGroup>
-
-                {!isExecutive && (
-                  <>
-                    <FormGroup>
-                      <DateInput
-                        label="Date of Birth"
-                        value={birthDate}
-                        onChange={(value) => setBirthDate(value)}
-                        error={errors.birthDate}
-                        max={new Date().toISOString().split("T")[0]}
-                      />
-                    </FormGroup>
-
-                    <FormGroup>
-                      <Select
-                        label="Gender"
-                        value={gender}
-                        onChange={(e) => setGender(parseInt(e.target.value))}
-                        options={GENDER_OPTIONS}
-                        error={errors.gender}
-                      />
-                    </FormGroup>
-
-                    {gender === 1 && (
-                      <FormGroup className="md:col-span-2">
-                        <Input
-                          label="Gender (Other)"
-                          value={genderOther}
-                          onChange={(e) => setGenderOther(e.target.value)}
-                          error={errors.genderOther}
-                          placeholder="Please specify"
-                        />
-                      </FormGroup>
-                    )}
-                  </>
+      {/* Form */}
+      <form onSubmit={handleSubmit}>
+        {/* Personal Information */}
+        <Card className="mb-6">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-800 flex items-center">
+              <IdentificationIcon className="h-5 w-5 mr-2 text-gray-600" />
+              Personal Information
+            </h2>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  First Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  required
+                  placeholder="Enter your first name"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    errors.firstName ? "border-red-500" : "border-gray-300"
+                  }`}
+                />
+                {errors.firstName && (
+                  <p className="mt-1 text-sm text-red-500">{errors.firstName}</p>
                 )}
               </div>
-            </div>
-          </Card>
 
-          {/* Contact Information */}
-          <Card className="mb-6">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-800 flex items-center">
-                <PhoneIcon className="h-5 w-5 mr-2 text-gray-600" />
-                Contact Information
-              </h2>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormGroup className="md:col-span-2">
-                  <Input
-                    type="email"
-                    label="Email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    error={errors.email}
-                    placeholder="email@example.com"
-                  />
-                </FormGroup>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Last Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  required
+                  placeholder="Enter your last name"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    errors.lastName ? "border-red-500" : "border-gray-300"
+                  }`}
+                />
+                {errors.lastName && (
+                  <p className="mt-1 text-sm text-red-500">{errors.lastName}</p>
+                )}
+              </div>
 
-                {/* Only show email agreement checkboxes for non-Executives */}
-                {!isExecutive && (
-                  <>
-                    <FormGroup className="md:col-span-2">
-                      <Checkbox
-                        label="I agree to receive electronic emails"
-                        checked={isOkToEmail}
-                        onChange={(e) => setIsOkToEmail(e.target.checked)}
+              {!isExecutive && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Date of Birth
+                    </label>
+                    <input
+                      type="date"
+                      value={birthDate}
+                      onChange={(e) => setBirthDate(e.target.value)}
+                      max={new Date().toISOString().split("T")[0]}
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        errors.birthDate ? "border-red-500" : "border-gray-300"
+                      }`}
+                    />
+                    {errors.birthDate && (
+                      <p className="mt-1 text-sm text-red-500">{errors.birthDate}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Gender
+                    </label>
+                    <select
+                      value={gender}
+                      onChange={(e) => setGender(parseInt(e.target.value))}
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        errors.gender ? "border-red-500" : "border-gray-300"
+                      }`}
+                    >
+                      {GENDER_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.gender && (
+                      <p className="mt-1 text-sm text-red-500">{errors.gender}</p>
+                    )}
+                  </div>
+
+                  {gender === 1 && (
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Gender (Other)
+                      </label>
+                      <input
+                        type="text"
+                        value={genderOther}
+                        onChange={(e) => setGenderOther(e.target.value)}
+                        placeholder="Please specify"
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                          errors.genderOther ? "border-red-500" : "border-gray-300"
+                        }`}
                       />
-                    </FormGroup>
-                  </>
-                )}
+                      {errors.genderOther && (
+                        <p className="mt-1 text-sm text-red-500">{errors.genderOther}</p>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        </Card>
 
-                <FormGroup>
-                  <Input
-                    type="tel"
-                    label="Phone"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    required
-                    error={errors.phone}
-                    placeholder="(123) 456-7890"
+        {/* Contact Information */}
+        <Card className="mb-6">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-800 flex items-center">
+              <PhoneIcon className="h-5 w-5 mr-2 text-gray-600" />
+              Contact Information
+            </h2>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  placeholder="email@example.com"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    errors.email ? "border-red-500" : "border-gray-300"
+                  }`}
+                />
+                {errors.email && (
+                  <p className="mt-1 text-sm text-red-500">{errors.email}</p>
+                )}
+              </div>
+
+              {/* Only show email agreement checkboxes for non-Executives */}
+              {!isExecutive && (
+                <div className="md:col-span-2">
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={isOkToEmail}
+                      onChange={(e) => setIsOkToEmail(e.target.checked)}
+                      className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">
+                      I agree to receive electronic emails
+                    </span>
+                  </label>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                  placeholder="(123) 456-7890"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    errors.phone ? "border-red-500" : "border-gray-300"
+                  }`}
+                />
+                {errors.phone && (
+                  <p className="mt-1 text-sm text-red-500">{errors.phone}</p>
+                )}
+              </div>
+
+              {/* Only show phone type for non-Executives */}
+              {!isExecutive && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Type
+                  </label>
+                  <select
+                    value={phoneType}
+                    onChange={(e) => setPhoneType(parseInt(e.target.value))}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      errors.phoneType ? "border-red-500" : "border-gray-300"
+                    }`}
+                  >
+                    {ASSOCIATE_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.phoneType && (
+                    <p className="mt-1 text-sm text-red-500">{errors.phoneType}</p>
+                  )}
+                </div>
+              )}
+
+              {!isExecutive && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Extension (Optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={phoneExtension}
+                    onChange={(e) => setPhoneExtension(e.target.value)}
+                    placeholder="1234"
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                      errors.phoneExtension ? "border-red-500" : "border-gray-300"
+                    }`}
                   />
-                </FormGroup>
+                  {errors.phoneExtension && (
+                    <p className="mt-1 text-sm text-red-500">{errors.phoneExtension}</p>
+                  )}
+                </div>
+              )}
 
-                {/* Only show phone type for non-Executives */}
-                {!isExecutive && (
-                  <FormGroup>
-                    <Select
-                      label="Phone Type"
-                      value={phoneType}
-                      onChange={(e) => setPhoneType(parseInt(e.target.value))}
-                      options={
-                        ASSOCIATE_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS
-                      }
-                      error={errors.phoneType}
-                    />
-                  </FormGroup>
-                )}
-
-                {!isExecutive && (
-                  <FormGroup>
-                    <Input
-                      label="Phone Extension (Optional)"
-                      value={phoneExtension}
-                      onChange={(e) => setPhoneExtension(e.target.value)}
-                      error={errors.phoneExtension}
-                      placeholder="1234"
-                    />
-                  </FormGroup>
-                )}
-
-                <FormGroup className="md:col-span-2">
-                  <Checkbox
-                    label="I agree to receive text messages"
+              <div className="md:col-span-2">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
                     checked={isOkToText}
                     onChange={(e) => setIsOkToText(e.target.checked)}
+                    className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
                   />
-                </FormGroup>
+                  <span className="ml-2 text-sm text-gray-700">
+                    I agree to receive text messages
+                  </span>
+                </label>
+              </div>
 
-                <FormGroup>
-                  <Input
-                    type="tel"
-                    label="Other Phone (Optional)"
-                    value={otherPhone}
-                    onChange={(e) => setOtherPhone(e.target.value)}
-                    error={errors.otherPhone}
-                    placeholder="(123) 456-7890"
-                  />
-                </FormGroup>
-
-                <FormGroup>
-                  <Select
-                    label="Other Phone Type (Optional)"
-                    value={otherPhoneType}
-                    onChange={(e) =>
-                      setOtherPhoneType(parseInt(e.target.value))
-                    }
-                    options={ASSOCIATE_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS}
-                    error={errors.otherPhoneType}
-                  />
-                </FormGroup>
-
-                {!isExecutive && (
-                  <>
-                    <FormGroup>
-                      <Input
-                        label="Other Phone Extension (Optional)"
-                        value={otherPhoneExtension}
-                        onChange={(e) => setOtherPhoneExtension(e.target.value)}
-                        error={errors.otherPhoneExtension}
-                        placeholder="1234"
-                      />
-                    </FormGroup>
-
-                    <FormGroup>
-                      <Input
-                        type="tel"
-                        label="Fax Number (Optional)"
-                        value={faxNumber}
-                        onChange={(e) => setFaxNumber(e.target.value)}
-                        error={errors.faxNumber}
-                        placeholder="(123) 456-7890"
-                      />
-                    </FormGroup>
-                  </>
-                )}
-
-                {/* Only show promotional email checkbox for non-Executives */}
-                {!isExecutive && (
-                  <FormGroup className="md:col-span-2">
-                    <Checkbox
-                      label="I agree to receive promotional emails"
-                      checked={agreePromotionsEmail}
-                      onChange={(e) =>
-                        setAgreePromotionsEmail(e.target.checked)
-                      }
-                    />
-                  </FormGroup>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Other Phone (Optional)
+                </label>
+                <input
+                  type="tel"
+                  value={otherPhone}
+                  onChange={(e) => setOtherPhone(e.target.value)}
+                  placeholder="(123) 456-7890"
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    errors.otherPhone ? "border-red-500" : "border-gray-300"
+                  }`}
+                />
+                {errors.otherPhone && (
+                  <p className="mt-1 text-sm text-red-500">{errors.otherPhone}</p>
                 )}
               </div>
-            </div>
-          </Card>
 
-          {/* Address Information */}
-          <Card className="mb-6">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-800 flex items-center">
-                <MapPinIcon className="h-5 w-5 mr-2 text-gray-600" />
-                Address Information
-              </h2>
-            </div>
-            <div className="p-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Other Phone Type (Optional)
+                </label>
+                <select
+                  value={otherPhoneType}
+                  onChange={(e) => setOtherPhoneType(parseInt(e.target.value))}
+                  className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                    errors.otherPhoneType ? "border-red-500" : "border-gray-300"
+                  }`}
+                >
+                  {ASSOCIATE_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                {errors.otherPhoneType && (
+                  <p className="mt-1 text-sm text-red-500">{errors.otherPhoneType}</p>
+                )}
+              </div>
+
               {!isExecutive && (
-                <FormGroup className="mb-6">
-                  <Checkbox
-                    label="Has shipping address different from billing address"
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Other Phone Extension (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={otherPhoneExtension}
+                      onChange={(e) => setOtherPhoneExtension(e.target.value)}
+                      placeholder="1234"
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        errors.otherPhoneExtension ? "border-red-500" : "border-gray-300"
+                      }`}
+                    />
+                    {errors.otherPhoneExtension && (
+                      <p className="mt-1 text-sm text-red-500">{errors.otherPhoneExtension}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Fax Number (Optional)
+                    </label>
+                    <input
+                      type="tel"
+                      value={faxNumber}
+                      onChange={(e) => setFaxNumber(e.target.value)}
+                      placeholder="(123) 456-7890"
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        errors.faxNumber ? "border-red-500" : "border-gray-300"
+                      }`}
+                    />
+                    {errors.faxNumber && (
+                      <p className="mt-1 text-sm text-red-500">{errors.faxNumber}</p>
+                    )}
+                  </div>
+                </>
+              )}
+
+              {/* Only show promotional email checkbox for non-Executives */}
+              {!isExecutive && (
+                <div className="md:col-span-2">
+                  <label className="flex items-center">
+                    <input
+                      type="checkbox"
+                      checked={agreePromotionsEmail}
+                      onChange={(e) => setAgreePromotionsEmail(e.target.checked)}
+                      className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                    />
+                    <span className="ml-2 text-sm text-gray-700">
+                      I agree to receive promotional emails
+                    </span>
+                  </label>
+                </div>
+              )}
+            </div>
+          </div>
+        </Card>
+
+        {/* Address Information */}
+        <Card className="mb-6">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-800 flex items-center">
+              <MapPinIcon className="h-5 w-5 mr-2 text-gray-600" />
+              Address Information
+            </h2>
+          </div>
+          <div className="p-6">
+            {!isExecutive && (
+              <div className="mb-6">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
                     checked={hasShippingAddress}
                     onChange={(e) => setHasShippingAddress(e.target.checked)}
+                    className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
                   />
-                </FormGroup>
-              )}
+                  <span className="ml-2 text-sm text-gray-700">
+                    Has shipping address different from billing address
+                  </span>
+                </label>
+              </div>
+            )}
 
-              <div
-                className={
-                  hasShippingAddress
-                    ? "grid grid-cols-1 lg:grid-cols-2 gap-6"
-                    : ""
-                }
-              >
-                <div>
-                  {hasShippingAddress && (
-                    <h3 className="text-md font-medium text-gray-700 mb-4">
-                      Billing Address
-                    </h3>
-                  )}
+            <div className={hasShippingAddress ? "grid grid-cols-1 lg:grid-cols-2 gap-6" : ""}>
+              <div>
+                {hasShippingAddress && (
+                  <h3 className="text-md font-medium text-gray-700 mb-4">
+                    Billing Address
+                  </h3>
+                )}
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormGroup>
-                      <Select
-                        label="Country"
-                        value={country}
-                        onChange={(e) => setCountry(e.target.value)}
-                        options={COUNTRY_OPTIONS}
-                        required
-                        error={errors.country}
-                      />
-                    </FormGroup>
-
-                    <FormGroup>
-                      <Select
-                        label="Province/State"
-                        value={region}
-                        onChange={(e) => setRegion(e.target.value)}
-                        options={REGION_OPTIONS[country] || []}
-                        required
-                        error={errors.region}
-                      />
-                    </FormGroup>
-
-                    <FormGroup className="md:col-span-2">
-                      <Input
-                        label="City"
-                        value={city}
-                        onChange={(e) => setCity(e.target.value)}
-                        required
-                        error={errors.city}
-                        placeholder="Enter city"
-                      />
-                    </FormGroup>
-
-                    {/* Only show address line 1 for non-Executives */}
-                    {!isExecutive && (
-                      <>
-                        <FormGroup className="md:col-span-2">
-                          <Input
-                            label="Address Line 1"
-                            value={addressLine1}
-                            onChange={(e) => setAddressLine1(e.target.value)}
-                            required
-                            error={errors.addressLine1}
-                            placeholder="Street address"
-                          />
-                        </FormGroup>
-
-                        <FormGroup className="md:col-span-2">
-                          <Input
-                            label="Address Line 2 (Optional)"
-                            value={addressLine2}
-                            onChange={(e) => setAddressLine2(e.target.value)}
-                            error={errors.addressLine2}
-                            placeholder="Apartment, suite, etc."
-                          />
-                        </FormGroup>
-
-                        <FormGroup>
-                          <Input
-                            label="Postal Code"
-                            value={postalCode}
-                            onChange={(e) => setPostalCode(e.target.value)}
-                            required
-                            error={errors.postalCode}
-                            placeholder="A1B 2C3"
-                          />
-                        </FormGroup>
-                      </>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Country <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={country}
+                      onChange={(e) => setCountry(e.target.value)}
+                      required
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        errors.country ? "border-red-500" : "border-gray-300"
+                      }`}
+                    >
+                      {COUNTRY_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.country && (
+                      <p className="mt-1 text-sm text-red-500">{errors.country}</p>
                     )}
                   </div>
-                </div>
 
-                {hasShippingAddress && (
                   <div>
-                    <h3 className="text-md font-medium text-gray-700 mb-4">
-                      Shipping Address
-                    </h3>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Province/State <span className="text-red-500">*</span>
+                    </label>
+                    <select
+                      value={region}
+                      onChange={(e) => setRegion(e.target.value)}
+                      required
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        errors.region ? "border-red-500" : "border-gray-300"
+                      }`}
+                    >
+                      <option value="">Select...</option>
+                      {(REGION_OPTIONS[country] || []).map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                    {errors.region && (
+                      <p className="mt-1 text-sm text-red-500">{errors.region}</p>
+                    )}
+                  </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <FormGroup className="md:col-span-2">
-                        <Input
-                          label="Contact Name"
-                          value={shippingName}
-                          onChange={(e) => setShippingName(e.target.value)}
-                          error={errors.shippingName}
-                          placeholder="Contact name for shipping"
-                        />
-                      </FormGroup>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      City <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      required
+                      placeholder="Enter city"
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        errors.city ? "border-red-500" : "border-gray-300"
+                      }`}
+                    />
+                    {errors.city && (
+                      <p className="mt-1 text-sm text-red-500">{errors.city}</p>
+                    )}
+                  </div>
 
-                      <FormGroup className="md:col-span-2">
-                        <Input
-                          label="Contact Phone"
-                          value={shippingPhone}
-                          onChange={(e) => setShippingPhone(e.target.value)}
-                          error={errors.shippingPhone}
-                          placeholder="(123) 456-7890"
-                        />
-                      </FormGroup>
-
-                      <FormGroup>
-                        <Select
-                          label="Country"
-                          value={shippingCountry}
-                          onChange={(e) => setShippingCountry(e.target.value)}
-                          options={COUNTRY_OPTIONS}
-                          error={errors.shippingCountry}
-                        />
-                      </FormGroup>
-
-                      <FormGroup>
-                        <Select
-                          label="Province/State"
-                          value={shippingRegion}
-                          onChange={(e) => setShippingRegion(e.target.value)}
-                          options={REGION_OPTIONS[shippingCountry] || []}
-                          error={errors.shippingRegion}
-                        />
-                      </FormGroup>
-
-                      <FormGroup className="md:col-span-2">
-                        <Input
-                          label="City"
-                          value={shippingCity}
-                          onChange={(e) => setShippingCity(e.target.value)}
-                          error={errors.shippingCity}
-                          placeholder="Enter city"
-                        />
-                      </FormGroup>
-
-                      <FormGroup className="md:col-span-2">
-                        <Input
-                          label="Address Line 1"
-                          value={shippingAddressLine1}
-                          onChange={(e) =>
-                            setShippingAddressLine1(e.target.value)
-                          }
-                          error={errors.shippingAddressLine1}
+                  {/* Only show address line 1 for non-Executives */}
+                  {!isExecutive && (
+                    <>
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Address Line 1 <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={addressLine1}
+                          onChange={(e) => setAddressLine1(e.target.value)}
+                          required
                           placeholder="Street address"
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                            errors.addressLine1 ? "border-red-500" : "border-gray-300"
+                          }`}
                         />
-                      </FormGroup>
+                        {errors.addressLine1 && (
+                          <p className="mt-1 text-sm text-red-500">{errors.addressLine1}</p>
+                        )}
+                      </div>
 
-                      <FormGroup className="md:col-span-2">
-                        <Input
-                          label="Address Line 2 (Optional)"
-                          value={shippingAddressLine2}
-                          onChange={(e) =>
-                            setShippingAddressLine2(e.target.value)
-                          }
-                          error={errors.shippingAddressLine2}
+                      <div className="md:col-span-2">
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Address Line 2 (Optional)
+                        </label>
+                        <input
+                          type="text"
+                          value={addressLine2}
+                          onChange={(e) => setAddressLine2(e.target.value)}
                           placeholder="Apartment, suite, etc."
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                            errors.addressLine2 ? "border-red-500" : "border-gray-300"
+                          }`}
                         />
-                      </FormGroup>
+                        {errors.addressLine2 && (
+                          <p className="mt-1 text-sm text-red-500">{errors.addressLine2}</p>
+                        )}
+                      </div>
 
-                      <FormGroup>
-                        <Input
-                          label="Postal Code"
-                          value={shippingPostalCode}
-                          onChange={(e) =>
-                            setShippingPostalCode(e.target.value)
-                          }
-                          error={errors.shippingPostalCode}
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Postal Code <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={postalCode}
+                          onChange={(e) => setPostalCode(e.target.value)}
+                          required
                           placeholder="A1B 2C3"
+                          className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                            errors.postalCode ? "border-red-500" : "border-gray-300"
+                          }`}
                         />
-                      </FormGroup>
+                        {errors.postalCode && (
+                          <p className="mt-1 text-sm text-red-500">{errors.postalCode}</p>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {hasShippingAddress && (
+                <div>
+                  <h3 className="text-md font-medium text-gray-700 mb-4">
+                    Shipping Address
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Contact Name
+                      </label>
+                      <input
+                        type="text"
+                        value={shippingName}
+                        onChange={(e) => setShippingName(e.target.value)}
+                        placeholder="Contact name for shipping"
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                          errors.shippingName ? "border-red-500" : "border-gray-300"
+                        }`}
+                      />
+                      {errors.shippingName && (
+                        <p className="mt-1 text-sm text-red-500">{errors.shippingName}</p>
+                      )}
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Contact Phone
+                      </label>
+                      <input
+                        type="tel"
+                        value={shippingPhone}
+                        onChange={(e) => setShippingPhone(e.target.value)}
+                        placeholder="(123) 456-7890"
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                          errors.shippingPhone ? "border-red-500" : "border-gray-300"
+                        }`}
+                      />
+                      {errors.shippingPhone && (
+                        <p className="mt-1 text-sm text-red-500">{errors.shippingPhone}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Country
+                      </label>
+                      <select
+                        value={shippingCountry}
+                        onChange={(e) => setShippingCountry(e.target.value)}
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                          errors.shippingCountry ? "border-red-500" : "border-gray-300"
+                        }`}
+                      >
+                        {COUNTRY_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.shippingCountry && (
+                        <p className="mt-1 text-sm text-red-500">{errors.shippingCountry}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Province/State
+                      </label>
+                      <select
+                        value={shippingRegion}
+                        onChange={(e) => setShippingRegion(e.target.value)}
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                          errors.shippingRegion ? "border-red-500" : "border-gray-300"
+                        }`}
+                      >
+                        <option value="">Select...</option>
+                        {(REGION_OPTIONS[shippingCountry] || []).map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.shippingRegion && (
+                        <p className="mt-1 text-sm text-red-500">{errors.shippingRegion}</p>
+                      )}
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        City
+                      </label>
+                      <input
+                        type="text"
+                        value={shippingCity}
+                        onChange={(e) => setShippingCity(e.target.value)}
+                        placeholder="Enter city"
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                          errors.shippingCity ? "border-red-500" : "border-gray-300"
+                        }`}
+                      />
+                      {errors.shippingCity && (
+                        <p className="mt-1 text-sm text-red-500">{errors.shippingCity}</p>
+                      )}
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Address Line 1
+                      </label>
+                      <input
+                        type="text"
+                        value={shippingAddressLine1}
+                        onChange={(e) => setShippingAddressLine1(e.target.value)}
+                        placeholder="Street address"
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                          errors.shippingAddressLine1 ? "border-red-500" : "border-gray-300"
+                        }`}
+                      />
+                      {errors.shippingAddressLine1 && (
+                        <p className="mt-1 text-sm text-red-500">{errors.shippingAddressLine1}</p>
+                      )}
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Address Line 2 (Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={shippingAddressLine2}
+                        onChange={(e) => setShippingAddressLine2(e.target.value)}
+                        placeholder="Apartment, suite, etc."
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                          errors.shippingAddressLine2 ? "border-red-500" : "border-gray-300"
+                        }`}
+                      />
+                      {errors.shippingAddressLine2 && (
+                        <p className="mt-1 text-sm text-red-500">{errors.shippingAddressLine2}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Postal Code
+                      </label>
+                      <input
+                        type="text"
+                        value={shippingPostalCode}
+                        onChange={(e) => setShippingPostalCode(e.target.value)}
+                        placeholder="A1B 2C3"
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                          errors.shippingPostalCode ? "border-red-500" : "border-gray-300"
+                        }`}
+                      />
+                      {errors.shippingPostalCode && (
+                        <p className="mt-1 text-sm text-red-500">{errors.shippingPostalCode}</p>
+                      )}
                     </div>
                   </div>
-                )}
-              </div>
-            </div>
-          </Card>
-
-          {/* Professional Information (Management/Frontline only) */}
-          {!isExecutive && (
-            <>
-              <Card className="mb-6">
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <h2 className="text-lg font-semibold text-gray-800 flex items-center">
-                    <BriefcaseIcon className="h-5 w-5 mr-2 text-gray-600" />
-                    Professional Information
-                  </h2>
                 </div>
-                <div className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormGroup className="md:col-span-2">
-                      <Textarea
-                        label="Limitations or Special Considerations (Optional)"
-                        value={limitSpecial}
-                        onChange={(e) => setLimitSpecial(e.target.value)}
-                        error={errors.limitSpecial}
-                        rows={4}
-                        placeholder="Enter any limitations or special considerations..."
-                        helperText="Maximum 638 characters"
-                      />
-                    </FormGroup>
-
-                    <FormGroup>
-                      <DateInput
-                        label="Police Check Expiry (Optional)"
-                        value={policeCheck}
-                        onChange={(value) => setPoliceCheck(value)}
-                        error={errors.policeCheck}
-                      />
-                    </FormGroup>
-
-                    <FormGroup>
-                      <Input
-                        label="Driver's License Class (Optional)"
-                        value={driversLicenseClass}
-                        onChange={(e) => setDriversLicenseClass(e.target.value)}
-                        error={errors.driversLicenseClass}
-                        placeholder="e.g., G, G2"
-                      />
-                    </FormGroup>
-
-                    {vehicleTypeOptions.length > 0 && (
-                      <FormGroup className="md:col-span-2">
-                        <MultiSelect
-                          label="Vehicle Types (Optional)"
-                          options={vehicleTypeOptions}
-                          value={vehicleTypes}
-                          onChange={setVehicleTypes}
-                          error={errors.vehicleTypes}
-                          placeholder="Select vehicle types..."
-                        />
-                      </FormGroup>
-                    )}
-
-                    <FormGroup className="md:col-span-2">
-                      <Textarea
-                        label="Description (Optional)"
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        error={errors.description}
-                        rows={4}
-                        placeholder="Enter a description..."
-                        helperText="Maximum 638 characters"
-                      />
-                    </FormGroup>
-
-                    <FormGroup>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Preferred Language
-                      </label>
-                      <div className="space-y-2">
-                        <label className="flex items-center">
-                          <input
-                            type="radio"
-                            name="preferredLanguage"
-                            value="English"
-                            checked={preferredLanguage === "English"}
-                            onChange={(e) =>
-                              setPreferredLanguage(e.target.value)
-                            }
-                            className="mr-2"
-                          />
-                          English
-                        </label>
-                        <label className="flex items-center">
-                          <input
-                            type="radio"
-                            name="preferredLanguage"
-                            value="French"
-                            checked={preferredLanguage === "French"}
-                            onChange={(e) =>
-                              setPreferredLanguage(e.target.value)
-                            }
-                            className="mr-2"
-                          />
-                          French
-                        </label>
-                      </div>
-                    </FormGroup>
-                  </div>
-                </div>
-              </Card>
-
-              {/* Emergency Contact */}
-              <Card className="mb-6">
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <h2 className="text-lg font-semibold text-gray-800 flex items-center">
-                    <ExclamationTriangleIcon className="h-5 w-5 mr-2 text-gray-600" />
-                    Emergency Contact
-                  </h2>
-                </div>
-                <div className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormGroup>
-                      <Input
-                        label="Contact Name"
-                        value={emergencyContactName}
-                        onChange={(e) =>
-                          setEmergencyContactName(e.target.value)
-                        }
-                        error={errors.emergencyContactName}
-                        placeholder="Emergency contact name"
-                      />
-                    </FormGroup>
-
-                    <FormGroup>
-                      <Input
-                        label="Relationship"
-                        value={emergencyContactRelationship}
-                        onChange={(e) =>
-                          setEmergencyContactRelationship(e.target.value)
-                        }
-                        error={errors.emergencyContactRelationship}
-                        placeholder="e.g., Spouse, Parent, Friend"
-                      />
-                    </FormGroup>
-
-                    <FormGroup>
-                      <Input
-                        type="tel"
-                        label="Contact Phone"
-                        value={emergencyContactTelephone}
-                        onChange={(e) =>
-                          setEmergencyContactTelephone(e.target.value)
-                        }
-                        error={errors.emergencyContactTelephone}
-                        placeholder="(123) 456-7890"
-                      />
-                    </FormGroup>
-
-                    <FormGroup>
-                      <Input
-                        type="tel"
-                        label="Alternative Phone (Optional)"
-                        value={emergencyContactAlternativeTelephone}
-                        onChange={(e) =>
-                          setEmergencyContactAlternativeTelephone(
-                            e.target.value,
-                          )
-                        }
-                        error={errors.emergencyContactAlternativeTelephone}
-                        placeholder="(123) 456-7890"
-                      />
-                    </FormGroup>
-                  </div>
-                </div>
-              </Card>
-
-              {/* Metrics */}
-              <Card className="mb-6">
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <h2 className="text-lg font-semibold text-gray-800 flex items-center">
-                    <ChartBarIcon className="h-5 w-5 mr-2 text-gray-600" />
-                    Additional Information
-                  </h2>
-                </div>
-                <div className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {tagOptions.length > 0 && (
-                      <FormGroup className="md:col-span-2">
-                        <MultiSelect
-                          label="Tags (Optional)"
-                          options={tagOptions}
-                          value={tags}
-                          onChange={setTags}
-                          error={errors.tags}
-                          placeholder="Select tags..."
-                        />
-                      </FormGroup>
-                    )}
-
-                    {howHearOptions.length > 0 && (
-                      <FormGroup className="md:col-span-2">
-                        <Select
-                          label="How did you hear about us?"
-                          value={howDidYouHearAboutUsId}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            setHowDidYouHearAboutUsId(value);
-                            // Check if "Other" was selected
-                            const selectedOption = howHearOptions.find(
-                              (opt) => opt.value === value,
-                            );
-                            setIsHowDidYouHearAboutUsOther(
-                              selectedOption?.label === "Other",
-                            );
-                          }}
-                          options={[
-                            { value: "", label: "Please select" },
-                            ...howHearOptions,
-                          ]}
-                          error={errors.howDidYouHearAboutUsId}
-                        />
-                      </FormGroup>
-                    )}
-
-                    {isHowDidYouHearAboutUsOther && (
-                      <FormGroup className="md:col-span-2">
-                        <Input
-                          label="How did you hear about us? (Other)"
-                          value={howDidYouHearAboutUsOther}
-                          onChange={(e) =>
-                            setHowDidYouHearAboutUsOther(e.target.value)
-                          }
-                          error={errors.howDidYouHearAboutUsOther}
-                          placeholder="Please specify..."
-                        />
-                      </FormGroup>
-                    )}
-
-                    <FormGroup className="md:col-span-2">
-                      <MultiSelect
-                        label="Do you identify as belonging to any of the following groups? (Optional)"
-                        options={IDENTIFY_AS_OPTIONS}
-                        value={identifyAs}
-                        onChange={setIdentifyAs}
-                        error={errors.identifyAs}
-                        placeholder="Select all that apply..."
-                      />
-                    </FormGroup>
-                  </div>
-                </div>
-              </Card>
-            </>
-          )}
-
-          {/* Form Actions */}
-          <div className="flex flex-col sm:flex-row justify-between gap-4">
-            <Link to="/admin/account">
-              <Button
-                type="button"
-                variant="secondary"
-                className="flex items-center"
-              >
-                <ArrowLeftIcon className="h-4 w-4 mr-2" />
-                Back to Profile
-              </Button>
-            </Link>
-
-            <Button
-              type="submit"
-              variant="success"
-              disabled={isSaving}
-              className="flex items-center"
-            >
-              {isSaving ? (
-                <>
-                  <svg
-                    className="animate-spin h-4 w-4 mr-2"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                      fill="none"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  Saving...
-                </>
-              ) : (
-                <>
-                  <CheckCircleIcon className="h-4 w-4 mr-2" />
-                  Save Changes
-                </>
               )}
-            </Button>
+            </div>
           </div>
-        </form>
-      </div>
-    </div>
+        </Card>
+
+        {/* Professional Information (Management/Frontline only) */}
+        {!isExecutive && (
+          <>
+            <Card className="mb-6">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-800 flex items-center">
+                  <BriefcaseIcon className="h-5 w-5 mr-2 text-gray-600" />
+                  Professional Information
+                </h2>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Limitations or Special Considerations (Optional)
+                    </label>
+                    <textarea
+                      value={limitSpecial}
+                      onChange={(e) => setLimitSpecial(e.target.value)}
+                      rows={4}
+                      placeholder="Enter any limitations or special considerations..."
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        errors.limitSpecial ? "border-red-500" : "border-gray-300"
+                      }`}
+                    />
+                    <p className="mt-1 text-xs text-gray-500">Maximum 638 characters</p>
+                    {errors.limitSpecial && (
+                      <p className="mt-1 text-sm text-red-500">{errors.limitSpecial}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Police Check Expiry (Optional)
+                    </label>
+                    <input
+                      type="date"
+                      value={policeCheck}
+                      onChange={(e) => setPoliceCheck(e.target.value)}
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        errors.policeCheck ? "border-red-500" : "border-gray-300"
+                      }`}
+                    />
+                    {errors.policeCheck && (
+                      <p className="mt-1 text-sm text-red-500">{errors.policeCheck}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Driver's License Class (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={driversLicenseClass}
+                      onChange={(e) => setDriversLicenseClass(e.target.value)}
+                      placeholder="e.g., G, G2"
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        errors.driversLicenseClass ? "border-red-500" : "border-gray-300"
+                      }`}
+                    />
+                    {errors.driversLicenseClass && (
+                      <p className="mt-1 text-sm text-red-500">{errors.driversLicenseClass}</p>
+                    )}
+                  </div>
+
+                  {vehicleTypeOptions.length > 0 && (
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Vehicle Types (Optional)
+                      </label>
+                      <select
+                        multiple
+                        value={vehicleTypes}
+                        onChange={(e) => {
+                          const selectedValues = Array.from(e.target.selectedOptions, option => option.value);
+                          setVehicleTypes(selectedValues);
+                        }}
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[100px] ${
+                          errors.vehicleTypes ? "border-red-500" : "border-gray-300"
+                        }`}
+                      >
+                        {vehicleTypeOptions.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="mt-1 text-xs text-gray-500">Hold Ctrl/Cmd to select multiple</p>
+                      {errors.vehicleTypes && (
+                        <p className="mt-1 text-sm text-red-500">{errors.vehicleTypes}</p>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Description (Optional)
+                    </label>
+                    <textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      rows={4}
+                      placeholder="Enter a description..."
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        errors.description ? "border-red-500" : "border-gray-300"
+                      }`}
+                    />
+                    <p className="mt-1 text-xs text-gray-500">Maximum 638 characters</p>
+                    {errors.description && (
+                      <p className="mt-1 text-sm text-red-500">{errors.description}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Preferred Language
+                    </label>
+                    <div className="space-y-2">
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="preferredLanguage"
+                          value="English"
+                          checked={preferredLanguage === "English"}
+                          onChange={(e) => setPreferredLanguage(e.target.value)}
+                          className="mr-2"
+                        />
+                        English
+                      </label>
+                      <label className="flex items-center">
+                        <input
+                          type="radio"
+                          name="preferredLanguage"
+                          value="French"
+                          checked={preferredLanguage === "French"}
+                          onChange={(e) => setPreferredLanguage(e.target.value)}
+                          className="mr-2"
+                        />
+                        French
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Emergency Contact */}
+            <Card className="mb-6">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-800 flex items-center">
+                  <ExclamationTriangleIcon className="h-5 w-5 mr-2 text-gray-600" />
+                  Emergency Contact
+                </h2>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Contact Name
+                    </label>
+                    <input
+                      type="text"
+                      value={emergencyContactName}
+                      onChange={(e) => setEmergencyContactName(e.target.value)}
+                      placeholder="Emergency contact name"
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        errors.emergencyContactName ? "border-red-500" : "border-gray-300"
+                      }`}
+                    />
+                    {errors.emergencyContactName && (
+                      <p className="mt-1 text-sm text-red-500">{errors.emergencyContactName}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Relationship
+                    </label>
+                    <input
+                      type="text"
+                      value={emergencyContactRelationship}
+                      onChange={(e) => setEmergencyContactRelationship(e.target.value)}
+                      placeholder="e.g., Spouse, Parent, Friend"
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        errors.emergencyContactRelationship ? "border-red-500" : "border-gray-300"
+                      }`}
+                    />
+                    {errors.emergencyContactRelationship && (
+                      <p className="mt-1 text-sm text-red-500">{errors.emergencyContactRelationship}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Contact Phone
+                    </label>
+                    <input
+                      type="tel"
+                      value={emergencyContactTelephone}
+                      onChange={(e) => setEmergencyContactTelephone(e.target.value)}
+                      placeholder="(123) 456-7890"
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        errors.emergencyContactTelephone ? "border-red-500" : "border-gray-300"
+                      }`}
+                    />
+                    {errors.emergencyContactTelephone && (
+                      <p className="mt-1 text-sm text-red-500">{errors.emergencyContactTelephone}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Alternative Phone (Optional)
+                    </label>
+                    <input
+                      type="tel"
+                      value={emergencyContactAlternativeTelephone}
+                      onChange={(e) => setEmergencyContactAlternativeTelephone(e.target.value)}
+                      placeholder="(123) 456-7890"
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                        errors.emergencyContactAlternativeTelephone ? "border-red-500" : "border-gray-300"
+                      }`}
+                    />
+                    {errors.emergencyContactAlternativeTelephone && (
+                      <p className="mt-1 text-sm text-red-500">{errors.emergencyContactAlternativeTelephone}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Metrics */}
+            <Card className="mb-6">
+              <div className="px-6 py-4 border-b border-gray-200">
+                <h2 className="text-lg font-semibold text-gray-800 flex items-center">
+                  <ChartBarIcon className="h-5 w-5 mr-2 text-gray-600" />
+                  Additional Information
+                </h2>
+              </div>
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {tagOptions.length > 0 && (
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Tags (Optional)
+                      </label>
+                      <select
+                        multiple
+                        value={tags}
+                        onChange={(e) => {
+                          const selectedValues = Array.from(e.target.selectedOptions, option => option.value);
+                          setTags(selectedValues);
+                        }}
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[100px] ${
+                          errors.tags ? "border-red-500" : "border-gray-300"
+                        }`}
+                      >
+                        {tagOptions.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="mt-1 text-xs text-gray-500">Hold Ctrl/Cmd to select multiple</p>
+                      {errors.tags && (
+                        <p className="mt-1 text-sm text-red-500">{errors.tags}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {howHearOptions.length > 0 && (
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        How did you hear about us?
+                      </label>
+                      <select
+                        value={howDidYouHearAboutUsId}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setHowDidYouHearAboutUsId(value);
+                          // Check if "Other" was selected
+                          const selectedOption = howHearOptions.find(
+                            (opt) => opt.value === value,
+                          );
+                          setIsHowDidYouHearAboutUsOther(
+                            selectedOption?.label === "Other",
+                          );
+                        }}
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                          errors.howDidYouHearAboutUsId ? "border-red-500" : "border-gray-300"
+                        }`}
+                      >
+                        <option value="">Please select</option>
+                        {howHearOptions.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                      {errors.howDidYouHearAboutUsId && (
+                        <p className="mt-1 text-sm text-red-500">{errors.howDidYouHearAboutUsId}</p>
+                      )}
+                    </div>
+                  )}
+
+                  {isHowDidYouHearAboutUsOther && (
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        How did you hear about us? (Other)
+                      </label>
+                      <input
+                        type="text"
+                        value={howDidYouHearAboutUsOther}
+                        onChange={(e) => setHowDidYouHearAboutUsOther(e.target.value)}
+                        placeholder="Please specify..."
+                        className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                          errors.howDidYouHearAboutUsOther ? "border-red-500" : "border-gray-300"
+                        }`}
+                      />
+                      {errors.howDidYouHearAboutUsOther && (
+                        <p className="mt-1 text-sm text-red-500">{errors.howDidYouHearAboutUsOther}</p>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Do you identify as belonging to any of the following groups? (Optional)
+                    </label>
+                    <select
+                      multiple
+                      value={identifyAs}
+                      onChange={(e) => {
+                        const selectedValues = Array.from(e.target.selectedOptions, option => parseInt(option.value));
+                        setIdentifyAs(selectedValues);
+                      }}
+                      className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 min-h-[100px] ${
+                        errors.identifyAs ? "border-red-500" : "border-gray-300"
+                      }`}
+                    >
+                      {IDENTIFY_AS_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="mt-1 text-xs text-gray-500">Hold Ctrl/Cmd to select multiple</p>
+                    {errors.identifyAs && (
+                      <p className="mt-1 text-sm text-red-500">{errors.identifyAs}</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </>
+        )}
+
+        {/* Form Actions */}
+        <div className="flex flex-col sm:flex-row justify-between gap-4">
+          <Link to="/admin/account">
+            <Button
+              type="button"
+              variant="secondary"
+              icon={ChevronLeftIcon}
+            >
+              Back to Profile
+            </Button>
+          </Link>
+
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={isSaving}
+            icon={isSaving ? null : CheckCircleIcon}
+          >
+            {isSaving ? (
+              <span className="flex items-center">
+                <Spinner size="sm" className="mr-2" />
+                Saving...
+              </span>
+            ) : (
+              "Save Changes"
+            )}
+          </Button>
+        </div>
+      </form>
+    </Card>
   );
 }
 
-export default AdminAccountUpdatePage;
+// Wrapper with UIXThemeProvider
+function AdminAccountUpdatePageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminAccountUpdatePage />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminAccountUpdatePageWithProvider;

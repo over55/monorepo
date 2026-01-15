@@ -1,8 +1,15 @@
-// monorepo/web/workery-frontend/src/pages/Admin/Help/Page.jsx
+// File Path: web/workery-frontend/src/pages/Admin/Help/Page.jsx
+// UIX Upgraded - Uses UIX primitives (Card, Breadcrumb, Button)
 
-import React from "react";
+import React, { useMemo, useCallback } from "react";
 import { Link } from "react-router";
-import { Card, Breadcrumb, Button } from "../../../components/UI";
+import {
+  Card,
+  Breadcrumb,
+  Button,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../components/UIX";
 import {
   QuestionMarkCircleIcon,
   EnvelopeIcon,
@@ -20,30 +27,73 @@ import {
   InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 
+// Contact information constants
+const CONTACT_INFO = {
+  email: "support@workery.ca",
+  phone: "+1(519)438-1111",
+  location: {
+    text: "London, ON Canada",
+    mapUrl:
+      "https://www.google.com/maps/place/Over+55+Skills+at+Work/@42.982378,-81.2639086,17z/data=!3m2!4b1!5s0x882ef1f1bda3c3d5:0xb6c19797240aed91!4m6!3m5!1s0x882ef1f195805b65:0xc74817a331752923!8m2!3d42.982378!4d-81.261339!16s%2Fg%2F1thq1brc?entry=ttu",
+  },
+  website: {
+    text: "Official Website",
+    url: "https://skillsatwork.ca",
+  },
+};
+
+// FAQs
+const FAQS = [
+  {
+    question: "How do I reset my password?",
+    answer:
+      "You can reset your password by clicking on the 'Forgot Password' link on the login page. You'll receive an email with instructions to create a new password.",
+  },
+  {
+    question: "How do I add a new customer?",
+    answer:
+      "Navigate to Customers → Add New Customer from the main menu. Fill in the required information and click Submit.",
+  },
+  {
+    question: "How do I generate reports?",
+    answer:
+      "Go to the Reports section from the main menu. Select the type of report you need and specify the date range. Click Generate to create your report.",
+  },
+  {
+    question: "How do I manage staff permissions?",
+    answer:
+      "Access the Staff section, select the staff member you want to modify, and click on 'Edit Permissions' to adjust their access levels.",
+  },
+  {
+    question: "How do I create a new work order?",
+    answer:
+      "Go to Orders → Add New Order. Search for or create a customer, then fill in the job details, assign an associate if needed, and submit the order.",
+  },
+  {
+    question: "How do I track task progress?",
+    answer:
+      "Navigate to the Tasks section to view all pending tasks. Click on any task to see its details and update its status.",
+  },
+];
+
 /**
  * Admin Help Page
  * Displays contact information and support details
  */
 function AdminHelpPage() {
-  // Contact information constants
-  const CONTACT_INFO = {
-    email: "support@workery.ca",
-    phone: "+1(519)438-1111",
-    location: {
-      text: "London, ON Canada",
-      mapUrl:
-        "https://www.google.com/maps/place/Over+55+Skills+at+Work/@42.982378,-81.2639086,17z/data=!3m2!4b1!5s0x882ef1f1bda3c3d5:0xb6c19797240aed91!4m6!3m5!1s0x882ef1f195805b65:0xc74817a331752923!8m2!3d42.982378!4d-81.261339!16s%2Fg%2F1thq1brc?entry=ttu",
-    },
-    website: {
-      text: "Official Website",
-      url: "https://skillsatwork.ca",
-    },
-  };
+  const { getThemeClasses } = useUIXTheme();
+
+  // Memoize theme classes
+  const themeClasses = useMemo(() => ({
+    textPrimary: getThemeClasses("text-primary"),
+    textSecondary: getThemeClasses("text-secondary"),
+    linkPrimary: getThemeClasses("link-primary"),
+  }), [getThemeClasses]);
 
   /**
    * Format phone number for display
    */
-  const formatPhoneNumber = (phone) => {
+  const formatPhoneNumber = useCallback((phone) => {
     const cleaned = phone.replace(/\D/g, "");
     if (cleaned.length === 11 && cleaned.startsWith("1")) {
       const areaCode = cleaned.substring(1, 4);
@@ -52,66 +102,40 @@ function AdminHelpPage() {
       return `+1 (${areaCode}) ${firstPart}-${secondPart}`;
     }
     return phone;
-  };
+  }, []);
 
-  const faqs = [
+  // Breadcrumb items
+  const breadcrumbItems = useMemo(() => [
     {
-      question: "How do I reset my password?",
-      answer:
-        "You can reset your password by clicking on the 'Forgot Password' link on the login page. You'll receive an email with instructions to create a new password.",
+      label: "Dashboard",
+      to: "/admin/dashboard",
+      icon: ChartBarIcon,
     },
     {
-      question: "How do I add a new customer?",
-      answer:
-        "Navigate to Customers → Add New Customer from the main menu. Fill in the required information and click Submit.",
+      label: "Help",
+      icon: QuestionMarkCircleIcon,
+      isActive: true,
     },
-    {
-      question: "How do I generate reports?",
-      answer:
-        "Go to the Reports section from the main menu. Select the type of report you need and specify the date range. Click Generate to create your report.",
-    },
-    {
-      question: "How do I manage staff permissions?",
-      answer:
-        "Access the Staff section, select the staff member you want to modify, and click on 'Edit Permissions' to adjust their access levels.",
-    },
-    {
-      question: "How do I create a new work order?",
-      answer:
-        "Go to Orders → Add New Order. Search for or create a customer, then fill in the job details, assign an associate if needed, and submit the order.",
-    },
-    {
-      question: "How do I track task progress?",
-      answer:
-        "Navigate to the Tasks section to view all pending tasks. Click on any task to see its details and update its status.",
-    },
-  ];
+  ], []);
+
+  // Scroll to top handler
+  const handleScrollToTop = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
-        <Breadcrumb
-          items={[
-            {
-              label: "Dashboard",
-              href: "/admin/dashboard",
-              icon: ChartBarIcon,
-            },
-            {
-              label: "Help",
-              icon: QuestionMarkCircleIcon,
-            },
-          ]}
-        />
+        <Breadcrumb items={breadcrumbItems} className="mb-6" />
 
         {/* Page Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-            <QuestionMarkCircleIcon className="w-8 h-8 mr-3 text-gray-700" />
+          <h1 className={`text-2xl md:text-3xl font-bold ${themeClasses.textPrimary} flex items-center`}>
+            <QuestionMarkCircleIcon className={`w-6 h-6 md:w-8 md:h-8 mr-3 ${themeClasses.linkPrimary}`} />
             Help & Support
           </h1>
-          <p className="mt-2 text-gray-600">
+          <p className={`mt-2 ${themeClasses.textSecondary}`}>
             Get assistance and find answers to your questions
           </p>
         </div>
@@ -350,7 +374,7 @@ function AdminHelpPage() {
           </div>
           <div className="p-6">
             <div className="space-y-4">
-              {faqs.map((faq, index) => (
+              {FAQS.map((faq, index) => (
                 <details
                   key={index}
                   className="group border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
@@ -374,7 +398,7 @@ function AdminHelpPage() {
         <div className="mt-8 text-center">
           <Button
             variant="ghost"
-            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+            onClick={handleScrollToTop}
             className="inline-flex items-center text-gray-600 hover:text-gray-900"
           >
             <ArrowLeftIcon className="w-4 h-4 mr-2 rotate-90" />
@@ -386,4 +410,13 @@ function AdminHelpPage() {
   );
 }
 
-export default AdminHelpPage;
+// Wrapper with UIXThemeProvider
+function AdminHelpPageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminHelpPage />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminHelpPageWithProvider;

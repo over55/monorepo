@@ -1,6 +1,7 @@
 // monorepo/web/workery-frontend/src/pages/Admin/SkillSet/AssociateSearchCriteriaPage.jsx
+// UIX Upgraded - Uses UIX primitives (Card, Alert, Button, Breadcrumb)
 
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 import {
   ChartBarIcon,
@@ -13,10 +14,18 @@ import {
   InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 import { SkillSetsMultiSelect } from "../../../components/business/selects";
-import { Card, Alert, Button, Radio } from "../../../components/UI";
+import {
+  Card,
+  Alert,
+  Button,
+  Breadcrumb,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../components/UIX";
 
 function AdminSkillSetAssociateSearchCriteriaPage() {
   const navigate = useNavigate();
+  const { getThemeClasses } = useUIXTheme();
 
   // Component states
   const [errors, setErrors] = useState({});
@@ -24,9 +33,30 @@ function AdminSkillSetAssociateSearchCriteriaPage() {
   const [searchType, setSearchType] = useState("");
   const [alert, setAlert] = useState(null);
 
-  const onUnauthorized = () => {
+  // Memoize theme classes
+  const themeClasses = useMemo(() => ({
+    textPrimary: getThemeClasses("text-primary"),
+    textSecondary: getThemeClasses("text-secondary"),
+    linkPrimary: getThemeClasses("link-primary"),
+  }), [getThemeClasses]);
+
+  // Breadcrumb items
+  const breadcrumbItems = useMemo(() => [
+    {
+      label: "Dashboard",
+      to: "/admin/dashboard",
+      icon: ChartBarIcon,
+    },
+    {
+      label: "Skill Sets",
+      icon: WrenchScrewdriverIcon,
+      isActive: true,
+    },
+  ], []);
+
+  const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
-  };
+  }, [navigate]);
 
   // Handle skill set change
   const handleSkillSetChange = (value) => {
@@ -88,38 +118,17 @@ function AdminSkillSetAssociateSearchCriteriaPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Breadcrumb */}
-      <nav className="flex mb-6" aria-label="Breadcrumb">
-        <ol className="inline-flex items-center space-x-1 md:space-x-3">
-          <li className="inline-flex items-center">
-            <Link
-              to="/admin/dashboard"
-              className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
-            >
-              <ChartBarIcon className="w-4 h-4 mr-2" />
-              Dashboard
-            </Link>
-          </li>
-          <li aria-current="page">
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <span className="text-sm font-medium text-gray-500 inline-flex items-center">
-                <WrenchScrewdriverIcon className="w-4 h-4 mr-2" />
-                Skill Sets
-              </span>
-            </div>
-          </li>
-        </ol>
-      </nav>
+      <Breadcrumb items={breadcrumbItems} className="mb-6" />
 
       {/* Page Title */}
       <div className="mb-6">
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-              <WrenchScrewdriverIcon className="w-8 h-8 mr-3 text-blue-600" />
+            <h1 className={`text-2xl md:text-3xl font-bold ${themeClasses.textPrimary} flex items-center`}>
+              <WrenchScrewdriverIcon className={`w-6 h-6 md:w-8 md:h-8 mr-3 ${themeClasses.linkPrimary}`} />
               Skill Sets
             </h1>
-            <p className="mt-1 text-sm text-gray-600 flex items-center">
+            <p className={`mt-1 text-sm ${themeClasses.textSecondary} flex items-center`}>
               <MagnifyingGlassIcon className="w-4 h-4 mr-1" />
               Search for associates by skill sets
             </p>
@@ -316,4 +325,13 @@ function AdminSkillSetAssociateSearchCriteriaPage() {
   );
 }
 
-export default AdminSkillSetAssociateSearchCriteriaPage;
+// Wrapper with UIXThemeProvider
+function AdminSkillSetAssociateSearchCriteriaPageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminSkillSetAssociateSearchCriteriaPage />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminSkillSetAssociateSearchCriteriaPageWithProvider;

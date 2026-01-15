@@ -1,3 +1,4 @@
+// UIX Upgraded - Uses UIX primitives (Card, Button, Alert, Spinner, Breadcrumb)
 // File Path: monorepo/web/workery-frontend/src/pages/Anonymous/Index/DebugEnv.jsx
 import React from "react";
 import {

@@ -1,13 +1,13 @@
 // File Path: web/workery-frontend/src/pages/Admin/Setting/NOC/SearchResult/Page.jsx
+// @uix-page: SettingNOCSearchResultPage
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
 import { useNavigate, useSearchParams } from "react-router";
 import { useNOCManager } from "../../../../../services/Services";
 import {
   MagnifyingGlassIcon,
   AcademicCapIcon,
   ArrowLeftIcon,
-  XMarkIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ArrowsUpDownIcon,
@@ -17,704 +17,573 @@ import {
   FolderIcon,
   ChartBarIcon,
   AdjustmentsHorizontalIcon,
-  ExclamationCircleIcon,
+  SparklesIcon,
+  HomeIcon,
+  Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
-import { ExclamationTriangleIcon } from "@heroicons/react/24/solid";
+import {
+  Breadcrumb,
+  PageHeader,
+  Alert,
+  Button,
+  Select,
+  SearchCriteriaPills,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../../components/UIX";
 
 function SettingNOCSearchResultPage() {
-  const nocManager = useNOCManager();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  return (
+    <UIXThemeProvider>
+      <SettingNOCSearchResultPageContent />
+    </UIXThemeProvider>
+  );
+}
 
-  // URL search parameters
-  const urlSearchText = searchParams.get("q") || "";
-  const urlCode = searchParams.get("c") || "";
-  const urlUnitGroupTitle = searchParams.get("ugt") || "";
+const SettingNOCSearchResultPageContent = memo(
+  function SettingNOCSearchResultPageContent() {
+    const nocManager = useNOCManager();
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const { getThemeClasses } = useUIXTheme();
 
-  // Component state
-  const [nocs, setNocs] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
+    // URL search parameters
+    const urlSearchText = searchParams.get("q") || "";
+    const urlCode = searchParams.get("c") || "";
+    const urlUnitGroupTitle = searchParams.get("ugt") || "";
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const [pageSize, setPageSize] = useState(50);
-  const [hasNextPage, setHasNextPage] = useState(false);
-  const [hasPreviousPage, setHasPreviousPage] = useState(false);
+    // Component state
+    const [nocs, setNocs] = useState([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState(null);
 
-  // Sorting state
-  const [sortBy, setSortBy] = useState("code");
-  const [sortOrder, setSortOrder] = useState("ASC");
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalCount, setTotalCount] = useState(0);
+    const [pageSize, setPageSize] = useState(50);
+    const [hasNextPage, setHasNextPage] = useState(false);
+    const [hasPreviousPage, setHasPreviousPage] = useState(false);
 
-  const onUnauthorized = () => {
-    navigate("/login?unauthorized=true");
-  };
+    // Sorting state
+    const [sortBy, setSortBy] = useState("code");
+    const [sortOrder, setSortOrder] = useState("ASC");
 
-  const performSearch = async (page = 1) => {
-    setIsLoading(true);
-    setError(null);
+    // Memoize theme classes
+    const themeClasses = useMemo(
+      () => ({
+        bgGradientPrimary: getThemeClasses("bg-gradient-primary") || "bg-gradient-to-br from-gray-50 via-white to-red-50",
+        linkText: getThemeClasses("text-primary") || "text-gray-900",
+        linkHover: getThemeClasses("text-primary-hover") || "hover:bg-gray-50",
+        textMuted: getThemeClasses("text-muted") || "text-gray-500",
+        textPrimary: getThemeClasses("text-primary") || "text-gray-900",
+        accentText: getThemeClasses("text-accent") || "text-red-500",
+        badgeActiveBg: getThemeClasses("badge-active-bg") || "bg-red-100",
+        badgeActiveText: getThemeClasses("badge-active-text") || "text-red-800",
+        badgeInactiveBg: getThemeClasses("badge-inactive-bg") || "bg-gray-100",
+        badgeInactiveText: getThemeClasses("badge-inactive-text") || "text-gray-500",
+        loadingSpinner: getThemeClasses("loading-spinner") || "text-red-600",
+        errorText: getThemeClasses("text-error") || "text-red-600",
+        errorBg: getThemeClasses("bg-error-light") || "bg-red-50",
+        errorBorder: getThemeClasses("border-error") || "border-red-200",
+        focusRing: getThemeClasses("focus-ring") || "focus:ring-red-500",
+        alertInfoBg: getThemeClasses("alert-info-bg") || "bg-blue-50",
+        borderPrimary: getThemeClasses("border-primary") || "border-gray-200",
+        // Decorative blobs
+        blobPrimary: getThemeClasses("blob-primary") || "bg-purple-200",
+        blobSecondary: getThemeClasses("blob-secondary") || "bg-yellow-200",
+        blobTertiary: getThemeClasses("blob-tertiary") || "bg-pink-200",
+        // Card/table styling
+        bgCard: getThemeClasses("bg-card") || "bg-white",
+        borderLight: getThemeClasses("border-light") || "border-gray-100",
+        borderMedium: getThemeClasses("border-medium") || "border-gray-200",
+        tableHeaderBg: getThemeClasses("table-header-bg") || "bg-gray-50",
+      }),
+      [getThemeClasses],
+    );
 
-    try {
-      const params = {
-        page,
-        limit: pageSize,
+    const onUnauthorized = useCallback(() => {
+      navigate("/login?unauthorized=true");
+    }, [navigate]);
+
+    const performSearch = useCallback(
+      async (page = 1) => {
+        setIsLoading(true);
+        setError(null);
+
+        try {
+          const params = {
+            page,
+            limit: pageSize,
+            sortBy,
+            sortOrder,
+          };
+
+          // Add search parameters
+          if (urlSearchText.trim()) {
+            params.search = urlSearchText.trim();
+          }
+          if (urlCode.trim()) {
+            params.code = urlCode.trim();
+          }
+          if (urlUnitGroupTitle.trim()) {
+            params.ugt = urlUnitGroupTitle.trim();
+          }
+
+          const response = await nocManager.getNOCs(
+            params,
+            onUnauthorized,
+            true,
+          );
+
+          setNocs(response.results || []);
+          setTotalCount(response.count || 0);
+          setHasNextPage(response.hasNextPage || false);
+          setHasPreviousPage(page > 1);
+          setCurrentPage(page);
+        } catch (err) {
+          if (import.meta.env.DEV) {
+            console.error("Failed to search NOCs:", err);
+          }
+          setError(err.message || "Failed to search NOCs");
+          setNocs([]);
+        } finally {
+          setIsLoading(false);
+        }
+      },
+      [
+        pageSize,
         sortBy,
         sortOrder,
-      };
+        urlSearchText,
+        urlCode,
+        urlUnitGroupTitle,
+        nocManager,
+        onUnauthorized,
+      ],
+    );
 
-      // Add search parameters
-      if (urlSearchText.trim()) {
-        params.search = urlSearchText.trim();
+    const _handlePreviousPage = useCallback(() => {
+      if (hasPreviousPage) {
+        performSearch(currentPage - 1);
       }
-      if (urlCode.trim()) {
-        params.code = urlCode.trim();
+    }, [hasPreviousPage, currentPage, performSearch]);
+
+    const _handleNextPage = useCallback(() => {
+      if (hasNextPage) {
+        performSearch(currentPage + 1);
       }
-      if (urlUnitGroupTitle.trim()) {
-        params.ugt = urlUnitGroupTitle.trim();
-      }
+    }, [hasNextPage, currentPage, performSearch]);
 
-      const response = await nocManager.getNOCs(params, onUnauthorized, true);
+    const handleRowClick = useCallback(
+      (noc) => {
+        navigate(`/admin/settings/noc/${noc.id}/detail`);
+      },
+      [navigate],
+    );
 
-      setNocs(response.results || []);
-      setTotalCount(response.count || 0);
-      setHasNextPage(response.hasNextPage || false);
-      setHasPreviousPage(page > 1);
-      setCurrentPage(page);
-    } catch (err) {
-      console.error("Failed to search NOCs:", err);
-      setError(err.message || "Failed to search NOCs");
-      setNocs([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const handleSortChange = useCallback((value) => {
+      const [field, order] = value.split(",");
+      setSortBy(field);
+      setSortOrder(order);
+      setCurrentPage(1);
+    }, []);
 
-  const handlePreviousPage = () => {
-    if (hasPreviousPage) {
-      performSearch(currentPage - 1);
-    }
-  };
+    const _handlePageSizeChange = useCallback((value) => {
+      setPageSize(parseInt(value));
+      setCurrentPage(1);
+    }, []);
 
-  const handleNextPage = () => {
-    if (hasNextPage) {
-      performSearch(currentPage + 1);
-    }
-  };
+    // Auto-search on mount and scroll to top
+    useEffect(() => {
+      // Scroll to top when component mounts
+      window.scrollTo(0, 0);
+      performSearch(1);
+    }, [sortBy, sortOrder, pageSize, performSearch]);
 
-  const handleRowClick = (noc) => {
-    navigate(`/admin/settings/noc/${noc.id}/detail`);
-  };
+    // Build search criteria display
+    const searchCriteria = useMemo(() => {
+      const criteria = [];
+      if (urlSearchText)
+        criteria.push({
+          label: "Keywords",
+          value: urlSearchText,
+          icon: MagnifyingGlassIcon,
+        });
+      if (urlCode)
+        criteria.push({ label: "Code", value: urlCode, icon: HashtagIcon });
+      if (urlUnitGroupTitle)
+        criteria.push({
+          label: "Unit Group",
+          value: urlUnitGroupTitle,
+          icon: DocumentTextIcon,
+        });
+      return criteria;
+    }, [urlSearchText, urlCode, urlUnitGroupTitle]);
 
-  const handleSortChange = (e) => {
-    const [field, order] = e.target.value.split(",");
-    setSortBy(field);
-    setSortOrder(order);
-    setCurrentPage(1);
-  };
+    const _totalPages = useMemo(
+      () => Math.ceil(totalCount / pageSize),
+      [totalCount, pageSize],
+    );
 
-  const handlePageSizeChange = (e) => {
-    setPageSize(parseInt(e.target.value));
-    setCurrentPage(1);
-  };
-
-  // Auto-search on mount and scroll to top
-  useEffect(() => {
-    // Scroll to top when component mounts
-    window.scrollTo(0, 0);
-    performSearch(1);
-  }, [sortBy, sortOrder, pageSize]);
-
-  // Build search criteria display
-  const searchCriteria = [];
-  if (urlSearchText)
-    searchCriteria.push({
-      label: "Keywords",
-      value: urlSearchText,
-      icon: MagnifyingGlassIcon,
-    });
-  if (urlCode)
-    searchCriteria.push({ label: "Code", value: urlCode, icon: HashtagIcon });
-  if (urlUnitGroupTitle)
-    searchCriteria.push({
-      label: "Unit Group",
-      value: urlUnitGroupTitle,
-      icon: DocumentTextIcon,
-    });
-
-  const totalPages = Math.ceil(totalCount / pageSize);
-
-  return (
-    <div
-      className="min-h-screen bg-gray-50"
-      style={{
-        minHeight: "100dvh",
-        paddingBottom: "env(keyboard-inset-height, 0px)",
-      }}
-    >
-      <div
-        className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8 pb-safe"
-        style={{
-          paddingBottom:
-            "max(1rem, env(safe-area-inset-bottom), env(keyboard-inset-height, 0px))",
-          paddingLeft: "max(0.75rem, env(safe-area-inset-left))",
-          paddingRight: "max(0.75rem, env(safe-area-inset-right))",
-        }}
-      >
-        {/* Breadcrumb - iOS & Android Optimized */}
-        <nav
-          className="flex mb-4 sm:mb-6 lg:mb-8 overflow-x-auto -webkit-overflow-scrolling-touch"
-          aria-label="Breadcrumb"
-          style={{
-            WebkitOverflowScrolling: "touch",
-            scrollbarWidth: "none",
-            msOverflowStyle: "none",
-          }}
-        >
-          <ol className="inline-flex items-center space-x-1 md:space-x-3 whitespace-nowrap">
-            <li className="inline-flex items-center">
-              <button
-                onClick={() => navigate("/admin/dashboard")}
-                className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-indigo-600 transition-colors duration-200 min-h-[48px] px-2 py-2 rounded-md touch-manipulation"
-                style={{
-                  WebkitTapHighlightColor: "transparent",
-                  minHeight: "48px",
-                  touchAction: "manipulation",
-                }}
-              >
-                Dashboard
-              </button>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <svg
-                  className="w-3 h-3 text-gray-400 mx-1"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 6 10"
-                >
-                  <path
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="m1 9 4-4-4-4"
-                  />
-                </svg>
-                <button
-                  onClick={() => navigate("/admin/settings")}
-                  className="ml-1 text-xs sm:text-sm font-medium text-gray-700 hover:text-indigo-600 md:ml-2 transition-colors duration-200 min-h-[48px] px-2 py-2 rounded-md touch-manipulation"
-                  style={{
-                    WebkitTapHighlightColor: "transparent",
-                    minHeight: "48px",
-                    touchAction: "manipulation",
-                  }}
-                >
-                  Settings
-                </button>
-              </div>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <svg
-                  className="w-3 h-3 text-gray-400 mx-1"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 6 10"
-                >
-                  <path
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="m1 9 4-4-4-4"
-                  />
-                </svg>
-                <button
-                  onClick={() => navigate("/admin/settings/noc/search")}
-                  className="ml-1 text-xs sm:text-sm font-medium text-gray-700 hover:text-indigo-600 md:ml-2 transition-colors duration-200 min-h-[48px] px-2 py-2 rounded-md touch-manipulation"
-                  style={{
-                    WebkitTapHighlightColor: "transparent",
-                    minHeight: "48px",
-                    touchAction: "manipulation",
-                  }}
-                >
-                  NOC Search
-                </button>
-              </div>
-            </li>
-            <li aria-current="page">
-              <div className="flex items-center">
-                <svg
-                  className="w-3 h-3 text-gray-400 mx-1"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 6 10"
-                >
-                  <path
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="m1 9 4-4-4-4"
-                  />
-                </svg>
-                <span className="ml-1 text-xs sm:text-sm font-medium text-gray-500 md:ml-2">
-                  Search Results
-                </span>
-              </div>
-            </li>
-          </ol>
-        </nav>
-
-        {/* Header Section - Improved mobile layout */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col space-y-4 lg:flex-row lg:items-start lg:justify-between lg:space-y-0">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start">
-                <AcademicCapIcon className="h-6 w-6 sm:h-8 sm:w-8 text-indigo-600 mr-2 sm:mr-3 flex-shrink-0 mt-1" />
-                <div>
-                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">
-                    National Occupational Classification
-                  </h1>
-                  <p className="mt-1 sm:mt-2 text-sm sm:text-base lg:text-lg text-gray-600">
-                    Search Results
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="flex-shrink-0">
-              <button
-                onClick={() => navigate("/admin/settings/noc/search")}
-                className="inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-xs sm:text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200 w-full sm:w-auto justify-center min-h-[48px] touch-manipulation"
-                style={{
-                  WebkitTapHighlightColor: "transparent",
-                  minHeight: "48px",
-                  touchAction: "manipulation",
-                }}
-              >
-                <ArrowLeftIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                Back to Search
-              </button>
-            </div>
-          </div>
-
-          {/* Search Criteria Display - Improved mobile layout */}
-          {searchCriteria.length > 0 && (
-            <div className="mt-3 sm:mt-4 flex flex-wrap gap-2">
-              {searchCriteria.map((criteria, index) => {
-                const Icon = criteria.icon;
-                return (
-                  <span
-                    key={index}
-                    className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-indigo-100 text-indigo-800"
-                  >
-                    <Icon className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-1.5" />
-                    <span className="truncate max-w-[120px] sm:max-w-none">
-                      {criteria.label}: "{criteria.value}"
-                    </span>
-                  </span>
-                );
-              })}
-            </div>
-          )}
+    return (
+      <div className={`min-h-screen ${themeClasses.bgGradientPrimary}`}>
+        {/* Decorative background elements */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <div className={`absolute -top-40 -right-40 w-80 h-80 ${themeClasses.blobPrimary} rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob`}></div>
+          <div className={`absolute -bottom-40 -left-40 w-80 h-80 ${themeClasses.blobSecondary} rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-2000`}></div>
+          <div className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 ${themeClasses.blobTertiary} rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-blob animation-delay-4000`}></div>
         </div>
 
-        {/* Error Alert - Improved mobile layout */}
-        {error && (
-          <div className="mb-4 sm:mb-6 bg-red-50 border-l-4 border-red-400 p-3 sm:p-4 rounded-lg">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <ExclamationTriangleIcon className="h-4 w-4 sm:h-5 sm:w-5 text-red-400" />
-              </div>
-              <div className="ml-2 sm:ml-3 flex-1">
-                <p className="text-xs sm:text-sm text-red-800">{error}</p>
-              </div>
-              <div className="ml-auto pl-2 sm:pl-3">
-                <button
-                  onClick={() => setError(null)}
-                  className="inline-flex text-red-400 hover:text-red-500 transition-colors duration-200 p-2 min-h-[48px] min-w-[48px] items-center justify-center rounded-md touch-manipulation"
-                  style={{
-                    WebkitTapHighlightColor: "transparent",
-                    minHeight: "48px",
-                    minWidth: "48px",
-                    touchAction: "manipulation",
-                  }}
-                >
-                  <XMarkIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
+          <Breadcrumb
+            items={[
+              {
+                label: "Dashboard",
+                to: "/admin/dashboard",
+                icon: HomeIcon,
+              },
+              {
+                label: "Settings",
+                to: "/admin/settings",
+                icon: Cog6ToothIcon,
+              },
+              {
+                label: "NOC Search",
+                to: "/admin/settings/noc/search",
+                icon: AcademicCapIcon,
+              },
+              {
+                label: "Search Results",
+                icon: ChartBarIcon,
+                isActive: true,
+              },
+            ]}
+          />
 
-        {/* Main Content */}
-        <div className="bg-white shadow-sm rounded-lg">
-          {/* Results Header - Improved mobile layout */}
-          <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200">
-            <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 flex items-center">
-                  <ChartBarIcon className="h-4 w-4 sm:h-5 sm:w-5 mr-2 text-indigo-600" />
-                  Search Results
-                </h2>
+          <PageHeader
+            icon={AcademicCapIcon}
+            title="NOC"
+            subtitle="National Occupational Classification"
+            actions={[
+              <Button
+                key="back"
+                variant="secondary"
+                onClick={() => navigate("/admin/settings/noc/search")}
+                icon={ArrowLeftIcon}
+              >
+                Back to Search
+              </Button>,
+            ]}
+          />
+
+          {/* Search Criteria Display */}
+          <SearchCriteriaPills criteria={searchCriteria} className="mb-8" />
+
+          {error && (
+            <Alert
+              type="error"
+              enhanced={true}
+              dismissible={true}
+              onDismiss={() => setError(null)}
+            >
+              {error}
+            </Alert>
+          )}
+
+          {/* Main Content - Enhanced with modern design */}
+          <div className={`${themeClasses.bgCard} shadow-xl rounded-2xl overflow-hidden border ${themeClasses.borderLight} hover:shadow-2xl transition-shadow duration-300`}>
+            {/* Results Header - Enhanced styling */}
+            <div
+              className={`px-6 sm:px-8 py-3 sm:py-4 ${themeClasses.bgGradientPrimary}`}
+            >
+              <div className="flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center">
+                    <div className="p-2 bg-white/20 rounded-lg mr-3 backdrop-blur-sm">
+                      <ChartBarIcon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                    </div>
+                    Search Results
+                  </h2>
+                  {!isLoading && nocs.length > 0 && (
+                    <p
+                      className={`mt-1 text-sm sm:text-base ${themeClasses.textMuted}`}
+                    >
+                      Found{" "}
+                      <span className="font-bold text-white">{totalCount}</span>{" "}
+                      NOC classifications
+                      {searchCriteria.length > 0 && " matching your criteria"}
+                    </p>
+                  )}
+                </div>
+
+                {/* Filters and Sorting - Enhanced styling */}
                 {!isLoading && nocs.length > 0 && (
-                  <p className="mt-1 text-xs sm:text-sm text-gray-600">
-                    Found <span className="font-semibold">{totalCount}</span>{" "}
-                    NOC classifications
-                    {searchCriteria.length > 0 && " matching your criteria"}
-                  </p>
+                  <div className="flex flex-col xs:flex-row gap-3">
+                    {/* Sort By */}
+                    <div className="flex items-center">
+                      <ArrowsUpDownIcon className="h-5 w-5 text-white/70 mr-2 hidden sm:block" />
+                      <Select
+                        id="sort"
+                        value={`${sortBy},${sortOrder}`}
+                        onChange={handleSortChange}
+                        size="sm"
+                        placeholder={null}
+                        options={[
+                          { value: "code,ASC", label: "Code (A-Z)" },
+                          { value: "code,DESC", label: "Code (Z-A)" },
+                          { value: "unit_group_title,ASC", label: "Title (A-Z)" },
+                          { value: "unit_group_title,DESC", label: "Title (Z-A)" },
+                        ]}
+                      />
+                    </div>
+                  </div>
                 )}
               </div>
+            </div>
 
-              {/* Filters and Sorting - Improved mobile layout */}
-              {!isLoading && nocs.length > 0 && (
-                <div className="flex flex-col xs:flex-row gap-2 sm:gap-3">
-                  {/* Sort By */}
-                  <div className="flex items-center">
-                    <label htmlFor="sort" className="sr-only">
-                      Sort by
-                    </label>
-                    <ArrowsUpDownIcon className="h-4 w-4 text-gray-400 mr-2 hidden sm:block" />
-                    <select
-                      id="sort"
-                      value={`${sortBy},${sortOrder}`}
-                      onChange={handleSortChange}
-                      className="block w-full sm:w-auto rounded-lg border-gray-300 py-2 sm:py-1.5 pl-3 pr-8 text-xs sm:text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 min-h-[48px] appearance-none bg-white touch-manipulation"
-                      style={{
-                        WebkitTapHighlightColor: "transparent",
-                        minHeight: "48px",
-                        WebkitAppearance: "none",
-                        touchAction: "manipulation",
-                      }}
+            {/* Results Content */}
+            <div className="overflow-hidden">
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center py-16 sm:py-24">
+                  <div className="relative">
+                    <svg
+                      className={`animate-spin h-12 w-12 sm:h-16 sm:w-16 ${themeClasses.loadingSpinner}`}
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
                     >
-                      <option value="code,ASC">Code (A-Z)</option>
-                      <option value="code,DESC">Code (Z-A)</option>
-                      <option value="unit_group_title,ASC">Title (A-Z)</option>
-                      <option value="unit_group_title,DESC">Title (Z-A)</option>
-                    </select>
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    <SparklesIcon
+                      className={`absolute top-0 -right-2 h-4 w-4 ${themeClasses.accentText} animate-pulse`}
+                    />
                   </div>
-
-                  {/* Page Size */}
-                  <div className="flex items-center">
-                    <label htmlFor="pageSize" className="sr-only">
-                      Items per page
-                    </label>
-                    <AdjustmentsHorizontalIcon className="h-4 w-4 text-gray-400 mr-2 hidden sm:block" />
-                    <select
-                      id="pageSize"
-                      value={pageSize.toString()}
-                      onChange={handlePageSizeChange}
-                      className="block w-full sm:w-auto rounded-lg border-gray-300 py-2 sm:py-1.5 pl-3 pr-8 text-xs sm:text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 min-h-[44px] appearance-none bg-white"
-                      style={{
-                        WebkitTapHighlightColor: "transparent",
-                        minHeight: "44px",
-                        WebkitAppearance: "none",
-                      }}
-                    >
-                      <option value="25">25 per page</option>
-                      <option value="50">50 per page</option>
-                      <option value="100">100 per page</option>
-                      <option value="200">200 per page</option>
-                    </select>
-                  </div>
+                  <p
+                    className={`mt-4 text-base sm:text-lg ${themeClasses.textMuted} font-medium`}
+                  >
+                    Searching NOC database...
+                  </p>
                 </div>
+              ) : nocs.length === 0 ? (
+                <div className="text-center py-8 sm:py-12 px-4">
+                  <div
+                    className={`inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 ${themeClasses.badgeInactiveBg} rounded-full mb-4`}
+                  >
+                    <MagnifyingGlassIcon
+                      className={`h-8 w-8 sm:h-10 sm:w-10 ${themeClasses.textMuted}`}
+                    />
+                  </div>
+                  <h3
+                    className={`text-lg sm:text-xl font-bold ${themeClasses.linkText} mb-2`}
+                  >
+                    No NOCs Found
+                  </h3>
+                  <p
+                    className={`text-sm sm:text-base ${themeClasses.textMuted} mb-6 max-w-md mx-auto`}
+                  >
+                    No results were found. Try adjusting your search terms or
+                    using different keywords.
+                  </p>
+                  <Button
+                    variant="primary"
+                    gradient={true}
+                    onClick={() => navigate("/admin/settings/noc/search")}
+                    icon={ArrowLeftIcon}
+                  >
+                    Try New Search
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  {/* Results Table - Enhanced styling */}
+                  <div className="overflow-x-auto">
+                    <table className={`min-w-full divide-y ${themeClasses.borderMedium}`}>
+                      <thead
+                        className={themeClasses.tableHeaderBg}
+                      >
+                        <tr>
+                          <th
+                            scope="col"
+                            className={`px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-bold ${themeClasses.linkText} uppercase tracking-wider`}
+                          >
+                            <div className="flex items-center">
+                              <div
+                                className={`p-1 ${themeClasses.alertInfoBg} rounded mr-2`}
+                              >
+                                <HashtagIcon
+                                  className={`h-4 w-4 ${themeClasses.textPrimary}`}
+                                />
+                              </div>
+                              Code
+                            </div>
+                          </th>
+                          <th
+                            scope="col"
+                            className={`px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-bold ${themeClasses.linkText} uppercase tracking-wider`}
+                          >
+                            <div className="flex items-center">
+                              <div
+                                className={`p-1 ${themeClasses.badgeActiveBg} rounded mr-2`}
+                              >
+                                <BriefcaseIcon
+                                  className={`h-4 w-4 ${themeClasses.accentText}`}
+                                />
+                              </div>
+                              Unit Group Title
+                            </div>
+                          </th>
+                          <th
+                            scope="col"
+                            className={`hidden md:table-cell px-4 sm:px-6 py-3 sm:py-4 text-left text-xs sm:text-sm font-bold ${themeClasses.linkText} uppercase tracking-wider`}
+                          >
+                            <div className="flex items-center">
+                              <div
+                                className={`p-1 ${themeClasses.alertInfoBg} rounded mr-2`}
+                              >
+                                <FolderIcon
+                                  className={`h-4 w-4 ${themeClasses.textPrimary}`}
+                                />
+                              </div>
+                              Major Group
+                            </div>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className={`${themeClasses.bgCard} divide-y ${themeClasses.borderMedium}`}>
+                        {nocs.map((noc, index) => (
+                          <tr
+                            key={noc.id || index}
+                            onClick={() => handleRowClick(noc)}
+                            className={`${themeClasses.linkHover} cursor-pointer transition-all duration-200 group`}
+                          >
+                            <td className="px-4 sm:px-6 py-4 sm:py-5 whitespace-nowrap">
+                              <span
+                                className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm sm:text-base font-bold bg-gradient-to-r from-${themeClasses.alertInfoBg} to-${themeClasses.alertInfoBg} ${themeClasses.textPrimary} border ${themeClasses.borderPrimary} group-hover:shadow-sm transition-shadow`}
+                              >
+                                {noc.code}
+                              </span>
+                            </td>
+                            <td className="px-4 sm:px-6 py-4 sm:py-5">
+                              <div
+                                className={`text-sm sm:text-base font-semibold ${themeClasses.linkText} leading-relaxed`}
+                              >
+                                {noc.unitGroupTitle}
+                              </div>
+                              {/* Show major group on mobile as subtitle */}
+                              <div
+                                className={`md:hidden mt-1 text-xs sm:text-sm ${themeClasses.textMuted}`}
+                              >
+                                {noc.majorGroupCode && noc.majorGroupTitle ? (
+                                  <span>
+                                    <span
+                                      className={`font-semibold ${themeClasses.textPrimary}`}
+                                    >
+                                      {noc.majorGroupCode}
+                                    </span>{" "}
+                                    - {noc.majorGroupTitle}
+                                  </span>
+                                ) : (
+                                  noc.majorGroupTitle || (
+                                    <span
+                                      className={`${themeClasses.textMuted} italic`}
+                                    >
+                                      Not specified
+                                    </span>
+                                  )
+                                )}
+                              </div>
+                            </td>
+                            <td className="hidden md:table-cell px-4 sm:px-6 py-4 sm:py-5">
+                              <div
+                                className={`text-sm sm:text-base ${themeClasses.linkText}`}
+                              >
+                                {noc.majorGroupCode && noc.majorGroupTitle ? (
+                                  <span>
+                                    <span
+                                      className={`font-bold ${themeClasses.textPrimary}`}
+                                    >
+                                      {noc.majorGroupCode}
+                                    </span>{" "}
+                                    - {noc.majorGroupTitle}
+                                  </span>
+                                ) : (
+                                  noc.majorGroupTitle || (
+                                    <span
+                                      className={`${themeClasses.textMuted} italic`}
+                                    >
+                                      Not specified
+                                    </span>
+                                  )
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
               )}
             </div>
           </div>
-
-          {/* Results Content */}
-          <div className="overflow-hidden">
-            {isLoading ? (
-              <div className="flex flex-col items-center justify-center py-12 sm:py-16">
-                <svg
-                  className="animate-spin h-8 w-8 sm:h-10 sm:w-10 text-indigo-600 mb-3 sm:mb-4"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  />
-                </svg>
-                <p className="text-sm sm:text-base text-gray-600">
-                  Searching NOC database...
-                </p>
-              </div>
-            ) : nocs.length === 0 ? (
-              <div className="text-center py-12 sm:py-16 px-4">
-                <MagnifyingGlassIcon className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mb-3 sm:mb-4" />
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
-                  No NOCs Found
-                </h3>
-                <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6 max-w-md mx-auto">
-                  No National Occupational Classifications match your search
-                  criteria. Try adjusting your search terms or using different
-                  keywords.
-                </p>
-                <button
-                  onClick={() => navigate("/admin/settings/noc/search")}
-                  className="inline-flex items-center px-3 sm:px-4 py-2 border border-transparent text-xs sm:text-sm font-medium rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200 min-h-[48px] touch-manipulation"
-                  style={{
-                    WebkitTapHighlightColor: "transparent",
-                    minHeight: "48px",
-                    touchAction: "manipulation",
-                  }}
-                >
-                  <ArrowLeftIcon className="h-4 w-4 mr-2" />
-                  Try New Search
-                </button>
-              </div>
-            ) : (
-              <>
-                {/* Results Table - Improved mobile responsiveness */}
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th
-                          scope="col"
-                          className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          <div className="flex items-center">
-                            <HashtagIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                            Code
-                          </div>
-                        </th>
-                        <th
-                          scope="col"
-                          className="px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          <div className="flex items-center">
-                            <BriefcaseIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                            Unit Group Title
-                          </div>
-                        </th>
-                        <th
-                          scope="col"
-                          className="hidden md:table-cell px-3 sm:px-6 py-2 sm:py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          <div className="flex items-center">
-                            <FolderIcon className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                            Major Group
-                          </div>
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {nocs.map((noc, index) => (
-                        <tr
-                          key={noc.id || index}
-                          onClick={() => handleRowClick(noc)}
-                          className="hover:bg-gray-50 cursor-pointer transition-colors min-h-[48px] touch-manipulation"
-                          style={{
-                            WebkitTapHighlightColor: "rgba(79, 70, 229, 0.1)",
-                            minHeight: "48px",
-                            touchAction: "manipulation",
-                          }}
-                        >
-                          <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                            <span className="inline-flex items-center px-2 py-0.5 sm:px-2.5 rounded-md text-xs sm:text-sm font-medium bg-indigo-100 text-indigo-800">
-                              {noc.code}
-                            </span>
-                          </td>
-                          <td className="px-3 sm:px-6 py-3 sm:py-4">
-                            <div className="text-xs sm:text-sm font-medium text-gray-900 leading-tight">
-                              {noc.unitGroupTitle}
-                            </div>
-                            {/* Show major group on mobile as subtitle */}
-                            <div className="md:hidden mt-1 text-xs text-gray-600">
-                              {noc.majorGroupCode && noc.majorGroupTitle ? (
-                                <span>
-                                  <span className="font-medium">
-                                    {noc.majorGroupCode}
-                                  </span>{" "}
-                                  - {noc.majorGroupTitle}
-                                </span>
-                              ) : (
-                                noc.majorGroupTitle || (
-                                  <span className="text-gray-400 italic">
-                                    Not specified
-                                  </span>
-                                )
-                              )}
-                            </div>
-                          </td>
-                          <td className="hidden md:table-cell px-3 sm:px-6 py-3 sm:py-4">
-                            <div className="text-xs sm:text-sm text-gray-600">
-                              {noc.majorGroupCode && noc.majorGroupTitle ? (
-                                <span>
-                                  <span className="font-medium">
-                                    {noc.majorGroupCode}
-                                  </span>{" "}
-                                  - {noc.majorGroupTitle}
-                                </span>
-                              ) : (
-                                noc.majorGroupTitle || (
-                                  <span className="text-gray-400 italic">
-                                    Not specified
-                                  </span>
-                                )
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Pagination Footer - Improved mobile layout */}
-                {(hasPreviousPage || hasNextPage) && (
-                  <div className="bg-white px-3 sm:px-4 lg:px-6 py-3 flex items-center justify-between border-t border-gray-200">
-                    <div className="flex-1 flex justify-between sm:hidden">
-                      <button
-                        onClick={handlePreviousPage}
-                        disabled={!hasPreviousPage || isLoading}
-                        className="relative inline-flex items-center px-3 py-2 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 min-h-[48px] touch-manipulation"
-                        style={{
-                          WebkitTapHighlightColor: "transparent",
-                          minHeight: "48px",
-                          touchAction: "manipulation",
-                        }}
-                      >
-                        Previous
-                      </button>
-                      <button
-                        onClick={handleNextPage}
-                        disabled={!hasNextPage || isLoading}
-                        className="ml-3 relative inline-flex items-center px-3 py-2 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 min-h-[48px] touch-manipulation"
-                        style={{
-                          WebkitTapHighlightColor: "transparent",
-                          minHeight: "48px",
-                          touchAction: "manipulation",
-                        }}
-                      >
-                        Next
-                      </button>
-                    </div>
-                    <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                      <div>
-                        <p className="text-xs sm:text-sm text-gray-700">
-                          Showing{" "}
-                          <span className="font-medium">
-                            {(currentPage - 1) * pageSize + 1}
-                          </span>{" "}
-                          to{" "}
-                          <span className="font-medium">
-                            {Math.min(currentPage * pageSize, totalCount)}
-                          </span>{" "}
-                          of <span className="font-medium">{totalCount}</span>{" "}
-                          results
-                        </p>
-                      </div>
-                      <div>
-                        <nav
-                          className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                          aria-label="Pagination"
-                        >
-                          <button
-                            onClick={handlePreviousPage}
-                            disabled={!hasPreviousPage || isLoading}
-                            className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-xs sm:text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 min-h-[48px] min-w-[48px] touch-manipulation"
-                            style={{
-                              WebkitTapHighlightColor: "transparent",
-                              minHeight: "48px",
-                              minWidth: "48px",
-                              touchAction: "manipulation",
-                            }}
-                          >
-                            <span className="sr-only">Previous</span>
-                            <ChevronLeftIcon
-                              className="h-4 w-4 sm:h-5 sm:w-5"
-                              aria-hidden="true"
-                            />
-                          </button>
-
-                          {/* Page Numbers */}
-                          <span
-                            className="relative inline-flex items-center px-3 sm:px-4 py-2 border border-gray-300 bg-white text-xs sm:text-sm font-medium text-gray-700 min-h-[48px]"
-                            style={{ minHeight: "48px" }}
-                          >
-                            Page {currentPage}{" "}
-                            {totalPages > 1 && `of ${totalPages}`}
-                          </span>
-
-                          <button
-                            onClick={handleNextPage}
-                            disabled={!hasNextPage || isLoading}
-                            className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-xs sm:text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 min-h-[48px] min-w-[48px] touch-manipulation"
-                            style={{
-                              WebkitTapHighlightColor: "transparent",
-                              minHeight: "48px",
-                              minWidth: "48px",
-                              touchAction: "manipulation",
-                            }}
-                          >
-                            <span className="sr-only">Next</span>
-                            <ChevronRightIcon
-                              className="h-4 w-4 sm:h-5 sm:w-5"
-                              aria-hidden="true"
-                            />
-                          </button>
-                        </nav>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
         </div>
 
-        {/* Bottom Action Buttons - iOS & Android Optimized */}
-        <div
-          className="mt-4 sm:mt-6 flex flex-col sm:flex-row justify-between gap-3 sm:gap-4 pb-safe"
-          style={{
-            paddingBottom:
-              "max(0.75rem, env(safe-area-inset-bottom), env(keyboard-inset-height, 0px))",
-          }}
-        >
-          <button
-            onClick={() => navigate("/admin/settings/noc/search")}
-            className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-gray-300 shadow-sm text-xs sm:text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200 min-h-[48px] touch-manipulation"
-            style={{
-              WebkitTapHighlightColor: "transparent",
-              minHeight: "48px",
-              touchAction: "manipulation",
-            }}
-          >
-            <ArrowLeftIcon className="h-4 w-4 mr-2" />
-            Back to Search
-          </button>
-          <button
-            onClick={() => navigate("/admin/settings")}
-            className="inline-flex items-center justify-center px-3 sm:px-4 py-2 border border-gray-300 shadow-sm text-xs sm:text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-200 min-h-[48px] touch-manipulation"
-            style={{
-              WebkitTapHighlightColor: "transparent",
-              minHeight: "48px",
-              touchAction: "manipulation",
-            }}
-          >
-            Settings Dashboard
-          </button>
-        </div>
+        <style jsx>{`
+          @keyframes blob {
+            0% {
+              transform: translate(0px, 0px) scale(1);
+            }
+            33% {
+              transform: translate(30px, -50px) scale(1.1);
+            }
+            66% {
+              transform: translate(-20px, 20px) scale(0.9);
+            }
+            100% {
+              transform: translate(0px, 0px) scale(1);
+            }
+          }
+          .animate-blob {
+            animation: blob 7s infinite;
+          }
+          .animation-delay-2000 {
+            animation-delay: 2s;
+          }
+          .animation-delay-4000 {
+            animation-delay: 4s;
+          }
+          @keyframes slideIn {
+            from {
+              opacity: 0;
+              transform: translateY(-10px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+          .animate-slideIn {
+            animation: slideIn 0.3s ease-out;
+          }
+        `}</style>
       </div>
-    </div>
-  );
-}
+    );
+  },
+);
+
+SettingNOCSearchResultPageContent.displayName =
+  "SettingNOCSearchResultPageContent";
 
 export default SettingNOCSearchResultPage;

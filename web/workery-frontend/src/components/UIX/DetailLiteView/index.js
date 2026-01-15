@@ -1,0 +1,1 @@
+export { default as DetailLiteView } from './DetailLiteView.jsx';

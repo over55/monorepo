@@ -1,9 +1,11 @@
 // File Path: web/workery-frontend/src/pages/Admin/Financial/Detail/More/Clone/Page.jsx
+// UIX Upgraded - Uses UIX primitives (Spinner, Breadcrumb)
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useParams, useNavigate } from "react-router";
 import { useOrderManager } from "../../../../../../services/Services";
 import { ORDER_STATUS_ARCHIVED } from "../../../../../../constants/Order";
+import { Spinner, Breadcrumb, UIXThemeProvider, useUIXTheme } from "../../../../../../components/UIX";
 import {
   ChartBarIcon,
   CreditCardIcon,
@@ -25,6 +27,23 @@ function AdminFinancialDetailMoreClonePage() {
   // Service hooks
   const orderManager = useOrderManager();
 
+  // UIX Theme
+  const { getThemeClasses } = useUIXTheme();
+  const themeClasses = useMemo(() => ({
+    textPrimary: getThemeClasses("text-primary"),
+    textSecondary: getThemeClasses("text-secondary"),
+    linkPrimary: getThemeClasses("link-primary"),
+  }), [getThemeClasses]);
+
+  // Breadcrumb items
+  const breadcrumbItems = useMemo(() => [
+    { label: "Dashboard", to: "/admin/dashboard", icon: ChartBarIcon },
+    { label: "Financials", to: "/admin/financials", icon: CreditCardIcon },
+    { label: `Order #${oid}`, to: `/admin/financial/${oid}`, icon: InformationCircleIcon },
+    { label: "More", to: `/admin/financial/${oid}/more`, icon: EllipsisHorizontalIcon },
+    { label: "Clone", icon: DocumentDuplicateIcon, isActive: true },
+  ], [oid]);
+
   // Component states
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
@@ -34,9 +53,9 @@ function AdminFinancialDetailMoreClonePage() {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   // Handle unauthorized access
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
-  };
+  }, [navigate]);
 
   // Fetch order details
   useEffect(() => {
@@ -151,7 +170,7 @@ function AdminFinancialDetailMoreClonePage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <Spinner size="lg" />
             <p className="mt-4 text-gray-600">Loading order details...</p>
           </div>
         </div>
@@ -162,70 +181,7 @@ function AdminFinancialDetailMoreClonePage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Breadcrumb */}
-      <nav className="flex mb-6" aria-label="Breadcrumb">
-        <ol className="inline-flex items-center space-x-1 md:space-x-3">
-          <li className="inline-flex items-center">
-            <Link
-              to="/admin/dashboard"
-              className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
-            >
-              <ChartBarIcon className="w-4 h-4 mr-2" />
-              Dashboard
-            </Link>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <Link
-                to="/admin/financials"
-                className="text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                <span className="inline-flex items-center">
-                  <CreditCardIcon className="w-4 h-4 mr-2" />
-                  Financials
-                </span>
-              </Link>
-            </div>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <Link
-                to={`/admin/financial/${oid}`}
-                className="text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                <span className="inline-flex items-center">
-                  <InformationCircleIcon className="w-4 h-4 mr-2" />
-                  Order #{oid}
-                </span>
-              </Link>
-            </div>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <Link
-                to={`/admin/financial/${oid}/more`}
-                className="text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                <span className="inline-flex items-center">
-                  <EllipsisHorizontalIcon className="w-4 h-4 mr-2" />
-                  More
-                </span>
-              </Link>
-            </div>
-          </li>
-          <li aria-current="page">
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <span className="text-sm font-medium text-gray-500 inline-flex items-center">
-                <DocumentDuplicateIcon className="w-4 h-4 mr-2" />
-                Clone
-              </span>
-            </div>
-          </li>
-        </ol>
-      </nav>
+      <Breadcrumb items={breadcrumbItems} className="mb-6" />
 
       {/* Page Title */}
       <div className="mb-6">
@@ -464,4 +420,12 @@ function AdminFinancialDetailMoreClonePage() {
   );
 }
 
-export default AdminFinancialDetailMoreClonePage;
+function AdminFinancialDetailMoreClonePageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminFinancialDetailMoreClonePage />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminFinancialDetailMoreClonePageWithProvider;

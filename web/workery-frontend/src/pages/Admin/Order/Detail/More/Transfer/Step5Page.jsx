@@ -1,7 +1,14 @@
 // File Path: web/workery-frontend/src/pages/Admin/Order/Detail/More/Transfer/Step5Page.jsx
+// UIX Upgraded - Uses UIX primitives (Spinner, Breadcrumb, UIXThemeProvider, useUIXTheme)
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate, useParams } from "react-router";
+import {
+  Spinner,
+  Breadcrumb,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../../../components/UIX";
 import {
   useAuthManager,
   useOrderManager,
@@ -9,23 +16,14 @@ import {
 } from "../../../../../../services/Services";
 import {
   ArrowsRightLeftIcon,
-  ChevronRightIcon,
   XMarkIcon,
   InformationCircleIcon,
   ArrowLeftIcon,
   ChartBarIcon,
-  UserIcon,
-  EnvelopeIcon,
-  PhoneIcon,
   ExclamationCircleIcon,
-  MagnifyingGlassIcon,
   ClipboardDocumentIcon,
   EllipsisHorizontalIcon,
-  AdjustmentsHorizontalIcon,
-  ArrowRightIcon,
-  UserGroupIcon,
   WrenchScrewdriverIcon,
-  DocumentCheckIcon,
   CheckIcon,
   CheckCircleIcon,
   PencilSquareIcon,
@@ -73,6 +71,23 @@ function AdminOrderDetailMoreTransferStep5Page() {
   const orderManager = useOrderManager();
   const transferOperationStorage = useTransferOperationStorage();
   const navigate = useNavigate();
+  const { getThemeClasses } = useUIXTheme();
+
+  // Memoize theme classes
+  const themeClasses = useMemo(() => ({
+    textPrimary: getThemeClasses("text-primary"),
+    textSecondary: getThemeClasses("text-secondary"),
+    linkPrimary: getThemeClasses("link-primary"),
+  }), [getThemeClasses]);
+
+  // Memoize breadcrumb items
+  const breadcrumbItems = useMemo(() => [
+    { label: "Dashboard", to: "/admin/dashboard", icon: ChartBarIcon },
+    { label: "Orders", to: "/admin/orders", icon: WrenchScrewdriverIcon },
+    { label: `#${oid}`, to: `/admin/order/${oid}`, icon: ClipboardDocumentIcon },
+    { label: "More", to: `/admin/order/${oid}/more`, icon: EllipsisHorizontalIcon },
+    { label: "Transfer", icon: ArrowsRightLeftIcon, isActive: true },
+  ], [oid]);
 
   // State management
   const [order, setOrder] = useState(null);
@@ -84,12 +99,12 @@ function AdminOrderDetailMoreTransferStep5Page() {
   const [showCancelWarning, setShowCancelWarning] = useState(false);
 
   // Handle unauthorized access
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
-  };
+  }, [navigate]);
 
   // Fetch order data
-  const fetchOrder = async () => {
+  const fetchOrder = useCallback(async () => {
     setLoading(true);
     setErrors({});
 
@@ -102,7 +117,7 @@ function AdminOrderDetailMoreTransferStep5Page() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [oid, orderManager, onUnauthorized]);
 
   // Initialize component
   useEffect(() => {
@@ -207,7 +222,7 @@ function AdminOrderDetailMoreTransferStep5Page() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <Spinner size="lg" />
         <span className="ml-3 text-gray-600">Loading order details...</span>
       </div>
     );
@@ -216,91 +231,22 @@ function AdminOrderDetailMoreTransferStep5Page() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {/* Responsive Breadcrumb - Updated to match Step1Page */}
-        <nav
-          className="flex mb-4 sm:mb-6 overflow-x-auto"
-          aria-label="Breadcrumb"
-        >
-          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
-            <li className="inline-flex items-center">
-              <Link
-                to="/admin/dashboard"
-                className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
-              >
-                <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                <span className="hidden sm:inline">Dashboard</span>
-                <span className="sm:hidden">Dash</span>
-              </Link>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-3 sm:w-4 h-3 sm:h-4 text-gray-400 mx-1 sm:mx-2" />
-                <Link
-                  to="/admin/orders"
-                  className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
-                >
-                  <span className="inline-flex items-center">
-                    <WrenchScrewdriverIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                    <span className="hidden sm:inline">Orders</span>
-                    <span className="sm:hidden">Orders</span>
-                  </span>
-                </Link>
-              </div>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-3 sm:w-4 h-3 sm:h-4 text-gray-400 mx-1 sm:mx-2" />
-                <Link
-                  to={`/admin/order/${oid}`}
-                  className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
-                >
-                  <span className="inline-flex items-center">
-                    <ClipboardDocumentIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                    <span className="hidden sm:inline">Order #{oid}</span>
-                    <span className="sm:hidden">#{oid}</span>
-                  </span>
-                </Link>
-              </div>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-3 sm:w-4 h-3 sm:h-4 text-gray-400 mx-1 sm:mx-2" />
-                <Link
-                  to={`/admin/order/${oid}/more`}
-                  className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
-                >
-                  <span className="inline-flex items-center">
-                    <EllipsisHorizontalIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                    More
-                  </span>
-                </Link>
-              </div>
-            </li>
-            <li aria-current="page">
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-3 sm:w-4 h-3 sm:h-4 text-gray-400 mx-1 sm:mx-2" />
-                <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
-                  <ArrowsRightLeftIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                  Transfer
-                </span>
-              </div>
-            </li>
-          </ol>
-        </nav>
+        {/* Responsive Breadcrumb */}
+        <Breadcrumb items={breadcrumbItems} className="mb-4 sm:mb-6" />
 
         {/* Page Title - Responsive */}
         <div className="mb-4 sm:mb-6">
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-900 flex items-center">
-            <ArrowsRightLeftIcon className="w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
+          <h1 className={`text-xl sm:text-2xl md:text-3xl font-bold ${themeClasses.textPrimary} flex items-center`}>
+            <ArrowsRightLeftIcon className={`w-6 sm:w-7 md:w-8 h-6 sm:h-7 md:h-8 mr-2 sm:mr-3 ${themeClasses.linkPrimary} flex-shrink-0`} />
             Transfer Order
           </h1>
-          <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
+          <p className={`mt-1 text-xs sm:text-sm ${themeClasses.textSecondary} flex items-center`}>
             <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
             Review and confirm the transfer details
           </p>
         </div>
 
-        {/* Wizard Steps - Mobile First (Updated to match Step1Page) */}
+        {/* Wizard Steps - Mobile First */}
         <div className="mb-4 sm:mb-6">
           {/* Mobile View */}
           <div className="md:hidden bg-blue-50 border border-blue-200 rounded-lg p-3">
@@ -408,7 +354,7 @@ function AdminOrderDetailMoreTransferStep5Page() {
         {submitting ? (
           <div className="bg-white shadow-sm rounded-lg p-8">
             <div className="flex items-center justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+              <Spinner size="lg" />
               <span className="ml-3 text-gray-600">Processing transfer...</span>
             </div>
           </div>
@@ -545,7 +491,7 @@ function AdminOrderDetailMoreTransferStep5Page() {
         <div className="mt-6 sm:mt-8">
           <Link
             to={`/admin/order/${oid}/more`}
-            className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800 transition-colors"
+            className={`inline-flex items-center text-xs sm:text-sm ${themeClasses.linkPrimary} hover:opacity-80 transition-colors`}
           >
             <ArrowLeftIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
             Back to More Options
@@ -593,4 +539,13 @@ function AdminOrderDetailMoreTransferStep5Page() {
   );
 }
 
-export default AdminOrderDetailMoreTransferStep5Page;
+// Wrapper with UIXThemeProvider
+function AdminOrderDetailMoreTransferStep5PageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminOrderDetailMoreTransferStep5Page />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminOrderDetailMoreTransferStep5PageWithProvider;

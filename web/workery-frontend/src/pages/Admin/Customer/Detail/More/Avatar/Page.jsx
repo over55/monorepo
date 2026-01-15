@@ -1,7 +1,12 @@
-// File Path: web/workery-frontend/src/pages/Admin/Customer/Detail/More/Avatar/Page.jsx
-
-import React, { useState, useEffect } from "react";
+// UIX Upgraded - Uses UIX primitives (Card, Alert, Button, Breadcrumb, Spinner, etc.)
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate, useParams } from "react-router";
+import {
+  Breadcrumb,
+  Spinner,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../../../components/UIX";
 import {
   ChartBarIcon,
   UsersIcon,
@@ -33,6 +38,19 @@ function AdminCustomerDetailMoreAvatarPage() {
   const customerManager = useCustomerManager();
   const authManager = useAuthManager();
 
+  // UIX Theme
+  const { getThemeClasses } = useUIXTheme();
+
+  // Memoized theme classes
+  const themeClasses = useMemo(
+    () => ({
+      textPrimary: getThemeClasses("text-primary"),
+      textSecondary: getThemeClasses("text-secondary"),
+      linkPrimary: getThemeClasses("link-primary"),
+    }),
+    [getThemeClasses],
+  );
+
   // Component states
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
@@ -42,9 +60,21 @@ function AdminCustomerDetailMoreAvatarPage() {
   const [isUploading, setIsUploading] = useState(false);
 
   // Unauthorized callback
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
-  };
+  }, [navigate]);
+
+  // Memoized breadcrumb items
+  const breadcrumbItems = useMemo(
+    () => [
+      { label: "Dashboard", path: "/admin/dashboard", icon: "chart-bar" },
+      { label: "Customers", path: "/admin/customers", icon: "users" },
+      { label: "Detail", path: `/admin/customer/${cid}`, icon: "information-circle" },
+      { label: "More", path: `/admin/customer/${cid}/more`, icon: "cog-6-tooth" },
+      { label: "Avatar", icon: "camera" },
+    ],
+    [cid],
+  );
 
   // Load customer details
   useEffect(() => {
@@ -206,10 +236,7 @@ function AdminCustomerDetailMoreAvatarPage() {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-gray-600">Loading customer details...</p>
-          </div>
+          <Spinner size="lg" />
         </div>
       </div>
     );
@@ -218,70 +245,7 @@ function AdminCustomerDetailMoreAvatarPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Breadcrumb */}
-      <nav className="flex mb-6" aria-label="Breadcrumb">
-        <ol className="inline-flex items-center space-x-1 md:space-x-3">
-          <li className="inline-flex items-center">
-            <Link
-              to="/admin/dashboard"
-              className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
-            >
-              <ChartBarIcon className="w-4 h-4 mr-2" />
-              Dashboard
-            </Link>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <Link
-                to="/admin/customers"
-                className="text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                <span className="inline-flex items-center">
-                  <UsersIcon className="w-4 h-4 mr-2" />
-                  Customers
-                </span>
-              </Link>
-            </div>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <Link
-                to={`/admin/customer/${cid}`}
-                className="text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                <span className="inline-flex items-center">
-                  <InformationCircleIcon className="w-4 h-4 mr-2" />
-                  Detail
-                </span>
-              </Link>
-            </div>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <Link
-                to={`/admin/customer/${cid}/more`}
-                className="text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                <span className="inline-flex items-center">
-                  <Cog6ToothIcon className="w-4 h-4 mr-2" />
-                  More
-                </span>
-              </Link>
-            </div>
-          </li>
-          <li aria-current="page">
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <span className="text-sm font-medium text-gray-500 inline-flex items-center">
-                <CameraIcon className="w-4 h-4 mr-2" />
-                Avatar
-              </span>
-            </div>
-          </li>
-        </ol>
-      </nav>
+      <Breadcrumb items={breadcrumbItems} />
 
       {/* Page Title */}
       <div className="mb-6">
@@ -478,7 +442,7 @@ function AdminCustomerDetailMoreAvatarPage() {
             >
               {isUploading ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <Spinner size="sm" className="mr-2" />
                   Uploading...
                 </>
               ) : (
@@ -495,4 +459,12 @@ function AdminCustomerDetailMoreAvatarPage() {
   );
 }
 
-export default AdminCustomerDetailMoreAvatarPage;
+function AdminCustomerDetailMoreAvatarPageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminCustomerDetailMoreAvatarPage />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminCustomerDetailMoreAvatarPageWithProvider;

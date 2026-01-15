@@ -1,7 +1,14 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/OrderIncident/Detail/Page.jsx
+// UIX Upgraded - Uses UIX primitives (Breadcrumb, Spinner, UIXThemeProvider, useUIXTheme)
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate, useParams } from "react-router";
+import {
+  Breadcrumb,
+  Spinner,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../components/UIX";
 import {
   ChartBarIcon,
   ExclamationTriangleIcon,
@@ -39,6 +46,15 @@ function AdminOrderIncidentDetailPage() {
   const orderIncidentManager = useOrderIncidentManager();
   const authManager = useAuthManager();
   const navigate = useNavigate();
+  const { getThemeClasses } = useUIXTheme();
+
+  // Memoize theme classes
+  const themeClasses = useMemo(() => ({
+    textPrimary: getThemeClasses("text-primary"),
+    textSecondary: getThemeClasses("text-secondary"),
+    bgCard: getThemeClasses("bg-card"),
+    cardBorder: getThemeClasses("card-border"),
+  }), [getThemeClasses]);
 
   // Component states
   const [errors, setErrors] = useState({});
@@ -49,9 +65,28 @@ function AdminOrderIncidentDetailPage() {
   const [alertMessage, setAlertMessage] = useState("");
   const [alertStatus, setAlertStatus] = useState("");
 
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
-  };
+  }, [navigate]);
+
+  // Memoize breadcrumb items
+  const breadcrumbItems = useMemo(() => [
+    {
+      label: "Dashboard",
+      to: "/admin/dashboard",
+      icon: ChartBarIcon,
+    },
+    {
+      label: "Incidents",
+      to: "/admin/incidents",
+      icon: ExclamationTriangleIcon,
+    },
+    {
+      label: "Detail",
+      icon: InformationCircleIcon,
+      isActive: true,
+    },
+  ], []);
 
   // Fetch incident details
   const fetchData = async () => {
@@ -142,7 +177,7 @@ function AdminOrderIncidentDetailPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <Spinner size="lg" />
             <p className="mt-4 text-sm sm:text-base text-gray-600">
               Loading incident details...
             </p>
@@ -154,47 +189,8 @@ function AdminOrderIncidentDetailPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-      {/* Responsive Breadcrumb */}
-      <nav
-        className="flex mb-4 sm:mb-6 overflow-x-auto"
-        aria-label="Breadcrumb"
-      >
-        <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
-          <li className="inline-flex items-center">
-            <Link
-              to="/admin/dashboard"
-              className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
-            >
-              <ChartBarIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-              <span className="hidden sm:inline">Dashboard</span>
-              <span className="sm:hidden">Dash</span>
-            </Link>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
-              <Link
-                to="/admin/incidents"
-                className="text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 whitespace-nowrap"
-              >
-                <span className="inline-flex items-center">
-                  <ExclamationTriangleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                  Incidents
-                </span>
-              </Link>
-            </div>
-          </li>
-          <li aria-current="page">
-            <div className="flex items-center">
-              <span className="mx-1 sm:mx-2 text-gray-400">/</span>
-              <span className="text-xs sm:text-sm font-medium text-gray-500 inline-flex items-center whitespace-nowrap">
-                <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                Detail
-              </span>
-            </div>
-          </li>
-        </ol>
-      </nav>
+      {/* Breadcrumb */}
+      <Breadcrumb items={breadcrumbItems} />
 
       {/* Page Title - Responsive */}
       <div className="mb-4 sm:mb-6">
@@ -624,4 +620,13 @@ function AdminOrderIncidentDetailPage() {
   );
 }
 
-export default AdminOrderIncidentDetailPage;
+// Wrapper with UIXThemeProvider
+function AdminOrderIncidentDetailPageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminOrderIncidentDetailPage />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminOrderIncidentDetailPageWithProvider;

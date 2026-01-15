@@ -3,6 +3,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./AppRouter";
 import { ServiceProvider } from "./services/Services";
+import { UIXThemeProvider } from "./components/UIX";
 import "./styles/app.css";
 
 // Error Boundary Component
@@ -51,9 +52,11 @@ const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>
     <ErrorBoundary>
-      <ServiceProvider>
-        <App /> {/* AppRouter should contain BrowserRouter */}
-      </ServiceProvider>
+      <UIXThemeProvider>
+        <ServiceProvider>
+          <App /> {/* AppRouter should contain BrowserRouter */}
+        </ServiceProvider>
+      </UIXThemeProvider>
     </ErrorBoundary>
   </React.StrictMode>,
 );

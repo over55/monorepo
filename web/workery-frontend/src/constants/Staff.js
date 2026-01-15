@@ -19,6 +19,10 @@ export const UNASSIGNED_STAFF_TYPE_OF_ID = 1;
 export const RESIDENTIAL_STAFF_TYPE_OF_ID = 2;
 export const COMMERCIAL_STAFF_TYPE_OF_ID = 3;
 
+// Staff status constants
+export const STAFF_STATUS_ACTIVE = 1;
+export const STAFF_STATUS_ARCHIVED = 2;
+
 // Staff type filter options
 export const STAFF_TYPE_FILTER_OPTIONS = [
   { value: 0, label: "All" },

@@ -1,6 +1,7 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Setting/AssociateAwayLog/List/Page.jsx
+// UIX Upgraded - Uses UIX primitives (requires custom Check Expired Docs feature not supported by SettingsListView)
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 import {
   useAssociateAwayLogManager,
@@ -31,6 +32,17 @@ import {
 } from "@heroicons/react/24/outline";
 import { ChevronDownIcon } from "@heroicons/react/20/solid";
 import { formatDateForDisplay } from "../../../../../services/Helpers/DateFormatter";
+import {
+  Card,
+  Button,
+  Alert,
+  Spinner,
+  Breadcrumb,
+  UIXThemeProvider,
+  useUIXTheme,
+  Select,
+  Input,
+} from "../../../../../components/UIX";
 
 // Constants - Updated to match backend
 const SORT_OPTIONS = [
@@ -67,6 +79,7 @@ function SettingAssociateAwayLogListPage() {
   const associateManager = useAssociateManager();
   const navigate = useNavigate();
   const isLoadingRef = useRef(false);
+  const { getThemeClasses } = useUIXTheme();
 
   // State management
   const [associateAwayLogs, setAssociateAwayLogs] = useState([]);
@@ -97,10 +110,24 @@ function SettingAssociateAwayLogListPage() {
   // Mobile filter toggle
   const [showMobileFilters, setShowMobileFilters] = useState(false);
 
+  // Memoize theme classes
+  const themeClasses = useMemo(() => ({
+    textPrimary: getThemeClasses("text-primary"),
+    textSecondary: getThemeClasses("text-secondary"),
+    linkPrimary: getThemeClasses("link-primary"),
+  }), [getThemeClasses]);
+
   // Handle unauthorized access
-  const onUnauthorized = () => {
+  const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
-  };
+  }, [navigate]);
+
+  // Breadcrumb items
+  const breadcrumbItems = useMemo(() => [
+    { label: "Dashboard", to: "/admin/dashboard", icon: ChartBarIcon },
+    { label: "Settings", to: "/admin/settings", icon: Cog6ToothIcon },
+    { label: "Associate Away Logs", icon: CalendarDaysIcon, isActive: true },
+  ], []);
 
   // Check for associates with expired insurance/police checks
   const checkForExpiredDocuments = async () => {
@@ -318,113 +345,54 @@ function SettingAssociateAwayLogListPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-        {/* Breadcrumb - Responsive */}
-        <nav className="flex mb-4 sm:mb-6 lg:mb-8" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-wrap">
-            <li className="inline-flex items-center">
-              <Link
-                to="/admin/dashboard"
-                className="inline-flex items-center text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                <ChartBarIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Dashboard</span>
-                <span className="sm:hidden">Dash</span>
-              </Link>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
-                <Link
-                  to="/admin/settings"
-                  className="ml-1 text-xs sm:text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
-                >
-                  <span className="inline-flex items-center">
-                    <Cog6ToothIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                    Settings
-                  </span>
-                </Link>
-              </div>
-            </li>
-            <li aria-current="page">
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
-                <span className="ml-1 text-xs sm:text-sm font-medium text-gray-500 md:ml-2 inline-flex items-center">
-                  <CalendarDaysIcon className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">Associate Away Logs</span>
-                  <span className="sm:hidden">Away Logs</span>
-                </span>
-              </div>
-            </li>
-          </ol>
-        </nav>
+        <Breadcrumb items={breadcrumbItems} className="mb-4" />
 
-        {/* Header - Responsive */}
+        {/* Header */}
         <div className="mb-4 sm:mb-6 lg:mb-8">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 flex items-center">
-            <CalendarDaysIcon className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 mr-2 sm:mr-3 text-gray-700" />
+          <h1 className={`text-xl sm:text-2xl lg:text-3xl font-bold ${themeClasses.textPrimary} flex items-center`}>
+            <CalendarDaysIcon className={`w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 mr-2 sm:mr-3 ${themeClasses.linkPrimary}`} />
             <span className="hidden sm:inline">Associate Away Logs</span>
             <span className="sm:hidden">Away Logs</span>
           </h1>
         </div>
 
-        {/* Success/Error Messages - Responsive */}
+        {/* Success/Error Messages */}
         {success && (
-          <div className="mb-4 sm:mb-6 bg-green-50 border border-green-200 text-green-800 px-3 py-2 sm:px-4 sm:py-3 rounded-lg flex items-center justify-between">
-            <span className="flex items-center text-sm sm:text-base">
-              <CheckCircleIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 flex-shrink-0" />
-              <span className="break-words">{success}</span>
-            </span>
-            <button
-              onClick={() => setSuccess(null)}
-              className="text-green-600 hover:text-green-800 ml-2 flex-shrink-0"
-            >
-              <XMarkIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-          </div>
+          <Alert type="success" dismissible onDismiss={() => setSuccess(null)} className="mb-4">
+            {success}
+          </Alert>
         )}
 
         {error && (
-          <div className="mb-4 sm:mb-6 bg-red-50 border border-red-200 text-red-800 px-3 py-2 sm:px-4 sm:py-3 rounded-lg flex items-center justify-between">
-            <span className="flex items-center text-sm sm:text-base">
-              <ExclamationTriangleIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 flex-shrink-0" />
-              <span className="break-words">{error}</span>
-            </span>
-            <button
-              onClick={() => setError(null)}
-              className="text-red-600 hover:text-red-800 ml-2 flex-shrink-0"
-            >
-              <XMarkIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
-          </div>
+          <Alert type="error" dismissible onDismiss={() => setError(null)} className="mb-4">
+            {error}
+          </Alert>
         )}
 
         {/* Expired Documents Warning */}
         {associatesWithExpiredDocs.length > 0 && (
-          <div className="mb-4 sm:mb-6 bg-amber-50 border border-amber-200 text-amber-800 px-3 py-2 sm:px-4 sm:py-3 rounded-lg">
-            <div className="flex items-center">
-              <ShieldExclamationIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 flex-shrink-0" />
-              <span className="text-sm sm:text-base">
-                {associatesWithExpiredDocs.length} associate(s) have expired
-                documents but are not on the away list. Consider creating away
-                logs for them.
-              </span>
-            </div>
-          </div>
+          <Alert type="warning" className="mb-4">
+            <ShieldExclamationIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-2 flex-shrink-0 inline" />
+            {associatesWithExpiredDocs.length} associate(s) have expired
+            documents but are not on the away list. Consider creating away
+            logs for them.
+          </Alert>
         )}
 
         {/* Main Card */}
-        <div className="bg-white shadow-sm rounded-lg">
-          {/* Card Header - Responsive */}
+        <Card>
+          {/* Card Header */}
           <div className="px-4 py-3 sm:px-6 sm:py-4 border-b border-gray-200 flex items-center justify-between">
             <h2 className="text-base sm:text-lg font-semibold text-gray-800 flex items-center">
               <ClipboardDocumentListIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
               List
             </h2>
             <div className="flex items-center space-x-2">
-              <button
+              <Button
+                variant="warning"
+                size="sm"
                 onClick={() => checkForExpiredDocuments()}
                 disabled={checkingExpiredDocs}
-                className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 bg-amber-500 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 transition-colors disabled:opacity-50"
               >
                 {checkingExpiredDocs ? (
                   <ArrowPathIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-0.5 sm:mr-1 animate-spin" />
@@ -433,21 +401,22 @@ function SettingAssociateAwayLogListPage() {
                 )}
                 <span className="hidden sm:inline">Check Expired Docs</span>
                 <span className="sm:hidden">Check</span>
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="success"
+                size="sm"
                 onClick={() =>
                   navigate("/admin/settings/associate-away-log/create")
                 }
-                className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 bg-emerald-500 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors"
               >
                 <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-0.5 sm:mr-1" />
                 <span className="hidden sm:inline">New</span>
                 <span className="sm:hidden">Add</span>
-              </button>
+              </Button>
             </div>
           </div>
 
-          {/* Filters Section - Responsive */}
+          {/* Filters Section */}
           <div className="px-4 py-3 sm:px-6 sm:py-4 bg-gray-50 border-b border-gray-200">
             <div className="flex items-center justify-between mb-3 sm:mb-4">
               <h3 className="text-xs sm:text-sm font-medium text-gray-700 flex items-center">
@@ -477,83 +446,49 @@ function SettingAssociateAwayLogListPage() {
               className={`grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 ${showMobileFilters ? "block" : "hidden sm:grid"}`}
             >
               {/* Search */}
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                  Search:
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
-                    placeholder="Search by associate..."
-                    className="w-full px-2.5 py-1.5 sm:px-3 sm:py-2 pr-8 sm:pr-10 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-                  />
-                  <button
-                    onClick={handleSearch}
-                    className="absolute right-1.5 sm:right-2 top-1/2 -translate-y-1/2 p-1 text-gray-400 hover:text-gray-600"
-                  >
-                    <MagnifyingGlassIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </button>
-                </div>
-              </div>
+              <Input
+                label="Search:"
+                value={searchText}
+                onChange={(value) => setSearchText(value)}
+                placeholder="Search by associate..."
+                icon={MagnifyingGlassIcon}
+                onKeyPress={(e) => e.key === "Enter" && handleSearch()}
+              />
 
               {/* Status */}
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                  Status
-                </label>
-                <div className="relative">
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => {
-                      setStatusFilter(e.target.value);
-                    }}
-                    className="w-full px-2.5 py-1.5 sm:px-3 sm:py-2 pr-8 sm:pr-10 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
-                  >
-                    {STATUS_FILTER_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDownIcon className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400 pointer-events-none" />
-                </div>
-              </div>
+              <Select
+                label="Status"
+                value={statusFilter}
+                onChange={(value) => setStatusFilter(value)}
+                options={STATUS_FILTER_OPTIONS.map((opt) => ({
+                  value: opt.value,
+                  label: opt.label,
+                }))}
+                placeholder="All Statuses"
+              />
 
               {/* Sort By */}
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                  Sort by
-                </label>
-                <div className="relative">
-                  <select
-                    value={`${sortBy},${sortOrder}`}
-                    onChange={(e) => {
-                      const [field, order] = e.target.value.split(",");
-                      setSortBy(field);
-                      setSortOrder(order);
-                    }}
-                    className="w-full px-2.5 py-1.5 sm:px-3 sm:py-2 pr-8 sm:pr-10 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none bg-white"
-                  >
-                    {SORT_OPTIONS.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDownIcon className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400 pointer-events-none" />
-                </div>
-              </div>
+              <Select
+                label="Sort by"
+                value={`${sortBy},${sortOrder}`}
+                onChange={(value) => {
+                  const [field, order] = value.split(",");
+                  setSortBy(field);
+                  setSortOrder(order);
+                }}
+                options={SORT_OPTIONS.map((opt) => ({
+                  value: opt.value,
+                  label: opt.label,
+                }))}
+              />
             </div>
           </div>
 
-          {/* Table Content - Responsive */}
+          {/* Table Content */}
           <div className="px-4 py-3 sm:px-6 sm:py-4">
             {loading ? (
               <div className="flex items-center justify-center py-8 sm:py-12">
-                <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-blue-600"></div>
+                <Spinner size="lg" />
                 <span className="ml-2 sm:ml-3 text-sm sm:text-base text-gray-600">
                   Loading...
                 </span>
@@ -686,160 +621,161 @@ function SettingAssociateAwayLogListPage() {
                 {/* Mobile/Tablet Card View - Visible on mobile and tablet */}
                 <div className="lg:hidden space-y-3">
                   {associateAwayLogs.map((awayLog) => (
-                    <div
+                    <Card
                       key={awayLog.id}
-                      className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                      className="hover:shadow-md transition-shadow"
                     >
-                      <div className="flex items-start justify-between mb-3">
-                        <Link
-                          to={`/admin/associate/${awayLog.associateId}`}
-                          className="text-blue-600 hover:text-blue-800 font-medium flex items-center text-sm"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          <UserIcon className="w-4 h-4 mr-1" />
-                          {awayLog.associateName ||
-                            `Associate #${awayLog.associateId}`}
-                        </Link>
-                        <div className="flex items-center space-x-2">
-                          <button
-                            onClick={() =>
-                              navigate(
-                                `/admin/settings/associate-away-log/${awayLog.id}/detail`,
-                              )
-                            }
-                            className="text-blue-600 hover:text-blue-800"
-                            title="View"
+                      <div className="p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <Link
+                            to={`/admin/associate/${awayLog.associateId}`}
+                            className="text-blue-600 hover:text-blue-800 font-medium flex items-center text-sm"
+                            target="_blank"
+                            rel="noopener noreferrer"
                           >
-                            <EyeIcon className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() =>
-                              navigate(
-                                `/admin/settings/associate-away-log/${awayLog.id}/update`,
-                              )
-                            }
-                            className="text-amber-600 hover:text-amber-800"
-                            title="Edit"
-                          >
-                            <PencilSquareIcon className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() =>
-                              navigate(
-                                `/admin/settings/associate-away-log/${awayLog.id}/delete`,
-                              )
-                            }
-                            className="text-red-600 hover:text-red-800"
-                            title="Delete"
-                          >
-                            <TrashIcon className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2 text-xs">
-                        <div className="flex items-start">
-                          <span className="text-gray-500 w-20 flex-shrink-0">
-                            Reason:
-                          </span>
-                          <span className="text-gray-900 flex items-center">
-                            {(awayLog.reason ===
-                              REASON_COMMERCIAL_INSURANCE_EXPIRED ||
-                              awayLog.reason ===
-                                REASON_POLICE_CHECK_EXPIRED) && (
-                              <ShieldExclamationIcon className="w-3 h-3 mr-1 text-amber-500" />
-                            )}
-                            {awayLog.reason === 1
-                              ? awayLog.reasonOther || "Other"
-                              : REASON_MAP[awayLog.reason] || "Unknown"}
-                          </span>
+                            <UserIcon className="w-4 h-4 mr-1" />
+                            {awayLog.associateName ||
+                              `Associate #${awayLog.associateId}`}
+                          </Link>
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() =>
+                                navigate(
+                                  `/admin/settings/associate-away-log/${awayLog.id}/detail`,
+                                )
+                              }
+                              className="text-blue-600 hover:text-blue-800"
+                              title="View"
+                            >
+                              <EyeIcon className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() =>
+                                navigate(
+                                  `/admin/settings/associate-away-log/${awayLog.id}/update`,
+                                )
+                              }
+                              className="text-amber-600 hover:text-amber-800"
+                              title="Edit"
+                            >
+                              <PencilSquareIcon className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() =>
+                                navigate(
+                                  `/admin/settings/associate-away-log/${awayLog.id}/delete`,
+                                )
+                              }
+                              className="text-red-600 hover:text-red-800"
+                              title="Delete"
+                            >
+                              <TrashIcon className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
 
-                        <div className="flex items-start">
-                          <span className="text-gray-500 w-20 flex-shrink-0">
-                            Start:
-                          </span>
-                          <span className="text-gray-900 flex items-center">
-                            <CalendarIcon className="w-3 h-3 mr-1 text-gray-400" />
-                            {formatDateForDisplay(awayLog.startDate)}
-                          </span>
-                        </div>
-
-                        <div className="flex items-start">
-                          <span className="text-gray-500 w-20 flex-shrink-0">
-                            Until:
-                          </span>
-                          {awayLog.untilFurtherNotice === 1 ? (
-                            <span className="text-amber-600 font-medium flex items-center">
-                              <ClockIcon className="w-3 h-3 mr-1" />
-                              Further Notice
+                        <div className="space-y-2 text-xs">
+                          <div className="flex items-start">
+                            <span className="text-gray-500 w-20 flex-shrink-0">
+                              Reason:
                             </span>
-                          ) : (
+                            <span className="text-gray-900 flex items-center">
+                              {(awayLog.reason ===
+                                REASON_COMMERCIAL_INSURANCE_EXPIRED ||
+                                awayLog.reason ===
+                                  REASON_POLICE_CHECK_EXPIRED) && (
+                                <ShieldExclamationIcon className="w-3 h-3 mr-1 text-amber-500" />
+                              )}
+                              {awayLog.reason === 1
+                                ? awayLog.reasonOther || "Other"
+                                : REASON_MAP[awayLog.reason] || "Unknown"}
+                            </span>
+                          </div>
+
+                          <div className="flex items-start">
+                            <span className="text-gray-500 w-20 flex-shrink-0">
+                              Start:
+                            </span>
                             <span className="text-gray-900 flex items-center">
                               <CalendarIcon className="w-3 h-3 mr-1 text-gray-400" />
-                              {formatDateForDisplay(awayLog.untilDate)}
+                              {formatDateForDisplay(awayLog.startDate)}
                             </span>
-                          )}
-                        </div>
+                          </div>
 
-                        <div className="flex items-start">
-                          <span className="text-gray-500 w-20 flex-shrink-0">
-                            Created:
-                          </span>
-                          <span className="text-gray-900">
-                            {formatDateForDisplay(awayLog.createdAt)}
-                          </span>
+                          <div className="flex items-start">
+                            <span className="text-gray-500 w-20 flex-shrink-0">
+                              Until:
+                            </span>
+                            {awayLog.untilFurtherNotice === 1 ? (
+                              <span className="text-amber-600 font-medium flex items-center">
+                                <ClockIcon className="w-3 h-3 mr-1" />
+                                Further Notice
+                              </span>
+                            ) : (
+                              <span className="text-gray-900 flex items-center">
+                                <CalendarIcon className="w-3 h-3 mr-1 text-gray-400" />
+                                {formatDateForDisplay(awayLog.untilDate)}
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex items-start">
+                            <span className="text-gray-500 w-20 flex-shrink-0">
+                              Created:
+                            </span>
+                            <span className="text-gray-900">
+                              {formatDateForDisplay(awayLog.createdAt)}
+                            </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </Card>
                   ))}
                 </div>
 
-                {/* Cursor-based Pagination - Responsive */}
+                {/* Cursor-based Pagination */}
                 <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-3 sm:space-y-0">
                   <div className="flex items-center space-x-2">
-                    <label className="text-xs sm:text-sm text-gray-700">
-                      Per page:
-                    </label>
-                    <select
-                      value={pageSize}
-                      onChange={(e) => {
-                        setPageSize(parseInt(e.target.value));
-                      }}
-                      className="px-2 py-1 sm:px-3 sm:py-1 border border-gray-300 rounded-lg text-xs sm:text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value={10}>10</option>
-                      <option value={25}>25</option>
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                    </select>
+                    <Select
+                      label="Per page:"
+                      value={String(pageSize)}
+                      onChange={(value) => setPageSize(parseInt(value))}
+                      options={[
+                        { value: "10", label: "10" },
+                        { value: "25", label: "25" },
+                        { value: "50", label: "50" },
+                        { value: "100", label: "100" },
+                      ]}
+                      className="w-20"
+                    />
                   </div>
 
                   <div className="flex items-center justify-center space-x-2">
-                    <button
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={handlePreviousPage}
                       disabled={!hasPreviousPage}
-                      className="px-2 py-1 sm:px-3 sm:py-1 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
                     >
                       <ChevronLeftIcon className="w-4 h-4 mr-1" />
                       <span className="hidden sm:inline">Previous</span>
                       <span className="sm:hidden">Prev</span>
-                    </button>
+                    </Button>
 
                     <span className="text-xs sm:text-sm text-gray-700 px-3">
                       Showing {startRecord} - {endRecord}
                     </span>
 
-                    <button
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={handleNextPage}
                       disabled={!hasNextPage}
-                      className="px-2 py-1 sm:px-3 sm:py-1 text-xs sm:text-sm border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center"
                     >
                       <span className="hidden sm:inline">Next</span>
                       <span className="sm:hidden">Next</span>
                       <ChevronRightIcon className="w-4 h-4 ml-1" />
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </>
@@ -855,23 +791,32 @@ function SettingAssociateAwayLogListPage() {
                     : "No associate away logs have been created yet."}
                 </p>
                 <div className="mt-4 sm:mt-6">
-                  <button
+                  <Button
+                    variant="primary"
                     onClick={() =>
                       navigate("/admin/settings/associate-away-log/create")
                     }
-                    className="inline-flex items-center px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 text-white text-xs sm:text-sm font-medium rounded-lg hover:bg-blue-700"
                   >
                     <PlusIcon className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
                     Create First Away Log
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );
 }
 
-export default SettingAssociateAwayLogListPage;
+// Wrapper with UIXThemeProvider
+function SettingAssociateAwayLogListPageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <SettingAssociateAwayLogListPage />
+    </UIXThemeProvider>
+  );
+}
+
+export default SettingAssociateAwayLogListPageWithProvider;

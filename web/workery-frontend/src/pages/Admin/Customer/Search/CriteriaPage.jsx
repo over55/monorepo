@@ -1,7 +1,13 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Admin/Customer/Search/CriteriaPage.jsx
-import React, { useState, useEffect } from "react";
+// UIX Upgraded - Uses UIX primitives (Card, Alert, Button, Breadcrumb, Spinner, etc.)
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate } from "react-router";
 import { useAuthManager } from "../../../../services/Services";
+import {
+  Breadcrumb,
+  Spinner,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../components/UIX";
 import {
   MagnifyingGlassIcon,
   UserGroupIcon,
@@ -22,6 +28,17 @@ import {
 function AdminCustomerSearchCriteriaPage() {
   const authManager = useAuthManager();
   const navigate = useNavigate();
+  const { getThemeClasses } = useUIXTheme();
+
+  // Memoized theme classes
+  const themeClasses = useMemo(
+    () => ({
+      textPrimary: getThemeClasses("text-primary"),
+      textSecondary: getThemeClasses("text-secondary"),
+      linkPrimary: getThemeClasses("link-primary"),
+    }),
+    [getThemeClasses],
+  );
 
   // Form states
   const [errors, setErrors] = useState({});
@@ -32,6 +49,21 @@ function AdminCustomerSearchCriteriaPage() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [showOnlyActive, setShowOnlyActive] = useState(true);
+
+  // Memoized breadcrumb items
+  const breadcrumbItems = useMemo(
+    () => [
+      { label: "Dashboard", path: "/admin/dashboard", icon: "chart-bar" },
+      { label: "Customers", path: "/admin/customers", icon: "users" },
+      { label: "Search", icon: "magnifying-glass" },
+    ],
+    [],
+  );
+
+  // Memoized unauthorized handler
+  const onUnauthorized = useCallback(() => {
+    navigate("/login?unauthorized=true");
+  }, [navigate]);
 
   // Check authentication on mount
   useEffect(() => {
@@ -105,10 +137,7 @@ function AdminCustomerSearchCriteriaPage() {
   if (isFetching) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -117,38 +146,7 @@ function AdminCustomerSearchCriteriaPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
-        <nav className="flex mb-8" aria-label="Breadcrumb">
-          <ol className="inline-flex items-center space-x-1 md:space-x-3">
-            <li className="inline-flex items-center">
-              <Link
-                to="/admin/dashboard"
-                className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                <ChartBarIcon className="w-4 h-4 mr-2" />
-                Dashboard
-              </Link>
-            </li>
-            <li>
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <Link
-                  to="/admin/customers"
-                  className="ml-1 text-sm font-medium text-gray-700 hover:text-blue-600 md:ml-2"
-                >
-                  Customers
-                </Link>
-              </div>
-            </li>
-            <li aria-current="page">
-              <div className="flex items-center">
-                <ChevronRightIcon className="w-5 h-5 text-gray-400" />
-                <span className="ml-1 text-sm font-medium text-gray-500 md:ml-2">
-                  Search
-                </span>
-              </div>
-            </li>
-          </ol>
-        </nav>
+        <Breadcrumb items={breadcrumbItems} />
 
         {/* Header Section */}
         <div className="mb-8">
@@ -359,26 +357,7 @@ function AdminCustomerSearchCriteriaPage() {
               >
                 {isFetching ? (
                   <>
-                    <svg
-                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      />
-                    </svg>
+                    <Spinner size="sm" className="mr-2" />
                     Searching...
                   </>
                 ) : (
@@ -426,4 +405,12 @@ function AdminCustomerSearchCriteriaPage() {
   );
 }
 
-export default AdminCustomerSearchCriteriaPage;
+function AdminCustomerSearchCriteriaPageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminCustomerSearchCriteriaPage />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminCustomerSearchCriteriaPageWithProvider;

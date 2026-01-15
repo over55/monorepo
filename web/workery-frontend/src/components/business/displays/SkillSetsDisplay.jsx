@@ -1,8 +1,8 @@
-// File Path: monorepo/web/workery-frontend/src/components/business/displays/SkillSetsDisplay.jsx
+// File Path: monorepo/web/frontend/src/components/business/displays/SkillSetsDisplay.jsx
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useSkillSetManager } from "../../../services/Services";
-import { Badge, Loading } from "../../UI";
+import { Badge, Loading, useUIXTheme } from "../../UIX";
 
 /**
  * Display component for multiple selected skill sets
@@ -22,18 +22,24 @@ function SkillSetsDisplay({
   variant = "primary",
 }) {
   const skillSetManager = useSkillSetManager();
+  const { getThemeClasses } = useUIXTheme();
   const [displaySkillSets, setDisplaySkillSets] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Memoize stringified values to use as a stable dependency for detecting array changes
+  const valuesKey = useMemo(() => JSON.stringify(values), [values]);
 
   useEffect(() => {
     let mounted = true;
 
     const fetchDisplayValues = async () => {
       // Debug logging
-      console.log("SkillSetsDisplay - values received:", values);
-      console.log("SkillSetsDisplay - values type:", typeof values);
-      console.log("SkillSetsDisplay - is array?:", Array.isArray(values));
+      if (import.meta.env.DEV) {
+        console.log("SkillSetsDisplay - values received:", values);
+        console.log("SkillSetsDisplay - values type:", typeof values);
+        console.log("SkillSetsDisplay - is array?:", Array.isArray(values));
+      }
 
       // Handle null, undefined, or empty cases
       if (
@@ -43,7 +49,9 @@ function SkillSetsDisplay({
         values === null ||
         values === undefined
       ) {
-        console.log("SkillSetsDisplay - No values to display");
+        if (import.meta.env.DEV) {
+          console.log("SkillSetsDisplay - No values to display");
+        }
         setDisplaySkillSets([]);
         return;
       }
@@ -57,7 +65,9 @@ function SkillSetsDisplay({
           v !== null && v !== undefined && v !== "" && v !== 0 && v !== "0",
       );
 
-      console.log("SkillSetsDisplay - filtered values:", filteredValues);
+      if (import.meta.env.DEV) {
+        console.log("SkillSetsDisplay - filtered values:", filteredValues);
+      }
 
       if (filteredValues.length === 0) {
         setDisplaySkillSets([]);
@@ -72,7 +82,9 @@ function SkillSetsDisplay({
         const options =
           await skillSetManager.getSkillSetSelectOptions(onUnauthorized);
 
-        console.log("SkillSetsDisplay - fetched options:", options);
+        if (import.meta.env.DEV) {
+          console.log("SkillSetsDisplay - fetched options:", options);
+        }
 
         if (mounted && options) {
           // Map the IDs to their labels
@@ -87,10 +99,12 @@ function SkillSetsDisplay({
                 return optionId === skillSetIdStr;
               });
 
-              console.log(
-                `SkillSetsDisplay - Mapping skill set ID ${skillSetId}:`,
-                matchingOption,
-              );
+              if (import.meta.env.DEV) {
+                console.log(
+                  `SkillSetsDisplay - Mapping skill set ID ${skillSetId}:`,
+                  matchingOption,
+                );
+              }
 
               if (matchingOption) {
                 return {
@@ -103,9 +117,11 @@ function SkillSetsDisplay({
               } else {
                 // Only show unknown if we have a valid ID
                 if (skillSetIdStr && skillSetIdStr !== "undefined") {
-                  console.warn(
-                    `SkillSetsDisplay - No match found for skill set ID: ${skillSetId}`,
-                  );
+                  if (import.meta.env.DEV) {
+                    console.warn(
+                      `SkillSetsDisplay - No match found for skill set ID: ${skillSetId}`,
+                    );
+                  }
                   return {
                     id: skillSetId,
                     label: `Unknown (ID: ${skillSetId})`,
@@ -116,11 +132,15 @@ function SkillSetsDisplay({
             })
             .filter(Boolean); // Remove any null values
 
-          console.log("SkillSetsDisplay - mapped skill sets:", mappedSkillSets);
+          if (import.meta.env.DEV) {
+            console.log("SkillSetsDisplay - mapped skill sets:", mappedSkillSets);
+          }
           setDisplaySkillSets(mappedSkillSets);
         }
       } catch (error) {
-        console.error("Error fetching skill set options:", error);
+        if (import.meta.env.DEV) {
+          console.error("Error fetching skill set options:", error);
+        }
         if (mounted) {
           setError("Failed to load skill sets");
           // Fallback to showing IDs only if we have valid values
@@ -142,12 +162,13 @@ function SkillSetsDisplay({
     return () => {
       mounted = false;
     };
-  }, [JSON.stringify(values), onUnauthorized]); // Use stringified values to detect array changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- valuesKey is a memoized serialization of values to detect array content changes without triggering on reference changes
+  }, [valuesKey, onUnauthorized, skillSetManager]);
 
   if (isLoading) {
     return (
       <div className={`mb-4 ${className}`}>
-        <p className="text-sm font-medium text-gray-700 mb-2">{label}</p>
+        <p className={`text-sm font-medium ${getThemeClasses("text-secondary")} mb-2`}>{label}</p>
         <div className="flex items-center">
           <Loading size="sm" text="Loading skill sets..." />
         </div>
@@ -157,7 +178,7 @@ function SkillSetsDisplay({
 
   return (
     <div className={`mb-4 ${className}`}>
-      <p className="text-sm font-medium text-gray-700 mb-2">{label}</p>
+      <p className={`text-sm font-medium ${getThemeClasses("text-secondary")} mb-2`}>{label}</p>
       <div className="flex flex-wrap gap-2">
         {error ? (
           <span className="text-red-600 text-sm">{error}</span>
@@ -168,7 +189,7 @@ function SkillSetsDisplay({
             </Badge>
           ))
         ) : (
-          <span className="text-gray-400 text-sm">No skill sets selected</span>
+          <span className={`${getThemeClasses("text-muted")} text-sm`}>No skill sets selected</span>
         )}
       </div>
     </div>

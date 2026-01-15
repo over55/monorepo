@@ -1,6 +1,7 @@
 // monorepo/web/workery-frontend/src/pages/Admin/SkillSet/AssociateSearchResultPage.jsx
+// UIX Upgraded - Uses UIX primitives (Card, Alert, Button, Spinner, Breadcrumb, Badge)
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useSearchParams } from "react-router";
 import {
   ChartBarIcon,
@@ -24,12 +25,12 @@ import {
   Card,
   Alert,
   Button,
-  Select,
-  Loading,
+  Spinner,
+  Breadcrumb,
   Badge,
-  EmptyState,
-  Table,
-} from "../../../components/UI";
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../components/UIX";
 
 // Constants for filtering and sorting
 const ASSOCIATE_STATUS_OPTIONS = [
@@ -62,11 +63,38 @@ const PAGE_SIZE_OPTIONS = [
 function AdminSkillSetAssociateSearchResultPage() {
   const [searchParams] = useSearchParams();
   const associateManager = useAssociateManager();
+  const { getThemeClasses } = useUIXTheme();
 
   // Get search parameters from URL
   const skillSetIDsStr = searchParams.get("ssids");
   const targetSkillSetIDs = skillSetIDsStr ? skillSetIDsStr.split(",") : [];
   const searchType = searchParams.get("type");
+
+  // Memoize theme classes
+  const themeClasses = useMemo(() => ({
+    textPrimary: getThemeClasses("text-primary"),
+    textSecondary: getThemeClasses("text-secondary"),
+    linkPrimary: getThemeClasses("link-primary"),
+  }), [getThemeClasses]);
+
+  // Breadcrumb items
+  const breadcrumbItems = useMemo(() => [
+    {
+      label: "Dashboard",
+      to: "/admin/dashboard",
+      icon: ChartBarIcon,
+    },
+    {
+      label: "Skill Sets",
+      to: "/admin/skill-sets",
+      icon: WrenchScrewdriverIcon,
+    },
+    {
+      label: "Results",
+      icon: UserGroupIcon,
+      isActive: true,
+    },
+  ], []);
 
   // State management
   const [associates, setAssociates] = useState(null);
@@ -251,11 +279,13 @@ function AdminSkillSetAssociateSearchResultPage() {
   if (isFetching && !associates) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Loading
-          size="lg"
-          text="Loading associates..."
-          className="min-h-[400px]"
-        />
+        <Breadcrumb items={breadcrumbItems} className="mb-6" />
+        <Card padding="p-0" className="flex items-center justify-center min-h-[400px] border-0 shadow-none">
+          <div className="text-center">
+            <Spinner size="lg" />
+            <p className="mt-4 text-gray-600">Loading associates...</p>
+          </div>
+        </Card>
       </div>
     );
   }
@@ -349,58 +379,24 @@ function AdminSkillSetAssociateSearchResultPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Breadcrumb */}
-      <nav className="flex mb-6" aria-label="Breadcrumb">
-        <ol className="inline-flex items-center space-x-1 md:space-x-3">
-          <li className="inline-flex items-center">
-            <Link
-              to="/admin/dashboard"
-              className="inline-flex items-center text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors"
-            >
-              <ChartBarIcon className="w-4 h-4 mr-2" />
-              Dashboard
-            </Link>
-          </li>
-          <li>
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <Link
-                to="/admin/skill-sets"
-                className="text-sm font-medium text-gray-700 hover:text-blue-600"
-              >
-                <span className="inline-flex items-center">
-                  <WrenchScrewdriverIcon className="w-4 h-4 mr-2" />
-                  Skill Sets
-                </span>
-              </Link>
-            </div>
-          </li>
-          <li aria-current="page">
-            <div className="flex items-center">
-              <span className="mx-2 text-gray-400">/</span>
-              <span className="text-sm font-medium text-gray-500 inline-flex items-center">
-                <UserGroupIcon className="w-4 h-4 mr-2" />
-                Results
-              </span>
-            </div>
-          </li>
-        </ol>
-      </nav>
+      <Breadcrumb items={breadcrumbItems} className="mb-6" />
 
       {/* Page Title */}
       <div className="mb-6">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-              <WrenchScrewdriverIcon className="w-8 h-8 mr-3 text-blue-600" />
+            <h1 className={`text-2xl md:text-3xl font-bold ${themeClasses.textPrimary} flex items-center`}>
+              <WrenchScrewdriverIcon className={`w-6 h-6 md:w-8 md:h-8 mr-3 ${themeClasses.linkPrimary}`} />
               Search Results
             </h1>
-            <p className="mt-1 text-sm text-gray-600">
+            <p className={`mt-1 text-sm ${themeClasses.textSecondary}`}>
               Found {totalCount} associate{totalCount !== 1 ? "s" : ""} matching
               your search criteria
             </p>
           </div>
           <Link to="/admin/skill-sets">
-            <Button variant="outline" icon={MagnifyingGlassIcon}>
+            <Button variant="secondary">
+              <MagnifyingGlassIcon className="w-4 h-4 mr-2" />
               New Search
             </Button>
           </Link>
@@ -569,26 +565,29 @@ function AdminSkillSetAssociateSearchResultPage() {
             </div>
           </>
         ) : (
-          <EmptyState
-            title="No Associates Found"
-            description="No associates match your search criteria. Try adjusting your filters or search terms."
-            icon={UserGroupIcon}
-            action={
-              <div className="flex gap-3">
-                <Link to="/admin/skill-sets">
-                  <Button variant="outline" icon={MagnifyingGlassIcon}>
-                    Search Again
-                  </Button>
-                </Link>
-                <Link to="/admin/associates/add/step-1-search">
-                  <Button variant="primary" icon={UserGroupIcon}>
-                    Add New Associate
-                  </Button>
-                </Link>
-              </div>
-            }
-            className="py-12"
-          />
+          <div className="text-center py-12">
+            <UserGroupIcon className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No Associates Found
+            </h3>
+            <p className="text-gray-500 mb-6 max-w-md mx-auto">
+              No associates match your search criteria. Try adjusting your filters or search terms.
+            </p>
+            <div className="flex gap-3 justify-center">
+              <Link to="/admin/skill-sets">
+                <Button variant="secondary">
+                  <MagnifyingGlassIcon className="w-4 h-4 mr-2" />
+                  Search Again
+                </Button>
+              </Link>
+              <Link to="/admin/associates/add/step-1-search">
+                <Button variant="primary">
+                  <UserGroupIcon className="w-4 h-4 mr-2" />
+                  Add New Associate
+                </Button>
+              </Link>
+            </div>
+          </div>
         )}
       </Card>
 
@@ -609,4 +608,13 @@ function AdminSkillSetAssociateSearchResultPage() {
   );
 }
 
-export default AdminSkillSetAssociateSearchResultPage;
+// Wrapper with UIXThemeProvider
+function AdminSkillSetAssociateSearchResultPageWithProvider() {
+  return (
+    <UIXThemeProvider>
+      <AdminSkillSetAssociateSearchResultPage />
+    </UIXThemeProvider>
+  );
+}
+
+export default AdminSkillSetAssociateSearchResultPageWithProvider;
