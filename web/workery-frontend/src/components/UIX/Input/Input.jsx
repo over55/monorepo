@@ -74,7 +74,7 @@ const Input = memo(function Input({
       inputBorderError: getThemeClasses("input-border-error"),
       bgDisabled: getThemeClasses("bg-disabled"),
       bgCard: getThemeClasses("bg-card") || "bg-white",
-      placeholderColor: getThemeClasses("placeholder-color") || "placeholder-gray-400",
+      placeholderColor: getThemeClasses("placeholder-color") || "placeholder-gray-500",
     }),
     [getThemeClasses],
   );

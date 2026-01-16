@@ -58,7 +58,7 @@ const FALLBACK_VARIANT_CLASSES = Object.freeze({
   error: "bg-red-100 text-red-800",
   danger: "bg-red-100 text-red-800",
   info: "bg-cyan-100 text-cyan-800",
-  secondary: "bg-gray-100 text-gray-600",
+  secondary: "bg-gray-100 text-gray-700",
 });
 
 const Badge = memo(

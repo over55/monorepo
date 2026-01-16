@@ -26,9 +26,10 @@ import { PlusIcon } from "@heroicons/react/24/outline";
 const SIZE_CLASSES = "px-8 py-4 min-h-[52px] text-base sm:text-lg";
 
 // Gradient styles - static since they don't change
+// Uses Tailwind green palette: green-600 (5 150 105), green-500 (16 185 129), green-700 (4 120 87)
 const GRADIENT_STYLES = Object.freeze({
-  default: "linear-gradient(135deg, #059669 0%, #10b981 100%)",
-  hover: "linear-gradient(135deg, #047857 0%, #059669 100%)",
+  default: "linear-gradient(135deg, rgb(5 150 105) 0%, rgb(16 185 129) 100%)",
+  hover: "linear-gradient(135deg, rgb(4 120 87) 0%, rgb(5 150 105) 100%)",
 });
 
 // Loading Spinner Component - Separated for better performance

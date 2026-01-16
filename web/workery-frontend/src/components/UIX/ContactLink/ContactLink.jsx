@@ -140,7 +140,7 @@ const ContactLink = memo(
         sizes.icon,
         "mr-2",
         "sm:mr-3",
-        textSecondaryClass || "text-gray-400",
+        textSecondaryClass || "text-gray-600",
         "flex-shrink-0",
       ];
 
@@ -160,7 +160,7 @@ const ContactLink = memo(
         <div className={containerClasses}>
           {showIcon && <IconComponent className={iconClasses} />}
           <div className="min-w-0 flex-1">
-            <span className={textMutedClass || "text-gray-500"}>{fallbackText}</span>
+            <span className={textMutedClass || "text-gray-600"}>{fallbackText}</span>
           </div>
         </div>
       );

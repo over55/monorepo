@@ -27,7 +27,7 @@ const CheckboxGroup = memo(
     const themeClasses = useMemo(() => ({
       textLabel: getThemeClasses("text-label") || "text-gray-700",
       textPrimary: getThemeClasses("text-primary") || "text-gray-900",
-      textMuted: getThemeClasses("text-muted") || "text-gray-500",
+      textMuted: getThemeClasses("text-muted") || "text-gray-600",
       textDanger: getThemeClasses("text-danger") || "text-red-600",
       textRequired: getThemeClasses("text-required") || "text-red-500",
       textAccent: getThemeClasses("text-accent") || "text-red-500",

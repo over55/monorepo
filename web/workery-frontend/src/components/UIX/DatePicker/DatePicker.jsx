@@ -128,7 +128,7 @@ const DatePicker = memo(
     const themeClasses = useMemo(() => ({
       textPrimary: getThemeClasses("text-primary") || "text-gray-900",
       textSecondary: getThemeClasses("text-secondary") || "text-gray-700",
-      textMuted: getThemeClasses("text-muted") || "text-gray-500",
+      textMuted: getThemeClasses("text-muted") || "text-gray-600",
       textError: getThemeClasses("text-error") || "text-red-600",
       bgCard: getThemeClasses("bg-card") || "bg-white",
       bgMuted: getThemeClasses("bg-muted") || "bg-gray-50",

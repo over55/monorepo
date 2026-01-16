@@ -88,14 +88,14 @@ const CreateButton = memo(
       [getThemeClasses],
     );
 
-    // Memoize gradient style
+    // Memoize gradient style - uses Tailwind green palette (green-600, green-500)
     const gradientStyle = useMemo(() => {
       if (!gradient) return {};
 
       return {
         background:
           themeClasses.bgGradientSecondary ||
-          "linear-gradient(to right, #059669, #10b981)",
+          "linear-gradient(to right, rgb(5 150 105), rgb(16 185 129))",
       };
     }, [gradient, themeClasses.bgGradientSecondary]);
 

@@ -87,7 +87,7 @@ const IconText = memo(function IconText({
   // Memoize icon classes
   const iconClasses = useMemo(
     () =>
-      `${sizes.icon} ${sizes.iconMargin} flex-shrink-0 ${iconMuted ? (themeClasses.textMuted || "text-gray-400") : (themeClasses.textSecondary || "text-gray-600")}`,
+      `${sizes.icon} ${sizes.iconMargin} flex-shrink-0 ${iconMuted ? (themeClasses.textMuted || "text-gray-600") : (themeClasses.textSecondary || "text-gray-600")}`,
     [sizes.icon, sizes.iconMargin, iconMuted, themeClasses.textMuted, themeClasses.textSecondary],
   );
 

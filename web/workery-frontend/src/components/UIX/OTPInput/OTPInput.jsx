@@ -72,7 +72,7 @@ const OTPInput = forwardRef(
       textSecondary: getThemeClasses("text-secondary") || "text-gray-600",
       textDanger: getThemeClasses("text-danger") || "text-red-600",
       textSuccess: getThemeClasses("text-success") || "text-green-600",
-      textMuted: getThemeClasses("text-muted") || "text-gray-400",
+      textMuted: getThemeClasses("text-muted") || "text-gray-600",
       bgCard: getThemeClasses("bg-card") || "bg-white",
       bgDisabled: getThemeClasses("bg-disabled") || "bg-gray-50",
       bgError: getThemeClasses("bg-error-light") || "bg-red-50",

@@ -60,7 +60,7 @@ function EntityActionConfirmationPage({
     // Text colors
     textPrimary: getThemeClasses("text-primary") || "text-gray-900",
     textSecondary: getThemeClasses("text-secondary") || "text-gray-600",
-    textMuted: getThemeClasses("text-muted") || "text-gray-500",
+    textMuted: getThemeClasses("text-muted") || "text-gray-600",
     textError: getThemeClasses("text-error") || "text-red-600",
     textSuccess: getThemeClasses("text-success") || "text-green-700",
     // Background colors

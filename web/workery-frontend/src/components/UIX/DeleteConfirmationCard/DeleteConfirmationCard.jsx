@@ -81,7 +81,7 @@ const DeleteConfirmationCard = memo(
         // Text colors
         textPrimary: getThemeClasses("text-primary") || "text-gray-900",
         textSecondary: getThemeClasses("text-secondary") || "text-gray-700",
-        textMuted: getThemeClasses("text-muted") || "text-gray-500",
+        textMuted: getThemeClasses("text-muted") || "text-gray-600",
         textDanger: getThemeClasses("text-danger") || "text-red-800",
         textDangerDark: getThemeClasses("text-danger-dark") || "text-red-700",
         textWarning: getThemeClasses("text-warning") || "text-amber-800",

@@ -52,7 +52,7 @@ const FALLBACK_CLASSES = Object.freeze({
   danger:
     "bg-red-600 hover:bg-red-700 text-white focus:ring-2 focus:ring-red-500",
   ghost: "hover:bg-gray-100 text-gray-700 focus:ring-2 focus:ring-gray-500",
-  disabled: "bg-gray-300 text-gray-500 cursor-not-allowed",
+  disabled: "bg-gray-300 text-gray-600 cursor-not-allowed",
 });
 
 // Variant to theme key mapping

@@ -188,7 +188,7 @@ export const DivisionBasicInfoSection = React.memo(
               placeholder={orgSelectPlaceholder}
             />
             {formData.divisionType && (
-              <p className="mt-1 text-xs text-gray-500">
+              <p className="mt-1 text-xs text-gray-600">
                 Only showing{" "}
                 {formData.divisionType === "non-profit"
                   ? "non-profit"
@@ -727,7 +727,7 @@ export const DivisionAdditionalInfoSection = React.memo(
               placeholder="Any additional information..."
               className={`block w-full px-3 py-2 border ${getThemeClasses("input-border")} rounded-lg ${getThemeClasses("focus-ring")} ${getThemeClasses("focus-border")}`}
             />
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-1 text-xs text-gray-600">
               {formData.additionalComment?.length || 0}/
               {DEFAULT_VALUES.COMMENT_MAX_LENGTH} characters
             </p>

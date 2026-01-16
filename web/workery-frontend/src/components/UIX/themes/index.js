@@ -79,17 +79,17 @@ const getThemeConfigs = () => {
 
         // Navigation and breadcrumb
         "breadcrumb-active": "text-blue-600",
-        "breadcrumb-inactive": "text-gray-500 hover:text-blue-600",
+        "breadcrumb-inactive": "text-gray-600 hover:text-blue-600",
 
         // Tabs
         "tab-active": "border-blue-500 text-blue-600",
         "tab-inactive":
-          "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300",
+          "border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300",
 
         // Pagination
         "pagination-active": "bg-blue-500 text-white",
         "pagination-inactive":
-          "text-gray-500 bg-white border border-gray-300 hover:bg-gray-100",
+          "text-gray-600 bg-white border border-gray-300 hover:bg-gray-100",
 
         // Checkbox and Radio
         "checkbox-focus": "text-blue-500 focus:ring-blue-500",
@@ -223,7 +223,7 @@ const getThemeConfigs = () => {
         // Text and background theme classes
         "text-primary": "text-gray-900",
         "text-secondary": "text-gray-600",
-        "text-muted": "text-gray-400",
+        "text-muted": "text-gray-600",
         "text-danger": "text-red-600",
         "bg-card": "bg-white",
         "bg-primary": "bg-white",
@@ -267,7 +267,7 @@ const getThemeConfigs = () => {
         "sidebar-bg": "bg-gray-900",
         "sidebar-text": "text-gray-200",
         "sidebar-hover": "hover:bg-gray-700",
-        "sidebar-text-muted": "text-gray-400",
+        "sidebar-text-muted": "text-gray-500",
       },
     },
 
@@ -326,17 +326,17 @@ const getThemeConfigs = () => {
 
         // Navigation and breadcrumb
         "breadcrumb-active": "text-red-600",
-        "breadcrumb-inactive": "text-gray-500 hover:text-red-600",
+        "breadcrumb-inactive": "text-gray-600 hover:text-red-600",
 
         // Tabs
         "tab-active": "border-red-500 text-red-600",
         "tab-inactive":
-          "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300",
+          "border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300",
 
         // Pagination
         "pagination-active": "bg-red-500 text-white",
         "pagination-inactive":
-          "text-gray-500 bg-white border border-gray-300 hover:bg-gray-100",
+          "text-gray-600 bg-white border border-gray-300 hover:bg-gray-100",
 
         // Checkbox and Radio
         "checkbox-focus": "text-red-500 focus:ring-red-500",
@@ -470,7 +470,7 @@ const getThemeConfigs = () => {
         // Text and background theme classes
         "text-primary": "text-gray-900",
         "text-secondary": "text-gray-600",
-        "text-muted": "text-gray-400",
+        "text-muted": "text-gray-600",
         "text-danger": "text-red-600",
         "bg-card": "bg-white",
         "bg-primary": "bg-white",
@@ -514,7 +514,7 @@ const getThemeConfigs = () => {
         "sidebar-bg": "bg-gray-900",
         "sidebar-text": "text-gray-200",
         "sidebar-hover": "hover:bg-gray-700",
-        "sidebar-text-muted": "text-gray-400",
+        "sidebar-text-muted": "text-gray-500",
       },
     },
 
@@ -573,17 +573,17 @@ const getThemeConfigs = () => {
 
         // Navigation and breadcrumb
         "breadcrumb-active": "text-purple-600",
-        "breadcrumb-inactive": "text-gray-500 hover:text-purple-600",
+        "breadcrumb-inactive": "text-gray-600 hover:text-purple-600",
 
         // Tabs
         "tab-active": "border-purple-500 text-purple-600",
         "tab-inactive":
-          "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300",
+          "border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300",
 
         // Pagination
         "pagination-active": "bg-purple-500 text-white",
         "pagination-inactive":
-          "text-gray-500 bg-white border border-gray-300 hover:bg-gray-100",
+          "text-gray-600 bg-white border border-gray-300 hover:bg-gray-100",
 
         // Checkbox and Radio
         "checkbox-focus": "text-purple-500 focus:ring-purple-500",
@@ -718,7 +718,7 @@ const getThemeConfigs = () => {
         // Text and background theme classes
         "text-primary": "text-gray-900",
         "text-secondary": "text-gray-600",
-        "text-muted": "text-gray-400",
+        "text-muted": "text-gray-600",
         "text-danger": "text-red-600",
         "bg-card": "bg-white",
         "bg-primary": "bg-white",
@@ -762,7 +762,7 @@ const getThemeConfigs = () => {
         "sidebar-bg": "bg-gray-900",
         "sidebar-text": "text-gray-200",
         "sidebar-hover": "hover:bg-gray-700",
-        "sidebar-text-muted": "text-gray-400",
+        "sidebar-text-muted": "text-gray-500",
       },
     },
 
@@ -821,17 +821,17 @@ const getThemeConfigs = () => {
 
         // Navigation and breadcrumb
         "breadcrumb-active": "text-green-600",
-        "breadcrumb-inactive": "text-gray-500 hover:text-green-600",
+        "breadcrumb-inactive": "text-gray-600 hover:text-green-600",
 
         // Tabs
         "tab-active": "border-green-500 text-green-600",
         "tab-inactive":
-          "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300",
+          "border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300",
 
         // Pagination
         "pagination-active": "bg-green-500 text-white",
         "pagination-inactive":
-          "text-gray-500 bg-white border border-gray-300 hover:bg-gray-100",
+          "text-gray-600 bg-white border border-gray-300 hover:bg-gray-100",
 
         // Checkbox and Radio
         "checkbox-focus": "text-green-500 focus:ring-green-500",
@@ -965,7 +965,7 @@ const getThemeConfigs = () => {
         // Text and background theme classes
         "text-primary": "text-gray-900",
         "text-secondary": "text-gray-600",
-        "text-muted": "text-gray-400",
+        "text-muted": "text-gray-600",
         "text-danger": "text-red-600",
         "bg-card": "bg-white",
         "bg-primary": "bg-white",
@@ -1009,7 +1009,7 @@ const getThemeConfigs = () => {
         "sidebar-bg": "bg-gray-900",
         "sidebar-text": "text-gray-200",
         "sidebar-hover": "hover:bg-gray-700",
-        "sidebar-text-muted": "text-gray-400",
+        "sidebar-text-muted": "text-gray-500",
       },
     },
 
@@ -1068,17 +1068,17 @@ const getThemeConfigs = () => {
 
         // Navigation and breadcrumb
         "breadcrumb-active": "text-slate-600",
-        "breadcrumb-inactive": "text-gray-500 hover:text-slate-600",
+        "breadcrumb-inactive": "text-gray-600 hover:text-slate-600",
 
         // Tabs
         "tab-active": "border-slate-500 text-slate-600",
         "tab-inactive":
-          "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300",
+          "border-transparent text-gray-600 hover:text-gray-800 hover:border-gray-300",
 
         // Pagination
         "pagination-active": "bg-slate-500 text-white",
         "pagination-inactive":
-          "text-gray-500 bg-white border border-gray-300 hover:bg-gray-100",
+          "text-gray-600 bg-white border border-gray-300 hover:bg-gray-100",
 
         // Checkbox and Radio
         "checkbox-focus": "text-slate-500 focus:ring-slate-500",
@@ -1212,7 +1212,7 @@ const getThemeConfigs = () => {
         // Text and background theme classes
         "text-primary": "text-gray-900",
         "text-secondary": "text-gray-600",
-        "text-muted": "text-gray-400",
+        "text-muted": "text-gray-600",
         "text-danger": "text-red-600",
         "bg-card": "bg-white",
         "bg-primary": "bg-white",
@@ -1256,7 +1256,7 @@ const getThemeConfigs = () => {
         "sidebar-bg": "bg-gray-900",
         "sidebar-text": "text-gray-200",
         "sidebar-hover": "hover:bg-gray-700",
-        "sidebar-text-muted": "text-gray-400",
+        "sidebar-text-muted": "text-gray-500",
       },
     },
 

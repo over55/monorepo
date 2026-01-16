@@ -234,9 +234,9 @@ function ServerErrorContent({
             animation: spin-slow 8s linear infinite;
           }
 
-          /* Error code styling */
+          /* Error code styling - uses Tailwind red palette */
           .error-code-gradient-500 {
-            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+            background: linear-gradient(135deg, rgb(220 38 38) 0%, rgb(239 68 68) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;

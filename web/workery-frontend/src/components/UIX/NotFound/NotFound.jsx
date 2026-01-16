@@ -216,9 +216,9 @@ function NotFoundContent({
             animation: bounce 2s infinite;
           }
 
-          /* Error code styling */
+          /* Error code styling - uses Tailwind blue palette */
           .error-code-gradient {
-            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            background: linear-gradient(135deg, rgb(30 58 138) 0%, rgb(59 130 246) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;

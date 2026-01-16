@@ -187,7 +187,7 @@ const DataList = memo(
         badgeSecondary: getThemeClasses("badge-secondary"),
         textPrimary: getThemeClasses("text-primary") || "text-gray-900 dark:text-gray-100",
         textSecondary: getThemeClasses("text-secondary") || "text-gray-700 dark:text-gray-300",
-        textMuted: getThemeClasses("text-muted") || "text-gray-400 dark:text-gray-500",
+        textMuted: getThemeClasses("text-muted") || "text-gray-600 dark:text-gray-400",
         linkPrimary: getThemeClasses("link-primary") || "text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300",
         linkHover: getThemeClasses("link-hover") || "hover:text-blue-600 dark:hover:text-blue-400",
         buttonBg: getThemeClasses("bg-card") || "bg-white dark:bg-gray-800",

@@ -1,63 +1,84 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/TaskItem/Update/AssignAssociate/Step4Page.jsx
 // @uix-page: TaskItemAssignAssociateStep4
-// UIX Upgraded - Uses UIX primitives (Spinner, Breadcrumb, UIXThemeProvider)
+// UIX Upgraded - Uses WizardFormStep whole page component
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Link, Navigate, useParams } from "react-router";
+import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
+import { Link, Navigate, useParams, useNavigate } from "react-router";
 import { useTaskManager } from "../../../../../services/Services";
-import { Spinner, Breadcrumb, UIXThemeProvider, useUIXTheme } from "../../../../../components/UIX";
+import {
+  WizardFormStep,
+  DetailCard,
+  Alert,
+  Button,
+  useUIXTheme,
+} from "../../../../../components/UIX";
 import {
   TagsDisplay,
   SkillSetsDisplay,
 } from "../../../../../components/business/displays";
 import { CLIENT_PHONE_TYPE_OF_MAP } from "../../../../../constants/FieldOptions";
+import { STORAGE_KEYS } from "../../../../../constants/Storage";
 import {
-  ChevronRightIcon,
-  ArrowLeftIcon,
-  CheckIcon,
-  ChartBarIcon,
-  ClipboardDocumentListIcon,
+  DocumentCheckIcon,
   UserPlusIcon,
-  ExclamationCircleIcon,
+  ClipboardDocumentListIcon,
   PencilSquareIcon,
   UserIcon,
   MapPinIcon,
-  ClipboardDocumentIcon,
   CheckCircleIcon,
   BriefcaseIcon,
   PhoneIcon,
   EnvelopeIcon,
-  CalendarIcon,
   WrenchScrewdriverIcon,
-  TagIcon,
   ChatBubbleLeftRightIcon,
   InformationCircleIcon,
-  DocumentCheckIcon,
   CalendarDaysIcon,
+  XCircleIcon,
 } from "@heroicons/react/24/outline";
 
-function AdminTaskItemAssignAssociateStep4Page() {
-  // URL Parameters
+// Wizard configuration
+const WIZARD_STEPS = Object.freeze([
+  { title: "Review", description: "Task Details", isCompleted: true },
+  { title: "Search", description: "Find Associate", isCompleted: true },
+  { title: "Assign", description: "Select Associate", isCompleted: true },
+  { title: "Confirm", description: "Complete Assignment" },
+]);
+
+// Status map
+const ASSIGN_STATUS_MAP = Object.freeze({
+  3: "Yes - Accepted",
+  4: "No - Declined",
+});
+
+// Memoized Detail Field Component
+const DetailField = memo(function DetailField({ label, value, fullWidth = false, icon: Icon = null, themeClasses }) {
+  return (
+    <div className={fullWidth ? "lg:col-span-2" : ""}>
+      <dt className={`text-xs sm:text-sm font-semibold ${themeClasses.textSecondary} mb-1 flex items-center`}>
+        {Icon && <Icon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />}
+        {label}
+      </dt>
+      <dd className={`text-base sm:text-lg font-medium ${themeClasses.textPrimary} break-words`}>
+        {value || "-"}
+      </dd>
+    </div>
+  );
+});
+
+// Memoized content component
+const Step4Content = memo(function Step4Content() {
   const { tid } = useParams();
-
-  // Services
+  const navigate = useNavigate();
   const taskManager = useTaskManager();
+  const { getThemeClasses } = useUIXTheme();
 
-  // UIX Theme
-  const { theme } = useUIXTheme();
+  // Memoize theme classes
   const themeClasses = useMemo(() => ({
-    container: theme === 'dark' ? 'bg-gray-900 text-white' : 'bg-gray-50 text-gray-900',
-    card: theme === 'dark' ? 'bg-gray-800' : 'bg-white',
-    text: theme === 'dark' ? 'text-gray-100' : 'text-gray-900',
-    textMuted: theme === 'dark' ? 'text-gray-400' : 'text-gray-600',
-  }), [theme]);
-
-  // Memoized breadcrumb items
-  const breadcrumbItems = useMemo(() => [
-    { label: "Dashboard", path: "/admin/dashboard", icon: ChartBarIcon },
-    { label: "Tasks", path: "/admin/tasks", icon: ClipboardDocumentListIcon },
-    { label: "Review & Submit", icon: DocumentCheckIcon },
-  ], []);
+    textPrimary: getThemeClasses("text-primary") || "text-gray-900",
+    textSecondary: getThemeClasses("text-secondary") || "text-gray-600",
+    linkPrimary: getThemeClasses("link-primary") || "text-blue-600 hover:text-blue-800",
+    borderLight: getThemeClasses("border-light") || "border-gray-200",
+  }), [getThemeClasses]);
 
   // Component states
   const [task, setTask] = useState(null);
@@ -72,28 +93,56 @@ function AdminTaskItemAssignAssociateStep4Page() {
     setForceURL("/login?unauthorized=true");
   }, []);
 
-  // Helper function to extract IDs from array of objects
-  const extractIds = (items) => {
+  // Helper function to extract IDs
+  const extractIds = useCallback((items) => {
     if (!items || !Array.isArray(items)) return [];
-    return items
-      .map((item) => {
-        if (typeof item === "number" || typeof item === "string") {
-          return item;
+    return items.map((item) => {
+      if (typeof item === "number" || typeof item === "string") return item;
+      return item.id || item.value || item.skillSetId || item.tagId;
+    }).filter(Boolean);
+  }, []);
+
+  // Load task details and assignment data
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchData = async () => {
+      if (!mounted) return;
+
+      const storedData = sessionStorage.getItem(STORAGE_KEYS.WORKERY_ASSIGN_ASSOCIATE_DATA);
+      if (!storedData) {
+        setForceURL(`/admin/task/${tid}/assign-associate/step-3`);
+        return;
+      }
+
+      setAssignmentData(JSON.parse(storedData));
+      setFetching(true);
+      setErrors({});
+
+      try {
+        const taskData = await taskManager.getTaskDetail(tid, onUnauthorized);
+        if (mounted) setTask(taskData);
+      } catch (error) {
+        if (mounted) {
+          console.error("Error fetching task:", error);
+          setErrors({ message: error.message || "Failed to load task details" });
         }
-        return item.id || item.value || item.skillSetId || item.tagId;
-      })
-      .filter(Boolean);
-  };
+      } finally {
+        if (mounted) setFetching(false);
+      }
+    };
 
-  const onSubmitClick = async () => {
-    console.log("onSubmitClick: Starting...");
+    fetchData();
+    return () => { mounted = false; };
+  }, [tid, taskManager, onUnauthorized]);
 
+  // Submit handler
+  const handleSubmit = useCallback(async () => {
     if (!assignmentData) {
-      setErrors({ general: "Assignment data not found" });
+      setErrors({ message: "Assignment data not found" });
       return;
     }
 
-    // Prepare payload - using snake_case as required by API
     const payload = {
       task_id: tid,
       task_item_id: tid,
@@ -105,19 +154,13 @@ function AdminTaskItemAssignAssociateStep4Page() {
       comment: assignmentData.comment,
     };
 
-    console.log("onSubmitClick: Payload:", payload);
     setErrors({});
     setIsSubmitting(true);
 
     try {
       await taskManager.assignAssociate(payload, onUnauthorized);
-
-      // Clear session storage
-      sessionStorage.removeItem("WORKERY_ASSIGN_ASSOCIATE_DATA");
-
-      // Show success message (handled by navigate)
-      // setForceURL(`/admin/order/${task.orderWjid}`); // Redirect to order detail page
-      setForceURL(`/admin/orders`); // Redirect to the work orders list.
+      sessionStorage.removeItem(STORAGE_KEYS.WORKERY_ASSIGN_ASSOCIATE_DATA);
+      setForceURL("/admin/orders");
     } catch (error) {
       console.error("Error assigning associate:", error);
       setErrors(error);
@@ -125,526 +168,210 @@ function AdminTaskItemAssignAssociateStep4Page() {
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [assignmentData, tid, taskManager, onUnauthorized]);
 
-  // Load task details and assignment data
-  useEffect(() => {
-    let mounted = true;
+  // Navigation handlers
+  const handleBack = useCallback(() => {
+    navigate(`/admin/task/${tid}/assign-associate/step-3`);
+  }, [navigate, tid]);
 
-    const fetchData = async () => {
-      if (!mounted) return;
+  // Redirect if needed
+  if (forceURL !== "") return <Navigate to={forceURL} />;
 
-      // Load assignment data from session storage
-      const storedData = sessionStorage.getItem(
-        "WORKERY_ASSIGN_ASSOCIATE_DATA",
-      );
-      if (!storedData) {
-        setForceURL(`/admin/task/${tid}/assign-associate/step-3`);
-        return;
-      }
-
-      const data = JSON.parse(storedData);
-      setAssignmentData(data);
-
-      setFetching(true);
-      setErrors({});
-
-      try {
-        // Fetch fresh task details
-        const taskData = await taskManager.getTaskDetail(tid, onUnauthorized);
-        if (mounted) {
-          setTask(taskData);
-        }
-      } catch (error) {
-        if (mounted) {
-          console.error("Error fetching task:", error);
-          setErrors(error);
-        }
-      } finally {
-        if (mounted) {
-          setFetching(false);
-        }
-      }
-    };
-
-    fetchData();
-
-    return () => {
-      mounted = false;
-    };
-  }, [tid]);
-
-  // Section Component - Using dark header pattern
-  const DetailSection = ({ title, icon: Icon, children, action = null }) => (
-    <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
-      <div className="px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
-        <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
-          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
-          <span className="truncate">{title}</span>
-        </h3>
-        {action && <div>{action}</div>}
-      </div>
-      <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
-        {children}
-      </div>
-    </div>
-  );
-
-  // Detail Field Component
-  const DetailField = ({
-    label,
-    value,
-    fullWidth = false,
-    icon: Icon = null,
-  }) => (
-    <div className={fullWidth ? "lg:col-span-2" : ""}>
-      <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-1 flex items-center">
-        {Icon && <Icon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />}
-        {label}
-      </dt>
-      <dd className="text-base sm:text-lg font-medium text-gray-900 break-words">
-        {value || "-"}
-      </dd>
-    </div>
-  );
-
-  // Component rendering
-  if (forceURL !== "") {
-    return <Navigate to={forceURL} />;
-  }
-
-  const assignAssociateStatusMap = {
-    3: "Yes - Accepted",
-    4: "No - Declined",
-  };
-
-  if (isFetching || !task || !assignmentData) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
-        <Spinner size="lg" label="Loading..." />
-      </div>
-    );
-  }
+  // Action buttons
+  const actions = useMemo(() => [{
+    label: "Submit Assignment",
+    variant: "success",
+    icon: CheckCircleIcon,
+    onClick: handleSubmit,
+    disabled: isSubmitting,
+    loading: isSubmitting,
+    loadingText: "Submitting...",
+  }], [handleSubmit, isSubmitting]);
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {/* Breadcrumb */}
-        <Breadcrumb items={breadcrumbItems} />
+    <WizardFormStep
+      wizardSteps={WIZARD_STEPS}
+      currentStep={4}
+      wizardTitle="Assign Associate"
+      wizardIcon={UserPlusIcon}
+      stepTitle="Review & Submit"
+      stepSubtitle="Review all details before finalizing the assignment"
+      stepIcon={DocumentCheckIcon}
+      showFormCard={false}
+      contentMaxWidth="7xl"
+      errors={errors}
+      isLoading={isFetching || !task || !assignmentData}
+      actions={actions}
+      onBack={handleBack}
+      backLabel="Back to Step 3"
+      actionLayout="end"
+    >
+      {/* Status Alert */}
+      {task && (task.status === 2 || task.isClosed === true) && (
+        <Alert type="info" message="This task is archived / closed" className="mb-6" />
+      )}
 
-        {/* Page Title - Responsive */}
-        <div className="mb-4 sm:mb-6">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
-                <DocumentCheckIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
-                Review & Submit Assignment
-              </h1>
-              <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
-                <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
-                Review all details before finalizing the assignment
-              </p>
-            </div>
-          </div>
-        </div>
+      {/* Review Warning */}
+      <Alert type="warning" message="Please review all information carefully before submitting." className="mb-6" />
 
-        {/* Status Alerts - Responsive */}
-        {task && (task.status === 2 || task.isClosed === true) && (
-          <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center text-sm sm:text-base">
-            <InformationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
-            This task is archived / closed
-          </div>
-        )}
+      {task && assignmentData && (
+        <div className="space-y-6">
+          {/* Task Information */}
+          <DetailCard
+            title="Task Information"
+            icon={ClipboardDocumentListIcon}
+            maxWidth="full"
+            headerAction={
+              <Link to={`/admin/task/${tid}/assign-associate/step-1`} className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800">
+                <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />Edit
+              </Link>
+            }
+          >
+            <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+              <DetailField label="Type" value="Assign Associate" themeClasses={themeClasses} />
+              <DetailField label="Description" value={task.description} themeClasses={themeClasses} />
+            </dl>
+          </DetailCard>
 
-        {/* Wizard Steps - Responsive */}
-        <div className="mb-4 sm:mb-6 bg-white shadow-sm rounded-lg p-3 sm:p-4">
-          {/* Mobile View */}
-          <div className="md:hidden">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full">
-                  <span className="text-white font-semibold text-sm">4</span>
+          {/* Job Information */}
+          <DetailCard title="Job Information" icon={BriefcaseIcon} maxWidth="full">
+            <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+              <DetailField
+                label="Job #"
+                value={<Link to={`/admin/order/${task.orderWjid}`} className={themeClasses.linkPrimary}>{task.orderWjid}</Link>}
+                themeClasses={themeClasses}
+              />
+              <DetailField
+                label="Start Date"
+                icon={CalendarDaysIcon}
+                value={task.orderStartDate ? new Date(task.orderStartDate).toLocaleDateString() : "-"}
+                themeClasses={themeClasses}
+              />
+              <DetailField label="Job Description" value={task.orderDescription} fullWidth themeClasses={themeClasses} />
+              {task.orderSkillSets?.length > 0 && (
+                <div className="lg:col-span-2">
+                  <SkillSetsDisplay values={extractIds(task.orderSkillSets)} onUnauthorized={onUnauthorized} label="Required Skill Sets" variant="primary" />
                 </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">
-                    Final Step
-                  </p>
-                  <p className="text-xs text-gray-500">Review & Submit</p>
+              )}
+              {task.orderTags?.length > 0 && (
+                <div className="lg:col-span-2">
+                  <TagsDisplay values={extractIds(task.orderTags)} onUnauthorized={onUnauthorized} label="Job Tags" variant="success" />
                 </div>
-              </div>
-              <div className="text-xs text-gray-500">4 of 4</div>
-            </div>
-            <div className="mt-3">
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div
-                  className="bg-green-600 h-2 rounded-full"
-                  style={{ width: "100%" }}
-                ></div>
-              </div>
-            </div>
-          </div>
+              )}
+            </dl>
+          </DetailCard>
 
-          {/* Desktop View */}
-          <div className="hidden md:flex items-center justify-center overflow-x-auto">
-            <div className="flex items-center min-w-max">
-              {/* Steps 1-3 Complete */}
-              {[1, 2, 3].map((step, index) => (
-                <React.Fragment key={step}>
-                  <div className="flex items-center">
-                    <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
-                      <CheckIcon className="w-6 h-6 text-white" />
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-900">
-                        {step === 1 && "Search"}
-                        {step === 2 && "Select"}
-                        {step === 3 && "Details"}
-                      </p>
-                      <p className="text-xs text-gray-500">Complete</p>
+          {/* Client Information */}
+          <DetailCard title="Client Information" icon={UserIcon} maxWidth="full">
+            <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+              <DetailField
+                label="Name"
+                value={<Link to={`/admin/customer/${task.customerId}`} className={themeClasses.linkPrimary}>{task.customerName}</Link>}
+                themeClasses={themeClasses}
+              />
+              {task.customerPhone && (
+                <DetailField
+                  label={`Phone (${CLIENT_PHONE_TYPE_OF_MAP[task.customerPhoneType]})`}
+                  icon={PhoneIcon}
+                  value={<>{task.customerPhone}{task.customerPhoneExtension && ` ext. ${task.customerPhoneExtension}`}</>}
+                  themeClasses={themeClasses}
+                />
+              )}
+              {task.customerFullAddressUrl && (
+                <DetailField
+                  label="Address"
+                  icon={MapPinIcon}
+                  value={<a href={task.customerFullAddressUrl} target="_blank" rel="noreferrer" className={themeClasses.linkPrimary}>{task.customerFullAddressWithoutPostalCode}</a>}
+                  fullWidth
+                  themeClasses={themeClasses}
+                />
+              )}
+              {task.customerTags?.length > 0 && (
+                <div className="lg:col-span-2">
+                  <TagsDisplay values={extractIds(task.customerTags)} onUnauthorized={onUnauthorized} label="Client Tags" variant="info" />
+                </div>
+              )}
+            </dl>
+          </DetailCard>
+
+          {/* Associate Assignment */}
+          <DetailCard
+            title="Associate Assignment"
+            icon={WrenchScrewdriverIcon}
+            maxWidth="full"
+            headerAction={
+              <Link to={`/admin/task/${tid}/assign-associate/step-3`} className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800">
+                <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />Edit
+              </Link>
+            }
+          >
+            <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+              <DetailField
+                label="Associate"
+                icon={UserIcon}
+                value={<Link to={`/admin/associate/${assignmentData.associateID}`} className={themeClasses.linkPrimary}>{assignmentData.associateName}</Link>}
+                themeClasses={themeClasses}
+              />
+              {assignmentData.associatePhone && (
+                <DetailField label="Phone" icon={PhoneIcon} value={assignmentData.associatePhone} themeClasses={themeClasses} />
+              )}
+              {assignmentData.associateEmail && (
+                <DetailField label="Email" icon={EnvelopeIcon} value={assignmentData.associateEmail} fullWidth themeClasses={themeClasses} />
+              )}
+              <DetailField
+                label="Job Acceptance Status"
+                value={
+                  <span className={`inline-flex items-center px-3 py-1 text-sm font-medium rounded-full ${assignmentData.status === 3 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                    {assignmentData.status === 3 ? <CheckCircleIcon className="w-4 h-4 mr-1" /> : <XCircleIcon className="w-4 h-4 mr-1" />}
+                    {ASSIGN_STATUS_MAP[assignmentData.status]}
+                  </span>
+                }
+                themeClasses={themeClasses}
+              />
+            </dl>
+
+            {/* Comments */}
+            {(assignmentData.predefinedComment || assignmentData.comment) && (
+              <div className={`mt-6 pt-6 border-t ${themeClasses.borderLight}`}>
+                <h4 className={`text-sm font-semibold ${themeClasses.textSecondary} mb-3 flex items-center`}>
+                  <ChatBubbleLeftRightIcon className="w-4 h-4 mr-2" />Comments
+                </h4>
+
+                {assignmentData.predefinedComment && (
+                  <div className="mb-3 bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+                    <div className="flex items-start">
+                      <InformationCircleIcon className="w-4 h-4 mt-0.5 mr-2 text-blue-600 flex-shrink-0" />
+                      <div>
+                        <p className="text-xs font-semibold text-blue-800 mb-1">System Generated Comment</p>
+                        <p className={`text-sm ${themeClasses.textPrimary}`}>{assignmentData.predefinedComment}</p>
+                      </div>
                     </div>
                   </div>
-                  {index < 3 && (
-                    <div className="mx-4 w-16 h-0.5 bg-green-600"></div>
-                  )}
-                </React.Fragment>
-              ))}
+                )}
 
-              {/* Step 4 - Active */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
-                  <span className="text-white font-semibold">4</span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">Review</p>
-                  <p className="text-xs text-gray-500">Submit</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="bg-white shadow-sm rounded-lg">
-          <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-              <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 flex items-center">
-                <CheckCircleIcon className="w-5 sm:w-7 h-5 sm:h-7 mr-2 text-blue-600 flex-shrink-0" />
-                Final Review
-              </h2>
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-1.5 text-xs sm:text-sm text-yellow-800">
-                Please review all information carefully
-              </div>
-            </div>
-          </div>
-
-          <div className="p-4 sm:p-6">
-            <p className="text-sm sm:text-base text-gray-600 mb-6">
-              Please carefully review the following assignment details. If
-              everything looks correct, click the{" "}
-              <strong>Submit Assignment</strong> button to complete the process.
-            </p>
-
-            {errors && Object.keys(errors).length > 0 && (
-              <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base">
-                <div className="flex items-start">
-                  <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 mt-0.5" />
-                  <div>
-                    {Object.entries(errors).map(([key, value]) => (
-                      <div key={key} className="break-words">
-                        {key}: {value}
+                {assignmentData.comment && (
+                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4">
+                    <div className="flex items-start">
+                      <ChatBubbleLeftRightIcon className="w-4 h-4 mt-0.5 mr-2 text-gray-600 flex-shrink-0" />
+                      <div>
+                        <p className="text-xs font-semibold text-gray-700 mb-1">Additional Comment</p>
+                        <p className={`text-sm ${themeClasses.textPrimary}`}>{assignmentData.comment}</p>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {isSubmitting ? (
-              <div className="flex items-center justify-center py-8">
-                <Spinner size="lg" label="Submitting assignment..." />
-              </div>
-            ) : (
-              <div>
-                {/* Task Information Section */}
-                <DetailSection
-                  title="Task Information"
-                  icon={ClipboardDocumentListIcon}
-                  action={
-                    <Link
-                      to={`/admin/task/${tid}/assign-associate/step-1`}
-                      className="inline-flex items-center text-xs sm:text-sm text-white hover:text-blue-200"
-                    >
-                      <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                      <span className="hidden sm:inline">Edit</span>
-                    </Link>
-                  }
-                >
-                  <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                    <DetailField label="Type" value="Assign Associate" />
-                    <DetailField label="Description" value={task.description} />
-                  </dl>
-                </DetailSection>
-
-                {/* Job Information Section */}
-                <DetailSection title="Job Information" icon={BriefcaseIcon}>
-                  <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                    <DetailField
-                      label="Job #"
-                      value={
-                        <Link
-                          to={`/admin/order/${task.orderWjid}`}
-                          className="text-blue-600 hover:text-blue-700"
-                        >
-                          {task.orderWjid}
-                        </Link>
-                      }
-                    />
-                    <DetailField
-                      label="Start Date"
-                      icon={CalendarDaysIcon}
-                      value={
-                        task.orderStartDate
-                          ? new Date(task.orderStartDate).toLocaleDateString()
-                          : "-"
-                      }
-                    />
-                    <DetailField
-                      label="Job Description"
-                      value={task.orderDescription}
-                      fullWidth
-                    />
-
-                    {/* Skill Sets Display */}
-                    {task.orderSkillSets && task.orderSkillSets.length > 0 && (
-                      <div className="lg:col-span-2">
-                        <SkillSetsDisplay
-                          values={extractIds(task.orderSkillSets)}
-                          onUnauthorized={onUnauthorized}
-                          label="Required Skill Sets"
-                          variant="primary"
-                        />
-                      </div>
-                    )}
-
-                    {/* Tags Display */}
-                    {task.orderTags && task.orderTags.length > 0 && (
-                      <div className="lg:col-span-2">
-                        <TagsDisplay
-                          values={extractIds(task.orderTags)}
-                          onUnauthorized={onUnauthorized}
-                          label="Job Tags"
-                          variant="success"
-                        />
-                      </div>
-                    )}
-                  </dl>
-                </DetailSection>
-
-                {/* Client Information Section */}
-                <DetailSection title="Client Information" icon={UserIcon}>
-                  <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                    <DetailField
-                      label="Name"
-                      value={
-                        <Link
-                          to={`/admin/customer/${task.customerId}`}
-                          className="text-blue-600 hover:text-blue-700"
-                        >
-                          {task.customerName}
-                        </Link>
-                      }
-                    />
-                    {task.customerPhone && (
-                      <DetailField
-                        label={`Phone (${CLIENT_PHONE_TYPE_OF_MAP[task.customerPhoneType]})`}
-                        icon={PhoneIcon}
-                        value={
-                          <>
-                            {task.customerPhone}
-                            {task.customerPhoneExtension &&
-                              ` ext. ${task.customerPhoneExtension}`}
-                          </>
-                        }
-                      />
-                    )}
-                    {task.customerFullAddressUrl && (
-                      <DetailField
-                        label="Address"
-                        icon={MapPinIcon}
-                        value={
-                          <a
-                            href={task.customerFullAddressUrl}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-blue-600 hover:text-blue-700"
-                          >
-                            {task.customerFullAddressWithoutPostalCode}
-                          </a>
-                        }
-                        fullWidth
-                      />
-                    )}
-
-                    {/* Client Tags Display */}
-                    {task.customerTags && task.customerTags.length > 0 && (
-                      <div className="lg:col-span-2">
-                        <TagsDisplay
-                          values={extractIds(task.customerTags)}
-                          onUnauthorized={onUnauthorized}
-                          label="Client Tags"
-                          variant="info"
-                        />
-                      </div>
-                    )}
-                  </dl>
-                </DetailSection>
-
-                {/* Associate Assignment Section */}
-                <DetailSection
-                  title="Associate Assignment"
-                  icon={WrenchScrewdriverIcon}
-                  action={
-                    <Link
-                      to={`/admin/task/${tid}/assign-associate/step-3`}
-                      className="inline-flex items-center text-xs sm:text-sm text-white hover:text-blue-200"
-                    >
-                      <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-                      <span className="hidden sm:inline">Edit</span>
-                    </Link>
-                  }
-                >
-                  <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                    <DetailField
-                      label="Associate"
-                      icon={UserIcon}
-                      value={
-                        <Link
-                          to={`/admin/associate/${assignmentData.associateID}`}
-                          className="text-blue-600 hover:text-blue-700"
-                        >
-                          {assignmentData.associateName}
-                        </Link>
-                      }
-                    />
-                    {assignmentData.associatePhone && (
-                      <DetailField
-                        label="Phone"
-                        icon={PhoneIcon}
-                        value={assignmentData.associatePhone}
-                      />
-                    )}
-                    {assignmentData.associateEmail && (
-                      <DetailField
-                        label="Email"
-                        icon={EnvelopeIcon}
-                        value={assignmentData.associateEmail}
-                        fullWidth
-                      />
-                    )}
-                    <DetailField
-                      label="Job Acceptance Status"
-                      value={
-                        <span
-                          className={`inline-flex items-center px-3 py-1 text-sm font-medium rounded-full ${
-                            assignmentData.status === 3
-                              ? "bg-green-100 text-green-800"
-                              : "bg-red-100 text-red-800"
-                          }`}
-                        >
-                          {assignmentData.status === 3 ? (
-                            <CheckCircleIcon className="w-4 h-4 mr-1" />
-                          ) : (
-                            <XCircleIcon className="w-4 h-4 mr-1" />
-                          )}
-                          {assignAssociateStatusMap[assignmentData.status]}
-                        </span>
-                      }
-                    />
-                  </dl>
-
-                  {/* Comments */}
-                  {(assignmentData.predefinedComment ||
-                    assignmentData.comment) && (
-                    <div className="mt-6 pt-6 border-t border-gray-200">
-                      <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
-                        <ChatBubbleLeftRightIcon className="w-4 h-4 mr-2" />
-                        Comments
-                      </h4>
-
-                      {assignmentData.predefinedComment && (
-                        <div className="mb-3 bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
-                          <div className="flex items-start">
-                            <InformationCircleIcon className="w-4 h-4 mt-0.5 mr-2 text-blue-600 flex-shrink-0" />
-                            <div>
-                              <p className="text-xs font-semibold text-blue-800 mb-1">
-                                System Generated Comment
-                              </p>
-                              <p className="text-sm text-gray-700">
-                                {assignmentData.predefinedComment}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {assignmentData.comment && (
-                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4">
-                          <div className="flex items-start">
-                            <ChatBubbleLeftRightIcon className="w-4 h-4 mt-0.5 mr-2 text-gray-600 flex-shrink-0" />
-                            <div>
-                              <p className="text-xs font-semibold text-gray-700 mb-1">
-                                Additional Comment
-                              </p>
-                              <p className="text-sm text-gray-700">
-                                {assignmentData.comment}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
                     </div>
-                  )}
-                </DetailSection>
-
-                {/* Form Actions - Responsive */}
-                <div className="flex flex-col sm:flex-row sm:justify-between items-stretch sm:items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 gap-3">
-                  <Link
-                    to={`/admin/task/${tid}/assign-associate/step-3`}
-                    className="order-2 sm:order-1"
-                  >
-                    <button
-                      type="button"
-                      disabled={isSubmitting}
-                      className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 transition-colors"
-                    >
-                      <ArrowLeftIcon className="w-4 h-4 mr-2" />
-                      Back to Step 3
-                    </button>
-                  </Link>
-                  <button
-                    onClick={onSubmitClick}
-                    disabled={isSubmitting}
-                    className="order-1 sm:order-2 inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 text-sm sm:text-base font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 transition-colors"
-                  >
-                    <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
-                    Submit Assignment
-                  </button>
-                </div>
+                  </div>
+                )}
               </div>
             )}
-          </div>
+          </DetailCard>
         </div>
-      </div>
-    </div>
+      )}
+    </WizardFormStep>
   );
+});
+
+function AdminTaskItemAssignAssociateStep4Page() {
+  return <Step4Content />;
 }
 
-function AdminTaskItemAssignAssociateStep4PageWithTheme() {
-  return (
-    <UIXThemeProvider>
-      <AdminTaskItemAssignAssociateStep4Page />
-    </UIXThemeProvider>
-  );
-}
-
-export default AdminTaskItemAssignAssociateStep4PageWithTheme;
+export default AdminTaskItemAssignAssociateStep4Page;

@@ -60,7 +60,7 @@ const TagInput = memo(function TagInput({
       textPrimary: getThemeClasses('text-primary') || 'text-gray-900',
       textSecondary: getThemeClasses('text-secondary') || 'text-gray-700',
       textDanger: getThemeClasses('text-danger') || 'text-red-600',
-      textMuted: getThemeClasses('text-muted') || 'text-gray-500',
+      textMuted: getThemeClasses('text-muted') || 'text-gray-600',
       bgCard: getThemeClasses('bg-card') || 'bg-white',
       bgDisabled: getThemeClasses('bg-disabled') || 'bg-gray-50',
       borderError: getThemeClasses('border-error') || 'border-red-500',
@@ -74,7 +74,7 @@ const TagInput = memo(function TagInput({
       // Suggestions
       suggestionSelected: getThemeClasses('suggestion-selected') || 'bg-red-50 text-red-700',
       suggestionHover: getThemeClasses('suggestion-hover') || 'hover:bg-gray-50',
-      placeholderColor: getThemeClasses('placeholder-color') || 'placeholder-gray-400',
+      placeholderColor: getThemeClasses('placeholder-color') || 'placeholder-gray-500',
     }),
     [getThemeClasses],
   );

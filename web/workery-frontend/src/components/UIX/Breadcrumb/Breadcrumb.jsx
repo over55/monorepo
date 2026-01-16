@@ -42,9 +42,10 @@ import { useUIXTheme } from "../themes/useUIXTheme.jsx";
 // ============================================
 
 // Shadow styles (created once, reused)
+// Uses black with alpha transparency for consistent shadow appearance
 const SHADOW_STYLE = Object.freeze({
   boxShadow:
-    "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+    "0 10px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04)",
 });
 
 // Base classes that never change
@@ -289,7 +290,7 @@ const Breadcrumb = memo(function Breadcrumb({
         getThemeClasses("breadcrumb-inactive") ||
         "text-gray-600 hover:text-gray-900 hover:bg-gray-100",
       active: getThemeClasses("breadcrumb-active") || "text-gray-900",
-      separator: getThemeClasses("text-muted") || "text-gray-400",
+      separator: getThemeClasses("text-muted") || "text-gray-600",
     }),
     [getThemeClasses],
   );

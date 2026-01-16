@@ -46,7 +46,7 @@ const DetailFullViewInner = memo(
         cardBorder: getThemeClasses("card-border") || "border-gray-200",
         textPrimary: getThemeClasses("text-primary") || "text-gray-900",
         bgDisabled: getThemeClasses("bg-disabled") || "bg-gray-100",
-        textMuted: getThemeClasses("text-muted") || "text-gray-500",
+        textMuted: getThemeClasses("text-muted") || "text-gray-600",
         bgCard: getThemeClasses("bg-card") || "bg-white",
         // Detail header theme classes
         detailHeaderBg: getThemeClasses("detail-header-bg"),

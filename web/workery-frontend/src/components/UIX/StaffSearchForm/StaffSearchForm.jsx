@@ -32,7 +32,8 @@ const DEFAULT_SUBMIT_LABEL = "Search";
 const DEFAULT_BACK_PATH = "/";
 const VALIDATION_ERROR_MESSAGE = "Please enter at least one search criterion";
 const LOADING_TEXT = "Searching...";
-const GRADIENT_STYLE = { background: 'linear-gradient(135deg, #8a1622 0%, #dc2626 100%)' };
+// Uses Tailwind red palette: red-900 (127 29 29) and red-600 (220 38 38)
+const GRADIENT_STYLE = { background: 'linear-gradient(135deg, rgb(127 29 29) 0%, rgb(220 38 38) 100%)' };
 
 /**
  * Reusable StaffSearchForm Component - Performance Optimized
@@ -96,7 +97,7 @@ const StaffSearchForm = memo(function StaffSearchForm({
     blobTertiary: getThemeClasses("blob-tertiary") || "bg-pink-200",
     textHeading: getThemeClasses("text-heading") || "text-gray-800",
     textSecondary: getThemeClasses("text-secondary") || "text-gray-600",
-    textMuted: getThemeClasses("text-muted") || "text-gray-500",
+    textMuted: getThemeClasses("text-muted") || "text-gray-600",
     textLabel: getThemeClasses("text-label") || "text-gray-700",
     checkboxColor: getThemeClasses("checkbox-color") || "text-red-600",
     checkboxBorder: getThemeClasses("checkbox-border") || "border-gray-300",

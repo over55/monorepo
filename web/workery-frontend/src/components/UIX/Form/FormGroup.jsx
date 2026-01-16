@@ -52,7 +52,7 @@ const FormGroup = memo(function FormGroup({
   const helperTextElement = useMemo(() => {
     if (!helperText || error) return null;
 
-    return <p className="mt-2 text-sm text-gray-500">{helperText}</p>;
+    return <p className="mt-2 text-sm text-gray-600">{helperText}</p>;
   }, [helperText, error]);
 
   // Memoize error message with icon

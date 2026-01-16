@@ -161,7 +161,7 @@ const DateTime = memo(
       () => ({
         textPrimary: getThemeClasses("text-primary") || "text-gray-900",
         textDanger: getThemeClasses("text-danger") || "text-red-600",
-        textMuted: getThemeClasses("text-muted") || "text-gray-500",
+        textMuted: getThemeClasses("text-muted") || "text-gray-600",
         textSecondary: getThemeClasses("text-secondary") || "text-gray-600",
         hoverTextPrimary: getThemeClasses("hover:text-primary") || "hover:text-gray-900",
         inputBorder: getThemeClasses("input-border") || "border-gray-300",
@@ -173,7 +173,7 @@ const DateTime = memo(
         borderLight: getThemeClasses("border-light") || "border-gray-200",
         // Tab styles
         tabActive: getThemeClasses("tab-active") || "text-red-600 border-b-2 border-red-600",
-        tabInactive: getThemeClasses("tab-inactive") || "text-gray-500 hover:text-gray-700",
+        tabInactive: getThemeClasses("tab-inactive") || "text-gray-600 hover:text-gray-800",
         // Input focus
         inputFocus: getThemeClasses("input-focus") || "focus:ring-2 focus:ring-red-500",
         // Hover backgrounds
