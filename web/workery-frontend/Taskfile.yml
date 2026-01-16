@@ -35,6 +35,27 @@ tasks:
       - git -C ../../../workery-frontend-static commit -m 'Latest production deployment.'
       - git -C ../../../workery-frontend-static push origin prod
 
+  # Deployment task (similar to the original, but adapted for Vite)
+  deploy-v2:
+    desc: "[TEMPORARY DELETE WHEN CODE MERGED] Build and deploy the production version to a static site repository"
+    cmds:
+      # Build the project
+      - npm run build
+
+      # Checkout prod branch in the target repo
+      - git -C ../../../workery-frontend-static-v2 checkout -B prod
+
+      # Copy build files (Vite generates the "dist" directory by default)
+      - cp -Rf ./dist/* ../../../workery-frontend-static-v2
+
+      # Remove build directory
+      - rm -Rf ./dist
+
+      # Commit and push changes
+      - git -C ../../../workery-frontend-static-v2 add --all
+      - git -C ../../../workery-frontend-static-v2 commit -m 'Latest production deployment.'
+      - git -C ../../../workery-frontend-static-v2 push origin prod
+
   # Optional: Lint and type-check task
   lint:
     desc: "Run ESLint and TypeScript type checking"
