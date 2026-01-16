@@ -1,4 +1,5 @@
 // File Path: web/workery-frontend/src/pages/Admin/Account/More/Page.jsx
+// @uix-page: AccountMorePage
 // UIX Upgraded - Uses UIX primitives (Card, Alert, Breadcrumb, Spinner, Button, ActionCard)
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";

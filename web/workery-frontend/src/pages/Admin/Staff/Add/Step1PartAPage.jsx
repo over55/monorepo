@@ -1,5 +1,5 @@
 // File Path: web/workery-frontend/src/pages/Admin/Staff/Add/Step1PartAPage.jsx
-// UIX Upgraded - Uses WizardSearchStep whole page component
+// UIX Upgraded - Uses WizardAddOrSearchStep whole page component
 // @uix-page: AdminStaffAddStep1PartAPage
 
 import React, { useState, useEffect, useCallback, memo } from "react";
@@ -10,11 +10,9 @@ import {
   UserIcon,
   EnvelopeIcon,
   PhoneIcon,
-  UsersIcon,
-  ChartBarIcon,
 } from "@heroicons/react/24/outline";
 import {
-  WizardSearchStep,
+  WizardAddOrSearchStep,
   UIXThemeProvider,
 } from "../../../../components/UIX";
 
@@ -65,13 +63,6 @@ const SEARCH_FIELDS = [
   },
 ];
 
-// Breadcrumb items (static, moved outside component)
-const BREADCRUMB_ITEMS = [
-  { label: "Dashboard", to: "/admin/dashboard", icon: ChartBarIcon },
-  { label: "Staff", to: "/admin/staff", icon: UsersIcon },
-  { label: "Add", icon: UserPlusIcon, isActive: true },
-];
-
 // Memoized content component
 const Step1PartAContent = memo(function Step1PartAContent() {
   const navigate = useNavigate();
@@ -87,11 +78,10 @@ const Step1PartAContent = memo(function Step1PartAContent() {
     phone: "",
   });
 
-  // Clear wizard state on mount
+  // Scroll to top on mount (don't clear wizard state here - only clear when user explicitly starts new wizard)
   useEffect(() => {
     window.scrollTo(0, 0);
-    wizardStorage.clearWizardState();
-  }, [wizardStorage]);
+  }, []);
 
   // Event handlers wrapped with useCallback
   const handleSearch = useCallback((data) => {
@@ -137,12 +127,11 @@ const Step1PartAContent = memo(function Step1PartAContent() {
   }, [navigate]);
 
   return (
-    <WizardSearchStep
+    <WizardAddOrSearchStep
       wizardSteps={WIZARD_STEPS}
       currentStep={1}
       wizardTitle="Add New Staff Member"
       wizardIcon={UserPlusIcon}
-      breadcrumbItems={BREADCRUMB_ITEMS}
       formData={formData}
       onFormDataChange={setFormData}
       searchFields={SEARCH_FIELDS}
@@ -152,7 +141,7 @@ const Step1PartAContent = memo(function Step1PartAContent() {
       onSkipSearch={handleSkipSearch}
       entityName="staff member"
       isLoading={isLoading}
-      skipIcon={UserPlusIcon}
+      addIcon={UserPlusIcon}
     />
   );
 });

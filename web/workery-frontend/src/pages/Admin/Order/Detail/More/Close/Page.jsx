@@ -2,7 +2,7 @@
 // UIX Upgraded - Uses OrderCloseActionPage whole page component
 // @uix-page: AdminOrderDetailMoreClosePage
 
-import React, { useMemo } from "react";
+import React, { useMemo, memo } from "react";
 import {
   useOrderManager,
   useAuthManager,
@@ -11,7 +11,7 @@ import { TASK_ITEM_CLOSE_REASON_OPTIONS_WITH_EMPTY_OPTION } from "../../../../..
 import { OrderCloseActionPage } from "../../../../../../components/business/views";
 import { UIXThemeProvider } from "../../../../../../components/UIX";
 
-function AdminOrderDetailMoreClosePage() {
+const AdminOrderDetailMoreClosePage = memo(function AdminOrderDetailMoreClosePage() {
   const orderManager = useOrderManager();
   const authManager = useAuthManager();
 
@@ -43,7 +43,7 @@ function AdminOrderDetailMoreClosePage() {
   );
 
   return <OrderCloseActionPage config={config} />;
-}
+});
 
 // Wrapper with UIXThemeProvider
 function AdminOrderDetailMoreClosePageWithProvider() {

@@ -163,12 +163,12 @@ function AdminAssociateListPage() {
     ],
 
     // Table columns for tabular view
-    // DataList render function signature: (fieldValue, fullItem, rowIndex)
+    // DataList render function signature: (item, rowIndex)
     columns: [
       {
         key: "name",
         label: "Name",
-        render: (value, associate) => (
+        render: (associate) => (
           <Link
             to={`/admin/associate/${associate.id}`}
             onClick={(e) => e.stopPropagation()}
@@ -195,7 +195,7 @@ function AdminAssociateListPage() {
       {
         key: "phone",
         label: "Phone",
-        render: (value, associate) =>
+        render: (associate) =>
           associate.phone ? (
             <span className="flex items-center text-lg">
               <PhoneIcon className="w-5 h-5 mr-2 text-gray-400" />
@@ -208,7 +208,7 @@ function AdminAssociateListPage() {
       {
         key: "email",
         label: "Email",
-        render: (value, associate) =>
+        render: (associate) =>
           associate.email ? (
             <a
               href={`mailto:${associate.email}`}
@@ -226,7 +226,7 @@ function AdminAssociateListPage() {
         key: "actions",
         label: "Actions",
         align: "center",
-        render: (value, associate) => (
+        render: (associate) => (
           <ViewButton
             to={`/admin/associate/${associate.id}`}
             text="View"

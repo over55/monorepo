@@ -105,7 +105,7 @@ const DETAIL_FIELDS = [
   {
     name: "type",
     label: "Customer Type",
-    render: (value) => getCustomerTypeDisplay(value),
+    render: (item) => getCustomerTypeDisplay(item.type),
   },
   {
     name: "organizationName",
@@ -122,7 +122,7 @@ const DETAIL_FIELDS = [
   {
     name: "gender",
     label: "Gender",
-    render: (value, item) => getGenderText(value, item.genderOther),
+    render: (item) => getGenderText(item.gender, item.genderOther),
   },
   {
     name: "_contactInfo",
@@ -133,10 +133,10 @@ const DETAIL_FIELDS = [
     name: "email",
     label: "Email",
     icon: EnvelopeIcon,
-    render: (value) =>
-      value ? (
-        <a href={`mailto:${value}`} className="text-blue-600 hover:text-blue-800">
-          {value}
+    render: (item) =>
+      item.email ? (
+        <a href={`mailto:${item.email}`} className="text-blue-600 hover:text-blue-800">
+          {item.email}
         </a>
       ) : (
         <span className="text-gray-400 italic">Not provided</span>
@@ -146,8 +146,8 @@ const DETAIL_FIELDS = [
     name: "phone",
     label: "Phone",
     icon: PhoneIcon,
-    render: (value) =>
-      value || <span className="text-gray-400 italic">Not provided</span>,
+    render: (item) =>
+      item.phone || <span className="text-gray-400 italic">Not provided</span>,
   },
   {
     name: "_deactivationInfo",
@@ -167,8 +167,8 @@ const DETAIL_FIELDS = [
   {
     name: "deactivationReason",
     label: "Deactivation Reason",
-    render: (value, item) =>
-      getDeactivationReasonText(value, item.deactivationReasonOther),
+    render: (item) =>
+      getDeactivationReasonText(item.deactivationReason, item.deactivationReasonOther),
   },
   {
     name: "description",

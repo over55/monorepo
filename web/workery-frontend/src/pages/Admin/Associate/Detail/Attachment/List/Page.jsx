@@ -20,7 +20,7 @@ import {
   useAssociateManager,
 } from "../../../../../../services/Services";
 import { ATTACHMENT_OWNERSHIP_TYPE } from "../../../../../../constants/Attachment";
-import { EntityAttachmentListPage } from "../../../../../../components/UIX";
+import { EntityAttachmentListPage, UIXThemeProvider } from "../../../../../../components/UIX";
 
 function AdminAssociateDetailAttachmentListPage() {
   const { aid } = useParams();
@@ -130,7 +130,11 @@ function AdminAssociateDetailAttachmentListPage() {
     },
   }), [attachmentManager, associateManager, navigate]);
 
-  return <EntityAttachmentListPage config={config} />;
+  return (
+    <UIXThemeProvider>
+      <EntityAttachmentListPage config={config} />
+    </UIXThemeProvider>
+  );
 }
 
 export default AdminAssociateDetailAttachmentListPage;

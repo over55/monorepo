@@ -1,4 +1,5 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/TaskItem/Operation/Close/Page.jsx
+// @uix-page: TaskItemClosePage
 // UIX Upgraded - Uses UIX primitives (Spinner, Breadcrumb, UIXThemeProvider)
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";

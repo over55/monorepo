@@ -78,7 +78,6 @@ const WIZARD_STEPS = [
 
 // Gender options
 const GENDER_OPTIONS = [
-  { value: 0, label: "Please select" },
   { value: ASSOCIATE_GENDER_MALE, label: "Male" },
   { value: ASSOCIATE_GENDER_FEMALE, label: "Female" },
   { value: ASSOCIATE_GENDER_OTHER, label: "Other" },

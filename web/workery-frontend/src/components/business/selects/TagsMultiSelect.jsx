@@ -1,7 +1,7 @@
 // File: monorepo/web/frontend/src/components/business/selects/TagsMultiSelect.jsx
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { TagInput, Loading } from "../../UIX";
+import { SkillSetTagPicker, Loading } from "../../UIX";
 import { useTagManager } from "../../../services/Services";
 
 /**
@@ -120,11 +120,11 @@ function TagsMultiSelect({
     );
   }
 
-  // Use cleaned value for the TagInput
+  // Use cleaned value for the SkillSetTagPicker
   const currentValue = cleanValue(value);
 
   return (
-    <TagInput
+    <SkillSetTagPicker
       id={id}
       label={label}
       options={options}

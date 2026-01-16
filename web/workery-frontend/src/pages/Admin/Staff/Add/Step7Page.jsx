@@ -1,5 +1,5 @@
 // File Path: web/workery-frontend/src/pages/Admin/Staff/Add/Step7Page.jsx
-// UIX Upgraded - Uses WizardFormStep whole page component
+// UIX Upgraded - Uses WizardFormStep and FormCard components
 // @uix-page: AdminStaffAddStep7Page
 
 import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
@@ -17,15 +17,13 @@ import {
   CheckCircleIcon,
   PencilSquareIcon,
   TruckIcon,
-  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import {
   WizardFormStep,
-  InfoCard,
+  FormCard,
   DataField,
   Alert,
   UIXThemeProvider,
-  useUIXTheme,
 } from "../../../../components/UIX";
 import {
   GENDER_OPTIONS_WITH_EMPTY_OPTION,
@@ -53,81 +51,58 @@ const WIZARD_STEPS = [
   { title: "Comments" },
 ];
 
-// Review Section Component with Edit Link
-const ReviewSection = memo(function ReviewSection({
-  title,
-  icon: Icon,
-  children,
-  editLink,
-  hasError = false,
-  themeClasses = {},
-}) {
-  // Theme-aware default classes
-  const sectionHeaderBg = themeClasses.sectionHeaderBg || "bg-gray-700 dark:bg-gray-800";
-  const sectionHeaderText = themeClasses.sectionHeaderText || "text-white";
-  const linkPrimary = themeClasses.linkPrimary || "text-blue-300 hover:text-blue-200";
-  const bgCard = themeClasses.bgCard || "bg-white dark:bg-gray-900";
-  const errorRing = themeClasses.errorRing || "ring-red-500 dark:ring-red-400";
-  const errorText = themeClasses.errorText || "text-red-300 dark:text-red-400";
-  const errorTextHover = themeClasses.errorTextHover || "text-red-300 hover:text-red-200 dark:text-red-400 dark:hover:text-red-300";
+// Edit Link Component for FormCard headers
+const EditLink = memo(function EditLink({ to, hasError = false }) {
+  const linkClasses = useMemo(() => {
+    const baseClasses = "inline-flex items-center text-xs sm:text-sm font-medium transition-colors";
+    if (hasError) {
+      return `${baseClasses} text-red-300 hover:text-red-100`;
+    }
+    // Use white/light colors for better contrast on dark header background
+    return `${baseClasses} text-white/90 hover:text-white`;
+  }, [hasError]);
 
   return (
-    <div
-      className={`${sectionHeaderBg} rounded-lg shadow-sm mb-6 ${hasError ? `ring-2 ${errorRing}` : ""}`}
-    >
-      <div className="px-4 sm:px-6 py-3 sm:py-4">
-        <div className="flex items-center justify-between">
-          <h3 className={`text-base sm:text-lg font-semibold ${sectionHeaderText} flex items-center`}>
-            <Icon
-              className={`w-4 sm:w-5 h-4 sm:h-5 mr-2 ${hasError ? errorText : linkPrimary} flex-shrink-0`}
-            />
-            <span className="truncate">{title}</span>
-            {hasError && (
-              <ExclamationTriangleIcon className={`w-4 sm:w-5 h-4 sm:h-5 ml-2 ${errorText}`} />
-            )}
-          </h3>
-          {editLink && (
-            <Link
-              to={editLink}
-              className={`inline-flex items-center text-xs sm:text-sm ${hasError ? errorTextHover : linkPrimary}`}
-            >
-              <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-              {hasError ? "Fix" : "Edit"}
-            </Link>
-          )}
-        </div>
-      </div>
-      <div className={`${bgCard} border-2 border-t-0 ${sectionHeaderBg} rounded-b-lg p-4 sm:p-6`}>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-          {children}
-        </div>
-      </div>
-    </div>
+    <Link to={to} className={linkClasses}>
+      <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+      {hasError ? "Fix" : "Edit"}
+    </Link>
   );
 });
+
+EditLink.displayName = "EditLink";
 
 // Memoized content component
 const Step7Content = memo(function Step7Content() {
   const navigate = useNavigate();
-  const { getThemeClasses } = useUIXTheme();
   const wizardStorage = useStaffAddWizardStorage();
   const staffManager = useStaffManager();
 
+  // Debug: Log when component renders and wizardStorage reference
+  if (import.meta.env.DEV) {
+    console.log("Step7Page: Component rendering, wizardStorage ref =", wizardStorage);
+  }
+
   const wizardState = useMemo(() => {
+    if (import.meta.env.DEV) {
+      console.log("Step7Page: useMemo executing (wizardStorage changed or first render)");
+    }
     const state = wizardStorage.getWizardState();
+    if (import.meta.env.DEV) {
+      console.log("Step7Page: wizardState from storage =", JSON.stringify(state, null, 2));
+      console.log("Step7Page: firstName =", state.firstName);
+      console.log("Step7Page: type =", state.type);
+      console.log("Step7Page: email =", state.email);
+    }
     return state;
   }, [wizardStorage]);
 
-  // Memoized theme classes for ReviewSection
-  const themeClasses = useMemo(() => ({
-    bgCard: getThemeClasses('bg-card') || 'bg-white dark:bg-gray-900',
-    linkPrimary: getThemeClasses('link-primary') || 'text-blue-300 hover:text-blue-200',
-    sectionHeaderBg: getThemeClasses('form-card-header-bg') || 'bg-gray-700 dark:bg-gray-800',
-    sectionHeaderText: getThemeClasses('form-card-header-text') || 'text-white',
-    errorRing: getThemeClasses('error-ring') || 'ring-red-500 dark:ring-red-400',
-    errorText: getThemeClasses('error-text') || 'text-red-300 dark:text-red-400',
-    errorTextHover: getThemeClasses('error-text-hover') || 'text-red-300 hover:text-red-200 dark:text-red-400 dark:hover:text-red-300',
-  }), [getThemeClasses]);
+  // Debug: Also read directly to compare
+  if (import.meta.env.DEV) {
+    const directState = wizardStorage.getWizardState();
+    console.log("Step7Page: Direct read (not memoized) =", JSON.stringify(directState, null, 2));
+    console.log("Step7Page: Memoized vs Direct match =", JSON.stringify(wizardState) === JSON.stringify(directState));
+  }
 
   const [errors, setErrors] = useState({});
   const [fieldErrors, setFieldErrors] = useState({});
@@ -382,189 +357,223 @@ const Step7Content = memo(function Step7Content() {
         )}
 
         {/* Contact Information Section */}
-        <ReviewSection
+        <FormCard
           title="Contact Information"
           icon={UserIcon}
-          editLink="/admin/staff/add/step-3"
+          maxWidth="7xl"
           hasError={sectionHasErrors("contact")}
-          themeClasses={themeClasses}
-        >
-          <DataField label="Type" value={formatStaffType(wizardState.type)} />
-          <DataField label="First Name" value={wizardState.firstName} />
-          <DataField label="Last Name" value={wizardState.lastName} />
-          <DataField label="Email" value={wizardState.email} />
-          <DataField
-            label="Phone"
-            value={`${wizardState.phone} (${formatPhoneType(wizardState.phoneType)})`}
-            themeClasses={themeClasses}
-          />
-          <DataField label="OK to Email" value={wizardState.isOkToEmail ? "Yes" : "No"} />
-          <DataField label="OK to Text" value={wizardState.isOkToText ? "Yes" : "No"} />
-          {wizardState.otherPhone && (
-            <DataField
-              label="Other Phone"
-              value={`${wizardState.otherPhone} (${formatPhoneType(wizardState.otherPhoneType)})`}
-              themeClasses={themeClasses}
+          headerAction={
+            <EditLink
+              to="/admin/staff/add/step-3"
+              hasError={sectionHasErrors("contact")}
             />
-          )}
-        </ReviewSection>
+          }
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <DataField label="Type" value={formatStaffType(wizardState.type)} />
+            <DataField label="First Name" value={wizardState.firstName} />
+            <DataField label="Last Name" value={wizardState.lastName} />
+            <DataField label="Email" value={wizardState.email} />
+            <DataField
+              label="Phone"
+              value={`${wizardState.phone} (${formatPhoneType(wizardState.phoneType)})`}
+            />
+            <DataField label="OK to Email" value={wizardState.isOkToEmail ? "Yes" : "No"} />
+            <DataField label="OK to Text" value={wizardState.isOkToText ? "Yes" : "No"} />
+            {wizardState.otherPhone && (
+              <DataField
+                label="Other Phone"
+                value={`${wizardState.otherPhone} (${formatPhoneType(wizardState.otherPhoneType)})`}
+              />
+            )}
+          </div>
+        </FormCard>
 
         {/* Address Information Section */}
-        <ReviewSection
+        <FormCard
           title="Address Information"
           icon={MapPinIcon}
-          editLink="/admin/staff/add/step-4"
+          maxWidth="7xl"
           hasError={sectionHasErrors("address")}
-          themeClasses={themeClasses}
+          headerAction={
+            <EditLink
+              to="/admin/staff/add/step-4"
+              hasError={sectionHasErrors("address")}
+            />
+          }
         >
-          <DataField label="Address" value={wizardState.addressLine1} />
-          {wizardState.addressLine2 && (
-            <DataField label="Address Line 2" value={wizardState.addressLine2} />
-          )}
-          <DataField label="City" value={wizardState.city} />
-          <DataField label="Province/Territory" value={wizardState.region} />
-          <DataField label="Postal Code" value={wizardState.postalCode} />
-          <DataField label="Country" value={wizardState.country} />
-        </ReviewSection>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            <DataField label="Address" value={wizardState.addressLine1} />
+            {wizardState.addressLine2 && (
+              <DataField label="Address Line 2" value={wizardState.addressLine2} />
+            )}
+            <DataField label="City" value={wizardState.city} />
+            <DataField label="Province/Territory" value={wizardState.region} />
+            <DataField label="Postal Code" value={wizardState.postalCode} />
+            <DataField label="Country" value={wizardState.country} />
+          </div>
+        </FormCard>
 
         {/* Shipping Address Section (if applicable) */}
         {wizardState.hasShippingAddress && (
-          <ReviewSection
+          <FormCard
             title="Shipping Address"
             icon={TruckIcon}
-            editLink="/admin/staff/add/step-4"
+            maxWidth="7xl"
             hasError={sectionHasErrors("shipping")}
-            themeClasses={themeClasses}
+            headerAction={
+              <EditLink
+                to="/admin/staff/add/step-4"
+                hasError={sectionHasErrors("shipping")}
+              />
+            }
           >
-            <DataField label="Name" value={wizardState.shippingName} />
-            <DataField label="Phone" value={wizardState.shippingPhone} />
-            <DataField label="Address" value={wizardState.shippingAddressLine1} />
-            {wizardState.shippingAddressLine2 && (
-              <DataField label="Address Line 2" value={wizardState.shippingAddressLine2} />
-            )}
-            <DataField label="City" value={wizardState.shippingCity} />
-            <DataField label="Province/Territory" value={wizardState.shippingRegion} />
-            <DataField label="Postal Code" value={wizardState.shippingPostalCode} />
-            <DataField label="Country" value={wizardState.shippingCountry} />
-          </ReviewSection>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+              <DataField label="Name" value={wizardState.shippingName} />
+              <DataField label="Phone" value={wizardState.shippingPhone} />
+              <DataField label="Address" value={wizardState.shippingAddressLine1} />
+              {wizardState.shippingAddressLine2 && (
+                <DataField label="Address Line 2" value={wizardState.shippingAddressLine2} />
+              )}
+              <DataField label="City" value={wizardState.shippingCity} />
+              <DataField label="Province/Territory" value={wizardState.shippingRegion} />
+              <DataField label="Postal Code" value={wizardState.shippingPostalCode} />
+              <DataField label="Country" value={wizardState.shippingCountry} />
+            </div>
+          </FormCard>
         )}
 
         {/* Account Information Section */}
-        <ReviewSection
+        <FormCard
           title="Account Information"
           icon={ClipboardDocumentIcon}
-          editLink="/admin/staff/add/step-5"
+          maxWidth="7xl"
           hasError={sectionHasErrors("account")}
-          themeClasses={themeClasses}
-        >
-          {wizardState.vehicleTypes && wizardState.vehicleTypes.length > 0 && (
-            <div className="lg:col-span-2 mb-2">
-              <VehicleTypesDisplay
-                values={parseArrayValue(wizardState.vehicleTypes)}
-                label="Vehicle Types"
-                variant="warning"
-                onUnauthorized={onUnauthorized}
-              />
-            </div>
-          )}
-          {wizardState.limitSpecial && (
-            <DataField
-              label="Limitations/Special Considerations"
-              value={wizardState.limitSpecial}
-              fullWidth
-              themeClasses={themeClasses}
+          headerAction={
+            <EditLink
+              to="/admin/staff/add/step-5"
+              hasError={sectionHasErrors("account")}
             />
-          )}
-          {wizardState.policeCheck && (
-            <DataField label="Police Check Expiry" value={wizardState.policeCheck} />
-          )}
-          {wizardState.driversLicenseClass && (
-            <DataField label="Drivers License Class" value={wizardState.driversLicenseClass} />
-          )}
-          <DataField label="Preferred Language" value={wizardState.preferredLanguage} />
-          {wizardState.emergencyContactName && (
-            <>
-              <DataField
-                label="Emergency Contact"
-                value={`${wizardState.emergencyContactName} (${wizardState.emergencyContactRelationship})`}
-                fullWidth
-                themeClasses={themeClasses}
-              />
-              <DataField label="Emergency Phone" value={wizardState.emergencyContactTelephone} />
-              {wizardState.emergencyContactAlternativeTelephone && (
-                <DataField
-                  label="Emergency Alt Phone"
-                  value={wizardState.emergencyContactAlternativeTelephone}
-                  themeClasses={themeClasses}
+          }
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            {wizardState.vehicleTypes && wizardState.vehicleTypes.length > 0 && (
+              <div className="lg:col-span-2 mb-2">
+                <VehicleTypesDisplay
+                  values={parseArrayValue(wizardState.vehicleTypes)}
+                  label="Vehicle Types"
+                  variant="warning"
+                  onUnauthorized={onUnauthorized}
                 />
-              )}
-            </>
-          )}
-          {wizardState.description && (
-            <DataField label="Description" value={wizardState.description} fullWidth />
-          )}
-        </ReviewSection>
+              </div>
+            )}
+            {wizardState.limitSpecial && (
+              <div className="lg:col-span-2">
+                <DataField
+                  label="Limitations/Special Considerations"
+                  value={wizardState.limitSpecial}
+                />
+              </div>
+            )}
+            {wizardState.policeCheck && (
+              <DataField label="Police Check Expiry" value={wizardState.policeCheck} />
+            )}
+            {wizardState.driversLicenseClass && (
+              <DataField label="Drivers License Class" value={wizardState.driversLicenseClass} />
+            )}
+            <DataField label="Preferred Language" value={wizardState.preferredLanguage} />
+            {wizardState.emergencyContactName && (
+              <>
+                <div className="lg:col-span-2">
+                  <DataField
+                    label="Emergency Contact"
+                    value={`${wizardState.emergencyContactName} (${wizardState.emergencyContactRelationship})`}
+                  />
+                </div>
+                <DataField label="Emergency Phone" value={wizardState.emergencyContactTelephone} />
+                {wizardState.emergencyContactAlternativeTelephone && (
+                  <DataField
+                    label="Emergency Alt Phone"
+                    value={wizardState.emergencyContactAlternativeTelephone}
+                  />
+                )}
+              </>
+            )}
+            {wizardState.description && (
+              <div className="lg:col-span-2">
+                <DataField label="Description" value={wizardState.description} />
+              </div>
+            )}
+          </div>
+        </FormCard>
 
         {/* Metrics Information Section */}
-        <ReviewSection
+        <FormCard
           title="Metrics Information"
           icon={ChartBarSquareIcon}
-          editLink="/admin/staff/add/step-6"
+          maxWidth="7xl"
           hasError={sectionHasErrors("metrics")}
-          themeClasses={themeClasses}
+          headerAction={
+            <EditLink
+              to="/admin/staff/add/step-6"
+              hasError={sectionHasErrors("metrics")}
+            />
+          }
         >
-          {wizardState.identifyAs && wizardState.identifyAs.length > 0 && (
-            <DataField
-              label="Identifies As"
-              value={formatIdentifyAs(wizardState.identifyAs)}
-              fullWidth
-              themeClasses={themeClasses}
-            />
-          )}
-          <DataField label="Gender" value={formatGender(wizardState.gender)} />
-          {wizardState.gender === STAFF_GENDER_OTHER && wizardState.genderOther && (
-            <DataField label="Gender (Other)" value={wizardState.genderOther} />
-          )}
-          {wizardState.birthDate && (
-            <DataField label="Birth Date" value={wizardState.birthDate} />
-          )}
-          {wizardState.joinDate && <DataField label="Join Date" value={wizardState.joinDate} />}
-          {wizardState.howDidYouHearAboutUsID && (
-            <div className="lg:col-span-2">
-              <HowHearAboutUsDisplay
-                value={wizardState.howDidYouHearAboutUsID}
-                label="How did you hear about us?"
-                onUnauthorized={onUnauthorized}
-              />
-            </div>
-          )}
-          {wizardState.howDidYouHearAboutUsOther && (
-            <DataField
-              label="How did you hear about us (Other)"
-              value={wizardState.howDidYouHearAboutUsOther}
-              fullWidth
-              themeClasses={themeClasses}
-            />
-          )}
-          {wizardState.tags && wizardState.tags.length > 0 && (
-            <div className="lg:col-span-2">
-              <TagsDisplay
-                values={parseArrayValue(wizardState.tags)}
-                label="Tags"
-                variant="success"
-                onUnauthorized={onUnauthorized}
-              />
-            </div>
-          )}
-          {wizardState.additionalComment && (
-            <DataField
-              label="Additional Comments"
-              value={wizardState.additionalComment}
-              fullWidth
-              themeClasses={themeClasses}
-            />
-          )}
-        </ReviewSection>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+            {wizardState.identifyAs && wizardState.identifyAs.length > 0 && (
+              <div className="lg:col-span-2">
+                <DataField
+                  label="Identifies As"
+                  value={formatIdentifyAs(wizardState.identifyAs)}
+                />
+              </div>
+            )}
+            <DataField label="Gender" value={formatGender(wizardState.gender)} />
+            {wizardState.gender === STAFF_GENDER_OTHER && wizardState.genderOther && (
+              <DataField label="Gender (Other)" value={wizardState.genderOther} />
+            )}
+            {wizardState.birthDate && (
+              <DataField label="Birth Date" value={wizardState.birthDate} />
+            )}
+            {wizardState.joinDate && <DataField label="Join Date" value={wizardState.joinDate} />}
+            {wizardState.howDidYouHearAboutUsID && (
+              <div className="lg:col-span-2">
+                <HowHearAboutUsDisplay
+                  value={wizardState.howDidYouHearAboutUsID}
+                  label="How did you hear about us?"
+                  onUnauthorized={onUnauthorized}
+                />
+              </div>
+            )}
+            {wizardState.howDidYouHearAboutUsOther && (
+              <div className="lg:col-span-2">
+                <DataField
+                  label="How did you hear about us (Other)"
+                  value={wizardState.howDidYouHearAboutUsOther}
+                />
+              </div>
+            )}
+            {wizardState.tags && wizardState.tags.length > 0 && (
+              <div className="lg:col-span-2">
+                <TagsDisplay
+                  values={parseArrayValue(wizardState.tags)}
+                  label="Tags"
+                  variant="success"
+                  onUnauthorized={onUnauthorized}
+                />
+              </div>
+            )}
+            {wizardState.additionalComment && (
+              <div className="lg:col-span-2">
+                <DataField
+                  label="Additional Comments"
+                  value={wizardState.additionalComment}
+                />
+              </div>
+            )}
+          </div>
+        </FormCard>
       </div>
     </WizardFormStep>
   );

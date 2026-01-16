@@ -1,4 +1,5 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Setting/AssociateAwayLog/List/Page.jsx
+// @uix-page: SettingAssociateAwayLogListPage
 // UIX Upgraded - Uses UIX primitives (requires custom Check Expired Docs feature not supported by SettingsListView)
 
 import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";

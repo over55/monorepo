@@ -1,8 +1,9 @@
 // File Path: web/workery-frontend/src/pages/Admin/Order/Search/CriteriaPage.jsx
-// UIX Upgraded - Uses UIX primitives (Card, Alert, Spinner, Breadcrumb, Button)
+// UIX Upgraded - Uses UIX primitives (Card, Alert, Spinner, Breadcrumb, Button, FormCard, Input, Checkbox)
+// @uix-page: CustomSearchCriteriaPage
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Link, useNavigate } from "react-router";
+import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
+import { useNavigate } from "react-router";
 import { useAuthManager } from "../../../../services/Services";
 import {
   Card,
@@ -10,6 +11,9 @@ import {
   Spinner,
   Breadcrumb,
   Button,
+  FormCard,
+  Input,
+  Checkbox,
   UIXThemeProvider,
   useUIXTheme,
 } from "../../../../components/UIX";
@@ -18,13 +22,11 @@ import {
   WrenchScrewdriverIcon,
   ArrowLeftIcon,
   XMarkIcon,
-  ChevronRightIcon,
   LightBulbIcon,
   UserIcon,
   EnvelopeIcon,
   PhoneIcon,
   CheckCircleIcon,
-  ExclamationTriangleIcon,
   ChartBarIcon,
   BuildingOffice2Icon,
   FunnelIcon,
@@ -33,7 +35,23 @@ import {
   HashtagIcon,
 } from "@heroicons/react/24/outline";
 
-function AdminOrderSearchCriteriaPage() {
+// Static breadcrumb items
+const BREADCRUMB_ITEMS = Object.freeze([
+  { label: "Dashboard", to: "/admin/dashboard", icon: ChartBarIcon },
+  { label: "Orders", to: "/admin/orders", icon: WrenchScrewdriverIcon },
+  { label: "Search", icon: MagnifyingGlassIcon, isActive: true },
+]);
+
+// Static search tips
+const SEARCH_TIPS = Object.freeze([
+  "Use keywords to search across all order fields",
+  "Advanced search allows filtering by customer, associate, or order details",
+  "Enter partial information for broader results",
+  "Combine multiple filters for more precise searches",
+]);
+
+// Main content component
+const CriteriaPageContent = memo(function CriteriaPageContent() {
   const authManager = useAuthManager();
   const navigate = useNavigate();
   const { getThemeClasses } = useUIXTheme();
@@ -44,13 +62,6 @@ function AdminOrderSearchCriteriaPage() {
     textSecondary: getThemeClasses("text-secondary"),
     linkPrimary: getThemeClasses("link-primary"),
   }), [getThemeClasses]);
-
-  // Breadcrumb items
-  const breadcrumbItems = useMemo(() => [
-    { label: "Dashboard", to: "/admin/dashboard", icon: ChartBarIcon },
-    { label: "Orders", to: "/admin/orders", icon: WrenchScrewdriverIcon },
-    { label: "Search", icon: MagnifyingGlassIcon, isActive: true },
-  ], []);
 
   // Form states
   const [errors, setErrors] = useState({});
@@ -73,8 +84,7 @@ function AdminOrderSearchCriteriaPage() {
   const [customerLastName, setCustomerLastName] = useState("");
 
   // Associate fields
-  const [associateOrganizationName, setAssociateOrganizationName] =
-    useState("");
+  const [associateOrganizationName, setAssociateOrganizationName] = useState("");
   const [associateEmail, setAssociateEmail] = useState("");
   const [associatePhone, setAssociatePhone] = useState("");
   const [associateFirstName, setAssociateFirstName] = useState("");
@@ -82,6 +92,11 @@ function AdminOrderSearchCriteriaPage() {
 
   // Order fields
   const [orderWjid, setOrderWjid] = useState("");
+
+  // Memoized unauthorized handler
+  const onUnauthorized = useCallback(() => {
+    navigate("/login?unauthorized=true");
+  }, [navigate]);
 
   // Check authentication on mount
   useEffect(() => {
@@ -92,9 +107,8 @@ function AdminOrderSearchCriteriaPage() {
   }, [authManager, navigate]);
 
   // Handle form submission
-  const onSubmitClick = (e) => {
+  const onSubmitClick = useCallback((e) => {
     e.preventDefault();
-    console.log("onSubmitClick: Beginning...");
 
     // Clear previous errors
     setErrors({});
@@ -121,38 +135,38 @@ function AdminOrderSearchCriteriaPage() {
       return;
     }
 
-    // Build URL with query parameters (matching the original format)
+    // Build URL with query parameters
     const queryParams = new URLSearchParams();
 
     if (customerFirstName) queryParams.append("cfn", customerFirstName);
     if (customerLastName) queryParams.append("cln", customerLastName);
     if (customerEmail) queryParams.append("ce", customerEmail);
-    if (customerPhone)
-      queryParams.append("cp", encodeURIComponent(customerPhone));
-    if (customerOrganizationName)
-      queryParams.append("con", customerOrganizationName);
+    if (customerPhone) queryParams.append("cp", encodeURIComponent(customerPhone));
+    if (customerOrganizationName) queryParams.append("con", customerOrganizationName);
     if (actualSearchText) queryParams.append("q", actualSearchText);
     if (associateFirstName) queryParams.append("afn", associateFirstName);
     if (associateLastName) queryParams.append("aln", associateLastName);
     if (associateEmail) queryParams.append("ae", associateEmail);
-    if (associatePhone)
-      queryParams.append("ap", encodeURIComponent(associatePhone));
-    if (associateOrganizationName)
-      queryParams.append("aon", associateOrganizationName);
+    if (associatePhone) queryParams.append("ap", encodeURIComponent(associatePhone));
+    if (associateOrganizationName) queryParams.append("aon", associateOrganizationName);
     if (orderWjid) queryParams.append("owjid", orderWjid);
 
     const searchURL = `/admin/orders/search-result?${queryParams.toString()}`;
     navigate(searchURL);
-  };
+  }, [
+    customerOrganizationName, customerFirstName, customerLastName, customerEmail, customerPhone,
+    actualSearchText, associateOrganizationName, associateFirstName, associateLastName,
+    associateEmail, associatePhone, orderWjid, navigate
+  ]);
 
   // Handle cancel
-  const onCancelClick = (e) => {
+  const onCancelClick = useCallback((e) => {
     e.preventDefault();
     navigate("/admin/orders");
-  };
+  }, [navigate]);
 
   // Handle clear form
-  const handleClearForm = () => {
+  const handleClearForm = useCallback(() => {
     setActualSearchText("");
     setCustomerFirstName("");
     setCustomerLastName("");
@@ -169,14 +183,31 @@ function AdminOrderSearchCriteriaPage() {
     setFilterByAssociate(false);
     setFilterByOrder(false);
     setErrors({});
-  };
+  }, []);
 
   // Handle key press for Enter key submission
-  const handleKeyPress = (e) => {
+  const handleKeyPress = useCallback((e) => {
     if (e.key === "Enter") {
       onSubmitClick(e);
     }
-  };
+  }, [onSubmitClick]);
+
+  // Toggle handlers
+  const handleAdvancedToggle = useCallback(() => {
+    setIsAdvancedFiltering(prev => !prev);
+  }, []);
+
+  const handleFilterByCustomerChange = useCallback((checked) => {
+    setFilterByCustomer(checked);
+  }, []);
+
+  const handleFilterByAssociateChange = useCallback((checked) => {
+    setFilterByAssociate(checked);
+  }, []);
+
+  const handleFilterByOrderChange = useCallback((checked) => {
+    setFilterByOrder(checked);
+  }, []);
 
   if (isFetching) {
     return (
@@ -193,7 +224,7 @@ function AdminOrderSearchCriteriaPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
-        <Breadcrumb items={breadcrumbItems} className="mb-8" />
+        <Breadcrumb items={BREADCRUMB_ITEMS} className="mb-8" />
 
         {/* Header Section */}
         <div className="mb-8">
@@ -209,8 +240,7 @@ function AdminOrderSearchCriteriaPage() {
                 Find existing orders in your database
               </p>
             </div>
-            <Button variant="outline" onClick={() => navigate("/admin/orders")}>
-              <ArrowLeftIcon className="h-4 w-4 mr-2" />
+            <Button variant="outline" onClick={onCancelClick} icon={ArrowLeftIcon}>
               Back to Orders
             </Button>
           </div>
@@ -224,43 +254,36 @@ function AdminOrderSearchCriteriaPage() {
         )}
 
         {/* Main Search Form */}
-        <Card>
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className={`text-xl font-semibold ${themeClasses.textPrimary} flex items-center`}>
-              <MagnifyingGlassIcon className={`h-5 w-5 mr-2 ${themeClasses.linkPrimary}`} />
-              Search Criteria
-            </h2>
-            <p className="mt-1 text-sm text-gray-600">
-              Enter keywords or use advanced filters to find orders
-            </p>
-          </div>
-
-          <form onSubmit={onSubmitClick} className="p-6">
+        <FormCard
+          title="Search Criteria"
+          icon={MagnifyingGlassIcon}
+          description="Enter keywords or use advanced filters to find orders"
+          maxWidth="4xl"
+        >
+          <form onSubmit={onSubmitClick}>
             {/* Basic Search */}
             <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Search Keywords
-              </label>
-              <input
+              <Input
+                label="Search Keywords"
                 type="text"
                 value={actualSearchText}
-                onChange={(e) => setActualSearchText(e.target.value)}
+                onChange={setActualSearchText}
                 onKeyPress={handleKeyPress}
                 placeholder="Search by any keyword..."
-                className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                icon={MagnifyingGlassIcon}
               />
             </div>
 
             {/* Advanced Search Toggle */}
             <div className="mb-6">
-              <button
+              <Button
                 type="button"
-                onClick={() => setIsAdvancedFiltering(!isAdvancedFiltering)}
-                className="inline-flex items-center px-4 py-2 border border-blue-600 rounded-lg text-sm font-medium text-blue-600 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                variant="outline"
+                onClick={handleAdvancedToggle}
+                icon={FunnelIcon}
               >
-                <FunnelIcon className="h-4 w-4 mr-2" />
                 {isAdvancedFiltering ? "Hide" : "Show"} Advanced Search
-              </button>
+              </Button>
             </div>
 
             {/* Advanced Search Section */}
@@ -272,243 +295,169 @@ function AdminOrderSearchCriteriaPage() {
                     Filter Options
                   </h3>
                   <div className="space-y-2">
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={filterByCustomer}
-                        onChange={(e) => setFilterByCustomer(e.target.checked)}
-                        className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">
-                        Filter by Customer
-                      </span>
-                    </label>
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={filterByAssociate}
-                        onChange={(e) => setFilterByAssociate(e.target.checked)}
-                        className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">
-                        Filter by Associate
-                      </span>
-                    </label>
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={filterByOrder}
-                        onChange={(e) => setFilterByOrder(e.target.checked)}
-                        className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">
-                        Filter by Order
-                      </span>
-                    </label>
+                    <Checkbox
+                      id="filterByCustomer"
+                      label="Filter by Customer"
+                      checked={filterByCustomer}
+                      onChange={handleFilterByCustomerChange}
+                    />
+                    <Checkbox
+                      id="filterByAssociate"
+                      label="Filter by Associate"
+                      checked={filterByAssociate}
+                      onChange={handleFilterByAssociateChange}
+                    />
+                    <Checkbox
+                      id="filterByOrder"
+                      label="Filter by Order"
+                      checked={filterByOrder}
+                      onChange={handleFilterByOrderChange}
+                    />
                   </div>
                 </div>
 
                 {/* Customer Fields */}
                 {filterByCustomer && (
-                  <div className="mb-6">
+                  <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
                     <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center">
-                      <UserGroupIcon className="h-4 w-4 mr-2 text-gray-600" />
+                      <UserGroupIcon className="h-4 w-4 mr-2 text-blue-600" />
                       Customer Information
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          First Name
-                        </label>
-                        <input
-                          type="text"
-                          value={customerFirstName}
-                          onChange={(e) => setCustomerFirstName(e.target.value)}
-                          onKeyPress={handleKeyPress}
-                          placeholder="Enter first name"
-                          className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Last Name
-                        </label>
-                        <input
-                          type="text"
-                          value={customerLastName}
-                          onChange={(e) => setCustomerLastName(e.target.value)}
-                          onKeyPress={handleKeyPress}
-                          placeholder="Enter last name"
-                          className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          <EnvelopeIcon className="inline h-4 w-4 mr-1" />
-                          Email
-                        </label>
-                        <input
-                          type="email"
-                          value={customerEmail}
-                          onChange={(e) => setCustomerEmail(e.target.value)}
-                          onKeyPress={handleKeyPress}
-                          placeholder="Enter email address"
-                          className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          <PhoneIcon className="inline h-4 w-4 mr-1" />
-                          Phone
-                        </label>
-                        <input
-                          type="tel"
-                          value={customerPhone}
-                          onChange={(e) => setCustomerPhone(e.target.value)}
-                          onKeyPress={handleKeyPress}
-                          placeholder="Enter phone number"
-                          className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        <BuildingOffice2Icon className="inline h-4 w-4 mr-1" />
-                        Organization Name
-                      </label>
-                      <input
+                      <Input
+                        label="First Name"
                         type="text"
-                        value={customerOrganizationName}
-                        onChange={(e) =>
-                          setCustomerOrganizationName(e.target.value)
-                        }
+                        value={customerFirstName}
+                        onChange={setCustomerFirstName}
                         onKeyPress={handleKeyPress}
-                        placeholder="Enter organization name"
-                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Enter first name"
+                        icon={UserIcon}
+                      />
+                      <Input
+                        label="Last Name"
+                        type="text"
+                        value={customerLastName}
+                        onChange={setCustomerLastName}
+                        onKeyPress={handleKeyPress}
+                        placeholder="Enter last name"
+                        icon={UserIcon}
+                      />
+                      <Input
+                        label="Email"
+                        type="email"
+                        value={customerEmail}
+                        onChange={setCustomerEmail}
+                        onKeyPress={handleKeyPress}
+                        placeholder="Enter email address"
+                        icon={EnvelopeIcon}
+                      />
+                      <Input
+                        label="Phone"
+                        type="tel"
+                        value={customerPhone}
+                        onChange={setCustomerPhone}
+                        onKeyPress={handleKeyPress}
+                        placeholder="Enter phone number"
+                        icon={PhoneIcon}
                       />
                     </div>
+                    <Input
+                      label="Organization Name"
+                      type="text"
+                      value={customerOrganizationName}
+                      onChange={setCustomerOrganizationName}
+                      onKeyPress={handleKeyPress}
+                      placeholder="Enter organization name"
+                      icon={BuildingOffice2Icon}
+                    />
                   </div>
                 )}
 
                 {/* Associate Fields */}
                 {filterByAssociate && (
-                  <div className="mb-6">
+                  <div className="mb-6 p-4 bg-green-50 rounded-lg border border-green-200">
                     <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center">
-                      <UserIcon className="h-4 w-4 mr-2 text-gray-600" />
+                      <UserIcon className="h-4 w-4 mr-2 text-green-600" />
                       Associate Information
                     </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          First Name
-                        </label>
-                        <input
-                          type="text"
-                          value={associateFirstName}
-                          onChange={(e) =>
-                            setAssociateFirstName(e.target.value)
-                          }
-                          onKeyPress={handleKeyPress}
-                          placeholder="Enter first name"
-                          className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Last Name
-                        </label>
-                        <input
-                          type="text"
-                          value={associateLastName}
-                          onChange={(e) => setAssociateLastName(e.target.value)}
-                          onKeyPress={handleKeyPress}
-                          placeholder="Enter last name"
-                          className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          <EnvelopeIcon className="inline h-4 w-4 mr-1" />
-                          Email
-                        </label>
-                        <input
-                          type="email"
-                          value={associateEmail}
-                          onChange={(e) => setAssociateEmail(e.target.value)}
-                          onKeyPress={handleKeyPress}
-                          placeholder="Enter email address"
-                          className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          <PhoneIcon className="inline h-4 w-4 mr-1" />
-                          Phone
-                        </label>
-                        <input
-                          type="tel"
-                          value={associatePhone}
-                          onChange={(e) => setAssociatePhone(e.target.value)}
-                          onKeyPress={handleKeyPress}
-                          placeholder="Enter phone number"
-                          className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        <BuildingOffice2Icon className="inline h-4 w-4 mr-1" />
-                        Organization Name
-                      </label>
-                      <input
+                      <Input
+                        label="First Name"
                         type="text"
-                        value={associateOrganizationName}
-                        onChange={(e) =>
-                          setAssociateOrganizationName(e.target.value)
-                        }
+                        value={associateFirstName}
+                        onChange={setAssociateFirstName}
                         onKeyPress={handleKeyPress}
-                        placeholder="Enter organization name"
-                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                        placeholder="Enter first name"
+                        icon={UserIcon}
+                      />
+                      <Input
+                        label="Last Name"
+                        type="text"
+                        value={associateLastName}
+                        onChange={setAssociateLastName}
+                        onKeyPress={handleKeyPress}
+                        placeholder="Enter last name"
+                        icon={UserIcon}
+                      />
+                      <Input
+                        label="Email"
+                        type="email"
+                        value={associateEmail}
+                        onChange={setAssociateEmail}
+                        onKeyPress={handleKeyPress}
+                        placeholder="Enter email address"
+                        icon={EnvelopeIcon}
+                      />
+                      <Input
+                        label="Phone"
+                        type="tel"
+                        value={associatePhone}
+                        onChange={setAssociatePhone}
+                        onKeyPress={handleKeyPress}
+                        placeholder="Enter phone number"
+                        icon={PhoneIcon}
                       />
                     </div>
+                    <Input
+                      label="Organization Name"
+                      type="text"
+                      value={associateOrganizationName}
+                      onChange={setAssociateOrganizationName}
+                      onKeyPress={handleKeyPress}
+                      placeholder="Enter organization name"
+                      icon={BuildingOffice2Icon}
+                    />
                   </div>
                 )}
 
                 {/* Order Fields */}
                 {filterByOrder && (
-                  <div className="mb-6">
+                  <div className="mb-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
                     <h3 className="text-sm font-semibold text-gray-700 mb-4 flex items-center">
-                      <ClipboardDocumentListIcon className="h-4 w-4 mr-2 text-gray-600" />
+                      <ClipboardDocumentListIcon className="h-4 w-4 mr-2 text-purple-600" />
                       Order Information
                     </h3>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        <HashtagIcon className="inline h-4 w-4 mr-1" />
-                        Job Number
-                      </label>
-                      <input
-                        type="text"
-                        value={orderWjid}
-                        onChange={(e) => setOrderWjid(e.target.value)}
-                        onKeyPress={handleKeyPress}
-                        placeholder="Enter job number"
-                        className="block w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                      />
-                    </div>
+                    <Input
+                      label="Job Number"
+                      type="text"
+                      value={orderWjid}
+                      onChange={setOrderWjid}
+                      onKeyPress={handleKeyPress}
+                      placeholder="Enter job number"
+                      icon={HashtagIcon}
+                    />
                   </div>
                 )}
               </>
             )}
 
             {/* Action Buttons */}
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-center pt-4 border-t border-gray-200">
               <div className="flex space-x-3">
-                <Button variant="outline" type="button" onClick={onCancelClick}>
-                  <ArrowLeftIcon className="h-4 w-4 mr-2" />
+                <Button variant="outline" type="button" onClick={onCancelClick} icon={ArrowLeftIcon}>
                   Back
                 </Button>
-                <Button variant="outline" type="button" onClick={handleClearForm}>
-                  <XMarkIcon className="h-4 w-4 mr-2" />
+                <Button variant="outline" type="button" onClick={handleClearForm} icon={XMarkIcon}>
                   Clear
                 </Button>
               </div>
@@ -518,17 +467,13 @@ function AdminOrderSearchCriteriaPage() {
                 type="submit"
                 disabled={isFetching}
                 loading={isFetching}
+                icon={MagnifyingGlassIcon}
               >
-                {isFetching ? "Searching..." : (
-                  <>
-                    <MagnifyingGlassIcon className="h-4 w-4 mr-2" />
-                    Search
-                  </>
-                )}
+                {isFetching ? "Searching..." : "Search"}
               </Button>
             </div>
           </form>
-        </Card>
+        </FormCard>
 
         {/* Search Tips */}
         <Card className="mt-6">
@@ -540,40 +485,27 @@ function AdminOrderSearchCriteriaPage() {
           </div>
           <div className="p-6">
             <ul className="space-y-3 text-sm text-gray-600">
-              <li className="flex items-start">
-                <CheckCircleIcon className="w-4 h-4 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
-                <span>Use keywords to search across all order fields</span>
-              </li>
-              <li className="flex items-start">
-                <CheckCircleIcon className="w-4 h-4 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
-                <span>
-                  Advanced search allows filtering by customer, associate, or
-                  order details
-                </span>
-              </li>
-              <li className="flex items-start">
-                <CheckCircleIcon className="w-4 h-4 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
-                <span>Enter partial information for broader results</span>
-              </li>
-              <li className="flex items-start">
-                <CheckCircleIcon className="w-4 h-4 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
-                <span>Combine multiple filters for more precise searches</span>
-              </li>
+              {SEARCH_TIPS.map((tip, index) => (
+                <li key={index} className="flex items-start">
+                  <CheckCircleIcon className="w-4 h-4 mr-2 text-green-500 flex-shrink-0 mt-0.5" />
+                  <span>{tip}</span>
+                </li>
+              ))}
             </ul>
           </div>
         </Card>
       </div>
     </div>
   );
-}
+});
 
 // Wrapper with UIXThemeProvider
-function AdminOrderSearchCriteriaPageWithProvider() {
+function AdminOrderSearchCriteriaPage() {
   return (
     <UIXThemeProvider>
-      <AdminOrderSearchCriteriaPage />
+      <CriteriaPageContent />
     </UIXThemeProvider>
   );
 }
 
-export default AdminOrderSearchCriteriaPageWithProvider;
+export default AdminOrderSearchCriteriaPage;

@@ -535,6 +535,22 @@ const Step5Content = memo(function Step5Content() {
 
         {/* Login Credentials Section */}
         <FormCard title="Login Credentials" icon={LockClosedIcon} maxWidth="7xl">
+          {/* Honeypot fields to prevent browser autofill on real fields */}
+          {/* These hidden fields catch autofill attempts */}
+          <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', top: '-9999px', opacity: 0, height: 0, overflow: 'hidden' }}>
+            <input
+              type="email"
+              name="email"
+              tabIndex={-1}
+              autoComplete="username email"
+            />
+            <input
+              type="password"
+              name="password"
+              tabIndex={-1}
+              autoComplete="current-password"
+            />
+          </div>
           <div className="space-y-6">
             <div>
               <Input
@@ -545,6 +561,8 @@ const Step5Content = memo(function Step5Content() {
                 placeholder="Enter a secure password"
                 required
                 error={errors.password}
+                autoComplete="new-password"
+                name="staff_new_pwd"
               />
 
               {/* Password strength indicator */}
@@ -641,6 +659,8 @@ const Step5Content = memo(function Step5Content() {
                 placeholder="Re-enter your password"
                 required
                 error={errors.passwordRepeated}
+                autoComplete="new-password"
+                name="staff_confirm_pwd"
               />
               {passwordRepeated && password === passwordRepeated && (
                 <p className={`mt-1 text-xs sm:text-sm ${themeClasses.textSuccess} flex items-center`}>

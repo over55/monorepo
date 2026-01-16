@@ -28,7 +28,7 @@ import {
   HowHearAboutUsSelect,
 } from "../../../../components/business/selects";
 import {
-  GENDER_OPTIONS_WITH_EMPTY_OPTION,
+  GENDER_OPTIONS,
   IDENTIFY_AS_OPTIONS,
 } from "../../../../constants/FieldOptions";
 import { STAFF_GENDER_OTHER } from "../../../../constants/Staff";
@@ -112,6 +112,9 @@ const Step6Content = memo(function Step6Content() {
       hasErrors = true;
     }
 
+    if (import.meta.env.DEV) {
+      console.log("Validation: gender =", gender, "type =", typeof gender);
+    }
     if (gender === 0) {
       newErrors.gender = "Gender is required";
       hasErrors = true;
@@ -212,7 +215,12 @@ const Step6Content = memo(function Step6Content() {
   }, []);
 
   const handleGenderChange = useCallback((value) => {
-    setGender(parseInt(value));
+    if (import.meta.env.DEV) {
+      console.log("handleGenderChange: received value =", value, "type =", typeof value);
+      console.log("handleGenderChange: parseInt result =", parseInt(value, 10));
+    }
+    const parsedValue = parseInt(value, 10);
+    setGender(isNaN(parsedValue) ? 0 : parsedValue);
   }, []);
 
   const handleGenderOtherChange = useCallback((value) => {
@@ -227,10 +235,10 @@ const Step6Content = memo(function Step6Content() {
     setIdentifyAs(selectedValues.map((v) => parseInt(v)));
   }, []);
 
-  // Memoized gender options for Select component
+  // Memoized gender options for Select component (without empty "Please select" option)
   const genderOptions = useMemo(
     () =>
-      GENDER_OPTIONS_WITH_EMPTY_OPTION.map((opt) => ({
+      GENDER_OPTIONS.map((opt) => ({
         value: opt.value,
         label: opt.label,
       })),
@@ -344,6 +352,7 @@ const Step6Content = memo(function Step6Content() {
               value={gender}
               onChange={handleGenderChange}
               options={genderOptions}
+              placeholder="Select gender"
               required
               error={errors.gender}
             />

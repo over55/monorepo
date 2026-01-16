@@ -109,19 +109,19 @@ function RootTenantListPage() {
     ],
 
     // Table columns
-    // DataList render function signature: (fieldValue, fullItem, rowIndex)
+    // DataList render function signature: (item, rowIndex)
     columns: [
       {
         key: "schemaName",
         label: "Schema",
-        render: (value, tenant) => (
+        render: (tenant) => (
           <span className={`font-medium ${themeClasses.textPrimary}`}>{tenant.schemaName}</span>
         ),
       },
       {
         key: "name",
         label: "Name",
-        render: (value, tenant) => (
+        render: (tenant) => (
           <Link
             to={`/root/tenant/${tenant.id}`}
             className={`${themeClasses.textPrimary} font-medium hover:underline`}
@@ -134,7 +134,7 @@ function RootTenantListPage() {
         key: "actions",
         label: "Actions",
         align: "center",
-        render: (value, tenant) => (
+        render: (tenant) => (
           <div className="flex gap-2 justify-center">
             <Link to={`/root/tenant/${tenant.id}`}>
               <Button

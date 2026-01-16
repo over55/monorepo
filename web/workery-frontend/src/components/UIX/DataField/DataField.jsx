@@ -57,7 +57,7 @@ const DataField = memo(function DataField({
       >
         {label}
       </label>
-      <p className={`text-base ${themeClasses.textPrimary}`}>{displayValue}</p>
+      <p className={`text-base sm:text-lg font-medium ${themeClasses.textPrimary}`}>{displayValue}</p>
       {helperText && (
         <p className={`text-xs ${themeClasses.textMuted} mt-1`}>{helperText}</p>
       )}

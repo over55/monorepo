@@ -29,13 +29,9 @@ const TableCell = memo(function TableCell({
 }) {
   // Memoize cell content
   const cellContent = useMemo(() => {
-    // Custom render function
+    // Custom render function - pass full item as first argument for intuitive access
     if (typeof column.render === "function") {
-      return column.render(
-        item[column.key || column.accessor || column.field],
-        item,
-        rowIndex,
-      );
+      return column.render(item, rowIndex);
     }
 
     // Get the value

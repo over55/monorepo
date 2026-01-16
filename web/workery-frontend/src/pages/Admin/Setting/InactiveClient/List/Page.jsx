@@ -72,7 +72,7 @@ const COLUMNS = [
     label: "Name",
     linkTo: (item) => `/admin/settings/inactive-client/${item.id}/detail`,
     className: "font-medium text-blue-600",
-    render: (_value, row) => (
+    render: (row) => (
       <span className="flex items-center">
         {row.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID ? (
           <BuildingOffice2Icon className="w-4 h-4 mr-2 text-gray-400" />
@@ -86,11 +86,11 @@ const COLUMNS = [
   {
     key: "phone",
     label: "Phone",
-    render: (value) =>
-      value ? (
+    render: (row) =>
+      row.phone ? (
         <span className="flex items-center text-gray-600">
           <PhoneIcon className="w-4 h-4 mr-1" />
-          {value}
+          {row.phone}
         </span>
       ) : (
         <span className="text-gray-400 italic">—</span>
@@ -99,11 +99,11 @@ const COLUMNS = [
   {
     key: "email",
     label: "Email",
-    render: (value) =>
-      value ? (
+    render: (row) =>
+      row.email ? (
         <span className="flex items-center text-gray-600">
           <EnvelopeIcon className="w-4 h-4 mr-1" />
-          <span className="truncate max-w-[180px]">{value}</span>
+          <span className="truncate max-w-[180px]">{row.email}</span>
         </span>
       ) : (
         <span className="text-gray-400 italic">—</span>
@@ -112,14 +112,14 @@ const COLUMNS = [
   {
     key: "type",
     label: "Type",
-    render: (value) => getTypeBadge(value),
+    render: (row) => getTypeBadge(row.type),
   },
   {
     key: "deactivationReason",
     label: "Deactivation Reason",
-    render: (value, row) => (
+    render: (row) => (
       <span className="text-gray-600">
-        {getDeactivationReasonText(value, row.deactivationReasonOther)}
+        {getDeactivationReasonText(row.deactivationReason, row.deactivationReasonOther)}
       </span>
     ),
   },
@@ -127,15 +127,15 @@ const COLUMNS = [
     key: "modifiedAt",
     label: "Modified",
     type: "date",
-    render: (value) => (
-      <span className="text-gray-600">{formatDateForDisplay(value)}</span>
+    render: (row) => (
+      <span className="text-gray-600">{formatDateForDisplay(row.modifiedAt)}</span>
     ),
   },
   {
     key: "actions",
     label: "",
     centered: true,
-    render: (_value, row) => (
+    render: (row) => (
       <ViewButton basePath="/admin/settings/inactive-client" itemId={row.id} />
     ),
   },

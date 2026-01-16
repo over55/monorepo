@@ -18,7 +18,7 @@ import {
   useCustomerManager,
   useCommentManager,
 } from "../../../../../../services/Services";
-import { EntityCommentsPage } from "../../../../../../components/UIX";
+import { EntityCommentsPage, UIXThemeProvider } from "../../../../../../components/UIX";
 
 // Constants for comment belonging types (from backend)
 const BELONGS_TO_CUSTOMER = 1;
@@ -128,7 +128,11 @@ function AdminCustomerDetailCommentListPage() {
     getEntityDisplayName: (entity) => entity?.name || `${entity?.firstName} ${entity?.lastName}` || "Customer",
   }), [customerManager, commentManager]);
 
-  return <EntityCommentsPage config={config} />;
+  return (
+    <UIXThemeProvider>
+      <EntityCommentsPage config={config} />
+    </UIXThemeProvider>
+  );
 }
 
 export default AdminCustomerDetailCommentListPage;

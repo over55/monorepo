@@ -23,6 +23,7 @@ const Modal = memo(function Modal({ isOpen, onClose, title, children, footer }) 
   const { getThemeClasses } = useUIXTheme();
   const modalIdRef = useRef(null);
   const previousIsOpenRef = useRef(false);
+  const escHandlerRef = useRef(null);
 
   // Memoize all theme classes
   const themeClasses = useMemo(
@@ -80,6 +81,8 @@ const Modal = memo(function Modal({ isOpen, onClose, title, children, footer }) 
       }
       activeModalsCount++;
 
+      // Store handler reference for proper cleanup (prevents stale closure issue)
+      escHandlerRef.current = handleEscKey;
       // Add ESC key listener with capture phase to ensure it fires first
       document.addEventListener("keydown", handleEscKey, true);
     } else if (!isOpen && wasOpen) {
@@ -92,8 +95,11 @@ const Modal = memo(function Modal({ isOpen, onClose, title, children, footer }) 
         originalBodyOverflow = null;
       }
 
-      // Remove ESC key listener
-      document.removeEventListener("keydown", handleEscKey, true);
+      // Remove ESC key listener using stored reference
+      if (escHandlerRef.current) {
+        document.removeEventListener("keydown", escHandlerRef.current, true);
+        escHandlerRef.current = null;
+      }
     }
 
     // Cleanup function
@@ -108,8 +114,11 @@ const Modal = memo(function Modal({ isOpen, onClose, title, children, footer }) 
           originalBodyOverflow = null;
         }
 
-        // Remove event listener
-        document.removeEventListener("keydown", handleEscKey, true);
+        // Remove event listener using stored reference
+        if (escHandlerRef.current) {
+          document.removeEventListener("keydown", escHandlerRef.current, true);
+          escHandlerRef.current = null;
+        }
       }
     };
   }, [isOpen, handleEscKey]);

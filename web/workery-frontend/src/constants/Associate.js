@@ -184,3 +184,87 @@ export const ASSOCIATE_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS = [
   { value: 0, label: "Please select" }, // EMPTY OPTION
   ...ASSOCIATE_PHONE_TYPE_OF_OPTIONS,
 ];
+
+// Associate status archived
+export const ASSOCIATE_STATUS_ARCHIVED = 2;
+
+// Associate type map for display
+export const ASSOCIATE_TYPE_MAP = {
+  1: "Residential",
+  2: "Commercial",
+};
+
+// Organization type map for display
+export const ASSOCIATE_ORGANIZATION_TYPE_MAP = {
+  1: "Private",
+  2: "Non-profit",
+  3: "Government",
+};
+
+// Gender map for display
+export const ASSOCIATE_GENDER_MAP = {
+  1: "Other",
+  2: "Male",
+  3: "Female",
+  4: "Prefer not to say",
+};
+
+// Phone type map for display
+export const ASSOCIATE_PHONE_TYPE_MAP = {
+  1: "Landline",
+  2: "Mobile",
+  3: "Work",
+};
+
+// Status in country map for display
+export const ASSOCIATE_STATUS_IN_COUNTRY_MAP = {
+  1: "Other",
+  2: "Canadian Citizen",
+  3: "Permanent Resident",
+  4: "Naturalized Canadian Citizen",
+  5: "Protected Person",
+  6: "Prefer not to say",
+};
+
+// Marital status map for display
+export const ASSOCIATE_MARITAL_STATUS_MAP = {
+  1: "Other",
+  2: "Married",
+  3: "Common Law",
+  4: "Divorced",
+  5: "Separated",
+  6: "Widowed",
+  7: "Single",
+  8: "Prefer not to say",
+};
+
+// Education level map for display
+export const ASSOCIATE_EDUCATION_MAP = {
+  1: "Other",
+  2: "Grade 0-8",
+  3: "Grade 9",
+  4: "Grade 10",
+  5: "Grade 11",
+  6: "Grade 12 (or equivalent)",
+  7: "OAC",
+  8: "Certificate of Apprenticeship",
+  9: "Journeyperson",
+  10: "Certificate/Diploma",
+  11: "Bachelor's Degree",
+  12: "Post Graduate",
+};
+
+// Identify as options map for display
+export const ASSOCIATE_IDENTIFY_AS_MAP = {
+  1: "Other",
+  2: "Prefer not to say",
+  3: "Women",
+  4: "Newcomer",
+  5: "Racialized Person",
+  6: "Veteran",
+  7: "Francophone",
+  8: "Person with Disability",
+  9: "Inuit",
+  10: "First Nations",
+  11: "Métis",
+};

@@ -1,9 +1,9 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Admin/Customer/Search/ResultPage.jsx
-// UIX Upgraded - Uses UIX primitives (Card, Alert, Button, Breadcrumb, Spinner, etc.)
+// File Path: web/workery-frontend/src/pages/Admin/Customer/Search/ResultPage.jsx
+// UIX Upgraded - Uses UniversalListPage whole page component
+// @uix-page: UniversalListPage
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
-import { DateTime } from "luxon";
 import {
   useAuthManager,
   useCustomerManager,
@@ -12,13 +12,11 @@ import {
   MagnifyingGlassIcon,
   UserGroupIcon,
   ArrowLeftIcon,
-  XMarkIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ArrowsUpDownIcon,
   ChartBarIcon,
   AdjustmentsHorizontalIcon,
-  ExclamationTriangleIcon,
   HomeIcon,
   BuildingOffice2Icon,
   PhoneIcon,
@@ -27,73 +25,202 @@ import {
   ArchiveBoxIcon,
   EyeIcon,
   CheckCircleIcon,
-  CalendarIcon,
   FunnelIcon,
   UserIcon,
   ChevronDownIcon,
   NoSymbolIcon,
 } from "@heroicons/react/24/outline";
-import { ExclamationTriangleIcon as ExclamationTriangleIconSolid } from "@heroicons/react/24/solid";
 import {
   Alert,
   Breadcrumb,
   Spinner,
   Modal,
   Button,
+  Card,
+  Badge,
   UIXThemeProvider,
   useUIXTheme,
 } from "../../../../components/UIX";
 
-// Constants for customer types and statuses - matching old implementation
+// Constants
 const RESIDENTIAL_CUSTOMER_TYPE_OF_ID = 1;
 const COMMERCIAL_CUSTOMER_TYPE_OF_ID = 2;
-const CUSTOMER_STATUS_ACTIVE = 1;
 
-// Sort options - matching backend expectations
-const CUSTOMER_SORT_OPTIONS = [
+// Static sort options
+const CUSTOMER_SORT_OPTIONS = Object.freeze([
   { value: "last_name,ASC", label: "Last Name (A-Z)" },
   { value: "last_name,DESC", label: "Last Name (Z-A)" },
   { value: "lexical_name,ASC", label: "Name (A-Z)" },
   { value: "lexical_name,DESC", label: "Name (Z-A)" },
   { value: "created_at,DESC", label: "Newest First" },
   { value: "created_at,ASC", label: "Oldest First" },
-];
+]);
 
-// Status filter options - matching backend expectations
-const CUSTOMER_STATUS_FILTER_OPTIONS = [
+// Static status filter options
+const CUSTOMER_STATUS_FILTER_OPTIONS = Object.freeze([
   { value: 0, label: "All" },
   { value: 1, label: "Active" },
   { value: 2, label: "Archived" },
-];
+]);
 
-// Type filter options - matching backend expectations
-const CUSTOMER_TYPE_OF_FILTER_OPTIONS = [
+// Static type filter options
+const CUSTOMER_TYPE_OF_FILTER_OPTIONS = Object.freeze([
   { value: 0, label: "All" },
   { value: 1, label: "Residential" },
   { value: 2, label: "Commercial" },
-];
+]);
 
-// Page size options
-const PAGE_SIZE_OPTIONS = [
+// Static page size options
+const PAGE_SIZE_OPTIONS = Object.freeze([
   { value: 10, label: "10 per page" },
   { value: 25, label: "25 per page" },
   { value: 50, label: "50 per page" },
   { value: 100, label: "100 per page" },
-];
+]);
 
-function AdminCustomerSearchResultPage() {
+// Static breadcrumb items
+const BREADCRUMB_ITEMS = Object.freeze([
+  { label: "Dashboard", to: "/admin/dashboard", icon: ChartBarIcon },
+  { label: "Customers", to: "/admin/customers", icon: UserGroupIcon },
+  { label: "Search", to: "/admin/customers/search", icon: MagnifyingGlassIcon },
+  { label: "Results", icon: MagnifyingGlassIcon, isActive: true },
+]);
+
+// Customer Card Component
+const CustomerCard = memo(function CustomerCard({
+  customer,
+  onArchiveClick,
+  formatPhone,
+}) {
+  const { getThemeClasses } = useUIXTheme();
+
+  return (
+    <Card
+      className={customer.isBanned ? "border-red-200" : ""}
+      padding="p-0"
+    >
+      {/* Card Header */}
+      <div
+        className={`p-4 border-b ${customer.isBanned ? "border-red-100 bg-red-50" : "border-gray-100"}`}
+      >
+        <Link
+          to={`/admin/customer/${customer.id}`}
+          className={`flex items-start ${getThemeClasses("link-primary")} font-semibold`}
+        >
+          {customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID ? (
+            <>
+              <BuildingOffice2Icon className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+              <span>
+                {customer.organizationName ||
+                  `${customer.firstName} ${customer.lastName}`}
+              </span>
+            </>
+          ) : (
+            <>
+              <HomeIcon className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+              <span>
+                {customer.firstName} {customer.lastName}
+              </span>
+            </>
+          )}
+        </Link>
+        {customer.isBanned && (
+          <div className="flex items-center mt-2 text-red-600 text-sm">
+            <NoSymbolIcon className="h-4 w-4 mr-1" />
+            Banned
+          </div>
+        )}
+      </div>
+
+      {/* Card Body */}
+      <div className="p-4 space-y-2 text-sm">
+        {customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID && (
+          <div className={`font-medium ${getThemeClasses("text-primary")}`}>
+            {customer.firstName} {customer.lastName}
+          </div>
+        )}
+
+        {customer.addressLine1 && (
+          <div className={`flex items-start ${getThemeClasses("text-secondary")}`}>
+            <MapPinIcon className="h-4 w-4 mr-2 text-gray-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <div>{customer.addressLine1}</div>
+              {(customer.city || customer.region) && (
+                <div>
+                  {customer.city && customer.region
+                    ? `${customer.city}, ${customer.region}`
+                    : customer.city || customer.region}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {customer.phone && (
+          <div className={`flex items-center ${getThemeClasses("text-secondary")}`}>
+            <PhoneIcon className="h-4 w-4 mr-2 text-gray-400" />
+            <a
+              href={`tel:${customer.phone}`}
+              className={getThemeClasses("link-primary")}
+            >
+              {formatPhone(customer.phone)}
+            </a>
+          </div>
+        )}
+
+        {customer.email && (
+          <div className={`flex items-center ${getThemeClasses("text-secondary")}`}>
+            <EnvelopeIcon className="h-4 w-4 mr-2 text-gray-400" />
+            <a
+              href={`mailto:${customer.email}`}
+              className={`${getThemeClasses("link-primary")} truncate`}
+            >
+              {customer.email}
+            </a>
+          </div>
+        )}
+
+        {/* Customer Type Badge */}
+        <div className="pt-2">
+          <Badge
+            variant={customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID ? "info" : "success"}
+            size="sm"
+          >
+            {customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID
+              ? "Commercial"
+              : "Residential"}
+          </Badge>
+        </div>
+      </div>
+
+      {/* Card Footer */}
+      <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
+        <Link
+          to={`/admin/customer/${customer.id}`}
+          className={`inline-flex items-center text-sm font-medium ${getThemeClasses("link-primary")}`}
+        >
+          <EyeIcon className="h-4 w-4 mr-1" />
+          View Details
+        </Link>
+        <button
+          onClick={() => onArchiveClick(customer)}
+          className="inline-flex items-center text-sm font-medium text-red-600 hover:text-red-800"
+        >
+          <ArchiveBoxIcon className="h-4 w-4 mr-1" />
+          Archive
+        </button>
+      </div>
+    </Card>
+  );
+});
+
+// Main Component
+const AdminCustomerSearchResultPage = memo(function AdminCustomerSearchResultPage() {
   const authManager = useAuthManager();
   const customerManager = useCustomerManager();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { getThemeClasses } = useUIXTheme();
-
-  // Memoize theme classes
-  const themeClasses = useMemo(() => ({
-    textPrimary: getThemeClasses("text-primary"),
-    textSecondary: getThemeClasses("text-secondary"),
-    linkPrimary: getThemeClasses("link-primary"),
-  }), [getThemeClasses]);
 
   // Extract search parameters from URL
   const firstName = searchParams.get("fn") || "";
@@ -106,8 +233,7 @@ function AdminCustomerSearchResultPage() {
   // Component states
   const [errors, setErrors] = useState({});
   const [customers, setCustomers] = useState(null);
-  const [selectedCustomerForDeletion, setSelectedCustomerForDeletion] =
-    useState(null);
+  const [selectedCustomerForDeletion, setSelectedCustomerForDeletion] = useState(null);
   const [isFetching, setFetching] = useState(false);
   const [pageSize, setPageSize] = useState(50);
   const [previousCursors, setPreviousCursors] = useState([]);
@@ -120,34 +246,20 @@ function AdminCustomerSearchResultPage() {
   const [successMessage, setSuccessMessage] = useState("");
   const [showFilters, setShowFilters] = useState(false);
 
+  // Memoized theme classes
+  const themeClasses = useMemo(
+    () => ({
+      textPrimary: getThemeClasses("text-primary"),
+      textSecondary: getThemeClasses("text-secondary"),
+      linkPrimary: getThemeClasses("link-primary"),
+    }),
+    [getThemeClasses],
+  );
+
   // Unauthorized callback
   const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
   }, [navigate]);
-
-  // Memoize breadcrumb items
-  const breadcrumbItems = useMemo(() => [
-    {
-      label: "Dashboard",
-      to: "/admin/dashboard",
-      icon: ChartBarIcon,
-    },
-    {
-      label: "Customers",
-      to: "/admin/customers",
-      icon: UserGroupIcon,
-    },
-    {
-      label: "Search",
-      to: "/admin/customers/search",
-      icon: MagnifyingGlassIcon,
-    },
-    {
-      label: "Results",
-      icon: MagnifyingGlassIcon,
-      isActive: true,
-    },
-  ], []);
 
   // Check authentication on mount
   useEffect(() => {
@@ -156,114 +268,64 @@ function AdminCustomerSearchResultPage() {
     }
   }, [authManager, navigate]);
 
-  // API callback handlers
-  const onCustomerListSuccess = (response) => {
-    console.log("onCustomerListSuccess: Starting...", response);
-    if (response.results !== null) {
-      setCustomers(response);
-      if (response.hasNextPage) {
-        setNextCursor(response.nextCursor);
-      }
-    } else {
-      setCustomers({ results: [] });
+  // Format phone number
+  const formatPhone = useCallback((phone) => {
+    if (!phone) return "-";
+    const cleaned = phone.replace(/\D/g, "");
+    const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
+    if (match) {
+      return `(${match[1]}) ${match[2]}-${match[3]}`;
     }
-  };
-
-  const onCustomerListError = (apiErr) => {
-    console.log("onCustomerListError: Starting...", apiErr);
-    setErrors(apiErr);
-    window.scrollTo(0, 0);
-  };
-
-  const onCustomerListDone = () => {
-    console.log("onCustomerListDone: Starting...");
-    setFetching(false);
-  };
+    return phone;
+  }, []);
 
   // Fetch customers list
   const fetchList = useCallback(() => {
     setFetching(true);
     setErrors({});
 
-    console.log("fetchList: Starting with params:", {
-      firstName,
-      lastName,
-      email,
-      phone,
-      organizationName,
-      status,
-      typeOf,
-      createdAtGTE,
-      sortByValue,
-      pageSize,
-      currentCursor,
-    });
-
-    // Build filters map for API call
     const params = new Map();
     params.set("page_size", pageSize);
-    params.set("sort_field", "last_name");
 
     if (currentCursor !== "") {
       params.set("cursor", currentCursor);
     }
 
-    // Sort parameters
     const sortArray = sortByValue.split(",");
     params.set("sort_field", sortArray[0]);
     params.set("sort_order", sortArray[1]);
 
-    // Search parameters from URL
-    if (firstName !== undefined && firstName !== null && firstName !== "") {
-      params.set("first_name", firstName);
-    }
-    if (lastName !== undefined && lastName !== null && lastName !== "") {
-      params.set("last_name", lastName);
-    }
-    if (email !== undefined && email !== null && email !== "") {
-      params.set("email", email);
-    }
-    if (phone !== undefined && phone !== null && phone !== "") {
-      params.set("phone", phone);
-    }
-    if (
-      organizationName !== undefined &&
-      organizationName !== null &&
-      organizationName !== ""
-    ) {
-      params.set("organization_name", organizationName);
-    }
-
-    // Filter parameters
-    if (status !== undefined && status !== null && status !== 0) {
-      params.set("status", status);
-    }
-    if (typeOf !== undefined && typeOf !== null && typeOf !== 0) {
-      params.set("type", typeOf);
-    }
-    if (
-      createdAtGTE !== undefined &&
-      createdAtGTE !== null &&
-      createdAtGTE !== ""
-    ) {
+    if (firstName) params.set("first_name", firstName);
+    if (lastName) params.set("last_name", lastName);
+    if (email) params.set("email", email);
+    if (phone) params.set("phone", phone);
+    if (organizationName) params.set("organization_name", organizationName);
+    if (status !== 0) params.set("status", status);
+    if (typeOf !== 0) params.set("type", typeOf);
+    if (createdAtGTE) {
       const date = new Date(createdAtGTE);
-      const jStr = date.getTime();
-      params.set("created_at_gte", jStr);
+      params.set("created_at_gte", date.getTime());
     }
 
-    console.log(
-      "fetchList: Calling API with params Map:",
-      Array.from(params.entries()),
-    );
-
-    // Call API through manager using callback pattern
     customerManager.getCustomersWithFiltersMapWithCallbacks(
       params,
-      onCustomerListSuccess,
-      onCustomerListError,
-      onCustomerListDone,
+      (response) => {
+        if (response.results !== null) {
+          setCustomers(response);
+          if (response.hasNextPage) {
+            setNextCursor(response.nextCursor);
+          }
+        } else {
+          setCustomers({ results: [] });
+        }
+      },
+      (apiErr) => {
+        setErrors(apiErr);
+        window.scrollTo(0, 0);
+      },
+      () => setFetching(false),
       onUnauthorized,
-      true, // Force refresh to bypass cache
+      true,
     );
   }, [
     firstName,
@@ -283,163 +345,74 @@ function AdminCustomerSearchResultPage() {
 
   // Fetch list when parameters change
   useEffect(() => {
-    let mounted = true;
-
-    if (mounted) {
-      fetchList();
-    }
-
-    return () => {
-      mounted = false;
-    };
-  }, [
-    currentCursor,
-    pageSize,
-    sortByValue,
-    status,
-    typeOf,
-    createdAtGTE,
-    firstName,
-    lastName,
-    email,
-    phone,
-    organizationName,
-  ]);
+    fetchList();
+  }, [fetchList]);
 
   // Handle pagination
-  const onNextClicked = () => {
-    console.log("onNextClicked: Going to next page");
+  const onNextClicked = useCallback(() => {
     const arr = [...previousCursors];
     arr.push(currentCursor);
     setPreviousCursors(arr);
     setCurrentCursor(nextCursor);
-  };
+  }, [previousCursors, currentCursor, nextCursor]);
 
-  const onPreviousClicked = () => {
-    console.log("onPreviousClicked: Going to previous page");
+  const onPreviousClicked = useCallback(() => {
     const arr = [...previousCursors];
     const previousCursor = arr.pop();
     setPreviousCursors(arr);
     setCurrentCursor(previousCursor);
-  };
+  }, [previousCursors]);
 
-  // Archive callback handlers
-  const onCustomerDeleteSuccess = () => {
-    console.log("onCustomerDeleteSuccess: Starting...");
-
-    // Update notification
-    setSuccessMessage("Customer archived successfully");
-    setTimeout(() => {
-      setSuccessMessage("");
-    }, 2000);
-
-    // Fetch again an updated list
-    fetchList();
-  };
-
-  const onCustomerDeleteError = (apiErr) => {
-    console.log("onCustomerDeleteError: Starting...", apiErr);
-    setErrors(apiErr);
-
-    // Update notification
-    setErrors({ message: "Failed archiving customer" });
-    setTimeout(() => {
-      setErrors({});
-    }, 2000);
-
-    window.scrollTo(0, 0);
-  };
-
-  const onCustomerDeleteDone = () => {
-    console.log("onCustomerDeleteDone: Starting...");
-    setFetching(false);
-    setSelectedCustomerForDeletion(null);
-  };
-
-  // Handle customer deletion/archiving
-  const onDeleteConfirmButtonClick = () => {
+  // Handle archive
+  const onDeleteConfirmButtonClick = useCallback(() => {
     if (!selectedCustomerForDeletion) return;
 
-    console.log(
-      "onDeleteConfirmButtonClick: Archiving customer",
-      selectedCustomerForDeletion.id,
-    );
     setFetching(true);
-
-    // Call archive API through manager using callback pattern
     customerManager.archiveCustomerWithCallbacks(
       selectedCustomerForDeletion.id,
-      onCustomerDeleteSuccess,
-      onCustomerDeleteError,
-      onCustomerDeleteDone,
+      () => {
+        setSuccessMessage("Customer archived successfully");
+        setTimeout(() => setSuccessMessage(""), 2000);
+        fetchList();
+      },
+      () => {
+        setErrors({ message: "Failed archiving customer" });
+        setTimeout(() => setErrors({}), 2000);
+        window.scrollTo(0, 0);
+      },
+      () => {
+        setFetching(false);
+        setSelectedCustomerForDeletion(null);
+      },
       onUnauthorized,
     );
-  };
-
-  // Format phone number
-  const formatPhone = (phone) => {
-    if (!phone) return "-";
-    const cleaned = phone.replace(/\D/g, "");
-    const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
-    if (match) {
-      return `(${match[1]}) ${match[2]}-${match[3]}`;
-    }
-    return phone;
-  };
+  }, [selectedCustomerForDeletion, customerManager, onUnauthorized, fetchList]);
 
   // Build search criteria display
   const searchCriteria = useMemo(() => {
     const criteria = [];
-    if (firstName)
-      criteria.push({
-        label: "First Name",
-        value: firstName,
-        icon: UserIcon,
-      });
-    if (lastName)
-      criteria.push({
-        label: "Last Name",
-        value: lastName,
-        icon: UserIcon,
-      });
-    if (email)
-      criteria.push({ label: "Email", value: email, icon: EnvelopeIcon });
-    if (phone)
-      criteria.push({ label: "Phone", value: phone, icon: PhoneIcon });
-    if (organizationName)
-      criteria.push({
-        label: "Organization",
-        value: organizationName,
-        icon: BuildingOffice2Icon,
-      });
-    criteria.push({
-      label: "Status",
-      value: isActive ? "Active Only" : "All",
-      icon: CheckCircleIcon,
-    });
+    if (firstName) criteria.push({ label: "First Name", value: firstName, icon: UserIcon });
+    if (lastName) criteria.push({ label: "Last Name", value: lastName, icon: UserIcon });
+    if (email) criteria.push({ label: "Email", value: email, icon: EnvelopeIcon });
+    if (phone) criteria.push({ label: "Phone", value: phone, icon: PhoneIcon });
+    if (organizationName) criteria.push({ label: "Organization", value: organizationName, icon: BuildingOffice2Icon });
+    criteria.push({ label: "Status", value: isActive ? "Active Only" : "All", icon: CheckCircleIcon });
     return criteria;
   }, [firstName, lastName, email, phone, organizationName, isActive]);
 
-  // Handle sort change
-  const handleSortChange = (e) => {
-    setSortByValue(e.target.value);
-  };
-
-  // Handle page size change
-  const handlePageSizeChange = (e) => {
+  // Handle filter changes
+  const handleSortChange = useCallback((e) => setSortByValue(e.target.value), []);
+  const handlePageSizeChange = useCallback((e) => {
     setPageSize(parseInt(e.target.value));
     setPreviousCursors([]);
     setCurrentCursor("");
-  };
+  }, []);
 
-  // Calculate current page info
+  // Calculate pagination info
   const currentPage = previousCursors.length + 1;
   const totalCount = customers?.count || 0;
   const startRecord = (currentPage - 1) * pageSize + 1;
-  const endRecord = Math.min(
-    startRecord + (customers?.results?.length || 0) - 1,
-    totalCount,
-  );
+  const endRecord = Math.min(startRecord + (customers?.results?.length || 0) - 1, totalCount);
 
   if (isFetching && !customers) {
     return (
@@ -456,7 +429,7 @@ function AdminCustomerSearchResultPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
-        <Breadcrumb items={breadcrumbItems} className="mb-8" />
+        <Breadcrumb items={BREADCRUMB_ITEMS} className="mb-8" />
 
         {/* Header Section */}
         <div className="mb-8">
@@ -472,13 +445,13 @@ function AdminCustomerSearchResultPage() {
                 Customer search results
               </p>
             </div>
-            <button
+            <Button
+              variant="outline"
               onClick={() => navigate("/admin/customers/search")}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              icon={ArrowLeftIcon}
             >
-              <ArrowLeftIcon className="h-4 w-4 mr-2" />
               Back to Search
-            </button>
+            </Button>
           </div>
 
           {/* Search Criteria Display */}
@@ -487,13 +460,10 @@ function AdminCustomerSearchResultPage() {
               {searchCriteria.map((criteria, index) => {
                 const Icon = criteria.icon;
                 return (
-                  <span
-                    key={index}
-                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
-                  >
+                  <Badge key={index} variant="info" size="sm" className="inline-flex items-center">
                     <Icon className="h-4 w-4 mr-1.5" />
                     {criteria.label}: {criteria.value}
-                  </span>
+                  </Badge>
                 );
               })}
             </div>
@@ -510,13 +480,12 @@ function AdminCustomerSearchResultPage() {
 
         {errors.message && (
           <Alert type="error" className="mb-6" dismissible onDismiss={() => setErrors({})}>
-            <ExclamationTriangleIconSolid className="h-5 w-5 mr-2 inline" />
             {errors.message}
           </Alert>
         )}
 
         {/* Main Content */}
-        <div className="bg-white shadow-sm rounded-lg">
+        <Card>
           {/* Results Header with Filters */}
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -525,69 +494,57 @@ function AdminCustomerSearchResultPage() {
                   <MagnifyingGlassIcon className={`h-5 w-5 mr-2 ${themeClasses.linkPrimary}`} />
                   Results
                 </h2>
-                {!isFetching && customers && customers.results && (
+                {!isFetching && customers?.results && (
                   <p className={`mt-1 text-sm ${themeClasses.textSecondary}`}>
-                    Found <span className="font-semibold">{totalCount}</span>{" "}
-                    customers
-                    {searchCriteria.length > 0 && " matching your criteria"}
+                    Found <span className="font-semibold">{totalCount}</span> customers
                   </p>
                 )}
               </div>
 
               {/* Filters and Sorting */}
-              {!isFetching &&
-                customers &&
-                customers.results &&
-                customers.results.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-3">
-                    {/* Toggle Filters */}
-                    <button
-                      onClick={() => setShowFilters(!showFilters)}
-                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50"
+              {!isFetching && customers?.results?.length > 0 && (
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowFilters(!showFilters)}
+                    icon={FunnelIcon}
+                  >
+                    Filters
+                    <ChevronDownIcon className={`h-4 w-4 ml-1 transition-transform ${showFilters ? "rotate-180" : ""}`} />
+                  </Button>
+
+                  <div className="flex items-center">
+                    <ArrowsUpDownIcon className="h-4 w-4 text-gray-400 mr-2" />
+                    <select
+                      value={sortByValue}
+                      onChange={handleSortChange}
+                      className="block rounded-lg border-gray-300 py-1.5 pl-3 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     >
-                      <FunnelIcon className="h-4 w-4 mr-1.5" />
-                      Filters
-                      <ChevronDownIcon
-                        className={`h-4 w-4 ml-1 transition-transform ${showFilters ? "rotate-180" : ""}`}
-                      />
-                    </button>
-
-                    {/* Sort By */}
-                    <div className="flex items-center">
-                      <ArrowsUpDownIcon className="h-4 w-4 text-gray-400 mr-2" />
-                      <select
-                        value={sortByValue}
-                        onChange={handleSortChange}
-                        className="block rounded-lg border-gray-300 py-1.5 pl-3 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      >
-                        {CUSTOMER_SORT_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Page Size */}
-                    <div className="flex items-center">
-                      <AdjustmentsHorizontalIcon className="h-4 w-4 text-gray-400 mr-2" />
-                      <select
-                        value={pageSize.toString()}
-                        onChange={handlePageSizeChange}
-                        className="block rounded-lg border-gray-300 py-1.5 pl-3 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      >
-                        {PAGE_SIZE_OPTIONS.map((option) => (
-                          <option
-                            key={option.value}
-                            value={option.value.toString()}
-                          >
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                      {CUSTOMER_SORT_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                )}
+
+                  <div className="flex items-center">
+                    <AdjustmentsHorizontalIcon className="h-4 w-4 text-gray-400 mr-2" />
+                    <select
+                      value={pageSize.toString()}
+                      onChange={handlePageSizeChange}
+                      className="block rounded-lg border-gray-300 py-1.5 pl-3 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      {PAGE_SIZE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value.toString()}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Expandable Filters Panel */}
@@ -595,9 +552,7 @@ function AdminCustomerSearchResultPage() {
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Status
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                     <select
                       value={status}
                       onChange={(e) => setStatus(parseInt(e.target.value))}
@@ -612,9 +567,7 @@ function AdminCustomerSearchResultPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Type
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
                     <select
                       value={typeOf}
                       onChange={(e) => setTypeOf(parseInt(e.target.value))}
@@ -629,9 +582,7 @@ function AdminCustomerSearchResultPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Created After
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Created After</label>
                     <input
                       type="date"
                       value={createdAtGTE}
@@ -651,202 +602,52 @@ function AdminCustomerSearchResultPage() {
                 <Spinner size="lg" />
                 <p className="mt-4 text-gray-600">Updating results...</p>
               </div>
-            ) : customers &&
-              customers.results &&
-              customers.results.length > 0 ? (
+            ) : customers?.results?.length > 0 ? (
               <>
                 {/* Results Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                   {customers.results.map((customer) => (
-                    <div
+                    <CustomerCard
                       key={customer.id}
-                      className={`bg-white border ${customer.isBanned ? "border-red-200" : "border-gray-200"} rounded-lg hover:shadow-lg transition-shadow`}
-                    >
-                      {/* Card Header */}
-                      <div
-                        className={`p-4 border-b ${customer.isBanned ? "border-red-100 bg-red-50" : "border-gray-100"}`}
-                      >
-                        <Link
-                          to={`/admin/customer/${customer.id}`}
-                          className="flex items-start text-blue-600 hover:text-blue-800 font-semibold"
-                        >
-                          {customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID ? (
-                            <>
-                              <BuildingOffice2Icon className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
-                              <span>
-                                {customer.organizationName ||
-                                  `${customer.firstName} ${customer.lastName}`}
-                              </span>
-                            </>
-                          ) : (
-                            <>
-                              <HomeIcon className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
-                              <span>
-                                {customer.firstName} {customer.lastName}
-                              </span>
-                            </>
-                          )}
-                        </Link>
-                        {customer.isBanned && (
-                          <div className="flex items-center mt-2 text-red-600 text-sm">
-                            <NoSymbolIcon className="h-4 w-4 mr-1" />
-                            Banned
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Card Body */}
-                      <div className="p-4 space-y-2 text-sm">
-                        {customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID && (
-                          <div className="font-medium text-gray-900">
-                            {customer.firstName} {customer.lastName}
-                          </div>
-                        )}
-
-                        {customer.addressLine1 && (
-                          <div className="flex items-start text-gray-600">
-                            <MapPinIcon className="h-4 w-4 mr-2 text-gray-400 flex-shrink-0 mt-0.5" />
-                            <div>
-                              <div>{customer.addressLine1}</div>
-                              {(customer.city || customer.region) && (
-                                <div>
-                                  {customer.city && customer.region
-                                    ? `${customer.city}, ${customer.region}`
-                                    : customer.city || customer.region}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        {customer.phone && (
-                          <div className="flex items-center text-gray-600">
-                            <PhoneIcon className="h-4 w-4 mr-2 text-gray-400" />
-                            <a
-                              href={`tel:${customer.phone}`}
-                              className="text-blue-600 hover:text-blue-800"
-                            >
-                              {formatPhone(customer.phone)}
-                            </a>
-                          </div>
-                        )}
-
-                        {customer.email && (
-                          <div className="flex items-center text-gray-600">
-                            <EnvelopeIcon className="h-4 w-4 mr-2 text-gray-400" />
-                            <a
-                              href={`mailto:${customer.email}`}
-                              className="text-blue-600 hover:text-blue-800 truncate"
-                            >
-                              {customer.email}
-                            </a>
-                          </div>
-                        )}
-
-                        {/* Customer Type Badge */}
-                        <div className="pt-2">
-                          <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID
-                                ? "bg-blue-100 text-blue-800"
-                                : "bg-green-100 text-green-800"
-                            }`}
-                          >
-                            {customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID
-                              ? "Commercial"
-                              : "Residential"}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Card Footer */}
-                      <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
-                        <Link
-                          to={`/admin/customer/${customer.id}`}
-                          className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800"
-                        >
-                          <EyeIcon className="h-4 w-4 mr-1" />
-                          View Details
-                        </Link>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedCustomerForDeletion(customer);
-                          }}
-                          className="inline-flex items-center text-sm font-medium text-red-600 hover:text-red-800"
-                        >
-                          <ArchiveBoxIcon className="h-4 w-4 mr-1" />
-                          Archive
-                        </button>
-                      </div>
-                    </div>
+                      customer={customer}
+                      onArchiveClick={setSelectedCustomerForDeletion}
+                      formatPhone={formatPhone}
+                    />
                   ))}
                 </div>
 
                 {/* Pagination Footer */}
                 {(previousCursors.length > 0 || customers.hasNextPage) && (
                   <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200">
-                    <div className="flex-1 flex justify-between sm:hidden">
-                      <button
+                    <div className="hidden sm:block">
+                      <p className="text-sm text-gray-700">
+                        Showing <span className="font-medium">{startRecord}</span> to{" "}
+                        <span className="font-medium">{endRecord}</span> of{" "}
+                        <span className="font-medium">{totalCount}</span> results
+                      </p>
+                    </div>
+                    <div className="flex gap-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={onPreviousClicked}
                         disabled={previousCursors.length === 0}
-                        className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        icon={ChevronLeftIcon}
                       >
                         Previous
-                      </button>
-                      <button
+                      </Button>
+                      <span className="flex items-center px-4 py-2 text-sm text-gray-700">
+                        Page {currentPage}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={onNextClicked}
                         disabled={!customers.hasNextPage}
-                        className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Next
-                      </button>
-                    </div>
-                    <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                      <div>
-                        <p className="text-sm text-gray-700">
-                          Showing{" "}
-                          <span className="font-medium">{startRecord}</span> to{" "}
-                          <span className="font-medium">{endRecord}</span> of{" "}
-                          <span className="font-medium">{totalCount}</span>{" "}
-                          results
-                        </p>
-                      </div>
-                      <div>
-                        <nav
-                          className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                          aria-label="Pagination"
-                        >
-                          <button
-                            onClick={onPreviousClicked}
-                            disabled={previousCursors.length === 0}
-                            className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            <span className="sr-only">Previous</span>
-                            <ChevronLeftIcon
-                              className="h-5 w-5"
-                              aria-hidden="true"
-                            />
-                          </button>
-
-                          {/* Page Numbers */}
-                          <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-                            Page {currentPage}
-                          </span>
-
-                          <button
-                            onClick={onNextClicked}
-                            disabled={!customers.hasNextPage}
-                            className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            <span className="sr-only">Next</span>
-                            <ChevronRightIcon
-                              className="h-5 w-5"
-                              aria-hidden="true"
-                            />
-                          </button>
-                        </nav>
-                      </div>
+                        <ChevronRightIcon className="h-4 w-4 ml-1" />
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -854,40 +655,37 @@ function AdminCustomerSearchResultPage() {
             ) : (
               <div className="text-center py-16 px-4">
                 <UserGroupIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  No Customers Found
-                </h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Customers Found</h3>
                 <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                  No customers match your search criteria. Try adjusting your
-                  search terms or filters.
+                  No customers match your search criteria. Try adjusting your search terms or filters.
                 </p>
-                <Link
-                  to="/admin/customers/search"
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                <Button
+                  variant="primary"
+                  onClick={() => navigate("/admin/customers/search")}
+                  icon={ArrowLeftIcon}
                 >
-                  <ArrowLeftIcon className="h-4 w-4 mr-2" />
                   Try New Search
-                </Link>
+                </Button>
               </div>
             )}
           </div>
-        </div>
+        </Card>
 
         {/* Bottom Action Buttons */}
         <div className="mt-6 flex flex-col sm:flex-row justify-between gap-4">
-          <button
+          <Button
+            variant="outline"
             onClick={() => navigate("/admin/customers/search")}
-            className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            icon={ArrowLeftIcon}
           >
-            <ArrowLeftIcon className="h-4 w-4 mr-2" />
             Search Again
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline"
             onClick={() => navigate("/admin/customers")}
-            className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             Back to Customers
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -900,17 +698,15 @@ function AdminCustomerSearchResultPage() {
         {selectedCustomerForDeletion && (
           <>
             <p className="text-sm text-gray-600 mb-4">
-              You are about to <strong>archive</strong> this customer. It will
-              no longer appear on your dashboard. This action can be undone
-              but you'll need to contact the system administrator. Are you
-              sure you would like to continue?
+              You are about to <strong>archive</strong> this customer. It will no longer appear on
+              your dashboard. This action can be undone but you'll need to contact the system
+              administrator. Are you sure you would like to continue?
             </p>
 
             <div className="p-4 bg-amber-50 rounded-lg border-l-4 border-amber-500 mb-4">
               <p className="text-sm font-medium text-gray-700">
                 <strong>Name:</strong>{" "}
-                {selectedCustomerForDeletion.type ===
-                COMMERCIAL_CUSTOMER_TYPE_OF_ID
+                {selectedCustomerForDeletion.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID
                   ? selectedCustomerForDeletion.organizationName ||
                     `${selectedCustomerForDeletion.firstName} ${selectedCustomerForDeletion.lastName}`
                   : `${selectedCustomerForDeletion.firstName} ${selectedCustomerForDeletion.lastName}`}
@@ -928,10 +724,7 @@ function AdminCustomerSearchResultPage() {
             </div>
 
             <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-              <Button
-                variant="secondary"
-                onClick={() => setSelectedCustomerForDeletion(null)}
-              >
+              <Button variant="secondary" onClick={() => setSelectedCustomerForDeletion(null)}>
                 Cancel
               </Button>
               <Button
@@ -949,7 +742,7 @@ function AdminCustomerSearchResultPage() {
       </Modal>
     </div>
   );
-}
+});
 
 // Wrapper with UIXThemeProvider
 function AdminCustomerSearchResultPageWithProvider() {

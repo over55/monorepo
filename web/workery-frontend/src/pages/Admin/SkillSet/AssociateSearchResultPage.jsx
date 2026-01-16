@@ -1,4 +1,5 @@
 // monorepo/web/workery-frontend/src/pages/Admin/SkillSet/AssociateSearchResultPage.jsx
+// @uix-page: SkillSetAssociateSearchResultPage
 // UIX Upgraded - Uses UIX primitives (Card, Alert, Button, Spinner, Breadcrumb, Badge)
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
@@ -295,7 +296,7 @@ function AdminSkillSetAssociateSearchResultPage() {
     {
       header: "Name",
       accessor: "name",
-      render: (value, row) => (
+      render: (row) => (
         <div>
           <div className="font-medium text-gray-900">
             {row.firstName} {row.lastName}
@@ -309,7 +310,7 @@ function AdminSkillSetAssociateSearchResultPage() {
     {
       header: "Contact",
       accessor: "contact",
-      render: (value, row) => (
+      render: (row) => (
         <div className="space-y-1">
           {row.phone && (
             <div className="flex items-center text-sm text-gray-600">
@@ -334,7 +335,7 @@ function AdminSkillSetAssociateSearchResultPage() {
     {
       header: "Skill Sets",
       accessor: "skillSets",
-      render: (value, row) => {
+      render: (row) => {
         if (!row.skillSets || row.skillSets.length === 0) {
           return <span className="text-gray-400">No skills</span>;
         }
@@ -366,7 +367,7 @@ function AdminSkillSetAssociateSearchResultPage() {
       header: "Actions",
       accessor: "actions",
       align: "right",
-      render: (value, row) => (
+      render: (row) => (
         <Link to={`/admin/associate/${row.id}`}>
           <Button variant="ghost" size="sm" icon={EyeIcon}>
             View

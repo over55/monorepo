@@ -18,7 +18,7 @@ import {
   useAssociateManager,
   useCommentManager,
 } from "../../../../../../services/Services";
-import { EntityCommentsPage } from "../../../../../../components/UIX";
+import { EntityCommentsPage, UIXThemeProvider } from "../../../../../../components/UIX";
 
 // Constants for comment belonging types (from backend)
 const BELONGS_TO_ASSOCIATE = 2;
@@ -128,7 +128,11 @@ function AdminAssociateDetailCommentListPage() {
     getEntityDisplayName: (entity) => entity?.name || `${entity?.firstName} ${entity?.lastName}` || "Associate",
   }), [associateManager, commentManager]);
 
-  return <EntityCommentsPage config={config} />;
+  return (
+    <UIXThemeProvider>
+      <EntityCommentsPage config={config} />
+    </UIXThemeProvider>
+  );
 }
 
 export default AdminAssociateDetailCommentListPage;

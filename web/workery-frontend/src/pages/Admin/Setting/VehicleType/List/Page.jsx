@@ -30,7 +30,7 @@ const COLUMNS = [
     key: "actions",
     label: "",
     centered: true,
-    render: (_value, row) => (
+    render: (row) => (
       <ViewButton
         basePath="/admin/settings/vehicle-type"
         itemId={row.id}

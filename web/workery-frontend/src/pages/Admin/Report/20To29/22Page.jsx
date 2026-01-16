@@ -1,4 +1,5 @@
 // File Path: src/pages/Admin/Report/20To29/22Page.jsx
+// @uix-page: AdminReport22Page
 // UIX Upgraded - Uses UIX primitives (Card, Button, Alert, Spinner, Breadcrumb)
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";

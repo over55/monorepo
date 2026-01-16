@@ -227,6 +227,9 @@ export { default as StepWizard } from "./StepWizard/StepWizard";
 // WizardSearchStep Component (New - for reusable wizard search steps)
 export { default as WizardSearchStep } from "./WizardSearchStep/WizardSearchStep";
 
+// WizardAddOrSearchStep Component (prioritizes Add action over search)
+export { default as WizardAddOrSearchStep } from "./WizardAddOrSearchStep/WizardAddOrSearchStep";
+
 // Staff-specific wizard components (New - for staff workflows)
 export { default as StaffSearchForm } from "./StaffSearchForm/StaffSearchForm";
 export { default as StaffWizardSearchResults } from "./StaffWizardSearchResults/StaffWizardSearchResults";
@@ -291,6 +294,9 @@ export { default as Tabs } from "./Tabs/Tabs";
 
 // TagInput Component (New - for autocomplete tag input with pill-shaped tags)
 export { default as TagInput } from "./TagInput/TagInput";
+
+// SkillSetTagPicker Component (New - dropdown multi-select with removable tags)
+export { default as SkillSetTagPicker } from "./SkillSetTagPicker/SkillSetTagPicker";
 
 // Textarea Component
 export { default as Textarea, TextArea } from "./Textarea/Textarea";

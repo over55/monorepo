@@ -2,7 +2,7 @@
 // UIX Upgraded - Uses EntityMorePage whole page component
 // @uix-page: AdminOrderDetailMorePage
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from "react";
 import { useNavigate, useParams } from "react-router";
 import {
   WrenchScrewdriverIcon,
@@ -26,7 +26,7 @@ import { ORDER_STATUS_ARCHIVED } from "../../../../../constants/Order";
 import { EntityMorePage } from "../../../../../components/business/views";
 import { UIXThemeProvider } from "../../../../../components/UIX";
 
-function AdminOrderDetailMorePage() {
+const AdminOrderDetailMorePage = memo(function AdminOrderDetailMorePage() {
   const { oid } = useParams();
   const navigate = useNavigate();
   const orderManager = useOrderManager();
@@ -35,22 +35,35 @@ function AdminOrderDetailMorePage() {
   // State for current user (needed for permission checks)
   const [currentUser, setCurrentUser] = useState(null);
 
+  // Refs for cleanup - prevents state updates on unmounted component
+  const isMounted = useRef(true);
+
   // Handle unauthorized access
   const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
   }, [navigate]);
 
-  // Fetch current user on mount
+  // Fetch current user on mount with proper cleanup
   useEffect(() => {
+    isMounted.current = true;
+
     const fetchCurrentUser = async () => {
       try {
         const profile = await accountManager.getAccountDetail(onUnauthorized);
-        setCurrentUser(profile);
+        if (isMounted.current) {
+          setCurrentUser(profile);
+        }
       } catch (error) {
-        console.error("Failed to fetch current user:", error);
+        if (isMounted.current) {
+          console.error("Failed to fetch current user:", error);
+        }
       }
     };
     fetchCurrentUser();
+
+    return () => {
+      isMounted.current = false;
+    };
   }, [accountManager, onUnauthorized]);
 
   // Get entity detail function
@@ -192,7 +205,7 @@ function AdminOrderDetailMorePage() {
       infoMessage={infoMessage}
     />
   );
-}
+});
 
 // Wrapper with UIXThemeProvider
 function AdminOrderDetailMorePageWithProvider() {

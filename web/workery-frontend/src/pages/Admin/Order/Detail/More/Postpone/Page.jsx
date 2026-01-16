@@ -2,7 +2,7 @@
 // UIX Upgraded - Uses OrderPostponeActionPage whole page component
 // @uix-page: AdminOrderDetailMorePostponePage
 
-import React, { useMemo } from "react";
+import React, { useMemo, memo } from "react";
 import {
   useOrderManager,
   useAuthManager,
@@ -11,7 +11,7 @@ import { ORDER_POSTPONE_REASON_OPTIONS_WITH_EMPTY_OPTION } from "../../../../../
 import { OrderPostponeActionPage } from "../../../../../../components/business/views";
 import { UIXThemeProvider } from "../../../../../../components/UIX";
 
-function AdminOrderDetailMorePostponePage() {
+const AdminOrderDetailMorePostponePage = memo(function AdminOrderDetailMorePostponePage() {
   const orderManager = useOrderManager();
   const authManager = useAuthManager();
 
@@ -43,7 +43,7 @@ function AdminOrderDetailMorePostponePage() {
   );
 
   return <OrderPostponeActionPage config={config} />;
-}
+});
 
 // Wrapper with UIXThemeProvider
 function AdminOrderDetailMorePostponePageWithProvider() {

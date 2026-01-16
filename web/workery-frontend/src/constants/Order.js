@@ -36,3 +36,30 @@ export const ORDER_STATUS_OPTIONS = [
   }, // "8"
   { value: String(ORDER_STATUS_ARCHIVED), label: "Archived" }, // "9"
 ];
+
+// Order status map for display
+export const ORDER_STATUS_MAP = {
+  1: "New",
+  2: "Declined",
+  3: "Pending",
+  4: "Cancelled",
+  5: "Ongoing",
+  6: "In Progress",
+  7: "Completed but unpaid",
+  8: "Completed and paid",
+  9: "Archived",
+};
+
+// Client phone type map for display (used in Order context)
+export const ORDER_CLIENT_PHONE_TYPE_MAP = {
+  1: "Work",
+  2: "Home",
+  3: "Mobile",
+};
+
+// Associate phone type map for display (used in Order context)
+export const ORDER_ASSOCIATE_PHONE_TYPE_MAP = {
+  1: "Work",
+  2: "Home",
+  3: "Mobile",
+};

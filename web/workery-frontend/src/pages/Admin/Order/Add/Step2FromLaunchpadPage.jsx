@@ -1,5 +1,8 @@
-// UIX Upgraded - Uses UIX primitives (Card, Button, Alert, Spinner, Breadcrumb)
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+// File Path: web/workery-frontend/src/pages/Admin/Order/Add/Step2FromLaunchpadPage.jsx
+// UIX Upgraded - Transitional loading page for order creation from launchpad
+// @uix-page: OrderInitializationPage
+
+import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router";
 import {
   useAuthManager,

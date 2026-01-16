@@ -1,5 +1,6 @@
 // File Path: web/workery-frontend/src/pages/Admin/Staff/Search/ResultPage.jsx
-// UIX Upgraded - Uses UIX primitives (Modal, Select, Card)
+// UIX Upgraded - Uses UIX primitives (Card, Badge, Button, Modal, Alert, etc.)
+// @uix-page: UniversalListPage
 
 import React, { useState, useEffect, useCallback, useMemo, memo } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
@@ -10,7 +11,7 @@ import {
   Alert,
   Button,
   Modal,
-  Select,
+  Card,
   Badge,
   UIXThemeProvider,
   useUIXTheme,
@@ -24,7 +25,6 @@ import {
   ArrowsUpDownIcon,
   ChartBarIcon,
   AdjustmentsHorizontalIcon,
-  ExclamationTriangleIcon,
   PhoneIcon,
   EnvelopeIcon,
   ArchiveBoxIcon,
@@ -37,85 +37,84 @@ import {
   PencilIcon,
 } from "@heroicons/react/24/outline";
 
-// Staff type filter options
-const STAFF_TYPE_FILTER_OPTIONS = [
+// Static staff type filter options
+const STAFF_TYPE_FILTER_OPTIONS = Object.freeze([
   { value: 0, label: "All" },
   { value: 1, label: "Executive" },
   { value: 2, label: "Management" },
   { value: 3, label: "Frontline" },
-];
+]);
 
-// Staff status filter options
-const STAFF_STATUS_FILTER_OPTIONS = [
+// Static staff status filter options
+const STAFF_STATUS_FILTER_OPTIONS = Object.freeze([
   { value: 0, label: "All" },
   { value: 1, label: "Active" },
   { value: 2, label: "Archived" },
-];
+]);
 
-// Staff sort options
-const STAFF_SORT_OPTIONS = [
+// Static staff sort options
+const STAFF_SORT_OPTIONS = Object.freeze([
   { value: "lexical_name,ASC", label: "Name (A-Z)" },
   { value: "lexical_name,DESC", label: "Name (Z-A)" },
   { value: "join_date,DESC", label: "Newest First" },
   { value: "join_date,ASC", label: "Oldest First" },
   { value: "created_at,DESC", label: "Recently Created" },
   { value: "created_at,ASC", label: "Oldest Created" },
-];
+]);
 
-// Staff type mapping
-const STAFF_TYPE_MAP = {
+// Static staff type mapping
+const STAFF_TYPE_MAP = Object.freeze({
   1: "Executive",
   2: "Management",
   3: "Frontline",
-};
+});
 
-// Page size options
-const PAGE_SIZE_OPTIONS = [
+// Static page size options
+const PAGE_SIZE_OPTIONS = Object.freeze([
   { value: 10, label: "10 per page" },
   { value: 25, label: "25 per page" },
   { value: 50, label: "50 per page" },
   { value: 100, label: "100 per page" },
-];
+]);
 
-// Format phone number helper
-const formatPhone = (phone) => {
-  if (!phone) return "-";
-  const cleaned = phone.replace(/\D/g, "");
-  const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
-  if (match) {
-    return `(${match[1]}) ${match[2]}-${match[3]}`;
-  }
-  return phone;
-};
+// Static breadcrumb items
+const BREADCRUMB_ITEMS = Object.freeze([
+  { label: "Dashboard", to: "/admin/dashboard", icon: ChartBarIcon },
+  { label: "Staff", to: "/admin/staff", icon: UserGroupIcon },
+  { label: "Search", to: "/admin/staff/search", icon: MagnifyingGlassIcon },
+  { label: "Results", icon: MagnifyingGlassIcon, isActive: true },
+]);
 
-// Get type badge variant helper
-const getTypeBadgeVariant = (typeValue) => {
-  switch (typeValue) {
-    case 1: return "info";      // Executive
-    case 2: return "primary";   // Management
-    case 3: return "success";   // Frontline
-    default: return "secondary";
-  }
-};
+// Staff Card Component
+const StaffCard = memo(function StaffCard({ staff, onArchive, formatPhone }) {
+  const { getThemeClasses } = useUIXTheme();
 
-// Get status badge variant helper
-const getStatusBadgeVariant = (statusValue) => {
-  switch (statusValue) {
-    case 1: return "success"; // Active
-    case 2: return "secondary"; // Archived
-    default: return "secondary";
-  }
-};
+  // Get type badge variant
+  const getTypeBadgeVariant = (typeValue) => {
+    switch (typeValue) {
+      case 1: return "info";      // Executive
+      case 2: return "primary";   // Management
+      case 3: return "success";   // Frontline
+      default: return "secondary";
+    }
+  };
 
-// Memoized Staff Card Component
-const StaffCard = memo(function StaffCard({ staff, onArchive, themeClasses }) {
+  // Get status badge variant
+  const getStatusBadgeVariant = (statusValue) => {
+    switch (statusValue) {
+      case 1: return "success"; // Active
+      case 2: return "secondary"; // Archived
+      default: return "secondary";
+    }
+  };
+
   return (
-    <div className={`${themeClasses.bgCard} border ${themeClasses.cardBorder} rounded-lg hover:shadow-lg transition-shadow`}>
+    <Card padding="p-0">
       {/* Card Header */}
-      <div className={`p-4 border-b ${themeClasses.borderLight}`}>
+      <div className="p-4 border-b border-gray-100">
         <Link
           to={`/admin/staff/${staff.id}`}
-          className={`flex items-start ${themeClasses.linkPrimary} font-semibold`}
+          className={`flex items-start ${getThemeClasses("link-primary")} font-semibold`}
         >
           <UserIcon className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
           <span>
@@ -127,11 +126,11 @@ const StaffCard = memo(function StaffCard({ staff, onArchive, themeClasses }) {
       {/* Card Body */}
       <div className="p-4 space-y-2 text-sm">
         {staff.phone && (
-          <div className={`flex items-center ${themeClasses.textSecondary}`}>
-            <PhoneIcon className={`h-4 w-4 mr-2 ${themeClasses.textMuted}`} />
+          <div className={`flex items-center ${getThemeClasses("text-secondary")}`}>
+            <PhoneIcon className="h-4 w-4 mr-2 text-gray-400" />
             <a
               href={`tel:${staff.phone}`}
-              className={themeClasses.linkPrimary}
+              className={getThemeClasses("link-primary")}
             >
               {formatPhone(staff.phone)}
             </a>
@@ -139,11 +138,11 @@ const StaffCard = memo(function StaffCard({ staff, onArchive, themeClasses }) {
         )}
 
         {staff.email && (
-          <div className={`flex items-center ${themeClasses.textSecondary}`}>
-            <EnvelopeIcon className={`h-4 w-4 mr-2 ${themeClasses.textMuted}`} />
+          <div className={`flex items-center ${getThemeClasses("text-secondary")}`}>
+            <EnvelopeIcon className="h-4 w-4 mr-2 text-gray-400" />
             <a
               href={`mailto:${staff.email}`}
-              className={`${themeClasses.linkPrimary} truncate`}
+              className={`${getThemeClasses("link-primary")} truncate`}
             >
               {staff.email}
             </a>
@@ -153,12 +152,13 @@ const StaffCard = memo(function StaffCard({ staff, onArchive, themeClasses }) {
         {/* Type and Status Badges */}
         <div className="pt-2 flex flex-wrap gap-2">
           {staff.type && (
-            <Badge variant={getTypeBadgeVariant(staff.type)} icon={BriefcaseIcon}>
+            <Badge variant={getTypeBadgeVariant(staff.type)} size="sm">
+              <BriefcaseIcon className="h-3 w-3 mr-1" />
               {STAFF_TYPE_MAP[staff.type]}
             </Badge>
           )}
           {staff.status && (
-            <Badge variant={getStatusBadgeVariant(staff.status)}>
+            <Badge variant={getStatusBadgeVariant(staff.status)} size="sm">
               {staff.status === 1 ? "Active" : "Archived"}
             </Badge>
           )}
@@ -166,18 +166,18 @@ const StaffCard = memo(function StaffCard({ staff, onArchive, themeClasses }) {
       </div>
 
       {/* Card Footer */}
-      <div className={`px-4 py-3 ${themeClasses.bgMuted} border-t ${themeClasses.borderLight} flex justify-between items-center`}>
+      <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
         <div className="flex gap-2">
           <Link
             to={`/admin/staff/${staff.id}`}
-            className={`inline-flex items-center text-sm font-medium ${themeClasses.linkPrimary}`}
+            className={`inline-flex items-center text-sm font-medium ${getThemeClasses("link-primary")}`}
           >
             <EyeIcon className="h-4 w-4 mr-1" />
             View
           </Link>
           <Link
             to={`/admin/staff/${staff.id}/edit`}
-            className={`inline-flex items-center text-sm font-medium ${themeClasses.linkPrimary}`}
+            className={`inline-flex items-center text-sm font-medium ${getThemeClasses("link-primary")}`}
           >
             <PencilIcon className="h-4 w-4 mr-1" />
             Edit
@@ -188,50 +188,22 @@ const StaffCard = memo(function StaffCard({ staff, onArchive, themeClasses }) {
             e.stopPropagation();
             onArchive(staff);
           }}
-          className={`inline-flex items-center text-sm font-medium ${themeClasses.textDanger}`}
+          className="inline-flex items-center text-sm font-medium text-red-600 hover:text-red-800"
         >
           <ArchiveBoxIcon className="h-4 w-4 mr-1" />
           Archive
         </button>
       </div>
-    </div>
+    </Card>
   );
 });
 
-StaffCard.displayName = 'StaffCard';
-
-// Main content component
-const ResultPageContent = memo(function ResultPageContent() {
+// Main Component
+const AdminStaffSearchResultPage = memo(function AdminStaffSearchResultPage() {
   const navigate = useNavigate();
   const staffManager = useStaffManager();
   const [searchParams] = useSearchParams();
   const { getThemeClasses } = useUIXTheme();
-
-  // Memoize theme classes
-  const themeClasses = useMemo(() => ({
-    textPrimary: getThemeClasses("text-primary"),
-    textSecondary: getThemeClasses("text-secondary"),
-    textMuted: getThemeClasses("text-muted"),
-    textDanger: getThemeClasses("text-danger"),
-    linkPrimary: getThemeClasses("link-primary"),
-    bgPage: getThemeClasses("bg-page"),
-    bgCard: getThemeClasses("bg-card"),
-    bgMuted: getThemeClasses("bg-muted"),
-    cardBorder: getThemeClasses("card-border"),
-    borderLight: getThemeClasses("border-light"),
-    borderMedium: getThemeClasses("border-medium"),
-    iconPrimary: getThemeClasses("icon-primary"),
-    badgeInfoBg: getThemeClasses("badge-info-bg"),
-    badgeInfoText: getThemeClasses("badge-info-text"),
-  }), [getThemeClasses]);
-
-  // Memoize breadcrumb items
-  const breadcrumbItems = useMemo(() => [
-    { label: "Dashboard", to: "/admin/dashboard", icon: ChartBarIcon },
-    { label: "Staff", to: "/admin/staff", icon: UserGroupIcon },
-    { label: "Search", to: "/admin/staff/search", icon: MagnifyingGlassIcon },
-    { label: "Results", icon: MagnifyingGlassIcon, isActive: true },
-  ], []);
 
   // Extract search parameters from URL
   const firstName = searchParams.get("fn") || "";
@@ -240,7 +212,7 @@ const ResultPageContent = memo(function ResultPageContent() {
   const phone = searchParams.get("p") || "";
   const isActive = searchParams.get("active") === "1";
 
-  // List state
+  // Component states
   const [staffList, setStaffList] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -261,10 +233,31 @@ const ResultPageContent = memo(function ResultPageContent() {
   const [showFilters, setShowFilters] = useState(false);
   const [selectedStaffForDeletion, setSelectedStaffForDeletion] = useState(null);
 
+  // Memoized theme classes
+  const themeClasses = useMemo(
+    () => ({
+      textPrimary: getThemeClasses("text-primary"),
+      textSecondary: getThemeClasses("text-secondary"),
+      linkPrimary: getThemeClasses("link-primary"),
+    }),
+    [getThemeClasses],
+  );
+
   // Memoized unauthorized handler
   const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
   }, [navigate]);
+
+  // Format phone number
+  const formatPhone = useCallback((phone) => {
+    if (!phone) return "-";
+    const cleaned = phone.replace(/\D/g, "");
+    const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
+    if (match) {
+      return `(${match[1]}) ${match[2]}-${match[3]}`;
+    }
+    return phone;
+  }, []);
 
   // Fetch staff list based on search criteria
   const fetchStaffList = useCallback(() => {
@@ -341,33 +334,28 @@ const ResultPageContent = memo(function ResultPageContent() {
   }, [previousCursors]);
 
   // Filter change handlers
-  const handleSortByChange = useCallback((value) => {
-    setSortBy(value);
+  const handleSortByChange = useCallback((e) => {
+    setSortBy(e.target.value);
     setPreviousCursors([]);
     setCurrentCursor("");
   }, []);
 
-  const handleStatusChange = useCallback((value) => {
-    setStatus(parseInt(value));
+  const handleStatusChange = useCallback((e) => {
+    setStatus(parseInt(e.target.value));
     setPreviousCursors([]);
     setCurrentCursor("");
   }, []);
 
-  const handleTypeChange = useCallback((value) => {
-    setType(parseInt(value));
+  const handleTypeChange = useCallback((e) => {
+    setType(parseInt(e.target.value));
     setPreviousCursors([]);
     setCurrentCursor("");
   }, []);
 
-  const handlePageSizeChange = useCallback((value) => {
-    setPageSize(parseInt(value));
+  const handlePageSizeChange = useCallback((e) => {
+    setPageSize(parseInt(e.target.value));
     setPreviousCursors([]);
     setCurrentCursor("");
-  }, []);
-
-  // Archive handler
-  const handleArchiveStaff = useCallback((staff) => {
-    setSelectedStaffForDeletion(staff);
   }, []);
 
   // Confirm archive handler
@@ -383,7 +371,7 @@ const ResultPageContent = memo(function ResultPageContent() {
           setSelectedStaffForDeletion(null);
           fetchStaffList();
         },
-        (error) => {
+        () => {
           setErrors({ message: "Failed archiving staff member" });
           setTimeout(() => setErrors({}), 2000);
           window.scrollTo(0, 0);
@@ -396,11 +384,6 @@ const ResultPageContent = memo(function ResultPageContent() {
       );
     }
   }, [selectedStaffForDeletion, staffManager, onUnauthorized, fetchStaffList]);
-
-  // Cancel archive handler
-  const handleCancelDelete = useCallback(() => {
-    setSelectedStaffForDeletion(null);
-  }, []);
 
   // Build search criteria display
   const searchCriteria = useMemo(() => {
@@ -429,27 +412,27 @@ const ResultPageContent = memo(function ResultPageContent() {
 
   if (isLoading && !staffList) {
     return (
-      <div className={`min-h-screen ${themeClasses.bgPage} flex items-center justify-center`}>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <Spinner size="lg" />
-          <p className={`mt-4 ${themeClasses.textSecondary}`}>Loading search results...</p>
+          <p className="mt-4 text-gray-600">Loading search results...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`min-h-screen ${themeClasses.bgPage}`}>
+    <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
-        <Breadcrumb items={breadcrumbItems} className="mb-8" />
+        <Breadcrumb items={BREADCRUMB_ITEMS} className="mb-8" />
 
         {/* Header Section */}
         <div className="mb-8">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <div className="flex items-center">
-                <UserGroupIcon className={`h-8 w-8 ${themeClasses.iconPrimary} mr-3`} />
+                <UserGroupIcon className={`h-8 w-8 ${themeClasses.linkPrimary} mr-3`} />
                 <h1 className={`text-3xl font-bold ${themeClasses.textPrimary}`}>
                   Search Results
                 </h1>
@@ -458,8 +441,11 @@ const ResultPageContent = memo(function ResultPageContent() {
                 Staff search results
               </p>
             </div>
-            <Button variant="outline" onClick={() => navigate("/admin/staff/search")}>
-              <ArrowLeftIcon className="h-4 w-4 mr-2" />
+            <Button
+              variant="outline"
+              onClick={() => navigate("/admin/staff/search")}
+              icon={ArrowLeftIcon}
+            >
               Back to Search
             </Button>
           </div>
@@ -470,7 +456,8 @@ const ResultPageContent = memo(function ResultPageContent() {
               {searchCriteria.map((criteria, index) => {
                 const Icon = criteria.icon;
                 return (
-                  <Badge key={index} variant="info" icon={Icon}>
+                  <Badge key={index} variant="info" size="sm" className="inline-flex items-center">
+                    <Icon className="h-4 w-4 mr-1.5" />
                     {criteria.label}: {criteria.value}
                   </Badge>
                 );
@@ -482,6 +469,7 @@ const ResultPageContent = memo(function ResultPageContent() {
         {/* Success/Error Messages */}
         {successMessage && (
           <Alert type="success" className="mb-6" dismissible onDismiss={() => setSuccessMessage("")}>
+            <CheckCircleIcon className="h-5 w-5 mr-2 inline" />
             {successMessage}
           </Alert>
         )}
@@ -493,20 +481,18 @@ const ResultPageContent = memo(function ResultPageContent() {
         )}
 
         {/* Main Content */}
-        <div className={`${themeClasses.bgCard} shadow-sm rounded-lg`}>
+        <Card>
           {/* Results Header with Filters */}
-          <div className={`px-6 py-4 border-b ${themeClasses.borderMedium}`}>
+          <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <h2 className={`text-xl font-semibold ${themeClasses.textPrimary} flex items-center`}>
-                  <MagnifyingGlassIcon className={`h-5 w-5 mr-2 ${themeClasses.iconPrimary}`} />
+                  <MagnifyingGlassIcon className={`h-5 w-5 mr-2 ${themeClasses.linkPrimary}`} />
                   Results
                 </h2>
-                {!isLoading && staffList && staffList.results && (
+                {!isLoading && staffList?.results && (
                   <p className={`mt-1 text-sm ${themeClasses.textSecondary}`}>
-                    Found <span className="font-semibold">{totalCount}</span>{" "}
-                    staff members
-                    {searchCriteria.length > 0 && " matching your criteria"}
+                    Found <span className="font-semibold">{totalCount}</span> staff members
                   </p>
                 )}
               </div>
@@ -514,39 +500,44 @@ const ResultPageContent = memo(function ResultPageContent() {
               {/* Filters and Sorting */}
               {!isLoading && staffList?.results?.length > 0 && (
                 <div className="flex flex-wrap items-center gap-3">
-                  {/* Toggle Filters */}
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setShowFilters(!showFilters)}
+                    icon={FunnelIcon}
                   >
-                    <FunnelIcon className="h-4 w-4 mr-1.5" />
                     Filters
-                    <ChevronDownIcon
-                      className={`h-4 w-4 ml-1 transition-transform ${showFilters ? "rotate-180" : ""}`}
-                    />
+                    <ChevronDownIcon className={`h-4 w-4 ml-1 transition-transform ${showFilters ? "rotate-180" : ""}`} />
                   </Button>
 
-                  {/* Sort By */}
                   <div className="flex items-center">
-                    <ArrowsUpDownIcon className={`h-4 w-4 ${themeClasses.textMuted} mr-2`} />
-                    <Select
+                    <ArrowsUpDownIcon className="h-4 w-4 text-gray-400 mr-2" />
+                    <select
                       value={sortBy}
                       onChange={handleSortByChange}
-                      options={STAFF_SORT_OPTIONS}
-                      className="min-w-[160px]"
-                    />
+                      className="block rounded-lg border-gray-300 py-1.5 pl-3 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      {STAFF_SORT_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
-                  {/* Page Size */}
                   <div className="flex items-center">
-                    <AdjustmentsHorizontalIcon className={`h-4 w-4 ${themeClasses.textMuted} mr-2`} />
-                    <Select
-                      value={pageSize}
+                    <AdjustmentsHorizontalIcon className="h-4 w-4 text-gray-400 mr-2" />
+                    <select
+                      value={pageSize.toString()}
                       onChange={handlePageSizeChange}
-                      options={PAGE_SIZE_OPTIONS}
-                      className="min-w-[120px]"
-                    />
+                      className="block rounded-lg border-gray-300 py-1.5 pl-3 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      {PAGE_SIZE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value.toString()}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               )}
@@ -554,27 +545,35 @@ const ResultPageContent = memo(function ResultPageContent() {
 
             {/* Expandable Filters Panel */}
             {showFilters && (
-              <div className={`mt-4 pt-4 border-t ${themeClasses.borderMedium}`}>
+              <div className="mt-4 pt-4 border-t border-gray-200">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className={`block text-sm font-medium ${themeClasses.textSecondary} mb-1`}>
-                      Status
-                    </label>
-                    <Select
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select
                       value={status}
                       onChange={handleStatusChange}
-                      options={STAFF_STATUS_FILTER_OPTIONS}
-                    />
+                      className="w-full rounded-lg border-gray-300 py-2 pl-3 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      {STAFF_STATUS_FILTER_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                   <div>
-                    <label className={`block text-sm font-medium ${themeClasses.textSecondary} mb-1`}>
-                      Type
-                    </label>
-                    <Select
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
+                    <select
                       value={type}
                       onChange={handleTypeChange}
-                      options={STAFF_TYPE_FILTER_OPTIONS}
-                    />
+                      className="w-full rounded-lg border-gray-300 py-2 pl-3 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      {STAFF_TYPE_FILTER_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               </div>
@@ -586,7 +585,7 @@ const ResultPageContent = memo(function ResultPageContent() {
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-16">
                 <Spinner size="lg" />
-                <p className={`mt-4 ${themeClasses.textSecondary}`}>Updating results...</p>
+                <p className="mt-4 text-gray-600">Updating results...</p>
               </div>
             ) : staffList?.results?.length > 0 ? (
               <>
@@ -596,101 +595,80 @@ const ResultPageContent = memo(function ResultPageContent() {
                     <StaffCard
                       key={staff.id}
                       staff={staff}
-                      onArchive={handleArchiveStaff}
-                      themeClasses={themeClasses}
+                      onArchive={setSelectedStaffForDeletion}
+                      formatPhone={formatPhone}
                     />
                   ))}
                 </div>
 
                 {/* Pagination Footer */}
                 {(previousCursors.length > 0 || staffList.hasNextPage) && (
-                  <div className={`${themeClasses.bgCard} px-4 py-3 flex items-center justify-between border-t ${themeClasses.borderMedium}`}>
-                    <div className="flex-1 flex justify-between sm:hidden">
+                  <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200">
+                    <div className="hidden sm:block">
+                      <p className="text-sm text-gray-700">
+                        Showing <span className="font-medium">{startRecord}</span> to{" "}
+                        <span className="font-medium">{endRecord}</span> of{" "}
+                        <span className="font-medium">{totalCount}</span> results
+                      </p>
+                    </div>
+                    <div className="flex gap-3">
                       <Button
                         variant="outline"
+                        size="sm"
                         onClick={handlePreviousPage}
                         disabled={previousCursors.length === 0}
+                        icon={ChevronLeftIcon}
                       >
                         Previous
                       </Button>
+                      <span className="flex items-center px-4 py-2 text-sm text-gray-700">
+                        Page {currentPage}
+                      </span>
                       <Button
                         variant="outline"
+                        size="sm"
                         onClick={handleNextPage}
                         disabled={!staffList.hasNextPage}
                       >
                         Next
+                        <ChevronRightIcon className="h-4 w-4 ml-1" />
                       </Button>
-                    </div>
-                    <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                      <div>
-                        <p className={`text-sm ${themeClasses.textSecondary}`}>
-                          Showing{" "}
-                          <span className="font-medium">{startRecord}</span> to{" "}
-                          <span className="font-medium">{endRecord}</span> of{" "}
-                          <span className="font-medium">{totalCount}</span>{" "}
-                          results
-                        </p>
-                      </div>
-                      <div>
-                        <nav
-                          className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                          aria-label="Pagination"
-                        >
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handlePreviousPage}
-                            disabled={previousCursors.length === 0}
-                            className="rounded-l-md rounded-r-none"
-                          >
-                            <span className="sr-only">Previous</span>
-                            <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
-                          </Button>
-                          <span className={`relative inline-flex items-center px-4 py-2 border ${themeClasses.cardBorder} ${themeClasses.bgCard} text-sm font-medium ${themeClasses.textSecondary}`}>
-                            Page {currentPage}
-                          </span>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleNextPage}
-                            disabled={!staffList.hasNextPage}
-                            className="rounded-r-md rounded-l-none"
-                          >
-                            <span className="sr-only">Next</span>
-                            <ChevronRightIcon className="h-5 w-5" aria-hidden="true" />
-                          </Button>
-                        </nav>
-                      </div>
                     </div>
                   </div>
                 )}
               </>
             ) : (
               <div className="text-center py-16 px-4">
-                <UserGroupIcon className={`mx-auto h-12 w-12 ${themeClasses.textMuted} mb-4`} />
-                <h3 className={`text-lg font-semibold ${themeClasses.textPrimary} mb-2`}>
-                  No Staff Members Found
-                </h3>
-                <p className={`${themeClasses.textSecondary} mb-6 max-w-md mx-auto`}>
-                  No staff members match your search criteria. Try adjusting
-                  your search terms or filters.
+                <UserGroupIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Staff Members Found</h3>
+                <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                  No staff members match your search criteria. Try adjusting your search terms or filters.
                 </p>
-                <Button variant="primary" onClick={() => navigate("/admin/staff/search")}>
-                  <ArrowLeftIcon className="h-4 w-4 mr-2" />
+                <Button
+                  variant="primary"
+                  onClick={() => navigate("/admin/staff/search")}
+                  icon={ArrowLeftIcon}
+                >
                   Try New Search
                 </Button>
               </div>
             )}
           </div>
-        </div>
+        </Card>
 
         {/* Bottom Action Buttons */}
         <div className="mt-6 flex flex-col sm:flex-row justify-between gap-4">
-          <Button variant="outline" onClick={() => navigate("/admin/staff/search")}>
-            <ArrowLeftIcon className="h-4 w-4 mr-2" />
+          <Button
+            variant="outline"
+            onClick={() => navigate("/admin/staff/search")}
+            icon={ArrowLeftIcon}
+          >
             Search Again
           </Button>
-          <Button variant="outline" onClick={() => navigate("/admin/staff")}>
+          <Button
+            variant="outline"
+            onClick={() => navigate("/admin/staff")}
+          >
             Back to Staff
           </Button>
         </div>
@@ -699,68 +677,64 @@ const ResultPageContent = memo(function ResultPageContent() {
       {/* Archive Confirmation Modal */}
       <Modal
         isOpen={!!selectedStaffForDeletion}
-        onClose={handleCancelDelete}
+        onClose={() => setSelectedStaffForDeletion(null)}
         title="Archive Staff Member"
-        icon={ExclamationTriangleIcon}
-        iconColor="amber"
-        maxWidth="md"
-        footer={
-          <div className="flex justify-end space-x-3">
-            <Button variant="outline" onClick={handleCancelDelete}>
-              Cancel
-            </Button>
-            <Button
-              variant="danger"
-              onClick={handleConfirmDelete}
-              loading={isLoading}
-            >
-              <ArchiveBoxIcon className="h-4 w-4 mr-2" />
-              Confirm Archive
-            </Button>
-          </div>
-        }
       >
-        <p className={`text-sm ${themeClasses.textSecondary} mb-4`}>
-          You are about to <strong>archive</strong> this staff member.
-          They will no longer appear on your dashboard. This action can be
-          undone but you'll need to contact the system administrator. Are
-          you sure you would like to continue?
-        </p>
-
         {selectedStaffForDeletion && (
-          <Alert type="warning">
-            <p className="text-sm font-medium">
-              <strong>Name:</strong>{" "}
-              {selectedStaffForDeletion.name ||
-                `${selectedStaffForDeletion.firstName} ${selectedStaffForDeletion.lastName}`}
+          <>
+            <p className="text-sm text-gray-600 mb-4">
+              You are about to <strong>archive</strong> this staff member.
+              They will no longer appear on your dashboard. This action can be
+              undone but you'll need to contact the system administrator. Are
+              you sure you would like to continue?
             </p>
-            {selectedStaffForDeletion.email && (
-              <p className="text-sm mt-1">
-                <strong>Email:</strong> {selectedStaffForDeletion.email}
+
+            <div className="p-4 bg-amber-50 rounded-lg border-l-4 border-amber-500 mb-4">
+              <p className="text-sm font-medium text-gray-700">
+                <strong>Name:</strong>{" "}
+                {selectedStaffForDeletion.name ||
+                  `${selectedStaffForDeletion.firstName} ${selectedStaffForDeletion.lastName}`}
               </p>
-            )}
-            {selectedStaffForDeletion.type && (
-              <p className="text-sm mt-1">
-                <strong>Type:</strong>{" "}
-                {STAFF_TYPE_MAP[selectedStaffForDeletion.type]}
-              </p>
-            )}
-          </Alert>
+              {selectedStaffForDeletion.email && (
+                <p className="text-sm text-gray-600 mt-1">
+                  <strong>Email:</strong> {selectedStaffForDeletion.email}
+                </p>
+              )}
+              {selectedStaffForDeletion.type && (
+                <p className="text-sm text-gray-600 mt-1">
+                  <strong>Type:</strong> {STAFF_TYPE_MAP[selectedStaffForDeletion.type]}
+                </p>
+              )}
+            </div>
+
+            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+              <Button variant="secondary" onClick={() => setSelectedStaffForDeletion(null)}>
+                Cancel
+              </Button>
+              <Button
+                variant="danger"
+                onClick={handleConfirmDelete}
+                disabled={isLoading}
+                loading={isLoading}
+                icon={ArchiveBoxIcon}
+              >
+                {isLoading ? "Archiving..." : "Confirm Archive"}
+              </Button>
+            </div>
+          </>
         )}
       </Modal>
     </div>
   );
 });
 
-ResultPageContent.displayName = 'ResultPageContent';
-
 // Wrapper with UIXThemeProvider
-function AdminStaffSearchResultPage() {
+function AdminStaffSearchResultPageWithProvider() {
   return (
     <UIXThemeProvider>
-      <ResultPageContent />
+      <AdminStaffSearchResultPage />
     </UIXThemeProvider>
   );
 }
 
-export default AdminStaffSearchResultPage;
+export default AdminStaffSearchResultPageWithProvider;

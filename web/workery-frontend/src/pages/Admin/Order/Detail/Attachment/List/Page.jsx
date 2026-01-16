@@ -26,7 +26,7 @@ import {
   ORDER_STATUS_COMPLETED_AND_PAID,
   ORDER_STATUS_ARCHIVED,
 } from "../../../../../../constants/Order";
-import { EntityAttachmentListPage } from "../../../../../../components/UIX";
+import { EntityAttachmentListPage, UIXThemeProvider } from "../../../../../../components/UIX";
 
 function AdminOrderDetailAttachmentListPage() {
   const { oid } = useParams();
@@ -155,7 +155,11 @@ function AdminOrderDetailAttachmentListPage() {
     },
   }), [attachmentManager, orderManager, navigate]);
 
-  return <EntityAttachmentListPage config={config} />;
+  return (
+    <UIXThemeProvider>
+      <EntityAttachmentListPage config={config} />
+    </UIXThemeProvider>
+  );
 }
 
 export default AdminOrderDetailAttachmentListPage;

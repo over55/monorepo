@@ -1,1569 +1,576 @@
 // File Path: web/workery-frontend/src/pages/Admin/Associate/Update/Page.jsx
-// UIX Upgraded - Uses UIX primitives (Breadcrumb, Alert, Tabs, Spinner, Card)
+// UIX Upgraded - Uses EntityUpdatePage whole page component
+// @uix-page: AdminAssociateUpdatePage
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import React, { useMemo } from "react";
 import {
   ChartBarIcon,
   UserGroupIcon,
   InformationCircleIcon,
   PencilSquareIcon,
-  ChevronLeftIcon,
-  CheckCircleIcon,
-  BuildingOfficeIcon,
-  UserIcon,
-  MapPinIcon,
-  BriefcaseIcon,
-  ExclamationCircleIcon,
-  ChartPieIcon,
-  ComputerDesktopIcon,
   EllipsisHorizontalIcon,
-  ArchiveBoxIcon,
-  NoSymbolIcon,
 } from "@heroicons/react/24/outline";
+import { useAssociateManager } from "../../../../services/Services";
+import { EntityUpdatePage, UIXThemeProvider } from "../../../../components/UIX";
 import {
-  useAssociateManager,
-  useAuthManager,
-} from "../../../../services/Services";
-import {
-  SkillSetsMultiSelect,
-  InsuranceRequirementsMultiSelect,
-  VehicleTypesMultiSelect,
-  ServiceFeeSelect,
-  TagsMultiSelect,
-  HowHearAboutUsSelect,
-} from "../../../../components/business/selects";
-import { DateInput, Input, Select, Checkbox } from "../../../../components/UI";
-import {
-  Breadcrumb,
-  Alert,
-  Tabs,
-  Card,
-  Spinner,
-  UIXThemeProvider,
-} from "../../../../components/UIX";
+  AssociateSettingsSection,
+  AssociateContactInfoSection,
+  AssociateAddressSection,
+  AssociateProfessionalInfoSection,
+  AssociateEmergencyContactSection,
+  AssociateMetricsSection,
+  AssociateSystemInfoSection,
+} from "../../../../components/UIX/EntityUpdatePage/examples/AssociateFormSections";
+
+// Static configuration constants
+const ENTITY_NAME = "Associate";
+const ENTITY_TYPE = "associate";
+const ID_PARAM = "aid";
 
 // Constants
 const RESIDENTIAL_ASSOCIATE_TYPE_OF_ID = 2;
 const COMMERCIAL_ASSOCIATE_TYPE_OF_ID = 3;
 
-const ASSOCIATE_TYPE_OPTIONS = [
-  { value: 2, label: "Residential" },
-  { value: 3, label: "Commercial" },
-];
+// Static initial form data template
+const INITIAL_FORM_DATA = Object.freeze({
+  // Basic info
+  type: RESIDENTIAL_ASSOCIATE_TYPE_OF_ID,
+  organizationName: "",
+  organizationType: 0,
+  firstName: "",
+  lastName: "",
+  email: "",
+  phone: "",
+  phoneType: 0,
+  phoneExtension: "",
+  otherPhone: "",
+  otherPhoneType: 0,
+  otherPhoneExtension: "",
+  isOkToText: false,
+  isOkToEmail: false,
 
-const ORGANIZATION_TYPE_OPTIONS = [
-  { value: 0, label: "Please select" },
-  { value: 1, label: "Unknown" },
-  { value: 2, label: "Private" },
-  { value: 3, label: "Non-profit" },
-  { value: 4, label: "Government" },
-];
+  // Address
+  country: "Canada",
+  region: "",
+  city: "",
+  addressLine1: "",
+  addressLine2: "",
+  postalCode: "",
+  hasShippingAddress: false,
+  shippingName: "",
+  shippingPhone: "",
+  shippingCountry: "Canada",
+  shippingRegion: "",
+  shippingCity: "",
+  shippingAddressLine1: "",
+  shippingAddressLine2: "",
+  shippingPostalCode: "",
 
-const PHONE_TYPE_OPTIONS = [
-  { value: 0, label: "Please select" },
-  { value: 1, label: "Mobile" },
-  { value: 2, label: "Work" },
-  { value: 3, label: "Home" },
-];
+  // Professional info
+  skillSets: [],
+  insuranceRequirements: [],
+  vehicleTypes: [],
+  serviceFeeId: "",
+  hourlySalaryDesired: 0,
+  limitSpecial: "",
+  duesDate: "",
+  commercialInsuranceExpiryDate: "",
+  autoInsuranceExpiryDate: "",
+  wsibNumber: "",
+  wsibInsuranceDate: "",
+  policeCheck: "",
+  taxId: "",
+  driversLicenseClass: "",
 
-const GENDER_OPTIONS = [
-  { value: 0, label: "Please select" },
-  { value: 1, label: "Other" },
-  { value: 2, label: "Male" },
-  { value: 3, label: "Female" },
-  { value: 4, label: "Transgender" },
-  { value: 5, label: "Non-Binary" },
-  { value: 6, label: "Two Spirit" },
-  { value: 7, label: "Prefer not to say" },
-  { value: 8, label: "Do not know" },
-];
+  // Emergency contact
+  emergencyContactName: "",
+  emergencyContactRelationship: "",
+  emergencyContactTelephone: "",
+  emergencyContactAlternativeTelephone: "",
 
-const JOB_SEEKER_OPTIONS = [
-  { value: 1, label: "Yes" },
-  { value: 2, label: "No" },
-];
+  // Metrics
+  tags: [],
+  howDidYouHearAboutUsID: "",
+  isHowDidYouHearAboutUsOther: false,
+  howDidYouHearAboutUsOther: "",
+  gender: 0,
+  genderOther: "",
+  birthDate: "",
+  joinDate: "",
+  additionalComment: "",
+  identifyAs: [],
 
-const LANGUAGE_OPTIONS = [
-  { value: "English", label: "English" },
-  { value: "French", label: "French" },
-];
+  // Job seeker info
+  isJobSeeker: 2,
+  statusInCountry: 0,
+  statusInCountryOther: "",
+  countryOfOrigin: "",
+  dateOfEntryIntoCountry: "",
+  maritalStatus: 0,
+  maritalStatusOther: "",
+  accomplishedEducation: 0,
+  accomplishedEducationOther: "",
 
-const REGION_OPTIONS = [
-  { value: "", label: "Please select" },
-  { value: "Alberta", label: "Alberta" },
-  { value: "British Columbia", label: "British Columbia" },
-  { value: "Manitoba", label: "Manitoba" },
-  { value: "New Brunswick", label: "New Brunswick" },
-  { value: "Newfoundland and Labrador", label: "Newfoundland and Labrador" },
-  { value: "Northwest Territories", label: "Northwest Territories" },
-  { value: "Nova Scotia", label: "Nova Scotia" },
-  { value: "Nunavut", label: "Nunavut" },
-  { value: "Ontario", label: "Ontario" },
-  { value: "Prince Edward Island", label: "Prince Edward Island" },
-  { value: "Quebec", label: "Quebec" },
-  { value: "Saskatchewan", label: "Saskatchewan" },
-  { value: "Yukon", label: "Yukon" },
-];
+  // System
+  description: "",
+  preferredLanguage: "English",
+});
 
-// Helper function to format errors for display
-const formatErrorsForAlert = (errors) => {
-  if (!errors || typeof errors !== "object") {
-    return null;
+// Static form sections array
+const FORM_SECTIONS = Object.freeze([
+  AssociateSettingsSection,
+  AssociateContactInfoSection,
+  AssociateAddressSection,
+  AssociateProfessionalInfoSection,
+  AssociateEmergencyContactSection,
+  AssociateMetricsSection,
+  AssociateSystemInfoSection,
+]);
+
+// Static breadcrumb items
+const BREADCRUMB_ITEMS = Object.freeze([
+  {
+    label: "Dashboard",
+    to: "/admin/dashboard",
+    icon: ChartBarIcon,
+    hideOnMobile: false,
+    mobileLabel: "Dash",
+  },
+  {
+    label: "Associates",
+    to: "/admin/associates",
+    icon: UserGroupIcon,
+  },
+  {
+    label: "Detail",
+    icon: InformationCircleIcon,
+  },
+  {
+    label: "Update",
+    icon: PencilSquareIcon,
+    isActive: true,
+  },
+]);
+
+// Static tab items
+const TAB_ITEMS = Object.freeze([
+  {
+    label: "Summary",
+    to: `/admin/associate/{aid}`,
+  },
+  {
+    label: "Detail",
+    to: `/admin/associate/{aid}/detail`,
+  },
+  {
+    label: "Orders",
+    to: `/admin/associate/{aid}/orders`,
+  },
+  {
+    label: "Comments",
+    to: `/admin/associate/{aid}/comments`,
+  },
+  {
+    label: "Attachments",
+    to: `/admin/associate/{aid}/attachments`,
+  },
+  {
+    label: "More",
+    to: `/admin/associate/{aid}/more`,
+    icon: EllipsisHorizontalIcon,
+  },
+]);
+
+// Helper function for date formatting
+const formatDateForInput = (dateValue) => {
+  if (!dateValue) return "";
+  try {
+    const date = new Date(dateValue);
+    if (isNaN(date.getTime())) return "";
+    return date.toISOString().split("T")[0];
+  } catch {
+    return "";
   }
-
-  const errorList = [];
-  for (const [field, message] of Object.entries(errors)) {
-    if (message && field !== "general") {
-      const fieldName = field
-        .replace(/([A-Z])/g, " $1")
-        .replace(/^./, (str) => str.toUpperCase())
-        .trim();
-      errorList.push(`• ${fieldName}: ${message}`);
-    }
-  }
-
-  return errorList.length > 0 ? errorList : null;
 };
 
-// Section Component with Dark Header - Matching Customer Update style
-const FormSection = ({ title, icon: Icon, children }) => (
-  <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
-    <div className="px-4 sm:px-6 py-3 sm:py-4">
-      <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
-        <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
-        <span className="truncate">{title}</span>
-      </h3>
-    </div>
-    <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
-      {children}
-    </div>
-  </div>
-);
+// Helper function to format date for API submission
+const formatDateForAPI = (dateValue) => {
+  if (!dateValue) return "";
+  try {
+    const date = new Date(dateValue);
+    if (isNaN(date.getTime())) return "";
+    return date.toISOString();
+  } catch {
+    return "";
+  }
+};
+
+// Validation function
+const validateForm = (formData) => {
+  const newErrors = {};
+
+  // Required fields validation
+  if (!formData.firstName?.trim()) {
+    newErrors.firstName = "First name is required";
+  }
+  if (!formData.lastName?.trim()) {
+    newErrors.lastName = "Last name is required";
+  }
+  if (!formData.email?.trim()) {
+    newErrors.email = "Email is required";
+  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+    newErrors.email = "Please enter a valid email address";
+  }
+  if (!formData.phone?.trim()) {
+    newErrors.phone = "Phone number is required";
+  }
+  if (!formData.type) {
+    newErrors.type = "Associate type is required";
+  }
+
+  // Commercial associate validation
+  if (formData.type === COMMERCIAL_ASSOCIATE_TYPE_OF_ID) {
+    if (!formData.organizationName?.trim()) {
+      newErrors.organizationName =
+        "Organization name is required for business associates";
+    }
+    if (!formData.organizationType) {
+      newErrors.organizationType =
+        "Organization type is required for business associates";
+    }
+  }
+
+  // Address validation
+  if (!formData.country) {
+    newErrors.country = "Country is required";
+  }
+  if (!formData.region?.trim()) {
+    newErrors.region = "Province/Territory is required";
+  }
+  if (!formData.city?.trim()) {
+    newErrors.city = "City is required";
+  }
+  if (!formData.addressLine1?.trim()) {
+    newErrors.addressLine1 = "Address line 1 is required";
+  }
+  if (!formData.postalCode?.trim()) {
+    newErrors.postalCode = "Postal code is required";
+  }
+
+  // Shipping address validation
+  if (formData.hasShippingAddress) {
+    if (!formData.shippingName?.trim()) {
+      newErrors.shippingName = "Shipping name is required";
+    }
+    if (!formData.shippingPhone?.trim()) {
+      newErrors.shippingPhone = "Shipping phone is required";
+    }
+    if (!formData.shippingCountry) {
+      newErrors.shippingCountry = "Shipping country is required";
+    }
+    if (!formData.shippingRegion?.trim()) {
+      newErrors.shippingRegion = "Shipping province/territory is required";
+    }
+    if (!formData.shippingCity?.trim()) {
+      newErrors.shippingCity = "Shipping city is required";
+    }
+    if (!formData.shippingAddressLine1?.trim()) {
+      newErrors.shippingAddressLine1 = "Shipping address line 1 is required";
+    }
+    if (!formData.shippingPostalCode?.trim()) {
+      newErrors.shippingPostalCode = "Shipping postal code is required";
+    }
+  }
+
+  // Professional fields validation
+  if (!formData.skillSets || formData.skillSets.length === 0) {
+    newErrors.skillSets = "At least one skill set is required";
+  }
+  if (!formData.insuranceRequirements || formData.insuranceRequirements.length === 0) {
+    newErrors.insuranceRequirements = "At least one insurance requirement is required";
+  }
+  if (!formData.serviceFeeId) {
+    newErrors.serviceFeeId = "Service fee is required";
+  }
+  if (!formData.duesDate) {
+    newErrors.duesDate = "Member dues date is required";
+  }
+  if (!formData.policeCheck) {
+    newErrors.policeCheck = "Police check date is required";
+  }
+  if (!formData.commercialInsuranceExpiryDate) {
+    newErrors.commercialInsuranceExpiryDate = "Commercial insurance expiry date is required";
+  }
+
+  // Emergency contact validation
+  if (!formData.emergencyContactName?.trim()) {
+    newErrors.emergencyContactName = "Emergency contact name is required";
+  }
+  if (!formData.emergencyContactRelationship?.trim()) {
+    newErrors.emergencyContactRelationship = "Emergency contact relationship is required";
+  }
+  if (!formData.emergencyContactTelephone?.trim()) {
+    newErrors.emergencyContactTelephone = "Emergency contact telephone is required";
+  }
+
+  // Metrics validation
+  if (!formData.howDidYouHearAboutUsID) {
+    newErrors.howDidYouHearAboutUsID = "How did you hear about us is required";
+  }
+  if (formData.isHowDidYouHearAboutUsOther && !formData.howDidYouHearAboutUsOther?.trim()) {
+    newErrors.howDidYouHearAboutUsOther = "Please specify other option";
+  }
+  if (!formData.gender) {
+    newErrors.gender = "Gender is required";
+  }
+  if (formData.gender === 1 && !formData.genderOther?.trim()) {
+    newErrors.genderOther = "Please specify other gender";
+  }
+  if (!formData.birthDate) {
+    newErrors.birthDate = "Birth date is required";
+  }
+  if (!formData.preferredLanguage) {
+    newErrors.preferredLanguage = "Preferred language is required";
+  }
+
+  return newErrors;
+};
+
+// Format response data function
+const formatDataFromResponse = (response) => {
+  // Helper function to safely map array fields
+  const mapArrayField = (field, mapFn = (item) => item.id || item) => {
+    return field && Array.isArray(field) ? field.map(mapFn) : [];
+  };
+
+  return {
+    type: response.type || RESIDENTIAL_ASSOCIATE_TYPE_OF_ID,
+    organizationName: response.organizationName || "",
+    organizationType: response.organizationType || 0,
+    firstName: response.firstName || "",
+    lastName: response.lastName || "",
+    email: response.email || "",
+    phone: response.phone || "",
+    phoneType: response.phoneType || 0,
+    phoneExtension: response.phoneExtension || "",
+    otherPhone: response.otherPhone || "",
+    otherPhoneType: response.otherPhoneType || 0,
+    otherPhoneExtension: response.otherPhoneExtension || "",
+    isOkToText: response.isOkToText || false,
+    isOkToEmail: response.isOkToEmail || false,
+    country: response.country || "Canada",
+    region: response.region || "",
+    city: response.city || "",
+    addressLine1: response.addressLine1 || "",
+    addressLine2: response.addressLine2 || "",
+    postalCode: response.postalCode || "",
+    hasShippingAddress: response.hasShippingAddress || false,
+    shippingName: response.shippingName || "",
+    shippingPhone: response.shippingPhone || "",
+    shippingCountry: response.shippingCountry || "Canada",
+    shippingRegion: response.shippingRegion || "",
+    shippingCity: response.shippingCity || "",
+    shippingAddressLine1: response.shippingAddressLine1 || "",
+    shippingAddressLine2: response.shippingAddressLine2 || "",
+    shippingPostalCode: response.shippingPostalCode || "",
+    skillSets: mapArrayField(response.skillSets),
+    insuranceRequirements: mapArrayField(response.insuranceRequirements),
+    vehicleTypes: mapArrayField(response.vehicleTypes),
+    tags: mapArrayField(response.tags),
+    serviceFeeId: response.serviceFeeId || "",
+    hourlySalaryDesired: response.hourlySalaryDesired || 0,
+    limitSpecial: response.limitSpecial || "",
+    duesDate: formatDateForInput(response.duesDate),
+    commercialInsuranceExpiryDate: formatDateForInput(response.commercialInsuranceExpiryDate),
+    autoInsuranceExpiryDate: formatDateForInput(response.autoInsuranceExpiryDate),
+    wsibNumber: response.wsibNumber || "",
+    wsibInsuranceDate: formatDateForInput(response.wsibInsuranceDate),
+    policeCheck: formatDateForInput(response.policeCheck),
+    taxId: response.taxId || "",
+    driversLicenseClass: response.driversLicenseClass || "",
+    emergencyContactName: response.emergencyContactName || "",
+    emergencyContactRelationship: response.emergencyContactRelationship || "",
+    emergencyContactTelephone: response.emergencyContactTelephone || "",
+    emergencyContactAlternativeTelephone: response.emergencyContactAlternativeTelephone || "",
+    howDidYouHearAboutUsID: response.howDidYouHearAboutUsID || "",
+    isHowDidYouHearAboutUsOther: response.isHowDidYouHearAboutUsOther || false,
+    howDidYouHearAboutUsOther: response.howDidYouHearAboutUsOther || "",
+    gender: response.gender || 0,
+    genderOther: response.genderOther || "",
+    birthDate: formatDateForInput(response.birthDate),
+    joinDate: formatDateForInput(response.joinDate),
+    additionalComment: response.additionalComment || "",
+    identifyAs: response.identifyAs || [],
+    isJobSeeker: response.isJobSeeker || 2,
+    statusInCountry: response.statusInCountry || 0,
+    statusInCountryOther: response.statusInCountryOther || "",
+    countryOfOrigin: response.countryOfOrigin || "",
+    dateOfEntryIntoCountry: formatDateForInput(response.dateOfEntryIntoCountry),
+    maritalStatus: response.maritalStatus || 0,
+    maritalStatusOther: response.maritalStatusOther || "",
+    accomplishedEducation: response.accomplishedEducation || 0,
+    accomplishedEducationOther: response.accomplishedEducationOther || "",
+    description: response.description || "",
+    preferredLanguage: response.preferredLanguage || "English",
+  };
+};
+
+// Format submit data function
+const formatDataForSubmit = (formData, entityId) => {
+  // Helper to safely parse integer values
+  const safeParseInt = (value, defaultValue = 0) => {
+    if (value === null || value === undefined || value === "") return defaultValue;
+    const parsed = parseInt(value);
+    return isNaN(parsed) ? defaultValue : parsed;
+  };
+
+  const submitData = {
+    id: entityId,
+    type: safeParseInt(formData.type),
+    organizationName: formData.organizationName,
+    organizationType: safeParseInt(formData.organizationType),
+    firstName: formData.firstName,
+    lastName: formData.lastName,
+    email: formData.email,
+    phone: formData.phone,
+    phoneType: safeParseInt(formData.phoneType),
+    phoneExtension: formData.phoneExtension,
+    otherPhone: formData.otherPhone,
+    otherPhoneType: safeParseInt(formData.otherPhoneType),
+    otherPhoneExtension: formData.otherPhoneExtension,
+    isOkToText: formData.isOkToText,
+    isOkToEmail: formData.isOkToEmail,
+    country: formData.country,
+    region: formData.region,
+    city: formData.city,
+    addressLine1: formData.addressLine1,
+    addressLine2: formData.addressLine2,
+    postalCode: formData.postalCode,
+    hasShippingAddress: formData.hasShippingAddress,
+    shippingName: formData.shippingName,
+    shippingPhone: formData.shippingPhone,
+    shippingCountry: formData.shippingCountry,
+    shippingRegion: formData.shippingRegion,
+    shippingCity: formData.shippingCity,
+    shippingAddressLine1: formData.shippingAddressLine1,
+    shippingAddressLine2: formData.shippingAddressLine2,
+    shippingPostalCode: formData.shippingPostalCode,
+    skillSets: formData.skillSets || [],
+    insuranceRequirements: formData.insuranceRequirements || [],
+    vehicleTypes: formData.vehicleTypes || [],
+    tags: formData.tags || [],
+    serviceFeeId: formData.serviceFeeId,
+    hourlySalaryDesired: safeParseInt(formData.hourlySalaryDesired),
+    limitSpecial: formData.limitSpecial,
+    duesDate: formatDateForAPI(formData.duesDate),
+    commercialInsuranceExpiryDate: formatDateForAPI(formData.commercialInsuranceExpiryDate),
+    autoInsuranceExpiryDate: formatDateForAPI(formData.autoInsuranceExpiryDate),
+    wsibNumber: formData.wsibNumber,
+    wsibInsuranceDate: formatDateForAPI(formData.wsibInsuranceDate),
+    policeCheck: formatDateForAPI(formData.policeCheck),
+    taxId: formData.taxId,
+    driversLicenseClass: formData.driversLicenseClass,
+    emergencyContactName: formData.emergencyContactName,
+    emergencyContactRelationship: formData.emergencyContactRelationship,
+    emergencyContactTelephone: formData.emergencyContactTelephone,
+    emergencyContactAlternativeTelephone: formData.emergencyContactAlternativeTelephone,
+    howDidYouHearAboutUsID: formData.howDidYouHearAboutUsID,
+    isHowDidYouHearAboutUsOther: formData.isHowDidYouHearAboutUsOther,
+    howDidYouHearAboutUsOther: formData.howDidYouHearAboutUsOther,
+    gender: safeParseInt(formData.gender),
+    genderOther: formData.genderOther,
+    birthDate: formatDateForAPI(formData.birthDate),
+    joinDate: formatDateForAPI(formData.joinDate),
+    additionalComment: formData.additionalComment,
+    identifyAs: formData.identifyAs || [],
+    isJobSeeker: safeParseInt(formData.isJobSeeker, 2),
+    description: formData.description,
+    preferredLanguage: formData.preferredLanguage,
+  };
+
+  // Handle optional numeric fields
+  if (formData.statusInCountry) {
+    submitData.statusInCountry = safeParseInt(formData.statusInCountry);
+  }
+  if (formData.maritalStatus) {
+    submitData.maritalStatus = safeParseInt(formData.maritalStatus);
+  }
+  if (formData.accomplishedEducation) {
+    submitData.accomplishedEducation = safeParseInt(formData.accomplishedEducation);
+  }
+  if (formData.dateOfEntryIntoCountry) {
+    submitData.dateOfEntryIntoCountry = formatDateForAPI(formData.dateOfEntryIntoCountry);
+  }
+  if (formData.statusInCountryOther) {
+    submitData.statusInCountryOther = formData.statusInCountryOther;
+  }
+  if (formData.countryOfOrigin) {
+    submitData.countryOfOrigin = formData.countryOfOrigin;
+  }
+  if (formData.maritalStatusOther) {
+    submitData.maritalStatusOther = formData.maritalStatusOther;
+  }
+  if (formData.accomplishedEducationOther) {
+    submitData.accomplishedEducationOther = formData.accomplishedEducationOther;
+  }
+
+  return submitData;
+};
 
 function AdminAssociateUpdatePage() {
-  const { aid } = useParams();
-  const navigate = useNavigate();
   const associateManager = useAssociateManager();
 
-  // Loading and error states
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [alert, setAlert] = useState(null);
-  const [associate, setAssociate] = useState(null);
+  // Memoize the manager object with its methods
+  const manager = useMemo(
+    () => ({
+      getDetail: (id, onUnauthorized, options) =>
+        associateManager.getAssociateDetail(id, onUnauthorized, options),
+      update: (id, data, onUnauthorized) =>
+        associateManager.updateAssociate(id, data, onUnauthorized),
+    }),
+    [associateManager],
+  );
 
-  // Associate data state - Complete fields based on backend requirements
-  const [associateData, setAssociateData] = useState({
-    // Basic info
-    type: 2,
-    organizationName: "",
-    organizationType: 0,
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    phoneType: 0,
-    phoneExtension: "",
-    otherPhone: "",
-    otherPhoneType: 0,
-    otherPhoneExtension: "",
-    isOkToText: false,
-    isOkToEmail: false,
+  // Memoize the entire configuration object
+  const config = useMemo(
+    () => ({
+      // Basic entity information
+      entityName: ENTITY_NAME,
+      entityType: ENTITY_TYPE,
+      idParam: ID_PARAM,
 
-    // Address
-    country: "Canada",
-    region: "",
-    city: "",
-    addressLine1: "",
-    addressLine2: "",
-    postalCode: "",
-    hasShippingAddress: false,
-    shippingName: "",
-    shippingPhone: "",
-    shippingCountry: "Canada",
-    shippingRegion: "",
-    shippingCity: "",
-    shippingAddressLine1: "",
-    shippingAddressLine2: "",
-    shippingPostalCode: "",
-
-    // Professional info
-    skillSets: [],
-    insuranceRequirements: [],
-    vehicleTypes: [],
-    serviceFeeId: "",
-    hourlySalaryDesired: 0,
-    limitSpecial: "",
-    duesDate: "",
-    commercialInsuranceExpiryDate: "",
-    autoInsuranceExpiryDate: "",
-    wsibNumber: "",
-    wsibInsuranceDate: "",
-    policeCheck: "",
-    taxId: "",
-    driversLicenseClass: "",
-
-    // Emergency contact
-    emergencyContactName: "",
-    emergencyContactRelationship: "",
-    emergencyContactTelephone: "",
-    emergencyContactAlternativeTelephone: "",
-
-    // Metrics
-    tags: [],
-    howDidYouHearAboutUsID: "",
-    isHowDidYouHearAboutUsOther: false,
-    howDidYouHearAboutUsOther: "",
-    gender: 0,
-    genderOther: "",
-    birthDate: "",
-    joinDate: "",
-    additionalComment: "",
-    identifyAs: [],
-
-    // Job seeker info
-    isJobSeeker: 2,
-    statusInCountry: 0,
-    statusInCountryOther: "",
-    countryOfOrigin: "",
-    dateOfEntryIntoCountry: "",
-    maritalStatus: 0,
-    maritalStatusOther: "",
-    accomplishedEducation: 0,
-    accomplishedEducationOther: "",
-
-    // System
-    description: "",
-    preferredLanguage: "English",
-  });
-
-  const onUnauthorized = useCallback(() => {
-    navigate("/login?unauthorized=true");
-  }, [navigate]);
-
-  // Memoize breadcrumb items
-  const breadcrumbItems = useMemo(() => [
-    {
-      label: "Dashboard",
-      to: "/admin/dashboard",
-      icon: ChartBarIcon,
-    },
-    {
-      label: "Associates",
-      to: "/admin/associates",
+      // Icons
       icon: UserGroupIcon,
-    },
-    {
-      label: "Detail",
-      to: `/admin/associate/${aid}`,
-      icon: InformationCircleIcon,
-    },
-    {
-      label: "Update",
-      icon: PencilSquareIcon,
-      isActive: true,
-    },
-  ], [aid]);
+      dashboardIcon: ChartBarIcon,
+      detailIcon: InformationCircleIcon,
+      updateIcon: PencilSquareIcon,
 
-  // Memoize tabs
-  const tabs = useMemo(() => [
-    { label: "Summary", to: `/admin/associate/${aid}` },
-    { label: "Detail", to: `/admin/associate/${aid}/detail` },
-    { label: "Orders", to: `/admin/associate/${aid}/orders` },
-    { label: "Comments", to: `/admin/associate/${aid}/comments` },
-    { label: "Attachments", to: `/admin/associate/${aid}/attachments` },
-    { label: "More", to: `/admin/associate/${aid}/more`, icon: EllipsisHorizontalIcon },
-  ], [aid]);
+      // Manager with CRUD operations
+      manager,
 
-  useEffect(() => {
-    let mounted = true;
+      // Initial form data structure - create new object from frozen template
+      initialFormData: { ...INITIAL_FORM_DATA },
 
-    const fetchAssociateDetail = () => {
-      if (!aid) {
-        setAlert({ type: "error", message: "Invalid associate ID" });
-        setIsLoading(false);
-        return;
-      }
+      // Form sections to render
+      formSections: FORM_SECTIONS,
 
-      associateManager.getAssociateDetailWithCallbacks(
-        aid,
-        (data) => {
-          if (mounted) {
-            setAssociate(data);
+      // Validation, formatting functions
+      validateForm,
+      formatDataFromResponse,
+      formatDataForSubmit,
 
-            // Format dates properly for HTML date inputs
-            const formatDateForInput = (dateValue) => {
-              if (!dateValue) return "";
-              try {
-                const date = new Date(dateValue);
-                if (isNaN(date.getTime())) return "";
-                return date.toISOString().split("T")[0];
-              } catch (e) {
-                return "";
-              }
-            };
+      // Custom breadcrumb items
+      breadcrumbItems: BREADCRUMB_ITEMS,
 
-            // Map the API response to our form state
-            setAssociateData({
-              type: data.type || 2,
-              organizationName: data.organizationName || "",
-              organizationType: data.organizationType || 0,
-              firstName: data.firstName || "",
-              lastName: data.lastName || "",
-              email: data.email || "",
-              phone: data.phone || "",
-              phoneType: data.phoneType || 0,
-              phoneExtension: data.phoneExtension || "",
-              otherPhone: data.otherPhone || "",
-              otherPhoneType: data.otherPhoneType || 0,
-              otherPhoneExtension: data.otherPhoneExtension || "",
-              isOkToText: data.isOkToText || false,
-              isOkToEmail: data.isOkToEmail || false,
-              country: data.country || "Canada",
-              region: data.region || "",
-              city: data.city || "",
-              addressLine1: data.addressLine1 || "",
-              addressLine2: data.addressLine2 || "",
-              postalCode: data.postalCode || "",
-              hasShippingAddress: data.hasShippingAddress || false,
-              shippingName: data.shippingName || "",
-              shippingPhone: data.shippingPhone || "",
-              shippingCountry: data.shippingCountry || "Canada",
-              shippingRegion: data.shippingRegion || "",
-              shippingCity: data.shippingCity || "",
-              shippingAddressLine1: data.shippingAddressLine1 || "",
-              shippingAddressLine2: data.shippingAddressLine2 || "",
-              shippingPostalCode: data.shippingPostalCode || "",
-              skillSets: data.skillSets
-                ? data.skillSets.map((ss) => ss.id)
-                : [],
-              insuranceRequirements: data.insuranceRequirements
-                ? data.insuranceRequirements.map((ir) => ir.id)
-                : [],
-              vehicleTypes: data.vehicleTypes
-                ? data.vehicleTypes.map((vt) => vt.id)
-                : [],
-              tags: data.tags ? data.tags.map((tag) => tag.id) : [],
-              serviceFeeId: data.serviceFeeId || "",
-              hourlySalaryDesired: data.hourlySalaryDesired || 0,
-              limitSpecial: data.limitSpecial || "",
-              duesDate: formatDateForInput(data.duesDate),
-              commercialInsuranceExpiryDate: formatDateForInput(
-                data.commercialInsuranceExpiryDate,
-              ),
-              autoInsuranceExpiryDate: formatDateForInput(
-                data.autoInsuranceExpiryDate,
-              ),
-              wsibNumber: data.wsibNumber || "",
-              wsibInsuranceDate: formatDateForInput(data.wsibInsuranceDate),
-              policeCheck: formatDateForInput(data.policeCheck),
-              taxId: data.taxId || "",
-              driversLicenseClass: data.driversLicenseClass || "",
-              emergencyContactName: data.emergencyContactName || "",
-              emergencyContactRelationship:
-                data.emergencyContactRelationship || "",
-              emergencyContactTelephone: data.emergencyContactTelephone || "",
-              emergencyContactAlternativeTelephone:
-                data.emergencyContactAlternativeTelephone || "",
-              howDidYouHearAboutUsID: data.howDidYouHearAboutUsID || "",
-              isHowDidYouHearAboutUsOther:
-                data.isHowDidYouHearAboutUsOther || false,
-              howDidYouHearAboutUsOther: data.howDidYouHearAboutUsOther || "",
-              gender: data.gender || 0,
-              genderOther: data.genderOther || "",
-              birthDate: formatDateForInput(data.birthDate),
-              joinDate: formatDateForInput(data.joinDate),
-              additionalComment: data.additionalComment || "",
-              identifyAs: data.identifyAs || [],
-              isJobSeeker: data.isJobSeeker || 2,
-              statusInCountry: data.statusInCountry || 0,
-              statusInCountryOther: data.statusInCountryOther || "",
-              countryOfOrigin: data.countryOfOrigin || "",
-              dateOfEntryIntoCountry: formatDateForInput(
-                data.dateOfEntryIntoCountry,
-              ),
-              maritalStatus: data.maritalStatus || 0,
-              maritalStatusOther: data.maritalStatusOther || "",
-              accomplishedEducation: data.accomplishedEducation || 0,
-              accomplishedEducationOther: data.accomplishedEducationOther || "",
-              description: data.description || "",
-              preferredLanguage: data.preferredLanguage || "English",
-            });
-
-            setIsLoading(false);
-          }
-        },
-        (error) => {
-          if (mounted) {
-            console.error("Failed to load associate detail:", error);
-            setAlert({
-              type: "error",
-              message: "Failed to load associate details. Please try again.",
-            });
-            setIsLoading(false);
-          }
-        },
-        () => {},
-        onUnauthorized,
-      );
-    };
-
-    fetchAssociateDetail();
-    window.scrollTo(0, 0);
-
-    return () => {
-      mounted = false;
-    };
-  }, [aid, associateManager, onUnauthorized]);
-
-  const handleInputChange = useCallback((field, value) => {
-    setAssociateData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-
-    setErrors((prev) => {
-      if (prev[field]) {
-        return { ...prev, [field]: undefined };
-      }
-      return prev;
-    });
-  }, []);
-
-  const handleCheckboxChange = useCallback((field) => {
-    setAssociateData((prev) => ({
-      ...prev,
-      [field]: !prev[field],
-    }));
-  }, []);
-
-  const validateForm = useCallback(() => {
-    const newErrors = {};
-
-    // Required fields validation
-    if (!associateData.firstName.trim()) {
-      newErrors.firstName = "First name is required";
-    }
-    if (!associateData.lastName.trim()) {
-      newErrors.lastName = "Last name is required";
-    }
-    if (!associateData.email.trim()) {
-      newErrors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(associateData.email)) {
-      newErrors.email = "Please enter a valid email address";
-    }
-    if (!associateData.phone.trim()) {
-      newErrors.phone = "Phone number is required";
-    }
-    if (!associateData.type) {
-      newErrors.type = "Associate type is required";
-    }
-
-    // Commercial associate validation
-    if (associateData.type === COMMERCIAL_ASSOCIATE_TYPE_OF_ID) {
-      if (!associateData.organizationName.trim()) {
-        newErrors.organizationName =
-          "Organization name is required for business associates";
-      }
-      if (!associateData.organizationType) {
-        newErrors.organizationType =
-          "Organization type is required for business associates";
-      }
-    }
-
-    // Address validation
-    if (!associateData.country) {
-      newErrors.country = "Country is required";
-    }
-    if (!associateData.region.trim()) {
-      newErrors.region = "Province/Territory is required";
-    }
-    if (!associateData.city.trim()) {
-      newErrors.city = "City is required";
-    }
-    if (!associateData.addressLine1.trim()) {
-      newErrors.addressLine1 = "Address line 1 is required";
-    }
-    if (!associateData.postalCode.trim()) {
-      newErrors.postalCode = "Postal code is required";
-    }
-
-    // Shipping address validation if enabled
-    if (associateData.hasShippingAddress) {
-      if (!associateData.shippingName.trim()) {
-        newErrors.shippingName = "Shipping name is required";
-      }
-      if (!associateData.shippingPhone.trim()) {
-        newErrors.shippingPhone = "Shipping phone is required";
-      }
-      if (!associateData.shippingCountry) {
-        newErrors.shippingCountry = "Shipping country is required";
-      }
-      if (!associateData.shippingRegion.trim()) {
-        newErrors.shippingRegion = "Shipping province/territory is required";
-      }
-      if (!associateData.shippingCity.trim()) {
-        newErrors.shippingCity = "Shipping city is required";
-      }
-      if (!associateData.shippingAddressLine1.trim()) {
-        newErrors.shippingAddressLine1 = "Shipping address line 1 is required";
-      }
-      if (!associateData.shippingPostalCode.trim()) {
-        newErrors.shippingPostalCode = "Shipping postal code is required";
-      }
-    }
-
-    // Professional fields validation
-    if (!associateData.skillSets || associateData.skillSets.length === 0) {
-      newErrors.skillSets = "At least one skill set is required";
-    }
-    if (
-      !associateData.insuranceRequirements ||
-      associateData.insuranceRequirements.length === 0
-    ) {
-      newErrors.insuranceRequirements =
-        "At least one insurance requirement is required";
-    }
-    if (!associateData.serviceFeeId) {
-      newErrors.serviceFeeId = "Service fee is required";
-    }
-    if (!associateData.duesDate) {
-      newErrors.duesDate = "Member dues date is required";
-    }
-    if (!associateData.policeCheck) {
-      newErrors.policeCheck = "Police check date is required";
-    }
-    if (!associateData.commercialInsuranceExpiryDate) {
-      newErrors.commercialInsuranceExpiryDate =
-        "Commercial insurance expiry date is required";
-    }
-
-    // Emergency contact validation
-    if (!associateData.emergencyContactName.trim()) {
-      newErrors.emergencyContactName = "Emergency contact name is required";
-    }
-    if (!associateData.emergencyContactRelationship.trim()) {
-      newErrors.emergencyContactRelationship =
-        "Emergency contact relationship is required";
-    }
-    if (!associateData.emergencyContactTelephone.trim()) {
-      newErrors.emergencyContactTelephone =
-        "Emergency contact telephone is required";
-    }
-
-    // Metrics validation
-    if (!associateData.howDidYouHearAboutUsID) {
-      newErrors.howDidYouHearAboutUsID =
-        "How did you hear about us is required";
-    }
-    if (
-      associateData.isHowDidYouHearAboutUsOther &&
-      !associateData.howDidYouHearAboutUsOther.trim()
-    ) {
-      newErrors.howDidYouHearAboutUsOther = "Please specify other option";
-    }
-    if (!associateData.gender) {
-      newErrors.gender = "Gender is required";
-    }
-    if (associateData.gender === 1 && !associateData.genderOther.trim()) {
-      newErrors.genderOther = "Please specify other gender";
-    }
-    if (!associateData.birthDate) {
-      newErrors.birthDate = "Birth date is required";
-    }
-    if (!associateData.preferredLanguage) {
-      newErrors.preferredLanguage = "Preferred language is required";
-    }
-
-    return newErrors;
-  }, [associateData]);
-
-  const handleSubmit = useCallback(async (e) => {
-    e.preventDefault();
-
-    setAlert(null);
-
-    // Validate form
-    const formErrors = validateForm();
-    if (Object.keys(formErrors).length > 0) {
-      setErrors(formErrors);
-
-      const errorList = formatErrorsForAlert(formErrors);
-      if (errorList) {
-        setAlert({
-          type: "error",
-          message: "Please correct the following errors:",
-          details: errorList,
-        });
-      } else {
-        setAlert({
-          type: "error",
-          message: "Please correct the errors in the form before submitting.",
-        });
-      }
-
-      window.scrollTo(0, 0);
-      return;
-    }
-
-    setIsSaving(true);
-    setErrors({});
-
-    // Format dates for API submission
-    const formatDateForAPI = (dateValue) => {
-      if (!dateValue) return "";
-      try {
-        const date = new Date(dateValue);
-        if (isNaN(date.getTime())) return "";
-        return date.toISOString();
-      } catch (e) {
-        return "";
-      }
-    };
-
-    // Prepare data for submission
-    const submitData = {
-      id: aid,
-      ...associateData,
-      type: parseInt(associateData.type),
-      organizationType: associateData.organizationType
-        ? parseInt(associateData.organizationType)
-        : 0,
-      phoneType: associateData.phoneType
-        ? parseInt(associateData.phoneType)
-        : 0,
-      otherPhoneType: associateData.otherPhoneType
-        ? parseInt(associateData.otherPhoneType)
-        : 0,
-      hourlySalaryDesired: associateData.hourlySalaryDesired
-        ? parseInt(associateData.hourlySalaryDesired)
-        : 0,
-      isJobSeeker: associateData.isJobSeeker
-        ? parseInt(associateData.isJobSeeker)
-        : 2,
-      gender: associateData.gender ? parseInt(associateData.gender) : 0,
-      birthDate: formatDateForAPI(associateData.birthDate),
-      joinDate: formatDateForAPI(associateData.joinDate),
-      duesDate: formatDateForAPI(associateData.duesDate),
-      commercialInsuranceExpiryDate: formatDateForAPI(
-        associateData.commercialInsuranceExpiryDate,
-      ),
-      autoInsuranceExpiryDate: formatDateForAPI(
-        associateData.autoInsuranceExpiryDate,
-      ),
-      wsibInsuranceDate: formatDateForAPI(associateData.wsibInsuranceDate),
-      policeCheck: formatDateForAPI(associateData.policeCheck),
-      dateOfEntryIntoCountry: formatDateForAPI(
-        associateData.dateOfEntryIntoCountry,
-      ),
-      skillSets: associateData.skillSets || [],
-      insuranceRequirements: associateData.insuranceRequirements || [],
-      vehicleTypes: associateData.vehicleTypes || [],
-      tags: associateData.tags || [],
-      identifyAs: associateData.identifyAs || [],
-    };
-
-    // Handle optional numeric fields
-    if (associateData.statusInCountry) {
-      submitData.statusInCountry = parseInt(associateData.statusInCountry);
-    }
-    if (associateData.maritalStatus) {
-      submitData.maritalStatus = parseInt(associateData.maritalStatus);
-    }
-    if (associateData.accomplishedEducation) {
-      submitData.accomplishedEducation = parseInt(
-        associateData.accomplishedEducation,
-      );
-    }
-
-    associateManager.updateAssociateWithCallbacks(
-      aid,
-      submitData,
-      (data) => {
-        setAlert({
-          type: "success",
-          message: "Associate updated successfully!",
-        });
-
-        setTimeout(() => {
-          navigate(`/admin/associate/${aid}`);
-        }, 2000);
-      },
-      (error) => {
-        console.error("Failed to update associate:", error);
-
-        if (error && typeof error === "object") {
-          const hasFieldErrors = Object.keys(error).some(
-            (key) => key !== "message" && key !== "general" && key !== "detail",
-          );
-
-          if (hasFieldErrors) {
-            setErrors(error);
-            const errorList = formatErrorsForAlert(error);
-
-            if (errorList) {
-              setAlert({
-                type: "error",
-                message:
-                  error.general ||
-                  "Failed to update associate. Please correct the following errors:",
-                details: errorList,
-              });
-            } else {
-              setAlert({
-                type: "error",
-                message:
-                  error.general ||
-                  error.message ||
-                  "Failed to update associate. Please check the form and try again.",
-              });
-            }
-          } else {
-            setAlert({
-              type: "error",
-              message:
-                error.message ||
-                error.detail ||
-                "Failed to update associate. Please try again.",
-            });
-          }
-        } else {
-          setAlert({
-            type: "error",
-            message: "An unexpected error occurred. Please try again.",
-          });
-        }
-
-        window.scrollTo(0, 0);
-      },
-      () => {
-        setIsSaving(false);
-      },
-      onUnauthorized,
-    );
-  }, [aid, associateData, associateManager, navigate, onUnauthorized, validateForm]);
-
-  const handleHowHearChange = useCallback((value) => {
-    handleInputChange("howDidYouHearAboutUsID", value);
-  }, [handleInputChange]);
-
-  const handleHowHearOtherDetected = useCallback((isOther) => {
-    handleInputChange("isHowDidYouHearAboutUsOther", isOther);
-    if (!isOther) {
-      handleInputChange("howDidYouHearAboutUsOther", "");
-    }
-  }, [handleInputChange]);
-
-  const handleServiceFeeChange = useCallback((value) => {
-    handleInputChange("serviceFeeId", value);
-  }, [handleInputChange]);
-
-  if (isLoading) {
-    return (
-      <UIXThemeProvider>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <Spinner className="mx-auto" />
-              <p className="mt-4 text-sm sm:text-base text-gray-600">
-                Loading associate details...
-              </p>
-            </div>
-          </div>
-        </div>
-      </UIXThemeProvider>
-    );
-  }
+      // Custom tab items
+      tabItems: TAB_ITEMS,
+    }),
+    [manager],
+  );
 
   return (
     <UIXThemeProvider>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {/* Breadcrumb */}
-        <div className="mb-4 sm:mb-6">
-          <Breadcrumb items={breadcrumbItems} />
-        </div>
-
-        {/* Page Title */}
-        <div className="mb-4 sm:mb-6">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
-                <UserGroupIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
-                Associate
-              </h1>
-              <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
-                <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
-                Update associate information
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Status Alerts */}
-        {associate && associate.status === 2 && (
-          <Alert type="info" icon={ArchiveBoxIcon} className="mb-4">
-            This associate is archived
-          </Alert>
-        )}
-        {associate && associate.isBanned && (
-          <Alert type="warning" icon={NoSymbolIcon} className="mb-4">
-            This associate is banned
-          </Alert>
-        )}
-
-        {/* Alert Messages */}
-        {alert && (
-          <Alert
-            type={alert.type}
-            dismissible
-            onDismiss={() => setAlert(null)}
-            className="mb-4"
-          >
-            <div className="flex-1">
-              <span className="font-medium">{alert.message}</span>
-              {alert.details && alert.details.length > 0 && (
-                <div className="mt-2 text-xs sm:text-sm">
-                  {alert.details.map((detail, index) => (
-                    <div key={index}>{detail}</div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </Alert>
-        )}
-
-        {/* Main Content */}
-        <Card className="shadow-sm rounded-lg">
-          {/* Header with Actions */}
-          <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200">
-            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
-              <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 flex items-center">
-                <PencilSquareIcon className="w-5 sm:w-7 h-5 sm:h-7 mr-2 text-blue-600 flex-shrink-0" />
-                Update Associate
-              </h2>
-              <Link to={`/admin/associate/${aid}`} className="flex-shrink-0">
-                <button className="w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                  <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
-                  Back to Detail
-                </button>
-              </Link>
-            </div>
-          </div>
-
-          {/* Tab Navigation */}
-          <div className="px-4 sm:px-6 border-b border-gray-200">
-            <Tabs items={tabs} />
-          </div>
-
-          <form onSubmit={handleSubmit} className="p-4 sm:p-6">
-            {/* Settings Section with Dark Header */}
-            <FormSection title="Settings" icon={BuildingOfficeIcon}>
-              <div className="max-w-xl">
-                <Select
-                  label="Associate Type"
-                  value={associateData.type}
-                  onChange={(e) =>
-                    handleInputChange("type", parseInt(e.target.value))
-                  }
-                  options={ASSOCIATE_TYPE_OPTIONS}
-                  error={errors.type}
-                  required
-                />
-              </div>
-            </FormSection>
-
-            {/* Contact Information Section with Dark Header */}
-            <FormSection title="Contact Information" icon={UserIcon}>
-              {/* Organization fields for commercial associates */}
-              {associateData.type === COMMERCIAL_ASSOCIATE_TYPE_OF_ID && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-                  <Input
-                    label="Organization Name"
-                    value={associateData.organizationName}
-                    onChange={(e) =>
-                      handleInputChange("organizationName", e.target.value)
-                    }
-                    error={errors.organizationName}
-                    required
-                  />
-
-                  <Select
-                    label="Organization Type"
-                    value={associateData.organizationType}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "organizationType",
-                        parseInt(e.target.value),
-                      )
-                    }
-                    options={ORGANIZATION_TYPE_OPTIONS}
-                    error={errors.organizationType}
-                  />
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-                <Input
-                  label="First Name"
-                  value={associateData.firstName}
-                  onChange={(e) => handleInputChange("firstName", e.target.value)}
-                  error={errors.firstName}
-                  required
-                />
-
-                <Input
-                  label="Last Name"
-                  value={associateData.lastName}
-                  onChange={(e) => handleInputChange("lastName", e.target.value)}
-                  error={errors.lastName}
-                  required
-                />
-              </div>
-
-              <div className="mb-4 sm:mb-6">
-                <Input
-                  label="Email"
-                  type="email"
-                  value={associateData.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
-                  error={errors.email}
-                  required
-                />
-              </div>
-
-              <div className="mb-4 sm:mb-6">
-                <Checkbox
-                  label="I agree to receive electronic email"
-                  checked={associateData.isOkToEmail}
-                  onChange={() => handleCheckboxChange("isOkToEmail")}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-                <Input
-                  label="Phone"
-                  type="tel"
-                  value={associateData.phone}
-                  onChange={(e) => handleInputChange("phone", e.target.value)}
-                  error={errors.phone}
-                  required
-                />
-
-                <Select
-                  label="Phone Type"
-                  value={associateData.phoneType}
-                  onChange={(e) =>
-                    handleInputChange("phoneType", parseInt(e.target.value))
-                  }
-                  options={PHONE_TYPE_OPTIONS}
-                  error={errors.phoneType}
-                />
-              </div>
-
-              {associateData.phoneType === 2 && (
-                <div className="mb-4 sm:mb-6">
-                  <Input
-                    label="Phone Extension"
-                    value={associateData.phoneExtension}
-                    onChange={(e) =>
-                      handleInputChange("phoneExtension", e.target.value)
-                    }
-                    error={errors.phoneExtension}
-                  />
-                </div>
-              )}
-
-              <div className="mb-4 sm:mb-6">
-                <Checkbox
-                  label="I agree to receive texts to my phone"
-                  checked={associateData.isOkToText}
-                  onChange={() => handleCheckboxChange("isOkToText")}
-                />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
-                <Input
-                  label="Other Phone (Optional)"
-                  type="tel"
-                  value={associateData.otherPhone}
-                  onChange={(e) =>
-                    handleInputChange("otherPhone", e.target.value)
-                  }
-                  error={errors.otherPhone}
-                />
-
-                <Select
-                  label="Other Phone Type"
-                  value={associateData.otherPhoneType}
-                  onChange={(e) =>
-                    handleInputChange("otherPhoneType", parseInt(e.target.value))
-                  }
-                  options={PHONE_TYPE_OPTIONS}
-                  error={errors.otherPhoneType}
-                />
-              </div>
-
-              {associateData.otherPhoneType === 2 && (
-                <div className="mb-4 sm:mb-6">
-                  <Input
-                    label="Other Phone Extension"
-                    value={associateData.otherPhoneExtension}
-                    onChange={(e) =>
-                      handleInputChange("otherPhoneExtension", e.target.value)
-                    }
-                    error={errors.otherPhoneExtension}
-                  />
-                </div>
-              )}
-            </FormSection>
-
-            {/* Address Section with Dark Header */}
-            <FormSection title="Address" icon={MapPinIcon}>
-              <div className="mb-4 sm:mb-6">
-                <Checkbox
-                  label="Has shipping address different than billing address"
-                  checked={associateData.hasShippingAddress}
-                  onChange={() => handleCheckboxChange("hasShippingAddress")}
-                />
-              </div>
-
-              <div
-                className={`grid ${associateData.hasShippingAddress ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1"} gap-6 sm:gap-8`}
-              >
-                {/* Billing Address */}
-                <div>
-                  {associateData.hasShippingAddress && (
-                    <h4 className="text-sm sm:text-base font-medium text-gray-900 mb-3 sm:mb-4">
-                      Billing Address
-                    </h4>
-                  )}
-
-                  <div className="space-y-3 sm:space-y-4">
-                    <Input
-                      label="Country"
-                      value={associateData.country}
-                      onChange={(e) =>
-                        handleInputChange("country", e.target.value)
-                      }
-                      error={errors.country}
-                      required
-                    />
-
-                    <Select
-                      label="Province/Territory"
-                      value={associateData.region}
-                      onChange={(e) =>
-                        handleInputChange("region", e.target.value)
-                      }
-                      options={REGION_OPTIONS}
-                      error={errors.region}
-                      required
-                    />
-
-                    <Input
-                      label="City"
-                      value={associateData.city}
-                      onChange={(e) => handleInputChange("city", e.target.value)}
-                      error={errors.city}
-                      required
-                    />
-
-                    <Input
-                      label="Address Line 1"
-                      value={associateData.addressLine1}
-                      onChange={(e) =>
-                        handleInputChange("addressLine1", e.target.value)
-                      }
-                      error={errors.addressLine1}
-                      required
-                    />
-
-                    <Input
-                      label="Address Line 2 (Optional)"
-                      value={associateData.addressLine2}
-                      onChange={(e) =>
-                        handleInputChange("addressLine2", e.target.value)
-                      }
-                      error={errors.addressLine2}
-                    />
-
-                    <Input
-                      label="Postal Code"
-                      value={associateData.postalCode}
-                      onChange={(e) =>
-                        handleInputChange("postalCode", e.target.value)
-                      }
-                      error={errors.postalCode}
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* Shipping Address */}
-                {associateData.hasShippingAddress && (
-                  <div>
-                    <h4 className="text-sm sm:text-base font-medium text-gray-900 mb-3 sm:mb-4">
-                      Shipping Address
-                    </h4>
-
-                    <div className="space-y-3 sm:space-y-4">
-                      <Input
-                        label="Name"
-                        value={associateData.shippingName}
-                        onChange={(e) =>
-                          handleInputChange("shippingName", e.target.value)
-                        }
-                        placeholder="The name to contact for this shipping address"
-                        error={errors.shippingName}
-                        required
-                      />
-
-                      <Input
-                        label="Phone"
-                        type="tel"
-                        value={associateData.shippingPhone}
-                        onChange={(e) =>
-                          handleInputChange("shippingPhone", e.target.value)
-                        }
-                        placeholder="The contact phone number for this shipping address"
-                        error={errors.shippingPhone}
-                        required
-                      />
-
-                      <Input
-                        label="Country"
-                        value={associateData.shippingCountry}
-                        onChange={(e) =>
-                          handleInputChange("shippingCountry", e.target.value)
-                        }
-                        error={errors.shippingCountry}
-                        required
-                      />
-
-                      <Select
-                        label="Province/Territory"
-                        value={associateData.shippingRegion}
-                        onChange={(e) =>
-                          handleInputChange("shippingRegion", e.target.value)
-                        }
-                        options={REGION_OPTIONS}
-                        error={errors.shippingRegion}
-                        required
-                      />
-
-                      <Input
-                        label="City"
-                        value={associateData.shippingCity}
-                        onChange={(e) =>
-                          handleInputChange("shippingCity", e.target.value)
-                        }
-                        error={errors.shippingCity}
-                        required
-                      />
-
-                      <Input
-                        label="Address Line 1"
-                        value={associateData.shippingAddressLine1}
-                        onChange={(e) =>
-                          handleInputChange(
-                            "shippingAddressLine1",
-                            e.target.value,
-                          )
-                        }
-                        error={errors.shippingAddressLine1}
-                        required
-                      />
-
-                      <Input
-                        label="Address Line 2 (Optional)"
-                        value={associateData.shippingAddressLine2}
-                        onChange={(e) =>
-                          handleInputChange(
-                            "shippingAddressLine2",
-                            e.target.value,
-                          )
-                        }
-                        error={errors.shippingAddressLine2}
-                      />
-
-                      <Input
-                        label="Postal Code"
-                        value={associateData.shippingPostalCode}
-                        onChange={(e) =>
-                          handleInputChange("shippingPostalCode", e.target.value)
-                        }
-                        error={errors.shippingPostalCode}
-                        required
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </FormSection>
-
-            {/* Professional Information Section with Dark Header */}
-            <FormSection title="Professional Information" icon={BriefcaseIcon}>
-              <div className="space-y-4 sm:space-y-6">
-                <SkillSetsMultiSelect
-                  value={associateData.skillSets}
-                  onChange={(value) => handleInputChange("skillSets", value)}
-                  error={errors.skillSets}
-                  required={true}
-                  label="Skill Sets"
-                  helperText="Select all skill sets that apply to this associate"
-                  onUnauthorized={onUnauthorized}
-                />
-
-                <InsuranceRequirementsMultiSelect
-                  value={associateData.insuranceRequirements}
-                  onChange={(value) =>
-                    handleInputChange("insuranceRequirements", value)
-                  }
-                  error={errors.insuranceRequirements}
-                  required={true}
-                  label="Insurance Requirements"
-                  helperText="Select all insurance requirements for this associate"
-                  onUnauthorized={onUnauthorized}
-                />
-
-                <VehicleTypesMultiSelect
-                  value={associateData.vehicleTypes}
-                  onChange={(value) => handleInputChange("vehicleTypes", value)}
-                  error={errors.vehicleTypes}
-                  required={false}
-                  label="Vehicle Types (Optional)"
-                  helperText="Select all vehicle types the associate has access to"
-                  onUnauthorized={onUnauthorized}
-                />
-
-                <ServiceFeeSelect
-                  value={associateData.serviceFeeId}
-                  onChange={handleServiceFeeChange}
-                  error={errors.serviceFeeId}
-                  required={true}
-                  label="Service Fee"
-                  helperText="Select the applicable service fee for this associate"
-                  onUnauthorized={onUnauthorized}
-                />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                  <DateInput
-                    label="Member Dues Date"
-                    value={associateData.duesDate}
-                    onChange={(value) => handleInputChange("duesDate", value)}
-                    error={errors.duesDate}
-                    required
-                  />
-
-                  <DateInput
-                    label="Police Check Expiry"
-                    value={associateData.policeCheck}
-                    onChange={(value) => handleInputChange("policeCheck", value)}
-                    error={errors.policeCheck}
-                    required
-                  />
-                </div>
-
-                <DateInput
-                  label="Commercial Insurance Expiry Date"
-                  value={associateData.commercialInsuranceExpiryDate}
-                  onChange={(value) =>
-                    handleInputChange("commercialInsuranceExpiryDate", value)
-                  }
-                  error={errors.commercialInsuranceExpiryDate}
-                  required
-                />
-
-                <DateInput
-                  label="Auto Insurance Expiry Date (Optional)"
-                  value={associateData.autoInsuranceExpiryDate}
-                  onChange={(value) =>
-                    handleInputChange("autoInsuranceExpiryDate", value)
-                  }
-                  error={errors.autoInsuranceExpiryDate}
-                />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                  <Input
-                    label="WSIB Number (Optional)"
-                    value={associateData.wsibNumber}
-                    onChange={(e) =>
-                      handleInputChange("wsibNumber", e.target.value)
-                    }
-                    error={errors.wsibNumber}
-                  />
-
-                  <DateInput
-                    label="WSIB Insurance Date (Optional)"
-                    value={associateData.wsibInsuranceDate}
-                    onChange={(value) =>
-                      handleInputChange("wsibInsuranceDate", value)
-                    }
-                    error={errors.wsibInsuranceDate}
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                  <Input
-                    label="Tax ID (Optional)"
-                    value={associateData.taxId}
-                    onChange={(e) => handleInputChange("taxId", e.target.value)}
-                    error={errors.taxId}
-                  />
-
-                  <Input
-                    label="Driver's License Class (Optional)"
-                    value={associateData.driversLicenseClass}
-                    onChange={(e) =>
-                      handleInputChange("driversLicenseClass", e.target.value)
-                    }
-                    error={errors.driversLicenseClass}
-                  />
-                </div>
-
-                <Input
-                  label="Hourly Salary Desired (Optional)"
-                  type="number"
-                  value={associateData.hourlySalaryDesired}
-                  onChange={(e) =>
-                    handleInputChange("hourlySalaryDesired", e.target.value)
-                  }
-                  error={errors.hourlySalaryDesired}
-                />
-
-                <Input
-                  label="Limit Special (Optional)"
-                  value={associateData.limitSpecial}
-                  onChange={(e) =>
-                    handleInputChange("limitSpecial", e.target.value)
-                  }
-                  error={errors.limitSpecial}
-                  helperText="Any special limitations or notes"
-                />
-              </div>
-            </FormSection>
-
-            {/* Emergency Contact Section with Dark Header */}
-            <FormSection title="Emergency Contact" icon={ExclamationCircleIcon}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                <Input
-                  label="Contact Name"
-                  value={associateData.emergencyContactName}
-                  onChange={(e) =>
-                    handleInputChange("emergencyContactName", e.target.value)
-                  }
-                  error={errors.emergencyContactName}
-                  required
-                />
-
-                <Input
-                  label="Contact Relationship"
-                  value={associateData.emergencyContactRelationship}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "emergencyContactRelationship",
-                      e.target.value,
-                    )
-                  }
-                  error={errors.emergencyContactRelationship}
-                  required
-                />
-
-                <Input
-                  label="Contact Telephone"
-                  type="tel"
-                  value={associateData.emergencyContactTelephone}
-                  onChange={(e) =>
-                    handleInputChange("emergencyContactTelephone", e.target.value)
-                  }
-                  error={errors.emergencyContactTelephone}
-                  required
-                />
-
-                <Input
-                  label="Alternative Telephone (Optional)"
-                  type="tel"
-                  value={associateData.emergencyContactAlternativeTelephone}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "emergencyContactAlternativeTelephone",
-                      e.target.value,
-                    )
-                  }
-                  error={errors.emergencyContactAlternativeTelephone}
-                />
-              </div>
-            </FormSection>
-
-            {/* Metrics Section with Dark Header */}
-            <FormSection title="Metrics" icon={ChartPieIcon}>
-              <div className="space-y-4 sm:space-y-6">
-                <TagsMultiSelect
-                  value={associateData.tags}
-                  onChange={(value) => handleInputChange("tags", value)}
-                  error={errors.tags}
-                  required={false}
-                  label="Tags (Optional)"
-                  helperText="Select tags to categorize this associate"
-                  onUnauthorized={onUnauthorized}
-                />
-
-                <HowHearAboutUsSelect
-                  value={associateData.howDidYouHearAboutUsID}
-                  onChange={handleHowHearChange}
-                  onOtherDetected={handleHowHearOtherDetected}
-                  error={errors.howDidYouHearAboutUsID}
-                  required={true}
-                  helperText="Tell us how you discovered our organization"
-                  onUnauthorized={onUnauthorized}
-                />
-
-                {associateData.isHowDidYouHearAboutUsOther && (
-                  <Input
-                    label="How did you hear about us? (Other)"
-                    value={associateData.howDidYouHearAboutUsOther}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "howDidYouHearAboutUsOther",
-                        e.target.value,
-                      )
-                    }
-                    error={errors.howDidYouHearAboutUsOther}
-                    required
-                  />
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                  <Select
-                    label="Gender"
-                    value={associateData.gender}
-                    onChange={(e) =>
-                      handleInputChange("gender", parseInt(e.target.value))
-                    }
-                    options={GENDER_OPTIONS}
-                    error={errors.gender}
-                    required
-                  />
-
-                  <DateInput
-                    label="Birth Date"
-                    value={associateData.birthDate}
-                    onChange={(value) => handleInputChange("birthDate", value)}
-                    max={new Date().toISOString().split("T")[0]}
-                    error={errors.birthDate}
-                    required
-                  />
-                </div>
-
-                {associateData.gender === 1 && (
-                  <Input
-                    label="Gender (Other)"
-                    value={associateData.genderOther}
-                    onChange={(e) =>
-                      handleInputChange("genderOther", e.target.value)
-                    }
-                    error={errors.genderOther}
-                    required
-                  />
-                )}
-
-                <DateInput
-                  label="Join Date (Optional)"
-                  value={associateData.joinDate}
-                  onChange={(value) => handleInputChange("joinDate", value)}
-                  error={errors.joinDate}
-                  helperText="This indicates when the associate joined the workery"
-                />
-
-                <Select
-                  label="Is Job Seeker"
-                  value={associateData.isJobSeeker}
-                  onChange={(e) =>
-                    handleInputChange("isJobSeeker", parseInt(e.target.value))
-                  }
-                  options={JOB_SEEKER_OPTIONS}
-                  error={errors.isJobSeeker}
-                />
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Additional Comment (Optional)
-                  </label>
-                  <textarea
-                    value={associateData.additionalComment}
-                    onChange={(e) =>
-                      handleInputChange("additionalComment", e.target.value)
-                    }
-                    rows={4}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    maxLength={638}
-                  />
-                </div>
-              </div>
-            </FormSection>
-
-            {/* System Information Section with Dark Header */}
-            <FormSection title="System Information" icon={ComputerDesktopIcon}>
-              <div className="space-y-4 sm:space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description (Optional)
-                  </label>
-                  <textarea
-                    value={associateData.description}
-                    onChange={(e) =>
-                      handleInputChange("description", e.target.value)
-                    }
-                    rows={4}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
-                    maxLength={638}
-                  />
-                </div>
-
-                <div className="max-w-xl">
-                  <Select
-                    label="Preferred Language"
-                    value={associateData.preferredLanguage}
-                    onChange={(e) =>
-                      handleInputChange("preferredLanguage", e.target.value)
-                    }
-                    options={LANGUAGE_OPTIONS}
-                    error={errors.preferredLanguage}
-                    required
-                  />
-                </div>
-              </div>
-            </FormSection>
-
-            {/* Form Actions */}
-            <div className="flex flex-col sm:flex-row sm:justify-between items-stretch sm:items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 gap-3">
-              <Link to={`/admin/associate/${aid}`} className="order-2 sm:order-1">
-                <button
-                  type="button"
-                  className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-gray-300 rounded-lg text-sm sm:text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
-                >
-                  <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
-                  Back to Detail
-                </button>
-              </Link>
-
-              <button
-                type="submit"
-                disabled={isSaving}
-                className={`order-1 sm:order-2 inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-transparent rounded-lg text-sm sm:text-base font-medium text-white transition-colors ${
-                  isSaving
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-green-600 hover:bg-green-700"
-                }`}
-              >
-                <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
-                {isSaving ? "Saving..." : "Save Changes"}
-              </button>
-            </div>
-          </form>
-        </Card>
-      </div>
+      <EntityUpdatePage config={config} />
     </UIXThemeProvider>
   );
 }

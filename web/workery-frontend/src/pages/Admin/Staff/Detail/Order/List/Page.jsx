@@ -1,4 +1,5 @@
 // File Path: web/workery-frontend/src/pages/Admin/Staff/Detail/Order/List/Page.jsx
+// @uix-page: StaffOrderListPage
 // UIX Upgraded - Uses UIX primitives (Card, Button, Alert, Spinner, Breadcrumb, UIXThemeProvider, useUIXTheme)
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate } from "react-router";

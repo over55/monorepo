@@ -1,13 +1,18 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Admin/Associate/Detail/Order/List/Page.jsx
-// UIX Upgraded - Uses UIX primitives (Breadcrumb, Spinner, UIXThemeProvider)
+// File Path: web/workery-frontend/src/pages/Admin/Associate/Detail/Order/List/Page.jsx
+// UIX Upgraded - Uses DetailLiteView whole page component
+// @uix-page: DetailLiteView
 
-import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo, memo } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import {
-  Breadcrumb,
+  DetailLiteView,
+  Button,
+  Card,
+  Badge,
   Spinner,
   UIXThemeProvider,
   useUIXTheme,
+  ViewButton,
 } from "../../../../../../components/UIX";
 import {
   ChartBarIcon,
@@ -19,339 +24,240 @@ import {
   ClockIcon,
   ArchiveBoxIcon,
   EllipsisHorizontalIcon,
-  ChatBubbleLeftRightIcon,
-  PaperClipIcon,
   ChevronRightIcon,
-  ExclamationTriangleIcon,
-  XCircleIcon,
   HomeIcon,
   BuildingOfficeIcon,
   QuestionMarkCircleIcon,
   ArrowTopRightOnSquareIcon,
-  CurrencyDollarIcon,
-  ArrowRightIcon,
+  UserIcon,
 } from "@heroicons/react/24/outline";
 import {
-  useAssociateManager,
   useOrderManager,
+  useAssociateManager,
+  useAuthManager,
 } from "../../../../../../services/Services";
-import { DateTime } from "luxon";
 import { formatDateForDisplay } from "../../../../../../services/Helpers/DateFormatter";
+import { ASSOCIATE_STATUS_ARCHIVED } from "../../../../../../constants/Associate";
 
-// Constants
-const COMMERCIAL_ASSOCIATE_TYPE_OF_ID = 3;
-const RESIDENTIAL_ASSOCIATE_TYPE_OF_ID = 2;
+// Order status mappings
+const ORDER_STATUS_OPTIONS = Object.freeze({
+  1: { label: "New", variant: "info" },
+  2: { label: "Declined", variant: "danger" },
+  3: { label: "Pending", variant: "warning" },
+  4: { label: "Cancelled", variant: "secondary" },
+  5: { label: "Ongoing", variant: "info" },
+  6: { label: "In Progress", variant: "info" },
+  7: { label: "Completed (Unpaid)", variant: "warning" },
+  8: { label: "Completed (Paid)", variant: "success" },
+  9: { label: "Archived", variant: "secondary" },
+});
 
-// Order status mappings (fixed to match backend)
-const ORDER_STATUS_OPTIONS = {
-  1: { label: "New", colorClass: "text-blue-600" },
-  2: { label: "Declined", colorClass: "text-red-600" },
-  3: { label: "Pending", colorClass: "text-yellow-600" },
-  4: { label: "Cancelled", colorClass: "text-gray-600" },
-  5: { label: "Ongoing", colorClass: "text-blue-600" },
-  6: { label: "In Progress", colorClass: "text-blue-600" },
-  7: { label: "Completed (Unpaid)", colorClass: "text-yellow-600" },
-  8: { label: "Completed (Paid)", colorClass: "text-green-600" },
-  9: { label: "Archived", colorClass: "text-gray-600" },
-};
-
-// Order type mappings (fixed to match backend)
-const ORDER_TYPE_OPTIONS = {
+// Order type mappings
+const ORDER_TYPE_OPTIONS = Object.freeze({
   0: { label: "-", icon: null },
   1: { label: "Residential", icon: HomeIcon },
   2: { label: "Commercial", icon: BuildingOfficeIcon },
   3: { label: "Unassigned", icon: QuestionMarkCircleIcon },
-};
+});
 
-function AdminAssociateDetailOrderListPage() {
-  const { aid } = useParams();
-  const navigate = useNavigate();
-  const associateManager = useAssociateManager();
-  const orderManager = useOrderManager();
+// Static sort options
+const SORT_OPTIONS = Object.freeze([
+  { value: "assignment_date,DESC", label: "Assignment Date (Newest)" },
+  { value: "assignment_date,ASC", label: "Assignment Date (Oldest)" },
+  { value: "start_date,DESC", label: "Start Date (Newest)" },
+  { value: "start_date,ASC", label: "Start Date (Oldest)" },
+  { value: "created_at,DESC", label: "Created Date (Newest)" },
+  { value: "created_at,ASC", label: "Created Date (Oldest)" },
+]);
+
+// Static page size options
+const PAGE_SIZE_OPTIONS = Object.freeze([
+  { value: 10, label: "10" },
+  { value: 25, label: "25" },
+  { value: 50, label: "50" },
+  { value: 100, label: "100" },
+]);
+
+// Order Row Component
+const OrderRow = memo(function OrderRow({ order, formatType, formatStatus }) {
   const { getThemeClasses } = useUIXTheme();
 
-  // Memoize theme classes
-  const themeClasses = useMemo(
-    () => ({
-      pageContainer: getThemeClasses("pageContainer"),
-      contentWrapper: getThemeClasses("contentWrapper"),
-    }),
-    [getThemeClasses],
+  return (
+    <tr className="hover:bg-gray-50">
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        {formatType(order.type)}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
+        {order.wjid}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        {order.customerId &&
+        order.customerId !== "" &&
+        order.customerId !== "000000000000000000000000" ? (
+          <Link
+            to={`/admin/customer/${order.customerId}`}
+            target="_blank"
+            rel="noreferrer"
+            className={`${getThemeClasses("link-primary")} inline-flex items-center`}
+          >
+            {order.customerName}
+            <ArrowTopRightOnSquareIcon className="w-3 h-3 ml-1" />
+          </Link>
+        ) : (
+          "-"
+        )}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        {formatDateForDisplay(order.assignmentDate)}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        {formatDateForDisplay(order.startDate)}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        {formatDateForDisplay(order.completionDate)}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm">
+        {formatStatus(order.status)}
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+        <Link
+          to={`/admin/financial/${order.wjid}`}
+          target="_blank"
+          rel="noreferrer"
+          className={`${getThemeClasses("link-primary")} inline-flex items-center`}
+        >
+          View
+          <ArrowTopRightOnSquareIcon className="w-3 h-3 ml-1" />
+        </Link>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap text-sm">
+        <ViewButton to={`/admin/order/${order.wjid}`} text="View" size="sm" />
+      </td>
+    </tr>
   );
+});
 
-  // Memoize onUnauthorized callback
-  const onUnauthorized = useCallback(() => {
-    navigate("/login?unauthorized=true");
-  }, [navigate]);
+// Order Card Component (Mobile)
+const OrderCard = memo(function OrderCard({ order, formatType, formatStatus }) {
+  const { getThemeClasses } = useUIXTheme();
 
-  // Memoize breadcrumb items
-  const breadcrumbItems = useMemo(
-    () => [
-      { label: "Dashboard", path: "/admin/dashboard", icon: "ChartBarIcon" },
-      { label: "Associates", path: "/admin/associates" },
-      { label: "Detail" },
-    ],
-    [],
+  return (
+    <Card padding="p-4" className="mb-4">
+      <div className="space-y-3 text-sm">
+        <div className="flex justify-between items-start">
+          <div>
+            <span className="text-gray-500">Type:</span>{" "}
+            {formatType(order.type)}
+          </div>
+          {formatStatus(order.status)}
+        </div>
+        <div>
+          <span className="text-gray-500">Job #:</span>{" "}
+          <span className="font-mono font-semibold">{order.wjid}</span>
+        </div>
+        <div>
+          <span className="text-gray-500">Customer:</span>{" "}
+          {order.customerId &&
+          order.customerId !== "" &&
+          order.customerId !== "000000000000000000000000" ? (
+            <Link
+              to={`/admin/customer/${order.customerId}`}
+              target="_blank"
+              rel="noreferrer"
+              className={`${getThemeClasses("link-primary")} inline-flex items-center`}
+            >
+              {order.customerName}
+              <ArrowTopRightOnSquareIcon className="w-3 h-3 ml-1" />
+            </Link>
+          ) : (
+            "-"
+          )}
+        </div>
+        <div>
+          <span className="text-gray-500">Assigned:</span>{" "}
+          {formatDateForDisplay(order.assignmentDate) || "-"}
+        </div>
+        <div>
+          <span className="text-gray-500">Start:</span>{" "}
+          {formatDateForDisplay(order.startDate) || "-"}
+        </div>
+        <div>
+          <span className="text-gray-500">Completion:</span>{" "}
+          {formatDateForDisplay(order.completionDate) || "-"}
+        </div>
+        <div className="flex gap-2 pt-2 border-t border-gray-200">
+          <ViewButton to={`/admin/order/${order.wjid}`} text="View Order" className="flex-1" />
+          <Link
+            to={`/admin/financial/${order.wjid}`}
+            target="_blank"
+            rel="noreferrer"
+            className="flex-1"
+          >
+            <Button variant="outline" size="sm" className="w-full">
+              Financial
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </Card>
   );
+});
+
+// Main Component
+const AdminAssociateDetailOrderListPage = memo(function AdminAssociateDetailOrderListPage() {
+  const { aid } = useParams();
+  const navigate = useNavigate();
+  const orderManager = useOrderManager();
+  const associateManager = useAssociateManager();
+  const authManager = useAuthManager();
+  const { getThemeClasses } = useUIXTheme();
 
   // Component states
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
   const [isRefreshing, setRefreshing] = useState(false);
-  const [associate, setAssociate] = useState({});
+  const [associate, setAssociate] = useState(null);
   const [orderList, setOrderList] = useState([]);
   const [totalCount, setTotalCount] = useState(0);
+  const [lastFetchTime, setLastFetchTime] = useState(null);
 
-  // Pagination state using cursor-based approach
+  // Pagination state
   const [currentCursor, setCurrentCursor] = useState("");
   const [nextCursor, setNextCursor] = useState("");
   const [hasNextPage, setHasNextPage] = useState(false);
   const [cursorHistory, setCursorHistory] = useState([]);
   const [pageSize, setPageSize] = useState(50);
 
-  // Filter and sort state
+  // Filter state
   const [sortByValue, setSortByValue] = useState("assignment_date,DESC");
   const [status, setStatus] = useState(0);
-  const [lastFetchTime, setLastFetchTime] = useState(null);
 
-  // Use refs to track the latest filter values to avoid stale closures
-  const filtersRef = useRef({
-    sortByValue,
-    status,
-    pageSize,
-  });
+  // Refs for stale closure prevention
+  const filtersRef = useRef({ sortByValue, status, pageSize });
+  const isMountedRef = useRef(true);
 
   // Update refs when filters change
   useEffect(() => {
-    filtersRef.current = {
-      sortByValue,
-      status,
-      pageSize,
-    };
+    filtersRef.current = { sortByValue, status, pageSize };
   }, [sortByValue, status, pageSize]);
 
-  // Fetch associate details
-  const fetchAssociateDetail = async () => {
-    try {
-      const data = await associateManager.getAssociateDetail(
-        aid,
-        onUnauthorized,
-      );
-      setAssociate(data);
-    } catch (error) {
-      console.error("Failed to fetch associate detail:", error);
-      setErrors(error);
-    }
-  };
+  // Cleanup on unmount
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
-  // Fetch order list with force refresh option - now uses refs for filter values
-  const fetchOrderList = useCallback(
-    async (cursor = "", isNavigatingBack = false) => {
-      // Get the latest filter values from refs
-      const currentFilters = filtersRef.current;
+  // Memoized unauthorized handler
+  const onUnauthorized = useCallback(() => {
+    navigate("/login?unauthorized=true");
+  }, [navigate]);
 
-      console.log(
-        "🔄 fetchOrderList called with cursor:",
-        cursor,
-        "filters:",
-        currentFilters,
-      );
-
-      setFetching(true);
-      setErrors({});
-
-      // Always clear the cache when fetching with new filters
-      if (!isNavigatingBack) {
-        orderManager.clearOrdersCache();
-      }
-
-      try {
-        // Build filters map (matching old implementation)
-        const filtersMap = new Map();
-
-        // Add cursor if provided
-        if (cursor) {
-          filtersMap.set("cursor", cursor);
-        }
-
-        // Add page size
-        filtersMap.set("page_size", currentFilters.pageSize.toString());
-
-        // IMPORTANT: Always include associate_id filter
-        filtersMap.set("associate_id", aid);
-
-        // Handle sorting
-        const sortArray = currentFilters.sortByValue.split(",");
-        filtersMap.set("sort_field", sortArray[0]);
-        filtersMap.set("sort_order", sortArray[1]);
-
-        // Add status filter if not "All"
-        if (currentFilters.status !== 0) {
-          filtersMap.set("status", currentFilters.status.toString());
-        }
-
-        console.log(
-          "🌐 Making API call with filters:",
-          Array.from(filtersMap.entries()),
-        );
-
-        // Use the legacy method for compatibility with forceRefresh
-        const data = await orderManager.getOrdersWithFiltersMap(
-          filtersMap,
-          onUnauthorized,
-          true, // Always force refresh
-        );
-
-        console.log("✅ API response received:", {
-          resultsCount: data.results?.length,
-          nextCursor: data.nextCursor,
-          hasNextPage: data.hasNextPage,
-          totalCount: data.count,
-        });
-
-        setOrderList(data);
-        setTotalCount(data.count || 0);
-
-        // Handle pagination response
-        if (
-          data.nextCursor !== undefined &&
-          data.nextCursor !== null &&
-          data.nextCursor !== ""
-        ) {
-          setNextCursor(data.nextCursor);
-          setHasNextPage(true);
-        } else {
-          setNextCursor("");
-          setHasNextPage(false);
-        }
-
-        // Alternative: Check if hasNextPage is explicitly set
-        if (data.hasNextPage !== undefined) {
-          setHasNextPage(data.hasNextPage);
-        }
-
-        // Update current cursor if not navigating back
-        if (!isNavigatingBack) {
-          setCurrentCursor(cursor);
-        }
-
-        setLastFetchTime(new Date());
-      } catch (error) {
-        console.error("❌ Failed to fetch order list:", error);
-        setErrors(error);
-      } finally {
-        setFetching(false);
-        setRefreshing(false);
-      }
-    },
-    [aid, orderManager, onUnauthorized],
-  );
-
-  // Immediate filter application function
-  const applyFilters = useCallback(() => {
-    console.log("🔄 Applying filters - resetting pagination");
-    // Reset pagination when filters change
-    setCursorHistory([]);
-    setCurrentCursor("");
-    setNextCursor("");
-    setHasNextPage(false);
-    // Clear cache and fetch fresh data
-    orderManager.clearOrdersCache();
-    fetchOrderList("");
-  }, [fetchOrderList, orderManager]);
-
-  // Refresh handler
-  const handleRefresh = () => {
-    setRefreshing(true);
-    applyFilters();
-  };
-
-  // Pagination handlers
-  const handleNextPage = () => {
-    console.log(
-      "📜 handleNextPage clicked, nextCursor:",
-      nextCursor,
-      "hasNextPage:",
-      hasNextPage,
-    );
-
-    if (hasNextPage && nextCursor) {
-      console.log("✅ Going to next page with cursor:", nextCursor);
-
-      // Push current cursor to history for "Previous" functionality
-      setCursorHistory((prev) => [...prev, currentCursor]);
-
-      // Fetch next page
-      fetchOrderList(nextCursor);
-    } else {
-      console.log("❌ No next page available");
-    }
-  };
-
-  const handlePreviousPage = () => {
-    console.log("🔙 handlePreviousPage clicked");
-
-    if (cursorHistory.length > 0) {
-      // Pop the last cursor from history
-      const newHistory = [...cursorHistory];
-      const previousCursor = newHistory.pop();
-
-      console.log(
-        "✅ Going to previous page with cursor:",
-        previousCursor || "start",
-      );
-
-      // Update history
-      setCursorHistory(newHistory);
-
-      // Fetch previous page
-      fetchOrderList(previousCursor || "", true);
-    } else {
-      console.log("❌ Already on first page");
-    }
-  };
-
-  // Handle page size change
-  const handlePageSizeChange = (e) => {
-    const newPageSize = parseInt(e.target.value);
-    console.log("📏 Page size changing from", pageSize, "to", newPageSize);
-    setPageSize(newPageSize);
-    // Apply filters immediately after state update
-    setTimeout(() => applyFilters(), 0);
-  };
-
-  // Handle sort change
-  const handleSortChange = (e) => {
-    setSortByValue(e.target.value);
-    // Apply filters immediately after state update
-    setTimeout(() => applyFilters(), 0);
-  };
-
-  // Handle status filter change
-  const handleStatusFilterChange = (e) => {
-    console.log("🎯 Status filter change:", e.target.value);
-    setStatus(parseInt(e.target.value));
-    // Apply filters immediately after state update
-    setTimeout(() => applyFilters(), 0);
-  };
-
-  // Format status helper with color
-  const formatStatus = (statusValue) => {
-    const statusOption = ORDER_STATUS_OPTIONS[statusValue];
-    if (!statusOption) return <span>Unknown ({statusValue})</span>;
-
-    return (
-      <span className={`font-semibold ${statusOption.colorClass}`}>
-        {statusOption.label}
-      </span>
-    );
-  };
-
-  // Format type helper with icon
-  const formatType = (typeValue) => {
+  // Format type helper
+  const formatType = useCallback((typeValue) => {
     const type = ORDER_TYPE_OPTIONS[typeValue];
-    if (!type) return <span>Unknown ({typeValue})</span>;
-
+    if (!type) return <span>Unknown</span>;
     const IconComponent = type.icon;
     return (
       <span className="flex items-center">
@@ -359,520 +265,506 @@ function AdminAssociateDetailOrderListPage() {
         {type.label}
       </span>
     );
-  };
+  }, []);
 
-  // Format time since last fetch
-  const formatLastFetchTime = () => {
-    if (!lastFetchTime) return null;
-    const now = DateTime.now();
-    const fetchTime = DateTime.fromJSDate(lastFetchTime);
-    const diff = now.diff(fetchTime, ["minutes", "seconds"]);
+  // Format status helper
+  const formatStatus = useCallback((statusValue) => {
+    const statusOption = ORDER_STATUS_OPTIONS[statusValue];
+    if (!statusOption) return <Badge variant="secondary" size="sm">Unknown</Badge>;
+    return (
+      <Badge variant={statusOption.variant} size="sm">
+        {statusOption.label}
+      </Badge>
+    );
+  }, []);
 
-    if (diff.minutes >= 1) {
-      return `Last updated ${Math.floor(diff.minutes)} minute${Math.floor(diff.minutes) !== 1 ? "s" : ""} ago`;
-    } else {
-      return `Last updated ${Math.floor(diff.seconds)} seconds ago`;
+  // Format time ago
+  const formatTimeAgo = useCallback((date) => {
+    if (!date) return "";
+    const seconds = Math.floor((new Date() - date) / 1000);
+    if (seconds < 60) return `${seconds} seconds ago`;
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes} minute${minutes !== 1 ? "s" : ""} ago`;
+    const hours = Math.floor(minutes / 60);
+    return `${hours} hour${hours !== 1 ? "s" : ""} ago`;
+  }, []);
+
+  // Fetch associate details
+  const fetchAssociateDetail = useCallback(async () => {
+    try {
+      const data = await associateManager.getAssociateDetail(aid, onUnauthorized);
+      if (isMountedRef.current) {
+        setAssociate(data);
+      }
+    } catch (error) {
+      if (isMountedRef.current) {
+        setErrors(error);
+      }
     }
-  };
+  }, [aid, associateManager, onUnauthorized]);
 
-  // Initial load - fetch associate detail
+  // Fetch order list
+  const fetchOrderList = useCallback(
+    async (cursor = "", isNavigatingBack = false) => {
+      const currentFilters = filtersRef.current;
+
+      setFetching(true);
+      setErrors({});
+
+      if (!isNavigatingBack) {
+        orderManager.clearOrdersCache();
+      }
+
+      try {
+        const filtersMap = new Map();
+        if (cursor) filtersMap.set("cursor", cursor);
+        filtersMap.set("page_size", currentFilters.pageSize.toString());
+        filtersMap.set("associate_id", aid);
+
+        const sortArray = currentFilters.sortByValue.split(",");
+        filtersMap.set("sort_field", sortArray[0]);
+        filtersMap.set("sort_order", sortArray[1]);
+
+        if (currentFilters.status !== 0) {
+          filtersMap.set("status", currentFilters.status.toString());
+        }
+
+        const data = await orderManager.getOrdersWithFiltersMap(
+          filtersMap,
+          onUnauthorized,
+          true,
+        );
+
+        if (!isMountedRef.current) return;
+
+        setOrderList(data.results || []);
+        setTotalCount(data.count || 0);
+
+        if (data.nextCursor) {
+          setNextCursor(data.nextCursor);
+          setHasNextPage(true);
+        } else {
+          setNextCursor("");
+          setHasNextPage(false);
+        }
+
+        if (data.hasNextPage !== undefined) {
+          setHasNextPage(data.hasNextPage);
+        }
+
+        if (!isNavigatingBack) {
+          setCurrentCursor(cursor);
+        }
+
+        setLastFetchTime(new Date());
+      } catch (error) {
+        if (isMountedRef.current) {
+          setErrors(error);
+        }
+      } finally {
+        if (isMountedRef.current) {
+          setFetching(false);
+          setRefreshing(false);
+        }
+      }
+    },
+    [aid, orderManager, onUnauthorized],
+  );
+
+  // Apply filters and reset pagination
+  const applyFilters = useCallback(() => {
+    setCursorHistory([]);
+    setCurrentCursor("");
+    setNextCursor("");
+    setHasNextPage(false);
+    orderManager.clearOrdersCache();
+    fetchOrderList("");
+  }, [fetchOrderList, orderManager]);
+
+  // Handle refresh
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    applyFilters();
+  }, [applyFilters]);
+
+  // Pagination handlers
+  const handleNextPage = useCallback(() => {
+    if (hasNextPage && nextCursor) {
+      setCursorHistory((prev) => [...prev, currentCursor]);
+      fetchOrderList(nextCursor);
+    }
+  }, [hasNextPage, nextCursor, currentCursor, fetchOrderList]);
+
+  const handlePreviousPage = useCallback(() => {
+    if (cursorHistory.length > 0) {
+      const newHistory = [...cursorHistory];
+      const previousCursor = newHistory.pop();
+      setCursorHistory(newHistory);
+      fetchOrderList(previousCursor || "", true);
+    }
+  }, [cursorHistory, fetchOrderList]);
+
+  // Filter change handlers
+  const handleStatusFilterChange = useCallback((e) => {
+    setStatus(parseInt(e.target.value));
+    setTimeout(() => applyFilters(), 0);
+  }, [applyFilters]);
+
+  const handleSortChange = useCallback((e) => {
+    setSortByValue(e.target.value);
+    setTimeout(() => applyFilters(), 0);
+  }, [applyFilters]);
+
+  const handlePageSizeChange = useCallback((e) => {
+    setPageSize(parseInt(e.target.value));
+    setTimeout(() => applyFilters(), 0);
+  }, [applyFilters]);
+
+  // Check authentication
+  useEffect(() => {
+    if (!authManager.isAuthenticated()) {
+      navigate("/login");
+    }
+  }, [authManager, navigate]);
+
+  // Initial load
   useEffect(() => {
     window.scrollTo(0, 0);
     fetchAssociateDetail();
-    // Clear cache on mount to ensure fresh data
     orderManager.clearOrdersCache();
-  }, [aid]);
+  }, [aid, fetchAssociateDetail, orderManager]);
 
-  // Initial data load - only on mount
+  // Fetch orders after associate loads
   useEffect(() => {
-    if (aid) {
-      console.log("🚀 Initial mount - loading first page");
+    if (aid && authManager.isAuthenticated()) {
       fetchOrderList("");
     }
-  }, [aid]); // Only depend on aid, not fetchOrderList
+  }, [aid, authManager, fetchOrderList]);
 
-  // Page size options
-  const pageSizeOptions = [
-    { value: 10, label: "10" },
-    { value: 25, label: "25" },
-    { value: 50, label: "50" },
-    { value: 100, label: "100" },
-  ];
+  // Build breadcrumb items
+  const breadcrumbItems = useMemo(
+    () => [
+      { label: "Dashboard", to: "/admin/dashboard", icon: ChartBarIcon },
+      { label: "Associates", to: "/admin/associates", icon: UserGroupIcon },
+      { label: "Detail", icon: InformationCircleIcon, isActive: true },
+    ],
+    [],
+  );
+
+  // Build header config
+  const headerConfig = useMemo(
+    () => ({
+      title: associate
+        ? `${associate.firstName} ${associate.lastName}`
+        : "Associate",
+      subtitle: "View and manage associate orders",
+      icon: UserIcon,
+    }),
+    [associate],
+  );
+
+  // Build tab items
+  const tabItems = useMemo(
+    () => [
+      { label: "Summary", to: `/admin/associate/${aid}` },
+      { label: "Detail", to: `/admin/associate/${aid}/detail` },
+      { label: "Orders", to: `/admin/associate/${aid}/orders`, isActive: true },
+      { label: "Comments", to: `/admin/associate/${aid}/comments` },
+      { label: "Attachments", to: `/admin/associate/${aid}/attachments` },
+      { label: "More", to: `/admin/associate/${aid}/more`, icon: EllipsisHorizontalIcon },
+    ],
+    [aid],
+  );
+
+  // Build alerts
+  const alerts = useMemo(() => {
+    const alertsList = {};
+    if (associate?.status === ASSOCIATE_STATUS_ARCHIVED) {
+      alertsList.archived = {
+        type: "info",
+        message: "This associate is archived",
+        icon: ArchiveBoxIcon,
+      };
+    }
+    return alertsList;
+  }, [associate]);
 
   // Calculate pagination info
   const hasPreviousPage = cursorHistory.length > 0;
   const currentPageNumber = cursorHistory.length + 1;
 
-  if (isFetching && !associate.id) {
-    return <Spinner text="Loading associate orders..." />;
+  // Build field sections with orders content
+  const fieldSections = useMemo(() => {
+    return [
+      {
+        column: "primary",
+        className: "mb-0",
+        component: (
+          <div>
+            {/* Header with title and refresh */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+              <div className="flex items-center gap-4">
+                <h2 className={`text-xl font-semibold ${getThemeClasses("text-primary")} flex items-center`}>
+                  <WrenchScrewdriverIcon className={`w-6 h-6 mr-2 ${getThemeClasses("text-accent")}`} />
+                  Orders
+                </h2>
+                {lastFetchTime && (
+                  <span className={`text-sm ${getThemeClasses("text-muted")} flex items-center`}>
+                    <ClockIcon className="w-4 h-4 mr-1" />
+                    {formatTimeAgo(lastFetchTime)}
+                  </span>
+                )}
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleRefresh}
+                disabled={isRefreshing || isFetching}
+                loading={isRefreshing}
+                icon={ArrowPathIcon}
+              >
+                {isRefreshing ? "Refreshing..." : "Refresh"}
+              </Button>
+            </div>
+
+            {/* Filters */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div>
+                <label className={`block text-sm font-medium ${getThemeClasses("text-secondary")} mb-2`}>
+                  Status Filter:
+                </label>
+                <select
+                  value={status}
+                  onChange={handleStatusFilterChange}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value={0}>All Statuses</option>
+                  {Object.entries(ORDER_STATUS_OPTIONS).map(([value, option]) => (
+                    <option key={value} value={value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium ${getThemeClasses("text-secondary")} mb-2`}>
+                  Sort By:
+                </label>
+                <select
+                  value={sortByValue}
+                  onChange={handleSortChange}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                >
+                  {SORT_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className={`block text-sm font-medium ${getThemeClasses("text-secondary")} mb-2`}>
+                  Items per page:
+                </label>
+                <select
+                  value={pageSize}
+                  onChange={handlePageSizeChange}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
+                >
+                  {PAGE_SIZE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Results Count */}
+            <div className={`mb-6 ${getThemeClasses("text-secondary")}`}>
+              Showing{" "}
+              <strong className={getThemeClasses("text-primary")}>
+                {orderList.length}
+              </strong>{" "}
+              orders
+              {totalCount > 0 && ` (Total: ${totalCount})`}
+              {status !== 0 && " (filtered by status)"}
+            </div>
+
+            {/* Orders Content */}
+            {isFetching || isRefreshing ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <Spinner size="lg" />
+                  <p className="mt-4 text-gray-600">
+                    {isRefreshing ? "Refreshing orders..." : "Loading orders..."}
+                  </p>
+                </div>
+              </div>
+            ) : orderList.length > 0 ? (
+              <>
+                {/* Desktop Table */}
+                <div className="hidden md:block overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job #</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Customer</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Assigned</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Start</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Completion</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Financial</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {orderList.map((order, index) => (
+                        <OrderRow
+                          key={order.wjid || index}
+                          order={order}
+                          formatType={formatType}
+                          formatStatus={formatStatus}
+                        />
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile Cards */}
+                <div className="md:hidden">
+                  {orderList.map((order, index) => (
+                    <OrderCard
+                      key={order.wjid || index}
+                      order={order}
+                      formatType={formatType}
+                      formatStatus={formatStatus}
+                    />
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                {(hasPreviousPage || hasNextPage) && (
+                  <div className="flex justify-between items-center pt-6 border-t border-gray-200 mt-6">
+                    <div className="flex items-center text-sm text-gray-700">
+                      Page {currentPageNumber}
+                      {totalCount > 0 && (
+                        <span className="ml-2 text-gray-500">(Total: {totalCount} orders)</span>
+                      )}
+                    </div>
+                    <div className="flex gap-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handlePreviousPage}
+                        disabled={!hasPreviousPage}
+                        icon={ChevronLeftIcon}
+                      >
+                        Previous
+                      </Button>
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={handleNextPage}
+                        disabled={!hasNextPage}
+                      >
+                        Next
+                        <ChevronRightIcon className="w-4 h-4 ml-1" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="text-center py-16 bg-gray-50 rounded-lg">
+                <WrenchScrewdriverIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <h3 className={`text-lg font-medium ${getThemeClasses("text-primary")} mb-2`}>
+                  No Orders Found
+                </h3>
+                <p className="text-gray-500">
+                  {status !== 0
+                    ? "No orders match the selected status filter."
+                    : "This associate does not have any orders yet."}
+                </p>
+              </div>
+            )}
+
+            {/* Bottom Actions */}
+            <div className="flex justify-start mt-8 pt-6 border-t border-gray-200">
+              <Button
+                variant="outline"
+                onClick={() => navigate("/admin/associates")}
+                icon={ChevronLeftIcon}
+              >
+                Back to Associates
+              </Button>
+            </div>
+          </div>
+        ),
+      },
+    ];
+  }, [
+    orderList,
+    totalCount,
+    isFetching,
+    isRefreshing,
+    lastFetchTime,
+    status,
+    sortByValue,
+    pageSize,
+    hasPreviousPage,
+    hasNextPage,
+    currentPageNumber,
+    getThemeClasses,
+    formatTimeAgo,
+    formatType,
+    formatStatus,
+    handleRefresh,
+    handleStatusFilterChange,
+    handleSortChange,
+    handlePageSizeChange,
+    handlePreviousPage,
+    handleNextPage,
+    navigate,
+  ]);
+
+  // Error close handler
+  const handleErrorClose = useCallback(() => {
+    setErrors({});
+  }, []);
+
+  // Loading state
+  if (isFetching && !associate) {
+    return (
+      <UIXThemeProvider>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <Spinner size="lg" />
+          </div>
+        </div>
+      </UIXThemeProvider>
+    );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Breadcrumb */}
-      <Breadcrumb items={breadcrumbItems} />
-
-      {/* Page Title */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-              <UserGroupIcon className="w-8 h-8 mr-3 text-blue-600" />
-              Associate
-            </h1>
-            <p className="mt-1 text-sm text-gray-600 flex items-center">
-              <InformationCircleIcon className="w-4 h-4 mr-1" />
-              View and manage orders
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Status Alerts */}
-      {associate && associate.status === 2 && (
-        <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg flex items-center">
-          <ArchiveBoxIcon className="w-5 h-5 mr-2" />
-          This associate is archived
-        </div>
-      )}
-
-      {/* Error Display */}
-      {errors &&
-        typeof errors === "object" &&
-        Object.keys(errors).length > 0 && (
-          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            <div className="flex items-start">
-              <ExclamationTriangleIcon className="w-5 h-5 mr-2 mt-0.5" />
-              <div className="flex-1">
-                <strong>Error:</strong>
-                <ul className="mt-2 list-disc list-inside">
-                  {Object.entries(errors).map(([key, value]) => (
-                    <li key={key}>
-                      {key}: {value}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <button
-                onClick={() => setErrors({})}
-                className="text-red-700 hover:text-red-900 ml-3"
-              >
-                ×
-              </button>
-            </div>
-          </div>
-        )}
-
-      {/* Main Content */}
-      <div className="bg-white shadow-sm rounded-lg">
-        {associate && (
-          <>
-            {/* Header with Title and Refresh Button */}
-            <div className="px-6 py-5 border-b border-gray-200">
-              <div className="flex justify-between items-center flex-wrap gap-4">
-                <div className="flex items-center gap-4">
-                  <h2 className="text-2xl font-semibold text-gray-900 flex items-center">
-                    <WrenchScrewdriverIcon className="w-7 h-7 mr-2 text-blue-600" />
-                    Orders
-                  </h2>
-                  {lastFetchTime && (
-                    <span className="text-sm text-gray-500 flex items-center">
-                      <ClockIcon className="w-4 h-4 mr-1" />
-                      {formatLastFetchTime()}
-                    </span>
-                  )}
-                </div>
-                <button
-                  onClick={handleRefresh}
-                  disabled={isRefreshing}
-                  className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors disabled:opacity-50"
-                >
-                  <ArrowPathIcon
-                    className={`w-5 h-5 mr-2 ${isRefreshing ? "animate-spin" : ""}`}
-                  />
-                  {isRefreshing ? "Refreshing..." : "Refresh"}
-                </button>
-              </div>
-            </div>
-
-            {/* Tab Navigation */}
-            <div className="px-6 border-b border-gray-200">
-              <nav className="-mb-px flex space-x-8">
-                <Link
-                  to={`/admin/associate/${aid}`}
-                  className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                >
-                  Summary
-                </Link>
-                <Link
-                  to={`/admin/associate/${aid}/detail`}
-                  className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                >
-                  Detail
-                </Link>
-                <div className="border-b-2 border-blue-600 py-4 px-1 text-base font-medium text-blue-600">
-                  Orders
-                </div>
-                <Link
-                  to={`/admin/associate/${aid}/comments`}
-                  className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                >
-                  Comments
-                </Link>
-                <Link
-                  to={`/admin/associate/${aid}/attachments`}
-                  className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                >
-                  Attachments
-                </Link>
-                <Link
-                  to={`/admin/associate/${aid}/more`}
-                  className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center"
-                >
-                  More
-                  <EllipsisHorizontalIcon className="w-5 h-5 ml-1" />
-                </Link>
-              </nav>
-            </div>
-
-            <div className="p-6">
-              {/* Filters Section */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Status Filter:
-                  </label>
-                  <select
-                    value={status}
-                    onChange={handleStatusFilterChange}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value={0}>All Statuses</option>
-                    {Object.entries(ORDER_STATUS_OPTIONS).map(
-                      ([value, option]) => (
-                        <option key={value} value={value}>
-                          {option.label}
-                        </option>
-                      ),
-                    )}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Sort By:
-                  </label>
-                  <select
-                    value={sortByValue}
-                    onChange={handleSortChange}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="assignment_date,DESC">
-                      Assignment Date (Newest)
-                    </option>
-                    <option value="assignment_date,ASC">
-                      Assignment Date (Oldest)
-                    </option>
-                    <option value="start_date,DESC">Start Date (Newest)</option>
-                    <option value="start_date,ASC">Start Date (Oldest)</option>
-                    <option value="created_at,DESC">
-                      Created Date (Newest)
-                    </option>
-                    <option value="created_at,ASC">
-                      Created Date (Oldest)
-                    </option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Items per page:
-                  </label>
-                  <select
-                    value={pageSize}
-                    onChange={handlePageSizeChange}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    {pageSizeOptions.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* Results Count */}
-              <div className="mb-6 text-gray-600">
-                Showing{" "}
-                <strong className="text-gray-900">
-                  {orderList.results ? orderList.results.length : 0}
-                </strong>{" "}
-                orders
-                {totalCount > 0 && ` (Total: ${totalCount})`}
-                {status !== 0 && ` (filtered by status)`}
-              </div>
-
-              {/* Orders List */}
-              {isFetching || isRefreshing ? (
-                <Spinner text={isRefreshing ? "Refreshing orders..." : "Loading orders..."} />
-              ) : orderList &&
-                orderList.results &&
-                (orderList.results.length > 0 || cursorHistory.length > 0) ? (
-                <>
-                  {/* Orders Table - Desktop */}
-                  <div className="hidden md:block overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Type
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Job #
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Customer
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Assigned
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Start
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Completion
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Status
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Financial
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {orderList.results.map((order, index) => (
-                          <tr
-                            key={order.wjid || index}
-                            className={
-                              index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                            }
-                          >
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {formatType(order.type)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-900">
-                              {order.wjid}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              <Link
-                                to={`/admin/customer/${order.customerId}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-blue-600 hover:text-blue-800 inline-flex items-center"
-                              >
-                                {order.customerName}
-                                <ArrowTopRightOnSquareIcon className="w-3 h-3 ml-1" />
-                              </Link>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {formatDateForDisplay(order.assignmentDate)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {formatDateForDisplay(order.startDate)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {formatDateForDisplay(order.completionDate)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm">
-                              {formatStatus(order.status)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              <Link
-                                to={`/admin/financial/${order.wjid}`}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="text-blue-600 hover:text-blue-800 inline-flex items-center"
-                              >
-                                View
-                                <ArrowTopRightOnSquareIcon className="w-3 h-3 ml-1" />
-                              </Link>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              <Link
-                                to={`/admin/order/${order.wjid}`}
-                                className="text-blue-600 hover:text-blue-800 inline-flex items-center"
-                              >
-                                View
-                                <ArrowRightIcon className="w-3 h-3 ml-1" />
-                              </Link>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-
-                  {/* Orders List - Mobile */}
-                  <div className="md:hidden space-y-4">
-                    {orderList.results.map((order, index) => (
-                      <div
-                        key={order.wjid || index}
-                        className="bg-gray-50 rounded-lg border border-gray-200 p-4"
-                      >
-                        <div className="mb-3">
-                          <strong className="text-gray-700">Type:</strong>{" "}
-                          {formatType(order.type)}
-                        </div>
-                        <div className="mb-3">
-                          <strong className="text-gray-700">Job #:</strong>{" "}
-                          <span className="font-mono">{order.wjid}</span>
-                        </div>
-                        <div className="mb-3">
-                          <strong className="text-gray-700">Customer:</strong>{" "}
-                          <Link
-                            to={`/admin/customer/${order.customerId}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-blue-600 hover:text-blue-800 inline-flex items-center"
-                          >
-                            {order.customerName}
-                            <ArrowTopRightOnSquareIcon className="w-3 h-3 ml-1" />
-                          </Link>
-                        </div>
-                        <div className="mb-3">
-                          <strong className="text-gray-700">Assigned:</strong>{" "}
-                          {formatDateForDisplay(order.assignmentDate)}
-                        </div>
-                        <div className="mb-3">
-                          <strong className="text-gray-700">Start:</strong>{" "}
-                          {formatDateForDisplay(order.startDate)}
-                        </div>
-                        <div className="mb-3">
-                          <strong className="text-gray-700">Completion:</strong>{" "}
-                          {formatDateForDisplay(order.completionDate)}
-                        </div>
-                        <div className="mb-3">
-                          <strong className="text-gray-700">Status:</strong>{" "}
-                          {formatStatus(order.status)}
-                        </div>
-                        <div className="mb-4">
-                          <strong className="text-gray-700">Financial:</strong>{" "}
-                          <Link
-                            to={`/admin/financial/${order.wjid}`}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-blue-600 hover:text-blue-800 inline-flex items-center"
-                          >
-                            View
-                            <ArrowTopRightOnSquareIcon className="w-3 h-3 ml-1" />
-                          </Link>
-                        </div>
-                        <Link to={`/admin/order/${order.wjid}`}>
-                          <button className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-                            View Order
-                            <ArrowRightIcon className="w-4 h-4 ml-2" />
-                          </button>
-                        </Link>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Pagination Controls */}
-                  {(hasPreviousPage || hasNextPage) && (
-                    <div className="flex justify-between items-center pt-6 border-t border-gray-200 mt-6">
-                      <div className="flex items-center text-sm text-gray-700">
-                        Page {currentPageNumber}
-                        {totalCount > 0 && (
-                          <span className="ml-2 text-gray-500">
-                            (Total: {totalCount} orders)
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex gap-3">
-                        {hasPreviousPage && (
-                          <button
-                            onClick={handlePreviousPage}
-                            className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
-                          >
-                            <ChevronLeftIcon className="w-4 h-4 mr-2" />
-                            Previous
-                          </button>
-                        )}
-                        {hasNextPage && (
-                          <button
-                            onClick={handleNextPage}
-                            className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors"
-                          >
-                            Next
-                            <ChevronRightIcon className="w-4 h-4 ml-2" />
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </>
-              ) : (
-                // No orders message
-                <div className="text-center py-16 bg-gray-50 rounded-lg">
-                  <WrenchScrewdriverIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    No Orders Found
-                  </h3>
-                  <p className="text-gray-500">
-                    {status !== 0
-                      ? "No orders match the selected status filter."
-                      : "This associate does not have any orders yet."}
-                  </p>
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="flex justify-start mt-8 pt-6 border-t border-gray-200">
-                <Link to="/admin/associates">
-                  <button className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                    <ChevronLeftIcon className="w-5 h-5 mr-2" />
-                    Back to Associates
-                  </button>
-                </Link>
-              </div>
-            </div>
-          </>
-        )}
-
-        {!associate && !isFetching && (
-          <div className="px-6 py-16 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-100 rounded-full mb-4">
-              <UserGroupIcon className="w-8 h-8 text-gray-400" />
-            </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Associate Not Found
-            </h3>
-            <p className="text-gray-500 mb-6">
-              The associate you're looking for doesn't exist or you don't have
-              permission to view it.
-            </p>
-            <Link to="/admin/associates">
-              <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-                <ChevronLeftIcon className="w-4 h-4 mr-2" />
-                Back to Associates
-              </button>
-            </Link>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-export default function AdminAssociateDetailOrderListPageWithProvider() {
-  return (
     <UIXThemeProvider>
-      <AdminAssociateDetailOrderListPage />
+      <DetailLiteView
+        entityData={associate}
+        breadcrumbItems={breadcrumbItems}
+        headerConfig={headerConfig}
+        fieldSections={fieldSections}
+        tabs={tabItems}
+        alerts={alerts}
+        onUnauthorized={onUnauthorized}
+        isLoading={isFetching && !associate}
+        error={errors?.message}
+        onErrorClose={handleErrorClose}
+      />
     </UIXThemeProvider>
   );
-}
+});
+
+export default AdminAssociateDetailOrderListPage;

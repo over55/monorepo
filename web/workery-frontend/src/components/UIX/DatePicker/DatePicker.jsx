@@ -157,9 +157,17 @@ const DatePicker = memo(
       return new Date();
     });
 
+    // State for editable year and month
+    const [isEditingYear, setIsEditingYear] = useState(false);
+    const [yearInputValue, setYearInputValue] = useState("");
+    const [isEditingMonth, setIsEditingMonth] = useState(false);
+
     const dropdownRef = useRef(null);
     const inputRef = useRef(null);
     const portalContainerRef = useRef(null);
+    const yearInputRef = useRef(null);
+    // Ref to track the latest currentMonth for immediate access during blur->click sequences
+    const currentMonthRef = useRef(currentMonth);
 
     // Parse the selected date from value prop
     const selectedDate = useMemo(() => {
@@ -255,7 +263,14 @@ const DatePicker = memo(
     // Memoized event handlers
     const handleDateSelect = useCallback(
       (date) => {
-        const formattedDate = formatInputDate(date);
+        // Use the ref to get the latest month/year in case blur just updated it
+        const latestMonth = currentMonthRef.current;
+        const correctedDate = new Date(
+          latestMonth.getFullYear(),
+          latestMonth.getMonth(),
+          date.getDate()
+        );
+        const formattedDate = formatInputDate(correctedDate);
         onChange(formattedDate);
         setIsOpen(false);
       },
@@ -272,8 +287,60 @@ const DatePicker = memo(
       setCurrentMonth((prev) => {
         const newMonth = new Date(prev);
         newMonth.setMonth(prev.getMonth() + direction);
+        // Keep ref in sync
+        currentMonthRef.current = newMonth;
         return newMonth;
       });
+    }, []);
+
+    // Year editing handlers
+    const handleYearClick = useCallback(() => {
+      setYearInputValue(String(currentMonth.getFullYear()));
+      setIsEditingYear(true);
+      setIsEditingMonth(false);
+      // Focus the input after render
+      setTimeout(() => yearInputRef.current?.focus(), 0);
+    }, [currentMonth]);
+
+    const handleYearInputChange = useCallback((e) => {
+      // Only allow digits
+      const val = e.target.value.replace(/\D/g, "").slice(0, 4);
+      setYearInputValue(val);
+    }, []);
+
+    const handleYearInputBlur = useCallback(() => {
+      const year = parseInt(yearInputValue, 10);
+      if (year && year >= 1900 && year <= 2100) {
+        const newMonth = new Date(year, currentMonth.getMonth(), 1);
+        // Update ref immediately so handleDateSelect can access it before re-render
+        currentMonthRef.current = newMonth;
+        setCurrentMonth(newMonth);
+      }
+      setIsEditingYear(false);
+    }, [yearInputValue, currentMonth]);
+
+    const handleYearInputKeyDown = useCallback((e) => {
+      if (e.key === "Enter") {
+        handleYearInputBlur();
+      } else if (e.key === "Escape") {
+        setIsEditingYear(false);
+      }
+    }, [handleYearInputBlur]);
+
+    // Month editing handlers
+    const handleMonthClick = useCallback(() => {
+      setIsEditingMonth(true);
+      setIsEditingYear(false);
+    }, []);
+
+    const handleMonthSelect = useCallback((monthIndex) => {
+      setCurrentMonth((prev) => {
+        const newMonth = new Date(prev.getFullYear(), monthIndex, 1);
+        // Keep ref in sync
+        currentMonthRef.current = newMonth;
+        return newMonth;
+      });
+      setIsEditingMonth(false);
     }, []);
 
     const handleToday = useCallback(() => {
@@ -383,10 +450,38 @@ const DatePicker = memo(
                 >
                   <ChevronLeftIcon className={`h-5 w-5 ${themeClasses.textSecondary}`} />
                 </button>
-                <h3 className={`text-lg font-semibold ${themeClasses.textPrimary}`}>
-                  {MONTH_NAMES[currentMonth.getMonth()]}{" "}
-                  {currentMonth.getFullYear()}
-                </h3>
+                <div className="flex items-center gap-1">
+                  {/* Clickable Month */}
+                  <button
+                    type="button"
+                    onClick={handleMonthClick}
+                    className={`text-lg font-semibold ${themeClasses.textPrimary} hover:underline cursor-pointer px-1`}
+                  >
+                    {MONTH_NAMES[currentMonth.getMonth()]}
+                  </button>
+                  {/* Editable Year */}
+                  {isEditingYear ? (
+                    <input
+                      ref={yearInputRef}
+                      type="text"
+                      inputMode="numeric"
+                      value={yearInputValue}
+                      onChange={handleYearInputChange}
+                      onBlur={handleYearInputBlur}
+                      onKeyDown={handleYearInputKeyDown}
+                      className={`w-16 text-lg font-semibold ${themeClasses.textPrimary} ${themeClasses.bgCard} border ${themeClasses.borderMedium} rounded px-1 text-center focus:outline-none focus:ring-2 focus:ring-red-500`}
+                      maxLength={4}
+                    />
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={handleYearClick}
+                      className={`text-lg font-semibold ${themeClasses.textPrimary} hover:underline cursor-pointer px-1`}
+                    >
+                      {currentMonth.getFullYear()}
+                    </button>
+                  )}
+                </div>
                 <button
                   type="button"
                   onClick={() => navigateMonth(1)}
@@ -396,6 +491,27 @@ const DatePicker = memo(
                   <ChevronRightIcon className={`h-5 w-5 ${themeClasses.textSecondary}`} />
                 </button>
               </div>
+
+              {/* Month Selection Grid (shown when editing month) */}
+              {isEditingMonth && (
+                <div className="grid grid-cols-3 gap-2 mb-4 p-2 border rounded-lg">
+                  {MONTH_NAMES.map((month, index) => (
+                    <button
+                      key={month}
+                      type="button"
+                      onClick={() => handleMonthSelect(index)}
+                      className={`py-2 px-1 text-sm rounded-lg transition-colors touch-manipulation
+                        ${currentMonth.getMonth() === index
+                          ? themeClasses.daySelected
+                          : `${themeClasses.textPrimary} ${themeClasses.hoverBgLight}`
+                        }`}
+                      style={{ WebkitTapHighlightColor: 'transparent' }}
+                    >
+                      {month.slice(0, 3)}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {/* Day Headers */}
               <div className="grid grid-cols-7 gap-1 mb-2">

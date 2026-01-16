@@ -24,7 +24,7 @@ import {
   ORDER_STATUS_CANCELLED,
   ORDER_STATUS_DECLINED,
 } from "../../../../../../constants/Order";
-import { EntityCommentsPage } from "../../../../../../components/UIX";
+import { EntityCommentsPage, UIXThemeProvider } from "../../../../../../components/UIX";
 
 // Constants for comment belonging types (from backend)
 const BELONGS_TO_ORDER = 3;
@@ -146,7 +146,11 @@ function AdminOrderDetailCommentListPage() {
     getIncidentPath: (entityId, incidentId) => `/admin/order/${entityId}/more/incident/${incidentId}`,
   }), [orderManager, commentManager]);
 
-  return <EntityCommentsPage config={config} />;
+  return (
+    <UIXThemeProvider>
+      <EntityCommentsPage config={config} />
+    </UIXThemeProvider>
+  );
 }
 
 export default AdminOrderDetailCommentListPage;

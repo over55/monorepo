@@ -1,5 +1,6 @@
 // File Path: web/workery-frontend/src/pages/Admin/Order/Detail/More/Transfer/Step4Page.jsx
 // UIX Upgraded - Uses UIX primitives (Spinner, Breadcrumb, UIXThemeProvider, useUIXTheme)
+// @uix-page: OrderTransferWizardStep4
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate, useParams, useSearchParams } from "react-router";

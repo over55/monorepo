@@ -1,4 +1,5 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Financial/Detail/Page.jsx
+// @uix-page: FinancialDetailPage
 // UIX Upgraded - Uses UIX primitives (Spinner, Breadcrumb)
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";

@@ -15,7 +15,7 @@ const CheckboxGroup = memo(
     required = false,
     error,
     options = [],
-    value = {},
+    value = [],  // Supports both array [] and object {} formats
     onChange,
     disabled = false,
     className = "",
@@ -74,18 +74,43 @@ const CheckboxGroup = memo(
       [size],
     );
 
-    // Memoize the change handler
+    // Detect if value is an array (for array-based value format) or object
+    const isArrayValue = Array.isArray(value);
+
+    // Helper to check if an option is selected (supports both array and object formats)
+    const isOptionChecked = useCallback(
+      (optionKey) => {
+        if (isArrayValue) {
+          return value.includes(optionKey) || value.includes(String(optionKey));
+        }
+        return !!value[optionKey];
+      },
+      [value, isArrayValue],
+    );
+
+    // Memoize the change handler (supports both array and object formats)
     const handleChange = useCallback(
       (optionKey) => {
         if (disabled || !onChange) return;
 
-        const newValue = {
-          ...value,
-          [optionKey]: !value[optionKey],
-        };
-        onChange(newValue);
+        if (isArrayValue) {
+          // Array format: add/remove from array
+          const isCurrentlyChecked = value.includes(optionKey) || value.includes(String(optionKey));
+          if (isCurrentlyChecked) {
+            onChange(value.filter(v => v !== optionKey && v !== String(optionKey)));
+          } else {
+            onChange([...value, optionKey]);
+          }
+        } else {
+          // Object format: toggle boolean
+          const newValue = {
+            ...value,
+            [optionKey]: !value[optionKey],
+          };
+          onChange(newValue);
+        }
       },
-      [disabled, onChange, value],
+      [disabled, onChange, value, isArrayValue],
     );
 
     // Memoize label classes
@@ -95,7 +120,7 @@ const CheckboxGroup = memo(
 
     // Memoize checkbox input classes with mobile optimizations
     const checkboxInputClasses = useMemo(() => {
-      return `mt-1 ${sizeClasses.checkbox} ${themeClasses.checkboxColor} ${themeClasses.bgCheckbox} ${themeClasses.borderMedium} rounded ${themeClasses.checkboxFocus} transition-colors duration-200 touch-manipulation`;
+      return `mt-1 ${sizeClasses.checkbox} ${themeClasses.checkboxColor} ${themeClasses.bgCheckbox} ${themeClasses.borderMedium} rounded ${themeClasses.checkboxFocus} transition-colors duration-200 touch-manipulation cursor-pointer`;
     }, [sizeClasses.checkbox, themeClasses]);
 
     // Memoize the error icon component
@@ -144,7 +169,9 @@ const CheckboxGroup = memo(
     // Memoize option rendering function
     const renderOption = useCallback(
       (option) => {
-        const isChecked = !!value[option.key];
+        // Support both 'key' and 'value' properties for option identifier
+        const optionKey = option.key !== undefined ? option.key : option.value;
+        const isChecked = isOptionChecked(optionKey);
 
         // Build container classes with mobile optimizations
         const containerClasses = [
@@ -177,17 +204,17 @@ const CheckboxGroup = memo(
         }
 
         return (
-          <label key={option.key} className={containerClasses.join(" ")} style={{ WebkitTapHighlightColor: 'transparent' }}>
+          <label key={optionKey} className={containerClasses.join(" ")} style={{ WebkitTapHighlightColor: 'transparent' }}>
             <input
               type="checkbox"
               checked={isChecked}
-              onChange={() => handleChange(option.key)}
+              onChange={() => handleChange(optionKey)}
               disabled={disabled}
               className={checkboxInputClasses}
               aria-checked={isChecked}
               aria-disabled={disabled}
               aria-describedby={
-                option.description ? `${option.key}-description` : undefined
+                option.description ? `${optionKey}-description` : undefined
               }
             />
             <div className="ml-4">
@@ -205,7 +232,7 @@ const CheckboxGroup = memo(
               </div>
               {option.description && (
                 <p
-                  id={`${option.key}-description`}
+                  id={`${optionKey}-description`}
                   className={`${sizeClasses.description} ${themeClasses.textMuted} mt-1`}
                 >
                   {option.description}
@@ -215,7 +242,7 @@ const CheckboxGroup = memo(
           </label>
         );
       },
-      [value, handleChange, disabled, sizeClasses, checkboxInputClasses, themeClasses],
+      [isOptionChecked, handleChange, disabled, sizeClasses, checkboxInputClasses, themeClasses],
     );
 
     // Memoize the options list
@@ -239,21 +266,33 @@ const CheckboxGroup = memo(
   (prevProps, nextProps) => {
     // Custom comparison for memo optimization
     // Only re-render when these specific props change
-    return (
-      prevProps.label === nextProps.label &&
-      prevProps.description === nextProps.description &&
-      prevProps.required === nextProps.required &&
-      prevProps.error === nextProps.error &&
-      prevProps.disabled === nextProps.disabled &&
-      prevProps.className === nextProps.className &&
-      prevProps.size === nextProps.size &&
-      prevProps.onChange === nextProps.onChange &&
-      // Reference comparison for options (may contain complex data)
-      prevProps.options === nextProps.options &&
-      prevProps.options?.length === nextProps.options?.length &&
-      // Reference comparison for value
-      prevProps.value === nextProps.value
-    );
+    if (
+      prevProps.label !== nextProps.label ||
+      prevProps.description !== nextProps.description ||
+      prevProps.required !== nextProps.required ||
+      prevProps.error !== nextProps.error ||
+      prevProps.disabled !== nextProps.disabled ||
+      prevProps.className !== nextProps.className ||
+      prevProps.size !== nextProps.size ||
+      prevProps.onChange !== nextProps.onChange ||
+      prevProps.options !== nextProps.options ||
+      prevProps.options?.length !== nextProps.options?.length
+    ) {
+      return false;
+    }
+
+    // Deep comparison for value (supports both array and object)
+    const prevValue = prevProps.value;
+    const nextValue = nextProps.value;
+
+    if (prevValue === nextValue) return true;
+
+    if (Array.isArray(prevValue) && Array.isArray(nextValue)) {
+      if (prevValue.length !== nextValue.length) return false;
+      return prevValue.every((v, i) => v === nextValue[i]);
+    }
+
+    return false;
   },
 );
 

@@ -38,7 +38,7 @@ const DETAIL_FIELDS = [
     name: "associateInfo",
     label: "Associate",
     type: "custom",
-    render: (value, item) => (
+    render: (item) => (
       <Link
         to={`/admin/associate/${item.associateId}`}
         target="_blank"
@@ -53,8 +53,8 @@ const DETAIL_FIELDS = [
   {
     name: "reason",
     label: "Reason for Absence",
-    render: (value, item) => {
-      if (value === 1) {
+    render: (item) => {
+      if (item.reason === 1) {
         return (
           <span>
             {REASON_MAP[1]}
@@ -66,16 +66,16 @@ const DETAIL_FIELDS = [
           </span>
         );
       }
-      return REASON_MAP[value] || "Unknown";
+      return REASON_MAP[item.reason] || "Unknown";
     },
   },
   {
     name: "startDate",
     label: "Start Date",
-    render: (value) => (
+    render: (item) => (
       <span className="flex items-center">
         <CalendarIcon className="w-4 h-4 mr-2 text-gray-400" />
-        {formatDateForDisplay(value)}
+        {formatDateForDisplay(item.startDate)}
       </span>
     ),
   },
@@ -83,7 +83,7 @@ const DETAIL_FIELDS = [
     name: "untilInfo",
     label: "Until",
     type: "custom",
-    render: (value, item) => {
+    render: (item) => {
       if (item.untilFurtherNotice === 1) {
         return (
           <span className="text-amber-600 font-semibold flex items-center">

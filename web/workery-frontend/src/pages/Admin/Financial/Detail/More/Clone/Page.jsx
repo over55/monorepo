@@ -1,4 +1,5 @@
 // File Path: web/workery-frontend/src/pages/Admin/Financial/Detail/More/Clone/Page.jsx
+// @uix-page: FinancialClonePage
 // UIX Upgraded - Uses UIX primitives (Spinner, Breadcrumb)
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";

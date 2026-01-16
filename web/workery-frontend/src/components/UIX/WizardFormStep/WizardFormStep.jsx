@@ -138,6 +138,12 @@ const WizardFormStep = memo(function WizardFormStep({
       shadowCard: getThemeClasses('shadow-card'),
       textPrimary: getThemeClasses('text-primary'),
       textSecondary: getThemeClasses('text-secondary'),
+      borderLight: getThemeClasses('border-light') || 'border-gray-200',
+      borderMedium: getThemeClasses('border-medium') || 'border-gray-300',
+      alertErrorBg: getThemeClasses('alert-error-bg') || 'bg-red-50',
+      alertErrorBorder: getThemeClasses('alert-error-border') || 'border-red-200',
+      alertErrorText: getThemeClasses('alert-error-text') || 'text-red-700',
+      textDanger: getThemeClasses('text-danger') || 'text-red-600',
     }),
     [getThemeClasses],
   );
@@ -233,7 +239,7 @@ const WizardFormStep = memo(function WizardFormStep({
         {/* Error Display */}
         {errors.message && (
           <div className="mb-6 max-w-7xl mx-auto">
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            <div className={`${themeClasses.alertErrorBg} border ${themeClasses.alertErrorBorder} ${themeClasses.alertErrorText} px-4 py-3 rounded-lg`}>
               <div className="flex justify-between items-center">
                 <span className="flex items-center">
                   <ExclamationTriangleIcon className="w-5 h-5 mr-2 flex-shrink-0" />
@@ -242,7 +248,7 @@ const WizardFormStep = memo(function WizardFormStep({
                 <button
                   id="error-message-close"
                   onClick={() => {}}
-                  className="text-red-700 hover:text-red-900 ml-2 flex-shrink-0"
+                  className={`${themeClasses.textDanger} hover:opacity-80 ml-2 flex-shrink-0`}
                   aria-label="Close error message"
                 >
                   ×
@@ -257,7 +263,7 @@ const WizardFormStep = memo(function WizardFormStep({
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <div className={`animate-spin rounded-full h-12 w-12 border-b-2 ${themeClasses.borderPrimary}`}></div>
-              <span className="ml-3 text-gray-600">{LOADING_TEXT}</span>
+              <span className={`ml-3 ${themeClasses.textSecondary}`}>{LOADING_TEXT}</span>
             </div>
           ) : (
             <>
@@ -265,7 +271,7 @@ const WizardFormStep = memo(function WizardFormStep({
 
               {/* Action Buttons */}
               {showActions && allActions.length > 0 && (
-                <div className={`mt-8 pt-6 border-t border-gray-200 ${getActionLayoutClasses()}`}>
+                <div className={`mt-8 pt-6 border-t ${themeClasses.borderLight} ${getActionLayoutClasses()}`}>
                   {/* Back Button (when actionLayout is "end" or "between") */}
                   {onBack && (actionLayout === "end" || actionLayout === "between") && (
                     <Button
@@ -301,7 +307,7 @@ const WizardFormStep = memo(function WizardFormStep({
 
               {/* Back Navigation (when actionLayout is "center" or back button not in action row) */}
               {onBack && actionLayout === "center" && (
-                <div className="mt-6 pt-4 border-t border-gray-100">
+                <div className={`mt-6 pt-4 border-t ${themeClasses.borderLight}`}>
                   <Button
                     id="wizard-center-back-button"
                     variant="outline"

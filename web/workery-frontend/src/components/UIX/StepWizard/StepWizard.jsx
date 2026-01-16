@@ -61,6 +61,7 @@ const StepWizard = memo(function StepWizard({
       breadcrumbActive: getThemeClasses('breadcrumb-active'),
       textPrimary: getThemeClasses('text-primary'),
       textSecondary: getThemeClasses('text-secondary'),
+      textMuted: getThemeClasses('text-muted') || 'text-gray-400',
       buttonPrimary: getThemeClasses('button-primary'),
       linkPrimary: getThemeClasses('link-primary'),
       progressBarBg: getThemeClasses('progress-bar-bg'),
@@ -92,7 +93,7 @@ const StepWizard = memo(function StepWizard({
             <ol className="inline-flex items-center space-x-1 md:space-x-3 flex-nowrap">
               {breadcrumbItems.map((item, index) => (
                 <li key={index} className={index === breadcrumbItems.length - 1 ? "inline-flex items-center" : ""}>
-                  {index > 0 && <span className="mx-1 sm:mx-2 text-gray-400">/</span>}
+                  {index > 0 && <span className={`mx-1 sm:mx-2 ${themeClasses.textMuted}`}>/</span>}
                   {item.to ? (
                     <a
                       href={item.to}
@@ -104,7 +105,7 @@ const StepWizard = memo(function StepWizard({
                     </a>
                   ) : (
                     <span className={`text-xs sm:text-sm font-medium inline-flex items-center whitespace-nowrap ${
-                      item.isActive ? themeClasses.breadcrumbActive : "text-gray-500"
+                      item.isActive ? themeClasses.breadcrumbActive : themeClasses.textMuted
                     }`}>
                       {item.icon && <item.icon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />}
                       <span className={item.hideOnMobile ? "hidden sm:inline" : ""}>{item.label}</span>
@@ -175,7 +176,7 @@ const StepWizard = memo(function StepWizard({
                     <div className="mt-2 text-center">
                       <span
                         className={`text-xs sm:text-sm font-medium transition-all duration-200 ${
-                          isActive ? themeClasses.breadcrumbActive : isCompleted ? themeClasses.linkPrimary : "text-gray-500"
+                          isActive ? themeClasses.breadcrumbActive : isCompleted ? themeClasses.linkPrimary : themeClasses.textMuted
                         }`}
                       >
                         {stepLabel}

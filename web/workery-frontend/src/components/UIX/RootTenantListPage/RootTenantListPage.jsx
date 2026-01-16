@@ -163,9 +163,9 @@ const RootTenantListPage = memo(({ config }) => {
         header: "Schema",
         accessor: "schemaName",
         type: "text",
-        render: (value) => (
+        render: (row) => (
           <Badge variant="default" size="lg" className={`!bg-transparent font-medium ${themeClasses.textPrimary}`}>
-            {value}
+            {row.schemaName}
           </Badge>
         )
       },
@@ -173,9 +173,9 @@ const RootTenantListPage = memo(({ config }) => {
         header: "Name",
         accessor: "name",
         type: "text",
-        render: (value) => (
+        render: (row) => (
           <Badge variant="default" size="lg" className={`!bg-transparent font-medium ${themeClasses.textPrimary}`}>
-            {value}
+            {row.name}
           </Badge>
         )
       },
@@ -183,7 +183,7 @@ const RootTenantListPage = memo(({ config }) => {
         header: "Actions",
         align: "right",
         type: "action",
-        render: (value, row) => (
+        render: (row) => (
           <div className="flex gap-2 justify-end">
             <ViewButton
               to={(config.routes?.detail || "/root/tenant/:id").replace(":id", row.id)}

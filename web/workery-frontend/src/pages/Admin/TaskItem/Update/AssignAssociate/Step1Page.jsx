@@ -1,4 +1,5 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/TaskItem/Update/AssignAssociate/Step1Page.jsx
+// @uix-page: TaskItemAssignAssociateStep1
 // UIX Upgraded - Uses UIX primitives (Spinner, Breadcrumb, UIXThemeProvider)
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";

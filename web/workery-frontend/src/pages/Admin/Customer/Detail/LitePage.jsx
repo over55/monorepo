@@ -1,124 +1,197 @@
 // File Path: web/workery-frontend/src/pages/Admin/Customer/Detail/LitePage.jsx
-// UIX Upgraded - Uses DetailLiteView whole page component
-// @uix-page: AdminCustomerDetailLitePage
+// @uix-page: DetailLiteView
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from "react";
 import { useNavigate, useParams } from "react-router";
 import {
-  ChartBarIcon,
-  UserIcon,
   InformationCircleIcon,
-  PencilSquareIcon,
   ChevronLeftIcon,
-  EnvelopeIcon,
-  PhoneIcon,
-  MapPinIcon,
-  BuildingOfficeIcon,
-  HomeIcon,
   CheckCircleIcon,
-  XCircleIcon,
-  NoSymbolIcon,
   ArchiveBoxIcon,
-  ArrowTopRightOnSquareIcon,
-  ClipboardDocumentListIcon,
   EllipsisHorizontalIcon,
-  PlusCircleIcon,
+  UserIcon,
+  CalendarIcon,
+  NoSymbolIcon,
+  XCircleIcon,
+  HomeIcon,
+  BuildingOfficeIcon,
 } from "@heroicons/react/24/outline";
 import { useCustomerManager } from "../../../../services/Services";
 import { TagsDisplay } from "../../../../components/business/displays";
-import { DetailLiteView } from "../../../../components/UIX";
+import {
+  UIXThemeProvider,
+  DetailLiteView,
+  EditButton,
+  Avatar,
+  Badge,
+  ContactLink,
+  AddressDisplay,
+  useUIXTheme,
+} from "../../../../components/UIX";
+import { formatDateForDisplay } from "../../../../services/Helpers/DateFormatter";
+import {
+  COMMERCIAL_CUSTOMER_TYPE_OF_ID,
+  CUSTOMER_STATUS_ARCHIVED,
+  CUSTOMER_STATUS_ACTIVE,
+  CUSTOMER_TYPE_MAP,
+} from "../../../../constants/Customer";
 
-// Constants
-const COMMERCIAL_CUSTOMER_TYPE_OF_ID = 3;
-const RESIDENTIAL_CUSTOMER_TYPE_OF_ID = 2;
-const CUSTOMER_STATUS_ACTIVE = 1;
-const CUSTOMER_STATUS_ARCHIVED = 2;
-
-const CUSTOMER_TYPE_MAP = {
-  1: "Unassigned",
-  2: "Residential",
-  3: "Commercial",
+// Extract IDs helper - moved outside component for performance
+const extractIds = (items) => {
+  if (!items || !Array.isArray(items)) return [];
+  return items.map((item) => item.id || item.value).filter(Boolean);
 };
 
-function AdminCustomerDetailLitePage() {
+const AdminCustomerDetailLitePageContent = memo(function AdminCustomerDetailLitePageContent() {
   const { cid } = useParams();
   const customerManager = useCustomerManager();
   const navigate = useNavigate();
+  const { getThemeClasses } = useUIXTheme();
 
   // State management
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Refs for cleanup - prevents state updates on unmounted component
+  const isMounted = useRef(true);
+  const abortControllerRef = useRef(null);
+
   // Handle unauthorized access
   const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
   }, [navigate]);
 
-  // Fetch customer data
-  const fetchCustomer = useCallback(async () => {
-    if (!cid) return;
+  // Fetch customer data with proper cleanup
+  const fetchCustomer = useCallback(() => {
+    if (!cid) {
+      if (import.meta.env.DEV) {
+        console.log("No cid provided, returning");
+      }
+      return;
+    }
 
+    // Cancel any ongoing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create new abort controller
+    abortControllerRef.current = new AbortController();
+    const currentAbortController = abortControllerRef.current;
+
+    if (import.meta.env.DEV) {
+      console.log("Starting fetch for cid:", cid);
+    }
     setLoading(true);
     setError(null);
 
-    try {
-      const customerData = await customerManager.getCustomerDetail(
-        cid,
-        onUnauthorized,
-      );
-      setCustomer(customerData);
-    } catch (err) {
-      console.error("Failed to fetch customer:", err);
-      setError("Failed to load customer details. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    customerManager.getCustomerDetailWithCallbacks(
+      cid,
+      (response) => {
+        // Check if this request was aborted or component unmounted
+        if (currentAbortController.signal.aborted || !isMounted.current) {
+          return;
+        }
+        if (import.meta.env.DEV) {
+          console.log("Setting customer data:", response);
+        }
+        setCustomer(response);
+        setLoading(false);
+      },
+      (errorResponse) => {
+        // Check if this request was aborted or component unmounted
+        if (currentAbortController.signal.aborted || !isMounted.current) {
+          return;
+        }
+        if (import.meta.env.DEV) {
+          console.error("Setting error:", errorResponse);
+        }
+        setError(
+          errorResponse?.message ||
+            "Failed to load customer details. Please try again.",
+        );
+        setLoading(false);
+      },
+      () => {
+        // Check if this request was aborted or component unmounted
+        if (currentAbortController.signal.aborted || !isMounted.current) {
+          return;
+        }
+        if (import.meta.env.DEV) {
+          console.log("Setting loading to false");
+        }
+        setLoading(false);
+      },
+      onUnauthorized,
+    );
   }, [cid, customerManager, onUnauthorized]);
 
-  // Initial data load
+  // Initial data load with cleanup
   useEffect(() => {
+    isMounted.current = true;
+
+    if (import.meta.env.DEV) {
+      console.log("Effect running for cid:", cid);
+    }
     window.scrollTo(0, 0);
     fetchCustomer();
-  }, [fetchCustomer]);
 
-  // Format phone number for display
-  const formatPhone = useCallback((phone) => {
-    if (!phone) return "-";
-    const cleaned = phone.replace(/\D/g, "");
-    if (cleaned.length === 10) {
-      return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
-    }
-    return phone;
-  }, []);
+    // Cleanup function - only cancel requests, don't set state
+    return () => {
+      isMounted.current = false;
 
-  // Format address for display
-  const formatAddress = useCallback((customerData) => {
-    if (!customerData) return "-";
-    const address =
-      customerData.fullAddressWithPostalCode ||
-      `${customerData.addressLine1 || ""} ${customerData.city || ""} ${customerData.region || ""} ${customerData.postalCode || ""}`.trim();
-    return address || "-";
-  }, []);
+      // Cancel any ongoing requests
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+      // Note: Don't set state here - component is unmounting
+      // The isMounted check in callbacks prevents state updates
+    };
+  }, [cid, fetchCustomer]);
 
-  // Get Google Maps URL
-  const getGoogleMapsUrl = useCallback((customerData) => {
+  // Create status badge
+  const createStatusBadge = useCallback((customerData) => {
     if (!customerData) return null;
-    return customerData.fullAddressUrl || null;
+    if (customerData.isBanned) {
+      return (
+        <Badge variant="error" size="sm">
+          <XCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+          Banned
+        </Badge>
+      );
+    }
+    if (customerData.status === CUSTOMER_STATUS_ACTIVE) {
+      return (
+        <Badge variant="primary" size="sm">
+          <CheckCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+          Active
+        </Badge>
+      );
+    }
+    return (
+      <Badge variant="secondary" size="sm">
+        Archived
+      </Badge>
+    );
   }, []);
 
-  // Extract IDs from array of objects
-  const extractIds = useCallback((items) => {
-    if (!items || !Array.isArray(items)) return [];
-    return items.map((item) => item.id || item.value).filter(Boolean);
-  }, []);
+  // Memoize theme classes
+  const themeClasses = useMemo(() => ({
+    textPrimary: getThemeClasses("text-primary"),
+    textSecondary: getThemeClasses("text-secondary"),
+    textMuted: getThemeClasses("text-muted"),
+  }), [getThemeClasses]);
 
-  // Memoize breadcrumb items
+  // Configure DetailLiteView props - ALL HOOKS MUST BE BEFORE ANY CONDITIONAL RETURNS
   const breadcrumbItems = useMemo(() => [
     {
       label: "Dashboard",
       to: "/admin/dashboard",
-      icon: ChartBarIcon,
+      icon: HomeIcon,
+      hideOnMobile: false,
+      mobileLabel: "Dash",
     },
     {
       label: "Customers",
@@ -132,13 +205,13 @@ function AdminCustomerDetailLitePage() {
     },
   ], []);
 
-  // Memoize header config
   const headerConfig = useMemo(() => ({
-    title: "Summary",
-    icon: ClipboardDocumentListIcon,
+    title: "Customer - Summary",
+    icon: UserIcon,
     loadingText: "Loading customer details...",
     notFoundTitle: "Customer Not Found",
-    notFoundMessage: "The customer you're looking for doesn't exist or you don't have permission to view it.",
+    notFoundMessage:
+      "The customer you're looking for doesn't exist or you don't have permission to view it.",
     notFoundAction: {
       label: "Back to Customers",
       icon: ChevronLeftIcon,
@@ -146,47 +219,198 @@ function AdminCustomerDetailLitePage() {
     },
   }), [navigate]);
 
-  // Memoize tabs
-  const tabs = useMemo(() => {
-    if (!customer) return [];
-    return [
-      { label: "Summary", to: `/admin/customer/${customer.id}`, isActive: true },
-      { label: "Detail", to: `/admin/customer/${customer.id}/detail` },
-      { label: "Orders", to: `/admin/customer/${customer.id}/orders` },
-      { label: "Comments", to: `/admin/customer/${customer.id}/comments` },
-      { label: "Attachments", to: `/admin/customer/${customer.id}/attachments` },
-      { label: "More", to: `/admin/customer/${customer.id}/more`, icon: EllipsisHorizontalIcon },
-    ];
-  }, [customer]);
+  const actionButtons = useMemo(() => [
+    {
+      variant: "outline",
+      onClick: () => navigate("/admin/customers"),
+      icon: ChevronLeftIcon,
+      label: "Back",
+    },
+    {
+      component: (
+        <EditButton
+          onClick={() => navigate(`/admin/customer/${cid}/edit`)}
+          disabled={customer?.status === CUSTOMER_STATUS_ARCHIVED}
+          variant="primary"
+          className="flex-1 sm:flex-initial"
+        />
+      ),
+    },
+  ], [navigate, cid, customer?.status]);
 
-  // Memoize action buttons
-  const actionButtons = useMemo(() => {
-    if (!customer) return [];
-    return [
-      {
-        variant: "outline",
-        label: "Back",
-        icon: ChevronLeftIcon,
-        onClick: () => navigate("/admin/customers"),
-      },
-      {
-        variant: "secondary",
-        label: "Edit",
-        icon: PencilSquareIcon,
-        disabled: customer.status === CUSTOMER_STATUS_ARCHIVED,
-        onClick: () => navigate(`/admin/customer/${cid}/edit`),
-      },
-      {
-        variant: "primary",
-        label: "New Order",
-        icon: PlusCircleIcon,
-        external: true,
-        onClick: () => window.open(`/admin/orders/add/step-2-from-launchpad?id=${cid}&fn=${customer.firstName}&ln=${customer.lastName}`, '_blank'),
-      },
-    ];
-  }, [customer, navigate, cid]);
+  const tabs = useMemo(() => [
+    {
+      label: "Summary",
+      isActive: true,
+    },
+    {
+      label: "Detail",
+      to: `/admin/customer/${customer?.id}/detail`,
+    },
+    {
+      label: "Orders",
+      to: `/admin/customer/${customer?.id}/orders`,
+    },
+    {
+      label: "Comments",
+      to: `/admin/customer/${customer?.id}/comments`,
+    },
+    {
+      label: "Attachments",
+      to: `/admin/customer/${customer?.id}/attachments`,
+    },
+    {
+      label: "More",
+      to: `/admin/customer/${customer?.id}/more`,
+      icon: EllipsisHorizontalIcon,
+    },
+  ], [customer?.id]);
 
-  // Memoize alerts configuration
+  const fieldSections = useMemo(() => customer
+    ? [
+        // Avatar section
+        {
+          type: "avatar",
+          component: (
+            <Avatar
+              src={customer?.avatarObjectUrl}
+              alt={
+                customer?.avatarObjectUrl
+                  ? "Profile Picture"
+                  : "No Profile Picture"
+              }
+              size="lg"
+              borderStyle="default"
+              showFallbackIcon={true}
+            />
+          ),
+        },
+        // Primary column sections
+        {
+          column: "primary",
+          className: "mb-3 sm:mb-4 lg:mb-5",
+          component: (
+            <div>
+              {customer?.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID &&
+                customer.organizationName && (
+                  <h2
+                    className={`text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold ${themeClasses.textPrimary} flex items-center justify-center xl:justify-start mb-2`}
+                  >
+                    <BuildingOfficeIcon className="w-5 sm:w-6 h-5 sm:h-6 lg:w-8 lg:h-8 mr-2 lg:mr-3 text-blue-600 flex-shrink-0" />
+                    <span className="break-words">
+                      {customer.organizationName}
+                    </span>
+                  </h2>
+                )}
+              <h3
+                className={`text-base sm:text-lg md:text-xl lg:text-2xl font-semibold ${themeClasses.textPrimary} flex items-center justify-center xl:justify-start`}
+              >
+                <span className="break-words">
+                  {customer?.name || `${customer?.firstName} ${customer?.lastName}`}
+                </span>
+              </h3>
+              <div
+                className={`mt-2 text-sm lg:text-base ${themeClasses.textSecondary}`}
+              >
+                <Badge variant="primary" size="md">
+                  {CUSTOMER_TYPE_MAP[customer?.type] || "Unknown"}
+                </Badge>
+              </div>
+            </div>
+          ),
+        },
+        {
+          column: "primary",
+          className: "mb-3 sm:mb-4 lg:mb-5",
+          component: (
+            <AddressDisplay
+              addressData={customer}
+              size="md"
+              showIcon={true}
+              showMapsLink={true}
+            />
+          ),
+        },
+        {
+          column: "primary",
+          className: "space-y-2 sm:space-y-3",
+          component: (
+            <div className="space-y-2 sm:space-y-3">
+              <ContactLink
+                type="email"
+                value={customer?.email}
+                size="md"
+                fallbackText="No email"
+              />
+              <ContactLink
+                type="phone"
+                value={customer?.phone}
+                size="md"
+                fallbackText="No phone"
+              />
+              {customer?.otherPhone && (
+                <ContactLink
+                  type="phone"
+                  value={customer?.otherPhone}
+                  size="md"
+                  fallbackText="No phone"
+                />
+              )}
+            </div>
+          ),
+        },
+        // Secondary column sections
+        {
+          column: "secondary",
+          component: (
+            <TagsDisplay
+              values={extractIds(customer?.tags)}
+              label="Tags"
+              onUnauthorized={onUnauthorized}
+            />
+          ),
+        },
+        {
+          column: "secondary",
+          component: (
+            <div
+              className={`space-y-2 text-xs sm:text-sm lg:text-base ${themeClasses.textSecondary}`}
+            >
+              {customer?.createdAt && (
+                <div className="flex items-center justify-center xl:justify-start">
+                  <CalendarIcon
+                    className={`w-3 sm:w-4 h-3 sm:h-4 lg:w-5 lg:h-5 mr-2 ${themeClasses.textMuted}`}
+                  />
+                  <span className="font-medium">Created:</span>
+                  <span className="ml-2">
+                    {formatDateForDisplay(customer.createdAt)}
+                  </span>
+                </div>
+              )}
+              {customer?.modifiedAt && (
+                <div className="flex items-center justify-center xl:justify-start">
+                  <CalendarIcon
+                    className={`w-3 sm:w-4 h-3 sm:h-4 lg:w-5 lg:h-5 mr-2 ${themeClasses.textMuted}`}
+                  />
+                  <span className="font-medium">Last Modified:</span>
+                  <span className="ml-2">
+                    {formatDateForDisplay(customer.modifiedAt)}
+                  </span>
+                </div>
+              )}
+              <div className="flex items-center justify-center xl:justify-start">
+                <CheckCircleIcon
+                  className={`w-3 sm:w-4 h-3 sm:h-4 lg:w-5 lg:h-5 mr-2 ${themeClasses.textMuted}`}
+                />
+                <span className="font-medium">Status:</span>
+                <span className="ml-2">{createStatusBadge(customer)}</span>
+              </div>
+            </div>
+          ),
+        },
+      ].filter((section) => section.component)
+    : [], [customer, themeClasses, onUnauthorized, createStatusBadge]);
+
   const alerts = useMemo(() => ({
     archived: {
       message: "This customer is archived",
@@ -198,157 +422,17 @@ function AdminCustomerDetailLitePage() {
     },
   }), []);
 
-  // Format status display
-  const formatStatus = useCallback((customerData) => {
-    if (customerData.isBanned) {
-      return (
-        <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-medium bg-red-100 text-red-800">
-          <XCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-          Banned
-        </span>
-      );
-    }
-    if (customerData.status === CUSTOMER_STATUS_ACTIVE) {
-      return (
-        <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-medium bg-green-100 text-green-800">
-          <CheckCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-          Active
-        </span>
-      );
-    }
+  // Show loading state AFTER all hooks have been called
+  if (loading) {
     return (
-      <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs sm:text-sm font-medium bg-gray-100 text-gray-800">
-        Archived
-      </span>
+      <DetailLiteView
+        isLoading={loading}
+        headerConfig={{
+          loadingText: "Loading customer details...",
+        }}
+      />
     );
-  }, []);
-
-  // Memoize field sections
-  const fieldSections = useMemo(() => {
-    if (!customer) return [];
-
-    return [
-      // Primary column - Basic Info
-      {
-        column: "primary",
-        component: (
-          <div>
-            {/* Name/Organization */}
-            <div className="mb-3 sm:mb-4 lg:mb-5">
-              {customer.type === COMMERCIAL_CUSTOMER_TYPE_OF_ID && (
-                <h2 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold text-gray-900 flex items-center justify-center xl:justify-start mb-2">
-                  <BuildingOfficeIcon className="w-5 sm:w-6 h-5 sm:h-6 lg:w-8 lg:h-8 mr-2 lg:mr-3 text-blue-600 flex-shrink-0" />
-                  <span className="break-words">
-                    {customer.organizationName}
-                  </span>
-                </h2>
-              )}
-              <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-semibold text-gray-800 flex items-center justify-center xl:justify-start">
-                {customer.type === RESIDENTIAL_CUSTOMER_TYPE_OF_ID && (
-                  <HomeIcon className="w-4 sm:w-5 h-4 sm:h-5 lg:w-7 lg:h-7 mr-2 text-blue-600 flex-shrink-0" />
-                )}
-                <span className="break-words">
-                  {customer.name ||
-                    `${customer.firstName} ${customer.lastName}`}
-                </span>
-              </h3>
-              <div className="mt-2 text-sm lg:text-base text-gray-600">
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs lg:text-sm font-medium bg-blue-100 text-blue-800">
-                  {CUSTOMER_TYPE_MAP[customer.type] || "Unknown"}
-                </span>
-              </div>
-            </div>
-
-            {/* Address */}
-            <div className="flex items-start text-sm sm:text-base lg:text-lg text-gray-600 mb-3 sm:mb-4 lg:mb-5 justify-center xl:justify-start">
-              <MapPinIcon className="w-4 sm:w-5 h-4 sm:h-5 lg:w-6 lg:h-6 mr-2 mt-0.5 flex-shrink-0 text-gray-400" />
-              <div className="min-w-0 flex-1">
-                <span className="break-words">
-                  {formatAddress(customer)}
-                </span>
-                {getGoogleMapsUrl(customer) && (
-                  <a
-                    href={getGoogleMapsUrl(customer)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="ml-2 inline-flex items-center text-blue-600 hover:text-blue-700"
-                  >
-                    <ArrowTopRightOnSquareIcon className="w-3 sm:w-4 h-3 sm:h-4" />
-                  </a>
-                )}
-              </div>
-            </div>
-
-            {/* Email & Phone */}
-            <div className="space-y-2 sm:space-y-3">
-              <div className="flex items-center text-sm sm:text-base lg:text-lg justify-center xl:justify-start">
-                <EnvelopeIcon className="w-4 sm:w-5 h-4 sm:h-5 lg:w-6 lg:h-6 mr-2 sm:mr-3 text-gray-400 flex-shrink-0" />
-                <div className="min-w-0 flex-1">
-                  {customer.email ? (
-                    <a
-                      href={`mailto:${customer.email}`}
-                      className="text-blue-600 hover:text-blue-700 font-medium break-all"
-                    >
-                      {customer.email}
-                    </a>
-                  ) : (
-                    <span className="text-gray-500">No email</span>
-                  )}
-                </div>
-              </div>
-              <div className="flex items-center text-sm sm:text-base lg:text-lg justify-center xl:justify-start">
-                <PhoneIcon className="w-4 sm:w-5 h-4 sm:h-5 lg:w-6 lg:h-6 mr-2 sm:mr-3 text-gray-400 flex-shrink-0" />
-                <div className="min-w-0 flex-1">
-                  {customer.phone ? (
-                    <a
-                      href={`tel:${customer.phone}`}
-                      className="text-blue-600 hover:text-blue-700 font-medium"
-                    >
-                      {formatPhone(customer.phone)}
-                    </a>
-                  ) : (
-                    <span className="text-gray-500">No phone</span>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Type & Status */}
-            <div className="mt-3 sm:mt-4 lg:mt-5 space-y-2 sm:space-y-3">
-              <div className="flex items-center text-sm sm:text-base lg:text-lg justify-center xl:justify-start">
-                <ClipboardDocumentListIcon className="w-4 sm:w-5 h-4 sm:h-5 lg:w-6 lg:h-6 mr-2 sm:mr-3 text-gray-400 flex-shrink-0" />
-                <span className="text-gray-600 mr-2">Type:</span>
-                <span className="font-medium">
-                  {CUSTOMER_TYPE_MAP[customer.type] || "Unknown"}
-                </span>
-              </div>
-              <div className="flex items-center text-sm sm:text-base lg:text-lg justify-center xl:justify-start">
-                <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 lg:w-6 lg:h-6 mr-2 sm:mr-3 text-gray-400 flex-shrink-0" />
-                <span className="text-gray-600 mr-2">Status:</span>
-                {formatStatus(customer)}
-              </div>
-            </div>
-          </div>
-        ),
-      },
-      // Secondary column - Tags
-      {
-        column: "secondary",
-        component: (
-          <div className="space-y-3 sm:space-y-4 lg:space-y-6">
-            {/* Tags */}
-            <div>
-              <TagsDisplay
-                values={extractIds(customer.tags)}
-                label="Tags"
-                onUnauthorized={onUnauthorized}
-              />
-            </div>
-          </div>
-        ),
-      },
-    ];
-  }, [customer, formatAddress, getGoogleMapsUrl, formatPhone, formatStatus, extractIds, onUnauthorized]);
+  }
 
   return (
     <DetailLiteView
@@ -359,10 +443,19 @@ function AdminCustomerDetailLitePage() {
       actionButtons={actionButtons}
       tabs={tabs}
       alerts={alerts}
+      onUnauthorized={onUnauthorized}
       isLoading={loading}
       error={error}
       onErrorClose={() => setError(null)}
     />
+  );
+});
+
+function AdminCustomerDetailLitePage() {
+  return (
+    <UIXThemeProvider>
+      <AdminCustomerDetailLitePageContent />
+    </UIXThemeProvider>
   );
 }
 

@@ -64,9 +64,11 @@ const getThemeConfigs = () => {
         "alert-warning-text": "text-amber-800",
         "alert-warning-title": "text-amber-900",
         "alert-warning-border": "border-amber-200",
+        "alert-warning-icon": "text-amber-500",
         "alert-error-bg": "bg-red-50",
         "alert-error-text": "text-red-800",
         "alert-error-border": "border-red-200",
+        "error-ring": "ring-2 ring-red-500",
         "alert-success-bg": "bg-green-50",
         "alert-success-text": "text-green-800",
         "alert-success-border": "border-green-200",
@@ -91,6 +93,10 @@ const getThemeConfigs = () => {
 
         // Checkbox and Radio
         "checkbox-focus": "text-blue-500 focus:ring-blue-500",
+        "checkbox-color": "text-blue-600",
+        "bg-checked": "bg-blue-50",
+        "border-checked": "border-blue-500",
+        "text-accent": "text-blue-500",
         "radio-focus": "text-blue-500 focus:ring-blue-500",
 
         // MultiSelect
@@ -170,7 +176,7 @@ const getThemeConfigs = () => {
         "detail-header-bg": "bg-gradient-to-r from-blue-900 to-blue-950",
         "detail-header-text": "text-white",
         "detail-header-icon": "text-white/80",
-        "detail-button-back": "border-2 border-white bg-transparent text-white hover:bg-white/10 focus:ring-2 focus:ring-white/50",
+        "detail-button-back": "border-2 border-white bg-white text-blue-700 hover:bg-blue-50 focus:ring-2 focus:ring-white/50",
         "detail-button-edit": "bg-white/20 text-white hover:bg-white/30 border border-white/30 hover:border-white/50",
 
         // DetailCard header (colored bg with white text/icon for light mode)
@@ -305,9 +311,11 @@ const getThemeConfigs = () => {
         "alert-warning-text": "text-amber-800",
         "alert-warning-title": "text-amber-900",
         "alert-warning-border": "border-amber-200",
+        "alert-warning-icon": "text-amber-500",
         "alert-error-bg": "bg-red-50",
         "alert-error-text": "text-red-800",
         "alert-error-border": "border-red-200",
+        "error-ring": "ring-2 ring-red-500",
         "alert-success-bg": "bg-green-50",
         "alert-success-text": "text-green-800",
         "alert-success-border": "border-green-200",
@@ -332,6 +340,10 @@ const getThemeConfigs = () => {
 
         // Checkbox and Radio
         "checkbox-focus": "text-red-500 focus:ring-red-500",
+        "checkbox-color": "text-red-600",
+        "bg-checked": "bg-red-50",
+        "border-checked": "border-red-500",
+        "text-accent": "text-red-500",
         "radio-focus": "text-red-500 focus:ring-red-500",
 
         // MultiSelect
@@ -411,7 +423,7 @@ const getThemeConfigs = () => {
         "detail-header-bg": "bg-gradient-to-r from-red-900 to-red-950",
         "detail-header-text": "text-white",
         "detail-header-icon": "text-white/80",
-        "detail-button-back": "border-2 border-white bg-transparent text-white hover:bg-white/10 focus:ring-2 focus:ring-white/50",
+        "detail-button-back": "border-2 border-white bg-white text-red-700 hover:bg-red-50 focus:ring-2 focus:ring-white/50",
         "detail-button-edit": "bg-white/20 text-white hover:bg-white/30 border border-white/30 hover:border-white/50",
 
         // DetailCard header (colored bg with white text/icon for light mode)
@@ -546,9 +558,11 @@ const getThemeConfigs = () => {
         "alert-warning-text": "text-amber-800",
         "alert-warning-title": "text-amber-900",
         "alert-warning-border": "border-amber-200",
+        "alert-warning-icon": "text-amber-500",
         "alert-error-bg": "bg-red-50",
         "alert-error-text": "text-red-800",
         "alert-error-border": "border-red-200",
+        "error-ring": "ring-2 ring-red-500",
         "alert-success-bg": "bg-green-50",
         "alert-success-text": "text-green-800",
         "alert-success-border": "border-green-200",
@@ -573,6 +587,10 @@ const getThemeConfigs = () => {
 
         // Checkbox and Radio
         "checkbox-focus": "text-purple-500 focus:ring-purple-500",
+        "checkbox-color": "text-purple-600",
+        "bg-checked": "bg-purple-50",
+        "border-checked": "border-purple-500",
+        "text-accent": "text-purple-500",
         "radio-focus": "text-purple-500 focus:ring-purple-500",
 
         // MultiSelect
@@ -653,7 +671,7 @@ const getThemeConfigs = () => {
         "detail-header-bg": "bg-gradient-to-r from-purple-900 to-purple-950",
         "detail-header-text": "text-white",
         "detail-header-icon": "text-white/80",
-        "detail-button-back": "border-2 border-white bg-transparent text-white hover:bg-white/10 focus:ring-2 focus:ring-white/50",
+        "detail-button-back": "border-2 border-white bg-white text-purple-700 hover:bg-purple-50 focus:ring-2 focus:ring-white/50",
         "detail-button-edit": "bg-white/20 text-white hover:bg-white/30 border border-white/30 hover:border-white/50",
 
         // DetailCard header (colored bg with white text/icon for light mode)
@@ -788,9 +806,11 @@ const getThemeConfigs = () => {
         "alert-warning-text": "text-amber-800",
         "alert-warning-title": "text-amber-900",
         "alert-warning-border": "border-amber-200",
+        "alert-warning-icon": "text-amber-500",
         "alert-error-bg": "bg-red-50",
         "alert-error-text": "text-red-800",
         "alert-error-border": "border-red-200",
+        "error-ring": "ring-2 ring-red-500",
         "alert-success-bg": "bg-green-50",
         "alert-success-text": "text-green-800",
         "alert-success-border": "border-green-200",
@@ -815,6 +835,10 @@ const getThemeConfigs = () => {
 
         // Checkbox and Radio
         "checkbox-focus": "text-green-500 focus:ring-green-500",
+        "checkbox-color": "text-green-600",
+        "bg-checked": "bg-green-50",
+        "border-checked": "border-green-500",
+        "text-accent": "text-green-500",
         "radio-focus": "text-green-500 focus:ring-green-500",
 
         // MultiSelect
@@ -894,7 +918,7 @@ const getThemeConfigs = () => {
         "detail-header-bg": "bg-gradient-to-r from-green-900 to-green-950",
         "detail-header-text": "text-white",
         "detail-header-icon": "text-white/80",
-        "detail-button-back": "border-2 border-white bg-transparent text-white hover:bg-white/10 focus:ring-2 focus:ring-white/50",
+        "detail-button-back": "border-2 border-white bg-white text-green-700 hover:bg-green-50 focus:ring-2 focus:ring-white/50",
         "detail-button-edit": "bg-white/20 text-white hover:bg-white/30 border border-white/30 hover:border-white/50",
 
         // DetailCard header (colored bg with white text/icon for light mode)
@@ -1029,9 +1053,11 @@ const getThemeConfigs = () => {
         "alert-warning-text": "text-amber-800",
         "alert-warning-title": "text-amber-900",
         "alert-warning-border": "border-amber-200",
+        "alert-warning-icon": "text-amber-500",
         "alert-error-bg": "bg-red-50",
         "alert-error-text": "text-red-800",
         "alert-error-border": "border-red-200",
+        "error-ring": "ring-2 ring-red-500",
         "alert-success-bg": "bg-green-50",
         "alert-success-text": "text-green-800",
         "alert-success-border": "border-green-200",
@@ -1056,6 +1082,10 @@ const getThemeConfigs = () => {
 
         // Checkbox and Radio
         "checkbox-focus": "text-slate-500 focus:ring-slate-500",
+        "checkbox-color": "text-slate-600",
+        "bg-checked": "bg-slate-50",
+        "border-checked": "border-slate-500",
+        "text-accent": "text-slate-500",
         "radio-focus": "text-slate-500 focus:ring-slate-500",
 
         // MultiSelect
@@ -1135,7 +1165,7 @@ const getThemeConfigs = () => {
         "detail-header-bg": "bg-gradient-to-r from-slate-900 to-slate-950",
         "detail-header-text": "text-white",
         "detail-header-icon": "text-white/80",
-        "detail-button-back": "border-2 border-white bg-transparent text-white hover:bg-white/10 focus:ring-2 focus:ring-white/50",
+        "detail-button-back": "border-2 border-white bg-white text-slate-700 hover:bg-slate-50 focus:ring-2 focus:ring-white/50",
         "detail-button-edit": "bg-white/20 text-white hover:bg-white/30 border border-white/30 hover:border-white/50",
 
         // DetailCard header (colored bg with white text/icon for light mode)
@@ -1275,9 +1305,11 @@ const getThemeConfigs = () => {
         "alert-warning-text": "text-amber-200",
         "alert-warning-title": "text-white",
         "alert-warning-border": "border-amber-700",
+        "alert-warning-icon": "text-amber-400",
         "alert-error-bg": "bg-red-900/40",
         "alert-error-text": "text-red-200",
         "alert-error-border": "border-red-700",
+        "error-ring": "ring-2 ring-red-400",
         "alert-success-bg": "bg-green-900/40",
         "alert-success-text": "text-green-200",
         "alert-success-border": "border-green-700",
@@ -1302,6 +1334,10 @@ const getThemeConfigs = () => {
 
         // Checkbox and Radio
         "checkbox-focus": "text-blue-500 focus:ring-blue-500",
+        "checkbox-color": "text-blue-600",
+        "bg-checked": "bg-blue-900/50",
+        "border-checked": "border-blue-500",
+        "text-accent": "text-blue-400",
         "radio-focus": "text-blue-500 focus:ring-blue-500",
 
         // MultiSelect

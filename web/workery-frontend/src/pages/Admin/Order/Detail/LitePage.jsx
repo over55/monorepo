@@ -1,14 +1,11 @@
 // File Path: web/workery-frontend/src/pages/Admin/Order/Detail/LitePage.jsx
-// UIX Upgraded - Uses DetailLiteView whole page component
-// @uix-page: AdminOrderDetailLitePage
+// @uix-page: DetailLiteView
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, memo, useRef } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import {
-  ChartBarIcon,
   WrenchScrewdriverIcon,
   InformationCircleIcon,
-  PencilSquareIcon,
   ChevronLeftIcon,
   PhoneIcon,
   MapPinIcon,
@@ -19,11 +16,10 @@ import {
   ClipboardDocumentListIcon,
   EllipsisHorizontalIcon,
   UserIcon,
-  XMarkIcon,
+  XCircleIcon,
   ArrowRightIcon,
   CurrencyDollarIcon,
   NoSymbolIcon,
-  XCircleIcon,
 } from "@heroicons/react/24/outline";
 import { useOrderManager, useAuthManager } from "../../../../services/Services";
 import {
@@ -46,49 +42,118 @@ import {
   STAFF_TYPE_EXECUTIVE,
 } from "../../../../constants/Staff";
 import {
+  ORDER_STATUS_NEW,
+  ORDER_STATUS_DECLINED,
+  ORDER_STATUS_PENDING,
+  ORDER_STATUS_CANCELLED,
+  ORDER_STATUS_ONGOING,
+  ORDER_STATUS_IN_PROGRESS,
   ORDER_STATUS_COMPLETED_BUT_UNPAID,
   ORDER_STATUS_COMPLETED_AND_PAID,
   ORDER_STATUS_ARCHIVED,
-  ORDER_STATUS_CANCELLED,
-  ORDER_STATUS_DECLINED,
+  ORDER_CLIENT_PHONE_TYPE_MAP,
+  ORDER_ASSOCIATE_PHONE_TYPE_MAP,
 } from "../../../../constants/Order";
-import { DetailLiteView } from "../../../../components/UIX";
+import {
+  UIXThemeProvider,
+  DetailLiteView,
+  EditButton,
+  useUIXTheme,
+} from "../../../../components/UIX";
 
-// Constants
-const OrderStatusNew = 1;
-const OrderStatusDeclined = 2;
-const OrderStatusPending = 3;
-const OrderStatusCancelled = 4;
-const OrderStatusOngoing = 5;
-const OrderStatusInProgress = 6;
-const OrderStatusCompletedButUnpaid = 7;
-const OrderStatusCompletedAndPaid = 8;
-const OrderStatusArchived = 9;
-
-// Phone type mappings
-const CLIENT_PHONE_TYPE_OF_MAP = {
-  1: "Work",
-  2: "Home",
-  3: "Mobile",
+// Extract IDs helper - moved outside component for performance
+const extractIds = (items) => {
+  if (!items || !Array.isArray(items)) return [];
+  return items
+    .map((item) => {
+      if (typeof item === "number" || typeof item === "string") {
+        return item;
+      }
+      return item.id || item.value || item.skillSetId || item.tagId;
+    })
+    .filter(Boolean);
 };
 
-const ASSOCIATE_PHONE_TYPE_OF_MAP = {
-  1: "Work",
-  2: "Home",
-  3: "Mobile",
+// Order status configuration - moved outside component for performance
+const ORDER_STATUS_CONFIG = {
+  [ORDER_STATUS_NEW]: {
+    text: "New",
+    color: "text-green-600",
+    bg: "bg-green-50",
+    border: "border-green-200",
+  },
+  [ORDER_STATUS_DECLINED]: {
+    text: "Declined",
+    color: "text-red-600",
+    bg: "bg-red-50",
+    border: "border-red-200",
+  },
+  [ORDER_STATUS_PENDING]: {
+    text: "Pending",
+    color: "text-yellow-600",
+    bg: "bg-yellow-50",
+    border: "border-yellow-200",
+  },
+  [ORDER_STATUS_CANCELLED]: {
+    text: "Cancelled",
+    color: "text-gray-600",
+    bg: "bg-gray-50",
+    border: "border-gray-200",
+  },
+  [ORDER_STATUS_ONGOING]: {
+    text: "Ongoing",
+    color: "text-blue-600",
+    bg: "bg-blue-50",
+    border: "border-blue-200",
+  },
+  [ORDER_STATUS_IN_PROGRESS]: {
+    text: "In Progress",
+    color: "text-blue-600",
+    bg: "bg-blue-50",
+    border: "border-blue-200",
+  },
+  [ORDER_STATUS_COMPLETED_BUT_UNPAID]: {
+    text: "Completed (Unpaid)",
+    color: "text-orange-600",
+    bg: "bg-orange-50",
+    border: "border-orange-200",
+  },
+  [ORDER_STATUS_COMPLETED_AND_PAID]: {
+    text: "Completed (Paid)",
+    color: "text-green-600",
+    bg: "bg-green-50",
+    border: "border-green-200",
+  },
+  [ORDER_STATUS_ARCHIVED]: {
+    text: "Archived",
+    color: "text-gray-600",
+    bg: "bg-gray-50",
+    border: "border-gray-200",
+  },
 };
 
-function AdminOrderDetailLitePage() {
+// Order type map - moved outside component for performance
+const ORDER_TYPE_MAP = {
+  1: "Residential",
+  2: "Commercial",
+};
+
+const AdminOrderDetailLitePageContent = memo(function AdminOrderDetailLitePageContent() {
   const { oid } = useParams();
   const orderManager = useOrderManager();
   const authManager = useAuthManager();
   const navigate = useNavigate();
+  const { getThemeClasses } = useUIXTheme();
 
   // State management
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+
+  // Refs for cleanup - prevents state updates on unmounted component
+  const isMounted = useRef(true);
+  const abortControllerRef = useRef(null);
 
   // Handle unauthorized access
   const onUnauthorized = useCallback(() => {
@@ -119,48 +184,84 @@ function AdminOrderDetailLitePage() {
     }
   }, []);
 
-  // Extract IDs from array of objects
-  const extractIds = useCallback((items) => {
-    if (!items || !Array.isArray(items)) return [];
-    return items
-      .map((item) => {
-        if (typeof item === "number" || typeof item === "string") {
-          return item;
-        }
-        return item.id || item.value || item.skillSetId || item.tagId;
-      })
-      .filter(Boolean);
-  }, []);
+  // Fetch order data with proper cleanup
+  const fetchOrder = useCallback(() => {
+    if (!oid) {
+      if (import.meta.env.DEV) {
+        console.log("No oid provided, returning");
+      }
+      return;
+    }
 
-  // Fetch order data
-  const fetchOrder = useCallback(async () => {
-    if (!oid) return;
+    // Cancel any ongoing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
 
+    // Create new abort controller
+    abortControllerRef.current = new AbortController();
+    const currentAbortController = abortControllerRef.current;
+
+    if (import.meta.env.DEV) {
+      console.log("Starting fetch for oid:", oid);
+    }
     setLoading(true);
     setError(null);
 
-    try {
-      const orderData = await orderManager.getOrderDetail(oid, onUnauthorized);
-      setOrder(orderData);
-    } catch (err) {
-      console.error("Failed to fetch order:", err);
-      setError("Failed to load order details. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    orderManager.getOrderDetailWithCallbacks(
+      oid,
+      (response) => {
+        // Check if this request was aborted or component unmounted
+        if (currentAbortController.signal.aborted || !isMounted.current) {
+          return;
+        }
+        if (import.meta.env.DEV) {
+          console.log("Setting order data:", response);
+        }
+        setOrder(response);
+        setLoading(false);
+      },
+      (errorResponse) => {
+        // Check if this request was aborted or component unmounted
+        if (currentAbortController.signal.aborted || !isMounted.current) {
+          return;
+        }
+        if (import.meta.env.DEV) {
+          console.error("Setting error:", errorResponse);
+        }
+        setError(
+          errorResponse?.message ||
+            "Failed to load order details. Please try again.",
+        );
+        setLoading(false);
+      },
+      () => {
+        // Check if this request was aborted or component unmounted
+        if (currentAbortController.signal.aborted || !isMounted.current) {
+          return;
+        }
+        if (import.meta.env.DEV) {
+          console.log("Setting loading to false");
+        }
+        setLoading(false);
+      },
+      onUnauthorized,
+    );
   }, [oid, orderManager, onUnauthorized]);
 
   // Fetch current user data
-  const fetchCurrentUser = useCallback(async () => {
-    try {
-      setCurrentUser({ role: STAFF_TYPE_MANAGEMENT });
-    } catch (err) {
-      console.error("Failed to fetch current user:", err);
-    }
+  const fetchCurrentUser = useCallback(() => {
+    if (!isMounted.current) return;
+    setCurrentUser({ role: STAFF_TYPE_MANAGEMENT });
   }, []);
 
-  // Initial data load
+  // Initial data load with cleanup
   useEffect(() => {
+    isMounted.current = true;
+
+    if (import.meta.env.DEV) {
+      console.log("Effect running for oid:", oid);
+    }
     window.scrollTo(0, 0);
 
     if (!authManager.isAuthenticated()) {
@@ -170,6 +271,19 @@ function AdminOrderDetailLitePage() {
 
     fetchOrder();
     fetchCurrentUser();
+
+    // Cleanup function - only cancel requests, don't set state
+    return () => {
+      isMounted.current = false;
+
+      // Cancel any ongoing requests
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+      // Note: Don't set state here - component is unmounting
+      // The isMounted check in callbacks prevents state updates
+    };
   }, [oid, authManager, navigate, fetchOrder, fetchCurrentUser]);
 
   // Format phone number for display
@@ -191,64 +305,8 @@ function AdminOrderDetailLitePage() {
 
   // Get order status text and style
   const getOrderStatus = useCallback((status) => {
-    const statusConfig = {
-      [OrderStatusNew]: {
-        text: "New",
-        color: "text-green-600",
-        bg: "bg-green-50",
-        border: "border-green-200",
-      },
-      [OrderStatusDeclined]: {
-        text: "Declined",
-        color: "text-red-600",
-        bg: "bg-red-50",
-        border: "border-red-200",
-      },
-      [OrderStatusPending]: {
-        text: "Pending",
-        color: "text-yellow-600",
-        bg: "bg-yellow-50",
-        border: "border-yellow-200",
-      },
-      [OrderStatusCancelled]: {
-        text: "Cancelled",
-        color: "text-gray-600",
-        bg: "bg-gray-50",
-        border: "border-gray-200",
-      },
-      [OrderStatusOngoing]: {
-        text: "Ongoing",
-        color: "text-blue-600",
-        bg: "bg-blue-50",
-        border: "border-blue-200",
-      },
-      [OrderStatusInProgress]: {
-        text: "In Progress",
-        color: "text-blue-600",
-        bg: "bg-blue-50",
-        border: "border-blue-200",
-      },
-      [OrderStatusCompletedButUnpaid]: {
-        text: "Completed (Unpaid)",
-        color: "text-orange-600",
-        bg: "bg-orange-50",
-        border: "border-orange-200",
-      },
-      [OrderStatusCompletedAndPaid]: {
-        text: "Completed (Paid)",
-        color: "text-green-600",
-        bg: "bg-green-50",
-        border: "border-green-200",
-      },
-      [OrderStatusArchived]: {
-        text: "Archived",
-        color: "text-gray-600",
-        bg: "bg-gray-50",
-        border: "border-gray-200",
-      },
-    };
     return (
-      statusConfig[status] || {
+      ORDER_STATUS_CONFIG[status] || {
         text: "Unknown",
         color: "text-gray-600",
         bg: "bg-gray-50",
@@ -257,24 +315,22 @@ function AdminOrderDetailLitePage() {
     );
   }, []);
 
-  // Get order type text
-  const getOrderTypeText = useCallback((type) => {
-    const typeMap = {
-      1: "Residential",
-      2: "Commercial",
-    };
-    return typeMap[type] || "Unknown";
-  }, []);
+  // Memoize theme classes
+  const themeClasses = useMemo(() => ({
+    textPrimary: getThemeClasses("text-primary"),
+    textSecondary: getThemeClasses("text-secondary"),
+    textMuted: getThemeClasses("text-muted"),
+  }), [getThemeClasses]);
 
   // Computed values
-  const isArchived = useMemo(() => order?.status === OrderStatusArchived, [order]);
+  const isArchived = useMemo(() => order?.status === ORDER_STATUS_ARCHIVED, [order]);
   const hasAssociateAssigned = useMemo(() => order && order.associatePublicId !== 0, [order]);
   const hasPendingTask = useMemo(() => {
     return order?.latestPendingTaskId && order.latestPendingTaskId !== "000000000000000000000000";
   }, [order]);
   const canViewFinancials = useMemo(() => {
-    return (order?.status === OrderStatusCompletedButUnpaid ||
-      order?.status === OrderStatusCompletedAndPaid) &&
+    return (order?.status === ORDER_STATUS_COMPLETED_BUT_UNPAID ||
+      order?.status === ORDER_STATUS_COMPLETED_AND_PAID) &&
       (currentUser?.role === STAFF_TYPE_MANAGEMENT ||
         currentUser?.role === STAFF_TYPE_EXECUTIVE);
   }, [order, currentUser]);
@@ -286,14 +342,28 @@ function AdminOrderDetailLitePage() {
 
   // Memoize breadcrumb items
   const breadcrumbItems = useMemo(() => [
-    { label: "Dashboard", to: "/admin/dashboard", icon: ChartBarIcon },
-    { label: "Orders", to: "/admin/orders", icon: WrenchScrewdriverIcon },
-    { label: "Detail", icon: InformationCircleIcon, isActive: true },
+    {
+      label: "Dashboard",
+      to: "/admin/dashboard",
+      icon: HomeIcon,
+      hideOnMobile: false,
+      mobileLabel: "Dash",
+    },
+    {
+      label: "Orders",
+      to: "/admin/orders",
+      icon: WrenchScrewdriverIcon,
+    },
+    {
+      label: "Detail",
+      icon: InformationCircleIcon,
+      isActive: true,
+    },
   ], []);
 
   // Memoize header config
   const headerConfig = useMemo(() => ({
-    title: "Summary",
+    title: "Order - Summary",
     icon: ClipboardDocumentListIcon,
     loadingText: "Loading order details...",
     notFoundTitle: "Order Not Found",
@@ -345,17 +415,20 @@ function AdminOrderDetailLitePage() {
     buttons.push({
       variant: "danger",
       label: "Close",
-      icon: XMarkIcon,
+      icon: XCircleIcon,
       disabled: isArchived,
       onClick: () => navigate(`/admin/order/${oid}/more/close`),
     });
 
     buttons.push({
-      variant: "warning",
-      label: "Edit",
-      icon: PencilSquareIcon,
-      disabled: isArchived,
-      onClick: () => navigate(`/admin/order/${oid}/edit`),
+      component: (
+        <EditButton
+          onClick={() => navigate(`/admin/order/${oid}/edit`)}
+          disabled={isArchived}
+          variant="primary"
+          className="flex-1 sm:flex-initial"
+        />
+      ),
     });
 
     if (hasPendingTask) {
@@ -413,7 +486,7 @@ function AdminOrderDetailLitePage() {
             {/* Job ID and Status Header */}
             <div className="bg-gray-50 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4 lg:mb-5">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+                <h3 className={`text-base sm:text-lg font-semibold ${themeClasses.textPrimary}`}>
                   Job #{order.wjid}
                 </h3>
                 <div
@@ -426,14 +499,14 @@ function AdminOrderDetailLitePage() {
 
             {/* Client Information */}
             <div className="border-t border-gray-200 pt-4 sm:pt-6 mb-4 sm:mb-6">
-              <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-3 sm:mb-4">
+              <h4 className={`text-sm sm:text-base font-semibold ${themeClasses.textPrimary} mb-3 sm:mb-4`}>
                 Client Information
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                 <div className="flex items-start">
-                  <UserIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 text-gray-400 mt-0.5 flex-shrink-0" />
+                  <UserIcon className={`w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 ${themeClasses.textMuted} mt-0.5 flex-shrink-0`} />
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">
+                    <p className={`text-xs sm:text-sm font-medium ${themeClasses.textMuted}`}>
                       Name
                     </p>
                     <Link
@@ -446,10 +519,10 @@ function AdminOrderDetailLitePage() {
                   </div>
                 </div>
                 <div className="flex items-start">
-                  <PhoneIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 text-gray-400 mt-0.5 flex-shrink-0" />
+                  <PhoneIcon className={`w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 ${themeClasses.textMuted} mt-0.5 flex-shrink-0`} />
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">
-                      Phone ({CLIENT_PHONE_TYPE_OF_MAP[order.customerPhoneType]})
+                    <p className={`text-xs sm:text-sm font-medium ${themeClasses.textMuted}`}>
+                      Phone ({ORDER_CLIENT_PHONE_TYPE_MAP[order.customerPhoneType]})
                     </p>
                     {order.customerPhone ? (
                       <a
@@ -464,19 +537,19 @@ function AdminOrderDetailLitePage() {
                         )}
                       </a>
                     ) : (
-                      <span className="text-sm sm:text-base text-gray-500">
+                      <span className={`text-sm sm:text-base ${themeClasses.textMuted}`}>
                         No phone
                       </span>
                     )}
                   </div>
                 </div>
                 <div className="flex items-start md:col-span-2">
-                  <MapPinIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 text-gray-400 mt-0.5 flex-shrink-0" />
+                  <MapPinIcon className={`w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 ${themeClasses.textMuted} mt-0.5 flex-shrink-0`} />
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">
+                    <p className={`text-xs sm:text-sm font-medium ${themeClasses.textMuted}`}>
                       Address
                     </p>
-                    <span className="text-sm sm:text-base text-gray-900">
+                    <span className={`text-sm sm:text-base ${themeClasses.textPrimary}`}>
                       {formatAddress(order)}
                     </span>
                     {order.customerFullAddressUrl && (
@@ -497,14 +570,14 @@ function AdminOrderDetailLitePage() {
             {/* Associate Information (if assigned) */}
             {hasAssociateInfo && (
               <div className="border-t border-gray-200 pt-4 sm:pt-6 mb-4 sm:mb-6">
-                <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-3 sm:mb-4">
+                <h4 className={`text-sm sm:text-base font-semibold ${themeClasses.textPrimary} mb-3 sm:mb-4`}>
                   Associate Information
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
                   <div className="flex items-start">
-                    <UserIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <UserIcon className={`w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 ${themeClasses.textMuted} mt-0.5 flex-shrink-0`} />
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs sm:text-sm font-medium text-gray-500">
+                      <p className={`text-xs sm:text-sm font-medium ${themeClasses.textMuted}`}>
                         Name
                       </p>
                       <Link
@@ -517,10 +590,10 @@ function AdminOrderDetailLitePage() {
                     </div>
                   </div>
                   <div className="flex items-start">
-                    <PhoneIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 text-gray-400 mt-0.5 flex-shrink-0" />
+                    <PhoneIcon className={`w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 ${themeClasses.textMuted} mt-0.5 flex-shrink-0`} />
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs sm:text-sm font-medium text-gray-500">
-                        Phone ({ASSOCIATE_PHONE_TYPE_OF_MAP[order.associatePhoneType]})
+                      <p className={`text-xs sm:text-sm font-medium ${themeClasses.textMuted}`}>
+                        Phone ({ORDER_ASSOCIATE_PHONE_TYPE_MAP[order.associatePhoneType]})
                       </p>
                       {order.associatePhone ? (
                         <a
@@ -535,7 +608,7 @@ function AdminOrderDetailLitePage() {
                           )}
                         </a>
                       ) : (
-                        <span className="text-sm sm:text-base text-gray-500">
+                        <span className={`text-sm sm:text-base ${themeClasses.textMuted}`}>
                           No phone
                         </span>
                       )}
@@ -547,13 +620,13 @@ function AdminOrderDetailLitePage() {
 
             {/* Job Details */}
             <div className="border-t border-gray-200 pt-4 sm:pt-6">
-              <h4 className="text-sm sm:text-base font-semibold text-gray-900 mb-3 sm:mb-4">
+              <h4 className={`text-sm sm:text-base font-semibold ${themeClasses.textPrimary} mb-3 sm:mb-4`}>
                 Job Details
               </h4>
               <div className="space-y-3 sm:space-y-4">
                 <div className="flex items-start">
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">
+                    <p className={`text-xs sm:text-sm font-medium ${themeClasses.textMuted}`}>
                       Job Type
                     </p>
                     <div className="flex items-center mt-1">
@@ -562,25 +635,25 @@ function AdminOrderDetailLitePage() {
                       ) : (
                         <BuildingOfficeIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600" />
                       )}
-                      <span className="text-sm sm:text-base text-gray-900 font-medium">
-                        {getOrderTypeText(order.type)}
+                      <span className={`text-sm sm:text-base ${themeClasses.textPrimary} font-medium`}>
+                        {ORDER_TYPE_MAP[order.type] || "Unknown"}
                       </span>
                     </div>
                   </div>
                 </div>
                 <div className="flex items-start">
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500">
+                    <p className={`text-xs sm:text-sm font-medium ${themeClasses.textMuted}`}>
                       Description
                     </p>
-                    <div className="mt-1 text-sm sm:text-base text-gray-900 whitespace-pre-wrap">
+                    <div className={`mt-1 text-sm sm:text-base ${themeClasses.textPrimary} whitespace-pre-wrap`}>
                       {order.description || "No description provided"}
                     </div>
                   </div>
                 </div>
                 <div className="flex items-start">
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs sm:text-sm font-medium text-gray-500 mb-2">
+                    <p className={`text-xs sm:text-sm font-medium ${themeClasses.textMuted} mb-2`}>
                       Skills Required
                     </p>
                     <SkillSetsDisplay
@@ -592,7 +665,7 @@ function AdminOrderDetailLitePage() {
                 {hasPendingTask && (
                   <div className="flex items-start">
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs sm:text-sm font-medium text-gray-500 mb-2">
+                      <p className={`text-xs sm:text-sm font-medium ${themeClasses.textMuted} mb-2`}>
                         Required Task
                       </p>
                       <Link
@@ -631,7 +704,19 @@ function AdminOrderDetailLitePage() {
         ),
       },
     ];
-  }, [order, formatAddress, formatPhone, getOrderStatus, getOrderTypeText, extractIds, onUnauthorized, hasAssociateInfo, hasPendingTask, getTaskUpdateURL]);
+  }, [order, formatAddress, formatPhone, getOrderStatus, themeClasses, onUnauthorized, hasAssociateInfo, hasPendingTask, getTaskUpdateURL]);
+
+  // Show loading state AFTER all hooks have been called
+  if (loading) {
+    return (
+      <DetailLiteView
+        isLoading={loading}
+        headerConfig={{
+          loadingText: "Loading order details...",
+        }}
+      />
+    );
+  }
 
   return (
     <DetailLiteView
@@ -642,10 +727,19 @@ function AdminOrderDetailLitePage() {
       actionButtons={actionButtons}
       tabs={tabs}
       alerts={alerts}
+      onUnauthorized={onUnauthorized}
       isLoading={loading}
       error={error}
       onErrorClose={() => setError(null)}
     />
+  );
+});
+
+function AdminOrderDetailLitePage() {
+  return (
+    <UIXThemeProvider>
+      <AdminOrderDetailLitePageContent />
+    </UIXThemeProvider>
   );
 }
 

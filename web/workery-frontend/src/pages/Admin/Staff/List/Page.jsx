@@ -169,12 +169,12 @@ function AdminStaffListPage() {
     ],
 
     // Table columns for tabular view
-    // DataList render function signature: (fieldValue, fullItem, rowIndex)
+    // DataList render function signature: (item, rowIndex)
     columns: [
       {
         key: "name",
         label: "Name",
-        render: (value, staff) => (
+        render: (staff) => (
           <Link
             to={`/admin/staff/${staff.id}`}
             onClick={(e) => e.stopPropagation()}
@@ -190,7 +190,7 @@ function AdminStaffListPage() {
       {
         key: "email",
         label: "Email",
-        render: (value, staff) =>
+        render: (staff) =>
           staff.email ? (
             <a
               href={`mailto:${staff.email}`}
@@ -207,7 +207,7 @@ function AdminStaffListPage() {
       {
         key: "phone",
         label: "Phone",
-        render: (value, staff) =>
+        render: (staff) =>
           staff.phone ? (
             <span className="flex items-center text-lg">
               <PhoneIcon className={`w-5 h-5 mr-2 ${themeClasses.textMuted}`} />
@@ -220,7 +220,7 @@ function AdminStaffListPage() {
       {
         key: "type",
         label: "Type",
-        render: (value, staff) => (
+        render: (staff) => (
           <Badge variant={getTypeBadgeVariant(staff.type)}>
             {STAFF_TYPE_MAP[staff.type] || "Unknown"}
           </Badge>
@@ -230,7 +230,7 @@ function AdminStaffListPage() {
         key: "actions",
         label: "Actions",
         align: "center",
-        render: (value, staff) => (
+        render: (staff) => (
           <ViewButton
             to={`/admin/staff/${staff.id}`}
             text="View"

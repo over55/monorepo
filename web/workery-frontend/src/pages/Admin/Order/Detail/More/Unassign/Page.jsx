@@ -2,7 +2,7 @@
 // UIX Upgraded - Uses OrderUnassignActionPage whole page component
 // @uix-page: AdminOrderDetailMoreUnassignPage
 
-import React, { useMemo } from "react";
+import React, { useMemo, memo } from "react";
 import {
   useOrderManager,
   useAuthManager,
@@ -11,7 +11,7 @@ import { ORDER_UNASSIGN_REASON_OPTIONS_WITH_EMPTY_OPTIONS } from "../../../../..
 import { OrderUnassignActionPage } from "../../../../../../components/business/views";
 import { UIXThemeProvider } from "../../../../../../components/UIX";
 
-function AdminOrderDetailMoreUnassignPage() {
+const AdminOrderDetailMoreUnassignPage = memo(function AdminOrderDetailMoreUnassignPage() {
   const orderManager = useOrderManager();
   const authManager = useAuthManager();
 
@@ -44,7 +44,7 @@ function AdminOrderDetailMoreUnassignPage() {
   );
 
   return <OrderUnassignActionPage config={config} />;
-}
+});
 
 // Wrapper with UIXThemeProvider
 function AdminOrderDetailMoreUnassignPageWithProvider() {

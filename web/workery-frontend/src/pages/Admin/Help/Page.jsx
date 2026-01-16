@@ -1,4 +1,5 @@
 // File Path: web/workery-frontend/src/pages/Admin/Help/Page.jsx
+// @uix-page: AdminHelpPage
 // UIX Upgraded - Uses UIX primitives (Card, Breadcrumb, Button)
 
 import React, { useMemo, useCallback } from "react";
@@ -28,53 +29,53 @@ import {
 } from "@heroicons/react/24/outline";
 
 // Contact information constants
-const CONTACT_INFO = {
+const CONTACT_INFO = Object.freeze({
   email: "support@workery.ca",
   phone: "+1(519)438-1111",
-  location: {
+  location: Object.freeze({
     text: "London, ON Canada",
     mapUrl:
       "https://www.google.com/maps/place/Over+55+Skills+at+Work/@42.982378,-81.2639086,17z/data=!3m2!4b1!5s0x882ef1f1bda3c3d5:0xb6c19797240aed91!4m6!3m5!1s0x882ef1f195805b65:0xc74817a331752923!8m2!3d42.982378!4d-81.261339!16s%2Fg%2F1thq1brc?entry=ttu",
-  },
-  website: {
+  }),
+  website: Object.freeze({
     text: "Official Website",
     url: "https://skillsatwork.ca",
-  },
-};
+  }),
+});
 
 // FAQs
-const FAQS = [
-  {
+const FAQS = Object.freeze([
+  Object.freeze({
     question: "How do I reset my password?",
     answer:
       "You can reset your password by clicking on the 'Forgot Password' link on the login page. You'll receive an email with instructions to create a new password.",
-  },
-  {
+  }),
+  Object.freeze({
     question: "How do I add a new customer?",
     answer:
       "Navigate to Customers → Add New Customer from the main menu. Fill in the required information and click Submit.",
-  },
-  {
+  }),
+  Object.freeze({
     question: "How do I generate reports?",
     answer:
       "Go to the Reports section from the main menu. Select the type of report you need and specify the date range. Click Generate to create your report.",
-  },
-  {
+  }),
+  Object.freeze({
     question: "How do I manage staff permissions?",
     answer:
       "Access the Staff section, select the staff member you want to modify, and click on 'Edit Permissions' to adjust their access levels.",
-  },
-  {
+  }),
+  Object.freeze({
     question: "How do I create a new work order?",
     answer:
       "Go to Orders → Add New Order. Search for or create a customer, then fill in the job details, assign an associate if needed, and submit the order.",
-  },
-  {
+  }),
+  Object.freeze({
     question: "How do I track task progress?",
     answer:
       "Navigate to the Tasks section to view all pending tasks. Click on any task to see its details and update its status.",
-  },
-];
+  }),
+]);
 
 /**
  * Admin Help Page

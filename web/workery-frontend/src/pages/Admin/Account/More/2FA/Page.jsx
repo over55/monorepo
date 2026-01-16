@@ -1,4 +1,5 @@
 // File Path: web/workery-frontend/src/pages/Admin/Account/More/2FA/Page.jsx
+// @uix-page: Account2FAPage
 // UIX Upgraded - Uses UIX primitives (Card, Alert, Breadcrumb, Spinner, Button, Modal)
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";

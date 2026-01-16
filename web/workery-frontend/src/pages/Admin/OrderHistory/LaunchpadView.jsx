@@ -1,4 +1,5 @@
 // File Path: web/workery-frontend/src/pages/Admin/OrderHistory/LaunchpadView.jsx
+// @uix-page: JobHistoryLaunchpadPage
 // UIX Upgraded - Uses UIX primitives (Card, Alert, Button, Breadcrumb, Spinner)
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";

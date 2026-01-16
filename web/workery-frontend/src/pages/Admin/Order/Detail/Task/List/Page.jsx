@@ -1,5 +1,6 @@
 // File Path: web/workery-frontend/src/pages/Admin/Order/Detail/Task/List/Page.jsx
 // UIX Upgraded - Uses UIX primitives (Card, Alert, Spinner, Breadcrumb, Tabs, Button)
+// @uix-page: OrderTaskListPage
 
 import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Link, useParams, useNavigate } from "react-router";
@@ -48,6 +49,37 @@ import {
   TASK_ITEM_TYPE_FOLLOW_UP_CUSTOMER_SURVEY,
   TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_ACCEPT_JOB,
 } from "../../../../../../constants/Task";
+
+// Static constants - frozen for performance
+const PAGE_SIZE_OPTIONS = Object.freeze([
+  { value: 10, label: "10" },
+  { value: 25, label: "25" },
+  { value: 50, label: "50" },
+  { value: 100, label: "100" },
+]);
+
+const TASK_TYPE_MAP = Object.freeze({
+  1: "Assign Associate",
+  2: "Follow Up",
+  3: "Complete Job",
+  4: "Survey",
+  5: "Review",
+});
+
+const TASK_STATUS_MAP = Object.freeze({
+  1: "Pending",
+  2: "In Progress",
+  3: "Completed",
+  4: "Cancelled",
+});
+
+const TASK_STATUS_STYLES = Object.freeze({
+  1: "bg-yellow-100 text-yellow-800 border-yellow-200",
+  2: "bg-blue-100 text-blue-800 border-blue-200",
+  3: "bg-green-100 text-green-800 border-green-200",
+  4: "bg-red-100 text-red-800 border-red-200",
+  default: "bg-gray-100 text-gray-800 border-gray-200",
+});
 
 function AdminOrderDetailMoreTaskListPage() {
   const { oid } = useParams();
@@ -246,41 +278,18 @@ function AdminOrderDetailMoreTaskListPage() {
     }
   };
 
-  const getTaskTypeLabel = (type) => {
-    const types = {
-      1: "Assign Associate",
-      2: "Follow Up",
-      3: "Complete Job",
-      4: "Survey",
-      5: "Review",
-    };
-    return types[type] || `Type ${type}`;
-  };
+  // Helper functions using frozen maps
+  const getTaskTypeLabel = useCallback((type) => {
+    return TASK_TYPE_MAP[type] || `Type ${type}`;
+  }, []);
 
-  const getTaskStatusLabel = (status) => {
-    const statuses = {
-      1: "Pending",
-      2: "In Progress",
-      3: "Completed",
-      4: "Cancelled",
-    };
-    return statuses[status] || `Status ${status}`;
-  };
+  const getTaskStatusLabel = useCallback((status) => {
+    return TASK_STATUS_MAP[status] || `Status ${status}`;
+  }, []);
 
-  const getTaskStatusStyle = (status) => {
-    switch (status) {
-      case 1:
-        return "bg-yellow-100 text-yellow-800 border-yellow-200";
-      case 2:
-        return "bg-blue-100 text-blue-800 border-blue-200";
-      case 3:
-        return "bg-green-100 text-green-800 border-green-200";
-      case 4:
-        return "bg-red-100 text-red-800 border-red-200";
-      default:
-        return "bg-gray-100 text-gray-800 border-gray-200";
-    }
-  };
+  const getTaskStatusStyle = useCallback((status) => {
+    return TASK_STATUS_STYLES[status] || TASK_STATUS_STYLES.default;
+  }, []);
 
   // Initial load - only clear cache once on mount
   useEffect(() => {
@@ -299,14 +308,6 @@ function AdminOrderDetailMoreTaskListPage() {
       doFetchTasks(currentPage, false);
     }
   }, [oid, currentPage, pageSize, sortByValue, doFetchTasks]);
-
-  // Page size options
-  const pageSizeOptions = [
-    { value: 10, label: "10" },
-    { value: 25, label: "25" },
-    { value: 50, label: "50" },
-    { value: 100, label: "100" },
-  ];
 
   if (isFetching && taskList.results.length === 0) {
     return (
@@ -603,7 +604,7 @@ function AdminOrderDetailMoreTaskListPage() {
                       }
                       className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500"
                     >
-                      {pageSizeOptions.map((option) => (
+                      {PAGE_SIZE_OPTIONS.map((option) => (
                         <option key={option.value} value={option.value}>
                           {option.label}
                         </option>

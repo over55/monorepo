@@ -247,12 +247,12 @@ function AdminOrderListPage() {
     ],
 
     // Table columns for tabular view
-    // DataList render function signature: (fieldValue, fullItem, rowIndex)
+    // DataList render function signature: (item, rowIndex)
     columns: [
       {
         key: "wjid",
         label: "Order #",
-        render: (value, order) => (
+        render: (order) => (
           <Link
             to={`/admin/order/${order.wjid || order.id}`}
             onClick={(e) => e.stopPropagation()}
@@ -266,7 +266,7 @@ function AdminOrderListPage() {
       {
         key: "customerName",
         label: "Customer",
-        render: (value, order) =>
+        render: (order) =>
           order.customerName ? (
             <Link
               to={`/admin/customer/${order.customerId}`}
@@ -287,7 +287,7 @@ function AdminOrderListPage() {
       {
         key: "associateName",
         label: "Associate",
-        render: (value, order) =>
+        render: (order) =>
           order.associateName ? (
             <Link
               to={`/admin/associate/${order.associateId}`}
@@ -304,7 +304,7 @@ function AdminOrderListPage() {
       {
         key: "status",
         label: "Status",
-        render: (value, order) => (
+        render: (order) => (
           <span
             className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeColor(order.status)}`}
           >
@@ -315,7 +315,7 @@ function AdminOrderListPage() {
       {
         key: "startDate",
         label: "Start Date",
-        render: (value, order) =>
+        render: (order) =>
           order.startDate ? (
             <span className="flex items-center text-lg">
               <CalendarDaysIcon className="w-5 h-5 mr-2 text-gray-400" />
@@ -329,7 +329,7 @@ function AdminOrderListPage() {
         key: "actions",
         label: "Actions",
         align: "center",
-        render: (value, order) => (
+        render: (order) => (
           <div className="flex items-center justify-center gap-2">
             <ViewButton
               to={`/admin/order/${order.wjid || order.id}`}

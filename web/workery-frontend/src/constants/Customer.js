@@ -57,3 +57,35 @@ export const CUSTOMER_DEACTIVATION_REASON_MAP = {
   6: "Duplicate",
   7: "Other",
 };
+
+// Customer status archived alias
+export const CUSTOMER_STATUS_ARCHIVED = CUSTOMER_STATUS_INACTIVE;
+
+// Customer type map for display
+export const CUSTOMER_TYPE_MAP = {
+  1: "Unassigned",
+  2: "Residential",
+  3: "Commercial",
+};
+
+// Organization type map for display
+export const CUSTOMER_ORGANIZATION_TYPE_MAP = {
+  1: "Private",
+  2: "Non-profit",
+  3: "Government",
+};
+
+// Gender map for display
+export const CUSTOMER_GENDER_MAP = {
+  1: "Other",
+  2: "Male",
+  3: "Female",
+  4: "Prefer not to say",
+};
+
+// Phone type map for display
+export const CUSTOMER_PHONE_TYPE_MAP = {
+  1: "Mobile",
+  2: "Work",
+  3: "Home",
+};

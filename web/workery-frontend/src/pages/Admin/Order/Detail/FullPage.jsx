@@ -1,14 +1,11 @@
 // File Path: web/workery-frontend/src/pages/Admin/Order/Detail/FullPage.jsx
-// UIX Upgraded - Uses DetailFullView whole page component
-// @uix-page: AdminOrderDetailFullPage
+// @uix-page: DetailFullView
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, memo, useRef } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import {
-  ChartBarIcon,
   ClipboardDocumentCheckIcon,
   InformationCircleIcon,
-  PencilSquareIcon,
   ChevronLeftIcon,
   CheckCircleIcon,
   XCircleIcon,
@@ -22,12 +19,18 @@ import {
   ArrowRightIcon,
   CurrencyDollarIcon,
   NoSymbolIcon,
+  HomeIcon,
+  PencilSquareIcon,
 } from "@heroicons/react/24/outline";
 import { useOrderManager, useAuthManager } from "../../../../services/Services";
 import {
   TagsDisplay,
   SkillSetsDisplay,
 } from "../../../../components/business/displays";
+import {
+  DetailSection,
+  DetailField,
+} from "../../../../components/business/views";
 import {
   TASK_ITEM_TYPE_ASSIGN_ASSOCIATE,
   TASK_ITEM_TYPE_FOLLOW_UP_DID_ASSOCIATE_AND_CUSTOMER_AGREED_TO_MEET,
@@ -41,8 +44,8 @@ import {
   ORDER_STATUS_COMPLETED_BUT_UNPAID,
   ORDER_STATUS_COMPLETED_AND_PAID,
   ORDER_STATUS_ARCHIVED,
-  ORDER_STATUS_CANCELLED,
-  ORDER_STATUS_DECLINED,
+  ORDER_CLIENT_PHONE_TYPE_MAP,
+  ORDER_ASSOCIATE_PHONE_TYPE_MAP,
 } from "../../../../constants/Order";
 import { CLIENT_PHONE_TYPE_WORK } from "../../../../constants/Customer";
 import { ASSOCIATE_PHONE_TYPE_WORK } from "../../../../constants/Associate";
@@ -51,51 +54,26 @@ import {
   STAFF_TYPE_EXECUTIVE,
 } from "../../../../constants/Staff";
 import { formatDateForDisplay } from "../../../../services/Helpers/DateFormatter";
-import { DetailFullView } from "../../../../components/UIX";
+import {
+  UIXThemeProvider,
+  DetailFullView,
+  EditButton,
+} from "../../../../components/UIX";
 
-// Phone type mappings
-const CLIENT_PHONE_TYPE_OF_MAP = {
-  1: "Work",
-  2: "Home",
-  3: "Mobile",
+// Extract IDs helper - moved outside component for performance
+const extractIds = (items) => {
+  if (!items || !Array.isArray(items)) return [];
+  return items
+    .map((item) => {
+      if (typeof item === "number" || typeof item === "string") {
+        return item;
+      }
+      return item.id || item.value || item.skillSetId || item.tagId;
+    })
+    .filter(Boolean);
 };
 
-const ASSOCIATE_PHONE_TYPE_OF_MAP = {
-  1: "Work",
-  2: "Home",
-  3: "Mobile",
-};
-
-// Detail Section Component
-const DetailSection = ({ title, icon: Icon, children }) => (
-  <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
-    <div className="px-4 sm:px-6 py-3 sm:py-4">
-      <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
-        <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
-        <span className="truncate">{title}</span>
-      </h3>
-    </div>
-    <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
-      <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {children}
-      </dl>
-    </div>
-  </div>
-);
-
-// Detail Field Component
-const DetailField = ({ label, value, fullWidth = false }) => (
-  <div className={fullWidth ? "lg:col-span-2" : ""}>
-    <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-1">
-      {label}
-    </dt>
-    <dd className="text-base sm:text-lg font-medium text-gray-900 break-words">
-      {value || "-"}
-    </dd>
-  </div>
-);
-
-function AdminOrderDetailFullPage() {
+const AdminOrderDetailFullPageContent = memo(function AdminOrderDetailFullPageContent() {
   const { oid } = useParams();
   const orderManager = useOrderManager();
   const authManager = useAuthManager();
@@ -106,6 +84,10 @@ function AdminOrderDetailFullPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+
+  // Refs for cleanup - prevents state updates on unmounted component
+  const isMounted = useRef(true);
+  const abortControllerRef = useRef(null);
 
   // Handle unauthorized access
   const onUnauthorized = useCallback(() => {
@@ -136,48 +118,84 @@ function AdminOrderDetailFullPage() {
     }
   }, []);
 
-  // Extract IDs from array of objects
-  const extractIds = useCallback((items) => {
-    if (!items || !Array.isArray(items)) return [];
-    return items
-      .map((item) => {
-        if (typeof item === "number" || typeof item === "string") {
-          return item;
-        }
-        return item.id || item.value || item.skillSetId || item.tagId;
-      })
-      .filter(Boolean);
-  }, []);
+  // Fetch order data with proper cleanup
+  const fetchOrder = useCallback(() => {
+    if (!oid) {
+      if (import.meta.env.DEV) {
+        console.log("No oid provided, returning");
+      }
+      return;
+    }
 
-  // Fetch order data
-  const fetchOrder = useCallback(async () => {
-    if (!oid) return;
+    // Cancel any ongoing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
 
+    // Create new abort controller
+    abortControllerRef.current = new AbortController();
+    const currentAbortController = abortControllerRef.current;
+
+    if (import.meta.env.DEV) {
+      console.log("Starting fetch for oid:", oid);
+    }
     setLoading(true);
     setError(null);
 
-    try {
-      const orderData = await orderManager.getOrderDetail(oid, onUnauthorized);
-      setOrder(orderData);
-    } catch (err) {
-      console.error("Failed to fetch order:", err);
-      setError("Failed to load order details. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    orderManager.getOrderDetailWithCallbacks(
+      oid,
+      (response) => {
+        // Check if this request was aborted or component unmounted
+        if (currentAbortController.signal.aborted || !isMounted.current) {
+          return;
+        }
+        if (import.meta.env.DEV) {
+          console.log("Setting order data:", response);
+        }
+        setOrder(response);
+        setLoading(false);
+      },
+      (errorResponse) => {
+        // Check if this request was aborted or component unmounted
+        if (currentAbortController.signal.aborted || !isMounted.current) {
+          return;
+        }
+        if (import.meta.env.DEV) {
+          console.error("Setting error:", errorResponse);
+        }
+        setError(
+          errorResponse?.message ||
+            "Failed to load order details. Please try again.",
+        );
+        setLoading(false);
+      },
+      () => {
+        // Check if this request was aborted or component unmounted
+        if (currentAbortController.signal.aborted || !isMounted.current) {
+          return;
+        }
+        if (import.meta.env.DEV) {
+          console.log("Setting loading to false");
+        }
+        setLoading(false);
+      },
+      onUnauthorized,
+    );
   }, [oid, orderManager, onUnauthorized]);
 
   // Fetch current user data
-  const fetchCurrentUser = useCallback(async () => {
-    try {
-      setCurrentUser({ role: STAFF_TYPE_MANAGEMENT });
-    } catch (err) {
-      console.error("Failed to fetch current user:", err);
-    }
+  const fetchCurrentUser = useCallback(() => {
+    if (!isMounted.current) return;
+    setCurrentUser({ role: STAFF_TYPE_MANAGEMENT });
   }, []);
 
-  // Initial data load
+  // Initial data load with cleanup
   useEffect(() => {
+    isMounted.current = true;
+
+    if (import.meta.env.DEV) {
+      console.log("Effect running for oid:", oid);
+    }
     window.scrollTo(0, 0);
 
     if (!authManager.isAuthenticated()) {
@@ -187,6 +205,19 @@ function AdminOrderDetailFullPage() {
 
     fetchOrder();
     fetchCurrentUser();
+
+    // Cleanup function - only cancel requests, don't set state
+    return () => {
+      isMounted.current = false;
+
+      // Cancel any ongoing requests
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+      // Note: Don't set state here - component is unmounting
+      // The isMounted check in callbacks prevents state updates
+    };
   }, [oid, authManager, navigate, fetchOrder, fetchCurrentUser]);
 
   // Helper functions for formatting
@@ -210,7 +241,9 @@ function AdminOrderDetailFullPage() {
     {
       label: "Dashboard",
       to: "/admin/dashboard",
-      icon: ChartBarIcon,
+      icon: HomeIcon,
+      hideOnMobile: false,
+      mobileLabel: "Dash",
     },
     {
       label: "Orders",
@@ -226,7 +259,7 @@ function AdminOrderDetailFullPage() {
 
   // Memoize header config
   const headerConfig = useMemo(() => ({
-    title: "Full Details",
+    title: "Order - Full Details",
     icon: ClipboardDocumentListIcon,
     loadingText: "Loading order details...",
     notFoundTitle: "Order Not Found",
@@ -303,11 +336,14 @@ function AdminOrderDetailFullPage() {
     });
 
     buttons.push({
-      variant: "warning",
-      label: "Edit",
-      icon: PencilSquareIcon,
-      disabled: isArchived,
-      onClick: () => navigate(`/admin/order/${oid}/edit`),
+      component: (
+        <EditButton
+          onClick={() => navigate(`/admin/order/${oid}/edit`)}
+          disabled={isArchived}
+          variant="primary"
+          className="flex-1 sm:flex-initial"
+        />
+      ),
     });
 
     if (hasPendingTask) {
@@ -378,7 +414,7 @@ function AdminOrderDetailFullPage() {
               }
             />
             <DetailField
-              label={`Client Phone Number (${CLIENT_PHONE_TYPE_OF_MAP[order.customerPhoneType] || "Unknown"})`}
+              label={`Client Phone Number (${ORDER_CLIENT_PHONE_TYPE_MAP[order.customerPhoneType] || "Unknown"})`}
               value={
                 order.customerPhone ? (
                   <a
@@ -551,7 +587,7 @@ function AdminOrderDetailFullPage() {
               }
             />
             <DetailField
-              label={`Associate Phone Number (${ASSOCIATE_PHONE_TYPE_OF_MAP[order.associatePhoneType] || "Unknown"})`}
+              label={`Associate Phone Number (${ORDER_ASSOCIATE_PHONE_TYPE_MAP[order.associatePhoneType] || "Unknown"})`}
               value={
                 order.associatePhone ? (
                   <a
@@ -658,7 +694,19 @@ function AdminOrderDetailFullPage() {
         ),
       },
     ];
-  }, [order, formatAddress, formatPhone, extractIds, onUnauthorized, hasAssociateInfo, hasPendingTask, getTaskUpdateURL]);
+  }, [order, formatAddress, formatPhone, onUnauthorized, hasAssociateInfo, hasPendingTask, getTaskUpdateURL]);
+
+  // Show loading state AFTER all hooks have been called
+  if (loading) {
+    return (
+      <DetailFullView
+        isLoading={loading}
+        headerConfig={{
+          loadingText: "Loading order details...",
+        }}
+      />
+    );
+  }
 
   return (
     <DetailFullView
@@ -669,10 +717,19 @@ function AdminOrderDetailFullPage() {
       actionButtons={actionButtons}
       tabs={tabs}
       alerts={alerts}
+      onUnauthorized={onUnauthorized}
       isLoading={loading}
       error={error}
       onErrorClose={() => setError(null)}
     />
+  );
+});
+
+function AdminOrderDetailFullPage() {
+  return (
+    <UIXThemeProvider>
+      <AdminOrderDetailFullPageContent />
+    </UIXThemeProvider>
   );
 }
 

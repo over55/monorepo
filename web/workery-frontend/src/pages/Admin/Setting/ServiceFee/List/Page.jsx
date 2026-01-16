@@ -41,7 +41,7 @@ const COLUMNS = [
   {
     key: "percentage",
     label: "Rate",
-    render: (_value, row) => (
+    render: (row) => (
       <div className="flex items-center">
         <PercentBadgeIcon className="w-4 h-4 mr-1 text-blue-500" />
         <span className="font-medium">{row.percentage || 0}%</span>
@@ -51,7 +51,7 @@ const COLUMNS = [
   {
     key: "status",
     label: "Status",
-    render: (_value, row) => (
+    render: (row) => (
       <span
         className={`inline-flex px-2.5 py-0.5 text-xs font-medium rounded-full ${
           row.status === 1
@@ -72,7 +72,7 @@ const COLUMNS = [
     key: "actions",
     label: "",
     centered: true,
-    render: (_value, row) => (
+    render: (row) => (
       <ViewButton
         basePath="/admin/settings/service-fee"
         itemId={row.id}

@@ -1,4 +1,5 @@
 // File Path: web/workery-frontend/src/pages/Admin/Setting/InactiveClient/Create/Page.jsx
+// @uix-page: SettingInactiveClientCreatePage
 // UIX Upgraded - Uses UIX primitives (redirect page - inactive clients cannot be created)
 // Note: Inactive clients are created by archiving existing customers, not by direct creation.
 

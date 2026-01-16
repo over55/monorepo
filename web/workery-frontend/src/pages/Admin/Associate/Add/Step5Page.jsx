@@ -485,6 +485,12 @@ const Step5Content = memo(function Step5Content() {
           </div>
         </FormCard>
 
+        {/* Hidden honeypot fields to prevent browser autofill issues */}
+        <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', top: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}>
+          <input type="email" name="email" autoComplete="email" tabIndex={-1} />
+          <input type="text" name="username" autoComplete="username" tabIndex={-1} />
+        </div>
+
         {/* Emergency Contact */}
         <FormCard
           title="Emergency Contact"
@@ -500,6 +506,7 @@ const Step5Content = memo(function Step5Content() {
               placeholder="Enter emergency contact name"
               required
               error={errors.emergencyContactName}
+              autoComplete="off"
             />
             <Input
               label="Relationship"
@@ -508,6 +515,7 @@ const Step5Content = memo(function Step5Content() {
               placeholder="Enter relationship"
               required
               error={errors.emergencyContactRelationship}
+              autoComplete="off"
             />
             <Input
               label="Phone Number"
@@ -518,6 +526,7 @@ const Step5Content = memo(function Step5Content() {
               icon={PhoneIcon}
               required
               error={errors.emergencyContactTelephone}
+              autoComplete="tel"
             />
             <Input
               label="Alternative Phone (Optional)"
@@ -526,6 +535,7 @@ const Step5Content = memo(function Step5Content() {
               onChange={handleEmergencyContactAltTelephoneChange}
               placeholder="Enter alternative phone number"
               icon={PhoneIcon}
+              autoComplete="off"
             />
           </div>
         </FormCard>
@@ -564,6 +574,12 @@ const Step5Content = memo(function Step5Content() {
           </div>
         </FormCard>
 
+        {/* Hidden honeypot fields to prevent browser password autofill issues */}
+        <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', top: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}>
+          <input type="text" name="fakeusernameremembered" autoComplete="username" tabIndex={-1} />
+          <input type="password" name="fakepasswordremembered" autoComplete="current-password" tabIndex={-1} />
+        </div>
+
         {/* Login Credentials */}
         <FormCard
           title="Login Credentials"
@@ -582,6 +598,7 @@ const Step5Content = memo(function Step5Content() {
                 icon={LockClosedIcon}
                 error={errors.password}
                 helperText="Leave blank to auto-generate a password"
+                autoComplete="new-password"
               />
               <Input
                 label="Confirm Password (Optional)"
@@ -592,6 +609,7 @@ const Step5Content = memo(function Step5Content() {
                 icon={LockClosedIcon}
                 error={errors.passwordRepeated}
                 helperText="Must match the password above if entered"
+                autoComplete="new-password"
               />
             </div>
           </div>

@@ -102,11 +102,9 @@ const Table = memo(function Table({ columns = [], data = [], className = "" }) {
             let cellContent;
 
             // If column has a custom render function, use it
+            // Pass full row as first argument for intuitive access
             if (typeof column.render === "function") {
-              cellContent = column.render(
-                row[column.key || column.accessor],
-                row,
-              );
+              cellContent = column.render(row, rowIndex);
             } else {
               // Get the value using various possible keys
               let value = null;

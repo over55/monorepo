@@ -34,7 +34,7 @@ const COLUMNS = [
     key: "actions",
     label: "",
     centered: true,
-    render: (_value, row) => (
+    render: (row) => (
       <ViewButton
         basePath="/admin/settings/insurance-requirement"
         itemId={row.id}

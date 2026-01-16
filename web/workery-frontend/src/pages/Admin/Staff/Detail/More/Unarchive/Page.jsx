@@ -1,199 +1,91 @@
 // File Path: web/workery-frontend/src/pages/Admin/Staff/Detail/More/Unarchive/Page.jsx
-// UIX Upgraded - Uses EntityActionConfirmationPage whole page component
-// @uix-page: AdminStaffDetailMoreUnarchivePage
+// @uix-page: EntityActionUnarchivePage
 
-import React, { useCallback, useMemo } from "react";
-import { useParams } from "react-router";
-import {
-  ChartBarIcon,
-  UserGroupIcon,
-  ArchiveBoxXMarkIcon,
-  ExclamationTriangleIcon,
-  EllipsisHorizontalIcon,
-  UserIcon,
-  EnvelopeIcon,
-  PhoneIcon,
-  InformationCircleIcon,
-} from "@heroicons/react/24/outline";
+import React, { useCallback } from "react";
+import { UserIcon, BriefcaseIcon, EnvelopeIcon, PhoneIcon } from "@heroicons/react/24/outline";
 import { useStaffManager } from "../../../../../../services/Services";
-import { EntityActionConfirmationPage, UIXThemeProvider, useUIXTheme } from "../../../../../../components/UIX";
+import { EntityActionUnarchivePage, useUIXTheme, Card, Badge } from "../../../../../../components/UIX";
+import { STAFF_STATUS_ACTIVE, STAFF_STATUS_ARCHIVED } from "../../../../../../constants/Staff";
 
-function AdminStaffDetailMoreUnarchivePageContent() {
-  const { aid } = useParams();
+function AdminStaffDetailMoreUnarchivePage() {
   const staffManager = useStaffManager();
   const { getThemeClasses } = useUIXTheme();
 
-  // Memoized theme classes
-  const themeClasses = useMemo(() => ({
-    bgMuted: getThemeClasses('bg-muted') || 'bg-gray-50 dark:bg-gray-800',
-    textPrimary: getThemeClasses('text-primary') || 'text-gray-900 dark:text-gray-100',
-    textSecondary: getThemeClasses('text-secondary') || 'text-gray-700 dark:text-gray-300',
-    textMuted: getThemeClasses('text-muted') || 'text-gray-500 dark:text-gray-400',
-    iconMuted: getThemeClasses('icon-muted') || 'text-gray-400 dark:text-gray-500',
-    iconSecondary: getThemeClasses('icon-secondary') || 'text-gray-600 dark:text-gray-400',
-    badgeBg: getThemeClasses('badge-bg') || 'bg-gray-100 dark:bg-gray-700',
-    badgeText: getThemeClasses('badge-text') || 'text-gray-800 dark:text-gray-200',
-  }), [getThemeClasses]);
-
-  // Fetch entity function
+  // Wrapped callbacks to preserve 'this' context
   const fetchEntity = useCallback(
-    async (entityId, onSuccess, onError, onDone, onUnauthorized) => {
-      try {
-        const data = await staffManager.getStaffDetail(entityId, onUnauthorized);
-        onSuccess(data);
-      } catch (error) {
-        onError(error);
-      } finally {
-        onDone();
-      }
+    (staffId, onSuccess, onError, onDone, onUnauthorized) => {
+      staffManager.getStaffDetailWithCallbacks(staffId, onSuccess, onError, onDone, onUnauthorized);
     },
     [staffManager],
   );
 
-  // Execute action function (unarchive)
-  const executeAction = useCallback(
-    async (entityId, onSuccess, onError, onDone, onUnauthorized) => {
-      try {
-        // Note: The archive/unarchive endpoint toggles the status
-        await staffManager.archiveStaff(entityId, onUnauthorized);
-        onSuccess();
-      } catch (error) {
-        onError(error);
-      } finally {
-        onDone();
-      }
+  const executeUnarchive = useCallback(
+    (staffId, onSuccess, onError, onDone, onUnauthorized) => {
+      staffManager.unarchiveStaffWithCallbacks(staffId, onSuccess, onError, onDone, onUnauthorized);
     },
     [staffManager],
   );
 
-  // Breadcrumb items
-  const breadcrumbItems = [
-    {
-      label: "Dashboard",
-      to: "/admin/dashboard",
-      icon: ChartBarIcon,
-    },
-    {
-      label: "Staff",
-      to: "/admin/staff",
-      icon: UserIcon,
-    },
-    {
-      label: "Detail",
-      to: `/admin/staff/${aid}`,
-      icon: InformationCircleIcon,
-    },
-    {
-      label: "More",
-      to: `/admin/staff/${aid}/more`,
-      icon: EllipsisHorizontalIcon,
-    },
-    {
-      label: "Unarchive",
-      icon: ArchiveBoxXMarkIcon,
-      isActive: true,
-    },
-  ];
+  const formatPhone = useCallback((phone) => {
+    if (!phone) return "N/A";
+    return phone.replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3");
+  }, []);
 
-  // Page configuration
-  const pageConfig = {
-    title: "Unarchive Staff Member",
-    subtitle: "Restore this staff member from archive",
-    icon: ArchiveBoxXMarkIcon,
-    actionIcon: ArchiveBoxXMarkIcon,
-    loadingText: "Loading staff details...",
-  };
+  const getStatusDisplay = useCallback((status) => {
+    if (status === STAFF_STATUS_ACTIVE) {
+      return <Badge variant="success" size="sm">Active</Badge>;
+    } else if (status === STAFF_STATUS_ARCHIVED) {
+      return <Badge variant="warning" size="sm">Archived</Badge>;
+    }
+    return <Badge variant="secondary" size="sm">Unknown</Badge>;
+  }, []);
 
-  // Warning configuration
-  const warningConfig = {
-    title: "Unarchive Staff Member - Are you sure?",
-    description: "You are about to unarchive this staff member. This means:",
-    consequences: [
-      "This staff member will become active again",
-      "They will be able to access the system",
-      "They will appear in active staff searches",
-      "All previous settings and permissions will be restored",
-    ],
-    confirmationText: "Are you sure you would like to continue?",
-    warningType: "amber",
-  };
-
-  // Render entity information
   const renderEntityInfo = useCallback(
     (staff) => (
-      <div className={`${themeClasses.bgMuted} rounded-lg p-6 mb-6`}>
-        <h4 className={`text-lg font-semibold ${themeClasses.textPrimary} mb-4 flex items-center`}>
-          <UserIcon className={`w-5 h-5 mr-2 ${themeClasses.iconSecondary}`} />
+      <Card className={`${getThemeClasses("bg-muted")} mb-6`} padding="p-6">
+        <Badge variant="default" size="lg" className={`text-lg font-semibold ${getThemeClasses("text-primary")} mb-4 flex items-center`}>
+          <UserIcon className={`w-5 h-5 mr-2 ${getThemeClasses("text-secondary")}`} />
           Staff Information
-        </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="flex items-center">
-            <span className={`font-medium ${themeClasses.textSecondary} mr-2`}>Name:</span>
-            <span className={themeClasses.textPrimary}>
-              {staff.name || `${staff.firstName} ${staff.lastName}`}
-            </span>
-          </div>
-          <div className="flex items-center">
-            <span className={`font-medium ${themeClasses.textSecondary} mr-2`}>Current Status:</span>
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${themeClasses.badgeBg} ${themeClasses.badgeText}`}>
-              <ArchiveBoxXMarkIcon className="w-3 h-3 mr-1" />
-              Archived
-            </span>
-          </div>
-          <div className="flex items-center">
-            <EnvelopeIcon className={`w-4 h-4 mr-2 ${themeClasses.iconMuted}`} />
-            <span className={`font-medium ${themeClasses.textSecondary} mr-2`}>Email:</span>
-            <span className={themeClasses.textPrimary}>{staff.email || "-"}</span>
-          </div>
-          <div className="flex items-center">
-            <PhoneIcon className={`w-4 h-4 mr-2 ${themeClasses.iconMuted}`} />
-            <span className={`font-medium ${themeClasses.textSecondary} mr-2`}>Phone:</span>
-            <span className={themeClasses.textPrimary}>{staff.phone || "-"}</span>
-          </div>
-        </div>
-      </div>
+        </Badge>
+        <Card padding="p-0" className="grid grid-cols-1 md:grid-cols-2 gap-4 border-0 shadow-none">
+          <Card padding="p-0" className="flex items-center border-0 shadow-none">
+            <Badge variant="secondary" size="sm" className="font-medium mr-2">Name:</Badge>
+            <Badge variant="default" size="sm">{staff.firstName} {staff.lastName}</Badge>
+          </Card>
+          <Card padding="p-0" className="flex items-center border-0 shadow-none">
+            <Badge variant="secondary" size="sm" className="font-medium mr-2">Status:</Badge>
+            {getStatusDisplay(staff.status)}
+          </Card>
+          <Card padding="p-0" className="flex items-center border-0 shadow-none">
+            <EnvelopeIcon className={`w-4 h-4 mr-2 ${getThemeClasses("text-muted")}`} />
+            <Badge variant="secondary" size="sm" className="font-medium mr-2">Email:</Badge>
+            <Badge variant="default" size="sm">{staff.email}</Badge>
+          </Card>
+          <Card padding="p-0" className="flex items-center border-0 shadow-none">
+            <PhoneIcon className={`w-4 h-4 mr-2 ${getThemeClasses("text-muted")}`} />
+            <Badge variant="secondary" size="sm" className="font-medium mr-2">Phone:</Badge>
+            <Badge variant="default" size="sm">{formatPhone(staff.phone)}</Badge>
+          </Card>
+        </Card>
+      </Card>
     ),
-    [themeClasses],
+    [formatPhone, getStatusDisplay, getThemeClasses],
   );
 
-  // Status alerts
-  const statusAlerts = [
-    {
-      condition: (entity) => entity?.status !== 2,
-      type: "warning",
-      message: "This staff member is not archived and cannot be unarchived.",
-      icon: ExclamationTriangleIcon,
-    },
-  ];
-
-  // Check if action is disabled (only allow if staff is archived - status 2)
-  const isActionDisabled = useCallback((entity) => entity?.status !== 2, []);
-
   return (
-    <EntityActionConfirmationPage
-      entityType="staff member"
-      entityId={aid}
-      actionType="unarchive"
+    <EntityActionUnarchivePage
+      entityType="Staff"
+      entityTypePlural="Staff"
+      basePath="/admin/staff"
+      listPath="/admin/staff"
+      entityParamName="aid"
+      entityIcon={BriefcaseIcon}
       fetchEntity={fetchEntity}
-      executeAction={executeAction}
-      breadcrumbItems={breadcrumbItems}
-      pageConfig={pageConfig}
+      executeUnarchive={executeUnarchive}
       renderEntityInfo={renderEntityInfo}
-      warningConfig={warningConfig}
-      statusAlerts={statusAlerts}
-      isActionDisabled={isActionDisabled}
-      returnPath={`/admin/staff/${aid}/more`}
-      successRedirectPath={`/admin/staff/${aid}/detail`}
-      successRedirectDelay={2000}
+      activeStatus={STAFF_STATUS_ACTIVE}
+      successRedirectPath="/admin/staff"
     />
-  );
-}
-
-function AdminStaffDetailMoreUnarchivePage() {
-  return (
-    <UIXThemeProvider>
-      <AdminStaffDetailMoreUnarchivePageContent />
-    </UIXThemeProvider>
   );
 }
 

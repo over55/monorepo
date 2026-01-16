@@ -1,4 +1,5 @@
 // File Path: web/workery-frontend/src/pages/Admin/Setting/InactiveClient/Delete/Page.jsx
+// @uix-page: SettingInactiveClientDeletePage
 // UIX Upgraded - Uses UIX primitives (redirect page - inactive clients cannot be deleted from here)
 // Note: Permanent deletion of client records should be done through Customer management, not from this settings page.
 

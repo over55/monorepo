@@ -1,4 +1,5 @@
 // monorepo/web/workery-frontend/src/pages/Admin/SkillSet/AssociateSearchCriteriaPage.jsx
+// @uix-page: SkillSetAssociateSearchCriteriaPage
 // UIX Upgraded - Uses UIX primitives (Card, Alert, Button, Breadcrumb)
 
 import React, { useState, useMemo, useCallback } from "react";

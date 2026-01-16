@@ -1,4 +1,5 @@
 // File Path: web/workery-frontend/src/pages/Admin/Setting/Tax/Page.jsx
+// @uix-page: AdminSettingsTaxPage
 // UIX Upgraded - Uses UIX primitives (Card, Button, Alert, Spinner, Breadcrumb)
 
 import React, { useState, useEffect, useCallback, useMemo, memo } from "react";

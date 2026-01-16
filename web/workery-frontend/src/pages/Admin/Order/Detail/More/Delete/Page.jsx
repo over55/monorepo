@@ -2,7 +2,7 @@
 // UIX Upgraded - Uses OrderDeleteActionPage whole page component
 // @uix-page: AdminOrderDetailMoreDeletePage
 
-import React, { useMemo } from "react";
+import React, { useMemo, memo } from "react";
 import {
   useOrderManager,
   useAuthManager,
@@ -10,7 +10,7 @@ import {
 import { OrderDeleteActionPage } from "../../../../../../components/business/views";
 import { UIXThemeProvider } from "../../../../../../components/UIX";
 
-function AdminOrderDetailMoreDeletePage() {
+const AdminOrderDetailMoreDeletePage = memo(function AdminOrderDetailMoreDeletePage() {
   const orderManager = useOrderManager();
   const authManager = useAuthManager();
 
@@ -37,7 +37,7 @@ function AdminOrderDetailMoreDeletePage() {
   );
 
   return <OrderDeleteActionPage config={config} />;
-}
+});
 
 // Wrapper with UIXThemeProvider
 function AdminOrderDetailMoreDeletePageWithProvider() {

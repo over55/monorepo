@@ -1,4 +1,5 @@
 // File Path: web/workery-frontend/src/pages/Admin/Account/More/ChangePassword/Page.jsx
+// @uix-page: AccountChangePasswordPage
 // UIX Upgraded - Uses UIX primitives (Card, Alert, Breadcrumb, Spinner, Button)
 
 import React, { useState, useCallback, useMemo } from "react";

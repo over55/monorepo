@@ -1,4 +1,5 @@
 // File Path: web/workery-frontend/src/pages/Admin/Order/Detail/More/Incident/Detail/Page.jsx
+// @uix-page: OrderIncidentDetailPage
 // UIX Upgraded - Uses UIX primitives (Card, Alert, Button, Breadcrumb, Spinner, Modal)
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";

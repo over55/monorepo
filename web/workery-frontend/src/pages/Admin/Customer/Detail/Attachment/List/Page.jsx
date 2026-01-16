@@ -20,7 +20,7 @@ import {
   useCustomerManager,
 } from "../../../../../../services/Services";
 import { ATTACHMENT_OWNERSHIP_TYPE } from "../../../../../../constants/Attachment";
-import { EntityAttachmentListPage } from "../../../../../../components/UIX";
+import { EntityAttachmentListPage, UIXThemeProvider } from "../../../../../../components/UIX";
 
 function AdminCustomerDetailAttachmentListPage() {
   const { cid } = useParams();
@@ -130,7 +130,11 @@ function AdminCustomerDetailAttachmentListPage() {
     },
   }), [attachmentManager, customerManager, navigate]);
 
-  return <EntityAttachmentListPage config={config} />;
+  return (
+    <UIXThemeProvider>
+      <EntityAttachmentListPage config={config} />
+    </UIXThemeProvider>
+  );
 }
 
 export default AdminCustomerDetailAttachmentListPage;

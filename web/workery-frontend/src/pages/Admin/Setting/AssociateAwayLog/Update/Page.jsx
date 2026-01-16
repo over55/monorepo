@@ -1,4 +1,5 @@
 // File Path: web/workery-frontend/src/pages/Admin/Setting/AssociateAwayLog/Update/Page.jsx
+// @uix-page: SettingAssociateAwayLogUpdatePage
 // UIX Upgraded - Uses UIX primitives (requires conditional form fields and guidelines sidebar not supported by SettingsFormView)
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";

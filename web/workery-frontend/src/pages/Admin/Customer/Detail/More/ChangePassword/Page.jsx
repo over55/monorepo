@@ -1,134 +1,114 @@
-// UIX Upgraded - Uses UIX primitives (Card, Alert, Button, Breadcrumb, Spinner, etc.)
-import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { useNavigate, useParams } from "react-router";
+// File Path: web/workery-frontend/src/pages/Admin/Customer/Detail/More/ChangePassword/Page.jsx
+// @uix-page: CustomerChangePasswordPage
+// UIX Upgraded - Uses UIX primitives (Card, Alert, Button, Modal, Input, etc.)
+
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { Link, useNavigate, useParams } from "react-router";
 import {
-  useCustomerManager,
-  useAuthManager,
-} from "../../../../../../services/Services";
-import { theme, globalStyles } from "../../../../../../constants/Theme";
+  ChartBarIcon,
+  KeyIcon,
+  CheckCircleIcon,
+  InformationCircleIcon,
+  LockClosedIcon,
+  ArchiveBoxIcon,
+  Cog6ToothIcon,
+  UsersIcon,
+  ExclamationTriangleIcon,
+  NoSymbolIcon,
+} from "@heroicons/react/24/outline";
+import { useCustomerManager } from "../../../../../../services/Services";
+import axios from "axios";
 import {
   Card,
-  Button,
   Alert,
-  Loading,
+  Button,
   Breadcrumb,
   Modal,
   Input,
+  Spinner,
+  Badge,
   UIXThemeProvider,
   useUIXTheme,
 } from "../../../../../../components/UIX";
-import axios from "axios";
 
 function AdminCustomerDetailMoreChangePasswordPage() {
   const { cid } = useParams();
   const navigate = useNavigate();
   const customerManager = useCustomerManager();
-  const authManager = useAuthManager();
   const { getThemeClasses } = useUIXTheme();
 
-  // Memoized theme classes
-  const themeClasses = useMemo(
-    () => ({
-      textPrimary: getThemeClasses("text-primary"),
-      textSecondary: getThemeClasses("text-secondary"),
-      linkPrimary: getThemeClasses("link-primary"),
-    }),
-    [getThemeClasses],
-  );
-
-  const [customer, setCustomer] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // Component states
   const [errors, setErrors] = useState({});
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [modalJustOpened, setModalJustOpened] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-
-  // Form fields
+  const [isFetching, setFetching] = useState(true);
+  const [customer, setCustomer] = useState(null);
   const [password, setPassword] = useState("");
   const [passwordRepeated, setPasswordRepeated] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
+  // Memoize theme classes
+  const themeClasses = useMemo(() => ({
+    textPrimary: getThemeClasses("text-primary") || "text-gray-900 dark:text-gray-100",
+    textSecondary: getThemeClasses("text-secondary") || "text-gray-600 dark:text-gray-400",
+    textMuted: getThemeClasses("text-muted") || "text-gray-500 dark:text-gray-400",
+    linkPrimary: getThemeClasses("link-primary") || "text-blue-600 dark:text-blue-400",
+    bgMuted: getThemeClasses("bg-muted") || "bg-gray-50 dark:bg-gray-800",
+    borderMuted: getThemeClasses("border-muted") || "border-gray-200 dark:border-gray-700",
+    iconMuted: getThemeClasses("icon-muted") || "text-gray-400 dark:text-gray-500",
+    iconSecondary: getThemeClasses("icon-secondary") || "text-gray-600 dark:text-gray-400",
+  }), [getThemeClasses]);
+
+  // Unauthorized callback
   const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
   }, [navigate]);
 
-  // Memoized breadcrumb items
-  const breadcrumbItems = useMemo(
-    () => [
-      { label: "Dashboard", path: "/admin/dashboard", icon: "chart-bar" },
-      { label: "Customers", path: "/admin/customers", icon: "users" },
-      { label: "Detail (More)", path: `/admin/customer/${cid}/more`, icon: "information-circle" },
-      { label: "Password", icon: "key" },
-    ],
-    [cid],
-  );
-
-  // Fetch customer details
+  // Load customer details
   useEffect(() => {
     let mounted = true;
 
     const fetchCustomer = async () => {
-      if (!authManager.isAuthenticated()) {
-        navigate("/login");
-        return;
-      }
+      setFetching(true);
+      setErrors({});
 
       try {
-        setIsLoading(true);
-        setErrors({});
-
-        // Using callback-based approach similar to old code structure
-        await customerManager.getCustomerDetailWithCallbacks(
-          cid,
-          (customerData) => {
-            if (mounted) {
-              setCustomer(customerData);
-            }
-          },
-          (error) => {
-            if (mounted) {
-              setErrors(error);
-            }
-          },
-          () => {
-            if (mounted) {
-              setIsLoading(false);
-            }
-          },
-          onUnauthorized,
-        );
-      } catch (error) {
-        console.error("Failed to fetch customer:", error);
+        const data = await customerManager.getCustomerDetail(cid, onUnauthorized);
         if (mounted) {
-          setErrors({ general: "Failed to load customer information" });
-          setIsLoading(false);
+          setCustomer(data);
+        }
+      } catch (error) {
+        if (mounted) {
+          console.error("Failed to fetch customer:", error);
+          setErrors(error);
+        }
+      } finally {
+        if (mounted) {
+          setFetching(false);
         }
       }
     };
 
     if (cid) {
       fetchCustomer();
-    } else {
-      setErrors({ general: "Customer ID is required" });
-      setIsLoading(false);
     }
 
     return () => {
       mounted = false;
     };
-  }, [cid, customerManager, authManager, navigate]);
+  }, [cid, customerManager, onUnauthorized]);
 
-  // Handle form validation
-  const validateForm = () => {
+  // Validate form
+  const validateForm = useCallback(() => {
     const newErrors = {};
 
-    if (!password.trim()) {
+    if (!password) {
       newErrors.password = "Password is required";
     } else if (password.length < 8) {
       newErrors.password = "Password must be at least 8 characters long";
     }
 
-    if (!passwordRepeated.trim()) {
+    if (!passwordRepeated) {
       newErrors.passwordRepeated = "Password confirmation is required";
     } else if (password !== passwordRepeated) {
       newErrors.passwordRepeated = "Passwords do not match";
@@ -136,21 +116,26 @@ function AdminCustomerDetailMoreChangePasswordPage() {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [password, passwordRepeated]);
 
-  // Handle password change with direct API call
-  const handleChangePassword = async () => {
+  // Handle form submission
+  const handleSubmit = useCallback(async () => {
+    if (isSubmitting) return;
+
+    if (!validateForm()) return;
+
+    setErrors({});
+    setIsSubmitting(true);
+    setShowConfirmModal(false);
+
     try {
-      setIsSubmitting(true);
-      setErrors({});
-
       const passwordData = {
         customer_id: cid,
         password: password,
         password_repeated: passwordRepeated,
       };
 
-      // Get access token - try common keys
+      // Get access token
       let accessToken =
         localStorage.getItem("WORKERY_ACCESS_TOKEN") ||
         localStorage.getItem("WORKERY_TENANT_ACCESS_TOKEN") ||
@@ -158,14 +143,12 @@ function AdminCustomerDetailMoreChangePasswordPage() {
         localStorage.getItem("accessToken");
 
       if (!accessToken) {
-        // Try to find any key containing 'token'
         const tokenKey = Object.keys(localStorage).find(
           (key) =>
             key.toLowerCase().includes("token") &&
             !key.toLowerCase().includes("refresh") &&
             !key.toLowerCase().includes("timestamp"),
         );
-
         if (tokenKey) {
           accessToken = localStorage.getItem(tokenKey);
         }
@@ -175,7 +158,6 @@ function AdminCustomerDetailMoreChangePasswordPage() {
         throw new Error("No access token found. Please login again.");
       }
 
-      // Build the API URL
       const apiBaseUrl =
         process.env.NODE_ENV === "development"
           ? "http://127.0.0.1:8000"
@@ -184,8 +166,7 @@ function AdminCustomerDetailMoreChangePasswordPage() {
       const endpoint = "/api/v1/customers/operations/change-password";
       const fullUrl = `${apiBaseUrl}${endpoint}`;
 
-      // Make the API call
-      const response = await axios.post(fullUrl, passwordData, {
+      await axios.post(fullUrl, passwordData, {
         headers: {
           Authorization: `JWT ${accessToken}`,
           "Content-Type": "application/json",
@@ -193,23 +174,17 @@ function AdminCustomerDetailMoreChangePasswordPage() {
         },
       });
 
-      // Success
-      setSuccessMessage("Password changed successfully");
-      setShowConfirmModal(false);
-
-      // Clear form
+      setSuccessMessage("Password has been successfully changed");
       setPassword("");
       setPasswordRepeated("");
 
-      // Show success message briefly then redirect
       setTimeout(() => {
         navigate(`/admin/customer/${cid}/more`);
       }, 2000);
     } catch (error) {
-      console.error("Failed to change password:", error);
+      console.error("Password change failed:", error);
 
-      // Handle different error types
-      let errorMessage = "Failed to change password";
+      let errorMessage = "An unknown error occurred";
 
       if (error.response) {
         if (error.response.status === 404) {
@@ -232,214 +207,290 @@ function AdminCustomerDetailMoreChangePasswordPage() {
         errorMessage = error.message || errorMessage;
       }
 
-      setErrors({ general: errorMessage });
-      setShowConfirmModal(false);
+      setErrors({ message: errorMessage });
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [cid, password, passwordRepeated, validateForm, isSubmitting, navigate]);
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-
+  // Handle confirm button click
+  const handleConfirmClick = useCallback(() => {
     if (validateForm()) {
-      setModalJustOpened(true);
       setShowConfirmModal(true);
-      // Clear the flag after a short delay
-      setTimeout(() => {
-        setModalJustOpened(false);
-      }, 500);
     }
-  };
+  }, [validateForm]);
 
-  // Handle modal close
-  const handleModalClose = () => {
-    // Don't close if modal just opened or if submitting
-    if (modalJustOpened || isSubmitting) {
-      return;
-    }
-    setShowConfirmModal(false);
-  };
+  // Handle password change
+  const handlePasswordChange = useCallback((value) => {
+    setPassword(value);
+    setErrors((prev) => ({ ...prev, password: undefined }));
+  }, []);
 
-  if (isLoading) {
+  // Handle password repeated change
+  const handlePasswordRepeatedChange = useCallback((value) => {
+    setPasswordRepeated(value);
+    setErrors((prev) => ({ ...prev, passwordRepeated: undefined }));
+  }, []);
+
+  // Breadcrumb items
+  const breadcrumbItems = useMemo(() => [
+    {
+      label: "Dashboard",
+      to: "/admin/dashboard",
+      icon: ChartBarIcon,
+    },
+    {
+      label: "Customers",
+      to: "/admin/customers",
+      icon: UsersIcon,
+    },
+    {
+      label: "Detail",
+      to: `/admin/customer/${cid}`,
+      icon: InformationCircleIcon,
+    },
+    {
+      label: "More",
+      to: `/admin/customer/${cid}/more`,
+      icon: Cog6ToothIcon,
+    },
+    {
+      label: "Change Password",
+      icon: KeyIcon,
+      isActive: true,
+    },
+  ], [cid]);
+
+  // Render loading state
+  if (isFetching && !customer) {
     return (
-      <div style={globalStyles.container}>
-        <Loading message="Loading customer information..." />
-      </div>
-    );
-  }
-
-  if (!customer && !isLoading) {
-    return (
-      <div style={globalStyles.container}>
-        <Alert type="error">{errors.general || "Customer not found"}</Alert>
-        <div style={{ marginTop: "20px" }}>
-          <Button
-            onClick={() => navigate("/admin/customers")}
-            variant="outline"
-          >
-            ← Back to Customers
-          </Button>
-        </div>
-      </div>
+      <Card padding="p-4 sm:p-6 lg:p-8" className="max-w-7xl mx-auto border-0 shadow-none">
+        <Breadcrumb items={breadcrumbItems} className="mb-6" />
+        <Card padding="p-0" className="flex items-center justify-center min-h-[400px] border-0 shadow-none">
+          <div className="text-center">
+            <Spinner size="lg" />
+            <p className={`mt-4 ${themeClasses.textSecondary}`}>Loading customer details...</p>
+          </div>
+        </Card>
+      </Card>
     );
   }
 
   return (
-    <div style={globalStyles.container}>
-      <Breadcrumb items={breadcrumbItems} />
-
-      {/* Page banners */}
-      {customer?.status === 2 && (
-        <Alert type="info">Customer is archived</Alert>
-      )}
-      {customer?.isBanned && <Alert type="error">Customer is banned</Alert>}
+    <Card padding="p-4 sm:p-6 lg:p-8" className="max-w-7xl mx-auto border-0 shadow-none">
+      {/* Breadcrumb */}
+      <Breadcrumb items={breadcrumbItems} className="mb-6" />
 
       {/* Page Title */}
-      <h1 style={{ fontSize: "28px", marginBottom: "10px" }}>👤 Customer</h1>
-      <h2 style={{ fontSize: "20px", color: "#666", marginBottom: "30px" }}>
-        ℹ️ Detail
-      </h2>
+      <div className="mb-6">
+        <h1 className={`text-2xl md:text-3xl font-bold ${themeClasses.textPrimary} flex items-center`}>
+          <UsersIcon className={`w-6 h-6 md:w-8 md:h-8 mr-3 ${themeClasses.linkPrimary}`} />
+          Customer: {customer?.firstName} {customer?.lastName}
+        </h1>
+        <p className={`mt-1 text-sm ${themeClasses.textSecondary} flex items-center`}>
+          <KeyIcon className="w-4 h-4 mr-1" />
+          Change password for this customer
+        </p>
+      </div>
 
-      {/* Success message */}
-      {successMessage && <Alert type="success">{successMessage}</Alert>}
+      {/* Success Message */}
+      {successMessage && (
+        <Alert type="success" className="mb-4">
+          <CheckCircleIcon className="w-5 h-5 mr-2 inline" />
+          {successMessage}
+        </Alert>
+      )}
 
-      <Card title="🔑 Change Password">
-        {/* Error display */}
-        {Object.keys(errors).length > 0 && (
-          <Alert type="error">
-            <ul style={{ margin: 0, paddingLeft: "20px" }}>
-              {Object.entries(errors).map(([field, message]) => (
-                <li key={field}>
-                  {field === "general" ? message : `${field}: ${message}`}
-                </li>
-              ))}
-            </ul>
+      {/* Error Messages (non-field) */}
+      {errors.message && (
+        <Alert type="error" className="mb-4" dismissible onDismiss={() => setErrors({})}>
+          {errors.message}
+        </Alert>
+      )}
+
+      {/* Main Content Card */}
+      <Card>
+        {/* Card Header */}
+        <div className={`mb-6 pb-4 border-b ${themeClasses.borderMuted}`}>
+          <h2 className={`text-xl font-semibold ${themeClasses.textPrimary} flex items-center`}>
+            <LockClosedIcon className={`w-5 h-5 mr-2 ${themeClasses.linkPrimary}`} />
+            Change Password
+          </h2>
+        </div>
+
+        {/* Status Banner */}
+        {customer?.status === 2 && (
+          <Alert type="info" className="mb-4">
+            <ArchiveBoxIcon className="w-5 h-5 mr-2 inline" />
+            This customer is archived
           </Alert>
         )}
 
-        {/* Warning message */}
-        <Alert type="warning" style={{ marginBottom: "30px" }}>
-          <h4 style={{ margin: "0 0 10px 0" }}>⚠️ Warning</h4>
-          <p style={{ margin: 0 }}>
-            You are about to <strong>change the password</strong> for this
-            customer. Please make sure you enter it correctly or else customer
-            will be locked out of the account and requiring password resetting.
-            Are you sure you want to continue?
-          </p>
+        {customer?.isBanned && (
+          <Alert type="error" className="mb-4">
+            <NoSymbolIcon className="w-5 h-5 mr-2 inline" />
+            This customer is banned
+          </Alert>
+        )}
+
+        {/* Warning Message */}
+        <Alert type="warning" className="mb-6">
+          <div className="flex items-start">
+            <ExclamationTriangleIcon className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" />
+            <div>
+              <h4 className="font-semibold mb-2">Warning</h4>
+              <p className="text-sm">
+                You are about to <strong>change the password</strong> for this customer.
+                Please make sure you enter it correctly or else the customer will be locked
+                out of their account and will require password resetting.
+              </p>
+              <p className="text-sm mt-2">
+                <strong>Note:</strong> The customer will need to use this new password on their next login.
+              </p>
+            </div>
+          </div>
         </Alert>
 
-        <form onSubmit={handleSubmit}>
-          {/* Password */}
+        {/* Customer Information */}
+        {customer && (
+          <div className={`${themeClasses.bgMuted} rounded-lg p-4 mb-6`}>
+            <h4 className={`font-semibold ${themeClasses.textPrimary} mb-3 flex items-center`}>
+              <InformationCircleIcon className={`w-5 h-5 mr-2 ${themeClasses.iconSecondary}`} />
+              Customer Information
+            </h4>
+            <div className="space-y-2 text-sm">
+              <div className="flex">
+                <span className={`font-medium ${themeClasses.textSecondary} w-24`}>Name:</span>
+                <span className={themeClasses.textPrimary}>{customer.firstName} {customer.lastName}</span>
+              </div>
+              <div className="flex">
+                <span className={`font-medium ${themeClasses.textSecondary} w-24`}>Email:</span>
+                <span className={themeClasses.textPrimary}>{customer.email}</span>
+              </div>
+              <div className="flex">
+                <span className={`font-medium ${themeClasses.textSecondary} w-24`}>Status:</span>
+                <span>
+                  {customer.status === 1 ? (
+                    <Badge variant="success" size="sm">Active</Badge>
+                  ) : customer.status === 2 ? (
+                    <Badge variant="warning" size="sm">Archived</Badge>
+                  ) : (
+                    <Badge variant="secondary" size="sm">Unknown</Badge>
+                  )}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Password Form */}
+        <div className="space-y-4">
           <Input
-            label="Password"
-            name="password"
+            label="New Password"
             type="password"
+            required
             value={password}
-            onChange={(value) => setPassword(value)}
+            onChange={handlePasswordChange}
             placeholder="Enter new password"
             error={errors.password}
-            required
+            disabled={isSubmitting}
           />
 
-          {/* Password Repeated */}
           <Input
-            label="Password Repeated"
-            name="passwordRepeated"
+            label="Confirm New Password"
             type="password"
-            value={passwordRepeated}
-            onChange={(value) => setPasswordRepeated(value)}
-            placeholder="Enter password again"
-            error={errors.passwordRepeated}
             required
+            value={passwordRepeated}
+            onChange={handlePasswordRepeatedChange}
+            placeholder="Enter new password again"
+            error={errors.passwordRepeated}
+            disabled={isSubmitting}
           />
 
-          {/* Action buttons */}
-          <div
-            style={{
-              display: "flex",
-              gap: "15px",
-              flexWrap: "wrap",
-              paddingTop: "30px",
-              borderTop: "1px solid #eee",
-            }}
+          <Alert type="info" className="mt-4">
+            <p className="text-sm font-medium mb-2">Password Requirements:</p>
+            <ul className="text-sm space-y-1 ml-5 list-disc">
+              <li>Minimum 8 characters long</li>
+              <li>Both password fields must match</li>
+              <li>Consider using a mix of letters, numbers, and symbols for better security</li>
+            </ul>
+          </Alert>
+        </div>
+
+        {/* Action Buttons */}
+        <div className={`flex flex-col sm:flex-row justify-between gap-3 mt-6 pt-4 border-t ${themeClasses.borderMuted}`}>
+          <Link to={`/admin/customer/${cid}/more`}>
+            <Button variant="secondary" disabled={isSubmitting}>
+              Back to More
+            </Button>
+          </Link>
+
+          <Button
+            variant="danger"
+            onClick={handleConfirmClick}
+            disabled={isSubmitting || !password || !passwordRepeated}
+            loading={isSubmitting}
+            icon={CheckCircleIcon}
           >
-            <Button
-              onClick={() => navigate(`/admin/customer/${cid}/more`)}
-              variant="secondary"
-              style={{ minWidth: "200px" }}
-            >
-              ← Back to Detail (More)
-            </Button>
-            <Button
-              type="submit"
-              variant="danger"
-              disabled={isSubmitting}
-              style={{ minWidth: "200px" }}
-            >
-              {isSubmitting ? "Processing..." : "Confirm and Submit"}
-            </Button>
-          </div>
-        </form>
+            {isSubmitting ? "Processing..." : "Confirm and Submit"}
+          </Button>
+        </div>
       </Card>
 
       {/* Confirmation Modal */}
       <Modal
         isOpen={showConfirmModal}
-        onClose={handleModalClose}
+        onClose={() => !isSubmitting && setShowConfirmModal(false)}
         title="Confirm Password Change"
-        footer={
-          <>
+        size="md"
+      >
+        <div>
+          <p className={`text-sm ${themeClasses.textMuted} mb-3`}>
+            Are you sure you want to change the password for:
+          </p>
+          <p className={`font-semibold ${themeClasses.textPrimary} mb-3`}>
+            {customer?.firstName} {customer?.lastName} ({customer?.email})
+          </p>
+
+          <Alert type="warning" className="mb-4">
+            <strong>Important:</strong> The customer will need to use the new password
+            immediately. Make sure to securely communicate the new password to them.
+          </Alert>
+
+          {errors.message && (
+            <Alert type="error" className="mb-4">
+              <strong>Error:</strong> {errors.message}
+            </Alert>
+          )}
+
+          <p className={`text-sm ${themeClasses.textMuted}`}>
+            Do you want to proceed with changing the password?
+          </p>
+
+          <div className="mt-5 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
             <Button
-              onClick={() => !isSubmitting && setShowConfirmModal(false)}
               variant="secondary"
+              onClick={() => setShowConfirmModal(false)}
               disabled={isSubmitting}
             >
               Cancel
             </Button>
             <Button
-              onClick={handleChangePassword}
               variant="danger"
+              onClick={handleSubmit}
               disabled={isSubmitting}
+              loading={isSubmitting}
             >
-              {isSubmitting ? "Changing..." : "Change Password"}
+              {isSubmitting ? "Changing Password..." : "Yes, Change Password"}
             </Button>
-          </>
-        }
-      >
-        <div style={{ padding: "10px 0" }}>
-          <p style={{ margin: "0 0 15px 0", fontSize: "16px" }}>
-            Are you sure you want to <strong>change the password</strong> for
-            this customer?
-          </p>
-          {customer && (
-            <p
-              style={{
-                margin: "0 0 15px 0",
-                fontSize: "14px",
-                fontWeight: "bold",
-              }}
-            >
-              {customer.firstName} {customer.lastName} ({customer.email})
-            </p>
-          )}
-          <p style={{ margin: 0, color: "#666", fontSize: "14px" }}>
-            Make sure the customer can access their account with the new
-            password.
-          </p>
-
-          {/* Show any errors in the modal */}
-          {errors.general && (
-            <Alert type="error" style={{ marginTop: "15px" }}>
-              {errors.general}
-            </Alert>
-          )}
+          </div>
         </div>
       </Modal>
-    </div>
+    </Card>
   );
 }
 
+// Wrapper with UIXThemeProvider
 function AdminCustomerDetailMoreChangePasswordPageWithProvider() {
   return (
     <UIXThemeProvider>

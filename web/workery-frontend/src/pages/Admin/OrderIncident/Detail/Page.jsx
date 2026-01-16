@@ -1,4 +1,5 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/OrderIncident/Detail/Page.jsx
+// @uix-page: OrderIncidentDetailPage
 // UIX Upgraded - Uses UIX primitives (Breadcrumb, Spinner, UIXThemeProvider, useUIXTheme)
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";

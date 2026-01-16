@@ -1,14 +1,12 @@
 // File Path: web/workery-frontend/src/pages/Admin/Customer/Detail/FullPage.jsx
-// UIX Upgraded - Uses DetailFullView whole page component
-// @uix-page: AdminCustomerDetailFullPage
+// @uix-page: DetailFullView
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, memo, useRef } from "react";
 import { useNavigate, useParams } from "react-router";
 import {
   ChartBarIcon,
   UserIcon,
   InformationCircleIcon,
-  PencilSquareIcon,
   ChevronLeftIcon,
   PhoneIcon,
   MapPinIcon,
@@ -22,6 +20,7 @@ import {
   ComputerDesktopIcon,
   NoSymbolIcon,
   PlusCircleIcon,
+  HomeIcon,
 } from "@heroicons/react/24/outline";
 import { useCustomerManager } from "../../../../services/Services";
 import {
@@ -29,72 +28,35 @@ import {
   TagsDisplay,
 } from "../../../../components/business/displays";
 import {
+  DetailSection,
+  DetailField,
+} from "../../../../components/business/views";
+import {
   formatDateForDisplay,
   formatDateTime,
 } from "../../../../services/Helpers/DateFormatter";
-import { DetailFullView } from "../../../../components/UIX";
+import {
+  UIXThemeProvider,
+  DetailFullView,
+  EditButton,
+} from "../../../../components/UIX";
+import {
+  COMMERCIAL_CUSTOMER_TYPE_OF_ID,
+  CUSTOMER_PHONE_TYPE_WORK,
+  CUSTOMER_STATUS_ARCHIVED,
+  CUSTOMER_TYPE_MAP,
+  CUSTOMER_ORGANIZATION_TYPE_MAP,
+  CUSTOMER_GENDER_MAP,
+  CUSTOMER_PHONE_TYPE_MAP,
+} from "../../../../constants/Customer";
 
-// Constants
-const COMMERCIAL_CUSTOMER_TYPE_OF_ID = 3;
-const CUSTOMER_PHONE_TYPE_WORK = 2;
-const CUSTOMER_STATUS_ARCHIVED = 2;
-
-// Option mappings for display
-const CUSTOMER_TYPE_OPTIONS = {
-  1: "Unassigned",
-  2: "Residential",
-  3: "Commercial",
+// Extract IDs helper - moved outside component for performance
+const extractIds = (items) => {
+  if (!items || !Array.isArray(items)) return [];
+  return items.map((item) => item.id || item.value).filter(Boolean);
 };
 
-const CUSTOMER_ORGANIZATION_TYPE_OPTIONS = {
-  1: "Private",
-  2: "Non-profit",
-  3: "Government",
-};
-
-const GENDER_OPTIONS = {
-  1: "Other",
-  2: "Male",
-  3: "Female",
-  4: "Prefer not to say",
-};
-
-const PHONE_TYPE_OPTIONS = {
-  1: "Mobile",
-  2: "Work",
-  3: "Home",
-};
-
-// Detail Section Component
-const DetailSection = ({ title, icon: Icon, children }) => (
-  <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
-    <div className="px-4 sm:px-6 py-3 sm:py-4">
-      <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
-        <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
-        <span className="truncate">{title}</span>
-      </h3>
-    </div>
-    <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
-      <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {children}
-      </dl>
-    </div>
-  </div>
-);
-
-// Detail Field Component
-const DetailField = ({ label, value, fullWidth = false }) => (
-  <div className={fullWidth ? "lg:col-span-2" : ""}>
-    <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-1">
-      {label}
-    </dt>
-    <dd className="text-base sm:text-lg font-medium text-gray-900 break-words">
-      {value || "-"}
-    </dd>
-  </div>
-);
-
-function AdminCustomerDetailFullPage() {
+const AdminCustomerDetailFullPageContent = memo(function AdminCustomerDetailFullPageContent() {
   const { cid } = useParams();
   const customerManager = useCustomerManager();
   const navigate = useNavigate();
@@ -104,37 +66,103 @@ function AdminCustomerDetailFullPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Refs for cleanup - prevents state updates on unmounted component
+  const isMounted = useRef(true);
+  const abortControllerRef = useRef(null);
+
   // Handle unauthorized access
   const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
   }, [navigate]);
 
-  // Fetch customer data
-  const fetchCustomer = useCallback(async () => {
-    if (!cid) return;
+  // Fetch customer data with proper cleanup
+  const fetchCustomer = useCallback(() => {
+    if (!cid) {
+      if (import.meta.env.DEV) {
+        console.log("No cid provided, returning");
+      }
+      return;
+    }
 
+    // Cancel any ongoing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create new abort controller
+    abortControllerRef.current = new AbortController();
+    const currentAbortController = abortControllerRef.current;
+
+    if (import.meta.env.DEV) {
+      console.log("Starting fetch for cid:", cid);
+    }
     setLoading(true);
     setError(null);
 
-    try {
-      const customerData = await customerManager.getCustomerDetail(
-        cid,
-        onUnauthorized,
-      );
-      setCustomer(customerData);
-    } catch (err) {
-      console.error("Failed to fetch customer:", err);
-      setError("Failed to load customer details. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    customerManager.getCustomerDetailWithCallbacks(
+      cid,
+      (response) => {
+        // Check if this request was aborted or component unmounted
+        if (currentAbortController.signal.aborted || !isMounted.current) {
+          return;
+        }
+        if (import.meta.env.DEV) {
+          console.log("Setting customer data:", response);
+        }
+        setCustomer(response);
+        setLoading(false);
+      },
+      (errorResponse) => {
+        // Check if this request was aborted or component unmounted
+        if (currentAbortController.signal.aborted || !isMounted.current) {
+          return;
+        }
+        if (import.meta.env.DEV) {
+          console.error("Setting error:", errorResponse);
+        }
+        setError(
+          errorResponse?.message ||
+            "Failed to load customer details. Please try again.",
+        );
+        setLoading(false);
+      },
+      () => {
+        // Check if this request was aborted or component unmounted
+        if (currentAbortController.signal.aborted || !isMounted.current) {
+          return;
+        }
+        if (import.meta.env.DEV) {
+          console.log("Setting loading to false");
+        }
+        setLoading(false);
+      },
+      onUnauthorized,
+    );
   }, [cid, customerManager, onUnauthorized]);
 
-  // Initial data load
+  // Initial data load with cleanup
   useEffect(() => {
+    isMounted.current = true;
+
+    if (import.meta.env.DEV) {
+      console.log("Effect running for cid:", cid);
+    }
     window.scrollTo(0, 0);
     fetchCustomer();
-  }, [fetchCustomer]);
+
+    // Cleanup function - only cancel requests, don't set state
+    return () => {
+      isMounted.current = false;
+
+      // Cancel any ongoing requests
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+      // Note: Don't set state here - component is unmounting
+      // The isMounted check in callbacks prevents state updates
+    };
+  }, [cid, fetchCustomer]);
 
   // Helper functions
   const formatPhone = useCallback((phone, extension = null) => {
@@ -155,17 +183,14 @@ function AdminCustomerDetailFullPage() {
     return address || "-";
   }, []);
 
-  const extractIds = useCallback((items) => {
-    if (!items || !Array.isArray(items)) return [];
-    return items.map((item) => item.id || item.value).filter(Boolean);
-  }, []);
-
   // Memoize breadcrumb items
   const breadcrumbItems = useMemo(() => [
     {
       label: "Dashboard",
       to: "/admin/dashboard",
-      icon: ChartBarIcon,
+      icon: HomeIcon,
+      hideOnMobile: false,
+      mobileLabel: "Dash",
     },
     {
       label: "Customers",
@@ -181,7 +206,7 @@ function AdminCustomerDetailFullPage() {
 
   // Memoize header config
   const headerConfig = useMemo(() => ({
-    title: "Full Details",
+    title: "Customer - Full Details",
     icon: ClipboardDocumentListIcon,
     loadingText: "Loading customer details...",
     notFoundTitle: "Customer Not Found",
@@ -212,19 +237,22 @@ function AdminCustomerDetailFullPage() {
     return [
       {
         variant: "outline",
-        label: "Back",
-        icon: ChevronLeftIcon,
         onClick: () => navigate("/admin/customers"),
+        icon: ChevronLeftIcon,
+        label: "Back",
       },
       {
-        variant: "secondary",
-        label: "Edit",
-        icon: PencilSquareIcon,
-        disabled: customer.status === CUSTOMER_STATUS_ARCHIVED,
-        onClick: () => navigate(`/admin/customer/${cid}/edit`),
+        component: (
+          <EditButton
+            onClick={() => navigate(`/admin/customer/${cid}/edit`)}
+            disabled={customer?.status === CUSTOMER_STATUS_ARCHIVED}
+            variant="primary"
+            className="flex-1 sm:flex-initial"
+          />
+        ),
       },
       {
-        variant: "primary",
+        variant: "success",
         label: "New Order",
         icon: PlusCircleIcon,
         external: true,
@@ -265,7 +293,7 @@ function AdminCustomerDetailFullPage() {
             </div>
             <DetailField
               label="Type"
-              value={CUSTOMER_TYPE_OPTIONS[customer.type] || "Unknown"}
+              value={CUSTOMER_TYPE_MAP[customer.type] || "Unknown"}
             />
             <DetailField
               label="Description"
@@ -277,7 +305,7 @@ function AdminCustomerDetailFullPage() {
               value={
                 customer.gender ? (
                   <>
-                    {GENDER_OPTIONS[customer.gender] || "Unknown"}
+                    {CUSTOMER_GENDER_MAP[customer.gender] || "Unknown"}
                     {customer.gender === 1 &&
                       customer.genderOther &&
                       ` - ${customer.genderOther}`}
@@ -306,7 +334,7 @@ function AdminCustomerDetailFullPage() {
             />
             <DetailField
               label="Company Type"
-              value={CUSTOMER_ORGANIZATION_TYPE_OPTIONS[customer.organizationType]}
+              value={CUSTOMER_ORGANIZATION_TYPE_MAP[customer.organizationType]}
             />
           </DetailSection>
         ),
@@ -358,7 +386,7 @@ function AdminCustomerDetailFullPage() {
             />
             <DetailField
               label="Phone Type"
-              value={PHONE_TYPE_OPTIONS[customer.phoneType]}
+              value={CUSTOMER_PHONE_TYPE_MAP[customer.phoneType]}
             />
             {customer.otherPhone && (
               <>
@@ -373,7 +401,7 @@ function AdminCustomerDetailFullPage() {
                 />
                 <DetailField
                   label="Other Phone Type (Optional)"
-                  value={PHONE_TYPE_OPTIONS[customer.otherPhoneType]}
+                  value={CUSTOMER_PHONE_TYPE_MAP[customer.otherPhoneType]}
                 />
               </>
             )}
@@ -516,7 +544,19 @@ function AdminCustomerDetailFullPage() {
         ),
       },
     ];
-  }, [customer, formatAddress, formatPhone, extractIds, onUnauthorized]);
+  }, [customer, formatAddress, formatPhone, onUnauthorized]);
+
+  // Show loading state AFTER all hooks have been called
+  if (loading) {
+    return (
+      <DetailFullView
+        isLoading={loading}
+        headerConfig={{
+          loadingText: "Loading customer details...",
+        }}
+      />
+    );
+  }
 
   return (
     <DetailFullView
@@ -527,10 +567,19 @@ function AdminCustomerDetailFullPage() {
       actionButtons={actionButtons}
       tabs={tabs}
       alerts={alerts}
+      onUnauthorized={onUnauthorized}
       isLoading={loading}
       error={error}
       onErrorClose={() => setError(null)}
     />
+  );
+});
+
+function AdminCustomerDetailFullPage() {
+  return (
+    <UIXThemeProvider>
+      <AdminCustomerDetailFullPageContent />
+    </UIXThemeProvider>
   );
 }
 

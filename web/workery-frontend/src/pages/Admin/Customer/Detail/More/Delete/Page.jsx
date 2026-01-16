@@ -1,148 +1,89 @@
 // File Path: web/workery-frontend/src/pages/Admin/Customer/Detail/More/Delete/Page.jsx
-// UIX Upgraded - Uses EntityActionConfirmationPage whole page component
-// @uix-page: AdminCustomerDetailMoreDeletePage
+// @uix-page: EntityActionDeletePage
 
 import React, { useCallback } from "react";
-import { useParams } from "react-router";
-import {
-  ChartBarIcon,
-  UserIcon,
-  InformationCircleIcon,
-  TrashIcon,
-  EllipsisHorizontalIcon,
-  EnvelopeIcon,
-  PhoneIcon,
-  ExclamationTriangleIcon,
-} from "@heroicons/react/24/outline";
+import { UserIcon, UsersIcon, EnvelopeIcon, PhoneIcon } from "@heroicons/react/24/outline";
 import { useCustomerManager } from "../../../../../../services/Services";
-import { EntityActionConfirmationPage, UIXThemeProvider } from "../../../../../../components/UIX";
+import { EntityActionDeletePage, useUIXTheme, Card, Badge } from "../../../../../../components/UIX";
+import { CUSTOMER_STATUS_ACTIVE, CUSTOMER_STATUS_ARCHIVED } from "../../../../../../constants/Customer";
 
 function AdminCustomerDetailMoreDeletePage() {
-  const { cid } = useParams();
   const customerManager = useCustomerManager();
+  const { getThemeClasses } = useUIXTheme();
 
-  // Fetch entity function
   const fetchEntity = useCallback(
-    async (entityId, onSuccess, onError, onDone, onUnauthorized) => {
-      try {
-        const data = await customerManager.getCustomerDetail(entityId, onUnauthorized);
-        onSuccess(data);
-      } catch (error) {
-        onError(error);
-      } finally {
-        onDone();
-      }
+    (customerId, onSuccess, onError, onDone, onUnauthorized) => {
+      customerManager.getCustomerDetailWithCallbacks(customerId, onSuccess, onError, onDone, onUnauthorized);
     },
     [customerManager],
   );
 
-  // Execute action function
-  const executeAction = useCallback(
-    async (entityId, onSuccess, onError, onDone, onUnauthorized) => {
-      try {
-        await customerManager.deleteCustomer(entityId, onUnauthorized);
-        onSuccess();
-      } catch (error) {
-        onError(error);
-      } finally {
-        onDone();
-      }
+  const executeDelete = useCallback(
+    (customerId, onSuccess, onError, onDone, onUnauthorized) => {
+      customerManager.deleteCustomerWithCallbacks(customerId, onSuccess, onError, onDone, onUnauthorized);
     },
     [customerManager],
   );
 
-  // Breadcrumb items
-  const breadcrumbItems = [
-    { label: "Dashboard", to: "/admin/dashboard", icon: ChartBarIcon },
-    { label: "Customers", to: "/admin/customers", icon: UserIcon },
-    { label: "Detail", to: `/admin/customer/${cid}`, icon: InformationCircleIcon },
-    { label: "More", to: `/admin/customer/${cid}/more`, icon: EllipsisHorizontalIcon },
-    { label: "Delete", icon: TrashIcon, isActive: true },
-  ];
+  const formatPhone = useCallback((phone) => {
+    if (!phone) return "N/A";
+    return phone.replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3");
+  }, []);
 
-  // Page configuration
-  const pageConfig = {
-    title: "Delete Customer",
-    subtitle: "Permanently remove this customer",
-    icon: TrashIcon,
-    actionIcon: TrashIcon,
-    loadingText: "Loading customer details...",
-  };
+  const getStatusDisplay = useCallback((status) => {
+    if (status === CUSTOMER_STATUS_ACTIVE) {
+      return <Badge variant="success" size="sm">Active</Badge>;
+    } else if (status === CUSTOMER_STATUS_ARCHIVED) {
+      return <Badge variant="warning" size="sm">Archived</Badge>;
+    }
+    return <Badge variant="secondary" size="sm">Unknown</Badge>;
+  }, []);
 
-  // Warning configuration
-  const warningConfig = {
-    title: "Delete Customer - Are you sure?",
-    description: "You are about to permanently delete this customer. This action:",
-    consequences: [
-      "Will permanently remove all customer data",
-      "Cannot be undone",
-      "Will remove all associated records and history",
-      "Will affect any linked orders or assignments",
-      "Consider archiving instead if you want to preserve data",
-    ],
-    confirmationText: "Are you absolutely sure you want to proceed?",
-    warningType: "red",
-  };
-
-  // Render entity information
   const renderEntityInfo = useCallback(
     (customer) => (
-      <div className="bg-gray-50 rounded-lg p-6 mb-6">
-        <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-          <UserIcon className="w-5 h-5 mr-2 text-gray-600" />
+      <Card className={`${getThemeClasses("bg-muted")} mb-6`} padding="p-6">
+        <Badge variant="default" size="lg" className={`text-lg font-semibold ${getThemeClasses("text-primary")} mb-4 flex items-center`}>
+          <UserIcon className={`w-5 h-5 mr-2 ${getThemeClasses("text-secondary")}`} />
           Customer Information
-        </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="flex items-center">
-            <span className="font-medium text-gray-700 mr-2">Name:</span>
-            <span className="text-gray-900">
-              {customer.name || `${customer.firstName} ${customer.lastName}`}
-            </span>
-          </div>
-          <div className="flex items-center">
-            <EnvelopeIcon className="w-4 h-4 mr-2 text-gray-400" />
-            <span className="font-medium text-gray-700 mr-2">Email:</span>
-            <span className="text-gray-900">{customer.email || "-"}</span>
-          </div>
-          <div className="flex items-center">
-            <PhoneIcon className="w-4 h-4 mr-2 text-gray-400" />
-            <span className="font-medium text-gray-700 mr-2">Phone:</span>
-            <span className="text-gray-900">{customer.phone || "-"}</span>
-          </div>
-        </div>
-      </div>
+        </Badge>
+        <Card padding="p-0" className="grid grid-cols-1 md:grid-cols-2 gap-4 border-0 shadow-none">
+          <Card padding="p-0" className="flex items-center border-0 shadow-none">
+            <Badge variant="secondary" size="sm" className="font-medium mr-2">Name:</Badge>
+            <Badge variant="default" size="sm">{customer.firstName} {customer.lastName}</Badge>
+          </Card>
+          <Card padding="p-0" className="flex items-center border-0 shadow-none">
+            <Badge variant="secondary" size="sm" className="font-medium mr-2">Status:</Badge>
+            {getStatusDisplay(customer.status)}
+          </Card>
+          <Card padding="p-0" className="flex items-center border-0 shadow-none">
+            <EnvelopeIcon className={`w-4 h-4 mr-2 ${getThemeClasses("text-muted")}`} />
+            <Badge variant="secondary" size="sm" className="font-medium mr-2">Email:</Badge>
+            <Badge variant="default" size="sm">{customer.email}</Badge>
+          </Card>
+          <Card padding="p-0" className="flex items-center border-0 shadow-none">
+            <PhoneIcon className={`w-4 h-4 mr-2 ${getThemeClasses("text-muted")}`} />
+            <Badge variant="secondary" size="sm" className="font-medium mr-2">Phone:</Badge>
+            <Badge variant="default" size="sm">{formatPhone(customer.phone)}</Badge>
+          </Card>
+        </Card>
+      </Card>
     ),
-    [],
+    [formatPhone, getStatusDisplay, getThemeClasses],
   );
 
-  // Status alerts
-  const statusAlerts = [
-    {
-      condition: (entity) => entity?.status === 2,
-      type: "info",
-      message: "This customer is archived. Deleting will permanently remove all data.",
-      icon: ExclamationTriangleIcon,
-    },
-  ];
-
   return (
-    <UIXThemeProvider>
-      <EntityActionConfirmationPage
-        entityType="customer"
-        entityId={cid}
-        actionType="delete"
-        fetchEntity={fetchEntity}
-        executeAction={executeAction}
-        breadcrumbItems={breadcrumbItems}
-        pageConfig={pageConfig}
-        renderEntityInfo={renderEntityInfo}
-        warningConfig={warningConfig}
-        statusAlerts={statusAlerts}
-        returnPath={`/admin/customer/${cid}/more`}
-        successRedirectPath="/admin/customers"
-        successRedirectDelay={2000}
-      />
-    </UIXThemeProvider>
+    <EntityActionDeletePage
+      entityType="Customer"
+      entityTypePlural="Customers"
+      basePath="/admin/customers"
+      listPath="/admin/customers"
+      entityParamName="cid"
+      entityIcon={UsersIcon}
+      fetchEntity={fetchEntity}
+      executeDelete={executeDelete}
+      renderEntityInfo={renderEntityInfo}
+      successRedirectPath="/admin/customers"
+    />
   );
 }
 

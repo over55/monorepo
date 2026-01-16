@@ -1,4 +1,5 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/TaskItem/Update/OrderCompletion/Step4Page.jsx
+// @uix-page: TaskItemOrderCompletionStep4
 // UIX Upgraded - Uses UIX primitives (Spinner, Breadcrumb, UIXThemeProvider)
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";

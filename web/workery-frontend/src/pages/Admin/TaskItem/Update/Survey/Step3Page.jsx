@@ -1,3 +1,5 @@
+// File Path: monorepo/web/workery-frontend/src/pages/Admin/TaskItem/Update/Survey/Step3Page.jsx
+// @uix-page: TaskItemSurveyStep3
 // UIX Upgraded - Uses UIX primitives (Card, Button, Alert, Spinner, Breadcrumb)
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useNavigate, useParams } from "react-router";

@@ -1,7 +1,7 @@
 // File: monorepo/web/frontend/src/components/business/selects/SkillSetsMultiSelect.jsx
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { TagInput, Loading } from "../../UIX";
+import { SkillSetTagPicker, Loading } from "../../UIX";
 import { useSkillSetManager } from "../../../services/Services";
 
 /**
@@ -123,7 +123,7 @@ function SkillSetsMultiSelect({
   const currentValue = cleanValue(value);
 
   return (
-    <TagInput
+    <SkillSetTagPicker
       id={id}
       label={label}
       options={options}

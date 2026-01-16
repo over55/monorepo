@@ -84,3 +84,35 @@ export const STAFF_GENDER_OTHER = 1;
 export const STAFF_GENDER_MALE = 2;
 export const STAFF_GENDER_FEMALE = 3;
 export const STAFF_GENDER_PREFER_NOT_TO_SAY = 4;
+
+// Staff phone type map
+export const STAFF_PHONE_TYPE_MAP = {
+  1: "Landline",
+  2: "Mobile",
+  3: "Work",
+};
+
+// Staff gender map
+export const STAFF_GENDER_MAP = {
+  1: "Other",
+  2: "Male",
+  3: "Female",
+  4: "Prefer not to say",
+};
+
+// Staff identify as options
+export const STAFF_IDENTIFY_AS_OPTIONS = {
+  1: "Indigenous",
+  2: "Newcomer",
+  3: "Visible minority",
+  4: "Women",
+  5: "Prefer not to say",
+};
+
+// Staff organization type map
+export const STAFF_ORGANIZATION_TYPE_MAP = {
+  1: "Unknown",
+  2: "Private",
+  3: "Non-profit",
+  4: "Government",
+};

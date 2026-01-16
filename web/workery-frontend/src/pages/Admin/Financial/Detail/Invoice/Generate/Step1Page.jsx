@@ -1,4 +1,5 @@
 // File Path: web/workery-frontend/src/pages/Admin/Financial/Detail/Invoice/Generate/Step1Page.jsx
+// @uix-page: FinancialInvoiceGenerateStep1
 // UIX Upgraded - Uses UIX primitives (Card, Alert, Breadcrumb, Spinner, Button)
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";

@@ -1,7 +1,8 @@
 // File Path: web/workery-frontend/src/pages/Admin/Order/Search/ResultPage.jsx
-// UIX Upgraded - Uses UIX primitives (Card, Alert, Spinner, Breadcrumb, Button)
+// UIX Upgraded - Uses UIX primitives (Card, Alert, Spinner, Breadcrumb, Button, Badge)
+// @uix-page: SearchResultPage
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { useAuthManager, useOrderManager } from "../../../../services/Services";
 import {
@@ -10,6 +11,7 @@ import {
   Spinner,
   Breadcrumb,
   Button,
+  Badge,
   UIXThemeProvider,
   useUIXTheme,
 } from "../../../../components/UIX";
@@ -17,49 +19,52 @@ import {
   MagnifyingGlassIcon,
   ClipboardDocumentListIcon,
   ArrowLeftIcon,
-  XMarkIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ArrowsUpDownIcon,
   ChartBarIcon,
   AdjustmentsHorizontalIcon,
-  ExclamationTriangleIcon,
   HomeIcon,
   BuildingOffice2Icon,
   PhoneIcon,
   EnvelopeIcon,
-  MapPinIcon,
   EyeIcon,
-  CheckCircleIcon,
   CalendarIcon,
   FunnelIcon,
   UserIcon,
   ChevronDownIcon,
-  BriefcaseIcon,
-  DocumentTextIcon,
   HashtagIcon,
   UserGroupIcon,
 } from "@heroicons/react/24/outline";
-import { ExclamationTriangleIcon as ExclamationTriangleIconSolid } from "@heroicons/react/24/solid";
 import { formatDateForDisplay } from "../../../../services/Helpers/DateFormatter";
 
-// Constants for order types and statuses
-const RESIDENTIAL_ORDER_TYPE_OF_ID = 1;
-const COMMERCIAL_ORDER_TYPE_OF_ID = 2;
-const UNASSIGNED_ORDER_TYPE_OF_ID = 3;
+// Constants for order types - frozen for performance
+const ORDER_TYPE_IDS = Object.freeze({
+  RESIDENTIAL: 1,
+  COMMERCIAL: 2,
+  UNASSIGNED: 3,
+});
 
-// Sort options
-const ORDER_SORT_OPTIONS = [
+// Static breadcrumb items
+const BREADCRUMB_ITEMS = Object.freeze([
+  { label: "Dashboard", to: "/admin/dashboard", icon: ChartBarIcon },
+  { label: "Orders", to: "/admin/orders", icon: ClipboardDocumentListIcon },
+  { label: "Search", to: "/admin/orders/search", icon: MagnifyingGlassIcon },
+  { label: "Results", isActive: true },
+]);
+
+// Sort options - frozen for performance
+const ORDER_SORT_OPTIONS = Object.freeze([
   { value: "created_at,DESC", label: "Newest First" },
   { value: "created_at,ASC", label: "Oldest First" },
   { value: "start_date,DESC", label: "Start Date (Newest)" },
   { value: "start_date,ASC", label: "Start Date (Oldest)" },
   { value: "customer_last_name,ASC", label: "Customer Name (A-Z)" },
   { value: "customer_last_name,DESC", label: "Customer Name (Z-A)" },
-];
+]);
 
-// Status filter options
-const ORDER_STATUS_FILTER_OPTIONS = [
+// Status filter options - frozen for performance
+const ORDER_STATUS_FILTER_OPTIONS = Object.freeze([
   { value: "", label: "All Statuses" },
   { value: "1", label: "New" },
   { value: "2", label: "Assigned" },
@@ -67,25 +72,194 @@ const ORDER_STATUS_FILTER_OPTIONS = [
   { value: "4", label: "Completed" },
   { value: "5", label: "Closed" },
   { value: "6", label: "Cancelled" },
-];
+]);
 
-// Type filter options
-const ORDER_TYPE_FILTER_OPTIONS = [
+// Type filter options - frozen for performance
+const ORDER_TYPE_FILTER_OPTIONS = Object.freeze([
   { value: "", label: "All Types" },
   { value: "1", label: "Residential" },
   { value: "2", label: "Commercial" },
   { value: "3", label: "Unassigned" },
-];
+]);
 
-// Page size options
-const PAGE_SIZE_OPTIONS = [
+// Page size options - frozen for performance
+const PAGE_SIZE_OPTIONS = Object.freeze([
   { value: 10, label: "10 per page" },
   { value: 25, label: "25 per page" },
   { value: 50, label: "50 per page" },
   { value: 100, label: "100 per page" },
-];
+]);
 
-function AdminOrderSearchResultPage() {
+// Status badge mapping - frozen for performance
+const STATUS_BADGE_MAP = Object.freeze({
+  1: { variant: "success", label: "New" },
+  2: { variant: "info", label: "Assigned" },
+  3: { variant: "warning", label: "In Progress" },
+  4: { variant: "secondary", label: "Completed" },
+  5: { variant: "default", label: "Closed" },
+  6: { variant: "danger", label: "Cancelled" },
+});
+
+// Safe field access helper
+const getFieldValue = (obj, path, defaultValue = "") => {
+  return path.split(".").reduce((current, key) => {
+    return current && current[key] !== undefined && current[key] !== null
+      ? current[key]
+      : defaultValue;
+  }, obj);
+};
+
+// Format phone number helper
+const formatPhone = (phone) => {
+  if (!phone) return "-";
+  const cleaned = phone.replace(/\D/g, "");
+  const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
+  if (match) {
+    return `(${match[1]}) ${match[2]}-${match[3]}`;
+  }
+  return phone;
+};
+
+// Memoized Order Card component
+const OrderCard = memo(function OrderCard({ order }) {
+  const wjid = getFieldValue(order, "wjid") || order.id;
+  const customerFirstName = getFieldValue(order, "customerFirstName", "");
+  const customerLastName = getFieldValue(order, "customerLastName", "");
+  const customerOrgName = getFieldValue(order, "customerOrganizationName", "");
+  const associateFirstName = getFieldValue(order, "associateFirstName", "");
+  const associateLastName = getFieldValue(order, "associateLastName", "");
+  const orderType = parseInt(getFieldValue(order, "type", "0"));
+  const orderStatus = parseInt(getFieldValue(order, "status", "0"));
+  const startDate = getFieldValue(order, "startDate");
+  const description = getFieldValue(order, "description", "No description");
+  const customerEmail = getFieldValue(order, "customerEmail");
+  const customerPhone = getFieldValue(order, "customerPhone");
+
+  const customerName =
+    customerOrgName ||
+    `${customerFirstName} ${customerLastName}`.trim() ||
+    "Unknown Customer";
+  const associateName =
+    `${associateFirstName} ${associateLastName}`.trim() || "Unassigned";
+
+  const statusConfig = STATUS_BADGE_MAP[orderStatus] || { variant: "default", label: "Unknown" };
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-shadow">
+      {/* Card Header */}
+      <div className="p-4 border-b border-gray-100">
+        <Link
+          to={`/admin/order/${wjid}`}
+          className="flex items-start text-blue-600 hover:text-blue-800 font-semibold"
+        >
+          <HashtagIcon className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+          <span>Job #{wjid}</span>
+        </Link>
+        <div className="mt-2">
+          <Badge variant={statusConfig.variant} size="sm">
+            {statusConfig.label}
+          </Badge>
+        </div>
+      </div>
+
+      {/* Card Body */}
+      <div className="p-4 space-y-2 text-sm">
+        {/* Customer Info */}
+        <div className="font-medium text-gray-900 flex items-start">
+          {orderType === ORDER_TYPE_IDS.COMMERCIAL ? (
+            <BuildingOffice2Icon className="h-4 w-4 mr-2 text-gray-400 flex-shrink-0 mt-0.5" />
+          ) : (
+            <HomeIcon className="h-4 w-4 mr-2 text-gray-400 flex-shrink-0 mt-0.5" />
+          )}
+          <div>
+            <div className="font-medium">{customerName}</div>
+            {customerFirstName && customerLastName && customerOrgName && (
+              <div className="text-gray-500 text-xs">
+                {customerFirstName} {customerLastName}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Associate */}
+        <div className="flex items-center text-gray-600">
+          <UserGroupIcon className="h-4 w-4 mr-2 text-gray-400" />
+          <span className={associateName === "Unassigned" ? "text-gray-400 italic" : ""}>
+            {associateName}
+          </span>
+        </div>
+
+        {/* Start Date */}
+        {startDate && (
+          <div className="flex items-center text-gray-600">
+            <CalendarIcon className="h-4 w-4 mr-2 text-gray-400" />
+            {formatDateForDisplay(startDate)}
+          </div>
+        )}
+
+        {/* Customer Contact */}
+        {customerPhone && (
+          <div className="flex items-center text-gray-600">
+            <PhoneIcon className="h-4 w-4 mr-2 text-gray-400" />
+            <a href={`tel:${customerPhone}`} className="text-blue-600 hover:text-blue-800">
+              {formatPhone(customerPhone)}
+            </a>
+          </div>
+        )}
+
+        {customerEmail && (
+          <div className="flex items-center text-gray-600">
+            <EnvelopeIcon className="h-4 w-4 mr-2 text-gray-400" />
+            <a href={`mailto:${customerEmail}`} className="text-blue-600 hover:text-blue-800 truncate">
+              {customerEmail}
+            </a>
+          </div>
+        )}
+
+        {/* Description Preview */}
+        <div className="pt-2 text-gray-600">
+          <p className="text-xs line-clamp-2" title={description}>
+            {description}
+          </p>
+        </div>
+
+        {/* Order Type Badge */}
+        <div className="pt-2">
+          <Badge
+            variant={
+              orderType === ORDER_TYPE_IDS.COMMERCIAL
+                ? "info"
+                : orderType === ORDER_TYPE_IDS.RESIDENTIAL
+                  ? "success"
+                  : "default"
+            }
+            size="sm"
+          >
+            {orderType === ORDER_TYPE_IDS.COMMERCIAL
+              ? "Commercial"
+              : orderType === ORDER_TYPE_IDS.RESIDENTIAL
+                ? "Residential"
+                : "Unassigned"}
+          </Badge>
+        </div>
+      </div>
+
+      {/* Card Footer */}
+      <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-center">
+        <Link
+          to={`/admin/order/${wjid}`}
+          className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800"
+        >
+          <EyeIcon className="h-4 w-4 mr-1" />
+          View Details
+        </Link>
+      </div>
+    </div>
+  );
+});
+
+// Main content component
+const ResultPageContent = memo(function ResultPageContent() {
   const authManager = useAuthManager();
   const orderManager = useOrderManager();
   const navigate = useNavigate();
@@ -99,16 +273,8 @@ function AdminOrderSearchResultPage() {
     linkPrimary: getThemeClasses("link-primary"),
   }), [getThemeClasses]);
 
-  // Breadcrumb items
-  const breadcrumbItems = useMemo(() => [
-    { label: "Dashboard", to: "/admin/dashboard", icon: ChartBarIcon },
-    { label: "Orders", to: "/admin/orders", icon: ClipboardDocumentListIcon },
-    { label: "Search", to: "/admin/orders/search", icon: MagnifyingGlassIcon },
-    { label: "Results", isActive: true },
-  ], []);
-
-  // Extract search parameters from URL
-  const searchCriteria = {
+  // Extract search parameters from URL - memoized
+  const searchCriteria = useMemo(() => ({
     customerFirstName: searchParams.get("cfn") || "",
     customerLastName: searchParams.get("cln") || "",
     customerEmail: searchParams.get("ce") || "",
@@ -121,7 +287,7 @@ function AdminOrderSearchResultPage() {
     associatePhone: searchParams.get("ap") || "",
     associateOrganizationName: searchParams.get("aon") || "",
     orderWjid: searchParams.get("owjid") || "",
-  };
+  }), [searchParams]);
 
   // Component states
   const [errors, setErrors] = useState({});
@@ -137,6 +303,11 @@ function AdminOrderSearchResultPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
+  // Memoized unauthorized handler
+  const onUnauthorized = useCallback(() => {
+    navigate("/login?unauthorized=true");
+  }, [navigate]);
+
   // Check authentication on mount
   useEffect(() => {
     if (!authManager.isAuthenticated()) {
@@ -144,104 +315,49 @@ function AdminOrderSearchResultPage() {
     }
   }, [authManager, navigate]);
 
-  const onUnauthorized = useCallback(() => {
-    navigate("/login?unauthorized=true");
-  }, [navigate]);
-
-  const buildSearchParams = (page = 1) => {
+  // Build search params helper - memoized
+  const buildSearchParams = useCallback((page = 1) => {
     const params = {
       page: page,
       limit: pageSize,
     };
 
-    // Add sorting
     if (sortByValue) {
       const [field, order] = sortByValue.split(",");
       params.sortBy = field;
       params.sortOrder = order;
     }
 
-    // Add status filter
-    if (status) {
-      params.status = status;
-    }
-
-    // Add type filter
-    if (typeOf) {
-      params.type = typeOf;
-    }
-
-    // Add search criteria
-    if (searchCriteria.generalSearch) {
-      params.search = searchCriteria.generalSearch;
-    }
-    if (searchCriteria.customerFirstName) {
-      params.customerFirstName = searchCriteria.customerFirstName;
-    }
-    if (searchCriteria.customerLastName) {
-      params.customerLastName = searchCriteria.customerLastName;
-    }
-    if (searchCriteria.customerEmail) {
-      params.customerEmail = searchCriteria.customerEmail;
-    }
-    if (searchCriteria.customerPhone) {
-      params.customerPhone = searchCriteria.customerPhone;
-    }
-    if (searchCriteria.customerOrganizationName) {
-      params.customerOrganizationName = searchCriteria.customerOrganizationName;
-    }
-    if (searchCriteria.associateFirstName) {
-      params.associateFirstName = searchCriteria.associateFirstName;
-    }
-    if (searchCriteria.associateLastName) {
-      params.associateLastName = searchCriteria.associateLastName;
-    }
-    if (searchCriteria.associateEmail) {
-      params.associateEmail = searchCriteria.associateEmail;
-    }
-    if (searchCriteria.associatePhone) {
-      params.associatePhone = searchCriteria.associatePhone;
-    }
-    if (searchCriteria.associateOrganizationName) {
-      params.associateOrganizationName =
-        searchCriteria.associateOrganizationName;
-    }
-    if (searchCriteria.orderWjid) {
-      params.wjid = searchCriteria.orderWjid;
-    }
+    if (status) params.status = status;
+    if (typeOf) params.type = typeOf;
+    if (searchCriteria.generalSearch) params.search = searchCriteria.generalSearch;
+    if (searchCriteria.customerFirstName) params.customerFirstName = searchCriteria.customerFirstName;
+    if (searchCriteria.customerLastName) params.customerLastName = searchCriteria.customerLastName;
+    if (searchCriteria.customerEmail) params.customerEmail = searchCriteria.customerEmail;
+    if (searchCriteria.customerPhone) params.customerPhone = searchCriteria.customerPhone;
+    if (searchCriteria.customerOrganizationName) params.customerOrganizationName = searchCriteria.customerOrganizationName;
+    if (searchCriteria.associateFirstName) params.associateFirstName = searchCriteria.associateFirstName;
+    if (searchCriteria.associateLastName) params.associateLastName = searchCriteria.associateLastName;
+    if (searchCriteria.associateEmail) params.associateEmail = searchCriteria.associateEmail;
+    if (searchCriteria.associatePhone) params.associatePhone = searchCriteria.associatePhone;
+    if (searchCriteria.associateOrganizationName) params.associateOrganizationName = searchCriteria.associateOrganizationName;
+    if (searchCriteria.orderWjid) params.wjid = searchCriteria.orderWjid;
 
     return params;
-  };
+  }, [pageSize, sortByValue, status, typeOf, searchCriteria]);
 
-  const fetchOrders = async (page = 1) => {
-    if (isFetching) {
-      console.log("Already fetching, skipping duplicate request");
-      return;
-    }
+  // Fetch orders function - memoized
+  const fetchOrders = useCallback(async (page = 1) => {
+    if (isFetching) return;
 
     setFetching(true);
     setErrors({});
 
     try {
       const params = buildSearchParams(page);
-
-      console.log("Fetching orders with params:", params);
-
-      // Clear the orders cache to ensure fresh data
       orderManager.clearOrdersCache();
 
-      // Fetch orders using the OrderManager
-      const ordersData = await orderManager.getOrders(
-        params,
-        onUnauthorized,
-        true, // Force refresh
-      );
-
-      console.log("Orders data received:", {
-        resultsCount: ordersData.results ? ordersData.results.length : 0,
-        totalCount: ordersData.count,
-        page: page,
-      });
+      const ordersData = await orderManager.getOrders(params, onUnauthorized, true);
 
       setOrders(ordersData.results || []);
       setTotalCount(ordersData.count || 0);
@@ -258,7 +374,7 @@ function AdminOrderSearchResultPage() {
     } finally {
       setFetching(false);
     }
-  };
+  }, [buildSearchParams, isFetching, orderManager, onUnauthorized]);
 
   // Fetch list when parameters change
   useEffect(() => {
@@ -273,8 +389,7 @@ function AdminOrderSearchResultPage() {
         fetchOrders(currentPage);
       } else {
         setErrors({
-          message:
-            "No search criteria provided. Please go back and enter search terms.",
+          message: "No search criteria provided. Please go back and enter search terms.",
         });
         setHasSearched(true);
       }
@@ -283,190 +398,108 @@ function AdminOrderSearchResultPage() {
     return () => {
       mounted = false;
     };
-  }, [pageSize, sortByValue, status, typeOf, currentPage]);
+  }, [pageSize, sortByValue, status, typeOf, currentPage, authManager, searchCriteria]);
 
   // Handle pagination
-  const handlePageChange = (newPage) => {
-    if (isFetching) {
-      return;
-    }
+  const handlePageChange = useCallback((newPage) => {
+    if (isFetching) return;
 
     const totalPages = Math.ceil(totalCount / pageSize);
 
     if (newPage >= 1 && newPage <= totalPages && newPage !== currentPage) {
-      console.log(`Changing to page ${newPage} of ${totalPages}`);
       setCurrentPage(newPage);
       window.scrollTo(0, 0);
     }
-  };
+  }, [isFetching, totalCount, pageSize, currentPage]);
 
   // Handle sort change
-  const handleSortChange = (e) => {
+  const handleSortChange = useCallback((e) => {
     setSortByValue(e.target.value);
     setCurrentPage(1);
-  };
+  }, []);
 
   // Handle page size change
-  const handlePageSizeChange = (e) => {
+  const handlePageSizeChange = useCallback((e) => {
     setPageSize(parseInt(e.target.value));
     setCurrentPage(1);
-  };
+  }, []);
 
-  // Safe field access helper
-  const getFieldValue = (obj, path, defaultValue = "") => {
-    return path.split(".").reduce((current, key) => {
-      return current && current[key] !== undefined && current[key] !== null
-        ? current[key]
-        : defaultValue;
-    }, obj);
-  };
+  // Handle status filter change
+  const handleStatusChange = useCallback((e) => {
+    setStatus(e.target.value);
+    setCurrentPage(1);
+  }, []);
 
-  // Format phone number
-  const formatPhone = (phone) => {
-    if (!phone) return "-";
-    const cleaned = phone.replace(/\D/g, "");
-    const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
-    if (match) {
-      return `(${match[1]}) ${match[2]}-${match[3]}`;
-    }
-    return phone;
-  };
+  // Handle type filter change
+  const handleTypeChange = useCallback((e) => {
+    setTypeOf(e.target.value);
+    setCurrentPage(1);
+  }, []);
 
-  // Get status badge style
-  const getStatusBadgeClass = (status) => {
-    const statusNum = parseInt(status);
-    switch (statusNum) {
-      case 1: // New
-        return "bg-green-100 text-green-800";
-      case 2: // Assigned
-        return "bg-blue-100 text-blue-800";
-      case 3: // In Progress
-        return "bg-yellow-100 text-yellow-800";
-      case 4: // Completed
-        return "bg-purple-100 text-purple-800";
-      case 5: // Closed
-        return "bg-gray-100 text-gray-800";
-      case 6: // Cancelled
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
+  // Toggle filters
+  const handleToggleFilters = useCallback(() => {
+    setShowFilters(prev => !prev);
+  }, []);
 
-  // Get status label
-  const getStatusLabel = (status) => {
-    const statusNum = parseInt(status);
-    switch (statusNum) {
-      case 1:
-        return "New";
-      case 2:
-        return "Assigned";
-      case 3:
-        return "In Progress";
-      case 4:
-        return "Completed";
-      case 5:
-        return "Closed";
-      case 6:
-        return "Cancelled";
-      default:
-        return "Unknown";
-    }
-  };
+  // Dismiss handlers
+  const handleDismissSuccess = useCallback(() => {
+    setSuccessMessage("");
+  }, []);
 
-  // Build search criteria display
-  const getSearchCriteriaDisplay = () => {
+  const handleDismissError = useCallback(() => {
+    setErrors({});
+  }, []);
+
+  // Navigation handlers
+  const handleBackToSearch = useCallback(() => {
+    navigate("/admin/orders/search");
+  }, [navigate]);
+
+  const handleBackToOrders = useCallback(() => {
+    navigate("/admin/orders");
+  }, [navigate]);
+
+  // Build search criteria display - memoized
+  const searchCriteriaDisplay = useMemo(() => {
     const criteria = [];
 
     if (searchCriteria.generalSearch) {
-      criteria.push({
-        label: "Keywords",
-        value: searchCriteria.generalSearch,
-        icon: MagnifyingGlassIcon,
-      });
+      criteria.push({ label: "Keywords", value: searchCriteria.generalSearch, icon: MagnifyingGlassIcon });
     }
     if (searchCriteria.customerFirstName || searchCriteria.customerLastName) {
-      const name = [
-        searchCriteria.customerFirstName,
-        searchCriteria.customerLastName,
-      ]
-        .filter(Boolean)
-        .join(" ");
-      criteria.push({
-        label: "Customer",
-        value: name,
-        icon: UserIcon,
-      });
+      const name = [searchCriteria.customerFirstName, searchCriteria.customerLastName].filter(Boolean).join(" ");
+      criteria.push({ label: "Customer", value: name, icon: UserIcon });
     }
     if (searchCriteria.customerEmail) {
-      criteria.push({
-        label: "Customer Email",
-        value: searchCriteria.customerEmail,
-        icon: EnvelopeIcon,
-      });
+      criteria.push({ label: "Customer Email", value: searchCriteria.customerEmail, icon: EnvelopeIcon });
     }
     if (searchCriteria.customerPhone) {
-      criteria.push({
-        label: "Customer Phone",
-        value: searchCriteria.customerPhone,
-        icon: PhoneIcon,
-      });
+      criteria.push({ label: "Customer Phone", value: searchCriteria.customerPhone, icon: PhoneIcon });
     }
     if (searchCriteria.customerOrganizationName) {
-      criteria.push({
-        label: "Customer Org",
-        value: searchCriteria.customerOrganizationName,
-        icon: BuildingOffice2Icon,
-      });
+      criteria.push({ label: "Customer Org", value: searchCriteria.customerOrganizationName, icon: BuildingOffice2Icon });
     }
     if (searchCriteria.associateFirstName || searchCriteria.associateLastName) {
-      const name = [
-        searchCriteria.associateFirstName,
-        searchCriteria.associateLastName,
-      ]
-        .filter(Boolean)
-        .join(" ");
-      criteria.push({
-        label: "Associate",
-        value: name,
-        icon: UserGroupIcon,
-      });
+      const name = [searchCriteria.associateFirstName, searchCriteria.associateLastName].filter(Boolean).join(" ");
+      criteria.push({ label: "Associate", value: name, icon: UserGroupIcon });
     }
     if (searchCriteria.associateEmail) {
-      criteria.push({
-        label: "Associate Email",
-        value: searchCriteria.associateEmail,
-        icon: EnvelopeIcon,
-      });
+      criteria.push({ label: "Associate Email", value: searchCriteria.associateEmail, icon: EnvelopeIcon });
     }
     if (searchCriteria.associatePhone) {
-      criteria.push({
-        label: "Associate Phone",
-        value: searchCriteria.associatePhone,
-        icon: PhoneIcon,
-      });
+      criteria.push({ label: "Associate Phone", value: searchCriteria.associatePhone, icon: PhoneIcon });
     }
     if (searchCriteria.associateOrganizationName) {
-      criteria.push({
-        label: "Associate Org",
-        value: searchCriteria.associateOrganizationName,
-        icon: BuildingOffice2Icon,
-      });
+      criteria.push({ label: "Associate Org", value: searchCriteria.associateOrganizationName, icon: BuildingOffice2Icon });
     }
     if (searchCriteria.orderWjid) {
-      criteria.push({
-        label: "Job #",
-        value: searchCriteria.orderWjid,
-        icon: HashtagIcon,
-      });
+      criteria.push({ label: "Job #", value: searchCriteria.orderWjid, icon: HashtagIcon });
     }
 
     return criteria;
-  };
+  }, [searchCriteria]);
 
-  const searchCriteriaDisplay = getSearchCriteriaDisplay();
-
-  // Calculate current page info
+  // Calculate pagination info
   const totalPages = Math.ceil(totalCount / pageSize);
   const startRecord = (currentPage - 1) * pageSize + 1;
   const endRecord = Math.min(currentPage * pageSize, totalCount);
@@ -486,7 +519,7 @@ function AdminOrderSearchResultPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
-        <Breadcrumb items={breadcrumbItems} className="mb-8" />
+        <Breadcrumb items={BREADCRUMB_ITEMS} className="mb-8" />
 
         {/* Header Section */}
         <div className="mb-8">
@@ -502,8 +535,7 @@ function AdminOrderSearchResultPage() {
                 Order search results
               </p>
             </div>
-            <Button variant="outline" onClick={() => navigate("/admin/orders/search")}>
-              <ArrowLeftIcon className="h-4 w-4 mr-2" />
+            <Button variant="outline" onClick={handleBackToSearch} icon={ArrowLeftIcon}>
               Back to Search
             </Button>
           </div>
@@ -514,13 +546,10 @@ function AdminOrderSearchResultPage() {
               {searchCriteriaDisplay.map((criteria, index) => {
                 const Icon = criteria.icon;
                 return (
-                  <span
-                    key={index}
-                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
-                  >
+                  <Badge key={index} variant="info" size="sm" className="inline-flex items-center">
                     <Icon className="h-4 w-4 mr-1.5" />
                     {criteria.label}: {criteria.value}
-                  </span>
+                  </Badge>
                 );
               })}
             </div>
@@ -529,13 +558,13 @@ function AdminOrderSearchResultPage() {
 
         {/* Success/Error Messages */}
         {successMessage && (
-          <Alert type="success" className="mb-6" dismissible onDismiss={() => setSuccessMessage("")}>
+          <Alert type="success" className="mb-6" dismissible onDismiss={handleDismissSuccess}>
             {successMessage}
           </Alert>
         )}
 
         {errors.message && (
-          <Alert type="error" className="mb-6" dismissible onDismiss={() => setErrors({})}>
+          <Alert type="error" className="mb-6" dismissible onDismiss={handleDismissError}>
             {errors.message}
           </Alert>
         )}
@@ -554,8 +583,7 @@ function AdminOrderSearchResultPage() {
                   <p className="mt-1 text-sm text-gray-600">
                     Found <span className="font-semibold">{totalCount}</span>{" "}
                     order{totalCount !== 1 ? "s" : ""}
-                    {searchCriteriaDisplay.length > 0 &&
-                      " matching your criteria"}
+                    {searchCriteriaDisplay.length > 0 && " matching your criteria"}
                   </p>
                 )}
               </div>
@@ -565,7 +593,7 @@ function AdminOrderSearchResultPage() {
                 <div className="flex flex-wrap items-center gap-3">
                   {/* Toggle Filters */}
                   <button
-                    onClick={() => setShowFilters(!showFilters)}
+                    onClick={handleToggleFilters}
                     className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50"
                   >
                     <FunnelIcon className="h-4 w-4 mr-1.5" />
@@ -600,10 +628,7 @@ function AdminOrderSearchResultPage() {
                       className="block rounded-lg border-gray-300 py-1.5 pl-3 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     >
                       {PAGE_SIZE_OPTIONS.map((option) => (
-                        <option
-                          key={option.value}
-                          value={option.value.toString()}
-                        >
+                        <option key={option.value} value={option.value.toString()}>
                           {option.label}
                         </option>
                       ))}
@@ -623,7 +648,7 @@ function AdminOrderSearchResultPage() {
                     </label>
                     <select
                       value={status}
-                      onChange={(e) => setStatus(e.target.value)}
+                      onChange={handleStatusChange}
                       className="w-full rounded-lg border-gray-300 py-2 pl-3 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     >
                       {ORDER_STATUS_FILTER_OPTIONS.map((option) => (
@@ -640,7 +665,7 @@ function AdminOrderSearchResultPage() {
                     </label>
                     <select
                       value={typeOf}
-                      onChange={(e) => setTypeOf(e.target.value)}
+                      onChange={handleTypeChange}
                       className="w-full rounded-lg border-gray-300 py-2 pl-3 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     >
                       {ORDER_TYPE_FILTER_OPTIONS.map((option) => (
@@ -666,189 +691,9 @@ function AdminOrderSearchResultPage() {
               <>
                 {/* Results Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                  {orders.map((order) => {
-                    const wjid = getFieldValue(order, "wjid") || order.id;
-                    const customerFirstName = getFieldValue(
-                      order,
-                      "customerFirstName",
-                      "",
-                    );
-                    const customerLastName = getFieldValue(
-                      order,
-                      "customerLastName",
-                      "",
-                    );
-                    const customerOrgName = getFieldValue(
-                      order,
-                      "customerOrganizationName",
-                      "",
-                    );
-                    const associateFirstName = getFieldValue(
-                      order,
-                      "associateFirstName",
-                      "",
-                    );
-                    const associateLastName = getFieldValue(
-                      order,
-                      "associateLastName",
-                      "",
-                    );
-                    const orderType = parseInt(
-                      getFieldValue(order, "type", "0"),
-                    );
-                    const orderStatus = getFieldValue(order, "status", "");
-                    const startDate = getFieldValue(order, "startDate");
-                    const description = getFieldValue(
-                      order,
-                      "description",
-                      "No description",
-                    );
-                    const customerEmail = getFieldValue(order, "customerEmail");
-                    const customerPhone = getFieldValue(order, "customerPhone");
-
-                    const customerName =
-                      customerOrgName ||
-                      `${customerFirstName} ${customerLastName}`.trim() ||
-                      "Unknown Customer";
-                    const associateName =
-                      `${associateFirstName} ${associateLastName}`.trim() ||
-                      "Unassigned";
-
-                    return (
-                      <div
-                        key={order.id}
-                        className="bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-shadow"
-                      >
-                        {/* Card Header */}
-                        <div className="p-4 border-b border-gray-100">
-                          <Link
-                            to={`/admin/order/${wjid}`}
-                            className="flex items-start text-blue-600 hover:text-blue-800 font-semibold"
-                          >
-                            <HashtagIcon className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
-                            <span>Job #{wjid}</span>
-                          </Link>
-                          {/* Status Badge */}
-                          <div className="mt-2">
-                            <span
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadgeClass(orderStatus)}`}
-                            >
-                              {getStatusLabel(orderStatus)}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Card Body */}
-                        <div className="p-4 space-y-2 text-sm">
-                          {/* Customer Info */}
-                          <div className="font-medium text-gray-900 flex items-start">
-                            {orderType === COMMERCIAL_ORDER_TYPE_OF_ID ? (
-                              <BuildingOffice2Icon className="h-4 w-4 mr-2 text-gray-400 flex-shrink-0 mt-0.5" />
-                            ) : (
-                              <HomeIcon className="h-4 w-4 mr-2 text-gray-400 flex-shrink-0 mt-0.5" />
-                            )}
-                            <div>
-                              <div className="font-medium">{customerName}</div>
-                              {customerFirstName &&
-                                customerLastName &&
-                                customerOrgName && (
-                                  <div className="text-gray-500 text-xs">
-                                    {customerFirstName} {customerLastName}
-                                  </div>
-                                )}
-                            </div>
-                          </div>
-
-                          {/* Associate */}
-                          <div className="flex items-center text-gray-600">
-                            <UserGroupIcon className="h-4 w-4 mr-2 text-gray-400" />
-                            <span
-                              className={
-                                associateName === "Unassigned"
-                                  ? "text-gray-400 italic"
-                                  : ""
-                              }
-                            >
-                              {associateName}
-                            </span>
-                          </div>
-
-                          {/* Start Date */}
-                          {startDate && (
-                            <div className="flex items-center text-gray-600">
-                              <CalendarIcon className="h-4 w-4 mr-2 text-gray-400" />
-                              {formatDateForDisplay(startDate)}
-                            </div>
-                          )}
-
-                          {/* Customer Contact */}
-                          {customerPhone && (
-                            <div className="flex items-center text-gray-600">
-                              <PhoneIcon className="h-4 w-4 mr-2 text-gray-400" />
-                              <a
-                                href={`tel:${customerPhone}`}
-                                className="text-blue-600 hover:text-blue-800"
-                              >
-                                {formatPhone(customerPhone)}
-                              </a>
-                            </div>
-                          )}
-
-                          {customerEmail && (
-                            <div className="flex items-center text-gray-600">
-                              <EnvelopeIcon className="h-4 w-4 mr-2 text-gray-400" />
-                              <a
-                                href={`mailto:${customerEmail}`}
-                                className="text-blue-600 hover:text-blue-800 truncate"
-                              >
-                                {customerEmail}
-                              </a>
-                            </div>
-                          )}
-
-                          {/* Description Preview */}
-                          <div className="pt-2 text-gray-600">
-                            <p
-                              className="text-xs line-clamp-2"
-                              title={description}
-                            >
-                              {description}
-                            </p>
-                          </div>
-
-                          {/* Order Type Badge */}
-                          <div className="pt-2">
-                            <span
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                                orderType === COMMERCIAL_ORDER_TYPE_OF_ID
-                                  ? "bg-blue-100 text-blue-800"
-                                  : orderType === RESIDENTIAL_ORDER_TYPE_OF_ID
-                                    ? "bg-green-100 text-green-800"
-                                    : "bg-gray-100 text-gray-800"
-                              }`}
-                            >
-                              {orderType === COMMERCIAL_ORDER_TYPE_OF_ID
-                                ? "Commercial"
-                                : orderType === RESIDENTIAL_ORDER_TYPE_OF_ID
-                                  ? "Residential"
-                                  : "Unassigned"}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Card Footer */}
-                        <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-center">
-                          <Link
-                            to={`/admin/order/${wjid}`}
-                            className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800"
-                          >
-                            <EyeIcon className="h-4 w-4 mr-1" />
-                            View Details
-                          </Link>
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {orders.map((order) => (
+                    <OrderCard key={order.id} order={order} />
+                  ))}
                 </div>
 
                 {/* Pagination Footer */}
@@ -873,11 +718,9 @@ function AdminOrderSearchResultPage() {
                     <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                       <div>
                         <p className="text-sm text-gray-700">
-                          Showing{" "}
-                          <span className="font-medium">{startRecord}</span> to{" "}
+                          Showing <span className="font-medium">{startRecord}</span> to{" "}
                           <span className="font-medium">{endRecord}</span> of{" "}
-                          <span className="font-medium">{totalCount}</span>{" "}
-                          results
+                          <span className="font-medium">{totalCount}</span> results
                         </p>
                       </div>
                       <div>
@@ -891,13 +734,9 @@ function AdminOrderSearchResultPage() {
                             className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <span className="sr-only">Previous</span>
-                            <ChevronLeftIcon
-                              className="h-5 w-5"
-                              aria-hidden="true"
-                            />
+                            <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
                           </button>
 
-                          {/* Page Numbers */}
                           <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
                             Page {currentPage} of {totalPages}
                           </span>
@@ -908,10 +747,7 @@ function AdminOrderSearchResultPage() {
                             className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <span className="sr-only">Next</span>
-                            <ChevronRightIcon
-                              className="h-5 w-5"
-                              aria-hidden="true"
-                            />
+                            <ChevronRightIcon className="h-5 w-5" aria-hidden="true" />
                           </button>
                         </nav>
                       </div>
@@ -926,16 +762,11 @@ function AdminOrderSearchResultPage() {
                   No Orders Found
                 </h3>
                 <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                  No orders match your search criteria. Try adjusting your
-                  search terms or filters.
+                  No orders match your search criteria. Try adjusting your search terms or filters.
                 </p>
-                <Link
-                  to="/admin/orders/search"
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                >
-                  <ArrowLeftIcon className="h-4 w-4 mr-2" />
+                <Button variant="primary" onClick={handleBackToSearch} icon={ArrowLeftIcon}>
                   Try New Search
-                </Link>
+                </Button>
               </div>
             ) : null}
           </div>
@@ -943,26 +774,25 @@ function AdminOrderSearchResultPage() {
 
         {/* Bottom Action Buttons */}
         <div className="mt-6 flex flex-col sm:flex-row justify-between gap-4">
-          <Button variant="outline" onClick={() => navigate("/admin/orders/search")}>
-            <ArrowLeftIcon className="h-4 w-4 mr-2" />
+          <Button variant="outline" onClick={handleBackToSearch} icon={ArrowLeftIcon}>
             Search Again
           </Button>
-          <Button variant="outline" onClick={() => navigate("/admin/orders")}>
+          <Button variant="outline" onClick={handleBackToOrders}>
             Back to Orders
           </Button>
         </div>
       </div>
     </div>
   );
-}
+});
 
 // Wrapper with UIXThemeProvider
-function AdminOrderSearchResultPageWithProvider() {
+function AdminOrderSearchResultPage() {
   return (
     <UIXThemeProvider>
-      <AdminOrderSearchResultPage />
+      <ResultPageContent />
     </UIXThemeProvider>
   );
 }
 
-export default AdminOrderSearchResultPageWithProvider;
+export default AdminOrderSearchResultPage;

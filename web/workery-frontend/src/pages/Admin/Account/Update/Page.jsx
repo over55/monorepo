@@ -1,4 +1,5 @@
 // File Path: web/workery-frontend/src/pages/Admin/Account/Update/Page.jsx
+// @uix-page: AccountUpdatePage
 // UIX Upgraded - Uses UIX primitives (Card, Alert, Breadcrumb, Spinner, Button)
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
@@ -42,65 +43,65 @@ import { ASSOCIATE_PHONE_TYPE_OF_OPTIONS_WITH_EMPTY_OPTIONS } from "../../../../
 import { ensureISODateForAPI } from "../../../../services/Helpers/DateFormatter";
 
 // Gender options
-const GENDER_OPTIONS = [
-  { value: 0, label: "Please select" },
-  { value: 1, label: "Other" },
-  { value: 2, label: "Male" },
-  { value: 3, label: "Female" },
-  { value: 4, label: "Prefer not to say" },
-];
+const GENDER_OPTIONS = Object.freeze([
+  Object.freeze({ value: 0, label: "Please select" }),
+  Object.freeze({ value: 1, label: "Other" }),
+  Object.freeze({ value: 2, label: "Male" }),
+  Object.freeze({ value: 3, label: "Female" }),
+  Object.freeze({ value: 4, label: "Prefer not to say" }),
+]);
 
 // Identify As options
-const IDENTIFY_AS_OPTIONS = [
-  { value: 1, label: "Other" },
-  { value: 2, label: "Prefer not to say" },
-  { value: 3, label: "Women" },
-  { value: 4, label: "Newcomer to Canada" },
-  { value: 5, label: "Visible minority" },
-  { value: 6, label: "Veteran" },
-  { value: 7, label: "Francophone" },
-  { value: 8, label: "Person with disability" },
-  { value: 9, label: "Inuit" },
-  { value: 10, label: "First Nations" },
-  { value: 11, label: "Métis" },
-];
+const IDENTIFY_AS_OPTIONS = Object.freeze([
+  Object.freeze({ value: 1, label: "Other" }),
+  Object.freeze({ value: 2, label: "Prefer not to say" }),
+  Object.freeze({ value: 3, label: "Women" }),
+  Object.freeze({ value: 4, label: "Newcomer to Canada" }),
+  Object.freeze({ value: 5, label: "Visible minority" }),
+  Object.freeze({ value: 6, label: "Veteran" }),
+  Object.freeze({ value: 7, label: "Francophone" }),
+  Object.freeze({ value: 8, label: "Person with disability" }),
+  Object.freeze({ value: 9, label: "Inuit" }),
+  Object.freeze({ value: 10, label: "First Nations" }),
+  Object.freeze({ value: 11, label: "Métis" }),
+]);
 
 // Country options (prioritized)
-const COUNTRY_OPTIONS = [
-  { value: "CA", label: "Canada" },
-  { value: "US", label: "United States" },
-  { value: "MX", label: "Mexico" },
-];
+const COUNTRY_OPTIONS = Object.freeze([
+  Object.freeze({ value: "CA", label: "Canada" }),
+  Object.freeze({ value: "US", label: "United States" }),
+  Object.freeze({ value: "MX", label: "Mexico" }),
+]);
 
 // Province/State options based on country
-const REGION_OPTIONS = {
-  CA: [
-    { value: "AB", label: "Alberta" },
-    { value: "BC", label: "British Columbia" },
-    { value: "MB", label: "Manitoba" },
-    { value: "NB", label: "New Brunswick" },
-    { value: "NL", label: "Newfoundland and Labrador" },
-    { value: "NS", label: "Nova Scotia" },
-    { value: "NT", label: "Northwest Territories" },
-    { value: "NU", label: "Nunavut" },
-    { value: "ON", label: "Ontario" },
-    { value: "PE", label: "Prince Edward Island" },
-    { value: "QC", label: "Quebec" },
-    { value: "SK", label: "Saskatchewan" },
-    { value: "YT", label: "Yukon" },
-  ],
-  US: [
-    { value: "AL", label: "Alabama" },
-    { value: "AK", label: "Alaska" },
-    { value: "AZ", label: "Arizona" },
+const REGION_OPTIONS = Object.freeze({
+  CA: Object.freeze([
+    Object.freeze({ value: "AB", label: "Alberta" }),
+    Object.freeze({ value: "BC", label: "British Columbia" }),
+    Object.freeze({ value: "MB", label: "Manitoba" }),
+    Object.freeze({ value: "NB", label: "New Brunswick" }),
+    Object.freeze({ value: "NL", label: "Newfoundland and Labrador" }),
+    Object.freeze({ value: "NS", label: "Nova Scotia" }),
+    Object.freeze({ value: "NT", label: "Northwest Territories" }),
+    Object.freeze({ value: "NU", label: "Nunavut" }),
+    Object.freeze({ value: "ON", label: "Ontario" }),
+    Object.freeze({ value: "PE", label: "Prince Edward Island" }),
+    Object.freeze({ value: "QC", label: "Quebec" }),
+    Object.freeze({ value: "SK", label: "Saskatchewan" }),
+    Object.freeze({ value: "YT", label: "Yukon" }),
+  ]),
+  US: Object.freeze([
+    Object.freeze({ value: "AL", label: "Alabama" }),
+    Object.freeze({ value: "AK", label: "Alaska" }),
+    Object.freeze({ value: "AZ", label: "Arizona" }),
     // ... add more US states as needed
-  ],
-  MX: [
-    { value: "AGU", label: "Aguascalientes" },
-    { value: "BCN", label: "Baja California" },
+  ]),
+  MX: Object.freeze([
+    Object.freeze({ value: "AGU", label: "Aguascalientes" }),
+    Object.freeze({ value: "BCN", label: "Baja California" }),
     // ... add more Mexican states as needed
-  ],
-};
+  ]),
+});
 
 /**
  * Account Update Page for Admin Users

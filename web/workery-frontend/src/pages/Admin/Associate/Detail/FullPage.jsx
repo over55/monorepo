@@ -1,14 +1,11 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Admin/Associate/Detail/FullPage.jsx
-// UIX Upgraded - Uses DetailFullView whole page component
-// @uix-page: AdminAssociateDetailFullPage
+// File Path: web/workery-frontend/src/pages/Admin/Associate/Detail/FullPage.jsx
+// @uix-page: DetailFullView
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, memo, useRef } from "react";
 import { useNavigate, useParams } from "react-router";
 import {
-  ChartBarIcon,
   UserGroupIcon,
   InformationCircleIcon,
-  PencilSquareIcon,
   ChevronLeftIcon,
   PhoneIcon,
   MapPinIcon,
@@ -25,6 +22,7 @@ import {
   ChartPieIcon,
   ComputerDesktopIcon,
   NoSymbolIcon,
+  HomeIcon,
 } from "@heroicons/react/24/outline";
 import { useAssociateManager } from "../../../../services/Services";
 import {
@@ -36,115 +34,47 @@ import {
   InsuranceRequirementsDisplay,
 } from "../../../../components/business/displays";
 import {
+  DetailSection,
+  DetailField,
+} from "../../../../components/business/views";
+import {
   formatDateForDisplay,
   formatDateTime,
 } from "../../../../services/Helpers/DateFormatter";
-import { DetailFullView } from "../../../../components/UIX";
+import {
+  UIXThemeProvider,
+  DetailFullView,
+  EditButton,
+} from "../../../../components/UIX";
+import {
+  COMMERCIAL_ASSOCIATE_TYPE_OF_ID,
+  ASSOCIATE_PHONE_TYPE_WORK,
+  ASSOCIATE_IS_JOB_SEEKER_YES,
+  ASSOCIATE_IS_JOB_SEEKER_NO,
+  ASSOCIATE_STATUS_IN_COUNTRY_OTHER,
+  ASSOCIATE_STATUS_IN_COUNTRY_PERMANENT_RESIDENT,
+  ASSOCIATE_STATUS_IN_COUNTRY_NATURALIZED_CITIZEN,
+  ASSOCIATE_STATUS_IN_COUNTRY_PROTECTED_PERSON,
+  ASSOCIATE_MARITAL_STATUS_OTHER,
+  ASSOCIATE_EDUCATION_OTHER,
+  ASSOCIATE_STATUS_ARCHIVED,
+  ASSOCIATE_TYPE_MAP,
+  ASSOCIATE_ORGANIZATION_TYPE_MAP,
+  ASSOCIATE_GENDER_MAP,
+  ASSOCIATE_PHONE_TYPE_MAP,
+  ASSOCIATE_STATUS_IN_COUNTRY_MAP,
+  ASSOCIATE_MARITAL_STATUS_MAP,
+  ASSOCIATE_EDUCATION_MAP,
+  ASSOCIATE_IDENTIFY_AS_MAP,
+} from "../../../../constants/Associate";
 
-// Constants
-const COMMERCIAL_ASSOCIATE_TYPE_OF_ID = 3;
-const ASSOCIATE_PHONE_TYPE_WORK = 2;
-const ASSOCIATE_IS_JOB_SEEKER_YES = 1;
-const ASSOCIATE_IS_JOB_SEEKER_NO = 2;
-const ASSOCIATE_STATUS_IN_COUNTRY_OTHER = 1;
-const ASSOCIATE_STATUS_IN_COUNTRY_PERMANENT_RESIDENT = 2;
-const ASSOCIATE_STATUS_IN_COUNTRY_NATURALIZED_CANADIAN_CITIZEN = 3;
-const ASSOCIATE_STATUS_IN_COUNTRY_PROTECTED_PERSONS = 4;
-const ASSOCIATE_MARITAL_STATUS_OTHER = 1;
-const ASSOCIATE_ACCOMPLISHED_EDUCATION_OTHER = 1;
-const ASSOCIATE_STATUS_ARCHIVED = 2;
-
-// Option mappings for display
-const ASSOCIATE_TYPE_OPTIONS = {
-  1: "Unassigned",
-  2: "Residential",
-  3: "Commercial",
+// Extract IDs helper - moved outside component for performance
+const extractIds = (items) => {
+  if (!items || !Array.isArray(items)) return [];
+  return items.map((item) => item.id || item.value).filter(Boolean);
 };
 
-const ASSOCIATE_ORGANIZATION_TYPE_OPTIONS = {
-  1: "Private",
-  2: "Non-profit",
-  3: "Government",
-};
-
-const GENDER_OPTIONS = {
-  1: "Other",
-  2: "Male",
-  3: "Female",
-  4: "Prefer not to say",
-};
-
-const PHONE_TYPE_OPTIONS = {
-  1: "Mobile",
-  2: "Work",
-  3: "Home",
-};
-
-const ASSOCIATE_STATUS_IN_COUNTRY_OPTIONS = {
-  1: "Other",
-  2: "Permanent Resident",
-  3: "Naturalized Canadian Citizen",
-  4: "Protected Persons",
-};
-
-const ASSOCIATE_MARITAL_STATUS_OPTIONS = {
-  1: "Other",
-  2: "Single",
-  3: "Married",
-  4: "Divorced",
-  5: "Widowed",
-};
-
-const ASSOCIATE_ACCOMPLISHED_EDUCATION_OPTIONS = {
-  1: "Other",
-  2: "No formal education",
-  3: "Elementary school",
-  4: "High school",
-  5: "College",
-  6: "University",
-  7: "Graduate school",
-};
-
-const IDENTIFY_AS_OPTIONS = {
-  1: "Aboriginal",
-  2: "Visible minority",
-  3: "Person with disability",
-  4: "Youth",
-  5: "Senior",
-  6: "Woman",
-  7: "Newcomer",
-};
-
-// Detail Section Component
-const DetailSection = ({ title, icon: Icon, children }) => (
-  <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
-    <div className="px-4 sm:px-6 py-3 sm:py-4">
-      <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
-        <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
-        <span className="truncate">{title}</span>
-      </h3>
-    </div>
-    <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
-      <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-        {children}
-      </dl>
-    </div>
-  </div>
-);
-
-// Detail Field Component
-const DetailField = ({ label, value, fullWidth = false }) => (
-  <div className={fullWidth ? "lg:col-span-2" : ""}>
-    <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-1">
-      {label}
-    </dt>
-    <dd className="text-base sm:text-lg font-medium text-gray-900 break-words">
-      {value || "-"}
-    </dd>
-  </div>
-);
-
-function AdminAssociateDetailFullPage() {
+const AdminAssociateDetailFullPageContent = memo(function AdminAssociateDetailFullPageContent() {
   const { aid } = useParams();
   const associateManager = useAssociateManager();
   const navigate = useNavigate();
@@ -154,37 +84,103 @@ function AdminAssociateDetailFullPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Refs for cleanup - prevents state updates on unmounted component
+  const isMounted = useRef(true);
+  const abortControllerRef = useRef(null);
+
   // Handle unauthorized access
   const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
   }, [navigate]);
 
-  // Fetch associate data
-  const fetchAssociate = useCallback(async () => {
-    if (!aid) return;
+  // Fetch associate data with proper cleanup
+  const fetchAssociate = useCallback(() => {
+    if (!aid) {
+      if (import.meta.env.DEV) {
+        console.log("No aid provided, returning");
+      }
+      return;
+    }
 
+    // Cancel any ongoing request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create new abort controller
+    abortControllerRef.current = new AbortController();
+    const currentAbortController = abortControllerRef.current;
+
+    if (import.meta.env.DEV) {
+      console.log("Starting fetch for aid:", aid);
+    }
     setLoading(true);
     setError(null);
 
-    try {
-      const associateData = await associateManager.getAssociateDetail(
-        aid,
-        onUnauthorized,
-      );
-      setAssociate(associateData);
-    } catch (err) {
-      console.error("Failed to fetch associate:", err);
-      setError("Failed to load associate details. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    associateManager.getAssociateDetailWithCallbacks(
+      aid,
+      (response) => {
+        // Check if this request was aborted or component unmounted
+        if (currentAbortController.signal.aborted || !isMounted.current) {
+          return;
+        }
+        if (import.meta.env.DEV) {
+          console.log("Setting associate data:", response);
+        }
+        setAssociate(response);
+        setLoading(false);
+      },
+      (errorResponse) => {
+        // Check if this request was aborted or component unmounted
+        if (currentAbortController.signal.aborted || !isMounted.current) {
+          return;
+        }
+        if (import.meta.env.DEV) {
+          console.error("Setting error:", errorResponse);
+        }
+        setError(
+          errorResponse?.message ||
+            "Failed to load associate details. Please try again.",
+        );
+        setLoading(false);
+      },
+      () => {
+        // Check if this request was aborted or component unmounted
+        if (currentAbortController.signal.aborted || !isMounted.current) {
+          return;
+        }
+        if (import.meta.env.DEV) {
+          console.log("Setting loading to false");
+        }
+        setLoading(false);
+      },
+      onUnauthorized,
+    );
   }, [aid, associateManager, onUnauthorized]);
 
-  // Initial data load
+  // Initial data load with cleanup
   useEffect(() => {
+    isMounted.current = true;
+
+    if (import.meta.env.DEV) {
+      console.log("Effect running for aid:", aid);
+    }
     window.scrollTo(0, 0);
     fetchAssociate();
-  }, [fetchAssociate]);
+
+    // Cleanup function - only cancel requests, don't set state
+    return () => {
+      isMounted.current = false;
+
+      // Cancel any ongoing requests
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+      // Note: Don't set state here - component is unmounting
+      // The isMounted check in callbacks prevents state updates
+    };
+  }, [aid, fetchAssociate]);
 
   // Helper functions
   const formatPhone = useCallback((phone, extension = null) => {
@@ -238,17 +234,14 @@ function AdminAssociateDetailFullPage() {
     return address || "-";
   }, []);
 
-  const extractIds = useCallback((items) => {
-    if (!items || !Array.isArray(items)) return [];
-    return items.map((item) => item.id || item.value).filter(Boolean);
-  }, []);
-
   // Memoize breadcrumb items
   const breadcrumbItems = useMemo(() => [
     {
       label: "Dashboard",
       to: "/admin/dashboard",
-      icon: ChartBarIcon,
+      icon: HomeIcon,
+      hideOnMobile: false,
+      mobileLabel: "Dash",
     },
     {
       label: "Associates",
@@ -264,7 +257,7 @@ function AdminAssociateDetailFullPage() {
 
   // Memoize header config
   const headerConfig = useMemo(() => ({
-    title: "Full Details",
+    title: "Associate - Full Details",
     icon: ClipboardDocumentListIcon,
     loadingText: "Loading associate details...",
     notFoundTitle: "Associate Not Found",
@@ -295,16 +288,19 @@ function AdminAssociateDetailFullPage() {
     return [
       {
         variant: "outline",
-        label: "Back",
-        icon: ChevronLeftIcon,
         onClick: () => navigate("/admin/associates"),
+        icon: ChevronLeftIcon,
+        label: "Back",
       },
       {
-        variant: "secondary",
-        label: "Edit",
-        icon: PencilSquareIcon,
-        disabled: associate.status === ASSOCIATE_STATUS_ARCHIVED,
-        onClick: () => navigate(`/admin/associate/${aid}/edit`),
+        component: (
+          <EditButton
+            onClick={() => navigate(`/admin/associate/${aid}/edit`)}
+            disabled={associate?.status === ASSOCIATE_STATUS_ARCHIVED}
+            variant="primary"
+            className="flex-1 sm:flex-initial"
+          />
+        ),
       },
     ];
   }, [associate, navigate, aid]);
@@ -357,7 +353,7 @@ function AdminAssociateDetailFullPage() {
                     Type
                   </dt>
                   <dd className="text-base sm:text-lg font-medium text-gray-900">
-                    {ASSOCIATE_TYPE_OPTIONS[associate.type] || "Unknown"}
+                    {ASSOCIATE_TYPE_MAP[associate.type] || "Unknown"}
                   </dd>
                 </div>
                 <div>
@@ -367,7 +363,7 @@ function AdminAssociateDetailFullPage() {
                   <dd className="text-base sm:text-lg font-medium text-gray-900">
                     {associate.gender ? (
                       <>
-                        {GENDER_OPTIONS[associate.gender] || "Unknown"}
+                        {ASSOCIATE_GENDER_MAP[associate.gender] || "Unknown"}
                         {associate.gender === 1 &&
                           associate.genderOther &&
                           ` - ${associate.genderOther}`}
@@ -402,7 +398,7 @@ function AdminAssociateDetailFullPage() {
             />
             <DetailField
               label="Company Type"
-              value={ASSOCIATE_ORGANIZATION_TYPE_OPTIONS[associate.organizationType]}
+              value={ASSOCIATE_ORGANIZATION_TYPE_MAP[associate.organizationType]}
             />
           </DetailSection>
         ),
@@ -454,7 +450,7 @@ function AdminAssociateDetailFullPage() {
             />
             <DetailField
               label="Phone Type"
-              value={PHONE_TYPE_OPTIONS[associate.phoneType]}
+              value={ASSOCIATE_PHONE_TYPE_MAP[associate.phoneType]}
             />
             {associate.otherPhone && (
               <>
@@ -469,7 +465,7 @@ function AdminAssociateDetailFullPage() {
                 />
                 <DetailField
                   label="Other Phone Type (Optional)"
-                  value={PHONE_TYPE_OPTIONS[associate.otherPhoneType]}
+                  value={ASSOCIATE_PHONE_TYPE_MAP[associate.otherPhoneType]}
                 />
               </>
             )}
@@ -655,7 +651,7 @@ function AdminAssociateDetailFullPage() {
                 />
                 <DetailField
                   label="Status in Country"
-                  value={ASSOCIATE_STATUS_IN_COUNTRY_OPTIONS[associate.statusInCountry]}
+                  value={ASSOCIATE_STATUS_IN_COUNTRY_MAP[associate.statusInCountry]}
                 />
                 {associate.statusInCountry === ASSOCIATE_STATUS_IN_COUNTRY_OTHER && (
                   <DetailField
@@ -664,8 +660,8 @@ function AdminAssociateDetailFullPage() {
                   />
                 )}
                 {(associate.statusInCountry === ASSOCIATE_STATUS_IN_COUNTRY_PERMANENT_RESIDENT ||
-                  associate.statusInCountry === ASSOCIATE_STATUS_IN_COUNTRY_NATURALIZED_CANADIAN_CITIZEN ||
-                  associate.statusInCountry === ASSOCIATE_STATUS_IN_COUNTRY_PROTECTED_PERSONS) && (
+                  associate.statusInCountry === ASSOCIATE_STATUS_IN_COUNTRY_NATURALIZED_CITIZEN ||
+                  associate.statusInCountry === ASSOCIATE_STATUS_IN_COUNTRY_PROTECTED_PERSON) && (
                   <>
                     <DetailField
                       label="Country of Origin"
@@ -679,7 +675,7 @@ function AdminAssociateDetailFullPage() {
                 )}
                 <DetailField
                   label="Marital Status"
-                  value={ASSOCIATE_MARITAL_STATUS_OPTIONS[associate.maritalStatus]}
+                  value={ASSOCIATE_MARITAL_STATUS_MAP[associate.maritalStatus]}
                 />
                 {associate.maritalStatus === ASSOCIATE_MARITAL_STATUS_OTHER && (
                   <DetailField
@@ -689,9 +685,9 @@ function AdminAssociateDetailFullPage() {
                 )}
                 <DetailField
                   label="Accomplished level of Education"
-                  value={ASSOCIATE_ACCOMPLISHED_EDUCATION_OPTIONS[associate.accomplishedEducation]}
+                  value={ASSOCIATE_EDUCATION_MAP[associate.accomplishedEducation]}
                 />
-                {associate.accomplishedEducation === ASSOCIATE_ACCOMPLISHED_EDUCATION_OTHER && (
+                {associate.accomplishedEducation === ASSOCIATE_EDUCATION_OTHER && (
                   <DetailField
                     label="Accomplished level of Education (Other)"
                     value={associate.accomplishedEducationOther}
@@ -740,7 +736,7 @@ function AdminAssociateDetailFullPage() {
             </div>
             <DetailField
               label="Do you identify as belonging to any of the following groups?"
-              value={formatMultiSelect(associate.identifyAs, IDENTIFY_AS_OPTIONS)}
+              value={formatMultiSelect(associate.identifyAs, ASSOCIATE_IDENTIFY_AS_MAP)}
             />
             <DetailField
               label="Join date"
@@ -802,7 +798,19 @@ function AdminAssociateDetailFullPage() {
         ),
       },
     ];
-  }, [associate, formatAddress, formatPhone, formatMultiSelect, formatDriversLicenseClasses, extractIds, onUnauthorized]);
+  }, [associate, formatAddress, formatPhone, formatMultiSelect, formatDriversLicenseClasses, onUnauthorized]);
+
+  // Show loading state AFTER all hooks have been called
+  if (loading) {
+    return (
+      <DetailFullView
+        isLoading={loading}
+        headerConfig={{
+          loadingText: "Loading associate details...",
+        }}
+      />
+    );
+  }
 
   return (
     <DetailFullView
@@ -813,10 +821,19 @@ function AdminAssociateDetailFullPage() {
       actionButtons={actionButtons}
       tabs={tabs}
       alerts={alerts}
+      onUnauthorized={onUnauthorized}
       isLoading={loading}
       error={error}
       onErrorClose={() => setError(null)}
     />
+  );
+});
+
+function AdminAssociateDetailFullPage() {
+  return (
+    <UIXThemeProvider>
+      <AdminAssociateDetailFullPageContent />
+    </UIXThemeProvider>
   );
 }
 

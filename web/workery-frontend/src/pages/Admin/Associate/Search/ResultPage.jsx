@@ -1,14 +1,9 @@
-// File Path: monorepo/web/workery-frontend/src/pages/Admin/Associate/Search/ResultPage.jsx
-// UIX Upgraded - Uses UIX primitives (Breadcrumb, Spinner, UIXThemeProvider)
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+// File Path: web/workery-frontend/src/pages/Admin/Associate/Search/ResultPage.jsx
+// UIX Upgraded - Uses UIX primitives (Card, Badge, Button, Modal, Alert, etc.)
+// @uix-page: UniversalListPage
+
+import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
-import {
-  Breadcrumb,
-  Spinner,
-  UIXThemeProvider,
-  useUIXTheme,
-} from "../../../../components/UIX";
-import { DateTime } from "luxon";
 import {
   useAuthManager,
   useAssociateManager,
@@ -17,13 +12,11 @@ import {
   MagnifyingGlassIcon,
   WrenchScrewdriverIcon,
   ArrowLeftIcon,
-  XMarkIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   ArrowsUpDownIcon,
   ChartBarIcon,
   AdjustmentsHorizontalIcon,
-  ExclamationTriangleIcon,
   HomeIcon,
   BuildingOffice2Icon,
   PhoneIcon,
@@ -32,83 +25,190 @@ import {
   ArchiveBoxIcon,
   EyeIcon,
   CheckCircleIcon,
-  CalendarIcon,
   FunnelIcon,
   UserIcon,
   ChevronDownIcon,
-  BriefcaseIcon,
-  DocumentTextIcon,
 } from "@heroicons/react/24/outline";
-import { ExclamationTriangleIcon as ExclamationTriangleIconSolid } from "@heroicons/react/24/solid";
+import {
+  Alert,
+  Breadcrumb,
+  Spinner,
+  Modal,
+  Button,
+  Card,
+  Badge,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../components/UIX";
 
-// Constants for associate types and statuses - matching old implementation
+// Constants
 const RESIDENTIAL_ASSOCIATE_TYPE_OF_ID = 1;
 const COMMERCIAL_ASSOCIATE_TYPE_OF_ID = 2;
-const ASSOCIATE_STATUS_ACTIVE = 1;
 
-// Sort options - matching backend expectations
-const ASSOCIATE_SORT_OPTIONS = [
+// Static sort options
+const ASSOCIATE_SORT_OPTIONS = Object.freeze([
   { value: "last_name,ASC", label: "Last Name (A-Z)" },
   { value: "last_name,DESC", label: "Last Name (Z-A)" },
   { value: "lexical_name,ASC", label: "Name (A-Z)" },
   { value: "lexical_name,DESC", label: "Name (Z-A)" },
   { value: "join_date,DESC", label: "Newest First" },
   { value: "join_date,ASC", label: "Oldest First" },
-];
+]);
 
-// Status filter options - matching backend expectations
-const ASSOCIATE_STATUS_FILTER_OPTIONS = [
+// Static status filter options
+const ASSOCIATE_STATUS_FILTER_OPTIONS = Object.freeze([
   { value: 0, label: "All" },
   { value: 1, label: "Active" },
   { value: 2, label: "Archived" },
-];
+]);
 
-// Type filter options - matching backend expectations
-const ASSOCIATE_TYPE_OF_FILTER_OPTIONS = [
+// Static type filter options
+const ASSOCIATE_TYPE_OF_FILTER_OPTIONS = Object.freeze([
   { value: 0, label: "All" },
   { value: 1, label: "Residential" },
   { value: 2, label: "Commercial" },
-];
+]);
 
-// Page size options
-const PAGE_SIZE_OPTIONS = [
+// Static page size options
+const PAGE_SIZE_OPTIONS = Object.freeze([
   { value: 10, label: "10 per page" },
   { value: 25, label: "25 per page" },
   { value: 50, label: "50 per page" },
   { value: 100, label: "100 per page" },
-];
+]);
 
-function AdminAssociateSearchResultPage() {
+// Static breadcrumb items
+const BREADCRUMB_ITEMS = Object.freeze([
+  { label: "Dashboard", to: "/admin/dashboard", icon: ChartBarIcon },
+  { label: "Associates", to: "/admin/associates", icon: WrenchScrewdriverIcon },
+  { label: "Search", to: "/admin/associates/search", icon: MagnifyingGlassIcon },
+  { label: "Results", icon: MagnifyingGlassIcon, isActive: true },
+]);
+
+// Associate Card Component
+const AssociateCard = memo(function AssociateCard({
+  associate,
+  onArchiveClick,
+  formatPhone,
+}) {
+  const { getThemeClasses } = useUIXTheme();
+
+  return (
+    <Card padding="p-0">
+      {/* Card Header */}
+      <div className="p-4 border-b border-gray-100">
+        <Link
+          to={`/admin/associate/${associate.id}`}
+          className={`flex items-start ${getThemeClasses("link-primary")} font-semibold`}
+        >
+          {associate.type === COMMERCIAL_ASSOCIATE_TYPE_OF_ID ? (
+            <>
+              <BuildingOffice2Icon className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+              <span>
+                {associate.organizationName ||
+                  `${associate.firstName} ${associate.lastName}`}
+              </span>
+            </>
+          ) : (
+            <>
+              <HomeIcon className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
+              <span>
+                {associate.firstName} {associate.lastName}
+              </span>
+            </>
+          )}
+        </Link>
+      </div>
+
+      {/* Card Body */}
+      <div className="p-4 space-y-2 text-sm">
+        {associate.type === COMMERCIAL_ASSOCIATE_TYPE_OF_ID && (
+          <div className={`font-medium ${getThemeClasses("text-primary")}`}>
+            {associate.firstName} {associate.lastName}
+          </div>
+        )}
+
+        {associate.addressLine1 && (
+          <div className={`flex items-start ${getThemeClasses("text-secondary")}`}>
+            <MapPinIcon className="h-4 w-4 mr-2 text-gray-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <div>{associate.addressLine1}</div>
+              {(associate.city || associate.region) && (
+                <div>
+                  {associate.city && associate.region
+                    ? `${associate.city}, ${associate.region}`
+                    : associate.city || associate.region}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {associate.phone && (
+          <div className={`flex items-center ${getThemeClasses("text-secondary")}`}>
+            <PhoneIcon className="h-4 w-4 mr-2 text-gray-400" />
+            <a
+              href={`tel:${associate.phone}`}
+              className={getThemeClasses("link-primary")}
+            >
+              {formatPhone(associate.phone)}
+            </a>
+          </div>
+        )}
+
+        {associate.email && (
+          <div className={`flex items-center ${getThemeClasses("text-secondary")}`}>
+            <EnvelopeIcon className="h-4 w-4 mr-2 text-gray-400" />
+            <a
+              href={`mailto:${associate.email}`}
+              className={`${getThemeClasses("link-primary")} truncate`}
+            >
+              {associate.email}
+            </a>
+          </div>
+        )}
+
+        {/* Associate Type Badge */}
+        <div className="pt-2">
+          <Badge
+            variant={associate.type === COMMERCIAL_ASSOCIATE_TYPE_OF_ID ? "info" : "success"}
+            size="sm"
+          >
+            {associate.type === COMMERCIAL_ASSOCIATE_TYPE_OF_ID
+              ? "Commercial"
+              : "Residential"}
+          </Badge>
+        </div>
+      </div>
+
+      {/* Card Footer */}
+      <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
+        <Link
+          to={`/admin/associate/${associate.id}`}
+          className={`inline-flex items-center text-sm font-medium ${getThemeClasses("link-primary")}`}
+        >
+          <EyeIcon className="h-4 w-4 mr-1" />
+          View Details
+        </Link>
+        <button
+          onClick={() => onArchiveClick(associate)}
+          className="inline-flex items-center text-sm font-medium text-red-600 hover:text-red-800"
+        >
+          <ArchiveBoxIcon className="h-4 w-4 mr-1" />
+          Archive
+        </button>
+      </div>
+    </Card>
+  );
+});
+
+// Main Component
+const AdminAssociateSearchResultPage = memo(function AdminAssociateSearchResultPage() {
   const authManager = useAuthManager();
   const associateManager = useAssociateManager();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { getThemeClasses } = useUIXTheme();
-
-  // Memoize theme classes
-  const themeClasses = useMemo(
-    () => ({
-      pageContainer: getThemeClasses("pageContainer"),
-      contentWrapper: getThemeClasses("contentWrapper"),
-    }),
-    [getThemeClasses],
-  );
-
-  // Memoize onUnauthorized callback
-  const onUnauthorized = useCallback(() => {
-    navigate("/login?unauthorized=true");
-  }, [navigate]);
-
-  // Memoize breadcrumb items
-  const breadcrumbItems = useMemo(
-    () => [
-      { label: "Dashboard", path: "/admin/dashboard", icon: "ChartBarIcon" },
-      { label: "Associates", path: "/admin/associates" },
-      { label: "Search", path: "/admin/associates/search" },
-      { label: "Results" },
-    ],
-    [],
-  );
 
   // Extract search parameters from URL
   const firstName = searchParams.get("fn") || "";
@@ -121,19 +221,33 @@ function AdminAssociateSearchResultPage() {
   // Component states
   const [errors, setErrors] = useState({});
   const [associates, setAssociates] = useState(null);
-  const [selectedAssociateForDeletion, setSelectedAssociateForDeletion] =
-    useState(null);
+  const [selectedAssociateForDeletion, setSelectedAssociateForDeletion] = useState(null);
   const [isFetching, setFetching] = useState(false);
   const [pageSize, setPageSize] = useState(50);
   const [previousCursors, setPreviousCursors] = useState([]);
   const [nextCursor, setNextCursor] = useState("");
   const [currentCursor, setCurrentCursor] = useState("");
-  const [sortByValue, setSortByValue] = useState("last_name,ASC"); // Default sort by last name
-  const [status, setStatus] = useState(isActive ? 1 : 0); // 1 for active only, 0 for all
-  const [typeOf, setTypeOf] = useState(0); // 0 for all types
+  const [sortByValue, setSortByValue] = useState("last_name,ASC");
+  const [status, setStatus] = useState(isActive ? 1 : 0);
+  const [typeOf, setTypeOf] = useState(0);
   const [createdAtGTE, setCreatedAtGTE] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+
+  // Memoized theme classes
+  const themeClasses = useMemo(
+    () => ({
+      textPrimary: getThemeClasses("text-primary"),
+      textSecondary: getThemeClasses("text-secondary"),
+      linkPrimary: getThemeClasses("link-primary"),
+    }),
+    [getThemeClasses],
+  );
+
+  // Unauthorized callback
+  const onUnauthorized = useCallback(() => {
+    navigate("/login?unauthorized=true");
+  }, [navigate]);
 
   // Check authentication on mount
   useEffect(() => {
@@ -142,214 +256,8 @@ function AdminAssociateSearchResultPage() {
     }
   }, [authManager, navigate]);
 
-  // API callback handlers
-  const onAssociateListSuccess = (response) => {
-    console.log("onAssociateListSuccess: Starting...", response);
-    if (response.results !== null) {
-      setAssociates(response);
-      if (response.hasNextPage) {
-        setNextCursor(response.nextCursor);
-      }
-    } else {
-      setAssociates({ results: [] });
-    }
-  };
-
-  const onAssociateListError = (apiErr) => {
-    console.log("onAssociateListError: Starting...", apiErr);
-    setErrors(apiErr);
-    window.scrollTo(0, 0);
-  };
-
-  const onAssociateListDone = () => {
-    console.log("onAssociateListDone: Starting...");
-    setFetching(false);
-  };
-
-  // Fetch associates list
-  const fetchList = () => {
-    setFetching(true);
-    setErrors({});
-
-    console.log("fetchList: Starting with params:", {
-      firstName,
-      lastName,
-      email,
-      phone,
-      organizationName,
-      status,
-      typeOf,
-      createdAtGTE,
-      sortByValue,
-      pageSize,
-      currentCursor,
-    });
-
-    // Build filters map for API call - using exact same format as old code
-    const params = new Map();
-    params.set("page_size", pageSize);
-    params.set("sort_field", "last_name"); // Default sort field
-
-    if (currentCursor !== "") {
-      params.set("cursor", currentCursor);
-    }
-
-    // Sort parameters - matching old implementation
-    const sortArray = sortByValue.split(",");
-    params.set("sort_field", sortArray[0]);
-    params.set("sort_order", sortArray[1]);
-
-    // Search parameters from URL - using snake_case as backend expects
-    if (firstName !== undefined && firstName !== null && firstName !== "") {
-      params.set("first_name", firstName);
-    }
-    if (lastName !== undefined && lastName !== null && lastName !== "") {
-      params.set("last_name", lastName);
-    }
-    if (email !== undefined && email !== null && email !== "") {
-      params.set("email", email);
-    }
-    if (phone !== undefined && phone !== null && phone !== "") {
-      params.set("phone", phone);
-    }
-    if (
-      organizationName !== undefined &&
-      organizationName !== null &&
-      organizationName !== ""
-    ) {
-      params.set("organization_name", organizationName);
-    }
-
-    // Filter parameters
-    if (status !== undefined && status !== null && status !== 0) {
-      params.set("status", status);
-    }
-    if (typeOf !== undefined && typeOf !== null && typeOf !== 0) {
-      params.set("type", typeOf);
-    }
-    if (
-      createdAtGTE !== undefined &&
-      createdAtGTE !== null &&
-      createdAtGTE !== ""
-    ) {
-      const date = new Date(createdAtGTE);
-      const jStr = date.getTime();
-      params.set("created_at_gte", jStr);
-    }
-
-    console.log(
-      "fetchList: Calling API with params Map:",
-      Array.from(params.entries()),
-    );
-
-    // Call API through manager using callback pattern
-    associateManager.getAssociatesWithFiltersMapWithCallbacks(
-      params,
-      onAssociateListSuccess,
-      onAssociateListError,
-      onAssociateListDone,
-      onUnauthorized,
-      true, // Force refresh to bypass cache
-    );
-  };
-
-  // Fetch list when parameters change
-  useEffect(() => {
-    let mounted = true;
-
-    if (mounted) {
-      fetchList();
-    }
-
-    return () => {
-      mounted = false;
-    };
-  }, [
-    currentCursor,
-    pageSize,
-    sortByValue,
-    status,
-    typeOf,
-    createdAtGTE,
-    firstName,
-    lastName,
-    email,
-    phone,
-    organizationName,
-  ]);
-
-  // Handle pagination
-  const onNextClicked = (e) => {
-    console.log("onNextClicked: Going to next page");
-    const arr = [...previousCursors];
-    arr.push(currentCursor);
-    setPreviousCursors(arr);
-    setCurrentCursor(nextCursor);
-  };
-
-  const onPreviousClicked = (e) => {
-    console.log("onPreviousClicked: Going to previous page");
-    const arr = [...previousCursors];
-    const previousCursor = arr.pop();
-    setPreviousCursors(arr);
-    setCurrentCursor(previousCursor);
-  };
-
-  // Archive callback handlers
-  const onAssociateDeleteSuccess = (response) => {
-    console.log("onAssociateDeleteSuccess: Starting...");
-
-    // Update notification
-    setSuccessMessage("Associate archived successfully");
-    setTimeout(() => {
-      setSuccessMessage("");
-    }, 2000);
-
-    // Fetch again an updated list
-    fetchList();
-  };
-
-  const onAssociateDeleteError = (apiErr) => {
-    console.log("onAssociateDeleteError: Starting...", apiErr);
-    setErrors(apiErr);
-
-    // Update notification
-    setErrors({ message: "Failed archiving associate" });
-    setTimeout(() => {
-      setErrors({});
-    }, 2000);
-
-    window.scrollTo(0, 0);
-  };
-
-  const onAssociateDeleteDone = () => {
-    console.log("onAssociateDeleteDone: Starting...");
-    setFetching(false);
-    setSelectedAssociateForDeletion(null);
-  };
-
-  // Handle associate deletion/archiving
-  const onDeleteConfirmButtonClick = () => {
-    if (!selectedAssociateForDeletion) return;
-
-    console.log(
-      "onDeleteConfirmButtonClick: Archiving associate",
-      selectedAssociateForDeletion.id,
-    );
-    setFetching(true);
-
-    // Call archive API through manager using callback pattern
-    associateManager.archiveAssociateWithCallbacks(
-      selectedAssociateForDeletion.id,
-      onAssociateDeleteSuccess,
-      onAssociateDeleteError,
-      onAssociateDeleteDone,
-      onUnauthorized,
-    );
-  };
-
   // Format phone number
-  const formatPhone = (phone) => {
+  const formatPhone = useCallback((phone) => {
     if (!phone) return "-";
     const cleaned = phone.replace(/\D/g, "");
     const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
@@ -357,91 +265,181 @@ function AdminAssociateSearchResultPage() {
       return `(${match[1]}) ${match[2]}-${match[3]}`;
     }
     return phone;
-  };
+  }, []);
+
+  // Fetch associates list
+  const fetchList = useCallback(() => {
+    setFetching(true);
+    setErrors({});
+
+    const params = new Map();
+    params.set("page_size", pageSize);
+
+    if (currentCursor !== "") {
+      params.set("cursor", currentCursor);
+    }
+
+    const sortArray = sortByValue.split(",");
+    params.set("sort_field", sortArray[0]);
+    params.set("sort_order", sortArray[1]);
+
+    if (firstName) params.set("first_name", firstName);
+    if (lastName) params.set("last_name", lastName);
+    if (email) params.set("email", email);
+    if (phone) params.set("phone", phone);
+    if (organizationName) params.set("organization_name", organizationName);
+    if (status !== 0) params.set("status", status);
+    if (typeOf !== 0) params.set("type", typeOf);
+    if (createdAtGTE) {
+      const date = new Date(createdAtGTE);
+      params.set("created_at_gte", date.getTime());
+    }
+
+    associateManager.getAssociatesWithFiltersMapWithCallbacks(
+      params,
+      (response) => {
+        if (response.results !== null) {
+          setAssociates(response);
+          if (response.hasNextPage) {
+            setNextCursor(response.nextCursor);
+          }
+        } else {
+          setAssociates({ results: [] });
+        }
+      },
+      (apiErr) => {
+        setErrors(apiErr);
+        window.scrollTo(0, 0);
+      },
+      () => setFetching(false),
+      onUnauthorized,
+      true,
+    );
+  }, [
+    firstName,
+    lastName,
+    email,
+    phone,
+    organizationName,
+    status,
+    typeOf,
+    createdAtGTE,
+    sortByValue,
+    pageSize,
+    currentCursor,
+    associateManager,
+    onUnauthorized,
+  ]);
+
+  // Fetch list when parameters change
+  useEffect(() => {
+    fetchList();
+  }, [fetchList]);
+
+  // Handle pagination
+  const onNextClicked = useCallback(() => {
+    const arr = [...previousCursors];
+    arr.push(currentCursor);
+    setPreviousCursors(arr);
+    setCurrentCursor(nextCursor);
+  }, [previousCursors, currentCursor, nextCursor]);
+
+  const onPreviousClicked = useCallback(() => {
+    const arr = [...previousCursors];
+    const previousCursor = arr.pop();
+    setPreviousCursors(arr);
+    setCurrentCursor(previousCursor);
+  }, [previousCursors]);
+
+  // Handle archive
+  const onDeleteConfirmButtonClick = useCallback(() => {
+    if (!selectedAssociateForDeletion) return;
+
+    setFetching(true);
+    associateManager.archiveAssociateWithCallbacks(
+      selectedAssociateForDeletion.id,
+      () => {
+        setSuccessMessage("Associate archived successfully");
+        setTimeout(() => setSuccessMessage(""), 2000);
+        fetchList();
+      },
+      () => {
+        setErrors({ message: "Failed archiving associate" });
+        setTimeout(() => setErrors({}), 2000);
+        window.scrollTo(0, 0);
+      },
+      () => {
+        setFetching(false);
+        setSelectedAssociateForDeletion(null);
+      },
+      onUnauthorized,
+    );
+  }, [selectedAssociateForDeletion, associateManager, onUnauthorized, fetchList]);
 
   // Build search criteria display
-  const searchCriteria = [];
-  if (firstName)
-    searchCriteria.push({
-      label: "First Name",
-      value: firstName,
-      icon: UserIcon,
-    });
-  if (lastName)
-    searchCriteria.push({
-      label: "Last Name",
-      value: lastName,
-      icon: UserIcon,
-    });
-  if (email)
-    searchCriteria.push({ label: "Email", value: email, icon: EnvelopeIcon });
-  if (phone)
-    searchCriteria.push({ label: "Phone", value: phone, icon: PhoneIcon });
-  if (organizationName)
-    searchCriteria.push({
-      label: "Organization",
-      value: organizationName,
-      icon: BuildingOffice2Icon,
-    });
-  searchCriteria.push({
-    label: "Status",
-    value: isActive ? "Active Only" : "All",
-    icon: CheckCircleIcon,
-  });
+  const searchCriteria = useMemo(() => {
+    const criteria = [];
+    if (firstName) criteria.push({ label: "First Name", value: firstName, icon: UserIcon });
+    if (lastName) criteria.push({ label: "Last Name", value: lastName, icon: UserIcon });
+    if (email) criteria.push({ label: "Email", value: email, icon: EnvelopeIcon });
+    if (phone) criteria.push({ label: "Phone", value: phone, icon: PhoneIcon });
+    if (organizationName) criteria.push({ label: "Organization", value: organizationName, icon: BuildingOffice2Icon });
+    criteria.push({ label: "Status", value: isActive ? "Active Only" : "All", icon: CheckCircleIcon });
+    return criteria;
+  }, [firstName, lastName, email, phone, organizationName, isActive]);
 
-  // Handle sort change
-  const handleSortChange = (e) => {
-    const [field, order] = e.target.value.split(",");
-    setSortByValue(e.target.value);
-  };
-
-  // Handle page size change
-  const handlePageSizeChange = (e) => {
+  // Handle filter changes
+  const handleSortChange = useCallback((e) => setSortByValue(e.target.value), []);
+  const handlePageSizeChange = useCallback((e) => {
     setPageSize(parseInt(e.target.value));
     setPreviousCursors([]);
     setCurrentCursor("");
-  };
+  }, []);
 
-  // Calculate current page info
+  // Calculate pagination info
   const currentPage = previousCursors.length + 1;
   const totalCount = associates?.count || 0;
   const startRecord = (currentPage - 1) * pageSize + 1;
-  const endRecord = Math.min(
-    startRecord + (associates?.results?.length || 0) - 1,
-    totalCount,
-  );
+  const endRecord = Math.min(startRecord + (associates?.results?.length || 0) - 1, totalCount);
 
   if (isFetching && !associates) {
-    return <Spinner text="Loading search results..." />
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Spinner size="lg" />
+          <p className="mt-4 text-gray-600">Loading search results...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
-        <Breadcrumb items={breadcrumbItems} />
+        <Breadcrumb items={BREADCRUMB_ITEMS} className="mb-8" />
 
         {/* Header Section */}
         <div className="mb-8">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <div className="flex items-center">
-                <WrenchScrewdriverIcon className="h-8 w-8 text-blue-600 mr-3" />
-                <h1 className="text-3xl font-bold text-gray-900">
+                <WrenchScrewdriverIcon className={`h-8 w-8 ${themeClasses.linkPrimary} mr-3`} />
+                <h1 className={`text-3xl font-bold ${themeClasses.textPrimary}`}>
                   Search Results
                 </h1>
               </div>
-              <p className="mt-2 text-lg text-gray-600 ml-11">
+              <p className={`mt-2 text-lg ${themeClasses.textSecondary} ml-11`}>
                 Associate search results
               </p>
             </div>
-            <button
+            <Button
+              variant="outline"
               onClick={() => navigate("/admin/associates/search")}
-              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              icon={ArrowLeftIcon}
             >
-              <ArrowLeftIcon className="h-4 w-4 mr-2" />
               Back to Search
-            </button>
+            </Button>
           </div>
 
           {/* Search Criteria Display */}
@@ -450,13 +448,10 @@ function AdminAssociateSearchResultPage() {
               {searchCriteria.map((criteria, index) => {
                 const Icon = criteria.icon;
                 return (
-                  <span
-                    key={index}
-                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800"
-                  >
+                  <Badge key={index} variant="info" size="sm" className="inline-flex items-center">
                     <Icon className="h-4 w-4 mr-1.5" />
                     {criteria.label}: {criteria.value}
-                  </span>
+                  </Badge>
                 );
               })}
             </div>
@@ -465,120 +460,79 @@ function AdminAssociateSearchResultPage() {
 
         {/* Success/Error Messages */}
         {successMessage && (
-          <div className="mb-6 bg-green-50 border-l-4 border-green-400 p-4 rounded-lg">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <CheckCircleIcon className="h-5 w-5 text-green-400" />
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-green-800">{successMessage}</p>
-              </div>
-              <div className="ml-auto pl-3">
-                <button
-                  onClick={() => setSuccessMessage("")}
-                  className="inline-flex text-green-400 hover:text-green-500"
-                >
-                  <XMarkIcon className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-          </div>
+          <Alert type="success" className="mb-6" dismissible onDismiss={() => setSuccessMessage("")}>
+            <CheckCircleIcon className="h-5 w-5 mr-2 inline" />
+            {successMessage}
+          </Alert>
         )}
 
         {errors.message && (
-          <div className="mb-6 bg-red-50 border-l-4 border-red-400 p-4 rounded-lg">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <ExclamationTriangleIconSolid className="h-5 w-5 text-red-400" />
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-800">{errors.message}</p>
-              </div>
-              <div className="ml-auto pl-3">
-                <button
-                  onClick={() => setErrors({})}
-                  className="inline-flex text-red-400 hover:text-red-500"
-                >
-                  <XMarkIcon className="h-5 w-5" />
-                </button>
-              </div>
-            </div>
-          </div>
+          <Alert type="error" className="mb-6" dismissible onDismiss={() => setErrors({})}>
+            {errors.message}
+          </Alert>
         )}
 
         {/* Main Content */}
-        <div className="bg-white shadow-sm rounded-lg">
+        <Card>
           {/* Results Header with Filters */}
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h2 className="text-xl font-semibold text-gray-900 flex items-center">
-                  <MagnifyingGlassIcon className="h-5 w-5 mr-2 text-blue-600" />
+                <h2 className={`text-xl font-semibold ${themeClasses.textPrimary} flex items-center`}>
+                  <MagnifyingGlassIcon className={`h-5 w-5 mr-2 ${themeClasses.linkPrimary}`} />
                   Results
                 </h2>
-                {!isFetching && associates && associates.results && (
-                  <p className="mt-1 text-sm text-gray-600">
-                    Found <span className="font-semibold">{totalCount}</span>{" "}
-                    associates
-                    {searchCriteria.length > 0 && " matching your criteria"}
+                {!isFetching && associates?.results && (
+                  <p className={`mt-1 text-sm ${themeClasses.textSecondary}`}>
+                    Found <span className="font-semibold">{totalCount}</span> associates
                   </p>
                 )}
               </div>
 
               {/* Filters and Sorting */}
-              {!isFetching &&
-                associates &&
-                associates.results &&
-                associates.results.length > 0 && (
-                  <div className="flex flex-wrap items-center gap-3">
-                    {/* Toggle Filters */}
-                    <button
-                      onClick={() => setShowFilters(!showFilters)}
-                      className="inline-flex items-center px-3 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50"
+              {!isFetching && associates?.results?.length > 0 && (
+                <div className="flex flex-wrap items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowFilters(!showFilters)}
+                    icon={FunnelIcon}
+                  >
+                    Filters
+                    <ChevronDownIcon className={`h-4 w-4 ml-1 transition-transform ${showFilters ? "rotate-180" : ""}`} />
+                  </Button>
+
+                  <div className="flex items-center">
+                    <ArrowsUpDownIcon className="h-4 w-4 text-gray-400 mr-2" />
+                    <select
+                      value={sortByValue}
+                      onChange={handleSortChange}
+                      className="block rounded-lg border-gray-300 py-1.5 pl-3 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
                     >
-                      <FunnelIcon className="h-4 w-4 mr-1.5" />
-                      Filters
-                      <ChevronDownIcon
-                        className={`h-4 w-4 ml-1 transition-transform ${showFilters ? "rotate-180" : ""}`}
-                      />
-                    </button>
-
-                    {/* Sort By */}
-                    <div className="flex items-center">
-                      <ArrowsUpDownIcon className="h-4 w-4 text-gray-400 mr-2" />
-                      <select
-                        value={sortByValue}
-                        onChange={handleSortChange}
-                        className="block rounded-lg border-gray-300 py-1.5 pl-3 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      >
-                        {ASSOCIATE_SORT_OPTIONS.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Page Size */}
-                    <div className="flex items-center">
-                      <AdjustmentsHorizontalIcon className="h-4 w-4 text-gray-400 mr-2" />
-                      <select
-                        value={pageSize.toString()}
-                        onChange={handlePageSizeChange}
-                        className="block rounded-lg border-gray-300 py-1.5 pl-3 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      >
-                        {PAGE_SIZE_OPTIONS.map((option) => (
-                          <option
-                            key={option.value}
-                            value={option.value.toString()}
-                          >
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                      {ASSOCIATE_SORT_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
                   </div>
-                )}
+
+                  <div className="flex items-center">
+                    <AdjustmentsHorizontalIcon className="h-4 w-4 text-gray-400 mr-2" />
+                    <select
+                      value={pageSize.toString()}
+                      onChange={handlePageSizeChange}
+                      className="block rounded-lg border-gray-300 py-1.5 pl-3 pr-8 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      {PAGE_SIZE_OPTIONS.map((option) => (
+                        <option key={option.value} value={option.value.toString()}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Expandable Filters Panel */}
@@ -586,9 +540,7 @@ function AdminAssociateSearchResultPage() {
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Status
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
                     <select
                       value={status}
                       onChange={(e) => setStatus(parseInt(e.target.value))}
@@ -603,9 +555,7 @@ function AdminAssociateSearchResultPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Type
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
                     <select
                       value={typeOf}
                       onChange={(e) => setTypeOf(parseInt(e.target.value))}
@@ -620,9 +570,7 @@ function AdminAssociateSearchResultPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Created After
-                    </label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Created After</label>
                     <input
                       type="date"
                       value={createdAtGTE}
@@ -638,197 +586,56 @@ function AdminAssociateSearchResultPage() {
           {/* Results Content */}
           <div className="p-6">
             {isFetching ? (
-              <Spinner text="Updating results..." />
-            ) : associates &&
-              associates.results &&
-              associates.results.length > 0 ? (
+              <div className="flex flex-col items-center justify-center py-16">
+                <Spinner size="lg" />
+                <p className="mt-4 text-gray-600">Updating results...</p>
+              </div>
+            ) : associates?.results?.length > 0 ? (
               <>
                 {/* Results Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                   {associates.results.map((associate) => (
-                    <div
+                    <AssociateCard
                       key={associate.id}
-                      className="bg-white border border-gray-200 rounded-lg hover:shadow-lg transition-shadow"
-                    >
-                      {/* Card Header */}
-                      <div className="p-4 border-b border-gray-100">
-                        <Link
-                          to={`/admin/associate/${associate.id}`}
-                          className="flex items-start text-blue-600 hover:text-blue-800 font-semibold"
-                        >
-                          {associate.type ===
-                          COMMERCIAL_ASSOCIATE_TYPE_OF_ID ? (
-                            <>
-                              <BuildingOffice2Icon className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
-                              <span>
-                                {associate.organizationName ||
-                                  `${associate.firstName} ${associate.lastName}`}
-                              </span>
-                            </>
-                          ) : (
-                            <>
-                              <HomeIcon className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
-                              <span>
-                                {associate.firstName} {associate.lastName}
-                              </span>
-                            </>
-                          )}
-                        </Link>
-                      </div>
-
-                      {/* Card Body */}
-                      <div className="p-4 space-y-2 text-sm">
-                        {associate.type ===
-                          RESIDENTIAL_ASSOCIATE_TYPE_OF_ID && (
-                          <div className="font-medium text-gray-900">
-                            {associate.firstName} {associate.lastName}
-                          </div>
-                        )}
-
-                        {associate.addressLine1 && (
-                          <div className="flex items-start text-gray-600">
-                            <MapPinIcon className="h-4 w-4 mr-2 text-gray-400 flex-shrink-0 mt-0.5" />
-                            <div>
-                              <div>{associate.addressLine1}</div>
-                              {(associate.city || associate.region) && (
-                                <div>
-                                  {associate.city && associate.region
-                                    ? `${associate.city}, ${associate.region}`
-                                    : associate.city || associate.region}
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        {associate.phone && (
-                          <div className="flex items-center text-gray-600">
-                            <PhoneIcon className="h-4 w-4 mr-2 text-gray-400" />
-                            <a
-                              href={`tel:${associate.phone}`}
-                              className="text-blue-600 hover:text-blue-800"
-                            >
-                              {formatPhone(associate.phone)}
-                            </a>
-                          </div>
-                        )}
-
-                        {associate.email && (
-                          <div className="flex items-center text-gray-600">
-                            <EnvelopeIcon className="h-4 w-4 mr-2 text-gray-400" />
-                            <a
-                              href={`mailto:${associate.email}`}
-                              className="text-blue-600 hover:text-blue-800 truncate"
-                            >
-                              {associate.email}
-                            </a>
-                          </div>
-                        )}
-
-                        {/* Associate Type Badge */}
-                        <div className="pt-2">
-                          <span
-                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              associate.type === COMMERCIAL_ASSOCIATE_TYPE_OF_ID
-                                ? "bg-blue-100 text-blue-800"
-                                : "bg-green-100 text-green-800"
-                            }`}
-                          >
-                            {associate.type === COMMERCIAL_ASSOCIATE_TYPE_OF_ID
-                              ? "Commercial"
-                              : "Residential"}
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Card Footer */}
-                      <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex justify-between items-center">
-                        <Link
-                          to={`/admin/associate/${associate.id}`}
-                          className="inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800"
-                        >
-                          <EyeIcon className="h-4 w-4 mr-1" />
-                          View Details
-                        </Link>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedAssociateForDeletion(associate);
-                          }}
-                          className="inline-flex items-center text-sm font-medium text-red-600 hover:text-red-800"
-                        >
-                          <ArchiveBoxIcon className="h-4 w-4 mr-1" />
-                          Archive
-                        </button>
-                      </div>
-                    </div>
+                      associate={associate}
+                      onArchiveClick={setSelectedAssociateForDeletion}
+                      formatPhone={formatPhone}
+                    />
                   ))}
                 </div>
 
                 {/* Pagination Footer */}
                 {(previousCursors.length > 0 || associates.hasNextPage) && (
                   <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200">
-                    <div className="flex-1 flex justify-between sm:hidden">
-                      <button
+                    <div className="hidden sm:block">
+                      <p className="text-sm text-gray-700">
+                        Showing <span className="font-medium">{startRecord}</span> to{" "}
+                        <span className="font-medium">{endRecord}</span> of{" "}
+                        <span className="font-medium">{totalCount}</span> results
+                      </p>
+                    </div>
+                    <div className="flex gap-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={onPreviousClicked}
                         disabled={previousCursors.length === 0}
-                        className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        icon={ChevronLeftIcon}
                       >
                         Previous
-                      </button>
-                      <button
+                      </Button>
+                      <span className="flex items-center px-4 py-2 text-sm text-gray-700">
+                        Page {currentPage}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
                         onClick={onNextClicked}
                         disabled={!associates.hasNextPage}
-                        className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Next
-                      </button>
-                    </div>
-                    <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                      <div>
-                        <p className="text-sm text-gray-700">
-                          Showing{" "}
-                          <span className="font-medium">{startRecord}</span> to{" "}
-                          <span className="font-medium">{endRecord}</span> of{" "}
-                          <span className="font-medium">{totalCount}</span>{" "}
-                          results
-                        </p>
-                      </div>
-                      <div>
-                        <nav
-                          className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px"
-                          aria-label="Pagination"
-                        >
-                          <button
-                            onClick={onPreviousClicked}
-                            disabled={previousCursors.length === 0}
-                            className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            <span className="sr-only">Previous</span>
-                            <ChevronLeftIcon
-                              className="h-5 w-5"
-                              aria-hidden="true"
-                            />
-                          </button>
-
-                          {/* Page Numbers */}
-                          <span className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-                            Page {currentPage}
-                          </span>
-
-                          <button
-                            onClick={onNextClicked}
-                            disabled={!associates.hasNextPage}
-                            className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            <span className="sr-only">Next</span>
-                            <ChevronRightIcon
-                              className="h-5 w-5"
-                              aria-hidden="true"
-                            />
-                          </button>
-                        </nav>
-                      </div>
+                        <ChevronRightIcon className="h-4 w-4 ml-1" />
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -836,134 +643,97 @@ function AdminAssociateSearchResultPage() {
             ) : (
               <div className="text-center py-16 px-4">
                 <WrenchScrewdriverIcon className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  No Associates Found
-                </h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">No Associates Found</h3>
                 <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                  No associates match your search criteria. Try adjusting your
-                  search terms or filters.
+                  No associates match your search criteria. Try adjusting your search terms or filters.
                 </p>
-                <Link
-                  to="/admin/associates/search"
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                <Button
+                  variant="primary"
+                  onClick={() => navigate("/admin/associates/search")}
+                  icon={ArrowLeftIcon}
                 >
-                  <ArrowLeftIcon className="h-4 w-4 mr-2" />
                   Try New Search
-                </Link>
+                </Button>
               </div>
             )}
           </div>
-        </div>
+        </Card>
 
         {/* Bottom Action Buttons */}
         <div className="mt-6 flex flex-col sm:flex-row justify-between gap-4">
-          <button
+          <Button
+            variant="outline"
             onClick={() => navigate("/admin/associates/search")}
-            className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            icon={ArrowLeftIcon}
           >
-            <ArrowLeftIcon className="h-4 w-4 mr-2" />
             Search Again
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline"
             onClick={() => navigate("/admin/associates")}
-            className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
             Back to Associates
-          </button>
+          </Button>
         </div>
       </div>
 
       {/* Delete Confirmation Modal */}
-      {selectedAssociateForDeletion && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                <ExclamationTriangleIcon className="h-5 w-5 mr-2 text-amber-600" />
-                Archive Associate
-              </h3>
-            </div>
+      <Modal
+        isOpen={!!selectedAssociateForDeletion}
+        onClose={() => setSelectedAssociateForDeletion(null)}
+        title="Archive Associate"
+      >
+        {selectedAssociateForDeletion && (
+          <>
+            <p className="text-sm text-gray-600 mb-4">
+              You are about to <strong>archive</strong> this associate. It will no longer appear on
+              your dashboard. This action can be undone but you'll need to contact the system
+              administrator. Are you sure you would like to continue?
+            </p>
 
-            <div className="px-6 py-4">
-              <p className="text-sm text-gray-600 mb-4">
-                You are about to <strong>archive</strong> this associate. It
-                will no longer appear on your dashboard. This action can be
-                undone but you'll need to contact the system administrator. Are
-                you sure you would like to continue?
+            <div className="p-4 bg-amber-50 rounded-lg border-l-4 border-amber-500 mb-4">
+              <p className="text-sm font-medium text-gray-700">
+                <strong>Name:</strong>{" "}
+                {selectedAssociateForDeletion.type === COMMERCIAL_ASSOCIATE_TYPE_OF_ID
+                  ? selectedAssociateForDeletion.organizationName ||
+                    `${selectedAssociateForDeletion.firstName} ${selectedAssociateForDeletion.lastName}`
+                  : `${selectedAssociateForDeletion.firstName} ${selectedAssociateForDeletion.lastName}`}
               </p>
-
-              <div className="p-4 bg-amber-50 rounded-lg border-l-4 border-amber-500">
-                <p className="text-sm font-medium text-gray-700">
-                  <strong>Name:</strong>{" "}
-                  {selectedAssociateForDeletion.type ===
-                  COMMERCIAL_ASSOCIATE_TYPE_OF_ID
-                    ? selectedAssociateForDeletion.organizationName ||
-                      `${selectedAssociateForDeletion.firstName} ${selectedAssociateForDeletion.lastName}`
-                    : `${selectedAssociateForDeletion.firstName} ${selectedAssociateForDeletion.lastName}`}
+              {selectedAssociateForDeletion.email && (
+                <p className="text-sm text-gray-600 mt-1">
+                  <strong>Email:</strong> {selectedAssociateForDeletion.email}
                 </p>
-                {selectedAssociateForDeletion.email && (
-                  <p className="text-sm text-gray-600 mt-1">
-                    <strong>Email:</strong> {selectedAssociateForDeletion.email}
-                  </p>
-                )}
-              </div>
+              )}
             </div>
 
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end space-x-3">
-              <button
-                onClick={() => setSelectedAssociateForDeletion(null)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-              >
+            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+              <Button variant="secondary" onClick={() => setSelectedAssociateForDeletion(null)}>
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="danger"
                 onClick={onDeleteConfirmButtonClick}
                 disabled={isFetching}
-                className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                loading={isFetching}
+                icon={ArchiveBoxIcon}
               >
-                {isFetching ? (
-                  <>
-                    <svg
-                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    Archiving...
-                  </>
-                ) : (
-                  <>
-                    <ArchiveBoxIcon className="h-4 w-4 mr-2" />
-                    Confirm Archive
-                  </>
-                )}
-              </button>
+                {isFetching ? "Archiving..." : "Confirm Archive"}
+              </Button>
             </div>
-          </div>
-        </div>
-      )}
+          </>
+        )}
+      </Modal>
     </div>
   );
-}
+});
 
-export default function AdminAssociateSearchResultPageWithProvider() {
+// Wrapper with UIXThemeProvider
+function AdminAssociateSearchResultPageWithProvider() {
   return (
     <UIXThemeProvider>
       <AdminAssociateSearchResultPage />
     </UIXThemeProvider>
   );
 }
+
+export default AdminAssociateSearchResultPageWithProvider;

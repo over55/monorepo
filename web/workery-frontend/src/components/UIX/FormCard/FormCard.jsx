@@ -32,9 +32,11 @@ const MAX_WIDTH_CLASSES = {
  * @param {React.Component} icon - Icon component
  * @param {React.ReactNode} children - Card content
  * @param {React.ReactNode} actions - Card actions
+ * @param {React.ReactNode} headerAction - Optional action element in header (e.g., Edit link)
  * @param {string} className - Additional CSS classes
  * @param {string} maxWidth - Maximum width preset
  * @param {boolean} allowOverflow - Allow content overflow
+ * @param {boolean} hasError - Whether to show error styling (red ring)
  */
 const FormCard = memo(function FormCard({
   title,
@@ -42,9 +44,11 @@ const FormCard = memo(function FormCard({
   icon: Icon,
   children,
   actions,
+  headerAction,
   className = "",
   maxWidth = "4xl",
   allowOverflow = false,
+  hasError = false,
 }) {
   const { getThemeClasses } = useUIXTheme();
 
@@ -61,6 +65,8 @@ const FormCard = memo(function FormCard({
       formCardHeaderText: getThemeClasses("form-card-header-text"),
       formCardHeaderIcon: getThemeClasses("form-card-header-icon"),
       formCardHeaderSubtitle: getThemeClasses("form-card-header-subtitle"),
+      // Error styling
+      errorRing: getThemeClasses("error-ring") || "ring-2 ring-red-500",
     }),
     [getThemeClasses],
   );
@@ -85,8 +91,9 @@ const FormCard = memo(function FormCard({
       "duration-300",
     ];
     if (!allowOverflow) classes.push("overflow-hidden");
+    if (hasError) classes.push(themeClasses.errorRing);
     return classes.join(" ");
-  }, [themeClasses.bgCard, themeClasses.cardBorder, themeClasses.shadowCard, allowOverflow]);
+  }, [themeClasses.bgCard, themeClasses.cardBorder, themeClasses.shadowCard, themeClasses.errorRing, allowOverflow, hasError]);
 
   // Memoize header section
   const headerSection = useMemo(() => {
@@ -103,14 +110,23 @@ const FormCard = memo(function FormCard({
         padding="px-6 py-4"
         className={`!rounded-none rounded-t-2xl ${headerBg} shadow-none border-0`}
       >
-        <h2 className={`text-xs sm:text-base font-bold uppercase tracking-wider flex items-center ${headerText}`}>
-          {Icon && <Icon className={`w-5 h-5 mr-2 ${headerIcon}`} />}
-          {title}
-        </h2>
-        {subtitle && <p className={`text-sm mt-1 ${headerSubtitle}`}>{subtitle}</p>}
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className={`text-xs sm:text-base font-bold uppercase tracking-wider flex items-center ${headerText}`}>
+              {Icon && <Icon className={`w-5 h-5 mr-2 ${headerIcon}`} />}
+              {title}
+            </h2>
+            {subtitle && <p className={`text-sm mt-1 ${headerSubtitle}`}>{subtitle}</p>}
+          </div>
+          {headerAction && (
+            <div className="flex-shrink-0">
+              {headerAction}
+            </div>
+          )}
+        </div>
       </Card>
     );
-  }, [title, subtitle, Icon, themeClasses.bgGradientSecondary, themeClasses.formCardHeaderBg, themeClasses.formCardHeaderText, themeClasses.formCardHeaderIcon, themeClasses.formCardHeaderSubtitle]);
+  }, [title, subtitle, Icon, headerAction, themeClasses.bgGradientSecondary, themeClasses.formCardHeaderBg, themeClasses.formCardHeaderText, themeClasses.formCardHeaderIcon, themeClasses.formCardHeaderSubtitle]);
 
   // Memoize content section - use div instead of Card to avoid bg-card conflicts in dark mode
   const contentSection = useMemo(() => {
