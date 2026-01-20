@@ -3,7 +3,7 @@
 // UIX Upgraded - Uses WizardFormStep whole page component
 
 import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
-import { Link, Navigate, useParams, useNavigate } from "react-router";
+import { Link, useParams, useNavigate } from "react-router";
 import { useTaskManager } from "../../../../../services/Services";
 import {
   TagsDisplay,
@@ -129,6 +129,13 @@ const Step1Content = memo(function Step1Content() {
     };
   }, [tid, taskManager, onUnauthorized]);
 
+  // Handle navigation when forceURL is set
+  useEffect(() => {
+    if (forceURL !== "") {
+      navigate(forceURL);
+    }
+  }, [forceURL, navigate]);
+
   // Navigation handlers
   const handleBack = useCallback(() => {
     navigate("/admin/tasks");
@@ -163,11 +170,6 @@ const Step1Content = memo(function Step1Content() {
       },
     ];
   }, [task, handleCloseTask, handleBeginAssignment]);
-
-  // Redirect if needed
-  if (forceURL !== "") {
-    return <Navigate to={forceURL} />;
-  }
 
   return (
     <WizardFormStep

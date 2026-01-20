@@ -3,7 +3,7 @@
 // UIX Upgraded - Uses WizardFormStep whole page component
 
 import React, { useState, useEffect, useMemo, useCallback, memo } from "react";
-import { Link, Navigate, useParams, useNavigate } from "react-router";
+import { Link, useParams, useNavigate } from "react-router";
 import { useTaskManager } from "../../../../../services/Services";
 import {
   WizardFormStep,
@@ -154,6 +154,13 @@ const Step2Content = memo(function Step2Content() {
     return () => { mounted = false; };
   }, [tid, taskManager, onUnauthorized]);
 
+  // Handle navigation when forceURL is set
+  useEffect(() => {
+    if (forceURL !== "") {
+      navigate(forceURL);
+    }
+  }, [forceURL, navigate]);
+
   // Render skill sets with matching indicators
   const renderSkillSets = useCallback((associateSkillSets, taskSkillSets) => {
     if (!associateSkillSets || associateSkillSets.length === 0) {
@@ -212,11 +219,6 @@ const Step2Content = memo(function Step2Content() {
   const handleContinue = useCallback(() => {
     navigate(`/admin/task/${tid}/assign-associate/step-3`);
   }, [navigate, tid]);
-
-  // Redirect if needed
-  if (forceURL !== "") {
-    return <Navigate to={forceURL} />;
-  }
 
   // Calculate counts
   const awayAssociatesCount = associates?.results?.filter((a) => a.isAway).length || 0;
