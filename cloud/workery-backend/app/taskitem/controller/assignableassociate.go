@@ -172,6 +172,14 @@ func (impl *TaskItemControllerImpl) ListAssignableAssociatesByTaskID(ctx context
 	return &ListAssignableAssociatesByTaskIDResponse{Results: uniqueAssociatesSlice}, err
 }
 
+// processAwayAssociates checks each associate against active away logs and marks
+// them as unavailable (IsAway=true) if they have a current away period.
+//
+// BUGFIX: Previously this function only checked if an active away log existed,
+// without verifying that the current date falls within the away period's date
+// range (StartDate to UntilDate). This caused associates with expired away logs
+// (where UntilDate had passed) to still be marked as unavailable. The fix adds
+// proper date range validation before marking an associate as away.
 func (impl *TaskItemControllerImpl) processAwayAssociates(ctx context.Context, tenantID primitive.ObjectID, aa []*AssignableAssociate) error {
 	// STEP 1: Extract the unique associate IDs from the list of associates.
 	uniqueAssociateIDs := make([]primitive.ObjectID, 0, len(aa))
@@ -195,17 +203,35 @@ func (impl *TaskItemControllerImpl) processAwayAssociates(ctx context.Context, t
 		return err
 	}
 
+	// Get the current time for date comparisons.
+	now := time.Now()
+
 	// Iterate through the list of assignable associates and set the away status if applicable.
 	for _, a := range aa {
 		for _, awayRecord := range awayRecords.Results {
 			if a.ID == awayRecord.AssociateID {
-				// impl.Logger.Debug("Associate set to away",
-				// 	slog.Any("associate_id", a.ID),
-				// 	slog.Any("associate_name", a.Name),
-				// 	slog.Any("away_log_id", awayRecord.ID),
-				// ) // For debugging purposes only.
-				a.IsAway = true
-				break // No need to check further records for this associate.
+				// Check if the current date falls within the away period.
+				// The associate is away if:
+				// 1. The away period has started (now >= StartDate)
+				// 2. AND either:
+				//    a. UntilFurtherNotice is Yes (indefinite), OR
+				//    b. The away period hasn't ended yet (now <= UntilDate)
+				isAwayPeriodStarted := !awayRecord.StartDate.IsZero() && (now.Equal(awayRecord.StartDate) || now.After(awayRecord.StartDate))
+				isIndefinite := awayRecord.UntilFurtherNotice == aal_s.UntilFurtherNoticeYes
+				isWithinEndDate := awayRecord.UntilDate.IsZero() || now.Before(awayRecord.UntilDate) || now.Equal(awayRecord.UntilDate)
+
+				if isAwayPeriodStarted && (isIndefinite || isWithinEndDate) {
+					// impl.Logger.Debug("Associate set to away",
+					// 	slog.Any("associate_id", a.ID),
+					// 	slog.Any("associate_name", a.Name),
+					// 	slog.Any("away_log_id", awayRecord.ID),
+					// 	slog.Any("start_date", awayRecord.StartDate),
+					// 	slog.Any("until_date", awayRecord.UntilDate),
+					// 	slog.Any("until_further_notice", awayRecord.UntilFurtherNotice),
+					// ) // For debugging purposes only.
+					a.IsAway = true
+					break // No need to check further records for this associate.
+				}
 			}
 		}
 	}

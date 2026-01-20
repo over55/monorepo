@@ -64,6 +64,15 @@ func (h *Handler) createAwayLogOnAnyRequiredExpiredDates(ctx context.Context, t 
 }
 
 func (h *Handler) createAwayLogOnExpiredDuesDate(ctx context.Context, today time.Time, a *ass_ds.Associate) error {
+	// BUGFIX: We must check if the date is set before comparing.
+	// In Go, a zero/unset time.Time value is "0001-01-01 00:00:00" which is
+	// always "before today", causing associates without a dues date to be
+	// incorrectly marked as having an expired dues date. This resulted in
+	// all associates without this field set being marked as "unavailable"
+	// in the assign associate workflow.
+	if a.DuesDate.IsZero() {
+		return nil
+	}
 	if a.DuesDate.Before(today) {
 		f := &away_ds.AssociateAwayLogPaginationListFilter{
 			TenantID:    a.TenantID,
@@ -118,6 +127,15 @@ func (h *Handler) createAwayLogOnExpiredDuesDate(ctx context.Context, today time
 }
 
 func (h *Handler) createAwayLogOnExpiredPoliceCheck(ctx context.Context, today time.Time, a *ass_ds.Associate) error {
+	// BUGFIX: We must check if the date is set before comparing.
+	// In Go, a zero/unset time.Time value is "0001-01-01 00:00:00" which is
+	// always "before today", causing associates without a police check date
+	// to be incorrectly marked as having an expired police check. This resulted
+	// in all associates without this field set being marked as "unavailable"
+	// in the assign associate workflow.
+	if a.PoliceCheck.IsZero() {
+		return nil
+	}
 	if a.PoliceCheck.Before(today) {
 		f := &away_ds.AssociateAwayLogPaginationListFilter{
 			TenantID:    a.TenantID,
@@ -171,6 +189,15 @@ func (h *Handler) createAwayLogOnExpiredPoliceCheck(ctx context.Context, today t
 }
 
 func (h *Handler) createAwayLogOnExpiredCommercialInsuranceExpiryDate(ctx context.Context, today time.Time, a *ass_ds.Associate) error {
+	// BUGFIX: We must check if the date is set before comparing.
+	// In Go, a zero/unset time.Time value is "0001-01-01 00:00:00" which is
+	// always "before today", causing associates without a commercial insurance
+	// expiry date to be incorrectly marked as having expired insurance. This
+	// resulted in all associates without this field set being marked as
+	// "unavailable" in the assign associate workflow.
+	if a.CommercialInsuranceExpiryDate.IsZero() {
+		return nil
+	}
 	if a.CommercialInsuranceExpiryDate.Before(today) {
 		f := &away_ds.AssociateAwayLogPaginationListFilter{
 			TenantID:    a.TenantID,
@@ -284,12 +311,17 @@ func (h *Handler) createAwayLogOnExpiredAutoInsuranceExpiryDate(ctx context.Cont
 }
 
 func (h *Handler) createAwayLogOnWsibInsuranceDate(ctx context.Context, today time.Time, a *ass_ds.Associate) error {
-	// Because wsib insurance is optional, if the associate doesn't have it any date set then skip this function.
+	// Because WSIB insurance is optional, if the associate doesn't have a date
+	// set then skip this function. This also prevents the zero time bug where
+	// "0001-01-01" is always "before today".
 	if a.WsibInsuranceDate.IsZero() {
 		return nil
 	}
 
-	if a.AutoInsuranceExpiryDate.Before(today) {
+	// BUGFIX: Previously this was checking `a.AutoInsuranceExpiryDate` instead
+	// of `a.WsibInsuranceDate` due to a copy-paste error. This caused WSIB away
+	// logs to be created based on the wrong date field.
+	if a.WsibInsuranceDate.Before(today) {
 		f := &away_ds.AssociateAwayLogPaginationListFilter{
 			TenantID:    a.TenantID,
 			PageSize:    1_000_000,
