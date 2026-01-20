@@ -213,8 +213,6 @@ func (port *taskQueuePort) keepLockAlive(ctx context.Context, lockKey string, ow
 }
 
 func (port *taskQueuePort) runTaskProcessing() {
-	// port.Logger.Info("Starting task processing routines") // Commented out to reduce log noise
-
 	// Create a ticker for periodic task execution
 	// Adjust the interval based on your needs
 	taskTicker := time.NewTicker(1 * time.Minute)
@@ -245,8 +243,6 @@ func (port *taskQueuePort) runTaskProcessing() {
 }
 
 func (port *taskQueuePort) executeScheduledTasks() {
-	// port.Logger.Debug("Executing scheduled tasks") // Commented out to reduce log noise
-
 	// Check if we're still the primary before executing
 	port.mu.Lock()
 	if !port.isRunning {
