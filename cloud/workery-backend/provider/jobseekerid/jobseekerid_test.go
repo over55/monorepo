@@ -3,14 +3,12 @@ package jobseekerid
 import (
 	"fmt"
 	"testing"
-
-	"github.com/over55/monorepo/cloud/workery-backend/provider/jobseekerid"
 )
 
 // go test -v provider/jobseekerid/jobseekerid_test.go;
 
 func TestNewID(t *testing.T) {
-	p := jobseekerid.NewProvider()
+	p := NewProvider()
 
 	// ----------------------------------------
 	// People    | Range        | Formula
