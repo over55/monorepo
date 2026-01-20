@@ -44,8 +44,28 @@ func (c *TenantControllerImpl) UpdateByID(ctx context.Context, ns *domain.Tenant
 	os.ModifiedAt = time.Now()
 	os.ModifiedByUserID = userID
 	os.ModifiedByUserName = userName
+
+	// Update core fields
 	os.Status = ns.Status
 	os.Name = ns.Name
+
+	// Update identification fields
+	os.AlternateName = ns.AlternateName
+	os.Description = ns.Description
+
+	// Update contact information
+	os.Email = ns.Email
+	os.Telephone = ns.Telephone
+
+	// Update address fields
+	os.AddressCountry = ns.AddressCountry
+	os.AddressRegion = ns.AddressRegion
+	os.AddressLocality = ns.AddressLocality
+	os.PostalCode = ns.PostalCode
+	os.StreetAddress = ns.StreetAddress
+	os.StreetAddressExtra = ns.StreetAddressExtra
+
+	// Note: SchemaName is intentionally NOT updated for security reasons
 
 	// Save to the database the modified Tenant.
 	if err := c.TenantStorer.UpdateByID(ctx, os); err != nil {

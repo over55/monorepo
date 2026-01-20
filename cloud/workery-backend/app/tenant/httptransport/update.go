@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"regexp"
 
 	sub_s "github.com/over55/monorepo/cloud/workery-backend/app/tenant/datastore"
 	"github.com/over55/monorepo/cloud/workery-backend/utils/httperror"
@@ -34,12 +35,34 @@ func UnmarshalUpdateRequest(ctx context.Context, r *http.Request) (*sub_s.Tenant
 func ValidateUpdateRequest(dirtyData *sub_s.Tenant) error {
 	e := make(map[string]string)
 
-	// if dirtyData.ServiceType == 0 {
-	// 	e["service_type"] = "missing value"
-	// }
+	// Required field
 	if dirtyData.Name == "" {
 		e["name"] = "missing value"
 	}
+
+	// Optional field: Email - validate format and length if provided
+	if dirtyData.Email != "" {
+		if len(dirtyData.Email) > 255 {
+			e["email"] = "too long"
+		}
+		// Basic email format validation
+		emailRegex := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
+		matched, err := regexp.MatchString(emailRegex, dirtyData.Email)
+		if err != nil || !matched {
+			e["email"] = "invalid email format"
+		}
+	}
+
+	// Optional field: Description - validate length
+	if dirtyData.Description != "" && len(dirtyData.Description) > 500 {
+		e["description"] = "too long (max 500 characters)"
+	}
+
+	// Optional field: AlternateName - validate length
+	if dirtyData.AlternateName != "" && len(dirtyData.AlternateName) > 255 {
+		e["alternate_name"] = "too long (max 255 characters)"
+	}
+
 	if len(e) != 0 {
 		return httperror.NewForBadRequest(&e)
 	}
