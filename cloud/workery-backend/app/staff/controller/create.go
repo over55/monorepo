@@ -230,6 +230,9 @@ func (impl *StaffControllerImpl) createUserForStaff(ctx context.Context, staffID
 		PasswordHashAlgorithm:   "DO BELOW...",
 		PasswordHash:            "DO BELOW...",
 		Role:                    u_s.UserRoleStaff,
+		// HasStaffRole: Critical permission flag that enables staff-level operations (task closing, etc.)
+		// Must be set to true for all staff users to grant access to protected endpoints
+		HasStaffRole:            true,
 		ReferenceID:             staffID,
 		WasEmailVerified:        true,
 		EmailVerificationCode:   "",

@@ -404,6 +404,9 @@ func (impl *StaffControllerImpl) UpdateByID(ctx context.Context, req *StaffUpdat
 				PasswordHashAlgorithm:   "DO BELOW...",
 				PasswordHash:            "DO BELOW...",
 				Role:                    u_s.UserRoleStaff,
+				// HasStaffRole: Critical permission flag that enables staff-level operations (task closing, etc.)
+				// Must be set to true for all staff users to grant access to protected endpoints
+				HasStaffRole:            true,
 				WasEmailVerified:        true,
 				EmailVerificationCode:   "",
 				EmailVerificationExpiry: time.Now(),

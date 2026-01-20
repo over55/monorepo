@@ -116,6 +116,17 @@ func (impl *UserControllerImpl) UpdateByID(ctx context.Context, requestData *Use
 	ou.ModifiedByUserID = userID
 	ou.ModifiedByUserName = userName
 
+	// Recalculate HasStaffRole: This ensures the permission flag stays synchronized with the user's role.
+	// This is critical for fixing existing users who were created before HasStaffRole was properly set,
+	// and for maintaining consistency if roles are changed in the future. Staff-level operations
+	// (task closing, etc.) require both the correct role AND this flag to be true.
+	hasStaffRole := false
+	switch ou.Role {
+	case user_s.UserRoleExecutive, user_s.UserRoleManagement, user_s.UserRoleFrontlineStaff:
+		hasStaffRole = true
+	}
+	ou.HasStaffRole = hasStaffRole
+
 	if err := impl.UserStorer.UpdateByID(ctx, ou); err != nil {
 		impl.Logger.Error("user update by id error", slog.Any("error", err))
 		return nil, err

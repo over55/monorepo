@@ -49,6 +49,16 @@ func (impl *UserControllerImpl) userFromCreateRequest(requestData *UserCreateReq
 	requestData.Email = strings.ToLower(requestData.Email)
 	requestData.Email = strings.ReplaceAll(requestData.Email, " ", "")
 
+	// Calculate HasStaffRole: This critical permission flag determines access to staff-level operations
+	// (e.g., task closing, customer management, order operations). It must be set based on the user's
+	// assigned role. Executive, Management, and Frontline Staff roles all require staff permissions.
+	// Without this flag, users will be denied access to protected endpoints regardless of their role.
+	hasStaffRole := false
+	switch requestData.Role {
+	case user_s.UserRoleExecutive, user_s.UserRoleManagement, user_s.UserRoleFrontlineStaff:
+		hasStaffRole = true
+	}
+
 	return &user_s.User{
 		TenantID:             requestData.TenantID,
 		FirstName:            requestData.FirstName,
@@ -62,6 +72,7 @@ func (impl *UserControllerImpl) userFromCreateRequest(requestData *UserCreateReq
 		AgreePromotionsEmail: requestData.AgreePromotionsEmail,
 		Status:               requestData.Status,
 		Role:                 requestData.Role,
+		HasStaffRole:         hasStaffRole,
 	}, nil
 }
 
