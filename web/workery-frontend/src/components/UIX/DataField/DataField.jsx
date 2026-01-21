@@ -53,11 +53,11 @@ const DataField = memo(function DataField({
   return (
     <div className={containerClasses}>
       <label
-        className={`block text-sm font-medium mb-1 ${themeClasses.textSecondary}`}
+        className={`block text-sm sm:text-base font-semibold mb-2 ${themeClasses.textSecondary}`}
       >
         {label}
       </label>
-      <p className={`text-base sm:text-lg font-medium ${themeClasses.textPrimary}`}>{displayValue}</p>
+      <p className={`text-sm sm:text-base font-medium ${themeClasses.textPrimary}`}>{displayValue}</p>
       {helperText && (
         <p className={`text-xs ${themeClasses.textMuted} mt-1`}>{helperText}</p>
       )}

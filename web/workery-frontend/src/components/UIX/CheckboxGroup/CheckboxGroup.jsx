@@ -25,22 +25,22 @@ const CheckboxGroup = memo(
 
     // Theme classes for consistent styling
     const themeClasses = useMemo(() => ({
-      textLabel: getThemeClasses("text-label") || "text-gray-700",
-      textPrimary: getThemeClasses("text-primary") || "text-gray-900",
-      textMuted: getThemeClasses("text-muted") || "text-gray-600",
-      textDanger: getThemeClasses("text-danger") || "text-red-600",
-      textRequired: getThemeClasses("text-required") || "text-red-500",
-      textAccent: getThemeClasses("text-accent") || "text-red-500",
-      bgCard: getThemeClasses("bg-card") || "bg-white",
-      bgChecked: getThemeClasses("bg-checked") || "bg-red-50",
-      bgCheckbox: getThemeClasses("bg-checkbox") || "bg-gray-100",
-      borderLight: getThemeClasses("border-light") || "border-gray-200",
-      borderMedium: getThemeClasses("border-medium") || "border-gray-300",
-      borderChecked: getThemeClasses("border-checked") || "border-red-500",
-      hoverBorder: getThemeClasses("hover-border") || "hover:border-gray-300",
+      textLabel: getThemeClasses("text-label") || "text-gray-700 dark:text-gray-300",
+      textPrimary: getThemeClasses("text-primary") || "text-gray-900 dark:text-gray-100",
+      textMuted: getThemeClasses("text-muted") || "text-gray-600 dark:text-gray-400",
+      textDanger: getThemeClasses("text-danger") || "text-red-600 dark:text-red-400",
+      textRequired: getThemeClasses("text-required") || "text-red-500 dark:text-red-400",
+      textAccent: getThemeClasses("text-accent") || "text-red-500 dark:text-red-400",
+      bgCard: getThemeClasses("bg-card") || "bg-white dark:bg-gray-800",
+      bgChecked: getThemeClasses("bg-checked") || "bg-red-50 dark:bg-red-900/20",
+      bgCheckbox: getThemeClasses("bg-checkbox") || "bg-gray-100 dark:bg-gray-700",
+      borderLight: getThemeClasses("border-light") || "border-gray-200 dark:border-gray-700",
+      borderMedium: getThemeClasses("border-medium") || "border-gray-300 dark:border-gray-600",
+      borderChecked: getThemeClasses("border-checked") || "border-red-500 dark:border-red-400",
+      hoverBorder: getThemeClasses("hover-border") || "hover:border-gray-300 dark:hover:border-gray-500",
       hoverShadow: getThemeClasses("hover-shadow") || "hover:shadow-sm",
-      checkboxColor: getThemeClasses("checkbox-color") || "text-red-600",
-      checkboxFocus: getThemeClasses("checkbox-focus") || "focus:ring-red-500",
+      checkboxColor: getThemeClasses("checkbox-color") || "text-red-600 dark:text-red-400",
+      checkboxFocus: getThemeClasses("checkbox-focus") || "focus:ring-red-500 dark:focus:ring-red-400",
     }), [getThemeClasses]);
     // Memoize size classes with mobile-friendly touch targets (increased sizes)
     const sizeClasses = useMemo(

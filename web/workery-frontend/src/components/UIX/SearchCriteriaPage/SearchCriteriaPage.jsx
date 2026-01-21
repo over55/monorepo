@@ -78,17 +78,17 @@ const SearchCriteriaPage = memo(function SearchCriteriaPage({
 
   // Memoize theme classes for consistent styling
   const themeClasses = useMemo(() => ({
-    textPrimary: getThemeClasses('text-primary') || 'text-gray-800',
-    textAccent: getThemeClasses('text-accent') || 'text-red-600',
+    textPrimary: getThemeClasses('text-primary') || 'text-gray-800 dark:text-gray-100',
+    textAccent: getThemeClasses('text-accent') || 'text-red-600 dark:text-red-400',
     // Advanced search toggle button
-    advancedToggleBorder: getThemeClasses('advanced-toggle-border') || 'border-red-200',
-    advancedToggleBg: getThemeClasses('advanced-toggle-bg') || 'bg-red-50',
-    advancedToggleHoverBg: getThemeClasses('advanced-toggle-hover-bg') || 'hover:bg-red-100',
-    advancedToggleHoverBorder: getThemeClasses('advanced-toggle-hover-border') || 'hover:border-red-300',
-    advancedToggleText: getThemeClasses('advanced-toggle-text') || 'text-red-700',
+    advancedToggleBorder: getThemeClasses('advanced-toggle-border') || 'border-red-200 dark:border-red-800',
+    advancedToggleBg: getThemeClasses('advanced-toggle-bg') || 'bg-red-50 dark:bg-red-900/30',
+    advancedToggleHoverBg: getThemeClasses('advanced-toggle-hover-bg') || 'hover:bg-red-100 dark:hover:bg-red-900/50',
+    advancedToggleHoverBorder: getThemeClasses('advanced-toggle-hover-border') || 'hover:border-red-300 dark:hover:border-red-700',
+    advancedToggleText: getThemeClasses('advanced-toggle-text') || 'text-red-700 dark:text-red-300',
     // Advanced fields container
-    advancedFieldsBg: getThemeClasses('advanced-fields-bg') || 'bg-gradient-to-br from-red-50 to-red-50',
-    advancedFieldsBorder: getThemeClasses('advanced-fields-border') || 'border-red-200',
+    advancedFieldsBg: getThemeClasses('advanced-fields-bg') || 'bg-gradient-to-br from-red-50 to-red-50 dark:from-red-900/30 dark:to-red-900/30',
+    advancedFieldsBorder: getThemeClasses('advanced-fields-border') || 'border-red-200 dark:border-red-800',
   }), [getThemeClasses]);
 
   // Memoize event handlers to prevent unnecessary re-renders

@@ -126,26 +126,26 @@ const DatePicker = memo(
 
     // Memoize theme classes
     const themeClasses = useMemo(() => ({
-      textPrimary: getThemeClasses("text-primary") || "text-gray-900",
-      textSecondary: getThemeClasses("text-secondary") || "text-gray-700",
-      textMuted: getThemeClasses("text-muted") || "text-gray-600",
-      textError: getThemeClasses("text-error") || "text-red-600",
-      bgCard: getThemeClasses("bg-card") || "bg-white",
-      bgMuted: getThemeClasses("bg-muted") || "bg-gray-50",
-      borderLight: getThemeClasses("border-light") || "border-gray-200",
-      borderMedium: getThemeClasses("border-medium") || "border-gray-300",
-      borderError: getThemeClasses("border-error") || "border-red-500",
-      borderPrimary: getThemeClasses("border-primary") || "border-red-500",
-      focusRing: getThemeClasses("focus-ring") || "ring-4 ring-red-500/20",
-      hoverBgLight: getThemeClasses("hover-bg-light") || "hover:bg-gray-100",
-      hoverBorderMedium: getThemeClasses("hover-border-medium") || "hover:border-gray-400",
+      textPrimary: getThemeClasses("text-primary") || "text-gray-900 dark:text-gray-100",
+      textSecondary: getThemeClasses("text-secondary") || "text-gray-700 dark:text-gray-300",
+      textMuted: getThemeClasses("text-muted") || "text-gray-600 dark:text-gray-400",
+      textError: getThemeClasses("text-error") || "text-red-600 dark:text-red-400",
+      bgCard: getThemeClasses("bg-card") || "bg-white dark:bg-gray-800",
+      bgMuted: getThemeClasses("bg-muted") || "bg-gray-50 dark:bg-gray-700",
+      borderLight: getThemeClasses("border-light") || "border-gray-200 dark:border-gray-700",
+      borderMedium: getThemeClasses("border-medium") || "border-gray-300 dark:border-gray-600",
+      borderError: getThemeClasses("border-error") || "border-red-500 dark:border-red-400",
+      borderPrimary: getThemeClasses("border-primary") || "border-red-500 dark:border-red-400",
+      focusRing: getThemeClasses("focus-ring") || "ring-4 ring-red-500/20 dark:ring-red-400/20",
+      hoverBgLight: getThemeClasses("hover-bg-light") || "hover:bg-gray-100 dark:hover:bg-gray-700",
+      hoverBorderMedium: getThemeClasses("hover-border-medium") || "hover:border-gray-400 dark:hover:border-gray-500",
       // Calendar specific
-      daySelected: getThemeClasses("calendar-day-selected") || "bg-red-600 text-white hover:bg-red-700",
-      dayToday: getThemeClasses("calendar-day-today") || "bg-red-100 text-red-800 hover:bg-red-200",
-      dayDisabled: getThemeClasses("calendar-day-disabled") || "text-gray-300",
-      dayNormal: getThemeClasses("calendar-day-normal") || "text-gray-700",
+      daySelected: getThemeClasses("calendar-day-selected") || "bg-red-600 text-white hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600",
+      dayToday: getThemeClasses("calendar-day-today") || "bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50",
+      dayDisabled: getThemeClasses("calendar-day-disabled") || "text-gray-300 dark:text-gray-600",
+      dayNormal: getThemeClasses("calendar-day-normal") || "text-gray-700 dark:text-gray-300",
       // Buttons
-      btnPrimaryText: getThemeClasses("btn-primary-text") || "text-red-600 hover:text-red-700",
+      btnPrimaryText: getThemeClasses("btn-primary-text") || "text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300",
     }), [getThemeClasses]);
 
     const [isOpen, setIsOpen] = useState(false);

@@ -148,10 +148,10 @@ const Alert = memo(
         button = "flex-shrink-0 ml-auto hover:opacity-70 transition-opacity min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation select-none";
       } else {
         const typeColorMap = {
-          info: themeClasses.infoHover || "hover:bg-blue-100",
-          warning: themeClasses.warningHover || "hover:bg-amber-100",
-          error: themeClasses.errorHover || "hover:bg-red-100",
-          success: themeClasses.successHover || "hover:bg-green-100",
+          info: themeClasses.infoHover || "hover:bg-blue-100 dark:hover:bg-blue-900/30",
+          warning: themeClasses.warningHover || "hover:bg-amber-100 dark:hover:bg-amber-900/30",
+          error: themeClasses.errorHover || "hover:bg-red-100 dark:hover:bg-red-900/30",
+          success: themeClasses.successHover || "hover:bg-green-100 dark:hover:bg-green-900/30",
         };
 
         button = `inline-flex transition-colors duration-200 p-2 rounded-lg min-w-[44px] min-h-[44px] items-center justify-center touch-manipulation select-none active:scale-95 ${typeColorMap[type] || typeColorMap.info}`;

@@ -87,19 +87,19 @@ const IconText = memo(function IconText({
   // Memoize icon classes
   const iconClasses = useMemo(
     () =>
-      `${sizes.icon} ${sizes.iconMargin} flex-shrink-0 ${iconMuted ? (themeClasses.textMuted || "text-gray-600") : (themeClasses.textSecondary || "text-gray-600")}`,
+      `${sizes.icon} ${sizes.iconMargin} flex-shrink-0 ${iconMuted ? (themeClasses.textMuted || "text-gray-600 dark:text-gray-400") : (themeClasses.textSecondary || "text-gray-600 dark:text-gray-400")}`,
     [sizes.icon, sizes.iconMargin, iconMuted, themeClasses.textMuted, themeClasses.textSecondary],
   );
 
   // Memoize label classes
   const labelClasses = useMemo(
-    () => `${themeClasses.textSecondary || "text-gray-600"} mr-2`,
+    () => `${themeClasses.textSecondary || "text-gray-600 dark:text-gray-400"} mr-2`,
     [themeClasses.textSecondary],
   );
 
   // Memoize value classes
   const valueClasses = useMemo(
-    () => `font-medium ${themeClasses.textPrimary || "text-gray-900"}`,
+    () => `font-medium ${themeClasses.textPrimary || "text-gray-900 dark:text-gray-100"}`,
     [themeClasses.textPrimary],
   );
 

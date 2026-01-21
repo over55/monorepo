@@ -51,14 +51,14 @@ const VARIANT_THEME_KEYS = Object.freeze({
 
 // Default fallback classes if theme is not available (uses red theme for primary)
 const FALLBACK_VARIANT_CLASSES = Object.freeze({
-  default: "bg-gray-100 text-gray-800",
-  primary: "bg-red-100 text-red-800",
-  success: "bg-green-100 text-green-800",
-  warning: "bg-yellow-100 text-yellow-800",
-  error: "bg-red-100 text-red-800",
-  danger: "bg-red-100 text-red-800",
-  info: "bg-cyan-100 text-cyan-800",
-  secondary: "bg-gray-100 text-gray-700",
+  default: "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200",
+  primary: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+  success: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+  warning: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300",
+  error: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+  danger: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+  info: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-300",
+  secondary: "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300",
 });
 
 const Badge = memo(

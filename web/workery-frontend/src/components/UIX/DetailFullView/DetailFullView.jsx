@@ -41,13 +41,13 @@ const DetailFullViewInner = memo(
     // Memoize theme classes for performance
     const themeClasses = useMemo(
       () => ({
-        borderPrimary: getThemeClasses("border-primary") || "border-red-600",
-        textSecondary: getThemeClasses("text-secondary") || "text-gray-600",
-        cardBorder: getThemeClasses("card-border") || "border-gray-200",
-        textPrimary: getThemeClasses("text-primary") || "text-gray-900",
-        bgDisabled: getThemeClasses("bg-disabled") || "bg-gray-100",
-        textMuted: getThemeClasses("text-muted") || "text-gray-600",
-        bgCard: getThemeClasses("bg-card") || "bg-white",
+        borderPrimary: getThemeClasses("border-primary") || "border-red-600 dark:border-red-500",
+        textSecondary: getThemeClasses("text-secondary") || "text-gray-600 dark:text-gray-400",
+        cardBorder: getThemeClasses("card-border") || "border-gray-200 dark:border-gray-700",
+        textPrimary: getThemeClasses("text-primary") || "text-gray-900 dark:text-gray-100",
+        bgDisabled: getThemeClasses("bg-disabled") || "bg-gray-100 dark:bg-gray-800",
+        textMuted: getThemeClasses("text-muted") || "text-gray-600 dark:text-gray-400",
+        bgCard: getThemeClasses("bg-card") || "bg-white dark:bg-gray-800",
         // Detail header theme classes
         detailHeaderBg: getThemeClasses("detail-header-bg"),
         detailHeaderText: getThemeClasses("detail-header-text"),

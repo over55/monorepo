@@ -258,9 +258,9 @@ function ServerErrorContent({
       <div className={`min-h-screen relative overflow-hidden ${themeClasses.bgGradientPrimary}`}>
         {/* Animated background blobs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-20 -right-20 sm:-top-32 sm:-right-32 lg:-top-40 lg:-right-40 w-40 h-40 sm:w-60 sm:h-60 lg:w-80 lg:h-80 bg-orange-200 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob"></div>
-          <div className="absolute -bottom-20 -left-20 sm:-bottom-32 sm:-left-32 lg:-bottom-40 lg:-left-40 w-40 h-40 sm:w-60 sm:h-60 lg:w-80 lg:h-80 bg-red-200 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-2000"></div>
-          <div className="absolute top-20 left-20 sm:top-32 sm:left-32 lg:top-40 lg:left-40 w-40 h-40 sm:w-60 sm:h-60 lg:w-80 lg:h-80 bg-yellow-200 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-4000"></div>
+          <div className="absolute -top-20 -right-20 sm:-top-32 sm:-right-32 lg:-top-40 lg:-right-40 w-40 h-40 sm:w-60 sm:h-60 lg:w-80 lg:h-80 bg-orange-200 dark:bg-orange-900 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob"></div>
+          <div className="absolute -bottom-20 -left-20 sm:-bottom-32 sm:-left-32 lg:-bottom-40 lg:-left-40 w-40 h-40 sm:w-60 sm:h-60 lg:w-80 lg:h-80 bg-red-200 dark:bg-red-900 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-2000"></div>
+          <div className="absolute top-20 left-20 sm:top-32 sm:left-32 lg:top-40 lg:left-40 w-40 h-40 sm:w-60 sm:h-60 lg:w-80 lg:h-80 bg-yellow-200 dark:bg-yellow-900 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-blob animation-delay-4000"></div>
         </div>
 
         <div className="relative z-10 min-h-screen flex items-start justify-center p-4 sm:p-6 lg:p-4 pt-16 sm:pt-20 lg:pt-24">
@@ -271,7 +271,7 @@ function ServerErrorContent({
               <div className="flex justify-center mb-4">
                 <div className="relative">
                   <div className={`absolute inset-0 ${themeClasses.bgGradientSecondary} rounded-full blur-lg opacity-20 animate-pulse`}></div>
-                  <div className={`relative p-4 lg:p-5 rounded-full ${themeClasses.alertErrorBg || 'bg-red-50'}`}>
+                  <div className={`relative p-4 lg:p-5 rounded-full ${themeClasses.alertErrorBg || 'bg-red-50 dark:bg-red-900/30'}`}>
                     <div className="relative">
                       <ServerStackIcon className={`h-12 w-12 lg:h-16 lg:w-16 ${themeClasses.alertErrorText}`} />
                       <WrenchScrewdriverIcon className={`absolute -bottom-1 -right-1 h-6 w-6 lg:h-8 lg:w-8 ${themeClasses.alertErrorText} ${themeClasses.bgCard} rounded-full p-1 animate-spin-slow`} />
@@ -295,8 +295,8 @@ function ServerErrorContent({
               </p>
 
               {/* Status Message */}
-              <div className={`${themeClasses.alertWarningBg || 'bg-orange-50'} border ${themeClasses.borderSecondary} rounded-lg p-3 mb-5`}>
-                <div className={`flex items-center justify-center text-sm ${themeClasses.alertWarningText || 'text-orange-800'}`}>
+              <div className={`${themeClasses.alertWarningBg || 'bg-orange-50 dark:bg-orange-900/30'} border ${themeClasses.borderSecondary} rounded-lg p-3 mb-5`}>
+                <div className={`flex items-center justify-center text-sm ${themeClasses.alertWarningText || 'text-orange-800 dark:text-orange-300'}`}>
                   <div className="animate-pulse-slow flex items-center">
                     <span className="inline-block w-2 h-2 bg-orange-500 rounded-full mr-2"></span>
                     Our engineers are investigating the issue

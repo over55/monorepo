@@ -100,8 +100,8 @@ const ThemeSelector = memo(function ThemeSelector({
       const buttonClassName = `
         group relative p-4 rounded-xl transition-all duration-200
         ${isActive
-          ? `border-4 ${config.borderColor} bg-white shadow-lg`
-          : 'border-2 border-gray-200 bg-white hover:border-gray-300 hover:shadow-md'
+          ? `border-4 ${config.borderColor} bg-white dark:bg-gray-800 shadow-lg`
+          : 'border-2 border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-gray-300 dark:hover:border-gray-500 hover:shadow-md'
         }
         focus:outline-none focus:ring-4 focus:ring-blue-500/20
         ${layout === 'horizontal' ? 'min-w-[140px]' : 'w-full'}
@@ -115,7 +115,7 @@ const ThemeSelector = memo(function ThemeSelector({
 
       const nameClassName = `
         text-sm font-semibold transition-colors duration-200
-        ${isActive ? 'text-gray-900' : 'text-gray-700 group-hover:text-gray-900'}
+        ${isActive ? 'text-gray-900 dark:text-gray-100' : 'text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-gray-100'}
       `;
 
       return (

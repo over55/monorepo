@@ -71,42 +71,42 @@ const DeleteConfirmationCard = memo(
     const themeClasses = useMemo(
       () => ({
         // Background colors
-        bgCard: getThemeClasses("bg-card") || "bg-white",
-        bgPage: getThemeClasses("bg-page") || "bg-gray-50",
-        bgDanger: getThemeClasses("bg-danger-light") || "bg-red-50",
-        bgWarning: getThemeClasses("bg-warning-light") || "bg-amber-50",
-        bgInfo: getThemeClasses("bg-info-light") || "bg-blue-50",
-        bgSuccess: getThemeClasses("bg-success-light") || "bg-green-50",
+        bgCard: getThemeClasses("bg-card") || "bg-white dark:bg-gray-800",
+        bgPage: getThemeClasses("bg-page") || "bg-gray-50 dark:bg-gray-900",
+        bgDanger: getThemeClasses("bg-danger-light") || "bg-red-50 dark:bg-red-900/20",
+        bgWarning: getThemeClasses("bg-warning-light") || "bg-amber-50 dark:bg-amber-900/20",
+        bgInfo: getThemeClasses("bg-info-light") || "bg-blue-50 dark:bg-blue-900/20",
+        bgSuccess: getThemeClasses("bg-success-light") || "bg-green-50 dark:bg-green-900/20",
 
         // Text colors
-        textPrimary: getThemeClasses("text-primary") || "text-gray-900",
-        textSecondary: getThemeClasses("text-secondary") || "text-gray-700",
-        textMuted: getThemeClasses("text-muted") || "text-gray-600",
-        textDanger: getThemeClasses("text-danger") || "text-red-800",
-        textDangerDark: getThemeClasses("text-danger-dark") || "text-red-700",
-        textWarning: getThemeClasses("text-warning") || "text-amber-800",
-        textWarningDark: getThemeClasses("text-warning-dark") || "text-amber-700",
-        textInfo: getThemeClasses("text-info") || "text-blue-900",
-        textInfoLight: getThemeClasses("text-info-light") || "text-blue-600",
-        textSuccess: getThemeClasses("text-success") || "text-green-800",
+        textPrimary: getThemeClasses("text-primary") || "text-gray-900 dark:text-gray-100",
+        textSecondary: getThemeClasses("text-secondary") || "text-gray-700 dark:text-gray-300",
+        textMuted: getThemeClasses("text-muted") || "text-gray-600 dark:text-gray-400",
+        textDanger: getThemeClasses("text-danger") || "text-red-800 dark:text-red-300",
+        textDangerDark: getThemeClasses("text-danger-dark") || "text-red-700 dark:text-red-400",
+        textWarning: getThemeClasses("text-warning") || "text-amber-800 dark:text-amber-300",
+        textWarningDark: getThemeClasses("text-warning-dark") || "text-amber-700 dark:text-amber-400",
+        textInfo: getThemeClasses("text-info") || "text-blue-900 dark:text-blue-300",
+        textInfoLight: getThemeClasses("text-info-light") || "text-blue-600 dark:text-blue-400",
+        textSuccess: getThemeClasses("text-success") || "text-green-800 dark:text-green-300",
 
         // Border colors
-        borderDefault: getThemeClasses("border-default") || "border-gray-200",
-        borderLight: getThemeClasses("border-light") || "border-gray-100",
-        borderDanger: getThemeClasses("border-danger") || "border-red-300",
-        borderDangerLight: getThemeClasses("border-danger-light") || "border-red-200",
-        borderWarning: getThemeClasses("border-warning") || "border-amber-200",
-        borderInfo: getThemeClasses("border-info") || "border-blue-200",
-        borderSuccess: getThemeClasses("border-success") || "border-green-400",
+        borderDefault: getThemeClasses("border-default") || "border-gray-200 dark:border-gray-700",
+        borderLight: getThemeClasses("border-light") || "border-gray-100 dark:border-gray-800",
+        borderDanger: getThemeClasses("border-danger") || "border-red-300 dark:border-red-700",
+        borderDangerLight: getThemeClasses("border-danger-light") || "border-red-200 dark:border-red-800",
+        borderWarning: getThemeClasses("border-warning") || "border-amber-200 dark:border-amber-800",
+        borderInfo: getThemeClasses("border-info") || "border-blue-200 dark:border-blue-800",
+        borderSuccess: getThemeClasses("border-success") || "border-green-400 dark:border-green-600",
 
         // Focus/ring colors
-        focusDanger: getThemeClasses("focus-danger") || "focus:ring-red-200",
-        focusSuccess: getThemeClasses("focus-success") || "focus:ring-green-200",
-        focusDefault: getThemeClasses("focus-default") || "focus:ring-gray-200",
+        focusDanger: getThemeClasses("focus-danger") || "focus:ring-red-200 dark:focus:ring-red-800",
+        focusSuccess: getThemeClasses("focus-success") || "focus:ring-green-200 dark:focus:ring-green-800",
+        focusDefault: getThemeClasses("focus-default") || "focus:ring-gray-200 dark:focus:ring-gray-700",
 
         // Hover states
-        hoverBgLight: getThemeClasses("hover-bg-light") || "hover:bg-gray-50",
-        hoverBorderMedium: getThemeClasses("hover-border-medium") || "hover:border-gray-400",
+        hoverBgLight: getThemeClasses("hover-bg-light") || "hover:bg-gray-50 dark:hover:bg-gray-700",
+        hoverBorderMedium: getThemeClasses("hover-border-medium") || "hover:border-gray-400 dark:hover:border-gray-500",
         hoverGradientDangerMedium: getThemeClasses("hover-gradient-danger-medium") || "hover:from-red-600 hover:to-red-700",
 
         // Gradient
@@ -116,7 +116,7 @@ const DeleteConfirmationCard = memo(
         gradientHeader: getThemeClasses("gradient-danger-header") || "bg-gradient-to-r from-red-800 to-red-600",
 
         // Link colors
-        linkDanger: getThemeClasses("link-danger") || "text-red-600 hover:text-red-800",
+        linkDanger: getThemeClasses("link-danger") || "text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300",
       }),
       [getThemeClasses],
     );

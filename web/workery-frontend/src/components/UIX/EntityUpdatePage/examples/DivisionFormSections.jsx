@@ -74,7 +74,9 @@ export const DivisionBasicInfoSection = React.memo(
     // Memoized handler for unauthorized access
     const handleUnauthorized = useCallback(() => {
       // This will be handled by the parent EntityUpdatePage
-      console.log("Unauthorized access");
+      if (process.env.NODE_ENV === "development") {
+        console.log("Unauthorized access");
+      }
     }, []);
 
     // Memoized handler for division type change
@@ -654,25 +656,35 @@ export const DivisionAdditionalInfoSection = React.memo(
 
       const loadTags = async () => {
         try {
-          console.log("DivisionAdditionalInfoSection: Loading tag options...");
+          if (process.env.NODE_ENV === "development") {
+            console.log("DivisionAdditionalInfoSection: Loading tag options...");
+          }
           const options = await tagManager.getTagSelectOptions(() => {}, {
             signal: abortControllerRef.current?.signal,
           });
 
-          console.log("DivisionAdditionalInfoSection: Raw options received:", options);
+          if (process.env.NODE_ENV === "development") {
+            console.log("DivisionAdditionalInfoSection: Raw options received:", options);
+          }
           const formattedOptions = options.map((opt) => ({
             value: opt.value,
             label: opt.label,
           }));
-          console.log("DivisionAdditionalInfoSection: Setting tagOptions to:", formattedOptions);
+          if (process.env.NODE_ENV === "development") {
+            console.log("DivisionAdditionalInfoSection: Setting tagOptions to:", formattedOptions);
+          }
           setTagOptions(formattedOptions);
         } catch (error) {
           // Ignore abort errors
           if (error.name === "AbortError") {
-            console.log("DivisionAdditionalInfoSection: Tag loading aborted (expected on unmount)");
+            if (process.env.NODE_ENV === "development") {
+              console.log("DivisionAdditionalInfoSection: Tag loading aborted (expected on unmount)");
+            }
             return;
           }
-          console.error("DivisionAdditionalInfoSection: Error loading tags:", error);
+          if (process.env.NODE_ENV === "development") {
+            console.error("DivisionAdditionalInfoSection: Error loading tags:", error);
+          }
         }
       };
 
@@ -697,9 +709,11 @@ export const DivisionAdditionalInfoSection = React.memo(
 
     // Debug logging
     useEffect(() => {
-      console.log("DivisionAdditionalInfoSection: formData.tags:", formData.tags);
-      console.log("DivisionAdditionalInfoSection: tagOptions:", tagOptions);
-      console.log("DivisionAdditionalInfoSection: tagOptions loaded?", tagOptions.length > 0);
+      if (process.env.NODE_ENV === "development") {
+        console.log("DivisionAdditionalInfoSection: formData.tags:", formData.tags);
+        console.log("DivisionAdditionalInfoSection: tagOptions:", tagOptions);
+        console.log("DivisionAdditionalInfoSection: tagOptions loaded?", tagOptions.length > 0);
+      }
     }, [formData.tags, tagOptions]);
 
     return (

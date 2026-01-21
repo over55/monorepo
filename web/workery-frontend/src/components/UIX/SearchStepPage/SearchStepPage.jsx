@@ -102,12 +102,12 @@ const SearchStepPage = memo(function SearchStepPage({
   // Memoize all theme classes to prevent multiple calls on each render
   const themeClasses = useMemo(
     () => ({
-      borderPrimary: getThemeClasses('border-primary') || 'border-red-600',
-      alertInfoBg: getThemeClasses('alert-info-bg') || 'bg-blue-50',
-      alertInfoBorder: getThemeClasses('alert-info-border') || 'border-blue-200',
-      alertInfoText: getThemeClasses('alert-info-text') || 'text-blue-800',
-      textMuted: getThemeClasses('text-muted') || 'text-gray-600',
-      borderMedium: getThemeClasses('border-medium') || 'border-gray-200',
+      borderPrimary: getThemeClasses('border-primary') || 'border-red-600 dark:border-red-500',
+      alertInfoBg: getThemeClasses('alert-info-bg') || 'bg-blue-50 dark:bg-blue-900/30',
+      alertInfoBorder: getThemeClasses('alert-info-border') || 'border-blue-200 dark:border-blue-800',
+      alertInfoText: getThemeClasses('alert-info-text') || 'text-blue-800 dark:text-blue-300',
+      textMuted: getThemeClasses('text-muted') || 'text-gray-600 dark:text-gray-400',
+      borderMedium: getThemeClasses('border-medium') || 'border-gray-200 dark:border-gray-700',
     }),
     [getThemeClasses],
   );

@@ -91,18 +91,18 @@ const StaffSearchForm = memo(function StaffSearchForm({
 
   // Theme classes for consistent styling
   const themeClasses = useMemo(() => ({
-    bgGradient: getThemeClasses("bg-gradient-page") || "bg-gradient-to-br from-gray-50 via-white to-red-50",
-    blobPrimary: getThemeClasses("blob-primary") || "bg-purple-200",
-    blobSecondary: getThemeClasses("blob-secondary") || "bg-yellow-200",
-    blobTertiary: getThemeClasses("blob-tertiary") || "bg-pink-200",
-    textHeading: getThemeClasses("text-heading") || "text-gray-800",
-    textSecondary: getThemeClasses("text-secondary") || "text-gray-600",
-    textMuted: getThemeClasses("text-muted") || "text-gray-600",
-    textLabel: getThemeClasses("text-label") || "text-gray-700",
-    checkboxColor: getThemeClasses("checkbox-color") || "text-red-600",
-    checkboxBorder: getThemeClasses("checkbox-border") || "border-gray-300",
-    checkboxFocus: getThemeClasses("checkbox-focus") || "focus:ring-red-500",
-    borderLight: getThemeClasses("border-light") || "border-gray-200",
+    bgGradient: getThemeClasses("bg-gradient-page") || "bg-gradient-to-br from-gray-50 via-white to-red-50 dark:from-gray-900 dark:via-gray-900 dark:to-red-950",
+    blobPrimary: getThemeClasses("blob-primary") || "bg-purple-200 dark:bg-purple-900",
+    blobSecondary: getThemeClasses("blob-secondary") || "bg-yellow-200 dark:bg-yellow-900",
+    blobTertiary: getThemeClasses("blob-tertiary") || "bg-pink-200 dark:bg-pink-900",
+    textHeading: getThemeClasses("text-heading") || "text-gray-800 dark:text-gray-100",
+    textSecondary: getThemeClasses("text-secondary") || "text-gray-600 dark:text-gray-400",
+    textMuted: getThemeClasses("text-muted") || "text-gray-600 dark:text-gray-400",
+    textLabel: getThemeClasses("text-label") || "text-gray-700 dark:text-gray-300",
+    checkboxColor: getThemeClasses("checkbox-color") || "text-red-600 dark:text-red-400",
+    checkboxBorder: getThemeClasses("checkbox-border") || "border-gray-300 dark:border-gray-600",
+    checkboxFocus: getThemeClasses("checkbox-focus") || "focus:ring-red-500 dark:focus:ring-red-400",
+    borderLight: getThemeClasses("border-light") || "border-gray-200 dark:border-gray-700",
   }), [getThemeClasses]);
 
   // Memoize combined errors

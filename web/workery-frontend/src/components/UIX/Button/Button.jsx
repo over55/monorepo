@@ -42,17 +42,17 @@ const ENABLED_CLASSES = "cursor-pointer active:scale-[0.98]"; // Subtle press fe
 // Fallback classes if theme not available (uses red theme for primary)
 const FALLBACK_CLASSES = Object.freeze({
   primary:
-    "bg-red-600 hover:bg-red-700 text-white focus:ring-2 focus:ring-red-500",
+    "bg-red-600 hover:bg-red-700 text-white focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400",
   secondary:
-    "bg-gray-200 hover:bg-gray-300 text-gray-800 focus:ring-2 focus:ring-gray-500",
+    "bg-gray-200 hover:bg-gray-300 text-gray-800 focus:ring-2 focus:ring-gray-500 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200 dark:focus:ring-gray-400",
   outline:
-    "border-2 border-gray-300 hover:border-gray-400 text-gray-700 focus:ring-2 focus:ring-gray-500",
+    "border-2 border-gray-300 hover:border-gray-400 text-gray-700 focus:ring-2 focus:ring-gray-500 dark:border-gray-600 dark:hover:border-gray-500 dark:text-gray-200 dark:focus:ring-gray-400",
   success:
-    "bg-green-600 hover:bg-green-700 text-white focus:ring-2 focus:ring-green-500",
+    "bg-green-600 hover:bg-green-700 text-white focus:ring-2 focus:ring-green-500 dark:focus:ring-green-400",
   danger:
-    "bg-red-600 hover:bg-red-700 text-white focus:ring-2 focus:ring-red-500",
-  ghost: "hover:bg-gray-100 text-gray-700 focus:ring-2 focus:ring-gray-500",
-  disabled: "bg-gray-300 text-gray-600 cursor-not-allowed",
+    "bg-red-600 hover:bg-red-700 text-white focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400",
+  ghost: "hover:bg-gray-100 text-gray-700 focus:ring-2 focus:ring-gray-500 dark:hover:bg-gray-800 dark:text-gray-200 dark:focus:ring-gray-400",
+  disabled: "bg-gray-300 text-gray-600 cursor-not-allowed dark:bg-gray-700 dark:text-gray-400",
 });
 
 // Variant to theme key mapping
@@ -136,7 +136,7 @@ const Button = memo(
       if (variant === "primary" && gradient) {
         return (
           getThemeClasses("button-gradient") ||
-          "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white"
+          "bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white dark:from-red-700 dark:to-red-800 dark:hover:from-red-800 dark:hover:to-red-900"
         );
       }
 

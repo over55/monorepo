@@ -933,8 +933,11 @@ export class OrderAPI {
         onUnauthorizedCallback,
       );
 
+      // Parse orderId to number if it's a string
+      const orderWJID = typeof orderId === 'string' ? parseInt(orderId, 10) : orderId;
+
       const data = {
-        order_id: orderId,
+        order_wjid: orderWJID,
       };
 
       // Make the API call

@@ -284,13 +284,13 @@ const Breadcrumb = memo(function Breadcrumb({
 
   const themeClasses = useMemo(
     () => ({
-      bgCard: getThemeClasses("bg-card") || "bg-white",
-      cardBorder: getThemeClasses("card-border") || "border-gray-200",
+      bgCard: getThemeClasses("bg-card") || "bg-white dark:bg-gray-800",
+      cardBorder: getThemeClasses("card-border") || "border-gray-200 dark:border-gray-700",
       inactive:
         getThemeClasses("breadcrumb-inactive") ||
-        "text-gray-600 hover:text-gray-900 hover:bg-gray-100",
-      active: getThemeClasses("breadcrumb-active") || "text-gray-900",
-      separator: getThemeClasses("text-muted") || "text-gray-600",
+        "text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-100 dark:hover:bg-gray-700",
+      active: getThemeClasses("breadcrumb-active") || "text-gray-900 dark:text-gray-100",
+      separator: getThemeClasses("text-muted") || "text-gray-600 dark:text-gray-400",
     }),
     [getThemeClasses],
   );

@@ -63,26 +63,26 @@ function BackupCodeDisplay({
 
   // Theme classes for consistent styling
   const themeClasses = {
-    textPrimary: getThemeClasses("text-primary") || "text-gray-900",
-    textSecondary: getThemeClasses("text-secondary") || "text-gray-600",
-    bgMuted: getThemeClasses("bg-muted") || "bg-gray-100",
-    textMuted: getThemeClasses("text-muted") || "text-gray-700",
-    borderMuted: getThemeClasses("border-muted") || "border-gray-300",
-    hoverBgMuted: getThemeClasses("hover-bg-muted") || "hover:bg-gray-200",
+    textPrimary: getThemeClasses("text-primary") || "text-gray-900 dark:text-gray-100",
+    textSecondary: getThemeClasses("text-secondary") || "text-gray-600 dark:text-gray-400",
+    bgMuted: getThemeClasses("bg-muted") || "bg-gray-100 dark:bg-gray-800",
+    textMuted: getThemeClasses("text-muted") || "text-gray-700 dark:text-gray-300",
+    borderMuted: getThemeClasses("border-muted") || "border-gray-300 dark:border-gray-600",
+    hoverBgMuted: getThemeClasses("hover-bg-muted") || "hover:bg-gray-200 dark:hover:bg-gray-700",
     // Success colors
-    successBg: getThemeClasses("success-bg") || "bg-green-100",
-    successText: getThemeClasses("success-text") || "text-green-700",
-    successBorder: getThemeClasses("success-border") || "border-green-300",
-    successBgLight: getThemeClasses("success-bg-light") || "bg-green-50",
-    successBorderLight: getThemeClasses("success-border-light") || "border-green-200",
-    successFocusRing: getThemeClasses("success-focus-ring") || "focus:ring-green-500 focus:border-green-500",
+    successBg: getThemeClasses("success-bg") || "bg-green-100 dark:bg-green-900/50",
+    successText: getThemeClasses("success-text") || "text-green-700 dark:text-green-300",
+    successBorder: getThemeClasses("success-border") || "border-green-300 dark:border-green-700",
+    successBgLight: getThemeClasses("success-bg-light") || "bg-green-50 dark:bg-green-900/30",
+    successBorderLight: getThemeClasses("success-border-light") || "border-green-200 dark:border-green-800",
+    successFocusRing: getThemeClasses("success-focus-ring") || "focus:ring-green-500 focus:border-green-500 dark:focus:ring-green-400 dark:focus:border-green-400",
     // Warning colors
-    warningBg: getThemeClasses("warning-bg") || "bg-amber-50",
-    warningBorder: getThemeClasses("warning-border") || "border-amber-200",
-    warningIcon: getThemeClasses("warning-icon") || "text-amber-600",
-    warningTitle: getThemeClasses("warning-title") || "text-amber-900",
-    warningText: getThemeClasses("warning-text") || "text-amber-800",
-    warningBullet: getThemeClasses("warning-bullet") || "bg-amber-600",
+    warningBg: getThemeClasses("warning-bg") || "bg-amber-50 dark:bg-amber-900/30",
+    warningBorder: getThemeClasses("warning-border") || "border-amber-200 dark:border-amber-800",
+    warningIcon: getThemeClasses("warning-icon") || "text-amber-600 dark:text-amber-400",
+    warningTitle: getThemeClasses("warning-title") || "text-amber-900 dark:text-amber-200",
+    warningText: getThemeClasses("warning-text") || "text-amber-800 dark:text-amber-300",
+    warningBullet: getThemeClasses("warning-bullet") || "bg-amber-600 dark:bg-amber-500",
   };
 
   // Handle copy to clipboard

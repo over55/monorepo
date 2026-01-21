@@ -45,16 +45,16 @@ const SettingsCard = memo(function SettingsCard({
   // Memoize theme classes
   const themeClasses = useMemo(
     () => ({
-      bgCard: getThemeClasses("bg-card") || "bg-white",
-      borderLight: getThemeClasses("border-light") || "border-gray-100",
-      textPrimary: getThemeClasses("text-primary") || "text-gray-900",
-      textSecondary: getThemeClasses("text-secondary") || "text-gray-700",
-      textMuted: getThemeClasses("text-muted") || "text-gray-600",
+      bgCard: getThemeClasses("bg-card") || "bg-white dark:bg-gray-800",
+      borderLight: getThemeClasses("border-light") || "border-gray-100 dark:border-gray-700",
+      textPrimary: getThemeClasses("text-primary") || "text-gray-900 dark:text-gray-100",
+      textSecondary: getThemeClasses("text-secondary") || "text-gray-700 dark:text-gray-300",
+      textMuted: getThemeClasses("text-muted") || "text-gray-600 dark:text-gray-400",
       gradientEnabled: getThemeClasses("settings-card-gradient") || "bg-gradient-to-br from-red-700 to-red-600",
-      gradientDisabled: getThemeClasses("settings-card-gradient-disabled") || "bg-gradient-to-br from-gray-500 to-gray-400",
-      hoverTextAccent: getThemeClasses("hover-text-accent") || "group-hover:text-red-600",
-      footerGradient: getThemeClasses("settings-card-footer-gradient") || "bg-gradient-to-r from-gray-50 to-red-50",
-      footerGradientHover: getThemeClasses("settings-card-footer-gradient-hover") || "hover:from-red-50 hover:to-red-100 hover:text-red-600",
+      gradientDisabled: getThemeClasses("settings-card-gradient-disabled") || "bg-gradient-to-br from-gray-500 to-gray-400 dark:from-gray-600 dark:to-gray-500",
+      hoverTextAccent: getThemeClasses("hover-text-accent") || "group-hover:text-red-600 dark:group-hover:text-red-400",
+      footerGradient: getThemeClasses("settings-card-footer-gradient") || "bg-gradient-to-r from-gray-50 to-red-50 dark:from-gray-800 dark:to-red-900/20",
+      footerGradientHover: getThemeClasses("settings-card-footer-gradient-hover") || "hover:from-red-50 hover:to-red-100 hover:text-red-600 dark:hover:from-red-900/20 dark:hover:to-red-900/30 dark:hover:text-red-400",
     }),
     [getThemeClasses],
   );

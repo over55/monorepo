@@ -29,7 +29,7 @@ import { useUIXTheme } from "../themes/useUIXTheme.jsx";
 // Conditional logging for development only
 const DEBUG = process.env.NODE_ENV === 'development';
 const log = (...args) => DEBUG && console.log(...args);
-const error = (...args) => console.error(...args); // Keep errors in production
+const error = (...args) => DEBUG && console.error(...args);
 const warn = (...args) => DEBUG && console.warn(...args);
 
 /**

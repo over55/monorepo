@@ -41,9 +41,9 @@ const FormGroup = memo(function FormGroup({
     if (!label) return null;
 
     return (
-      <label className="block text-sm font-medium text-gray-700 mb-2">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
         {label}
-        {required && <span className="text-red-500 ml-1">*</span>}
+        {required && <span className="text-red-500 dark:text-red-400 ml-1">*</span>}
       </label>
     );
   }, [label, required]);
@@ -52,7 +52,7 @@ const FormGroup = memo(function FormGroup({
   const helperTextElement = useMemo(() => {
     if (!helperText || error) return null;
 
-    return <p className="mt-2 text-sm text-gray-600">{helperText}</p>;
+    return <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">{helperText}</p>;
   }, [helperText, error]);
 
   // Memoize error message with icon
@@ -60,7 +60,7 @@ const FormGroup = memo(function FormGroup({
     if (!error) return null;
 
     return (
-      <p className="mt-2 text-sm text-red-600 flex items-center">
+      <p className="mt-2 text-sm text-red-600 dark:text-red-400 flex items-center">
         <ExclamationTriangleIcon
           className="h-4 w-4 mr-1 flex-shrink-0"
           aria-hidden="true"

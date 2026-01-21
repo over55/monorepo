@@ -61,11 +61,13 @@ const ActionCard = memo(
       if (disabled) {
         baseClasses.push(
           "bg-gray-400",
+          "dark:bg-gray-600",
           "cursor-not-allowed",
           "opacity-60",
           "text-gray-200",
+          "dark:text-gray-400",
         );
-        iconClasses = "w-12 h-12 mb-3 mx-auto text-gray-200";
+        iconClasses = "w-12 h-12 mb-3 mx-auto text-gray-200 dark:text-gray-400";
       } else {
         baseClasses.push(
           themeClasses.actionCard,

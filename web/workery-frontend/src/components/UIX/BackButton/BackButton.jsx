@@ -63,7 +63,7 @@ const BackButton = memo(
       () => ({
         buttonSecondary:
           getThemeClasses("button-secondary") ||
-          "bg-gray-200 hover:bg-gray-300 text-gray-800",
+          "bg-gray-200 hover:bg-gray-300 text-gray-800 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-200",
       }),
       [getThemeClasses],
     );

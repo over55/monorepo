@@ -54,9 +54,9 @@ const StatCard = memo(function StatCard({
   const valueColorClass = useMemo(() => {
     switch (variant) {
       case "positive":
-        return "text-green-600";
+        return "text-green-600 dark:text-green-400";
       case "negative":
-        return "text-red-600";
+        return "text-red-600 dark:text-red-400";
       case "highlight":
         return themeClasses.textPrimary;
       default:
@@ -68,7 +68,7 @@ const StatCard = memo(function StatCard({
   const bgClass = useMemo(() => {
     switch (variant) {
       case "highlight":
-        return "bg-blue-50";
+        return "bg-blue-50 dark:bg-blue-900/20";
       default:
         return themeClasses.bgDisabled;
     }

@@ -32,7 +32,7 @@ import { CommentsView } from "../";
 
 const DEBUG = process.env.NODE_ENV === "development";
 const log = (...args) => DEBUG && console.log(...args);
-const error = (...args) => console.error(...args);
+const error = (...args) => DEBUG && console.error(...args);
 
 /**
  * EntityCommentsPage Component

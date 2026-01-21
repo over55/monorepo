@@ -61,7 +61,7 @@ const StepWizard = memo(function StepWizard({
       breadcrumbActive: getThemeClasses('breadcrumb-active'),
       textPrimary: getThemeClasses('text-primary'),
       textSecondary: getThemeClasses('text-secondary'),
-      textMuted: getThemeClasses('text-muted') || 'text-gray-600',
+      textMuted: getThemeClasses('text-muted') || 'text-gray-600 dark:text-gray-400',
       buttonPrimary: getThemeClasses('button-primary'),
       linkPrimary: getThemeClasses('link-primary'),
       progressBarBg: getThemeClasses('progress-bar-bg'),

@@ -62,8 +62,8 @@ const RadioGroup = memo(function RadioGroup({
       bgPrimaryLight: getThemeClasses("bg-primary-light"),
       buttonPrimary: getThemeClasses("button-primary"),
       inputFocusRing: getThemeClasses("input-focus-ring"),
-      bgHover: getThemeClasses("bg-hover") || "hover:bg-gray-50",
-      borderHover: getThemeClasses("border-hover") || "hover:border-blue-300",
+      bgHover: getThemeClasses("bg-hover") || "hover:bg-gray-50 dark:hover:bg-gray-700",
+      borderHover: getThemeClasses("border-hover") || "hover:border-blue-300 dark:hover:border-blue-500",
     }),
     [getThemeClasses],
   );

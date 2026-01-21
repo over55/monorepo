@@ -91,7 +91,9 @@ export const UIXThemeProvider = React.memo(
           }
         } catch (e) {
           // Handle localStorage errors gracefully
-          console.warn("Could not access localStorage:", e);
+          if (process.env.NODE_ENV === "development") {
+            console.warn("Could not access localStorage:", e);
+          }
         }
       }
       return isValidUIXTheme(defaultTheme) ? defaultTheme : DEFAULT_UIX_THEME;
@@ -123,7 +125,9 @@ export const UIXThemeProvider = React.memo(
 
     // Memoize switchTheme function
     const switchTheme = useCallback((themeName, { reload = true } = {}) => {
-      console.log(`🎨 switchTheme called with: ${themeName}`);
+      if (process.env.NODE_ENV === "development") {
+        console.log(`🎨 switchTheme called with: ${themeName}`);
+      }
 
       if (!isValidUIXTheme(themeName)) {
         if (process.env.NODE_ENV === "development") {
@@ -137,11 +141,15 @@ export const UIXThemeProvider = React.memo(
 
       // Don't do anything if theme hasn't changed
       if (themeName === currentTheme) {
-        console.log(`⏭️ Theme already set to ${themeName}, skipping`);
+        if (process.env.NODE_ENV === "development") {
+          console.log(`⏭️ Theme already set to ${themeName}, skipping`);
+        }
         return;
       }
 
-      console.log(`✅ Switching theme from ${currentTheme} to ${themeName}`);
+      if (process.env.NODE_ENV === "development") {
+        console.log(`✅ Switching theme from ${currentTheme} to ${themeName}`);
+      }
 
       // Clear the theme class cache to ensure fresh values on reload
       themeClassCache.clear();
@@ -150,9 +158,13 @@ export const UIXThemeProvider = React.memo(
       if (typeof window !== "undefined") {
         try {
           localStorage.setItem("uix-theme", themeName);
-          console.log(`💾 Theme saved to localStorage: ${themeName}`);
+          if (process.env.NODE_ENV === "development") {
+            console.log(`💾 Theme saved to localStorage: ${themeName}`);
+          }
         } catch (e) {
-          console.warn("Could not save theme to localStorage:", e);
+          if (process.env.NODE_ENV === "development") {
+            console.warn("Could not save theme to localStorage:", e);
+          }
         }
       }
 
@@ -170,7 +182,9 @@ export const UIXThemeProvider = React.memo(
       // Reload the page to apply the theme consistently across all components
       // This ensures all providers and memoized components get the new theme
       if (reload && typeof window !== "undefined") {
-        console.log(`🔄 Reloading page to apply theme changes...`);
+        if (process.env.NODE_ENV === "development") {
+          console.log(`🔄 Reloading page to apply theme changes...`);
+        }
         // Use a small delay to ensure localStorage is flushed and React state is stable
         setTimeout(() => {
           window.location.reload();

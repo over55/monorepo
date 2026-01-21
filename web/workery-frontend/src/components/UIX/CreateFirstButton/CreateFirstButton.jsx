@@ -105,6 +105,7 @@ const CreateFirstButton = memo(
           "hover:shadow-xl",
           "focus:ring-4",
           "focus:ring-green-500/20",
+          "dark:focus:ring-green-400/20",
           "transform",
           "hover:scale-105",
           // Use CSS classes for hover effect instead of inline styles
@@ -113,10 +114,13 @@ const CreateFirstButton = memo(
       } else {
         classes.push(
           "bg-green-600",
+          "dark:bg-green-500",
           "text-white",
           "hover:bg-green-700",
+          "dark:hover:bg-green-600",
           "focus:ring-4",
           "focus:ring-green-500/20",
+          "dark:focus:ring-green-400/20",
           "border",
           "border-transparent",
           "shadow-sm",

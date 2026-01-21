@@ -155,7 +155,9 @@ const LegacyAttachmentListPageContent = memo(function LegacyAttachmentListPageCo
         if (!isMounted.current) return;
         setAttachments(attachmentsData);
       } catch (err) {
-        console.error("Error fetching data:", err);
+        if (process.env.NODE_ENV === "development") {
+          console.error("Error fetching data:", err);
+        }
         if (isMounted.current) {
           setError(err.message || "Failed to load data");
         }
@@ -198,9 +200,9 @@ const LegacyAttachmentListPageContent = memo(function LegacyAttachmentListPageCo
 
   // Memoize theme classes
   const themeClasses = useMemo(() => ({
-    textMuted: getThemeClasses('text-muted') || 'text-gray-600',
-    textError: getThemeClasses('text-error') || 'text-red-500',
-    borderMedium: getThemeClasses('border-medium') || 'border-gray-200',
+    textMuted: getThemeClasses('text-muted') || 'text-gray-600 dark:text-gray-400',
+    textError: getThemeClasses('text-error') || 'text-red-500 dark:text-red-400',
+    borderMedium: getThemeClasses('border-medium') || 'border-gray-200 dark:border-gray-700',
   }), [getThemeClasses]);
 
   // Loading state

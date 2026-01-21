@@ -54,18 +54,18 @@ const Loading = React.memo(
       if (!theme) {
         return {
           bgOverlay: "bg-black bg-opacity-50",
-          borderDisabled: "border-gray-200",
-          borderPrimary: "border-t-blue-500",
-          textMuted: "text-gray-600",
+          borderDisabled: "border-gray-200 dark:border-gray-700",
+          borderPrimary: "border-t-blue-500 dark:border-t-blue-400",
+          textMuted: "text-gray-600 dark:text-gray-400",
         };
       }
 
       // Use theme configuration if provided
       return {
         bgOverlay: theme.bgOverlay || "bg-black bg-opacity-50",
-        borderDisabled: theme.borderDisabled || "border-gray-200",
-        borderPrimary: theme.borderPrimary || "border-t-blue-500",
-        textMuted: theme.textMuted || "text-gray-600",
+        borderDisabled: theme.borderDisabled || "border-gray-200 dark:border-gray-700",
+        borderPrimary: theme.borderPrimary || "border-t-blue-500 dark:border-t-blue-400",
+        textMuted: theme.textMuted || "text-gray-600 dark:text-gray-400",
       };
     }, [theme]);
 
@@ -106,9 +106,11 @@ const Loading = React.memo(
         existingLoader.parentNode !==
           document.getElementById("loading-portal")
       ) {
-        console.warn(
-          "Multiple fullscreen loaders detected. This may cause performance issues.",
-        );
+        if (process.env.NODE_ENV === "development") {
+          console.warn(
+            "Multiple fullscreen loaders detected. This may cause performance issues.",
+          );
+        }
       }
     }, [fullScreen]);
 

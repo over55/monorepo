@@ -1,36 +1,33 @@
 // File Path: web/workery-frontend/src/pages/Admin/Financial/Detail/Invoice/Generate/Step4Page.jsx
 // @uix-page: FinancialInvoiceGenerateStep4
-// UIX Upgraded - Uses UIX primitives (Spinner, Breadcrumb)
+// UIX Fully Upgraded - All components use UIX primitives with theme classes
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate, Link, useSearchParams } from "react-router";
 import { useOrderManager } from "../../../../../../services/Services";
 import { InvoiceGenerationStorage } from "../../../../../../services/Storage/InvoiceGenerationStorage";
 import { ORDER_INVOICE_PAYMENT_METHODS_OPTIONS } from "../../../../../../constants/FieldOptions";
-import { Spinner, Breadcrumb, UIXThemeProvider, useUIXTheme } from "../../../../../../components/UIX";
 import {
-  ChevronRightIcon,
-  ArrowLeftIcon,
-  CheckIcon,
+  Spinner,
+  Alert,
+  Button,
+  Card,
+  FormCard,
+  StepWizard,
+  BackButton,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../../../components/UIX";
+import {
   ChartBarIcon,
-  CurrencyDollarIcon,
   DocumentTextIcon,
   CheckCircleIcon,
-  ExclamationCircleIcon,
   PencilSquareIcon,
   UserIcon,
   ClipboardDocumentListIcon,
   BanknotesIcon,
-  PencilIcon,
   ChevronLeftIcon,
   DocumentPlusIcon,
-  InformationCircleIcon,
-  UserGroupIcon,
-  CalendarIcon,
-  PhoneIcon,
-  EnvelopeIcon,
-  IdentificationIcon,
-  HomeIcon,
   CreditCardIcon,
 } from "@heroicons/react/24/outline";
 import { ensureISODateForAPI } from "../../../../../../services/Helpers/DateFormatter";
@@ -48,8 +45,22 @@ function AdminFinancialGenerateInvoiceStep4Page() {
   const themeClasses = useMemo(() => ({
     textPrimary: getThemeClasses("text-primary"),
     textSecondary: getThemeClasses("text-secondary"),
+    textMuted: getThemeClasses("text-muted"),
     linkPrimary: getThemeClasses("link-primary"),
+    bgPage: getThemeClasses("bg-page"),
+    borderLight: getThemeClasses("border-light"),
+    // Semantic colors for financial display
+    textSuccess: getThemeClasses("text-success") || "text-green-600",
+    textDanger: getThemeClasses("text-danger") || "text-red-600",
   }), [getThemeClasses]);
+
+  // Wizard steps configuration
+  const wizardSteps = useMemo(() => [
+    { id: 1, title: "Header Info", isCompleted: true },
+    { id: 2, title: "Line Items", isCompleted: true },
+    { id: 3, title: "Footer Info", isCompleted: true },
+    { id: 4, title: "Review", isCompleted: false },
+  ], []);
 
   // Breadcrumb items
   const breadcrumbItems = useMemo(() => [
@@ -69,30 +80,6 @@ function AdminFinancialGenerateInvoiceStep4Page() {
   const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
   }, [navigate]);
-
-  // Section Component with Dark Header
-  const ReviewSection = ({ title, icon: Icon, editLink, children }) => (
-    <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
-      <div className="px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
-        <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
-          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
-          <span className="truncate">{title}</span>
-        </h3>
-        {editLink && (
-          <Link
-            to={editLink}
-            className="inline-flex items-center text-xs sm:text-sm text-blue-300 hover:text-blue-100 transition-colors"
-          >
-            <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-            Edit
-          </Link>
-        )}
-      </div>
-      <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
-        {children}
-      </div>
-    </div>
-  );
 
   // Load order details and invoice data
   useEffect(() => {
@@ -256,7 +243,10 @@ function AdminFinancialGenerateInvoiceStep4Page() {
         invoice_quote_days: parseInt(invoiceData.invoiceQuoteDays) || 30,
       };
 
-      console.log("Submitting invoice generation payload:", payload);
+      // Debug logging only in development (payload contains PII)
+      if (process.env.NODE_ENV === "development") {
+        console.log("Submitting invoice generation payload:", payload);
+      }
 
       // Call the invoice operation
       await orderManager.invoiceOrder(oid, payload, onUnauthorized);
@@ -320,25 +310,25 @@ function AdminFinancialGenerateInvoiceStep4Page() {
     return lineItems;
   };
 
-  if (isFetching) {
+  if (isFetching || !invoiceData) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Spinner size="lg" />
-          <p className="mt-4 text-sm sm:text-base text-gray-600">
-            Loading order details...
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!invoiceData) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Spinner size="lg" />
-          <p className="mt-4 text-sm sm:text-base text-gray-600">Loading...</p>
+      <div className={`min-h-screen ${themeClasses.bgPage}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <StepWizard
+            steps={wizardSteps}
+            currentStep={4}
+            title={isEditMode ? "Edit Invoice" : "Generate Invoice"}
+            subtitle="Step 4 of 4 - Review & Submit"
+            icon={DocumentPlusIcon}
+            breadcrumbItems={breadcrumbItems}
+          >
+            <Card className="flex items-center justify-center min-h-[400px]">
+              <div className="text-center">
+                <Spinner size="lg" />
+                <p className={`mt-4 ${themeClasses.textMuted}`}>Loading order details...</p>
+              </div>
+            </Card>
+          </StepWizard>
         </div>
       </div>
     );
@@ -347,235 +337,165 @@ function AdminFinancialGenerateInvoiceStep4Page() {
   const activeLineItems = getActiveLineItems();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen ${themeClasses.bgPage}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {/* Breadcrumb */}
-        <Breadcrumb items={breadcrumbItems} className="mb-4 sm:mb-6" />
+        <StepWizard
+          steps={wizardSteps}
+          currentStep={4}
+          title={isEditMode ? "Edit Invoice" : "Generate Invoice"}
+          subtitle="Step 4 of 4 - Review & Submit"
+          icon={DocumentPlusIcon}
+          breadcrumbItems={breadcrumbItems}
+        >
+          {/* Error Messages */}
+          {errors.general && (
+            <Alert type="error" className="mb-4" dismissible onDismiss={() => setErrors({})}>
+              {errors.general}
+            </Alert>
+          )}
 
-        {/* Page Title - Responsive */}
-        <div className="mb-4 sm:mb-6">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
-                <DocumentPlusIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
-                {isEditMode ? "Edit Invoice" : "Generate Invoice"}
-              </h1>
-              <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
-                <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
-                Step 4 of 4 - Review & Submit
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Wizard Steps - Improved Responsive Design */}
-        <div className="mb-4 sm:mb-6">
-          {/* Mobile View */}
-          <div className="md:hidden">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full">
-                    <span className="text-white font-semibold text-sm">4</span>
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">
-                      Step 4: Review
-                    </p>
-                    <p className="text-xs text-gray-500">Confirm & Submit</p>
-                  </div>
-                </div>
-                <div className="text-xs text-gray-500">4 of 4</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Tablet/Desktop View */}
-          <div className="hidden md:flex items-center justify-center overflow-x-auto pb-2">
-            <div className="flex items-center min-w-max">
-              {/* Steps 1-3 Complete */}
-              {[1, 2, 3].map((step, index) => (
-                <React.Fragment key={step}>
-                  <div className="flex items-center">
-                    <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
-                      <CheckIcon className="w-5 h-5 text-white" />
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm font-medium text-gray-900">
-                        {step === 1 && "Header Info"}
-                        {step === 2 && "Line Items"}
-                        {step === 3 && "Footer Info"}
-                      </p>
-                      <p className="text-xs text-gray-500">Complete</p>
-                    </div>
-                  </div>
-                  {index < 3 && (
-                    <div className="mx-2 w-16 h-0.5 bg-green-600"></div>
+          {Object.keys(errors).length > 0 &&
+            Object.keys(errors).some((key) => key !== "general") && (
+              <Alert type="error" className="mb-4">
+                <p className="font-medium mb-2">Please correct the following errors:</p>
+                <ul className="list-disc list-inside space-y-1">
+                  {Object.entries(errors).map(
+                    ([key, value]) =>
+                      key !== "general" && (
+                        <li key={key} className="text-xs sm:text-sm">
+                          {value}
+                        </li>
+                      ),
                   )}
-                </React.Fragment>
-              ))}
-
-              {/* Step 4 - Active */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
-                  <span className="text-white font-semibold">4</span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">Review</p>
-                  <p className="text-xs text-gray-500">Submit</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="bg-white shadow-sm rounded-lg">
-          {/* Header with Dark Background */}
-          <div className="bg-gray-700 rounded-t-lg px-4 sm:px-6 py-4 sm:py-5">
-            <h2 className="text-xl sm:text-2xl font-semibold text-white flex items-center">
-              <CheckCircleIcon className="w-5 sm:w-7 h-5 sm:h-7 mr-2 flex-shrink-0" />
-              Review Invoice Details
-            </h2>
-            <p className="mt-1 text-xs sm:text-sm text-gray-300">
-              Please carefully review all invoice details before submitting
-            </p>
-          </div>
-
-          <div className="p-4 sm:p-6">
-            {errors.general && (
-              <div className="mb-4 sm:mb-6 bg-red-50 border border-red-200 text-red-800 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center text-sm sm:text-base">
-                <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
-                <span className="break-words">{errors.general}</span>
-              </div>
+                </ul>
+              </Alert>
             )}
 
-            {Object.keys(errors).length > 0 &&
-              Object.keys(errors).some((key) => key !== "general") && (
-                <div className="mb-4 sm:mb-6 bg-red-50 border border-red-200 text-red-800 px-3 sm:px-4 py-2 sm:py-3 rounded-lg">
-                  <div className="flex items-start">
-                    <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0 mt-0.5" />
-                    <div>
-                      <p className="font-medium mb-2 text-sm sm:text-base">
-                        Please correct the following errors:
-                      </p>
-                      <ul className="list-disc list-inside space-y-1">
-                        {Object.entries(errors).map(
-                          ([key, value]) =>
-                            key !== "general" && (
-                              <li key={key} className="text-xs sm:text-sm">
-                                {value}
-                              </li>
-                            ),
-                        )}
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              )}
-
+          {/* Main Content */}
+          <FormCard
+            title="Review Invoice Details"
+            subtitle="Please carefully review all invoice details before submitting"
+            icon={CheckCircleIcon}
+            maxWidth="full"
+          >
             {isSubmitting ? (
               <div className="flex items-center justify-center py-8">
                 <div className="text-center">
                   <Spinner size="lg" />
-                  <p className="mt-4 text-sm sm:text-base text-gray-600">
-                    Generating invoice...
-                  </p>
+                  <p className={`mt-4 ${themeClasses.textMuted}`}>Generating invoice...</p>
                 </div>
               </div>
             ) : (
               <div className="space-y-4 sm:space-y-6">
                 {/* Header Information Section */}
-                <ReviewSection
+                <FormCard
                   title="Step 1 - Header Information"
                   icon={UserIcon}
-                  editLink={`/admin/financial/${oid}/invoice/generate/step-1`}
+                  maxWidth="full"
+                  headerAction={
+                    <Link
+                      to={`/admin/financial/${oid}/invoice/generate/step-1`}
+                      className={`inline-flex items-center text-sm sm:text-base ${themeClasses.linkPrimary} transition-colors`}
+                    >
+                      <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                      Edit
+                    </Link>
+                  }
                 >
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-3">
                     <div>
-                      <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                      <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                         Invoice ID #:
                       </dt>
-                      <dd className="mt-1 text-sm sm:text-base font-medium text-gray-900">
+                      <dd className={`mt-1 text-base sm:text-lg font-medium ${themeClasses.textPrimary}`}>
                         {invoiceData.invoiceId}
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                      <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                         Invoice Date:
                       </dt>
-                      <dd className="mt-1 text-sm sm:text-base font-medium text-gray-900">
+                      <dd className={`mt-1 text-base sm:text-lg font-medium ${themeClasses.textPrimary}`}>
                         {invoiceData.invoiceDate}
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                      <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                         Associate Name:
                       </dt>
-                      <dd className="mt-1 text-sm sm:text-base font-medium text-gray-900">
+                      <dd className={`mt-1 text-base sm:text-lg font-medium ${themeClasses.textPrimary}`}>
                         {invoiceData.associateName}
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                      <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                         Associate Phone:
                       </dt>
-                      <dd className="mt-1 text-sm sm:text-base font-medium text-gray-900">
+                      <dd className={`mt-1 text-base sm:text-lg font-medium ${themeClasses.textPrimary}`}>
                         {invoiceData.associatePhone}
                       </dd>
                     </div>
                     {invoiceData.associateTaxId && (
                       <div>
-                        <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                        <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                           Associate Tax ID:
                         </dt>
-                        <dd className="mt-1 text-sm sm:text-base font-medium text-gray-900">
+                        <dd className={`mt-1 text-base sm:text-lg font-medium ${themeClasses.textPrimary}`}>
                           {invoiceData.associateTaxId}
                         </dd>
                       </div>
                     )}
                     <div>
-                      <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                      <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                         Client Name:
                       </dt>
-                      <dd className="mt-1 text-sm sm:text-base font-medium text-gray-900">
+                      <dd className={`mt-1 text-base sm:text-lg font-medium ${themeClasses.textPrimary}`}>
                         {invoiceData.customerName}
                       </dd>
                     </div>
                     <div className="sm:col-span-2">
-                      <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                      <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                         Client Address:
                       </dt>
-                      <dd className="mt-1 text-sm sm:text-base font-medium text-gray-900">
+                      <dd className={`mt-1 text-base sm:text-lg font-medium ${themeClasses.textPrimary}`}>
                         {invoiceData.customerAddress}
                       </dd>
                     </div>
                     <div>
-                      <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                      <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                         Client Phone:
                       </dt>
-                      <dd className="mt-1 text-sm sm:text-base font-medium text-gray-900">
+                      <dd className={`mt-1 text-base sm:text-lg font-medium ${themeClasses.textPrimary}`}>
                         {invoiceData.customerPhone}
                       </dd>
                     </div>
                     {invoiceData.customerEmail && (
                       <div>
-                        <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                        <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                           Client Email:
                         </dt>
-                        <dd className="mt-1 text-sm sm:text-base font-medium text-gray-900 break-all">
+                        <dd className={`mt-1 text-base sm:text-lg font-medium ${themeClasses.textPrimary} break-all`}>
                           {invoiceData.customerEmail}
                         </dd>
                       </div>
                     )}
                   </div>
-                </ReviewSection>
+                </FormCard>
 
                 {/* Line Items Section */}
-                <ReviewSection
+                <FormCard
                   title="Step 2 - Line Items"
                   icon={ClipboardDocumentListIcon}
-                  editLink={`/admin/financial/${oid}/invoice/generate/step-2`}
+                  maxWidth="full"
+                  headerAction={
+                    <Link
+                      to={`/admin/financial/${oid}/invoice/generate/step-2`}
+                      className={`inline-flex items-center text-sm sm:text-base ${themeClasses.linkPrimary} transition-colors`}
+                    >
+                      <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                      Edit
+                    </Link>
+                  }
                 >
                   {activeLineItems.length > 0 ? (
                     <div className="space-y-4">
@@ -583,42 +503,42 @@ function AdminFinancialGenerateInvoiceStep4Page() {
                         <div
                           key={item.number}
                           className={`${
-                            index > 0 ? "pt-4 border-t border-gray-200" : ""
+                            index > 0 ? `pt-4 border-t ${themeClasses.borderLight}` : ""
                           }`}
                         >
-                          <p className="text-sm font-semibold text-gray-700 mb-2">
+                          <p className={`text-base font-semibold ${themeClasses.textSecondary} mb-2`}>
                             Line {item.number}
                           </p>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
                             <div>
-                              <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                              <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                                 Quantity:
                               </dt>
-                              <dd className="mt-1 text-sm sm:text-base text-gray-900">
+                              <dd className={`mt-1 text-base sm:text-lg ${themeClasses.textPrimary}`}>
                                 {item.quantity}
                               </dd>
                             </div>
                             <div>
-                              <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                              <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                                 Unit Price:
                               </dt>
-                              <dd className="mt-1 text-sm sm:text-base text-gray-900">
+                              <dd className={`mt-1 text-base sm:text-lg ${themeClasses.textPrimary}`}>
                                 {formatCurrency(item.unitPrice)}
                               </dd>
                             </div>
                             <div>
-                              <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                              <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                                 Amount:
                               </dt>
-                              <dd className="mt-1 text-sm sm:text-base text-gray-900 font-semibold">
+                              <dd className={`mt-1 text-base sm:text-lg ${themeClasses.textPrimary} font-semibold`}>
                                 {formatCurrency(item.amount)}
                               </dd>
                             </div>
                             <div>
-                              <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                              <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                                 Description:
                               </dt>
-                              <dd className="mt-1 text-sm sm:text-base text-gray-900">
+                              <dd className={`mt-1 text-base sm:text-lg ${themeClasses.textPrimary}`}>
                                 {item.description}
                               </dd>
                             </div>
@@ -627,56 +547,65 @@ function AdminFinancialGenerateInvoiceStep4Page() {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-xs sm:text-sm text-gray-500">
+                    <p className={`text-sm sm:text-base ${themeClasses.textMuted}`}>
                       No line items added
                     </p>
                   )}
-                </ReviewSection>
+                </FormCard>
 
                 {/* Financial Details & Signatures Section */}
-                <ReviewSection
+                <FormCard
                   title="Step 3 - Financial Details & Signatures"
                   icon={BanknotesIcon}
-                  editLink={`/admin/financial/${oid}/invoice/generate/step-3`}
+                  maxWidth="full"
+                  headerAction={
+                    <Link
+                      to={`/admin/financial/${oid}/invoice/generate/step-3`}
+                      className={`inline-flex items-center text-sm sm:text-base ${themeClasses.linkPrimary} transition-colors`}
+                    >
+                      <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                      Edit
+                    </Link>
+                  }
                 >
                   <div className="space-y-6">
                     {/* Financial Summary */}
                     <div>
-                      <h4 className="text-sm font-semibold text-gray-900 mb-3">
+                      <h4 className={`text-base font-semibold ${themeClasses.textPrimary} mb-3`}>
                         Financial Summary
                       </h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
                         <div>
-                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                          <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                             Labour Amount:
                           </dt>
-                          <dd className="mt-1 text-sm sm:text-base text-gray-900">
+                          <dd className={`mt-1 text-base sm:text-lg ${themeClasses.textPrimary}`}>
                             {formatCurrency(invoiceData.invoiceLabourAmount)}
                           </dd>
                         </div>
                         <div>
-                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                          <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                             Material Amount:
                           </dt>
-                          <dd className="mt-1 text-sm sm:text-base text-gray-900">
+                          <dd className={`mt-1 text-base sm:text-lg ${themeClasses.textPrimary}`}>
                             {formatCurrency(invoiceData.invoiceMaterialAmount)}
                           </dd>
                         </div>
                         <div>
-                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                          <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                             Other Costs:
                           </dt>
-                          <dd className="mt-1 text-sm sm:text-base text-gray-900">
+                          <dd className={`mt-1 text-base sm:text-lg ${themeClasses.textPrimary}`}>
                             {formatCurrency(
                               invoiceData.invoiceOtherCostsAmount,
                             )}
                           </dd>
                         </div>
                         <div>
-                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                          <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                             Sub-Total:
                           </dt>
-                          <dd className="mt-1 text-sm sm:text-base text-gray-900 font-semibold">
+                          <dd className={`mt-1 text-base sm:text-lg ${themeClasses.textPrimary} font-semibold`}>
                             {formatCurrency(
                               (parseFloat(invoiceData.invoiceLabourAmount) ||
                                 0) +
@@ -690,34 +619,34 @@ function AdminFinancialGenerateInvoiceStep4Page() {
                           </dd>
                         </div>
                         <div>
-                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                          <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                             Tax:
                           </dt>
-                          <dd className="mt-1 text-sm sm:text-base text-gray-900">
+                          <dd className={`mt-1 text-base sm:text-lg ${themeClasses.textPrimary}`}>
                             {formatCurrency(invoiceData.invoiceTaxAmount)}
                           </dd>
                         </div>
                         <div>
-                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                          <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                             Total:
                           </dt>
-                          <dd className="mt-1 text-sm sm:text-base text-gray-900 font-bold text-green-600">
+                          <dd className={`mt-1 text-base sm:text-lg font-bold ${themeClasses.textSuccess}`}>
                             {formatCurrency(invoiceData.invoiceTotalAmount)}
                           </dd>
                         </div>
                         <div>
-                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                          <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                             Deposit:
                           </dt>
-                          <dd className="mt-1 text-sm sm:text-base text-gray-900">
+                          <dd className={`mt-1 text-base sm:text-lg ${themeClasses.textPrimary}`}>
                             {formatCurrency(invoiceData.invoiceDepositAmount)}
                           </dd>
                         </div>
                         <div>
-                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                          <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                             Amount Due:
                           </dt>
-                          <dd className="mt-1 text-sm sm:text-base text-gray-900 font-bold text-red-600">
+                          <dd className={`mt-1 text-base sm:text-lg font-bold ${themeClasses.textDanger}`}>
                             {formatCurrency(invoiceData.invoiceAmountDue)}
                           </dd>
                         </div>
@@ -725,67 +654,67 @@ function AdminFinancialGenerateInvoiceStep4Page() {
                     </div>
 
                     {/* Quote & Payment Details */}
-                    <div className="border-t pt-4">
-                      <h4 className="text-sm font-semibold text-gray-900 mb-3">
+                    <div className={`border-t ${themeClasses.borderLight} pt-4`}>
+                      <h4 className={`text-base font-semibold ${themeClasses.textPrimary} mb-3`}>
                         Quote & Payment Details
                       </h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
                         <div>
-                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                          <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                             Quote Valid For:
                           </dt>
-                          <dd className="mt-1 text-sm sm:text-base text-gray-900">
+                          <dd className={`mt-1 text-base sm:text-lg ${themeClasses.textPrimary}`}>
                             {invoiceData.invoiceQuoteDays} days
                           </dd>
                         </div>
                         <div>
-                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                          <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                             Date of Quote Approval:
                           </dt>
-                          <dd className="mt-1 text-sm sm:text-base text-gray-900">
+                          <dd className={`mt-1 text-base sm:text-lg ${themeClasses.textPrimary}`}>
                             {invoiceData.invoiceQuoteDate}
                           </dd>
                         </div>
                         <div>
-                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                          <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                             Customer Approval:
                           </dt>
-                          <dd className="mt-1 text-sm sm:text-base text-gray-900">
+                          <dd className={`mt-1 text-base sm:text-lg ${themeClasses.textPrimary}`}>
                             {invoiceData.invoiceCustomersApproval}
                           </dd>
                         </div>
                         <div>
-                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                          <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                             Date Client Paid:
                           </dt>
-                          <dd className="mt-1 text-sm sm:text-base text-gray-900">
+                          <dd className={`mt-1 text-base sm:text-lg ${themeClasses.textPrimary}`}>
                             {invoiceData.dateClientPaidInvoice}
                           </dd>
                         </div>
                         <div>
-                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                          <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                             Payment Methods:
                           </dt>
-                          <dd className="mt-1 text-sm sm:text-base text-gray-900">
+                          <dd className={`mt-1 text-base sm:text-lg ${themeClasses.textPrimary}`}>
                             {getPaymentMethodLabels(invoiceData.paymentMethods)}
                           </dd>
                         </div>
                         {invoiceData.line01Notes && (
                           <div className="sm:col-span-2">
-                            <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                            <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                               Line 01 Notes:
                             </dt>
-                            <dd className="mt-1 text-sm sm:text-base text-gray-900">
+                            <dd className={`mt-1 text-base sm:text-lg ${themeClasses.textPrimary}`}>
                               {invoiceData.line01Notes}
                             </dd>
                           </div>
                         )}
                         {invoiceData.line02Notes && (
                           <div className="sm:col-span-2">
-                            <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                            <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                               Line 02 Notes:
                             </dt>
-                            <dd className="mt-1 text-sm sm:text-base text-gray-900">
+                            <dd className={`mt-1 text-base sm:text-lg ${themeClasses.textPrimary}`}>
                               {invoiceData.line02Notes}
                             </dd>
                           </div>
@@ -794,74 +723,77 @@ function AdminFinancialGenerateInvoiceStep4Page() {
                     </div>
 
                     {/* Signatures */}
-                    <div className="border-t pt-4">
-                      <h4 className="text-sm font-semibold text-gray-900 mb-3">
+                    <div className={`border-t ${themeClasses.borderLight} pt-4`}>
+                      <h4 className={`text-base font-semibold ${themeClasses.textPrimary} mb-3`}>
                         Signatures
                       </h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 sm:gap-x-6 gap-y-2">
                         <div>
-                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                          <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                             Client Signature:
                           </dt>
-                          <dd className="mt-1 text-sm sm:text-base text-gray-900">
+                          <dd className={`mt-1 text-base sm:text-lg ${themeClasses.textPrimary}`}>
                             {invoiceData.clientSignature}
                           </dd>
                         </div>
                         <div>
-                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                          <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                             Associate Signature:
                           </dt>
-                          <dd className="mt-1 text-sm sm:text-base text-gray-900">
+                          <dd className={`mt-1 text-base sm:text-lg ${themeClasses.textPrimary}`}>
                             {invoiceData.associateSignature}
                           </dd>
                         </div>
                         <div>
-                          <dt className="text-xs sm:text-sm font-medium text-gray-500">
+                          <dt className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                             Associate Sign Date:
                           </dt>
-                          <dd className="mt-1 text-sm sm:text-base text-gray-900">
+                          <dd className={`mt-1 text-base sm:text-lg ${themeClasses.textPrimary}`}>
                             {invoiceData.associateSignDate}
                           </dd>
                         </div>
                       </div>
                     </div>
                   </div>
-                </ReviewSection>
+                </FormCard>
 
-                {/* Form Actions - Responsive */}
-                <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 gap-3">
-                  <button
+                {/* Form Actions */}
+                <div className={`flex flex-col sm:flex-row justify-between items-stretch sm:items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t ${themeClasses.borderLight} gap-3`}>
+                  <Button
+                    type="button"
+                    variant="secondary"
                     onClick={handleBack}
                     disabled={isSubmitting}
-                    className="order-2 sm:order-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="order-2 sm:order-1"
                   >
                     <ChevronLeftIcon className="w-4 h-4 mr-2" />
                     Back to Step 3
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="success"
                     onClick={handleSubmit}
                     disabled={isSubmitting}
-                    className="order-1 sm:order-2 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 transition-colors"
+                    className="order-1 sm:order-2"
                   >
                     <CheckCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
                     {isEditMode ? "Update Invoice" : "Submit Invoice"}
-                  </button>
+                  </Button>
                 </div>
               </div>
             )}
-          </div>
-        </div>
+          </FormCard>
 
-        {/* Back Link */}
-        <div className="mt-6">
-          <Link
-            to={`/admin/financial/${oid}/invoice`}
-            className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
-          >
-            <ChevronLeftIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-            Back to Invoice
-          </Link>
-        </div>
+          {/* Back Link */}
+          <div className="mt-6">
+            <BackButton
+              to={`/admin/financial/${oid}/invoice`}
+              size="sm"
+            >
+              Back to Invoice
+            </BackButton>
+          </div>
+        </StepWizard>
       </div>
     </div>
   );

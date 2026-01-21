@@ -38,10 +38,10 @@ const SearchCriteriaPills = memo(function SearchCriteriaPills({
   // Memoize theme classes
   const themeClasses = useMemo(
     () => ({
-      textPrimary: getThemeClasses("text-primary") || "text-gray-800",
-      pillBg: getThemeClasses("pill-bg") || "bg-gradient-to-r from-blue-100 to-blue-200",
-      pillText: getThemeClasses("pill-text") || "text-blue-800",
-      pillBorder: getThemeClasses("pill-border") || "border-blue-200",
+      textPrimary: getThemeClasses("text-primary") || "text-gray-800 dark:text-gray-100",
+      pillBg: getThemeClasses("pill-bg") || "bg-gradient-to-r from-blue-100 to-blue-200 dark:from-blue-900 dark:to-blue-800",
+      pillText: getThemeClasses("pill-text") || "text-blue-800 dark:text-blue-200",
+      pillBorder: getThemeClasses("pill-border") || "border-blue-200 dark:border-blue-700",
     }),
     [getThemeClasses],
   );

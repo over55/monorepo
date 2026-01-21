@@ -68,13 +68,13 @@ const Input = memo(function Input({
       textDanger: getThemeClasses("text-danger"),
       textMuted: getThemeClasses("text-muted"),
       textSecondary: getThemeClasses("text-secondary"),
-      textWarning: getThemeClasses("text-warning") || "text-amber-600",
+      textWarning: getThemeClasses("text-warning") || "text-amber-600 dark:text-amber-400",
       inputFocusRing: getThemeClasses("input-focus-ring"),
       inputBorder: getThemeClasses("input-border"),
       inputBorderError: getThemeClasses("input-border-error"),
       bgDisabled: getThemeClasses("bg-disabled"),
-      bgCard: getThemeClasses("bg-card") || "bg-white",
-      placeholderColor: getThemeClasses("placeholder-color") || "placeholder-gray-500",
+      bgCard: getThemeClasses("bg-card") || "bg-white dark:bg-gray-800",
+      placeholderColor: getThemeClasses("placeholder-color") || "placeholder-gray-500 dark:placeholder-gray-400",
     }),
     [getThemeClasses],
   );
@@ -127,6 +127,25 @@ const Input = memo(function Input({
     // Mobile optimizations: text-base ensures 16px font (prevents iOS zoom), touch-manipulation prevents double-tap zoom
     return `w-full ${sizeClasses[size]} ${leftPadding} ${rightPadding} border-2 rounded-xl shadow-sm transition-all duration-200 ${themeClasses.placeholderColor} focus:outline-none ${themeClasses.inputFocusRing} ${borderClass} ${bgClass} text-base touch-manipulation`;
   }, [error, disabled, size, Icon, rightIcon, themeClasses, sizeClasses]);
+
+  // Memoize input styles - includes spinner hiding for number inputs
+  // TODO: Uncomment to hide spinner arrows on number inputs globally
+  // const inputStyle = useMemo(() => {
+  //   const baseStyle = {
+  //     WebkitTapHighlightColor: 'transparent',
+  //     WebkitAppearance: 'none',
+  //   };
+  //
+  //   // Hide spinner arrows on number inputs
+  //   if (type === 'number') {
+  //     return {
+  //       ...baseStyle,
+  //       MozAppearance: 'textfield', // Firefox
+  //     };
+  //   }
+  //
+  //   return baseStyle;
+  // }, [type]);
 
   return (
     <div className={className}>

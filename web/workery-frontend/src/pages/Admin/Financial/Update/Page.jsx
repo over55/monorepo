@@ -1,16 +1,30 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Financial/Update/Page.jsx
 // @uix-page: FinancialUpdatePage
-// UIX Upgraded - Uses UIX primitives (Spinner, Breadcrumb)
+// UIX Upgraded - Full UIX conversion
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useParams, useNavigate } from "react-router";
-import { Spinner, Breadcrumb, UIXThemeProvider, useUIXTheme } from "../../../../components/UIX";
+import {
+  Spinner,
+  Breadcrumb,
+  UIXThemeProvider,
+  useUIXTheme,
+  PageHeader,
+  FormCard,
+  Alert,
+  Button,
+  BackButton,
+  Input,
+  Select,
+  RadioGroup,
+  DatePicker,
+  Checkbox,
+} from "../../../../components/UIX";
 import {
   ChartBarIcon,
   CurrencyDollarIcon,
   InformationCircleIcon,
   PencilSquareIcon,
-  ChevronLeftIcon,
   CheckCircleIcon,
   XCircleIcon,
   DocumentTextIcon,
@@ -19,11 +33,7 @@ import {
   BanknotesIcon,
   ClipboardDocumentCheckIcon,
   CreditCardIcon,
-  ExclamationTriangleIcon,
   ArchiveBoxIcon,
-  EllipsisHorizontalIcon,
-  ChatBubbleLeftRightIcon,
-  PaperClipIcon,
   UserGroupIcon,
   BuildingOfficeIcon,
 } from "@heroicons/react/24/outline";
@@ -62,6 +72,14 @@ function AdminFinancialUpdatePage() {
     textPrimary: getThemeClasses("text-primary"),
     textSecondary: getThemeClasses("text-secondary"),
     linkPrimary: getThemeClasses("link-primary"),
+    textDanger: getThemeClasses("text-danger") || "text-red-600 dark:text-red-400",
+    textSuccess: getThemeClasses("text-success") || "text-green-600 dark:text-green-400",
+    textWarning: getThemeClasses("text-warning") || "text-yellow-600 dark:text-yellow-400",
+    textRequired: "text-red-500 dark:text-red-400",
+    inputFocus: "focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400",
+    inputChecked: "text-blue-600 dark:text-blue-400",
+    borderError: "border-red-300 dark:border-red-500",
+    borderNormal: "border-gray-300 dark:border-gray-600",
   }), [getThemeClasses]);
 
   // Breadcrumb items
@@ -443,19 +461,6 @@ function AdminFinancialUpdatePage() {
               Math.max(0, financialData.invoiceBalanceOwingAmount || 0), // Ensure non-negative
             );
 
-            // Set the service fee object if ID exists
-            if (financialData.invoiceServiceFeeId) {
-              // Find from available service fees if already loaded
-              const foundFee = availableServiceFees.find(
-                (fee) => fee.id === financialData.invoiceServiceFeeId,
-              );
-              if (foundFee) {
-                setInvoiceServiceFee(foundFee);
-              } else {
-                // Fetch if not in the list (for backward compatibility)
-                await fetchServiceFeeDetails(financialData.invoiceServiceFeeId);
-              }
-            }
           }
         } catch (error) {
           console.error("Failed to fetch financial details:", error);
@@ -476,7 +481,22 @@ function AdminFinancialUpdatePage() {
     return () => {
       mounted = false;
     };
-  }, [orderWJID, onPageLoaded, availableServiceFees]);
+  }, [orderWJID, onPageLoaded]);
+
+  // Set the service fee object when both financial data and available service fees are loaded
+  useEffect(() => {
+    if (financial && financial.invoiceServiceFeeId && availableServiceFees.length > 0 && !invoiceServiceFee) {
+      const foundFee = availableServiceFees.find(
+        (fee) => fee.id === financial.invoiceServiceFeeId,
+      );
+      if (foundFee) {
+        setInvoiceServiceFee(foundFee);
+      } else {
+        // Fetch if not in the list (for backward compatibility)
+        fetchServiceFeeDetails(financial.invoiceServiceFeeId);
+      }
+    }
+  }, [financial, availableServiceFees, invoiceServiceFee]);
 
   // FIXED: Separate useEffect for calculations that always runs
   // This ensures calculations run whenever any relevant field changes
@@ -755,7 +775,7 @@ function AdminFinancialUpdatePage() {
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <Spinner size="lg" />
-            <p className="mt-4 text-gray-600">Loading financial details...</p>
+            <p className={`mt-4 ${themeClasses.textSecondary}`}>Loading financial details...</p>
           </div>
         </div>
       </div>
@@ -767,135 +787,68 @@ function AdminFinancialUpdatePage() {
       {/* Breadcrumb */}
       <Breadcrumb items={breadcrumbItems} className="mb-6" />
 
-      {/* Page Title */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-              <CurrencyDollarIcon className="w-8 h-8 mr-3 text-blue-600" />
-              Financial Record
-            </h1>
-            <p className="mt-1 text-sm text-gray-600 flex items-center">
-              <PencilSquareIcon className="w-4 h-4 mr-1" />
-              Update financial information #{fid}
-              {financial && financial.orderId && (
-                <span className="ml-2">
-                  (Related to Order #{financial.orderId})
-                </span>
-              )}
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* Page Header */}
+      <PageHeader
+        icon={CurrencyDollarIcon}
+        title="Financial Record"
+        subtitle={`Update financial information #${fid}${financial?.orderId ? ` (Related to Order #${financial.orderId})` : ""}`}
+        actions={[
+          <BackButton key="back" to={`/admin/financial/${fid}`} label="Back to Detail" size="md" />
+        ]}
+      />
 
       {/* Alert Messages */}
       {isFinancialArchived() && (
-        <div className="mb-4 px-4 py-3 rounded-lg bg-yellow-50 border border-yellow-200 text-yellow-700">
-          <div className="flex items-center">
-            <ArchiveBoxIcon className="w-5 h-5 mr-2" />
-            <span>This financial record is archived.</span>
-          </div>
-        </div>
+        <Alert type="warning" icon={ArchiveBoxIcon}>
+          This financial record is archived.
+        </Alert>
       )}
 
       {alert && (
-        <div
-          className={`mb-4 px-4 py-3 rounded-lg ${
-            alert.type === "success"
-              ? "bg-green-50 border border-green-200 text-green-700"
-              : "bg-red-50 border border-red-200 text-red-700"
-          }`}
+        <Alert
+          type={alert.type}
+          icon={alert.type === "success" ? CheckCircleIcon : XCircleIcon}
+          dismissible
+          onDismiss={() => setAlert(null)}
         >
-          <div className="flex justify-between items-start">
-            <div className="flex items-start">
-              {alert.type === "success" ? (
-                <CheckCircleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
-              ) : (
-                <XCircleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
-              )}
-              <div className="flex-1">
-                <span className="font-medium">
-                  {alert.type === "error"
-                    ? "Please fix the following errors:"
-                    : "Success!"}
-                </span>
-                <div className="mt-1 text-sm">{alert.message}</div>
-              </div>
-            </div>
-            <button
-              onClick={() => setAlert(null)}
-              className="text-current hover:opacity-70 text-xl ml-4"
-            >
-              ×
-            </button>
-          </div>
-        </div>
+          <span className="font-medium">
+            {alert.type === "error" ? "Please fix the following errors:" : "Success!"}
+          </span>
+          <div className="mt-1 text-sm">{alert.message}</div>
+        </Alert>
       )}
 
       {/* Detailed Error display (only if there are errors and no alert) */}
       {errors && Object.keys(errors).length > 0 && !alert && (
-        <div className="mb-4 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-700">
-          <div className="flex items-start mb-2">
-            <ExclamationTriangleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <span className="font-medium">
-                Please correct the following errors:
-              </span>
-              <ul className="mt-2 list-disc list-inside space-y-1 text-sm">
-                {Object.keys(errors).map((key) => {
-                  const fieldName =
-                    key === "general"
-                      ? ""
-                      : key
-                          .replace(/([A-Z])/g, " $1")
-                          .replace(/^./, (str) => str.toUpperCase()) + ": ";
-                  return (
-                    <li key={key}>
-                      <span className="font-medium">{fieldName}</span>
-                      {errors[key]}
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          </div>
-        </div>
+        <Alert type="error">
+          <span className="font-medium">Please correct the following errors:</span>
+          <ul className="mt-2 list-disc list-inside space-y-1 text-sm">
+            {Object.keys(errors).map((key) => {
+              const fieldName =
+                key === "general"
+                  ? ""
+                  : key.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase()) + ": ";
+              return (
+                <li key={key}>
+                  <span className="font-medium">{fieldName}</span>
+                  {errors[key]}
+                </li>
+              );
+            })}
+          </ul>
+        </Alert>
       )}
 
       {/* Main Content */}
       {financial && (
-        <div className="bg-white shadow-sm rounded-lg">
-          {/* Header */}
-          <div className="px-6 py-5 border-b border-gray-200">
-            <div className="flex justify-between items-center flex-wrap gap-4">
-              <h2 className="text-2xl font-semibold text-gray-900 flex items-center">
-                <PencilSquareIcon className="w-7 h-7 mr-2 text-blue-600" />
-                Update Financial Information
-              </h2>
-              <Link to={`/admin/financial/${fid}`}>
-                <button className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                  <ChevronLeftIcon className="w-5 h-5 mr-2" />
-                  Back to Detail
-                </button>
-              </Link>
-            </div>
-          </div>
-
-          <form onSubmit={handleSubmit} className="p-6">
-            {/* General Section */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-              <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 rounded-t-lg">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <DocumentTextIcon className="w-5 h-5 mr-2 text-blue-600" />
-                  General
-                </h3>
-              </div>
-              <div className="p-6">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* General Section */}
+          <FormCard title="General" icon={DocumentTextIcon}>
                 <div className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
                       Who was paid for this job?{" "}
-                      <span className="text-red-500">*</span>
+                      <span className="text-red-500 dark:text-red-400">*</span>
                     </label>
                     <div className="space-x-6">
                       <label className="inline-flex items-center">
@@ -906,9 +859,9 @@ function AdminFinancialUpdatePage() {
                           onChange={(e) =>
                             setInvoicePaidTo(parseInt(e.target.value))
                           }
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
                         />
-                        <span className="ml-2 text-sm text-gray-700">
+                        <span className="ml-2 text-base text-gray-700 dark:text-gray-200">
                           <UserGroupIcon className="inline w-4 h-4 mr-1" />
                           Associate
                         </span>
@@ -923,25 +876,25 @@ function AdminFinancialUpdatePage() {
                           onChange={(e) =>
                             setInvoicePaidTo(parseInt(e.target.value))
                           }
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
                         />
-                        <span className="ml-2 text-sm text-gray-700">
+                        <span className="ml-2 text-base text-gray-700 dark:text-gray-200">
                           <BuildingOfficeIcon className="inline w-4 h-4 mr-1" />
                           Organization
                         </span>
                       </label>
                     </div>
                     {errors.invoicePaidTo && (
-                      <p className="mt-1 text-sm text-red-600">
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                         {errors.invoicePaidTo}
                       </p>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
                       What is the service fee payment status of this job?{" "}
-                      <span className="text-red-500">*</span>
+                      <span className="text-red-500 dark:text-red-400">*</span>
                     </label>
                     <div className="space-x-6">
                       <label className="inline-flex items-center">
@@ -954,10 +907,10 @@ function AdminFinancialUpdatePage() {
                           onChange={(e) =>
                             setPaymentStatus(parseInt(e.target.value))
                           }
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
                         />
-                        <span className="ml-2 text-sm text-gray-700">
-                          <CheckCircleIcon className="inline w-4 h-4 mr-1 text-green-600" />
+                        <span className="ml-2 text-base text-gray-700 dark:text-gray-200">
+                          <CheckCircleIcon className="inline w-4 h-4 mr-1 text-green-600 dark:text-green-400" />
                           Paid
                         </span>
                       </label>
@@ -971,16 +924,16 @@ function AdminFinancialUpdatePage() {
                           onChange={(e) =>
                             setPaymentStatus(parseInt(e.target.value))
                           }
-                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
                         />
-                        <span className="ml-2 text-sm text-gray-700">
-                          <XCircleIcon className="inline w-4 h-4 mr-1 text-yellow-600" />
+                        <span className="ml-2 text-base text-gray-700 dark:text-gray-200">
+                          <XCircleIcon className="inline w-4 h-4 mr-1 text-yellow-600 dark:text-yellow-400" />
                           Unpaid
                         </span>
                       </label>
                     </div>
                     {errors.paymentStatus && (
-                      <p className="mt-1 text-sm text-red-600">
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                         {errors.paymentStatus}
                       </p>
                     )}
@@ -989,21 +942,21 @@ function AdminFinancialUpdatePage() {
                   {paymentStatus === ORDER_STATUS_COMPLETED_AND_PAID && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
                           Completion Date
                         </label>
                         <input
                           type="date"
                           value={formatDateForInput(completionDate)}
                           onChange={(e) => setCompletionDate(e.target.value)}
-                          className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
+                          className={`block w-full px-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
                             errors.completionDate
-                              ? "border-red-300"
-                              : "border-gray-300"
+                              ? "border-red-300 dark:border-red-500"
+                              : "border-gray-300 dark:border-gray-600"
                           }`}
                         />
                         {errors.completionDate && (
-                          <p className="mt-1 text-sm text-red-600">
+                          <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                             {errors.completionDate}
                           </p>
                         )}
@@ -1013,74 +966,66 @@ function AdminFinancialUpdatePage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Invoice Date <span className="text-red-500">*</span>
+                      <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                        Invoice Date <span className="text-red-500 dark:text-red-400">*</span>
                       </label>
                       <input
                         type="date"
                         value={formatDateForInput(invoiceDate)}
                         onChange={(e) => setInvoiceDate(e.target.value)}
-                        className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
+                        className={`block w-full px-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
                           errors.invoiceDate
-                            ? "border-red-300"
-                            : "border-gray-300"
+                            ? "border-red-300 dark:border-red-500"
+                            : "border-gray-300 dark:border-gray-600"
                         }`}
                         required
                       />
                       {errors.invoiceDate && (
-                        <p className="mt-1 text-sm text-red-600">
+                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                           {errors.invoiceDate}
                         </p>
                       )}
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Invoice IDs <span className="text-red-500">*</span>
+                      <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                        Invoice IDs <span className="text-red-500 dark:text-red-400">*</span>
                       </label>
                       <input
                         type="text"
                         value={invoiceIds}
                         onChange={(e) => setInvoiceIds(e.target.value)}
                         placeholder="Enter invoice ID"
-                        className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
+                        className={`block w-full px-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
                           errors.invoiceIds
-                            ? "border-red-300"
-                            : "border-gray-300"
+                            ? "border-red-300 dark:border-red-500"
+                            : "border-gray-300 dark:border-gray-600"
                         }`}
                         required
                       />
                       {errors.invoiceIds && (
-                        <p className="mt-1 text-sm text-red-600">
+                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                           {errors.invoiceIds}
                         </p>
                       )}
-                      <p className="mt-1 text-xs text-gray-500">
+                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                         The system automatically generates an ID if not provided
                       </p>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
+          </FormCard>
 
-            {/* Quote Section */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-              <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 rounded-t-lg">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <ClipboardDocumentCheckIcon className="w-5 h-5 mr-2 text-blue-600" />
-                  Quote
-                </h3>
-              </div>
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Quote Section */}
+          <FormCard title="Quote" icon={ClipboardDocumentCheckIcon}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Quoted Labour <span className="text-red-500">*</span>
+                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                      Quoted Labour <span className="text-red-500 dark:text-red-400">*</span>
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500">$</span>
+                        <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
                       </div>
                       <input
                         type="number"
@@ -1090,31 +1035,31 @@ function AdminFinancialUpdatePage() {
                           setInvoiceQuotedLabourAmount(e.target.value)
                         }
                         placeholder="0.00"
-                        className={`block w-full pl-7 pr-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
+                        className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
                           errors.invoiceQuotedLabourAmount
-                            ? "border-red-300"
-                            : "border-gray-300"
+                            ? "border-red-300 dark:border-red-500"
+                            : "border-gray-300 dark:border-gray-600"
                         }`}
                         required
                       />
                     </div>
                     {errors.invoiceQuotedLabourAmount && (
-                      <p className="mt-1 text-sm text-red-600">
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                         {errors.invoiceQuotedLabourAmount}
                       </p>
                     )}
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                       If no quoted labour costs, enter 0
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Quoted Materials <span className="text-red-500">*</span>
+                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                      Quoted Materials <span className="text-red-500 dark:text-red-400">*</span>
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500">$</span>
+                        <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
                       </div>
                       <input
                         type="number"
@@ -1124,31 +1069,31 @@ function AdminFinancialUpdatePage() {
                           setInvoiceQuotedMaterialAmount(e.target.value)
                         }
                         placeholder="0.00"
-                        className={`block w-full pl-7 pr-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
+                        className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
                           errors.invoiceQuotedMaterialAmount
-                            ? "border-red-300"
-                            : "border-gray-300"
+                            ? "border-red-300 dark:border-red-500"
+                            : "border-gray-300 dark:border-gray-600"
                         }`}
                         required
                       />
                     </div>
                     {errors.invoiceQuotedMaterialAmount && (
-                      <p className="mt-1 text-sm text-red-600">
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                         {errors.invoiceQuotedMaterialAmount}
                       </p>
                     )}
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                       If no quoted material costs, enter 0
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Quoted Other Costs <span className="text-red-500">*</span>
+                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                      Quoted Other Costs <span className="text-red-500 dark:text-red-400">*</span>
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500">$</span>
+                        <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
                       </div>
                       <input
                         type="number"
@@ -1158,66 +1103,58 @@ function AdminFinancialUpdatePage() {
                           setInvoiceQuotedOtherCostsAmount(e.target.value)
                         }
                         placeholder="0.00"
-                        className={`block w-full pl-7 pr-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
+                        className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
                           errors.invoiceQuotedOtherCostsAmount
-                            ? "border-red-300"
-                            : "border-gray-300"
+                            ? "border-red-300 dark:border-red-500"
+                            : "border-gray-300 dark:border-gray-600"
                         }`}
                         required
                       />
                     </div>
                     {errors.invoiceQuotedOtherCostsAmount && (
-                      <p className="mt-1 text-sm text-red-600">
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                         {errors.invoiceQuotedOtherCostsAmount}
                       </p>
                     )}
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                       If no quoted other costs, enter 0
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Total Quoted <span className="text-red-500">*</span>
+                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                      Total Quoted <span className="text-red-500 dark:text-red-400">*</span>
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500">$</span>
+                        <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
                       </div>
                       <input
                         type="number"
                         step="0.01"
                         value={invoiceTotalQuoteAmount}
                         disabled
-                        className="block w-full pl-7 pr-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-700"
+                        className="block w-full pl-8 pr-4 py-3 text-base sm:text-lg border border-gray-200 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200"
                       />
                     </div>
-                    <p className="mt-1 text-xs text-gray-500 flex items-center">
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 flex items-center">
                       <CalculatorIcon className="w-3 h-3 mr-1" />
                       Automatically calculated
                     </p>
                   </div>
-                </div>
-              </div>
             </div>
+          </FormCard>
 
-            {/* Actual Section */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-              <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 rounded-t-lg">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <BanknotesIcon className="w-5 h-5 mr-2 text-blue-600" />
-                  Actual
-                </h3>
-              </div>
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Actual Section */}
+          <FormCard title="Actual" icon={BanknotesIcon}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Actual Labour <span className="text-red-500">*</span>
+                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                      Actual Labour <span className="text-red-500 dark:text-red-400">*</span>
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500">$</span>
+                        <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
                       </div>
                       <input
                         type="number"
@@ -1225,31 +1162,31 @@ function AdminFinancialUpdatePage() {
                         value={invoiceLabourAmount}
                         onChange={(e) => setInvoiceLabourAmount(e.target.value)}
                         placeholder="0.00"
-                        className={`block w-full pl-7 pr-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
+                        className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
                           errors.invoiceLabourAmount
-                            ? "border-red-300"
-                            : "border-gray-300"
+                            ? "border-red-300 dark:border-red-500"
+                            : "border-gray-300 dark:border-gray-600"
                         }`}
                         required
                       />
                     </div>
                     {errors.invoiceLabourAmount && (
-                      <p className="mt-1 text-sm text-red-600">
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                         {errors.invoiceLabourAmount}
                       </p>
                     )}
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                       If no actual labour costs, enter 0
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Actual Material <span className="text-red-500">*</span>
+                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                      Actual Material <span className="text-red-500 dark:text-red-400">*</span>
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500">$</span>
+                        <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
                       </div>
                       <input
                         type="number"
@@ -1259,31 +1196,31 @@ function AdminFinancialUpdatePage() {
                           setInvoiceMaterialAmount(e.target.value)
                         }
                         placeholder="0.00"
-                        className={`block w-full pl-7 pr-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
+                        className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
                           errors.invoiceMaterialAmount
-                            ? "border-red-300"
-                            : "border-gray-300"
+                            ? "border-red-300 dark:border-red-500"
+                            : "border-gray-300 dark:border-gray-600"
                         }`}
                         required
                       />
                     </div>
                     {errors.invoiceMaterialAmount && (
-                      <p className="mt-1 text-sm text-red-600">
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                         {errors.invoiceMaterialAmount}
                       </p>
                     )}
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                       If no material costs were incurred, enter 0
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Actual Other Costs <span className="text-red-500">*</span>
+                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                      Actual Other Costs <span className="text-red-500 dark:text-red-400">*</span>
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500">$</span>
+                        <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
                       </div>
                       <input
                         type="number"
@@ -1293,27 +1230,27 @@ function AdminFinancialUpdatePage() {
                           setInvoiceOtherCostsAmount(e.target.value)
                         }
                         placeholder="0.00"
-                        className={`block w-full pl-7 pr-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
+                        className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
                           errors.invoiceOtherCostsAmount
-                            ? "border-red-300"
-                            : "border-gray-300"
+                            ? "border-red-300 dark:border-red-500"
+                            : "border-gray-300 dark:border-gray-600"
                         }`}
                         required
                       />
                     </div>
                     {errors.invoiceOtherCostsAmount && (
-                      <p className="mt-1 text-sm text-red-600">
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                         {errors.invoiceOtherCostsAmount}
                       </p>
                     )}
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                       If no other costs were incurred, enter 0
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Actual Tax <span className="text-red-500">*</span>
+                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                      Actual Tax <span className="text-red-500 dark:text-red-400">*</span>
                       {taxRate > 0 && (
                         <span className="text-xs text-gray-500 ml-2">
                           (Tax rate: {taxRate}%
@@ -1323,7 +1260,7 @@ function AdminFinancialUpdatePage() {
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500">$</span>
+                        <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
                       </div>
                       <input
                         type="number"
@@ -1332,18 +1269,18 @@ function AdminFinancialUpdatePage() {
                         onChange={(e) => setInvoiceTaxAmount(e.target.value)}
                         placeholder="0.00"
                         disabled={!invoiceIsCustomTaxAmount}
-                        className={`block w-full pl-7 pr-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
-                          !invoiceIsCustomTaxAmount ? "bg-gray-50" : ""
-                        } ${errors.invoiceTaxAmount ? "border-red-300" : "border-gray-300"}`}
+                        className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                          !invoiceIsCustomTaxAmount ? "bg-gray-50 dark:bg-gray-800" : ""
+                        } ${errors.invoiceTaxAmount ? "border-red-300 dark:border-red-500" : "border-gray-300 dark:border-gray-600"}`}
                         required
                       />
                     </div>
                     {errors.invoiceTaxAmount && (
-                      <p className="mt-1 text-sm text-red-600">
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                         {errors.invoiceTaxAmount}
                       </p>
                     )}
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                       {!invoiceIsCustomTaxAmount
                         ? `Tax is automatically calculated at ${taxRate}%`
                         : "Using custom tax amount"}
@@ -1358,9 +1295,9 @@ function AdminFinancialUpdatePage() {
                         onChange={(e) =>
                           setInvoiceIsCustomTaxAmount(e.target.checked)
                         }
-                        className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
                       />
-                      <span className="ml-2 text-sm text-gray-700">
+                      <span className="ml-2 text-base text-gray-700 dark:text-gray-200">
                         Custom Actual Tax? (Override automatic calculation with
                         custom value)
                       </span>
@@ -1368,20 +1305,20 @@ function AdminFinancialUpdatePage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
                       Actual Total Amount{" "}
-                      <span className="text-red-500">*</span>
+                      <span className="text-red-500 dark:text-red-400">*</span>
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500">$</span>
+                        <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
                       </div>
                       <input
                         type="number"
                         step="0.01"
                         value={invoiceTotalAmount}
                         disabled
-                        className={`block w-full pl-7 pr-3 py-2 border rounded-lg bg-gray-50 text-gray-700 ${
+                        className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl bg-gray-50 text-gray-700 ${
                           errors.invoiceTotalAmount || errors.amount
                             ? "border-red-300"
                             : "border-gray-200"
@@ -1389,24 +1326,24 @@ function AdminFinancialUpdatePage() {
                       />
                     </div>
                     {(errors.invoiceTotalAmount || errors.amount) && (
-                      <p className="mt-1 text-sm text-red-600">
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                         {errors.invoiceTotalAmount || errors.amount}
                       </p>
                     )}
-                    <p className="mt-1 text-xs text-gray-500 flex items-center">
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 flex items-center">
                       <CalculatorIcon className="w-3 h-3 mr-1" />
                       Automatically calculated
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
                       Actual Deposit Amount{" "}
-                      <span className="text-red-500">*</span>
+                      <span className="text-red-500 dark:text-red-400">*</span>
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500">$</span>
+                        <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
                       </div>
                       <input
                         type="number"
@@ -1416,49 +1353,49 @@ function AdminFinancialUpdatePage() {
                           setInvoiceDepositAmount(e.target.value)
                         }
                         placeholder="0.00"
-                        className={`block w-full pl-7 pr-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
+                        className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
                           errors.invoiceDepositAmount
-                            ? "border-red-300"
-                            : "border-gray-300"
+                            ? "border-red-300 dark:border-red-500"
+                            : "border-gray-300 dark:border-gray-600"
                         }`}
                         required
                       />
                     </div>
                     {errors.invoiceDepositAmount && (
-                      <p className="mt-1 text-sm text-red-600">
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                         {errors.invoiceDepositAmount}
                       </p>
                     )}
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                       If no deposit, enter 0
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Actual Amount Due <span className="text-red-500">*</span>
+                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                      Actual Amount Due <span className="text-red-500 dark:text-red-400">*</span>
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500">$</span>
+                        <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
                       </div>
                       <input
                         type="number"
                         step="0.01"
                         value={invoiceAmountDue}
                         disabled
-                        className="block w-full pl-7 pr-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-700"
+                        className="block w-full pl-8 pr-4 py-3 text-base sm:text-lg border border-gray-200 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200"
                       />
                     </div>
-                    <p className="mt-1 text-xs text-gray-500 flex items-center">
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 flex items-center">
                       <CalculatorIcon className="w-3 h-3 mr-1" />
                       Total amount minus deposit
                     </p>
                   </div>
 
                   <div className="md:col-span-2">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Payment Method(s) <span className="text-red-500">*</span>
+                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                      Payment Method(s) <span className="text-red-500 dark:text-red-400">*</span>
                     </label>
                     <div className="space-y-2">
                       {ORDER_INVOICE_PAYMENT_METHODS_OPTIONS.map((option) => (
@@ -1477,9 +1414,9 @@ function AdminFinancialUpdatePage() {
                                 );
                               }
                             }}
-                            className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                            className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
                           />
-                          <span className="ml-2 text-sm text-gray-700">
+                          <span className="ml-2 text-base text-gray-700 dark:text-gray-200">
                             <CreditCardIcon className="inline w-4 h-4 mr-1" />
                             {option.label}
                           </span>
@@ -1487,27 +1424,19 @@ function AdminFinancialUpdatePage() {
                       ))}
                     </div>
                     {errors.paymentMethods && (
-                      <p className="mt-1 text-sm text-red-600">
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                         {errors.paymentMethods}
                       </p>
                     )}
                   </div>
-                </div>
-              </div>
             </div>
+          </FormCard>
 
-            {/* Service Fee Section */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-              <div className="px-6 py-4 bg-gray-50 border-b border-gray-200 rounded-t-lg">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                  <CurrencyDollarIcon className="w-5 h-5 mr-2 text-blue-600" />
-                  Service Fee
-                </h3>
-              </div>
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Service Fee Section */}
+          <FormCard title="Service Fee" icon={CurrencyDollarIcon}>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
                       Service Fee
                     </label>
                     <select
@@ -1552,10 +1481,10 @@ function AdminFinancialUpdatePage() {
                           setInvoiceServiceFeeOther("");
                         }
                       }}
-                      className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
+                      className={`block w-full px-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
                         errors.invoiceServiceFeeId
-                          ? "border-red-300"
-                          : "border-gray-300"
+                          ? "border-red-300 dark:border-red-500"
+                          : "border-gray-300 dark:border-gray-600"
                       }`}
                     >
                       <option value="">Select a service fee...</option>
@@ -1566,12 +1495,12 @@ function AdminFinancialUpdatePage() {
                       ))}
                     </select>
                     {errors.invoiceServiceFeeId && (
-                      <p className="mt-1 text-sm text-red-600">
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                         {errors.invoiceServiceFeeId}
                       </p>
                     )}
                     {invoiceServiceFee && invoiceServiceFee.description && (
-                      <p className="mt-1 text-xs text-gray-500">
+                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                         {invoiceServiceFee.description}
                       </p>
                     )}
@@ -1579,7 +1508,7 @@ function AdminFinancialUpdatePage() {
 
                   {isInvoiceServiceFeeOther && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
                         Service Fee Other
                       </label>
                       <input
@@ -1589,14 +1518,14 @@ function AdminFinancialUpdatePage() {
                           setInvoiceServiceFeeOther(e.target.value)
                         }
                         placeholder="Enter custom service fee description"
-                        className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
+                        className={`block w-full px-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
                           errors.invoiceServiceFeeOther
-                            ? "border-red-300"
-                            : "border-gray-300"
+                            ? "border-red-300 dark:border-red-500"
+                            : "border-gray-300 dark:border-gray-600"
                         }`}
                       />
                       {errors.invoiceServiceFeeOther && (
-                        <p className="mt-1 text-sm text-red-600">
+                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                           {errors.invoiceServiceFeeOther}
                         </p>
                       )}
@@ -1604,7 +1533,7 @@ function AdminFinancialUpdatePage() {
                   )}
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
                       Service Fee Percentage
                     </label>
                     <div className="relative">
@@ -1613,13 +1542,13 @@ function AdminFinancialUpdatePage() {
                         step="0.01"
                         value={invoiceServiceFeePercentage}
                         readOnly
-                        className="block w-full pr-8 px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-700"
+                        className="block w-full pr-8 px-4 py-3 text-base sm:text-lg border border-gray-200 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200"
                       />
                       <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500">%</span>
+                        <span className="text-gray-500 dark:text-gray-400 text-base">%</span>
                       </div>
                     </div>
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                       Automatically set based on selected service fee. This
                       percentage is used to calculate: Labour × Percentage =
                       Service Fee Amount
@@ -1627,30 +1556,30 @@ function AdminFinancialUpdatePage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
                       Required Service Fee Amount{" "}
-                      <span className="text-red-500">*</span>
+                      <span className="text-red-500 dark:text-red-400">*</span>
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500">$</span>
+                        <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
                       </div>
                       <input
                         type="number"
                         step="0.01"
                         value={invoiceServiceFeeAmount}
                         disabled
-                        className="block w-full pl-7 pr-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-700"
+                        className="block w-full pl-8 pr-4 py-3 text-base sm:text-lg border border-gray-200 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200"
                       />
                     </div>
-                    <p className="mt-1 text-xs text-gray-500 flex items-center">
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 flex items-center">
                       <CalculatorIcon className="w-3 h-3 mr-1" />
                       Service fee owed by associate (labour × percentage)
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
                       Invoice Service Fee Payment Date
                     </label>
                     <input
@@ -1659,27 +1588,27 @@ function AdminFinancialUpdatePage() {
                       onChange={(e) =>
                         setInvoiceServiceFeePaymentDate(e.target.value)
                       }
-                      className={`block w-full px-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
+                      className={`block w-full px-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
                         errors.invoiceServiceFeePaymentDate
-                          ? "border-red-300"
-                          : "border-gray-300"
+                          ? "border-red-300 dark:border-red-500"
+                          : "border-gray-300 dark:border-gray-600"
                       }`}
                     />
                     {errors.invoiceServiceFeePaymentDate && (
-                      <p className="mt-1 text-sm text-red-600">
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                         {errors.invoiceServiceFeePaymentDate}
                       </p>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
                       Actual Service Fee Paid{" "}
-                      <span className="text-red-500">*</span>
+                      <span className="text-red-500 dark:text-red-400">*</span>
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500">$</span>
+                        <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
                       </div>
                       <input
                         type="number"
@@ -1689,79 +1618,66 @@ function AdminFinancialUpdatePage() {
                           setInvoiceActualServiceFeeAmountPaid(e.target.value)
                         }
                         placeholder="0.00"
-                        className={`block w-full pl-7 pr-3 py-2 border rounded-lg focus:ring-blue-500 focus:border-blue-500 ${
+                        className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
                           errors.invoiceActualServiceFeeAmountPaid
-                            ? "border-red-300"
-                            : "border-gray-300"
+                            ? "border-red-300 dark:border-red-500"
+                            : "border-gray-300 dark:border-gray-600"
                         }`}
                         required
                       />
                     </div>
                     {errors.invoiceActualServiceFeeAmountPaid && (
-                      <p className="mt-1 text-sm text-red-600">
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                         {errors.invoiceActualServiceFeeAmountPaid}
                       </p>
                     )}
-                    <p className="mt-1 text-xs text-gray-500">
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                       Amount paid by associate and received by organization (can
                       be $0 if service fee is 0%)
                     </p>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
                       Balance Owing Amount{" "}
-                      <span className="text-red-500">*</span>
+                      <span className="text-red-500 dark:text-red-400">*</span>
                     </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500">$</span>
+                        <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
                       </div>
                       <input
                         type="number"
                         step="0.01"
                         value={invoiceBalanceOwingAmount}
                         disabled
-                        className="block w-full pl-7 pr-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-gray-700"
+                        className="block w-full pl-8 pr-4 py-3 text-base sm:text-lg border border-gray-200 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200"
                       />
                     </div>
-                    <p className="mt-1 text-xs text-gray-500 flex items-center">
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 flex items-center">
                       <CalculatorIcon className="w-3 h-3 mr-1" />
                       Remaining balance to be paid by associate (cannot be
                       negative)
                     </p>
                   </div>
-                </div>
-              </div>
             </div>
+          </FormCard>
 
-            {/* Form Actions */}
-            <div className="flex justify-between items-center pt-6 border-t border-gray-200">
-              <Link to={`/admin/financial/${fid}`}>
-                <button
-                  type="button"
-                  className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
-                >
-                  <ChevronLeftIcon className="w-5 h-5 mr-2" />
-                  Back to Detail
-                </button>
-              </Link>
-
-              <button
-                type="submit"
-                disabled={isFinancialArchived() || isSubmitting}
-                className={`inline-flex items-center px-5 py-2.5 border border-transparent rounded-lg text-base font-medium text-white transition-colors ${
-                  isFinancialArchived() || isSubmitting
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-green-600 hover:bg-green-700"
-                }`}
-              >
-                <CheckCircleIcon className="w-5 h-5 mr-2" />
-                {isSubmitting ? "Saving..." : "Save & Submit"}
-              </button>
-            </div>
-          </form>
-        </div>
+          {/* Form Actions */}
+          <div className="flex justify-between items-center pt-6">
+            <BackButton to={`/admin/financial/${fid}`} label="Back to Detail" size="lg" />
+            <Button
+              type="submit"
+              variant="success"
+              icon={CheckCircleIcon}
+              disabled={isFinancialArchived() || isSubmitting}
+              loading={isSubmitting}
+              loadingText="Saving..."
+            >
+              Save & Submit
+            </Button>
+          </div>
+        </form>
       )}
     </div>
   );

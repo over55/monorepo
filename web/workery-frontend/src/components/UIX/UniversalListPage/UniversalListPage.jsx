@@ -23,6 +23,9 @@ import {
   ViewButton,
 } from "../";
 
+// Development-only logging
+const DEBUG = process.env.NODE_ENV === 'development';
+
 // Move static constants outside component to prevent recreation
 const VIEW_TYPE_TABULAR = "tabular";
 const VIEW_TYPE_GRID = "grid";
@@ -140,16 +143,18 @@ const UniversalListPage = memo(function UniversalListPage({ config }) {
   // Fetch entity list with useCallback to prevent infinite loops
   const fetchEntityList = useCallback(
     async (forceRefresh = false) => {
-      console.log("🔵 UniversalListPage fetchEntityList called with state:", {
-        currentCursor,
-        pageSize,
-        sortBy,
-        sortOrder,
-        status,
-        type,
-        searchQuery,
-        forceRefresh
-      });
+      if (DEBUG) {
+        console.log("🔵 UniversalListPage fetchEntityList called with state:", {
+          currentCursor,
+          pageSize,
+          sortBy,
+          sortOrder,
+          status,
+          type,
+          searchQuery,
+          forceRefresh
+        });
+      }
 
       // Check if mounted before setting loading state
       if (!isMountedRef.current) return;
@@ -179,12 +184,14 @@ const UniversalListPage = memo(function UniversalListPage({ config }) {
           config.onFetchSuccess(response, setEntityList, setNextCursor);
         } else {
           // Default success handling
-          console.log("🔵 UniversalListPage fetchEntityList response:", {
-            resultsCount: response.results?.length,
-            totalCount: response.count,
-            hasNextPage: response.hasNextPage,
-            nextCursor: response.nextCursor
-          });
+          if (DEBUG) {
+            console.log("🔵 UniversalListPage fetchEntityList response:", {
+              resultsCount: response.results?.length,
+              totalCount: response.count,
+              hasNextPage: response.hasNextPage,
+              nextCursor: response.nextCursor
+            });
+          }
 
           setEntityList({
             results: response.results || [],
@@ -192,10 +199,14 @@ const UniversalListPage = memo(function UniversalListPage({ config }) {
           });
 
           if (response.hasNextPage || (response.nextCursor && response.nextCursor !== "")) {
-            console.log("🟢 Setting nextCursor to:", response.nextCursor);
+            if (DEBUG) {
+              console.log("🟢 Setting nextCursor to:", response.nextCursor);
+            }
             setNextCursor(response.nextCursor || "");
           } else {
-            console.log("🔴 No next page - clearing nextCursor");
+            if (DEBUG) {
+              console.log("🔴 No next page - clearing nextCursor");
+            }
             setNextCursor("");
           }
         }
@@ -208,7 +219,9 @@ const UniversalListPage = memo(function UniversalListPage({ config }) {
           config.onFetchError(error, setErrors);
         } else {
           // Default error handling
-          console.error(`Error fetching ${config.entityNamePlural.toLowerCase()}:`, error);
+          if (DEBUG) {
+            console.error(`Error fetching ${config.entityNamePlural.toLowerCase()}:`, error);
+          }
           setErrors({ general: `Failed to load ${config.entityNamePlural.toLowerCase()}. Please try again.` });
         }
       } finally {
@@ -223,10 +236,14 @@ const UniversalListPage = memo(function UniversalListPage({ config }) {
 
   // Memoize pagination handlers
   const handlePageChange = useCallback((direction) => {
-    console.log("🔵 UniversalListPage handlePageChange:", { direction, currentCursor, nextCursor, previousCursorsLength: previousCursors.length });
+    if (DEBUG) {
+      console.log("🔵 UniversalListPage handlePageChange:", { direction, currentCursor, nextCursor, previousCursorsLength: previousCursors.length });
+    }
 
     if (direction === "next" && nextCursor) {
-      console.log("🟢 Moving to next page with cursor:", nextCursor);
+      if (DEBUG) {
+        console.log("🟢 Moving to next page with cursor:", nextCursor);
+      }
       const newPreviousCursors = [...previousCursors];
       newPreviousCursors.push(currentCursor);
       setPreviousCursors(newPreviousCursors);
@@ -234,11 +251,15 @@ const UniversalListPage = memo(function UniversalListPage({ config }) {
     } else if (direction === "previous" && previousCursors.length > 0) {
       const newPreviousCursors = [...previousCursors];
       const previousCursor = newPreviousCursors.pop();
-      console.log("🟢 Moving to previous page with cursor:", previousCursor);
+      if (DEBUG) {
+        console.log("🟢 Moving to previous page with cursor:", previousCursor);
+      }
       setPreviousCursors(newPreviousCursors);
       setCurrentCursor(previousCursor);
     } else {
-      console.log("🔴 Cannot change page - direction:", direction, "nextCursor:", nextCursor, "previousCursors:", previousCursors.length);
+      if (DEBUG) {
+        console.log("🔴 Cannot change page - direction:", direction, "nextCursor:", nextCursor, "previousCursors:", previousCursors.length);
+      }
     }
   }, [nextCursor, previousCursors, currentCursor]);
 
@@ -279,9 +300,13 @@ const UniversalListPage = memo(function UniversalListPage({ config }) {
   }, []);
 
   const handlePageSizeChange = useCallback((newPageSize) => {
-    console.log("🔵 UniversalListPage handlePageSizeChange called with:", newPageSize);
+    if (DEBUG) {
+      console.log("🔵 UniversalListPage handlePageSizeChange called with:", newPageSize);
+    }
     const parsedSize = parseInt(newPageSize);
-    console.log("🔵 UniversalListPage setting pageSize to:", parsedSize);
+    if (DEBUG) {
+      console.log("🔵 UniversalListPage setting pageSize to:", parsedSize);
+    }
     setPageSize(parsedSize);
     // Reset pagination when page size changes
     setPreviousCursors([]);
@@ -760,7 +785,9 @@ const UniversalListPage = memo(function UniversalListPage({ config }) {
                             variant="ghost"
                             size="sm"
                             onClick={() => {
-                              console.log("🔵 PREVIOUS button clicked!");
+                              if (DEBUG) {
+                                console.log("🔵 PREVIOUS button clicked!");
+                              }
                               handlePageChange("previous");
                             }}
                             disabled={previousCursors.length === 0}
@@ -774,7 +801,9 @@ const UniversalListPage = memo(function UniversalListPage({ config }) {
                             variant="ghost"
                             size="sm"
                             onClick={() => {
-                              console.log("🟢 NEXT button clicked! nextCursor:", nextCursor);
+                              if (DEBUG) {
+                                console.log("🟢 NEXT button clicked! nextCursor:", nextCursor);
+                              }
                               handlePageChange("next");
                             }}
                             disabled={!nextCursor}

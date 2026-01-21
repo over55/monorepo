@@ -323,10 +323,14 @@ const AttachmentsViewInner = memo(
         await onRefreshEntity(entityId, onUnauthorized);
       } catch (error) {
         if (error.name === "AbortError") {
-          console.log("Refresh cancelled");
+          if (process.env.NODE_ENV === "development") {
+            console.log("Refresh cancelled");
+          }
           return;
         }
-        console.error("Refresh failed:", error);
+        if (process.env.NODE_ENV === "development") {
+          console.error("Refresh failed:", error);
+        }
       } finally {
         if (isMountedRef.current) {
           setIsRefreshing(false);

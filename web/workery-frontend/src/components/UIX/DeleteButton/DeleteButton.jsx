@@ -73,6 +73,8 @@ const DeleteButton = memo(
     transition-all duration-200
     border border-red-200 text-red-700 bg-red-50
     hover:bg-red-100 hover:shadow-md
+    dark:border-red-800 dark:text-red-300 dark:bg-red-900/30
+    dark:hover:bg-red-900/50
     touch-manipulation select-none
     ${themeClasses.inputFocusRing}
     ${disabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}

@@ -87,7 +87,9 @@ function ChangePasswordPageContent({
 
         setEntity(entityData);
       } catch (error) {
-        console.error("Failed to fetch entity:", error);
+        if (process.env.NODE_ENV === "development") {
+          console.error("Failed to fetch entity:", error);
+        }
         setErrors({ general: error.message || "Failed to load information" });
       } finally {
         setIsLoading(false);
@@ -143,7 +145,9 @@ function ChangePasswordPageContent({
         navigate(successRedirectUrl);
       }, 2000);
     } catch (error) {
-      console.error("Failed to change password:", error);
+      if (process.env.NODE_ENV === "development") {
+        console.error("Failed to change password:", error);
+      }
       setErrors({ general: error.message || "Failed to change password" });
       setShowConfirmModal(false);
     } finally {

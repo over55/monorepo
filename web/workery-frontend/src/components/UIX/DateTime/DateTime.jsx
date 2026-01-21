@@ -159,29 +159,29 @@ const DateTime = memo(
     // Memoize theme classes
     const themeClasses = useMemo(
       () => ({
-        textPrimary: getThemeClasses("text-primary") || "text-gray-900",
-        textDanger: getThemeClasses("text-danger") || "text-red-600",
-        textMuted: getThemeClasses("text-muted") || "text-gray-600",
-        textSecondary: getThemeClasses("text-secondary") || "text-gray-600",
-        hoverTextPrimary: getThemeClasses("hover:text-primary") || "hover:text-gray-900",
-        inputBorder: getThemeClasses("input-border") || "border-gray-300",
-        inputBorderError: getThemeClasses("input-border-error") || "border-red-500",
-        inputFocusRing: getThemeClasses("input-focus-ring") || "ring-2 ring-red-500/20",
-        bgDisabled: getThemeClasses("bg-disabled") || "bg-gray-100",
-        bgCard: getThemeClasses("bg-card") || "bg-white",
-        bgMuted: getThemeClasses("bg-muted") || "bg-gray-50",
-        borderLight: getThemeClasses("border-light") || "border-gray-200",
+        textPrimary: getThemeClasses("text-primary") || "text-gray-900 dark:text-gray-100",
+        textDanger: getThemeClasses("text-danger") || "text-red-600 dark:text-red-400",
+        textMuted: getThemeClasses("text-muted") || "text-gray-600 dark:text-gray-400",
+        textSecondary: getThemeClasses("text-secondary") || "text-gray-600 dark:text-gray-400",
+        hoverTextPrimary: getThemeClasses("hover:text-primary") || "hover:text-gray-900 dark:hover:text-gray-100",
+        inputBorder: getThemeClasses("input-border") || "border-gray-300 dark:border-gray-600",
+        inputBorderError: getThemeClasses("input-border-error") || "border-red-500 dark:border-red-400",
+        inputFocusRing: getThemeClasses("input-focus-ring") || "ring-2 ring-red-500/20 dark:ring-red-400/20",
+        bgDisabled: getThemeClasses("bg-disabled") || "bg-gray-100 dark:bg-gray-700",
+        bgCard: getThemeClasses("bg-card") || "bg-white dark:bg-gray-800",
+        bgMuted: getThemeClasses("bg-muted") || "bg-gray-50 dark:bg-gray-700",
+        borderLight: getThemeClasses("border-light") || "border-gray-200 dark:border-gray-700",
         // Tab styles
-        tabActive: getThemeClasses("tab-active") || "text-red-600 border-b-2 border-red-600",
-        tabInactive: getThemeClasses("tab-inactive") || "text-gray-600 hover:text-gray-800",
+        tabActive: getThemeClasses("tab-active") || "text-red-600 border-b-2 border-red-600 dark:text-red-400 dark:border-red-400",
+        tabInactive: getThemeClasses("tab-inactive") || "text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200",
         // Input focus
-        inputFocus: getThemeClasses("input-focus") || "focus:ring-2 focus:ring-red-500",
+        inputFocus: getThemeClasses("input-focus") || "focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400",
         // Hover backgrounds
-        hoverBgLight: getThemeClasses("hover-bg-light") || "hover:bg-gray-100",
+        hoverBgLight: getThemeClasses("hover-bg-light") || "hover:bg-gray-100 dark:hover:bg-gray-700",
         // Button colors
-        btnPrimaryBg: getThemeClasses("btn-primary-bg") || "bg-red-600",
-        btnPrimaryHover: getThemeClasses("btn-primary-hover") || "hover:bg-red-700",
-        btnGhostHover: getThemeClasses("btn-ghost-hover") || "hover:text-gray-800",
+        btnPrimaryBg: getThemeClasses("btn-primary-bg") || "bg-red-600 dark:bg-red-500",
+        btnPrimaryHover: getThemeClasses("btn-primary-hover") || "hover:bg-red-700 dark:hover:bg-red-600",
+        btnGhostHover: getThemeClasses("btn-ghost-hover") || "hover:text-gray-800 dark:hover:text-gray-200",
       }),
       [getThemeClasses],
     );

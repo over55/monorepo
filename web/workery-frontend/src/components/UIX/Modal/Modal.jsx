@@ -29,14 +29,14 @@ const Modal = memo(function Modal({ isOpen, onClose, title, children, footer }) 
   const themeClasses = useMemo(
     () => ({
       backdrop: getThemeClasses("modal-backdrop") || "bg-black/50",
-      cardBg: getThemeClasses("bg-card") || "bg-white",
-      borderDefault: getThemeClasses("border-default") || "border-gray-200",
-      headerBg: getThemeClasses("bg-secondary") || "bg-gray-50",
-      textPrimary: getThemeClasses("text-primary") || "text-gray-900",
-      textSecondary: getThemeClasses("text-secondary") || "text-gray-700",
-      textMuted: getThemeClasses("text-muted") || "text-gray-600",
-      textMutedHover: getThemeClasses("text-muted-hover") || "hover:text-gray-700",
-      focusRing: getThemeClasses("focus-ring") || "focus:ring-2 focus:ring-indigo-500",
+      cardBg: getThemeClasses("bg-card") || "bg-white dark:bg-gray-800",
+      borderDefault: getThemeClasses("border-default") || "border-gray-200 dark:border-gray-700",
+      headerBg: getThemeClasses("bg-secondary") || "bg-gray-50 dark:bg-gray-900",
+      textPrimary: getThemeClasses("text-primary") || "text-gray-900 dark:text-gray-100",
+      textSecondary: getThemeClasses("text-secondary") || "text-gray-700 dark:text-gray-300",
+      textMuted: getThemeClasses("text-muted") || "text-gray-600 dark:text-gray-400",
+      textMutedHover: getThemeClasses("text-muted-hover") || "hover:text-gray-700 dark:hover:text-gray-300",
+      focusRing: getThemeClasses("focus-ring") || "focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400",
     }),
     [getThemeClasses],
   );

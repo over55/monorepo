@@ -1,23 +1,31 @@
 // File Path: web/workery-frontend/src/pages/Admin/Financial/Detail/Invoice/Page.jsx
 // @uix-page: FinancialInvoicePage
-// UIX Upgraded - Uses UIX primitives (Spinner, Breadcrumb)
+// UIX Upgraded - Full UIX conversion
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useParams, useNavigate } from "react-router";
 import { useOrderManager } from "../../../../../services/Services";
-import { DateTime } from "luxon";
 import { ORDER_STATUS_ARCHIVED } from "../../../../../constants/Order";
-import { Spinner, Breadcrumb, UIXThemeProvider, useUIXTheme } from "../../../../../components/UIX";
 import {
-  CLIENT_PHONE_TYPE_OF_MAP,
-  ORDER_INVOICE_PAYMENT_METHODS_OPTIONS,
-} from "../../../../../constants/FieldOptions";
+  Spinner,
+  Breadcrumb,
+  UIXThemeProvider,
+  useUIXTheme,
+  PageHeader,
+  DetailCard,
+  DataField,
+  Alert,
+  Tabs,
+  Button,
+  BackButton,
+  EmptyState,
+  Table,
+} from "../../../../../components/UIX";
+import { ORDER_INVOICE_PAYMENT_METHODS_OPTIONS } from "../../../../../constants/FieldOptions";
 import {
   ChartBarIcon,
   CurrencyDollarIcon,
   DocumentTextIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   PlusCircleIcon,
   ArchiveBoxIcon,
   EllipsisHorizontalIcon,
@@ -25,7 +33,6 @@ import {
   InformationCircleIcon,
   ArrowDownTrayIcon,
   PencilSquareIcon,
-  ExclamationCircleIcon,
 } from "@heroicons/react/24/outline";
 import { formatDateForDisplay } from "../../../../../services/Helpers/DateFormatter";
 
@@ -53,11 +60,17 @@ function AdminFinancialInvoiceDetailPage() {
     { label: "Invoice", icon: DocumentTextIcon, isActive: true },
   ], [oid]);
 
+  // Tab items for navigation
+  const tabItems = useMemo(() => [
+    { id: "detail", label: "Detail", to: `/admin/financial/${oid}` },
+    { id: "invoice", label: "Invoice", isActive: true },
+    { id: "more", label: "More", to: `/admin/financial/${oid}/more`, icon: EllipsisHorizontalIcon },
+  ], [oid]);
+
   // Component states
   const [errors, setErrors] = useState({});
   const [isFetching, setFetching] = useState(false);
   const [order, setOrder] = useState(null);
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
   // Handle unauthorized access
@@ -235,13 +248,58 @@ function AdminFinancialInvoiceDetailPage() {
     );
   };
 
+  // Generate action buttons based on invoice state
+  const actionButtons = useMemo(() => {
+    if (!order) return [];
+
+    const buttons = [];
+    if (order.invoice) {
+      buttons.push(
+        <Button
+          key="regenerate"
+          variant="secondary"
+          icon={PencilSquareIcon}
+          onClick={onRegenerateInvoiceClick}
+        >
+          Edit & Regenerate
+        </Button>
+      );
+      if (order.invoice.fileObjectUrl) {
+        buttons.push(
+          <Button
+            key="download"
+            variant="success"
+            icon={ArrowDownTrayIcon}
+            onClick={onDownloadInvoiceClick}
+            loading={isDownloading}
+            loadingText="Downloading..."
+          >
+            Download Invoice
+          </Button>
+        );
+      }
+    } else {
+      buttons.push(
+        <Button
+          key="generate"
+          variant="success"
+          icon={PlusCircleIcon}
+          onClick={onGenerateInvoiceClick}
+        >
+          Generate Invoice
+        </Button>
+      );
+    }
+    return buttons;
+  }, [order, isDownloading, onRegenerateInvoiceClick, onDownloadInvoiceClick, onGenerateInvoiceClick]);
+
   if (isFetching) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <Spinner size="lg" />
-            <p className="mt-4 text-gray-600">Loading invoice details...</p>
+            <p className={`mt-4 ${themeClasses.textSecondary}`}>Loading invoice details...</p>
           </div>
         </div>
       </div>
@@ -253,604 +311,161 @@ function AdminFinancialInvoiceDetailPage() {
       {/* Breadcrumb */}
       <Breadcrumb items={breadcrumbItems} className="mb-6" />
 
-      {/* Page Title */}
-      <div className="mb-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-              <CurrencyDollarIcon className="w-8 h-8 mr-3 text-blue-600" />
-              Financials
-            </h1>
-            <p className="mt-1 text-sm text-gray-600 flex items-center">
-              <InformationCircleIcon className="w-4 h-4 mr-1" />
-              Manage invoice and financial details
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* Page Header */}
+      <PageHeader
+        icon={CurrencyDollarIcon}
+        title="Financials"
+        subtitle="Manage invoice and financial details"
+        actions={actionButtons}
+      />
 
       {/* Status Alerts */}
       {isOrderArchived() && (
-        <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg flex items-center">
-          <ArchiveBoxIcon className="w-5 h-5 mr-2" />
+        <Alert type="info" icon={ArchiveBoxIcon}>
           This order is archived
-        </div>
+        </Alert>
       )}
 
       {/* Error Display */}
       {errors.general && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-          <div className="flex items-center">
-            <ExclamationCircleIcon className="w-5 h-5 mr-2" />
-            <span>{errors.general}</span>
-          </div>
-        </div>
+        <Alert type="error" dismissible onDismiss={() => setErrors({})}>
+          {errors.general}
+        </Alert>
       )}
 
       {/* Main Content */}
-      <div className="bg-white shadow-sm rounded-lg">
-        {/* Header with Title and Action Buttons */}
-        <div className="px-6 py-5 border-b border-gray-200">
-          <div className="flex justify-between items-center flex-wrap gap-4">
-            <h2 className="text-2xl font-semibold text-gray-900 flex items-center">
-              <DocumentTextIcon className="w-7 h-7 mr-2 text-blue-600" />
-              Invoice Detail
-            </h2>
-            {order && (
-              <div className="flex gap-2">
-                {order.invoice ? (
-                  <>
-                    <button
-                      onClick={onRegenerateInvoiceClick}
-                      className="inline-flex items-center px-5 py-2.5 border border-transparent rounded-lg text-base font-medium text-white bg-yellow-600 hover:bg-yellow-700 transition-colors"
-                    >
-                      <PencilSquareIcon className="w-5 h-5 mr-2" />
-                      Edit & Regenerate
-                    </button>
-                    {order.invoice.fileObjectUrl && (
-                      <button
-                        onClick={onDownloadInvoiceClick}
-                        disabled={isDownloading}
-                        className={`inline-flex items-center px-5 py-2.5 border border-transparent rounded-lg text-base font-medium text-white transition-colors ${
-                          isDownloading
-                            ? "bg-gray-400 cursor-not-allowed"
-                            : "bg-green-600 hover:bg-green-700"
-                        }`}
-                      >
-                        <ArrowDownTrayIcon className="w-5 h-5 mr-2" />
-                        {isDownloading ? "Downloading..." : "Download Invoice"}
-                      </button>
-                    )}
-                  </>
-                ) : (
-                  <button
-                    onClick={onGenerateInvoiceClick}
-                    className="inline-flex items-center px-5 py-2.5 border border-transparent rounded-lg text-base font-medium text-white bg-green-600 hover:bg-green-700 transition-colors"
-                  >
-                    <PlusCircleIcon className="w-5 h-5 mr-2" />
-                    Generate Invoice
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
+      {order && (
+        <div className="space-y-6">
+          {/* Tab Navigation */}
+          <Tabs tabs={tabItems} mode="routing" />
 
-        {/* Tab Navigation */}
-        <div className="px-6 border-b border-gray-200">
-          <nav className="-mb-px flex space-x-8">
-            <Link
-              to={`/admin/financial/${oid}`}
-              className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300"
-            >
-              Detail
-            </Link>
-            <div className="border-b-2 border-blue-600 py-4 px-1 text-base font-medium text-blue-600">
-              Invoice
-            </div>
-            <Link
-              to={`/admin/financial/${oid}/more`}
-              className="border-b-2 border-transparent py-4 px-1 text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center"
-            >
-              More
-              <EllipsisHorizontalIcon className="w-5 h-5 ml-1" />
-            </Link>
-          </nav>
-        </div>
-
-        <div className="p-6">
-          {order && order.invoice ? (
+          {order.invoice ? (
             <div className="space-y-6">
               {/* Invoice Header Section */}
-              <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                <div className="bg-gray-900 px-6 py-3">
-                  <h3 className="text-lg font-medium text-white">
-                    Invoice Header
-                  </h3>
+              <DetailCard title="Invoice Header" icon={DocumentTextIcon} maxWidth="full">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <DataField label="Order #" value={order.wjid || order.id} />
+                  <DataField label="Invoice Date" value={formatDateForDisplay(order.invoice.invoiceDate)} />
+                  <DataField label="Associate Name" value={order.invoice.associateName} />
+                  <DataField label="Associate Phone" value={formatPhone(order.invoice.associatePhone)} />
+                  <DataField label="Associate Tax #" value={order.invoice.associateTaxId} />
+                  <DataField label="Client Name" value={order.invoice.clientName} />
+                  <DataField label="Client Address" value={order.invoice.clientAddress || order.customerFullAddressWithoutPostalCode} fullWidth />
+                  <DataField label="Client Phone" value={formatPhone(order.invoice.clientPhone || order.customerPhone)} />
+                  <DataField label="Client Email" value={order.invoice.clientEmail || order.customerEmail} />
                 </div>
-                <div className="bg-white">
-                  <dl className="divide-y divide-gray-200">
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Order #
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {order.wjid || order.id}
-                      </dd>
-                    </div>
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Invoice Date
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {formatDateForDisplay(order.invoice.invoiceDate)}
-                      </dd>
-                    </div>
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Associate Name
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {order.invoice.associateName || "-"}
-                      </dd>
-                    </div>
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Associate Phone
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {formatPhone(order.invoice.associatePhone)}
-                      </dd>
-                    </div>
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Associate Tax #
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {order.invoice.associateTaxId || "-"}
-                      </dd>
-                    </div>
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Client Name
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {order.invoice.clientName || "-"}
-                      </dd>
-                    </div>
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Client Address
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {order.invoice.clientAddress ||
-                          order.customerFullAddressWithoutPostalCode ||
-                          "-"}
-                      </dd>
-                    </div>
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Client Phone
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {formatPhone(
-                          order.invoice.clientPhone || order.customerPhone,
-                        )}
-                      </dd>
-                    </div>
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Client Email
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {order.invoice.clientEmail ||
-                          order.customerEmail ||
-                          "-"}
-                      </dd>
-                    </div>
-                  </dl>
-                </div>
-              </div>
+              </DetailCard>
 
               {/* Invoice Description Section */}
-              <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                <div className="bg-gray-900 px-6 py-3">
-                  <h3 className="text-lg font-medium text-white">
-                    Invoice Description
-                  </h3>
+              <DetailCard title="Invoice Description" icon={ClipboardDocumentListIcon} maxWidth="full">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <DataField label="Invoice IDs" value={order.invoiceIds} />
+                  <DataField label="Order #" value={order.wjid || order.id} />
                 </div>
-                <div className="bg-white">
-                  <dl className="divide-y divide-gray-200">
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Invoice IDs
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {order.invoiceIds || "-"}
-                      </dd>
-                    </div>
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Order #
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {order.wjid || order.id}
-                      </dd>
-                    </div>
-                  </dl>
 
-                  {/* Line Items Table */}
-                  {(order.invoice.line01Qty > 0 ||
-                    order.invoice.line02Qty > 0 ||
-                    order.invoice.line03Qty > 0 ||
-                    order.invoice.line04Qty > 0 ||
-                    order.invoice.line05Qty > 0 ||
-                    order.invoice.line06Qty > 0 ||
-                    order.invoice.line07Qty > 0 ||
-                    order.invoice.line08Qty > 0 ||
-                    order.invoice.line09Qty > 0 ||
-                    order.invoice.line10Qty > 0 ||
-                    order.invoice.line11Qty > 0 ||
-                    order.invoice.line12Qty > 0 ||
-                    order.invoice.line13Qty > 0 ||
-                    order.invoice.line14Qty > 0 ||
-                    order.invoice.line15Qty > 0) && (
-                    <div className="px-6 py-4">
-                      <h4 className="text-sm font-medium text-gray-900 mb-3">
-                        Line Items
-                      </h4>
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full divide-y divide-gray-300">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Line
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Qty
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Description
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Price
-                              </th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                Amount
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {renderLineItem(
-                              1,
-                              order.invoice.line01Qty,
-                              order.invoice.line01Desc,
-                              order.invoice.line01Price,
-                              order.invoice.line01Amount,
-                            )}
-                            {renderLineItem(
-                              2,
-                              order.invoice.line02Qty,
-                              order.invoice.line02Desc,
-                              order.invoice.line02Price,
-                              order.invoice.line02Amount,
-                            )}
-                            {renderLineItem(
-                              3,
-                              order.invoice.line03Qty,
-                              order.invoice.line03Desc,
-                              order.invoice.line03Price,
-                              order.invoice.line03Amount,
-                            )}
-                            {renderLineItem(
-                              4,
-                              order.invoice.line04Qty,
-                              order.invoice.line04Desc,
-                              order.invoice.line04Price,
-                              order.invoice.line04Amount,
-                            )}
-                            {renderLineItem(
-                              5,
-                              order.invoice.line05Qty,
-                              order.invoice.line05Desc,
-                              order.invoice.line05Price,
-                              order.invoice.line05Amount,
-                            )}
-                            {renderLineItem(
-                              6,
-                              order.invoice.line06Qty,
-                              order.invoice.line06Desc,
-                              order.invoice.line06Price,
-                              order.invoice.line06Amount,
-                            )}
-                            {renderLineItem(
-                              7,
-                              order.invoice.line07Qty,
-                              order.invoice.line07Desc,
-                              order.invoice.line07Price,
-                              order.invoice.line07Amount,
-                            )}
-                            {renderLineItem(
-                              8,
-                              order.invoice.line08Qty,
-                              order.invoice.line08Desc,
-                              order.invoice.line08Price,
-                              order.invoice.line08Amount,
-                            )}
-                            {renderLineItem(
-                              9,
-                              order.invoice.line09Qty,
-                              order.invoice.line09Desc,
-                              order.invoice.line09Price,
-                              order.invoice.line09Amount,
-                            )}
-                            {renderLineItem(
-                              10,
-                              order.invoice.line10Qty,
-                              order.invoice.line10Desc,
-                              order.invoice.line10Price,
-                              order.invoice.line10Amount,
-                            )}
-                            {renderLineItem(
-                              11,
-                              order.invoice.line11Qty,
-                              order.invoice.line11Desc,
-                              order.invoice.line11Price,
-                              order.invoice.line11Amount,
-                            )}
-                            {renderLineItem(
-                              12,
-                              order.invoice.line12Qty,
-                              order.invoice.line12Desc,
-                              order.invoice.line12Price,
-                              order.invoice.line12Amount,
-                            )}
-                            {renderLineItem(
-                              13,
-                              order.invoice.line13Qty,
-                              order.invoice.line13Desc,
-                              order.invoice.line13Price,
-                              order.invoice.line13Amount,
-                            )}
-                            {renderLineItem(
-                              14,
-                              order.invoice.line14Qty,
-                              order.invoice.line14Desc,
-                              order.invoice.line14Price,
-                              order.invoice.line14Amount,
-                            )}
-                            {renderLineItem(
-                              15,
-                              order.invoice.line15Qty,
-                              order.invoice.line15Desc,
-                              order.invoice.line15Price,
-                              order.invoice.line15Amount,
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
+                {/* Line Items Table */}
+                {(order.invoice.line01Qty > 0 ||
+                  order.invoice.line02Qty > 0 ||
+                  order.invoice.line03Qty > 0 ||
+                  order.invoice.line04Qty > 0 ||
+                  order.invoice.line05Qty > 0 ||
+                  order.invoice.line06Qty > 0 ||
+                  order.invoice.line07Qty > 0 ||
+                  order.invoice.line08Qty > 0 ||
+                  order.invoice.line09Qty > 0 ||
+                  order.invoice.line10Qty > 0 ||
+                  order.invoice.line11Qty > 0 ||
+                  order.invoice.line12Qty > 0 ||
+                  order.invoice.line13Qty > 0 ||
+                  order.invoice.line14Qty > 0 ||
+                  order.invoice.line15Qty > 0) && (
+                  <div className="mb-6">
+                    <h4 className={`text-sm font-medium ${themeClasses.textPrimary} mb-3`}>Line Items</h4>
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-300">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Line</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {renderLineItem(1, order.invoice.line01Qty, order.invoice.line01Desc, order.invoice.line01Price, order.invoice.line01Amount)}
+                          {renderLineItem(2, order.invoice.line02Qty, order.invoice.line02Desc, order.invoice.line02Price, order.invoice.line02Amount)}
+                          {renderLineItem(3, order.invoice.line03Qty, order.invoice.line03Desc, order.invoice.line03Price, order.invoice.line03Amount)}
+                          {renderLineItem(4, order.invoice.line04Qty, order.invoice.line04Desc, order.invoice.line04Price, order.invoice.line04Amount)}
+                          {renderLineItem(5, order.invoice.line05Qty, order.invoice.line05Desc, order.invoice.line05Price, order.invoice.line05Amount)}
+                          {renderLineItem(6, order.invoice.line06Qty, order.invoice.line06Desc, order.invoice.line06Price, order.invoice.line06Amount)}
+                          {renderLineItem(7, order.invoice.line07Qty, order.invoice.line07Desc, order.invoice.line07Price, order.invoice.line07Amount)}
+                          {renderLineItem(8, order.invoice.line08Qty, order.invoice.line08Desc, order.invoice.line08Price, order.invoice.line08Amount)}
+                          {renderLineItem(9, order.invoice.line09Qty, order.invoice.line09Desc, order.invoice.line09Price, order.invoice.line09Amount)}
+                          {renderLineItem(10, order.invoice.line10Qty, order.invoice.line10Desc, order.invoice.line10Price, order.invoice.line10Amount)}
+                          {renderLineItem(11, order.invoice.line11Qty, order.invoice.line11Desc, order.invoice.line11Price, order.invoice.line11Amount)}
+                          {renderLineItem(12, order.invoice.line12Qty, order.invoice.line12Desc, order.invoice.line12Price, order.invoice.line12Amount)}
+                          {renderLineItem(13, order.invoice.line13Qty, order.invoice.line13Desc, order.invoice.line13Price, order.invoice.line13Amount)}
+                          {renderLineItem(14, order.invoice.line14Qty, order.invoice.line14Desc, order.invoice.line14Price, order.invoice.line14Amount)}
+                          {renderLineItem(15, order.invoice.line15Qty, order.invoice.line15Desc, order.invoice.line15Price, order.invoice.line15Amount)}
+                        </tbody>
+                      </table>
                     </div>
-                  )}
+                  </div>
+                )}
 
-                  {/* Totals */}
-                  <dl className="divide-y divide-gray-200">
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Deposit
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {formatCurrency(order.invoice.deposit)}
-                      </dd>
-                    </div>
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Actual Labour
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {formatCurrency(order.invoice.totalLabour)}
-                      </dd>
-                    </div>
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Actual Materials
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {formatCurrency(order.invoice.totalMaterials)}
-                      </dd>
-                    </div>
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Other Costs
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {formatCurrency(order.invoice.otherCosts)}
-                      </dd>
-                    </div>
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Total Tax
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {formatCurrency(order.invoice.tax)}
-                      </dd>
-                    </div>
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4 bg-gray-50">
-                      <dt className="text-sm font-bold text-gray-900">Total</dt>
-                      <dd className="mt-1 text-sm font-bold text-gray-900 sm:mt-0 sm:col-span-2">
-                        {formatCurrency(order.invoice.total)}
-                      </dd>
-                    </div>
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Date of Quote Approval
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {formatDateForDisplay(order.invoice.invoiceQuoteDate)}
-                      </dd>
-                    </div>
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Customer Approval
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {order.invoice.invoiceCustomersApproval || "-"}
-                      </dd>
-                    </div>
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Line 01 - Notes or Extras
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {order.invoice.line01Notes || "-"}
-                      </dd>
-                    </div>
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Line 02 - Notes or Extras
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {order.invoice.line02Notes || "-"}
-                      </dd>
-                    </div>
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Date Client Paid Invoice
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {formatDateForDisplay(
-                          order.invoice.dateClientPaidInvoice,
-                        )}
-                      </dd>
-                    </div>
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Payment Method(s)
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {getPaymentMethodsDisplay(order.invoice.paymentMethods)}
-                      </dd>
-                    </div>
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Client Signature upon completion
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {order.invoice.clientSignature || "-"}
-                      </dd>
-                    </div>
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Associate Signature Date
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {formatDateForDisplay(order.invoice.associateSignDate)}
-                      </dd>
-                    </div>
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Associate Signature
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {order.invoice.associateSignature || "-"}
-                      </dd>
-                    </div>
-                  </dl>
+                {/* Totals */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <DataField label="Deposit" value={formatCurrency(order.invoice.deposit)} />
+                  <DataField label="Actual Labour" value={formatCurrency(order.invoice.totalLabour)} />
+                  <DataField label="Actual Materials" value={formatCurrency(order.invoice.totalMaterials)} />
+                  <DataField label="Other Costs" value={formatCurrency(order.invoice.otherCosts)} />
+                  <DataField label="Total Tax" value={formatCurrency(order.invoice.tax)} />
+                  <DataField label="Total" value={<span className="font-bold">{formatCurrency(order.invoice.total)}</span>} />
+                  <DataField label="Date of Quote Approval" value={formatDateForDisplay(order.invoice.invoiceQuoteDate)} />
+                  <DataField label="Customer Approval" value={order.invoice.invoiceCustomersApproval} />
+                  <DataField label="Line 01 - Notes or Extras" value={order.invoice.line01Notes} fullWidth />
+                  <DataField label="Line 02 - Notes or Extras" value={order.invoice.line02Notes} fullWidth />
+                  <DataField label="Date Client Paid Invoice" value={formatDateForDisplay(order.invoice.dateClientPaidInvoice)} />
+                  <DataField label="Payment Method(s)" value={getPaymentMethodsDisplay(order.invoice.paymentMethods)} />
+                  <DataField label="Client Signature upon completion" value={order.invoice.clientSignature} />
+                  <DataField label="Associate Signature Date" value={formatDateForDisplay(order.invoice.associateSignDate)} />
+                  <DataField label="Associate Signature" value={order.invoice.associateSignature} />
                 </div>
-              </div>
+              </DetailCard>
 
               {/* System Information Section */}
-              <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                <div className="bg-gray-900 px-6 py-3">
-                  <h3 className="text-lg font-medium text-white">
-                    System Information
-                  </h3>
+              <DetailCard title="System Information" icon={InformationCircleIcon} maxWidth="full">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <DataField label="Order #" value={order.wjid || order.id} />
+                  <DataField label="Created At" value={formatDateForDisplay(order.invoice.createdAt)} />
+                  <DataField label="Created By" value={order.invoice.createdByUserName} />
+                  <DataField label="Modified At" value={formatDateForDisplay(order.invoice.modifiedAt)} />
+                  <DataField label="Modified By" value={order.invoice.modifiedByUserName} />
+                  <DataField label="Revision Version" value={order.invoice.revisionVersion} />
                 </div>
-                <div className="bg-white">
-                  <dl className="divide-y divide-gray-200">
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Order #
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {order.wjid || order.id}
-                      </dd>
-                    </div>
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Created At
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {formatDateForDisplay(order.invoice.createdAt)}
-                      </dd>
-                    </div>
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Created By
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {order.invoice.createdByUserName || "-"}
-                      </dd>
-                    </div>
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Modified At
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {formatDateForDisplay(order.invoice.modifiedAt)}
-                      </dd>
-                    </div>
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Modified By
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {order.invoice.modifiedByUserName || "-"}
-                      </dd>
-                    </div>
-                    <div className="px-6 py-4 sm:grid sm:grid-cols-3 sm:gap-4">
-                      <dt className="text-sm font-medium text-gray-900">
-                        Revision Version
-                      </dt>
-                      <dd className="mt-1 text-sm text-gray-700 sm:mt-0 sm:col-span-2">
-                        {order.invoice.revisionVersion || "-"}
-                      </dd>
-                    </div>
-                  </dl>
-                </div>
-              </div>
+              </DetailCard>
             </div>
           ) : (
             // No invoice message
-            <div className="text-center py-16 bg-gray-50 rounded-lg">
-              <DocumentTextIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                No Invoice
-              </h3>
-              <p className="text-gray-500 mb-4">
-                No invoice has been created for this order yet. You will need to
-                create it before you can download the PDF copy.
-              </p>
-              <button
-                onClick={onGenerateInvoiceClick}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors"
-              >
-                <PlusCircleIcon className="w-4 h-4 mr-2" />
-                Click here to generate invoice
-              </button>
-            </div>
+            <EmptyState
+              icon={DocumentTextIcon}
+              title="No Invoice"
+              description="No invoice has been created for this order yet. You will need to create it before you can download the PDF copy."
+              action={
+                <Button variant="primary" icon={PlusCircleIcon} onClick={onGenerateInvoiceClick}>
+                  Click here to generate invoice
+                </Button>
+              }
+            />
           )}
 
           {/* Action Buttons */}
-          <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
-            <Link to="/admin/financials">
-              <button className="inline-flex items-center px-5 py-2.5 border border-gray-300 rounded-lg text-base font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                <ChevronLeftIcon className="w-5 h-5 mr-2" />
-                Back to Financials
-              </button>
-            </Link>
+          <div className="flex justify-between items-center pt-6 gap-3">
+            <BackButton to="/admin/financials" label="Back to Financials" size="lg" />
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

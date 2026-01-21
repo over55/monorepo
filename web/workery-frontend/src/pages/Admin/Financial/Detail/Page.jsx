@@ -1,32 +1,33 @@
 // File Path: monorepo/web/workery-frontend/src/pages/Admin/Financial/Detail/Page.jsx
 // @uix-page: FinancialDetailPage
-// UIX Upgraded - Uses UIX primitives (Spinner, Breadcrumb)
+// UIX Upgraded - Full UIX conversion
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Link, useParams, useNavigate } from "react-router";
-import { Spinner, Breadcrumb, UIXThemeProvider, useUIXTheme } from "../../../../components/UIX";
+import {
+  Spinner,
+  Breadcrumb,
+  UIXThemeProvider,
+  useUIXTheme,
+  PageHeader,
+  DetailCard,
+  DataField,
+  Alert,
+  Tabs,
+  Button,
+  BackButton,
+  EmptyState,
+} from "../../../../components/UIX";
 import {
   ChartBarIcon,
   CreditCardIcon,
   InformationCircleIcon,
   PencilSquareIcon,
-  ChevronLeftIcon,
   DocumentTextIcon,
   CalendarIcon,
-  UserGroupIcon,
-  UserIcon,
-  CurrencyDollarIcon,
-  BanknotesIcon,
-  ReceiptPercentIcon,
   ClipboardDocumentListIcon,
-  CheckCircleIcon,
-  XCircleIcon,
   ArchiveBoxIcon,
   EllipsisHorizontalIcon,
-  HashtagIcon,
-  ClockIcon,
-  CalculatorIcon,
-  BuildingOfficeIcon,
 } from "@heroicons/react/24/outline";
 import { useOrderManager } from "../../../../services/Services";
 import { ORDER_INVOICE_PAYMENT_METHODS_OPTIONS } from "../../../../constants/FieldOptions";
@@ -47,6 +48,8 @@ function AdminFinancialDetailPage() {
     textPrimary: getThemeClasses("text-primary"),
     textSecondary: getThemeClasses("text-secondary"),
     linkPrimary: getThemeClasses("link-primary"),
+    textSuccess: getThemeClasses("text-success") || "text-green-600 dark:text-green-400",
+    textDanger: getThemeClasses("text-danger") || "text-red-600 dark:text-red-400",
   }), [getThemeClasses]);
 
   // Breadcrumb items
@@ -56,43 +59,64 @@ function AdminFinancialDetailPage() {
     { label: "Detail", icon: InformationCircleIcon, isActive: true },
   ], []);
 
+  // Tab items for navigation
+  const tabItems = useMemo(() => [
+    { id: "detail", label: "Detail", isActive: true },
+    { id: "invoice", label: "Invoice", to: `/admin/financial/${oid}/invoice` },
+    { id: "more", label: "More", to: `/admin/financial/${oid}/more`, icon: EllipsisHorizontalIcon },
+  ], [oid]);
+
   // Component states
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   // Handle unauthorized access
   const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
   }, [navigate]);
 
-  // Fetch order details
-  const fetchOrderDetails = async () => {
-    if (!oid) {
-      setError("Order ID is required");
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const orderData = await orderManager.getOrderDetail(oid, onUnauthorized);
-      setOrder(orderData);
-    } catch (err) {
-      console.error("Failed to fetch order details:", err);
-      setError("Failed to load financial details. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // Initial data load
   useEffect(() => {
+    let mounted = true;
+
+    const fetchOrderDetails = async () => {
+      if (!oid) {
+        if (mounted) {
+          setError("Order ID is required");
+        }
+        return;
+      }
+
+      if (mounted) {
+        setLoading(true);
+        setError(null);
+      }
+
+      try {
+        const orderData = await orderManager.getOrderDetail(oid, onUnauthorized);
+        if (mounted) {
+          setOrder(orderData);
+        }
+      } catch (err) {
+        console.error("Failed to fetch order details:", err);
+        if (mounted) {
+          setError("Failed to load financial details. Please try again.");
+        }
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
     window.scrollTo(0, 0);
     fetchOrderDetails();
-  }, [oid]);
+
+    return () => {
+      mounted = false;
+    };
+  }, [oid, orderManager, onUnauthorized]);
 
   // Helper functions
   const formatCurrency = (amount) => {
@@ -130,49 +154,13 @@ function AdminFinancialDetailPage() {
     return order && order.associateId && order.associateId !== EMPTY_OBJECT_ID;
   };
 
-  // Section Component - Updated with dark theme to match Customer Detail
-  const DetailSection = ({ title, icon: Icon, children }) => (
-    <div className="bg-gray-700 rounded-lg shadow-sm mb-4 sm:mb-6">
-      <div className="px-4 sm:px-6 py-3 sm:py-4">
-        <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
-          <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-300 flex-shrink-0" />
-          <span className="truncate">{title}</span>
-        </h3>
-      </div>
-      <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
-        <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-          {children}
-        </dl>
-      </div>
-    </div>
-  );
-
-  // Detail Field Component - Updated to match Customer Detail styling
-  const DetailField = ({
-    label,
-    value,
-    fullWidth = false,
-    highlight = false,
-  }) => (
-    <div className={fullWidth ? "lg:col-span-2" : ""}>
-      <dt className="text-xs sm:text-sm font-semibold text-gray-700 mb-1">
-        {label}
-      </dt>
-      <dd
-        className={`text-base sm:text-lg font-medium ${highlight ? "font-semibold text-gray-900" : "text-gray-900"} break-words`}
-      >
-        {value || "-"}
-      </dd>
-    </div>
-  );
-
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <Spinner size="lg" />
-            <p className="mt-4 text-sm sm:text-base text-gray-600">
+            <p className={`mt-4 text-sm sm:text-base ${themeClasses.textSecondary}`}>
               Loading financial details...
             </p>
           </div>
@@ -186,312 +174,164 @@ function AdminFinancialDetailPage() {
       {/* Breadcrumb */}
       <Breadcrumb items={breadcrumbItems} className="mb-4 sm:mb-6" />
 
-      {/* Page Title - Responsive */}
-      <div className="mb-4 sm:mb-6">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
-              <CreditCardIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
-              Financials
-            </h1>
-            <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
-              <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
-              View complete financial information for order #
-              {order?.wjid || order?.id || oid}
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* Page Header */}
+      <PageHeader
+        icon={CreditCardIcon}
+        title="Financials"
+        subtitle={`View complete financial information for order #${order?.wjid || order?.id || oid}`}
+        actions={[
+          <BackButton key="back" to="/admin/financials" label="Back" size="md" />,
+          <Button
+            key="edit"
+            variant="primary"
+            icon={PencilSquareIcon}
+            onClick={() => navigate(`/admin/financial/${oid}/edit`)}
+            disabled={isOrderArchived()}
+          >
+            Edit
+          </Button>
+        ]}
+      />
 
-      {/* Status Alerts - Responsive */}
+      {/* Status Alerts */}
       {order && isOrderArchived() && (
-        <div className="mb-4 bg-blue-50 border border-blue-200 text-blue-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center text-sm sm:text-base">
-          <ArchiveBoxIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
+        <Alert type="info" icon={ArchiveBoxIcon}>
           This order is archived
-        </div>
+        </Alert>
       )}
 
-      {/* Error Display - Responsive */}
+      {/* Error Display */}
       {error && (
-        <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm sm:text-base">
-          <div className="flex justify-between items-center">
-            <span className="break-words">{error}</span>
-            <button
-              onClick={() => setError(null)}
-              className="text-red-700 hover:text-red-900 ml-2 flex-shrink-0"
-            >
-              ×
-            </button>
-          </div>
-        </div>
+        <Alert type="error" dismissible onDismiss={() => setError(null)}>
+          {error}
+        </Alert>
       )}
 
       {/* Main Content */}
-      <div className="bg-white shadow-sm rounded-lg">
-        {order && (
-          <>
-            {/* Header with Actions - Responsive */}
-            <div className="px-4 sm:px-6 py-4 sm:py-5 border-b border-gray-200">
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-4">
-                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 flex items-center">
-                  <ClipboardDocumentListIcon className="w-5 sm:w-7 h-5 sm:h-7 mr-2 text-blue-600 flex-shrink-0" />
-                  Financial Detail
-                </h2>
-                <div className="flex gap-2 sm:gap-3">
-                  <Link
-                    to="/admin/financials"
-                    className="flex-1 sm:flex-initial"
-                  >
-                    <button className="w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border border-gray-600 rounded-lg text-sm sm:text-base font-medium text-white bg-gray-600 hover:bg-gray-700 transition-colors">
-                      <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
-                      Back
-                    </button>
-                  </Link>
-                  <Link
-                    to={`/admin/financial/${oid}/edit`}
-                    className="flex-1 sm:flex-initial"
-                  >
-                    <button
-                      disabled={isOrderArchived()}
-                      className={`w-full sm:w-auto inline-flex items-center justify-center px-3 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
-                        isOrderArchived()
-                          ? "border-gray-300 text-gray-400 bg-gray-200 cursor-not-allowed"
-                          : "border-orange-500 text-white bg-orange-500 hover:bg-orange-600"
-                      }`}
-                    >
-                      <PencilSquareIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
-                      Edit
-                    </button>
-                  </Link>
-                </div>
-              </div>
-            </div>
+      {order && (
+        <div className="space-y-6">
+          {/* Tab Navigation */}
+          <Tabs tabs={tabItems} mode="routing" />
 
-            {/* Tab Navigation - Responsive with horizontal scroll on mobile */}
-            <div className="border-b border-gray-200">
-              <div className="px-4 sm:px-6">
-                <nav className="-mb-px flex space-x-4 sm:space-x-8 overflow-x-auto scrollbar-hide">
-                  <div className="border-b-2 border-blue-600 py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-blue-600 whitespace-nowrap">
-                    Detail
-                  </div>
-                  <Link
-                    to={`/admin/financial/${oid}/invoice`}
-                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap"
-                  >
-                    Invoice
+          {/* Order Information */}
+          <DetailCard title="Order Information" icon={ClipboardDocumentListIcon} maxWidth="full">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <DataField
+                label="Order #"
+                value={
+                  <Link to={`/admin/order/${order.wjid || order.id}`} className={themeClasses.linkPrimary}>
+                    {order.wjid || order.id}
                   </Link>
-                  <Link
-                    to={`/admin/financial/${oid}/more`}
-                    className="border-b-2 border-transparent py-3 sm:py-4 px-1 text-sm sm:text-base font-medium text-gray-500 hover:text-gray-700 hover:border-gray-300 inline-flex items-center whitespace-nowrap"
-                  >
-                    More
-                    <EllipsisHorizontalIcon className="w-4 sm:w-5 h-4 sm:h-5 ml-1" />
-                  </Link>
-                </nav>
-              </div>
-            </div>
-
-            {/* Detail Sections - Responsive with dark theme */}
-            <div className="p-4 sm:p-6">
-              {/* Order Information */}
-              <DetailSection
-                title="Order Information"
-                icon={ClipboardDocumentListIcon}
-              >
-                <DetailField
-                  label="Order #"
+                }
+              />
+              <DataField label="# of Visits" value={order.visits} />
+              {hasValidCustomer() && (
+                <DataField
+                  label="Customer"
                   value={
-                    <Link
-                      to={`/admin/order/${order.wjid || order.id}`}
-                      className="text-blue-600 hover:text-blue-700"
-                    >
-                      {order.wjid || order.id}
+                    <Link to={`/admin/customer/${order.customerId}`} className={themeClasses.linkPrimary}>
+                      {order.customerName || "View Customer"}
                     </Link>
                   }
                 />
-                <DetailField label="# of Visits" value={order.visits} />
-
-                {hasValidCustomer() && (
-                  <DetailField
-                    label="Customer"
-                    value={
-                      <Link
-                        to={`/admin/customer/${order.customerId}`}
-                        className="text-blue-600 hover:text-blue-700"
-                      >
-                        {order.customerName || "View Customer"}
-                      </Link>
-                    }
-                  />
-                )}
-
-                {hasValidAssociate() && (
-                  <DetailField
-                    label="Associate"
-                    value={
-                      <Link
-                        to={`/admin/associate/${order.associateId}`}
-                        className="text-blue-600 hover:text-blue-700"
-                      >
-                        {order.associateName || "View Associate"}
-                      </Link>
-                    }
-                  />
-                )}
-              </DetailSection>
-
-              {/* Important Dates */}
-              <DetailSection title="Important Dates" icon={CalendarIcon}>
-                <DetailField
-                  label="Order Assignment Date"
-                  value={formatDateForDisplay(order.assignmentDate)}
-                />
-                <DetailField
-                  label="Order Start Date"
-                  value={formatDateForDisplay(order.startDate)}
-                />
-                <DetailField
-                  label="Order Completion Date"
-                  value={formatDateForDisplay(order.completionDate)}
-                />
-                <DetailField
-                  label="Invoice Date"
-                  value={formatDateForDisplay(order.invoiceDate)}
-                />
-                <DetailField
-                  label="Invoice Service Fee Payment Date"
-                  value={formatDateForDisplay(
-                    order.invoiceServiceFeePaymentDate,
-                  )}
-                />
-              </DetailSection>
-
-              {/* Invoice Details */}
-              <DetailSection title="Invoice Details" icon={DocumentTextIcon}>
-                <DetailField label="Invoice ID(s) #" value={order.invoiceIds} />
-                <DetailField
-                  label="Invoice Quote"
-                  value={formatCurrency(order.invoiceQuoteAmount)}
-                />
-                <DetailField
-                  label="Invoice Labour"
-                  value={formatCurrency(order.invoiceLabourAmount)}
-                />
-                <DetailField
-                  label="Invoice Material"
-                  value={formatCurrency(order.invoiceMaterialAmount)}
-                />
-                <DetailField
-                  label="Invoice Tax"
+              )}
+              {hasValidAssociate() && (
+                <DataField
+                  label="Associate"
                   value={
-                    <>
-                      {formatCurrency(order.invoiceTaxAmount)}
-                      {order.invoiceIsCustomTaxAmount && (
-                        <span className="ml-2 text-xs sm:text-sm text-gray-600">
-                          (Custom value was set)
-                        </span>
-                      )}
-                    </>
+                    <Link to={`/admin/associate/${order.associateId}`} className={themeClasses.linkPrimary}>
+                      {order.associateName || "View Associate"}
+                    </Link>
                   }
                 />
-                {order.associateTaxId && (
-                  <DetailField
-                    label="Invoice HST #"
-                    value={order.associateTaxId}
-                  />
-                )}
-                <DetailField
-                  label="Invoice Total"
-                  value={formatCurrency(order.invoiceTotalAmount)}
-                  highlight={true}
-                />
-              </DetailSection>
-
-              {/* Payment Information */}
-              <DetailSection title="Payment Information" icon={CreditCardIcon}>
-                <DetailField
-                  label="Invoice Service Fee"
-                  value={formatCurrency(order.invoiceServiceFeeAmount)}
-                />
-                <DetailField
-                  label="Payment Method(s)"
-                  value={getPaymentMethodsDisplay(order.paymentMethods)}
-                />
-                <DetailField
-                  label="Actual Service Fee Amount Paid"
-                  value={formatCurrency(
-                    order.invoiceActualServiceFeeAmountPaid,
-                  )}
-                />
-                <DetailField
-                  label="Account Balance"
-                  value={
-                    <span
-                      className={`font-semibold ${
-                        order.invoiceBalanceOwingAmount > 0
-                          ? "text-red-600"
-                          : "text-green-600"
-                      }`}
-                    >
-                      {formatCurrency(order.invoiceBalanceOwingAmount)}
-                    </span>
-                  }
-                />
-              </DetailSection>
-
-              {/* Action Buttons - Responsive */}
-              <div className="flex flex-col sm:flex-row sm:justify-between items-stretch sm:items-center mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200 gap-3">
-                <Link to="/admin/financials" className="order-2 sm:order-1">
-                  <button className="w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border border-gray-600 rounded-lg text-sm sm:text-base font-medium text-white bg-gray-600 hover:bg-gray-700 transition-colors">
-                    <ChevronLeftIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
-                    Back to Financials
-                  </button>
-                </Link>
-
-                <div className="flex gap-2 sm:gap-3 order-1 sm:order-2">
-                  <Link
-                    to={`/admin/financial/${oid}/edit`}
-                    className="flex-1 sm:flex-initial"
-                  >
-                    <button
-                      disabled={isOrderArchived()}
-                      className={`w-full sm:w-auto inline-flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 border rounded-lg text-sm sm:text-base font-medium transition-colors ${
-                        isOrderArchived()
-                          ? "border-gray-300 text-gray-400 bg-gray-200 cursor-not-allowed"
-                          : "border-orange-500 text-white bg-orange-500 hover:bg-orange-600"
-                      }`}
-                    >
-                      <PencilSquareIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1 sm:mr-2" />
-                      Edit
-                    </button>
-                  </Link>
-                </div>
-              </div>
+              )}
             </div>
-          </>
-        )}
+          </DetailCard>
 
-        {!order && !loading && (
-          <div className="px-4 sm:px-6 py-8 sm:py-16 text-center">
-            <div className="inline-flex items-center justify-center w-12 sm:w-16 h-12 sm:h-16 bg-gray-100 rounded-full mb-4">
-              <CreditCardIcon className="w-6 sm:w-8 h-6 sm:h-8 text-gray-400" />
+          {/* Important Dates */}
+          <DetailCard title="Important Dates" icon={CalendarIcon} maxWidth="full">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <DataField label="Order Assignment Date" value={formatDateForDisplay(order.assignmentDate)} />
+              <DataField label="Order Start Date" value={formatDateForDisplay(order.startDate)} />
+              <DataField label="Order Completion Date" value={formatDateForDisplay(order.completionDate)} />
+              <DataField label="Invoice Date" value={formatDateForDisplay(order.invoiceDate)} />
+              <DataField label="Invoice Service Fee Payment Date" value={formatDateForDisplay(order.invoiceServiceFeePaymentDate)} />
             </div>
-            <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">
-              Financial Record Not Found
-            </h3>
-            <p className="text-sm sm:text-base text-gray-500 mb-4 sm:mb-6">
-              The financial record you're looking for doesn't exist or you don't
-              have permission to view it.
-            </p>
-            <Link to="/admin/financials">
-              <button className="inline-flex items-center px-3 sm:px-4 py-2 border border-transparent rounded-lg text-xs sm:text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 transition-colors">
-                <ChevronLeftIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
-                Back to Financials
-              </button>
-            </Link>
+          </DetailCard>
+
+          {/* Invoice Details */}
+          <DetailCard title="Invoice Details" icon={DocumentTextIcon} maxWidth="full">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <DataField label="Invoice ID(s) #" value={order.invoiceIds} />
+              <DataField label="Invoice Quote" value={formatCurrency(order.invoiceQuoteAmount)} />
+              <DataField label="Invoice Labour" value={formatCurrency(order.invoiceLabourAmount)} />
+              <DataField label="Invoice Material" value={formatCurrency(order.invoiceMaterialAmount)} />
+              <DataField
+                label="Invoice Tax"
+                value={
+                  <>
+                    {formatCurrency(order.invoiceTaxAmount)}
+                    {order.invoiceIsCustomTaxAmount && (
+                      <span className={`ml-2 text-xs sm:text-sm ${themeClasses.textSecondary}`}>
+                        (Custom value was set)
+                      </span>
+                    )}
+                  </>
+                }
+              />
+              {order.associateTaxId && (
+                <DataField label="Invoice HST #" value={order.associateTaxId} />
+              )}
+              <DataField
+                label="Invoice Total"
+                value={<span className="font-bold">{formatCurrency(order.invoiceTotalAmount)}</span>}
+              />
+            </div>
+          </DetailCard>
+
+          {/* Payment Information */}
+          <DetailCard title="Payment Information" icon={CreditCardIcon} maxWidth="full">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <DataField label="Invoice Service Fee" value={formatCurrency(order.invoiceServiceFeeAmount)} />
+              <DataField label="Payment Method(s)" value={getPaymentMethodsDisplay(order.paymentMethods)} />
+              <DataField label="Actual Service Fee Amount Paid" value={formatCurrency(order.invoiceActualServiceFeeAmountPaid)} />
+              <DataField
+                label="Account Balance"
+                value={
+                  <span className={`font-semibold ${order.invoiceBalanceOwingAmount > 0 ? themeClasses.textDanger : themeClasses.textSuccess}`}>
+                    {formatCurrency(order.invoiceBalanceOwingAmount)}
+                  </span>
+                }
+              />
+            </div>
+          </DetailCard>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row sm:justify-between items-stretch sm:items-center pt-4 sm:pt-6 gap-3">
+            <BackButton to="/admin/financials" label="Back to Financials" size="lg" />
+            <Button
+              variant="primary"
+              icon={PencilSquareIcon}
+              onClick={() => navigate(`/admin/financial/${oid}/edit`)}
+              disabled={isOrderArchived()}
+            >
+              Edit
+            </Button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!order && !loading && (
+        <EmptyState
+          icon={CreditCardIcon}
+          title="Financial Record Not Found"
+          description="The financial record you're looking for doesn't exist or you don't have permission to view it."
+          action={
+            <BackButton to="/admin/financials" label="Back to Financials" />
+          }
+        />
+      )}
     </div>
   );
 }

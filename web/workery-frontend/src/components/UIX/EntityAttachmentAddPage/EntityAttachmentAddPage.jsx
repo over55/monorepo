@@ -48,7 +48,7 @@ import {
 // Development-only logging
 const DEBUG = process.env.NODE_ENV === 'development';
 const log = (...args) => DEBUG && console.log(...args);
-const error = (...args) => console.error(...args);
+const error = (...args) => DEBUG && console.error(...args);
 
 // Maximum file size (50MB)
 const DEFAULT_MAX_FILE_SIZE = 50 * 1024 * 1024;

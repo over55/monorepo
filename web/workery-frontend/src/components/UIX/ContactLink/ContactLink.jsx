@@ -140,7 +140,7 @@ const ContactLink = memo(
         sizes.icon,
         "mr-2",
         "sm:mr-3",
-        textSecondaryClass || "text-gray-600",
+        textSecondaryClass || "text-gray-600 dark:text-gray-400",
         "flex-shrink-0",
       ];
 
@@ -160,7 +160,7 @@ const ContactLink = memo(
         <div className={containerClasses}>
           {showIcon && <IconComponent className={iconClasses} />}
           <div className="min-w-0 flex-1">
-            <span className={textMutedClass || "text-gray-600"}>{fallbackText}</span>
+            <span className={textMutedClass || "text-gray-600 dark:text-gray-400"}>{fallbackText}</span>
           </div>
         </div>
       );
@@ -171,7 +171,7 @@ const ContactLink = memo(
       <div className={containerClasses}>
         {showIcon && <IconComponent className={iconClasses} />}
         <div className="min-w-0 flex-1">
-          {label && <span className={`${textSecondaryClass || "text-gray-600"} mr-2`}>{label}:</span>}
+          {label && <span className={`${textSecondaryClass || "text-gray-600 dark:text-gray-400"} mr-2`}>{label}:</span>}
           <a
             href={href}
             className={linkClasses}

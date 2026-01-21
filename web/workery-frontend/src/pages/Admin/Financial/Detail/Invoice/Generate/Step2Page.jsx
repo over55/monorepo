@@ -3,31 +3,38 @@
 // UIX Upgraded - Uses UIX primitives (Spinner, Breadcrumb)
 
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { useParams, useNavigate, Link, useSearchParams } from "react-router";
+import { useParams, useNavigate, useSearchParams } from "react-router";
 import { useOrderManager } from "../../../../../../services/Services";
 import { InvoiceGenerationStorage } from "../../../../../../services/Storage/InvoiceGenerationStorage";
-import { Spinner, Breadcrumb, UIXThemeProvider, useUIXTheme } from "../../../../../../components/UIX";
+import {
+  Spinner,
+  Breadcrumb,
+  Alert,
+  Button,
+  Card,
+  Modal,
+  FormCard,
+  StepWizard,
+  Input,
+  Textarea,
+  BackButton,
+  UIXThemeProvider,
+  useUIXTheme,
+} from "../../../../../../components/UIX";
 import {
   ChartBarIcon,
-  ChevronRightIcon,
   XMarkIcon,
-  ArrowLeftIcon,
   CreditCardIcon,
   DocumentTextIcon,
-  PlusIcon,
   ExclamationCircleIcon,
   ArrowRightIcon,
   DocumentPlusIcon,
-  PencilSquareIcon,
-  CurrencyDollarIcon,
   HashtagIcon,
   CalculatorIcon,
   TrashIcon,
   PlusCircleIcon,
-  CheckIcon,
   ChevronLeftIcon,
   ClipboardDocumentListIcon,
-  InformationCircleIcon,
 } from "@heroicons/react/24/outline";
 
 function AdminFinancialGenerateInvoiceStep2Page() {
@@ -43,8 +50,29 @@ function AdminFinancialGenerateInvoiceStep2Page() {
   const themeClasses = useMemo(() => ({
     textPrimary: getThemeClasses("text-primary"),
     textSecondary: getThemeClasses("text-secondary"),
+    textMuted: getThemeClasses("text-muted"),
     linkPrimary: getThemeClasses("link-primary"),
+    bgPage: getThemeClasses("bg-page"),
+    borderLight: getThemeClasses("border-light"),
+    alertWarningIcon: getThemeClasses("alert-warning-icon"),
+    // Total box (primary emphasis)
+    bgPrimary: getThemeClasses("bg-primary"),
+    borderPrimary: getThemeClasses("border-primary"),
+    textOnPrimary: getThemeClasses("text-primary"),
+    textOnPrimaryMuted: getThemeClasses("text-muted"),
+    // Warning notice
+    bgWarning: getThemeClasses("bg-warning") || "bg-yellow-50",
+    borderWarning: getThemeClasses("border-warning") || "border-yellow-200",
+    textWarning: getThemeClasses("text-warning") || "text-yellow-800",
   }), [getThemeClasses]);
+
+  // Wizard steps configuration
+  const wizardSteps = useMemo(() => [
+    { id: 1, title: "Header Info", isCompleted: true },
+    { id: 2, title: "Line Items", isCompleted: false },
+    { id: 3, title: "Footer Info", isCompleted: false },
+    { id: 4, title: "Review", isCompleted: false },
+  ], []);
 
   // Breadcrumb items
   const breadcrumbItems = useMemo(() => [
@@ -174,20 +202,28 @@ function AdminFinancialGenerateInvoiceStep2Page() {
 
   const handleLineItemChange = (index, field, value) => {
     const updatedItems = [...lineItems];
+
+    // Sanitize numeric inputs - prevent negative values
+    let sanitizedValue = value;
+    if (field === "quantity" || field === "unitPrice") {
+      const numValue = parseFloat(value) || 0;
+      sanitizedValue = numValue < 0 ? 0 : numValue;
+    }
+
     updatedItems[index] = {
       ...updatedItems[index],
-      [field]: value,
+      [field]: sanitizedValue,
     };
 
     // Auto-calculate amount if quantity or unit price changes
     if (field === "quantity" || field === "unitPrice") {
       const quantity =
         field === "quantity"
-          ? parseFloat(value) || 0
+          ? parseFloat(sanitizedValue) || 0
           : parseFloat(updatedItems[index].quantity) || 0;
       const unitPrice =
         field === "unitPrice"
-          ? parseFloat(value) || 0
+          ? parseFloat(sanitizedValue) || 0
           : parseFloat(updatedItems[index].unitPrice) || 0;
       updatedItems[index].amount = quantity * unitPrice;
     }
@@ -355,175 +391,63 @@ function AdminFinancialGenerateInvoiceStep2Page() {
 
   if (isFetching) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Spinner size="lg" />
-          <p className="mt-4 text-sm sm:text-base text-gray-600">
-            Loading order details...
-          </p>
+      <div className={`min-h-screen ${themeClasses.bgPage}`}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <StepWizard
+            steps={wizardSteps}
+            currentStep={2}
+            title={isEditMode ? "Edit Invoice" : "Generate Invoice"}
+            subtitle="Step 2 of 4 - Line Items"
+            icon={DocumentPlusIcon}
+            breadcrumbItems={breadcrumbItems}
+          >
+            <Card className="flex items-center justify-center min-h-[400px]">
+              <div className="text-center">
+                <Spinner size="lg" />
+                <p className={`mt-4 ${themeClasses.textMuted}`}>Loading order details...</p>
+              </div>
+            </Card>
+          </StepWizard>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen ${themeClasses.bgPage}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {/* Breadcrumb */}
-        <Breadcrumb items={breadcrumbItems} className="mb-4 sm:mb-6" />
+        <StepWizard
+          steps={wizardSteps}
+          currentStep={2}
+          title={isEditMode ? "Edit Invoice" : "Generate Invoice"}
+          subtitle="Step 2 of 4 - Line Items"
+          icon={DocumentPlusIcon}
+          breadcrumbItems={breadcrumbItems}
+        >
+          {/* Error Messages */}
+          {errors.general && (
+            <Alert type="error" className="mb-4" dismissible onDismiss={() => setErrors({})}>
+              {errors.general}
+            </Alert>
+          )}
 
-        {/* Page Title - Responsive */}
-        <div className="mb-4 sm:mb-6">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
-                <DocumentPlusIcon className="w-6 sm:w-8 h-6 sm:h-8 mr-2 sm:mr-3 text-blue-600 flex-shrink-0" />
-                {isEditMode ? "Edit Invoice" : "Generate Invoice"}
-              </h1>
-              <p className="mt-1 text-xs sm:text-sm text-gray-600 flex items-center">
-                <InformationCircleIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1 flex-shrink-0" />
-                Step 2 of 4 - Line Items
+          {/* Validation Error Summary */}
+          {Object.keys(errors).length > 0 && !errors.general && (
+            <Alert type="warning" className="mb-4">
+              <p className="font-medium">Please complete all required fields</p>
+              <p className="text-sm mt-1">
+                All line items must have quantity, unit price, and description filled in.
               </p>
-            </div>
-          </div>
-        </div>
+            </Alert>
+          )}
 
-        {/* Wizard Steps - Improved Responsive Design */}
-        <div className="mb-4 sm:mb-6">
-          {/* Mobile View */}
-          <div className="md:hidden">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="flex items-center justify-center w-8 h-8 bg-blue-600 rounded-full">
-                    <span className="text-white font-semibold text-sm">2</span>
-                  </div>
-                  <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">
-                      Step 2: Line Items
-                    </p>
-                    <p className="text-xs text-gray-500">Add service items</p>
-                  </div>
-                </div>
-                <div className="text-xs text-gray-500">2 of 4</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Tablet/Desktop View */}
-          <div className="hidden md:flex items-center justify-center overflow-x-auto pb-2">
-            <div className="flex items-center min-w-max">
-              {/* Step 1 - Complete */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-green-600 rounded-full">
-                  <CheckIcon className="w-5 h-5 text-white" />
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">
-                    Header Info
-                  </p>
-                  <p className="text-xs text-gray-500">Complete</p>
-                </div>
-              </div>
-
-              {/* Connector */}
-              <div className="mx-2 w-16 h-0.5 bg-green-600"></div>
-
-              {/* Step 2 - Active */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-blue-600 rounded-full">
-                  <span className="text-white font-semibold">2</span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-900">
-                    Line Items
-                  </p>
-                  <p className="text-xs text-gray-500">Add Items</p>
-                </div>
-              </div>
-
-              {/* Connector */}
-              <div className="mx-2 w-16 h-0.5 bg-gray-300"></div>
-
-              {/* Step 3 - Inactive */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
-                  <span className="text-gray-600 font-semibold">3</span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-500">
-                    Footer Info
-                  </p>
-                  <p className="text-xs text-gray-400">Totals</p>
-                </div>
-              </div>
-
-              {/* Connector */}
-              <div className="mx-2 w-16 h-0.5 bg-gray-300"></div>
-
-              {/* Step 4 - Inactive */}
-              <div className="flex items-center">
-                <div className="flex items-center justify-center w-10 h-10 bg-gray-300 rounded-full">
-                  <span className="text-gray-600 font-semibold">4</span>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-gray-500">Review</p>
-                  <p className="text-xs text-gray-400">Confirm</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Error Messages - Responsive */}
-        {errors.general && (
-          <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 sm:px-4 py-2 sm:py-3 rounded-lg flex items-center justify-between text-sm sm:text-base">
-            <span className="flex items-center">
-              <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 flex-shrink-0" />
-              <span className="break-words">{errors.general}</span>
-            </span>
-            <button
-              onClick={() => setErrors({})}
-              className="text-red-700 hover:text-red-900 ml-2 flex-shrink-0"
-            >
-              <XMarkIcon className="w-4 sm:w-5 h-4 sm:h-5" />
-            </button>
-          </div>
-        )}
-
-        {/* Validation Error Summary */}
-        {Object.keys(errors).length > 0 && !errors.general && (
-          <div className="mb-4 bg-amber-50 border border-amber-200 text-amber-800 px-3 sm:px-4 py-2 sm:py-3 rounded-lg">
-            <div className="flex items-start">
-              <ExclamationCircleIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="text-sm font-medium">
-                  Please complete all required fields
-                </p>
-                <p className="text-xs mt-1">
-                  All line items must have quantity, unit price, and description
-                  filled in.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Main Content */}
-        <div className="bg-white shadow-sm rounded-lg">
-          {/* Header with Dark Background */}
-          <div className="bg-gray-700 rounded-t-lg px-4 sm:px-6 py-4 sm:py-5">
-            <h2 className="text-xl sm:text-2xl font-semibold text-white flex items-center">
-              <ClipboardDocumentListIcon className="w-5 sm:w-7 h-5 sm:h-7 mr-2 flex-shrink-0" />
-              Invoice Line Items
-            </h2>
-            <p className="mt-1 text-xs sm:text-sm text-gray-300">
-              Add line items to your invoice. All fields are required for each
-              line item.
-            </p>
-          </div>
-
-          <div className="p-4 sm:p-6">
+          {/* Main Content */}
+          <FormCard
+            title="Invoice Line Items"
+            subtitle="Add line items to your invoice. All fields are required for each line item."
+            icon={ClipboardDocumentListIcon}
+            maxWidth="full"
+          >
             {order && (
               <form className="space-y-4 sm:space-y-6">
                 {lineItems.map((item, index) => {
@@ -531,181 +455,100 @@ function AdminFinancialGenerateInvoiceStep2Page() {
                   const errorPrefix = `line${lineNum}`;
 
                   return (
-                    <div
+                    <FormCard
                       key={index}
-                      className="bg-gray-700 rounded-lg shadow-sm"
-                    >
-                      <div className="px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
-                        <h3 className="text-base sm:text-lg font-semibold text-white flex items-center">
-                          <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-500 text-white text-xs font-bold mr-2">
-                            {lineNum}
-                          </span>
-                          Line Item {lineNum}
-                          <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">
-                            Required
-                          </span>
-                        </h3>
-                        {index > 0 && (
-                          <button
+                      title={`Line Item ${lineNum}`}
+                      subtitle="Required"
+                      maxWidth="full"
+                      headerAction={
+                        index > 0 && (
+                          <Button
                             type="button"
+                            variant="danger"
+                            size="sm"
                             onClick={() => handleRemoveLineItem(index)}
-                            className="inline-flex items-center p-2 text-red-300 hover:text-red-100 hover:bg-red-600/20 rounded-lg transition-colors"
                             title="Remove this line item"
                           >
-                            <TrashIcon className="w-4 sm:w-5 h-4 sm:h-5" />
-                          </button>
-                        )}
-                      </div>
-
-                      <div className="bg-white border-2 border-t-0 border-gray-700 rounded-b-lg p-4 sm:p-6">
+                            <TrashIcon className="w-4 h-4" />
+                          </Button>
+                        )
+                      }
+                    >
                         <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3">
                           {/* Quantity */}
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              <HashtagIcon className="inline w-4 h-4 mr-1" />
-                              Quantity <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                              type="number"
-                              value={item.quantity}
-                              onChange={(e) =>
-                                handleLineItemChange(
-                                  index,
-                                  "quantity",
-                                  e.target.value,
-                                )
-                              }
-                              placeholder="0"
-                              className={`block w-full rounded-md shadow-sm border px-4 py-2 sm:py-3 text-sm sm:text-base bg-white hover:bg-gray-50 transition-colors ${
-                                errors[`${errorPrefix}Quantity`]
-                                  ? "border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500"
-                                  : "border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
-                              }`}
-                            />
-                            {errors[`${errorPrefix}Quantity`] && (
-                              <p className="mt-1 text-xs text-red-600">
-                                {errors[`${errorPrefix}Quantity`]}
-                              </p>
-                            )}
-                          </div>
+                          <Input
+                            label="Quantity"
+                            type="number"
+                            value={item.quantity}
+                            onChange={(value) =>
+                              handleLineItemChange(index, "quantity", value)
+                            }
+                            placeholder="0"
+                            icon={HashtagIcon}
+                            required
+                            error={errors[`${errorPrefix}Quantity`]}
+                            min="0"
+                          />
 
                           {/* Unit Price */}
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              <CurrencyDollarIcon className="inline w-4 h-4 mr-1" />
-                              Unit Price <span className="text-red-500">*</span>
-                            </label>
-                            <div className="relative rounded-md">
-                              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span className="text-gray-500 text-sm sm:text-base">
-                                  $
-                                </span>
-                              </div>
-                              <input
-                                type="number"
-                                step="0.01"
-                                value={item.unitPrice}
-                                onChange={(e) =>
-                                  handleLineItemChange(
-                                    index,
-                                    "unitPrice",
-                                    e.target.value,
-                                  )
-                                }
-                                placeholder="0.00"
-                                className={`block w-full pl-8 pr-4 rounded-md shadow-sm border py-2 sm:py-3 text-sm sm:text-base bg-white hover:bg-gray-50 transition-colors ${
-                                  errors[`${errorPrefix}UnitPrice`]
-                                    ? "border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500"
-                                    : "border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
-                                }`}
-                              />
-                            </div>
-                            {errors[`${errorPrefix}UnitPrice`] && (
-                              <p className="mt-1 text-xs text-red-600">
-                                {errors[`${errorPrefix}UnitPrice`]}
-                              </p>
-                            )}
-                          </div>
+                          <Input
+                            label="Unit Price"
+                            type="number"
+                            value={item.unitPrice}
+                            onChange={(value) =>
+                              handleLineItemChange(index, "unitPrice", value)
+                            }
+                            placeholder="0.00"
+                            prefix="$"
+                            required
+                            error={errors[`${errorPrefix}UnitPrice`]}
+                            step="0.01"
+                            min="0"
+                          />
 
                           {/* Total Amount */}
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                              <CalculatorIcon className="inline w-4 h-4 mr-1" />
-                              Total Amount
-                            </label>
-                            <div className="relative rounded-md">
-                              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <span className="text-gray-500 text-sm sm:text-base">
-                                  $
-                                </span>
-                              </div>
-                              <input
-                                type="number"
-                                step="0.01"
-                                value={item.amount.toFixed(2)}
-                                disabled
-                                className="block w-full pl-8 pr-4 bg-gray-100 border border-gray-300 rounded-md shadow-sm py-2 sm:py-3 text-sm sm:text-base cursor-not-allowed"
-                              />
-                            </div>
-                            <p className="mt-1 text-xs text-gray-500">
-                              Auto-calculated
-                            </p>
-                          </div>
+                          <Input
+                            label="Total Amount"
+                            type="number"
+                            value={item.amount.toFixed(2)}
+                            onChange={() => {}}
+                            prefix="$"
+                            disabled
+                            helperText="Auto-calculated"
+                          />
                         </div>
 
                         {/* Description - Full Width */}
                         <div className="mt-4">
-                          <label className="block text-sm font-medium text-gray-700 mb-2">
-                            <DocumentTextIcon className="inline w-4 h-4 mr-1" />
-                            Description <span className="text-red-500">*</span>
-                          </label>
-                          <textarea
+                          <Textarea
+                            label="Description"
                             value={item.description}
-                            onChange={(e) =>
-                              handleLineItemChange(
-                                index,
-                                "description",
-                                e.target.value,
-                              )
+                            onChange={(value) =>
+                              handleLineItemChange(index, "description", value)
                             }
-                            maxLength="638"
-                            rows="3"
+                            maxLength={638}
+                            rows={3}
                             placeholder="Enter a detailed description of the line item..."
-                            className={`block w-full rounded-md shadow-sm border px-4 py-2 sm:py-3 text-sm sm:text-base bg-white hover:bg-gray-50 transition-colors resize-none ${
-                              errors[`${errorPrefix}Description`]
-                                ? "border-red-300 focus:border-red-500 focus:ring-2 focus:ring-red-500"
-                                : "border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
-                            }`}
+                            required
+                            error={errors[`${errorPrefix}Description`]}
+                            helperText={`${item.description.length}/638 characters`}
                           />
-                          <div className="mt-1 flex justify-between">
-                            <div>
-                              {errors[`${errorPrefix}Description`] && (
-                                <p className="text-xs text-red-600">
-                                  {errors[`${errorPrefix}Description`]}
-                                </p>
-                              )}
-                            </div>
-                            <p className="text-xs text-gray-500">
-                              {item.description.length}/638 characters
-                            </p>
-                          </div>
                         </div>
-                      </div>
-                    </div>
+                    </FormCard>
                   );
                 })}
 
                 {/* Running Total */}
                 {lineItems.length > 0 && (
-                  <div className="bg-blue-600 rounded-lg p-4 sm:p-6 border-2 border-blue-700">
+                  <div className={`${themeClasses.bgPrimary} rounded-lg p-4 sm:p-6 border-2 ${themeClasses.borderPrimary}`}>
                     <div className="flex justify-between items-center">
                       <div className="flex items-center">
-                        <CalculatorIcon className="w-5 h-5 mr-2 text-blue-100" />
-                        <span className="text-lg font-semibold text-white">
+                        <CalculatorIcon className={`w-5 h-5 mr-2 ${themeClasses.textOnPrimaryMuted}`} />
+                        <span className={`text-lg font-semibold ${themeClasses.textOnPrimary}`}>
                           Invoice Total
                         </span>
                       </div>
-                      <span className="text-2xl font-bold text-white">
+                      <span className={`text-2xl font-bold ${themeClasses.textOnPrimary}`}>
                         $
                         {lineItems
                           .reduce((sum, item) => sum + (item.amount || 0), 0)
@@ -718,18 +561,19 @@ function AdminFinancialGenerateInvoiceStep2Page() {
                 {/* Add Line Item Button */}
                 {lineItems.length < 15 && (
                   <div className="text-center">
-                    <button
+                    <Button
                       type="button"
+                      variant="secondary"
                       onClick={handleAddLineItem}
-                      className="inline-flex items-center px-6 py-3 text-sm font-medium text-blue-700 bg-blue-50 border-2 border-dashed border-blue-300 rounded-lg hover:bg-blue-100 hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 group"
+                      className="border-dashed"
                     >
-                      <PlusCircleIcon className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" />
+                      <PlusCircleIcon className="w-5 h-5 mr-2" />
                       Add Line Item
-                      <span className="ml-2 text-xs text-gray-500">
+                      <span className="ml-2 text-xs opacity-70">
                         ({lineItems.length}/15)
                       </span>
-                    </button>
-                    <p className="mt-2 text-xs text-gray-500">
+                    </Button>
+                    <p className={`mt-2 text-xs ${themeClasses.textMuted}`}>
                       Complete all fields in existing line items before adding
                       new ones
                     </p>
@@ -738,97 +582,93 @@ function AdminFinancialGenerateInvoiceStep2Page() {
 
                 {/* Maximum Line Items Notice */}
                 {lineItems.length >= 15 && (
-                  <div className="text-center py-4 px-6 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p className="text-sm text-yellow-800">
+                  <div className={`text-center py-4 px-6 ${themeClasses.bgWarning} border ${themeClasses.borderWarning} rounded-lg`}>
+                    <p className={`text-sm ${themeClasses.textWarning}`}>
                       Maximum of 15 line items reached
                     </p>
                   </div>
                 )}
 
-                {/* Form Actions - Responsive */}
-                <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-200">
-                  <button
+                {/* Form Actions */}
+                <div className={`flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 mt-6 sm:mt-8 pt-4 sm:pt-6 border-t ${themeClasses.borderLight}`}>
+                  <Button
                     type="button"
+                    variant="secondary"
                     onClick={handleBack}
-                    className="order-2 sm:order-1 inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                    className="order-2 sm:order-1"
                   >
                     <ChevronLeftIcon className="w-4 h-4 mr-2" />
                     Back to Step 1
-                  </button>
+                  </Button>
 
                   <div className="flex gap-3 order-1 sm:order-2">
-                    <button
+                    <Button
                       type="button"
+                      variant="secondary"
                       onClick={handleCancel}
-                      className="flex-1 sm:flex-initial inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                     >
                       <XMarkIcon className="w-4 h-4 mr-2" />
                       Cancel
-                    </button>
+                    </Button>
 
-                    <button
+                    <Button
                       type="button"
+                      variant="primary"
                       onClick={handleNext}
-                      className="flex-1 sm:flex-initial inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                     >
                       Save & Next
                       <ArrowRightIcon className="w-4 h-4 ml-2" />
-                    </button>
+                    </Button>
                   </div>
                 </div>
               </form>
             )}
-          </div>
-        </div>
+          </FormCard>
 
-        {/* Back Link */}
-        <div className="mt-6">
-          <Link
-            to={`/admin/financial/${oid}/invoice`}
-            className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800"
-          >
-            <ChevronLeftIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
-            Back to Invoice
-          </Link>
-        </div>
+          {/* Back Link */}
+          <div className="mt-6">
+            <BackButton
+              to={`/admin/financial/${oid}/invoice`}
+              label="Back to Invoice"
+              size="sm"
+            />
+          </div>
+        </StepWizard>
       </div>
 
       {/* Cancel Confirmation Modal */}
-      {showCancelWarning && (
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 flex items-center">
-                <ExclamationCircleIcon className="h-5 w-5 mr-2 text-amber-600" />
-                Are you sure?
-              </h3>
-            </div>
-
-            <div className="px-4 sm:px-6 py-4">
-              <p className="text-sm text-gray-600">
-                Your invoice {isEditMode ? "editing" : "generation"} will be
-                cancelled and your work will be lost. This cannot be undone. Do
-                you want to continue?
-              </p>
-            </div>
-
-            <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 border-t border-gray-200 flex flex-col sm:flex-row justify-end gap-3">
-              <button
-                onClick={() => setShowCancelWarning(false)}
-                className="order-2 sm:order-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 w-full sm:w-auto transition-colors"
-              >
-                No, Keep Working
-              </button>
-              <button
-                onClick={handleConfirmCancel}
-                className="order-1 sm:order-2 px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 w-full sm:w-auto transition-colors"
-              >
-                Yes, Cancel
-              </button>
-            </div>
+      <Modal
+        isOpen={showCancelWarning}
+        onClose={() => setShowCancelWarning(false)}
+        title="Are you sure?"
+        icon={ExclamationCircleIcon}
+        iconColor={themeClasses.alertWarningIcon}
+        size="md"
+        footer={
+          <div className="flex flex-col sm:flex-row sm:justify-end gap-3 w-full">
+            <Button
+              variant="secondary"
+              onClick={() => setShowCancelWarning(false)}
+              className="order-2 sm:order-1"
+            >
+              No, Keep Working
+            </Button>
+            <Button
+              variant="danger"
+              onClick={handleConfirmCancel}
+              className="order-1 sm:order-2"
+            >
+              Yes, Cancel
+            </Button>
           </div>
-        </div>
-      )}
+        }
+      >
+        <p className={`text-sm ${themeClasses.textMuted}`}>
+          Your invoice {isEditMode ? "editing" : "generation"} will be
+          cancelled and your work will be lost. This cannot be undone. Do
+          you want to continue?
+        </p>
+      </Modal>
     </div>
   );
 }

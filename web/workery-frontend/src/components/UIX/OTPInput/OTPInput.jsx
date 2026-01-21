@@ -68,21 +68,21 @@ const OTPInput = forwardRef(
 
     // Theme classes for consistent styling
     const themeClasses = {
-      textPrimary: getThemeClasses("text-primary") || "text-gray-900",
-      textSecondary: getThemeClasses("text-secondary") || "text-gray-600",
-      textDanger: getThemeClasses("text-danger") || "text-red-600",
-      textSuccess: getThemeClasses("text-success") || "text-green-600",
-      textMuted: getThemeClasses("text-muted") || "text-gray-600",
-      bgCard: getThemeClasses("bg-card") || "bg-white",
-      bgDisabled: getThemeClasses("bg-disabled") || "bg-gray-50",
-      bgError: getThemeClasses("bg-error-light") || "bg-red-50",
-      bgSuccess: getThemeClasses("bg-success-light") || "bg-green-50",
-      borderError: getThemeClasses("border-error") || "border-red-500",
-      borderErrorFocus: getThemeClasses("border-error-focus") || "focus:border-red-600 focus:ring-red-200",
-      borderSuccess: getThemeClasses("border-success") || "border-green-500",
-      borderSuccessFocus: getThemeClasses("border-success-focus") || "focus:border-green-600 focus:ring-green-200",
-      borderColor: getThemeClasses("border-color") || "border-gray-300",
-      focusRing: getThemeClasses("focus-ring") || "focus:border-red-500 focus:ring-red-200",
+      textPrimary: getThemeClasses("text-primary") || "text-gray-900 dark:text-gray-100",
+      textSecondary: getThemeClasses("text-secondary") || "text-gray-600 dark:text-gray-400",
+      textDanger: getThemeClasses("text-danger") || "text-red-600 dark:text-red-400",
+      textSuccess: getThemeClasses("text-success") || "text-green-600 dark:text-green-400",
+      textMuted: getThemeClasses("text-muted") || "text-gray-600 dark:text-gray-400",
+      bgCard: getThemeClasses("bg-card") || "bg-white dark:bg-gray-800",
+      bgDisabled: getThemeClasses("bg-disabled") || "bg-gray-50 dark:bg-gray-700",
+      bgError: getThemeClasses("bg-error-light") || "bg-red-50 dark:bg-red-900/20",
+      bgSuccess: getThemeClasses("bg-success-light") || "bg-green-50 dark:bg-green-900/20",
+      borderError: getThemeClasses("border-error") || "border-red-500 dark:border-red-400",
+      borderErrorFocus: getThemeClasses("border-error-focus") || "focus:border-red-600 focus:ring-red-200 dark:focus:border-red-400 dark:focus:ring-red-800",
+      borderSuccess: getThemeClasses("border-success") || "border-green-500 dark:border-green-400",
+      borderSuccessFocus: getThemeClasses("border-success-focus") || "focus:border-green-600 focus:ring-green-200 dark:focus:border-green-400 dark:focus:ring-green-800",
+      borderColor: getThemeClasses("border-color") || "border-gray-300 dark:border-gray-600",
+      focusRing: getThemeClasses("focus-ring") || "focus:border-red-500 focus:ring-red-200 dark:focus:border-red-400 dark:focus:ring-red-800",
     };
 
     // Determine input state

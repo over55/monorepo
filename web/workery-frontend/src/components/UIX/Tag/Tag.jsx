@@ -26,10 +26,10 @@ const Tag = memo(function Tag({
     const variants = {
       muted: `${getThemeClasses("text-muted")} ${getThemeClasses("bg-disabled")}`,
       default: `${getThemeClasses("text-secondary")} ${getThemeClasses("bg-disabled")}`,
-      primary: "text-blue-700 bg-blue-50",
-      success: "text-green-700 bg-green-50",
-      warning: "text-yellow-700 bg-yellow-50",
-      info: "text-cyan-700 bg-cyan-50",
+      primary: "text-blue-700 bg-blue-50 dark:text-blue-300 dark:bg-blue-900/30",
+      success: "text-green-700 bg-green-50 dark:text-green-300 dark:bg-green-900/30",
+      warning: "text-yellow-700 bg-yellow-50 dark:text-yellow-300 dark:bg-yellow-900/30",
+      info: "text-cyan-700 bg-cyan-50 dark:text-cyan-300 dark:bg-cyan-900/30",
     };
     return variants[variant] || variants.muted;
   }, [variant, getThemeClasses]);

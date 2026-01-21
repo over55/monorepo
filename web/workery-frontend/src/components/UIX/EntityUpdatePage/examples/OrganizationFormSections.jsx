@@ -609,7 +609,9 @@ export const OrganizationAdditionalInfoSection = React.memo(
           if (error.name === "AbortError") {
             return;
           }
-          console.error("OrganizationAdditionalInfoSection: Error loading tags:", error);
+          if (process.env.NODE_ENV === "development") {
+            console.error("OrganizationAdditionalInfoSection: Error loading tags:", error);
+          }
         }
       };
 

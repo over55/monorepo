@@ -19,7 +19,6 @@ import {
   ChevronRightIcon,
   EyeIcon,
   ChartBarIcon,
-  CalendarIcon,
   HomeIcon,
   BuildingOffice2Icon,
   DocumentDuplicateIcon,
@@ -46,7 +45,7 @@ import {
   ORDER_TYPE_FILTER_OPTIONS,
   DEFAULT_ORDER_LIST_SORT_BY_VALUE,
 } from "../../../../constants/FieldOptions";
-import { formatDateForDisplay } from "../../../../services/Helpers/DateFormatter";
+import { formatDate } from "../../../../services/Helpers/DateFormatter";
 
 // Helper functions for formatting
 const formatStatus = (statusValue) => {
@@ -64,9 +63,9 @@ const formatStatus = (statusValue) => {
     case ORDER_STATUS_IN_PROGRESS:
       return "In Progress";
     case ORDER_STATUS_COMPLETED_BUT_UNPAID:
-      return "Completed but Unpaid";
+      return "Unpaid";
     case ORDER_STATUS_COMPLETED_AND_PAID:
-      return "Completed and Paid";
+      return "Paid";
     case ORDER_STATUS_ARCHIVED:
       return "Archived";
     default:
@@ -173,16 +172,6 @@ function AdminFinancialListPage() {
       // Table columns for tabular view
       columns: [
         {
-          key: "type",
-          label: "Type",
-          render: (order) => (
-            <Badge variant={getTypeBadgeVariant(order.type)} size="sm">
-              <TypeIcon type={order.type} />
-              {formatType(order.type)}
-            </Badge>
-          ),
-        },
-        {
           key: "wjid",
           label: "Job #",
           render: (order) => (
@@ -199,7 +188,7 @@ function AdminFinancialListPage() {
               <Link
                 to={`/admin/customer/${order.customerId}`}
                 onClick={(e) => e.stopPropagation()}
-                className="text-blue-600 hover:text-blue-800 text-lg"
+                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-lg"
               >
                 {order.customerName}
               </Link>
@@ -217,7 +206,7 @@ function AdminFinancialListPage() {
               <Link
                 to={`/admin/associate/${order.associateId}`}
                 onClick={(e) => e.stopPropagation()}
-                className="text-blue-600 hover:text-blue-800 text-lg"
+                className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 text-lg"
               >
                 {order.associateName}
               </Link>
@@ -229,19 +218,10 @@ function AdminFinancialListPage() {
         },
         {
           key: "assignmentDate",
-          label: "Assigned Date",
+          label: "Assigned",
           render: (order) => (
             <span className="text-lg">
-              {formatDateForDisplay(order.assignmentDate)}
-            </span>
-          ),
-        },
-        {
-          key: "startDate",
-          label: "Start Date",
-          render: (order) => (
-            <span className="text-lg">
-              {formatDateForDisplay(order.startDate)}
+              {formatDate(order.assignmentDate, "compact")}
             </span>
           ),
         },
@@ -411,13 +391,6 @@ function AdminFinancialListPage() {
                   </Link>
                 </div>
               )}
-              <div className="flex items-center text-lg">
-                <CalendarIcon
-                  className="w-5 h-5 mr-2 text-gray-400 dark:text-gray-500 flex-shrink-0"
-                  aria-hidden="true"
-                />
-                <span>Start: {formatDateForDisplay(order.startDate)}</span>
-              </div>
             </div>
 
             <div className="flex gap-2">

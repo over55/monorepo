@@ -96,7 +96,9 @@ const EntityAttachmentDeletePage = memo(({ config }) => {
         );
       } catch (error) {
         // Entity fetch errors are non-critical, just log
-        console.error("Failed to fetch entity:", error);
+        if (process.env.NODE_ENV === "development") {
+          console.error("Failed to fetch entity:", error);
+        }
         return null;
       }
     };

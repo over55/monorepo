@@ -102,12 +102,12 @@ const WizardAddOrSearchStep = memo(function WizardAddOrSearchStep({
 
   // Memoize theme classes
   const themeClasses = useMemo(() => ({
-    borderPrimary: getThemeClasses('border-primary') || 'border-blue-600',
-    linkPrimary: getThemeClasses('link-primary') || 'text-blue-600 hover:text-blue-800',
-    borderMedium: getThemeClasses('border-medium') || 'border-gray-200',
-    textMuted: getThemeClasses('text-muted') || 'text-gray-600',
-    textSecondary: getThemeClasses('text-secondary') || 'text-gray-600',
-    alertWarningIcon: getThemeClasses('alert-warning-icon') || 'text-amber-500',
+    borderPrimary: getThemeClasses('border-primary') || 'border-blue-600 dark:border-blue-500',
+    linkPrimary: getThemeClasses('link-primary') || 'text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300',
+    borderMedium: getThemeClasses('border-medium') || 'border-gray-200 dark:border-gray-700',
+    textMuted: getThemeClasses('text-muted') || 'text-gray-600 dark:text-gray-400',
+    textSecondary: getThemeClasses('text-secondary') || 'text-gray-600 dark:text-gray-400',
+    alertWarningIcon: getThemeClasses('alert-warning-icon') || 'text-amber-500 dark:text-amber-400',
   }), [getThemeClasses]);
 
   // Handle form submission

@@ -57,6 +57,8 @@ function getFormattedDate(dt, format) {
       return dt.toISODate(); // 1983-10-14
     case "custom":
       return dt.toFormat("MMM dd, yyyy"); // Oct 14, 1983
+    case "compact":
+      return dt.toFormat("dd/MM/yyyy"); // 14/10/1983
     default:
       return dt.toLocaleString(DateTime.DATE_MED);
   }

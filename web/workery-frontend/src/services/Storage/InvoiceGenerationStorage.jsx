@@ -29,7 +29,9 @@ export class InvoiceGenerationStorage {
   saveInvoiceGenerationData(data) {
     try {
       sessionStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
-      console.log("InvoiceGenerationStorage: Data saved");
+      if (process.env.NODE_ENV === "development") {
+        console.log("InvoiceGenerationStorage: Data saved");
+      }
     } catch (error) {
       console.error("InvoiceGenerationStorage: Error saving data", error);
     }
@@ -50,6 +52,8 @@ export class InvoiceGenerationStorage {
    */
   clearInvoiceGenerationData() {
     sessionStorage.removeItem(this.STORAGE_KEY);
-    console.log("InvoiceGenerationStorage: Data cleared");
+    if (process.env.NODE_ENV === "development") {
+      console.log("InvoiceGenerationStorage: Data cleared");
+    }
   }
 }

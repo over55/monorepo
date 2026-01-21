@@ -45,7 +45,7 @@ import { formatDateForDisplay } from "../../../services/Helpers/DateFormatter";
 // Development-only logging
 const DEBUG = process.env.NODE_ENV === 'development';
 const log = (...args) => DEBUG && console.log(...args);
-const logError = (...args) => console.error(...args); // Keep errors in production
+const logError = (...args) => DEBUG && console.error(...args);
 
 // Constants
 const ACTIVE_STATUS = 1;
