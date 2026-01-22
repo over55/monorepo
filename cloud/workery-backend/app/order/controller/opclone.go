@@ -67,10 +67,16 @@ func (impl *OrderControllerImpl) Clone(ctx context.Context, req *OrderOperationC
 	// 2. Count total orders in system (for particular tenant).
 	// 3. Generate WJID.
 	// 4. Apply the WJID to the new duplicated order.
-	// 5. Unlock this function to be usable again by other calls after
+	// 5. Update the tenant's LatestOrderWJID to prevent duplicate WJIDs.
+	// 6. Unlock this function to be usable again by other calls after
 	//    the function successfully submits the order into our system.
 	impl.Kmutex.Lockf("create-order-by-tenant-%s", tid.Hex())
 	defer impl.Kmutex.Unlockf("create-order-by-tenant-%s", tid.Hex())
+
+	// Lock the tenant model from any read/writes because we are going
+	// to need to update the tenant's `LatestOrderWJID` field after cloning.
+	impl.Kmutex.Lockf("tenant-%s", tid.Hex())
+	defer impl.Kmutex.Unlockf("tenant-%s", tid.Hex())
 
 	////
 	//// Lock this order until completed (including errors as well).
@@ -166,6 +172,33 @@ func (impl *OrderControllerImpl) Clone(ctx context.Context, req *OrderOperationC
 		impl.Logger.Debug("order duplicated for clone operation",
 			slog.Any("old_order_wjid", req.OrderWJID),
 			slog.Any("new_order_wjid", o.WJID))
+
+		//
+		// Update tenant with latest order id's for tenant.
+		// This is critical to prevent duplicate WJIDs when creating new orders.
+		//
+
+		t, err := impl.TenantStorer.GetByID(sessCtx, tid)
+		if err != nil {
+			impl.Logger.Error("get tenant by id from database error", slog.Any("error", err))
+			return nil, err
+		}
+		if t == nil {
+			err := fmt.Errorf("tenant does not exist with id: %v", tid)
+			impl.Logger.Error("tenant does not exist error", slog.Any("error", err))
+			return nil, err
+		}
+
+		t.LatestOrderWJID = o.WJID
+		t.LatestOrderID = o.ID
+		if err := impl.TenantStorer.UpdateByID(sessCtx, t); err != nil {
+			impl.Logger.Error("tenant update in database error", slog.Any("error", err))
+			return nil, err
+		}
+
+		impl.Logger.Debug("tenant updated with latest order wjid",
+			slog.Any("latest_order_wjid", t.LatestOrderWJID),
+			slog.Any("latest_order_id", t.LatestOrderID))
 
 		//
 		// Step 2: Updated invoice.
