@@ -394,16 +394,16 @@ func (impl *StaffControllerImpl) UpdateByID(ctx context.Context, req *StaffUpdat
 			//
 
 			u := &u_s.User{
-				ID:                      primitive.NewObjectID(),
-				TenantID:                tid,
-				FirstName:               req.FirstName,
-				LastName:                req.LastName,
-				Name:                    fmt.Sprintf("%s %s", req.FirstName, req.LastName),
-				LexicalName:             fmt.Sprintf("%s, %s", req.LastName, req.FirstName),
-				Email:                   req.Email,
-				PasswordHashAlgorithm:   "DO BELOW...",
-				PasswordHash:            "DO BELOW...",
-				Role:                    u_s.UserRoleStaff,
+				ID:                    primitive.NewObjectID(),
+				TenantID:              tid,
+				FirstName:             req.FirstName,
+				LastName:              req.LastName,
+				Name:                  fmt.Sprintf("%s %s", req.FirstName, req.LastName),
+				LexicalName:           fmt.Sprintf("%s, %s", req.LastName, req.FirstName),
+				Email:                 req.Email,
+				PasswordHashAlgorithm: "DO BELOW...",
+				PasswordHash:          "DO BELOW...",
+				Role:                  u_s.UserRoleStaff,
 				// HasStaffRole: Critical permission flag that enables staff-level operations (task closing, etc.)
 				// Must be set to true for all staff users to grant access to protected endpoints
 				HasStaffRole:            true,
@@ -482,6 +482,10 @@ func (impl *StaffControllerImpl) UpdateByID(ctx context.Context, req *StaffUpdat
 			u.Country = a.Country
 			u.Region = a.Region
 			u.City = a.City
+
+			// HasStaffRole: Critical permission flag that enables staff-level operations (task closing, etc.)
+			// Must be set to true for all staff users to grant access to protected endpoints
+			u.HasStaffRole = true
 
 			if err := impl.UserStorer.UpdateByID(sessCtx, u); err != nil {
 				impl.Logger.Error("database update error", slog.Any("error", err))
