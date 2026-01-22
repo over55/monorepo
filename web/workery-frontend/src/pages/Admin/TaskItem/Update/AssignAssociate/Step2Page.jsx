@@ -21,7 +21,6 @@ import {
   UserGroupIcon,
   UserPlusIcon,
   PhoneIcon,
-  EnvelopeIcon,
   BuildingOfficeIcon,
   TagIcon,
   MapPinIcon,
@@ -382,8 +381,6 @@ const Step2Content = memo(function Step2Content() {
                       <tr>
                         <th className="px-4 py-4 text-left text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wider">Name</th>
                         <th className="px-4 py-4 text-left text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wider">Phone</th>
-                        <th className="px-4 py-4 text-left text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wider">Email</th>
-                        <th className="px-4 py-4 text-left text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wider">Contacts (30d)</th>
                         <th className="px-4 py-4 text-left text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wider">WSIB</th>
                         <th className="px-4 py-4 text-left text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wider">Skills</th>
                         <th className="px-4 py-4 text-left text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wider">Action</th>
@@ -396,10 +393,13 @@ const Step2Content = memo(function Step2Content() {
 
                         return (
                           <tr key={associate.id} className={isSelected ? "bg-green-50" : isAway ? "bg-gray-100 opacity-60" : "hover:bg-gray-50"}>
-                            <td className="px-4 py-4 whitespace-nowrap">
+                            <td className="px-4 py-4">
                               <Link to={`/admin/associate/${associate.id}`} target="_blank" className={`text-lg font-medium ${isAway ? "text-gray-500" : themeClasses.linkPrimary}`}>
                                 {associate.name}
                               </Link>
+                              <div className={`text-sm ${isAway ? "text-gray-400" : "text-gray-700"}`}>
+                                Calls (last 30 days): {associate.contactsLast30Days || 0}
+                              </div>
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap">
                               {associate.phone ? (
@@ -408,14 +408,6 @@ const Step2Content = memo(function Step2Content() {
                                 </a>
                               ) : <span className="text-lg text-gray-400">-</span>}
                             </td>
-                            <td className="px-4 py-4 whitespace-nowrap">
-                              {associate.email ? (
-                                <a href={`mailto:${associate.email}`} className={`text-lg ${isAway ? "text-gray-500 pointer-events-none" : themeClasses.linkPrimary} flex items-center`}>
-                                  <EnvelopeIcon className="w-5 h-5 mr-1.5" />{associate.email}
-                                </a>
-                              ) : <span className="text-lg text-gray-400">-</span>}
-                            </td>
-                            <td className={`px-4 py-4 whitespace-nowrap text-lg ${isAway ? "text-gray-500" : "text-gray-900"}`}>{associate.contactsLast30Days || 0}</td>
                             <td className="px-4 py-4 whitespace-nowrap">
                               {associate.wsibNumber ? (
                                 <span className="inline-flex items-center px-3 py-1.5 text-sm sm:text-base font-medium text-green-800 bg-green-100 rounded-full">
@@ -454,6 +446,9 @@ const Step2Content = memo(function Step2Content() {
                           <Link to={`/admin/associate/${associate.id}`} target="_blank" className={`text-xl font-semibold ${isAway ? "text-gray-500" : themeClasses.linkPrimary}`}>
                             {associate.name}
                           </Link>
+                          <div className={`text-lg ${isAway ? "text-gray-500" : "text-gray-700"}`}>
+                            <span className="text-gray-700">Calls (last 30 days):</span> {associate.contactsLast30Days || 0}
+                          </div>
                         </div>
 
                         <div className="space-y-3 text-lg">
@@ -463,22 +458,12 @@ const Step2Content = memo(function Step2Content() {
                               <a href={`tel:${associate.phone}`} className={isAway ? "text-gray-500 pointer-events-none" : themeClasses.linkPrimary}>{associate.phone}</a>
                             </div>
                           )}
-                          {associate.email && (
-                            <div className="flex items-center">
-                              <EnvelopeIcon className="w-6 h-6 mr-2.5 text-gray-400" />
-                              <a href={`mailto:${associate.email}`} className={`${isAway ? "text-gray-500 pointer-events-none" : themeClasses.linkPrimary} break-all`}>{associate.email}</a>
-                            </div>
-                          )}
                           {associate.organizationName && (
                             <div className="flex items-center">
                               <BuildingOfficeIcon className="w-6 h-6 mr-2.5 text-gray-400" />
                               <span className={isAway ? "text-gray-500" : "text-gray-900"}>{associate.organizationName}</span>
                             </div>
                           )}
-                          <div className="flex justify-between">
-                            <span className="text-gray-500">Contacts (30d):</span>
-                            <span className={isAway ? "text-gray-500" : "text-gray-900"}>{associate.contactsLast30Days || 0}</span>
-                          </div>
                           <div className="flex justify-between items-center">
                             <span className="text-gray-500">WSIB:</span>
                             {associate.wsibNumber ? (
