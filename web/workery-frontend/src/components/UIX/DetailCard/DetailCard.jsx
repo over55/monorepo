@@ -27,6 +27,7 @@ const MAX_WIDTH_CLASSES = {
  * @param {string} className - Additional CSS classes for the container
  * @param {string} maxWidth - Maximum width constraint (2xl, 3xl, 4xl, 5xl, full)
  * @param {boolean} gradient - Whether to use gradient background in header (default: true)
+ * @param {React.ReactNode} headerAction - Optional action element to display in header (e.g., Edit link)
  */
 const DetailCard = memo(
   ({
@@ -36,6 +37,7 @@ const DetailCard = memo(
     className = "",
     maxWidth = "4xl",
     gradient = true,
+    headerAction,
     ...props
   }) => {
     const { getThemeClasses } = useUIXTheme();
@@ -103,13 +105,16 @@ const DetailCard = memo(
 
       return (
         <Card padding="px-6 py-4 sm:py-5" className={`${headerClasses} shadow-none border-0`}>
-          <h2 className={`text-sm sm:text-lg font-bold ${textClass} uppercase tracking-wider flex items-center`}>
-            {Icon && <Icon className={`w-5 h-5 sm:w-6 sm:h-6 mr-2.5 ${iconClass}`} />}
-            {title}
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className={`text-sm sm:text-lg font-bold ${textClass} uppercase tracking-wider flex items-center`}>
+              {Icon && <Icon className={`w-5 h-5 sm:w-6 sm:h-6 mr-2.5 ${iconClass}`} />}
+              {title}
+            </h2>
+            {headerAction && <div className="ml-4">{headerAction}</div>}
+          </div>
         </Card>
       );
-    }, [title, Icon, headerClasses, themeClasses.detailCardHeaderText, themeClasses.detailCardHeaderIcon]);
+    }, [title, Icon, headerClasses, themeClasses.detailCardHeaderText, themeClasses.detailCardHeaderIcon, headerAction]);
 
     return (
       <Card padding="p-0" className={`${containerClasses} shadow-none border-0 bg-transparent`} {...props}>
