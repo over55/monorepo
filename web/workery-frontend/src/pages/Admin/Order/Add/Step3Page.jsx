@@ -2,7 +2,7 @@
 // UIX Upgraded - Uses WizardFormStep whole page component
 // @uix-page: AdminOrderAddStep3Page
 
-import React, { useState, useEffect, useCallback, useMemo, memo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from "react";
 import { useNavigate } from "react-router";
 import {
   useAuthManager,
@@ -13,7 +13,6 @@ import {
   FormCard,
   Textarea,
   UIXThemeProvider,
-  useUIXTheme,
 } from "../../../../components/UIX";
 import {
   SkillSetsMultiSelect,
@@ -35,20 +34,113 @@ const WIZARD_STEPS = [
   { title: "Review" },
 ];
 
+// Isolated memoized form sections to prevent re-renders when other fields change
+const DescriptionSection = memo(function DescriptionSection({ value, onChange, error }) {
+  return (
+    <FormCard
+      title="Job Description"
+      subtitle="Describe the work that needs to be done"
+      icon={DocumentTextIcon}
+      maxWidth="7xl"
+    >
+      <Textarea
+        label="Describe the Job"
+        value={value}
+        onChange={onChange}
+        placeholder="Describe the work that needs to be done..."
+        maxLength={1000}
+        rows={4}
+        required
+        error={error}
+        showCharacterCount
+      />
+    </FormCard>
+  );
+});
+DescriptionSection.displayName = 'DescriptionSection';
+
+const SkillsSection = memo(function SkillsSection({ value, onChange, error, onUnauthorized }) {
+  return (
+    <FormCard
+      title="Required Skills"
+      subtitle="Select the skill sets required for this job"
+      icon={AcademicCapIcon}
+      maxWidth="7xl"
+    >
+      <SkillSetsMultiSelect
+        value={value}
+        onChange={onChange}
+        error={error}
+        required={true}
+        label="Required Job Skills"
+        placeholder="Select required skill sets..."
+        helperText="Pick at least one skill set that is required for this job"
+        onUnauthorized={onUnauthorized}
+      />
+    </FormCard>
+  );
+});
+SkillsSection.displayName = 'SkillsSection';
+
+const TagsSection = memo(function TagsSection({ value, onChange, error, onUnauthorized }) {
+  return (
+    <FormCard
+      title="Tags"
+      subtitle="Categorize this order with tags"
+      icon={TagIcon}
+      maxWidth="7xl"
+    >
+      <TagsMultiSelect
+        value={value}
+        onChange={onChange}
+        error={error}
+        required={false}
+        label="Tags (Optional)"
+        placeholder="Select tags..."
+        helperText="Pick any tags you would like to associate with this order"
+        onUnauthorized={onUnauthorized}
+      />
+    </FormCard>
+  );
+});
+TagsSection.displayName = 'TagsSection';
+
+const AdditionalCommentsSection = memo(function AdditionalCommentsSection({ value, onChange }) {
+  return (
+    <FormCard
+      title="Additional Comments"
+      subtitle="Any extra information or special instructions"
+      icon={ChatBubbleLeftRightIcon}
+      maxWidth="7xl"
+    >
+      <Textarea
+        label="Additional Comments (Optional)"
+        value={value}
+        onChange={onChange}
+        placeholder="Any additional comments or special instructions..."
+        maxLength={1000}
+        rows={4}
+        showCharacterCount
+      />
+    </FormCard>
+  );
+});
+AdditionalCommentsSection.displayName = 'AdditionalCommentsSection';
+
 // Memoized content component
 const Step3Content = memo(function Step3Content() {
   const authManager = useAuthManager();
   const orderCreationStorage = useOrderCreationStorage();
   const navigate = useNavigate();
-  const { getThemeClasses } = useUIXTheme();
 
   // Component states
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
   const [showCancelWarning, setShowCancelWarning] = useState(false);
 
-  // Get existing order state
-  const existingOrder = orderCreationStorage.getOrderCreation();
+  // Get existing order state - use ref to avoid re-fetching on every render
+  const existingOrderRef = useRef(orderCreationStorage.getOrderCreation());
+  const existingOrder = existingOrderRef.current;
 
   // Form fields
   const [description, setDescription] = useState(existingOrder?.description || "");
@@ -56,7 +148,7 @@ const Step3Content = memo(function Step3Content() {
   const [additionalComment, setAdditionalComment] = useState(existingOrder?.additionalComment || "");
   const [tags, setTags] = useState(existingOrder?.tags || []);
 
-  // Check authentication and order state
+  // Check authentication and order state - only on mount
   useEffect(() => {
     if (!authManager.isAuthenticated()) {
       navigate("/login?unauthorized=true");
@@ -69,7 +161,8 @@ const Step3Content = memo(function Step3Content() {
     }
 
     window.scrollTo(0, 0);
-  }, [authManager, navigate, existingOrder]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount
 
   // Handle form submission
   const handleNext = useCallback(() => {
@@ -121,28 +214,39 @@ const Step3Content = memo(function Step3Content() {
     navigate("/admin/orders/add/step-2");
   }, [navigate]);
 
-  // Stable onChange handlers
+  // Stable unauthorized handler
+  const handleUnauthorized = useCallback(() => {
+    navigate("/login?unauthorized=true");
+  }, [navigate]);
+
+  // Stable onChange handlers - use functional updates to avoid dependency on errors
   const handleDescriptionChange = useCallback((value) => {
     setDescription(value);
-    if (errors.description && value.trim() !== "") {
+    if (value.trim() !== "") {
       setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors.description;
-        return newErrors;
+        if (prev.description) {
+          const newErrors = { ...prev };
+          delete newErrors.description;
+          return newErrors;
+        }
+        return prev;
       });
     }
-  }, [errors.description]);
+  }, []);
 
   const handleSkillSetsChange = useCallback((value) => {
     setSkillSets(value);
-    if (errors.skillSets && value.length > 0) {
+    if (value.length > 0) {
       setErrors((prev) => {
-        const newErrors = { ...prev };
-        delete newErrors.skillSets;
-        return newErrors;
+        if (prev.skillSets) {
+          const newErrors = { ...prev };
+          delete newErrors.skillSets;
+          return newErrors;
+        }
+        return prev;
       });
     }
-  }, [errors.skillSets]);
+  }, []);
 
   const handleTagsChange = useCallback((value) => {
     setTags(value);
@@ -203,108 +307,55 @@ const Step3Content = memo(function Step3Content() {
         actionLayout="end"
       >
         <div className="space-y-8">
-          {/* Job Description Section */}
-          <FormCard
-            title="Job Description"
-            subtitle="Describe the work that needs to be done"
-            icon={DocumentTextIcon}
-            maxWidth="7xl"
-          >
-            <Textarea
-              label="Describe the Job"
-              value={description}
-              onChange={handleDescriptionChange}
-              placeholder="Describe the work that needs to be done..."
-              maxLength={1000}
-              rows={4}
-              required
-              error={errors.description}
-              helperText={`${description.length}/1000 characters`}
-            />
-          </FormCard>
-
-          {/* Skills Section */}
-          <FormCard
-            title="Required Skills"
-            subtitle="Select the skill sets required for this job"
-            icon={AcademicCapIcon}
-            maxWidth="7xl"
-          >
-            <SkillSetsMultiSelect
-              value={skillSets}
-              onChange={handleSkillSetsChange}
-              error={errors.skillSets}
-              required={true}
-              label="Required Job Skills"
-              placeholder="Select required skill sets..."
-              helperText="Pick at least one skill set that is required for this job"
-              onUnauthorized={() => navigate("/login?unauthorized=true")}
-            />
-          </FormCard>
-
-          {/* Tags Section */}
-          <FormCard
-            title="Tags"
-            subtitle="Categorize this order with tags"
-            icon={TagIcon}
-            maxWidth="7xl"
-          >
-            <TagsMultiSelect
-              value={tags}
-              onChange={handleTagsChange}
-              error={errors.tags}
-              required={false}
-              label="Tags (Optional)"
-              placeholder="Select tags..."
-              helperText="Pick any tags you would like to associate with this order"
-              onUnauthorized={() => navigate("/login?unauthorized=true")}
-            />
-          </FormCard>
-
-          {/* Additional Comments Section */}
-          <FormCard
-            title="Additional Comments"
-            subtitle="Any extra information or special instructions"
-            icon={ChatBubbleLeftRightIcon}
-            maxWidth="7xl"
-          >
-            <Textarea
-              label="Additional Comments (Optional)"
-              value={additionalComment}
-              onChange={handleAdditionalCommentChange}
-              placeholder="Any additional comments or special instructions..."
-              maxLength={1000}
-              rows={4}
-              helperText={`${additionalComment.length}/1000 characters`}
-            />
-          </FormCard>
+          {/* Each section is memoized to prevent re-renders when other fields change */}
+          <DescriptionSection
+            value={description}
+            onChange={handleDescriptionChange}
+            error={errors.description}
+          />
+          <SkillsSection
+            value={skillSets}
+            onChange={handleSkillSetsChange}
+            error={errors.skillSets}
+            onUnauthorized={handleUnauthorized}
+          />
+          <TagsSection
+            value={tags}
+            onChange={handleTagsChange}
+            error={errors.tags}
+            onUnauthorized={handleUnauthorized}
+          />
+          <AdditionalCommentsSection
+            value={additionalComment}
+            onChange={handleAdditionalCommentChange}
+          />
         </div>
       </WizardFormStep>
 
       {/* Cancel Confirmation Modal */}
       {showCancelWarning && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+          <div className="bg-white rounded-xl max-w-lg w-full">
+            <div className="px-6 sm:px-8 py-5 border-b border-gray-200">
+              <h3 className="text-xl sm:text-2xl font-semibold text-gray-900">
                 Are you sure?
               </h3>
             </div>
-            <div className="px-4 sm:px-6 py-4">
-              <p className="text-xs sm:text-sm text-gray-600">
+            <div className="px-6 sm:px-8 py-5">
+              <p className="text-base sm:text-lg text-gray-600">
                 Your Order record will be cancelled and your work will be lost. This cannot be undone. Do you want to continue?
               </p>
             </div>
-            <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-col-reverse sm:flex-row sm:justify-end gap-3 rounded-b-lg">
+            <div className="px-6 sm:px-8 py-5 bg-gray-50 border-t border-gray-200 flex flex-col-reverse sm:flex-row sm:justify-end gap-4 rounded-b-xl">
               <button
                 onClick={() => setShowCancelWarning(false)}
-                className="w-full sm:w-auto px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="w-full sm:w-auto px-6 py-3 text-base sm:text-lg font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 No, Keep Working
               </button>
               <button
                 onClick={handleConfirmCancel}
-                className="w-full sm:w-auto px-4 py-2 text-xs sm:text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+                className="w-full sm:w-auto px-6 py-3 text-base sm:text-lg font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
               >
                 Yes, Cancel
               </button>

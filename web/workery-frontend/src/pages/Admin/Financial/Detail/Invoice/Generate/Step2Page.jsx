@@ -531,7 +531,7 @@ function AdminFinancialGenerateInvoiceStep2Page() {
                             placeholder="Enter a detailed description of the line item..."
                             required
                             error={errors[`${errorPrefix}Description`]}
-                            helperText={`${item.description.length}/638 characters`}
+                            showCharacterCount
                           />
                         </div>
                     </FormCard>

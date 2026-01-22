@@ -1,7 +1,7 @@
 // File: src/components/UIX/Input/Input.jsx
 // UIX Mobile Optimizations Applied
 
-import React, { useMemo, useCallback, memo } from "react";
+import React, { useMemo, useCallback, memo, useRef } from "react";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { useUIXTheme } from "../themes/useUIXTheme.jsx";
 
@@ -79,26 +79,22 @@ const Input = memo(function Input({
     [getThemeClasses],
   );
 
-  // Generate a unique id for the input field - memoized to prevent regeneration on every render
-  const inputId = useMemo(() => {
-    return (
-      props.id ||
-      props.name ||
-      `input-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    );
-  }, [props.id, props.name]);
+  // Generate a stable unique id for the input field - use useRef for guaranteed stability
+  // (useMemo can discard values for optimization, causing focus loss with Math.random())
+  const generatedIdRef = useRef(`input-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+  const inputId = props.id || props.name || generatedIdRef.current;
 
   // Memoize size classes with mobile-friendly touch targets (min 44px height)
   const sizeClasses = useMemo(() => ({
     sm: "px-3 py-2.5 text-sm min-h-[44px]",
     md: "px-4 py-3 text-base min-h-[44px]",
-    lg: "px-5 py-4 text-base sm:text-lg min-h-[48px]",
+    lg: "px-5 py-4 text-lg sm:text-xl min-h-[56px]",
   }), []);
 
   const labelSizeClasses = useMemo(() => ({
     sm: "text-sm",
     md: "text-base",
-    lg: "text-base sm:text-lg",
+    lg: "text-lg sm:text-xl",
   }), []);
 
   // Memoize event handler
@@ -122,7 +118,7 @@ const Input = memo(function Input({
   const inputClassName = useMemo(() => {
     const borderClass = error ? themeClasses.inputBorderError : themeClasses.inputBorder;
     const bgClass = disabled ? `${themeClasses.bgDisabled} cursor-not-allowed` : themeClasses.bgCard;
-    const leftPadding = Icon ? "pl-10" : "pl-5";
+    const leftPadding = Icon ? "pl-12" : "pl-5";
     const rightPadding = rightIcon ? "pr-12" : "pr-5";
     // Mobile optimizations: text-base ensures 16px font (prevents iOS zoom), touch-manipulation prevents double-tap zoom
     return `w-full ${sizeClasses[size]} ${leftPadding} ${rightPadding} border-2 rounded-xl shadow-sm transition-all duration-200 ${themeClasses.placeholderColor} focus:outline-none ${themeClasses.inputFocusRing} ${borderClass} ${bgClass} text-base touch-manipulation`;
@@ -187,8 +183,8 @@ const Input = memo(function Input({
           // Regular input without prefix
           <>
             {Icon && (
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Icon className={`h-5 w-5 ${themeClasses.textMuted}`} />
+              <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <Icon className={`h-6 w-6 ${themeClasses.textMuted}`} />
               </div>
             )}
             <input
@@ -217,9 +213,9 @@ const Input = memo(function Input({
 
       {/* Character count */}
       {showCharacterCount && maxLength && (
-        <div className="mt-1 text-right">
+        <div className="mt-2 text-right">
           <span
-            className={`text-xs ${isNearLimit ? themeClasses.textWarning : themeClasses.textMuted}`}
+            className={`text-base sm:text-lg ${isNearLimit ? themeClasses.textWarning : themeClasses.textMuted}`}
           >
             {currentLength}/{maxLength} characters
           </span>
@@ -228,7 +224,7 @@ const Input = memo(function Input({
 
       {/* Helper text */}
       {helperText && !error && (
-        <p className={`mt-1 text-xs ${themeClasses.textSecondary}`}>
+        <p className={`mt-3 text-base sm:text-lg ${themeClasses.textSecondary}`}>
           {helperText}
         </p>
       )}
@@ -236,10 +232,10 @@ const Input = memo(function Input({
       {/* Error message */}
       {error && (
         <p
-          className={`mt-1 text-sm ${themeClasses.textDanger} flex items-center animate-fade-in`}
+          className={`mt-3 text-base sm:text-lg ${themeClasses.textDanger} flex items-center animate-fade-in`}
         >
           <ExclamationTriangleIcon
-            className={`h-4 w-4 mr-1 ${themeClasses.textDanger}`}
+            className={`h-5 w-5 mr-1.5 ${themeClasses.textDanger}`}
           />
           {error}
         </p>

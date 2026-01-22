@@ -358,7 +358,7 @@ const Step5Content = memo(function Step5Content() {
                 placeholder="Max 638 characters"
                 maxLength={638}
                 rows={4}
-                helperText={`${additionalComment.length}/638 characters`}
+                showCharacterCount
                 icon={ChatBubbleBottomCenterTextIcon}
               />
             </div>

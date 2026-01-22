@@ -305,20 +305,20 @@ const Step3Content = memo(function Step3Content() {
 
       {/* Associate Away Warning */}
       {isAssociateAway && awayLogData && (
-        <div className="mb-6 bg-red-50 border-2 border-red-300 rounded-lg p-4 sm:p-6">
-          <h3 className="text-lg sm:text-xl font-bold text-red-800 mb-2">Associate Currently Away</h3>
-          <p className={`text-sm sm:text-base text-red-700 mb-3`}>
+        <div className="mb-6 bg-red-50 border-2 border-red-300 rounded-xl p-5 sm:p-6">
+          <h3 className="text-xl sm:text-2xl font-bold text-red-800 mb-3">Associate Currently Away</h3>
+          <p className={`text-base sm:text-lg text-red-700 mb-4`}>
             <strong>{associateData?.associateName}</strong> is currently marked as away and cannot be assigned to this task.
           </p>
-          <div className="bg-white rounded-md p-3 mb-3 border border-red-200">
-            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+          <div className="bg-white rounded-lg p-4 mb-4 border border-red-200">
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-base">
               <div><dt className="font-semibold text-gray-700">Reason:</dt><dd className="text-gray-900">{getAwayReasonText(awayLogData)}</dd></div>
               <div><dt className="font-semibold text-gray-700">Period:</dt><dd className="text-gray-900">{getAwayPeriodText(awayLogData)}</dd></div>
               {awayLogData.startDate && <div><dt className="font-semibold text-gray-700">Start Date:</dt><dd className="text-gray-900">{new Date(awayLogData.startDate).toLocaleDateString()}</dd></div>}
             </dl>
           </div>
-          <p className="text-sm sm:text-base text-red-700 font-medium">Please go back and select a different associate.</p>
-          <Button className="mt-4" variant="danger" onClick={handleBack}>Go Back & Select Different Associate</Button>
+          <p className="text-base sm:text-lg text-red-700 font-medium">Please go back and select a different associate.</p>
+          <Button className="mt-5" size="lg" variant="danger" onClick={handleBack}>Go Back & Select Different Associate</Button>
         </div>
       )}
 
@@ -329,25 +329,25 @@ const Step3Content = memo(function Step3Content() {
             <DetailCard title="Selected Associate" icon={UserIcon} maxWidth="full">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <div>
-                  <dt className={`text-xs sm:text-sm font-semibold ${themeClasses.textSecondary} mb-1`}>Associate Name</dt>
-                  <dd className={`text-base sm:text-lg font-medium ${themeClasses.textPrimary}`}>
+                  <dt className={`text-sm sm:text-base font-semibold ${themeClasses.textSecondary} mb-1.5`}>Associate Name</dt>
+                  <dd className={`text-lg sm:text-xl font-medium ${themeClasses.textPrimary}`}>
                     <Link to={`/admin/associate/${associateData.associateID}`} className={themeClasses.linkPrimary}>{associateData.associateName}</Link>
-                    {isAssociateAway && <span className="ml-2 inline-flex items-center px-2 py-1 text-xs font-medium text-red-800 bg-red-100 rounded-full"><CalendarDaysIcon className="w-3 h-3 mr-1" />Away</span>}
+                    {isAssociateAway && <span className="ml-2 inline-flex items-center px-2.5 py-1.5 text-sm font-medium text-red-800 bg-red-100 rounded-full"><CalendarDaysIcon className="w-4 h-4 mr-1.5" />Away</span>}
                   </dd>
                 </div>
                 {associateData.associatePhone && (
                   <div>
-                    <dt className={`text-xs sm:text-sm font-semibold ${themeClasses.textSecondary} mb-1`}>Phone</dt>
-                    <dd className={`text-base sm:text-lg font-medium ${themeClasses.textPrimary}`}>
-                      <a href={`tel:${associateData.associatePhone}`} className={`${themeClasses.linkPrimary} flex items-center`}><PhoneIcon className="w-4 h-4 mr-1" />{associateData.associatePhone}</a>
+                    <dt className={`text-sm sm:text-base font-semibold ${themeClasses.textSecondary} mb-1.5`}>Phone</dt>
+                    <dd className={`text-lg sm:text-xl font-medium ${themeClasses.textPrimary}`}>
+                      <a href={`tel:${associateData.associatePhone}`} className={`${themeClasses.linkPrimary} flex items-center`}><PhoneIcon className="w-5 h-5 mr-1.5" />{associateData.associatePhone}</a>
                     </dd>
                   </div>
                 )}
                 {associateData.associateEmail && (
                   <div className="lg:col-span-2">
-                    <dt className={`text-xs sm:text-sm font-semibold ${themeClasses.textSecondary} mb-1`}>Email</dt>
-                    <dd className={`text-base sm:text-lg font-medium ${themeClasses.textPrimary}`}>
-                      <a href={`mailto:${associateData.associateEmail}`} className={`${themeClasses.linkPrimary} flex items-center break-all`}><EnvelopeIcon className="w-4 h-4 mr-1 flex-shrink-0" />{associateData.associateEmail}</a>
+                    <dt className={`text-sm sm:text-base font-semibold ${themeClasses.textSecondary} mb-1.5`}>Email</dt>
+                    <dd className={`text-lg sm:text-xl font-medium ${themeClasses.textPrimary}`}>
+                      <a href={`mailto:${associateData.associateEmail}`} className={`${themeClasses.linkPrimary} flex items-center break-all`}><EnvelopeIcon className="w-5 h-5 mr-1.5 flex-shrink-0" />{associateData.associateEmail}</a>
                     </dd>
                   </div>
                 )}
@@ -358,61 +358,61 @@ const Step3Content = memo(function Step3Content() {
             {!isAssociateAway && (
               <>
                 <DetailCard title="Job Acceptance Status" icon={ClipboardDocumentCheckIcon} maxWidth="full">
-                  <div className="space-y-4">
+                  <div className="space-y-5">
                     <div>
-                      <label className={`block text-sm font-semibold ${themeClasses.textPrimary} mb-3`}>Has the associate accepted this job? <span className="text-red-500">*</span></label>
-                      <div className="space-y-2">
-                        <label className={`flex items-center p-3 sm:p-4 border-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${status === TASK_ASSIGN_ASSOCIATE_STATUS.ACCEPTED ? 'border-green-500 bg-green-50' : 'border-gray-200'}`}>
-                          <input type="radio" name="status" checked={status === TASK_ASSIGN_ASSOCIATE_STATUS.ACCEPTED} onChange={() => handleStatusChange(TASK_ASSIGN_ASSOCIATE_STATUS.ACCEPTED)} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300" />
-                          <span className="ml-3 flex items-center"><CheckCircleIcon className="w-5 h-5 mr-2 text-green-600" /><span className="text-base font-medium">Yes - Job Accepted</span></span>
+                      <label className={`block text-base sm:text-lg font-semibold ${themeClasses.textPrimary} mb-4`}>Has the associate accepted this job? <span className="text-red-500">*</span></label>
+                      <div className="space-y-3">
+                        <label className={`flex items-center p-4 sm:p-5 border-2 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors ${status === TASK_ASSIGN_ASSOCIATE_STATUS.ACCEPTED ? 'border-green-500 bg-green-50' : 'border-gray-200'}`}>
+                          <input type="radio" name="status" checked={status === TASK_ASSIGN_ASSOCIATE_STATUS.ACCEPTED} onChange={() => handleStatusChange(TASK_ASSIGN_ASSOCIATE_STATUS.ACCEPTED)} className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300" />
+                          <span className="ml-4 flex items-center"><CheckCircleIcon className="w-6 h-6 mr-2.5 text-green-600" /><span className="text-lg font-medium">Yes - Job Accepted</span></span>
                         </label>
-                        <label className={`flex items-center p-3 sm:p-4 border-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${status === TASK_ASSIGN_ASSOCIATE_STATUS.DECLINED ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}>
-                          <input type="radio" name="status" checked={status === TASK_ASSIGN_ASSOCIATE_STATUS.DECLINED} onChange={() => handleStatusChange(TASK_ASSIGN_ASSOCIATE_STATUS.DECLINED)} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300" />
-                          <span className="ml-3 flex items-center"><XCircleIcon className="w-5 h-5 mr-2 text-red-600" /><span className="text-base font-medium">No - Job Declined</span></span>
+                        <label className={`flex items-center p-4 sm:p-5 border-2 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors ${status === TASK_ASSIGN_ASSOCIATE_STATUS.DECLINED ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}>
+                          <input type="radio" name="status" checked={status === TASK_ASSIGN_ASSOCIATE_STATUS.DECLINED} onChange={() => handleStatusChange(TASK_ASSIGN_ASSOCIATE_STATUS.DECLINED)} className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300" />
+                          <span className="ml-4 flex items-center"><XCircleIcon className="w-6 h-6 mr-2.5 text-red-600" /><span className="text-lg font-medium">No - Job Declined</span></span>
                         </label>
                       </div>
-                      {errors.status && <p className="mt-2 text-sm text-red-600">{errors.status}</p>}
+                      {errors.status && <p className="mt-2 text-base text-red-600">{errors.status}</p>}
                     </div>
 
                     {/* How was job accepted */}
                     {status === TASK_ASSIGN_ASSOCIATE_STATUS.ACCEPTED && (
-                      <div className={`pt-4 border-t ${themeClasses.borderLight}`}>
-                        <label className={`block text-sm font-semibold ${themeClasses.textPrimary} mb-3`}>How was this job accepted? <span className="text-red-500">*</span></label>
-                        <div className="space-y-2">
+                      <div className={`pt-5 border-t ${themeClasses.borderLight}`}>
+                        <label className={`block text-base sm:text-lg font-semibold ${themeClasses.textPrimary} mb-4`}>How was this job accepted? <span className="text-red-500">*</span></label>
+                        <div className="space-y-3">
                           {[
                             { value: TASK_HOW_JOB_ACCEPTED.PHONE, icon: PhoneIcon, label: "Phone Call" },
                             { value: TASK_HOW_JOB_ACCEPTED.TEXT, icon: ChatBubbleLeftRightIcon, label: "Text Message" },
                             { value: TASK_HOW_JOB_ACCEPTED.EMAIL, icon: EnvelopeIcon, label: "Email" },
                             { value: TASK_HOW_JOB_ACCEPTED.IN_PERSON, icon: UserGroupIcon, label: "In-person confirmation" },
                           ].map((option) => (
-                            <label key={option.value} className={`flex items-center p-3 sm:p-4 border-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${howWasJobAccepted === option.value ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
-                              <input type="radio" name="howWasJobAccepted" checked={howWasJobAccepted === option.value} onChange={() => handleHowAcceptedChange(option.value)} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300" />
-                              <span className="ml-3 flex items-center"><option.icon className="w-5 h-5 mr-2 text-gray-600" /><span className="text-base">{option.label}</span></span>
+                            <label key={option.value} className={`flex items-center p-4 sm:p-5 border-2 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors ${howWasJobAccepted === option.value ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
+                              <input type="radio" name="howWasJobAccepted" checked={howWasJobAccepted === option.value} onChange={() => handleHowAcceptedChange(option.value)} className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300" />
+                              <span className="ml-4 flex items-center"><option.icon className="w-6 h-6 mr-2.5 text-gray-600" /><span className="text-lg">{option.label}</span></span>
                             </label>
                           ))}
                         </div>
-                        {errors.howWasJobAccepted && <p className="mt-2 text-sm text-red-600">{errors.howWasJobAccepted}</p>}
+                        {errors.howWasJobAccepted && <p className="mt-2 text-base text-red-600">{errors.howWasJobAccepted}</p>}
                       </div>
                     )}
 
                     {/* Why was job declined */}
                     {status === TASK_ASSIGN_ASSOCIATE_STATUS.DECLINED && (
-                      <div className={`pt-4 border-t ${themeClasses.borderLight}`}>
-                        <label className={`block text-sm font-semibold ${themeClasses.textPrimary} mb-3`}>Why was this job declined? <span className="text-red-500">*</span></label>
-                        <div className="space-y-2">
+                      <div className={`pt-5 border-t ${themeClasses.borderLight}`}>
+                        <label className={`block text-base sm:text-lg font-semibold ${themeClasses.textPrimary} mb-4`}>Why was this job declined? <span className="text-red-500">*</span></label>
+                        <div className="space-y-3">
                           {[
                             { value: TASK_WHY_JOB_DECLINED.ASSOCIATE_BUSY, icon: ClockIcon, label: "Associate was busy" },
                             { value: TASK_WHY_JOB_DECLINED.NO_SKILLS, icon: WrenchScrewdriverIcon, label: "Associate does not have the required skills" },
                             { value: TASK_WHY_JOB_DECLINED.NO_TRAVEL, icon: MapPinIcon, label: "Associate does not wish to travel to the customer's location" },
                             { value: TASK_WHY_JOB_DECLINED.NO_WORK_WITH_CLIENT, icon: UsersIcon, label: "Associate does not wish to work with this client" },
                           ].map((option) => (
-                            <label key={option.value} className={`flex items-center p-3 sm:p-4 border-2 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors ${whyJobDeclined === option.value ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}>
-                              <input type="radio" name="whyJobDeclined" checked={whyJobDeclined === option.value} onChange={() => handleWhyDeclinedChange(option.value)} className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300" />
-                              <span className="ml-3 flex items-center"><option.icon className="w-5 h-5 mr-2 text-gray-600" /><span className="text-base">{option.label}</span></span>
+                            <label key={option.value} className={`flex items-center p-4 sm:p-5 border-2 rounded-xl hover:bg-gray-50 cursor-pointer transition-colors ${whyJobDeclined === option.value ? 'border-red-500 bg-red-50' : 'border-gray-200'}`}>
+                              <input type="radio" name="whyJobDeclined" checked={whyJobDeclined === option.value} onChange={() => handleWhyDeclinedChange(option.value)} className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300" />
+                              <span className="ml-4 flex items-center"><option.icon className="w-6 h-6 mr-2.5 text-gray-600" /><span className="text-lg">{option.label}</span></span>
                             </label>
                           ))}
                         </div>
-                        {errors.whyJobDeclined && <p className="mt-2 text-sm text-red-600">{errors.whyJobDeclined}</p>}
+                        {errors.whyJobDeclined && <p className="mt-2 text-base text-red-600">{errors.whyJobDeclined}</p>}
                       </div>
                     )}
                   </div>
@@ -421,10 +421,10 @@ const Step3Content = memo(function Step3Content() {
                 {/* Comments Section */}
                 <DetailCard title="Comments" icon={ChatBubbleLeftRightIcon} maxWidth="full">
                   {status !== 0 && predefinedComment && (
-                    <div className="mb-4">
-                      <label className={`block text-xs sm:text-sm font-semibold ${themeClasses.textSecondary} mb-2`}>System Generated Comment</label>
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
-                        <p className={`text-sm sm:text-base ${themeClasses.textPrimary}`}>{predefinedComment}</p>
+                    <div className="mb-5">
+                      <label className={`block text-sm sm:text-base font-semibold ${themeClasses.textSecondary} mb-2.5`}>System Generated Comment</label>
+                      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 sm:p-5">
+                        <p className={`text-base sm:text-lg ${themeClasses.textPrimary}`}>{predefinedComment}</p>
                       </div>
                     </div>
                   )}
@@ -432,7 +432,7 @@ const Step3Content = memo(function Step3Content() {
                     <Textarea
                       label="Additional Comments (Optional)"
                       value={comment}
-                      onChange={(e) => setComment(e.target.value)}
+                      onChange={setComment}
                       placeholder="Add any additional notes or comments about this assignment..."
                       rows={5}
                       helperText="This comment will be added to the task history."

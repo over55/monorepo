@@ -11,15 +11,15 @@ const DEFAULT_SIZE = "lg";
 
 // Size classes with mobile-friendly touch targets (min 44px height)
 const SIZE_CLASSES = {
-  sm: "px-3 py-2.5 text-base min-h-[44px]",
+  sm: "px-3 py-2.5 text-sm min-h-[44px]",
   md: "px-4 py-3 text-base min-h-[44px]",
-  lg: "px-5 py-4 text-base sm:text-lg min-h-[58px]",
+  lg: "px-5 py-4 text-lg sm:text-xl min-h-[56px]",
 };
 
 const LABEL_SIZE_CLASSES = {
   sm: "text-sm",
   md: "text-base",
-  lg: "text-base sm:text-lg",
+  lg: "text-lg sm:text-xl",
 };
 
 // Static SVG data URLs
@@ -142,7 +142,7 @@ const Select = memo(function Select({
   }, [themeClasses.textDanger]);
 
   const iconClassName = useMemo(() => {
-    return `h-5 w-5 ${themeClasses.textMuted}`;
+    return `h-6 w-6 ${themeClasses.textMuted}`;
   }, [themeClasses.textMuted]);
 
   // Select className with mobile optimizations
@@ -150,7 +150,7 @@ const Select = memo(function Select({
     const baseClasses = [
       'w-full',
       SIZE_CLASSES[size],
-      Icon ? 'pl-10 pr-12' : 'pr-12',
+      Icon ? 'pl-12 pr-12' : 'pr-12',
       'border-2 rounded-xl shadow-sm',
       'transition-all duration-200',
       'focus:outline-none',
@@ -185,15 +185,15 @@ const Select = memo(function Select({
   }, []);
 
   const helperTextClassName = useMemo(() => {
-    return `mt-2 text-sm ${themeClasses.textMuted}`;
+    return `mt-3 text-base sm:text-lg ${themeClasses.textMuted}`;
   }, [themeClasses.textMuted]);
 
   const errorClassName = useMemo(() => {
-    return `mt-2 text-sm ${themeClasses.textDanger} flex items-center animate-fade-in`;
+    return `mt-3 text-base sm:text-lg ${themeClasses.textDanger} flex items-center animate-fade-in`;
   }, [themeClasses.textDanger]);
 
   const errorIconClassName = useMemo(() => {
-    return `h-4 w-4 mr-1 ${themeClasses.textDanger}`;
+    return `h-5 w-5 mr-1.5 ${themeClasses.textDanger}`;
   }, [themeClasses.textDanger]);
 
   // Memoize label section
@@ -213,7 +213,7 @@ const Select = memo(function Select({
     if (!Icon) return null;
 
     return (
-      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+      <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
         <Icon className={iconClassName} />
       </div>
     );

@@ -342,7 +342,11 @@ function EntityUpdatePage({ config }) {
   // Memoized breadcrumb items
   const breadcrumbItems = useMemo(() => {
     if (config.breadcrumbItems) {
-      return config.breadcrumbItems;
+      // Process placeholder replacements in custom breadcrumb items
+      return config.breadcrumbItems.map((item) => ({
+        ...item,
+        to: item.to ? item.to.replace(`{${config.idParam}}`, entityId) : item.to,
+      }));
     }
 
     return [
@@ -384,12 +388,8 @@ function EntityUpdatePage({ config }) {
         to: `/admin/${config.entityType}/${entityId}`,
       },
       {
-        label: "Full Details",
+        label: "Detail",
         to: `/admin/${config.entityType}/${entityId}/detail`,
-      },
-      {
-        label: "Update",
-        isActive: true,
       },
       {
         label: "Comments",
@@ -398,6 +398,10 @@ function EntityUpdatePage({ config }) {
       {
         label: "Attachments",
         to: `/admin/${config.entityType}/${entityId}/attachments`,
+      },
+      {
+        label: "Update",
+        isActive: true,
       },
     ];
   }, [config.tabItems, config.entityType, config.idParam, entityId]);

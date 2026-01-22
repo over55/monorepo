@@ -2,7 +2,7 @@
 // UIX Upgraded - Uses WizardFormStep whole page component
 // @uix-page: AdminOrderAddStep2Page
 
-import React, { useState, useEffect, useCallback, useMemo, memo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from "react";
 import { useNavigate } from "react-router";
 import {
   useAuthManager,
@@ -42,8 +42,9 @@ const Step2Content = memo(function Step2Content() {
   const [isLoading, setIsLoading] = useState(false);
   const [showCancelWarning, setShowCancelWarning] = useState(false);
 
-  // Get existing order state
-  const existingOrder = orderCreationStorage.getOrderCreation();
+  // Get existing order state - use ref to avoid re-fetching on every render
+  const existingOrderRef = useRef(orderCreationStorage.getOrderCreation());
+  const existingOrder = existingOrderRef.current;
 
   // Form fields
   const [startDate, setStartDate] = useState(existingOrder?.startDate || "");
@@ -52,7 +53,7 @@ const Step2Content = memo(function Step2Content() {
     existingOrder?.isHomeSupportService || 0
   );
 
-  // Check authentication and order state
+  // Check authentication and order state - only on mount
   useEffect(() => {
     if (!authManager.isAuthenticated()) {
       navigate("/login?unauthorized=true");
@@ -65,7 +66,8 @@ const Step2Content = memo(function Step2Content() {
     }
 
     window.scrollTo(0, 0);
-  }, [authManager, navigate, existingOrder]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount
 
   // Handle form submission
   const handleNext = useCallback(() => {
@@ -116,41 +118,44 @@ const Step2Content = memo(function Step2Content() {
     navigate("/admin/orders/add/step-1-search");
   }, [navigate]);
 
-  // Handle date change
+  // Handle date change - use functional update to avoid dependency on errors
   const handleStartDateChange = useCallback((value) => {
     setStartDate(value);
-    if (errors.startDate) {
-      setErrors((prev) => {
+    setErrors((prev) => {
+      if (prev.startDate) {
         const newErrors = { ...prev };
         delete newErrors.startDate;
         return newErrors;
-      });
-    }
-  }, [errors.startDate]);
+      }
+      return prev;
+    });
+  }, []);
 
-  // Handle ongoing change
+  // Handle ongoing change - use functional update to avoid dependency on errors
   const handleOngoingChange = useCallback((value) => {
     setIsOngoing(value);
-    if (errors.isOngoing) {
-      setErrors((prev) => {
+    setErrors((prev) => {
+      if (prev.isOngoing) {
         const newErrors = { ...prev };
         delete newErrors.isOngoing;
         return newErrors;
-      });
-    }
-  }, [errors.isOngoing]);
+      }
+      return prev;
+    });
+  }, []);
 
-  // Handle home support service change
+  // Handle home support service change - use functional update to avoid dependency on errors
   const handleHomeSupportChange = useCallback((value) => {
     setIsHomeSupportService(value);
-    if (errors.isHomeSupportService) {
-      setErrors((prev) => {
+    setErrors((prev) => {
+      if (prev.isHomeSupportService) {
         const newErrors = { ...prev };
         delete newErrors.isHomeSupportService;
         return newErrors;
-      });
-    }
-  }, [errors.isHomeSupportService]);
+      }
+      return prev;
+    });
+  }, []);
 
   // Action buttons
   const actions = useMemo(() => [
@@ -196,46 +201,46 @@ const Step2Content = memo(function Step2Content() {
             maxWidth="7xl"
           >
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
+              <label className="block text-xl font-semibold text-gray-700 mb-4">
                 Is this job one time or ongoing?
                 <span className="text-red-500 ml-1">*</span>
               </label>
               {errors.isOngoing && (
-                <p className="text-red-600 text-xs sm:text-sm mb-3">{errors.isOngoing}</p>
+                <p className="text-red-600 text-base sm:text-lg mb-4">{errors.isOngoing}</p>
               )}
-              <div className="space-y-3">
-                <label className={`flex items-center p-3 sm:p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 hover:border-blue-300 transition-all ${isOngoing === 2 ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
+              <div className="space-y-4">
+                <label className={`flex items-center p-5 sm:p-6 border-2 rounded-xl cursor-pointer hover:bg-gray-50 hover:border-blue-300 transition-all ${isOngoing === 2 ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
                   <input
                     type="radio"
                     name="isOngoing"
                     value="2"
                     checked={isOngoing === 2}
                     onChange={() => handleOngoingChange(2)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    className="h-6 w-6 text-blue-600 focus:ring-blue-500 border-gray-300"
                   />
-                  <div className="ml-3">
-                    <span className="block text-sm sm:text-base font-medium text-gray-900">
+                  <div className="ml-5">
+                    <span className="block text-lg sm:text-xl font-medium text-gray-900">
                       One-Time Job
                     </span>
-                    <span className="block text-xs sm:text-sm text-gray-500 mt-0.5">
+                    <span className="block text-base sm:text-lg text-gray-500 mt-1">
                       Single service visit with defined completion
                     </span>
                   </div>
                 </label>
-                <label className={`flex items-center p-3 sm:p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 hover:border-blue-300 transition-all ${isOngoing === 1 ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
+                <label className={`flex items-center p-5 sm:p-6 border-2 rounded-xl cursor-pointer hover:bg-gray-50 hover:border-blue-300 transition-all ${isOngoing === 1 ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
                   <input
                     type="radio"
                     name="isOngoing"
                     value="1"
                     checked={isOngoing === 1}
                     onChange={() => handleOngoingChange(1)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    className="h-6 w-6 text-blue-600 focus:ring-blue-500 border-gray-300"
                   />
-                  <div className="ml-3">
-                    <span className="block text-sm sm:text-base font-medium text-gray-900">
+                  <div className="ml-5">
+                    <span className="block text-lg sm:text-xl font-medium text-gray-900">
                       Ongoing Service
                     </span>
-                    <span className="block text-xs sm:text-sm text-gray-500 mt-0.5">
+                    <span className="block text-base sm:text-lg text-gray-500 mt-1">
                       Recurring or continuous service arrangement
                     </span>
                   </div>
@@ -252,46 +257,46 @@ const Step2Content = memo(function Step2Content() {
             maxWidth="7xl"
           >
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3">
+              <label className="block text-xl font-semibold text-gray-700 mb-4">
                 Is this job a home support service?
                 <span className="text-red-500 ml-1">*</span>
               </label>
               {errors.isHomeSupportService && (
-                <p className="text-red-600 text-xs sm:text-sm mb-3">{errors.isHomeSupportService}</p>
+                <p className="text-red-600 text-base sm:text-lg mb-4">{errors.isHomeSupportService}</p>
               )}
-              <div className="space-y-3">
-                <label className={`flex items-center p-3 sm:p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 hover:border-blue-300 transition-all ${isHomeSupportService === 2 ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
+              <div className="space-y-4">
+                <label className={`flex items-center p-5 sm:p-6 border-2 rounded-xl cursor-pointer hover:bg-gray-50 hover:border-blue-300 transition-all ${isHomeSupportService === 2 ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
                   <input
                     type="radio"
                     name="isHomeSupportService"
                     value="2"
                     checked={isHomeSupportService === 2}
                     onChange={() => handleHomeSupportChange(2)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    className="h-6 w-6 text-blue-600 focus:ring-blue-500 border-gray-300"
                   />
-                  <div className="ml-3">
-                    <span className="block text-sm sm:text-base font-medium text-gray-900">
+                  <div className="ml-5">
+                    <span className="block text-lg sm:text-xl font-medium text-gray-900">
                       No - Regular Service
                     </span>
-                    <span className="block text-xs sm:text-sm text-gray-500 mt-0.5">
+                    <span className="block text-base sm:text-lg text-gray-500 mt-1">
                       Standard maintenance or repair service
                     </span>
                   </div>
                 </label>
-                <label className={`flex items-center p-3 sm:p-4 border-2 rounded-lg cursor-pointer hover:bg-gray-50 hover:border-blue-300 transition-all ${isHomeSupportService === 1 ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
+                <label className={`flex items-center p-5 sm:p-6 border-2 rounded-xl cursor-pointer hover:bg-gray-50 hover:border-blue-300 transition-all ${isHomeSupportService === 1 ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}`}>
                   <input
                     type="radio"
                     name="isHomeSupportService"
                     value="1"
                     checked={isHomeSupportService === 1}
                     onChange={() => handleHomeSupportChange(1)}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    className="h-6 w-6 text-blue-600 focus:ring-blue-500 border-gray-300"
                   />
-                  <div className="ml-3">
-                    <span className="block text-sm sm:text-base font-medium text-gray-900">
+                  <div className="ml-5">
+                    <span className="block text-lg sm:text-xl font-medium text-gray-900">
                       Yes - Home Support Service
                     </span>
-                    <span className="block text-xs sm:text-sm text-gray-500 mt-0.5">
+                    <span className="block text-base sm:text-lg text-gray-500 mt-1">
                       Qualifies for home support service category
                     </span>
                   </div>
@@ -325,27 +330,27 @@ const Step2Content = memo(function Step2Content() {
       {/* Cancel Confirmation Modal */}
       {showCancelWarning && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+          <div className="bg-white rounded-xl max-w-lg w-full">
+            <div className="px-6 sm:px-8 py-5 border-b border-gray-200">
+              <h3 className="text-xl sm:text-2xl font-semibold text-gray-900">
                 Are you sure?
               </h3>
             </div>
-            <div className="px-4 sm:px-6 py-4">
-              <p className="text-xs sm:text-sm text-gray-600">
+            <div className="px-6 sm:px-8 py-5">
+              <p className="text-base sm:text-lg text-gray-600">
                 Your Order record will be cancelled and your work will be lost. This cannot be undone. Do you want to continue?
               </p>
             </div>
-            <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-col-reverse sm:flex-row sm:justify-end gap-3 rounded-b-lg">
+            <div className="px-6 sm:px-8 py-5 bg-gray-50 border-t border-gray-200 flex flex-col-reverse sm:flex-row sm:justify-end gap-4 rounded-b-xl">
               <button
                 onClick={() => setShowCancelWarning(false)}
-                className="w-full sm:w-auto px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="w-full sm:w-auto px-6 py-3 text-base sm:text-lg font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 No, Keep Working
               </button>
               <button
                 onClick={handleConfirmCancel}
-                className="w-full sm:w-auto px-4 py-2 text-xs sm:text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+                className="w-full sm:w-auto px-6 py-3 text-base sm:text-lg font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
               >
                 Yes, Cancel
               </button>

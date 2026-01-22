@@ -602,7 +602,7 @@ const Step6Content = memo(function Step6Content() {
                 placeholder="Enter any additional comments or notes about this associate"
                 maxLength={638}
                 rows={4}
-                helperText={`${additionalComment.length}/638 characters`}
+                showCharacterCount
                 icon={ChatBubbleBottomCenterTextIcon}
               />
             </div>

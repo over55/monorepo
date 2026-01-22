@@ -46,12 +46,12 @@ const WIZARD_STEPS = [
 // Memoized DataField helper component
 const DataField = memo(({ label, value, icon: Icon, error }) => (
   <div>
-    <span className="text-xs sm:text-sm font-medium text-gray-500 flex items-center">
-      {Icon && <Icon className="w-4 h-4 mr-1 text-gray-400" />}
+    <span className="text-lg sm:text-xl font-medium text-gray-500 flex items-center">
+      {Icon && <Icon className="w-6 h-6 mr-2 text-gray-400" />}
       {label}
     </span>
-    <p className="text-sm sm:text-base text-gray-900 mt-0.5">{value || "—"}</p>
-    {error && <p className="mt-1 text-xs sm:text-sm text-red-600 bg-red-50 p-1 rounded">{error}</p>}
+    <p className="text-xl sm:text-2xl text-gray-900 mt-1.5">{value || "—"}</p>
+    {error && <p className="mt-2 text-base sm:text-lg text-red-600 bg-red-50 p-3 rounded-lg">{error}</p>}
   </div>
 ));
 
@@ -205,17 +205,17 @@ const Step4Content = memo(function Step4Content() {
             headerAction={
               <Link
                 to="/admin/orders/add/step-1-search"
-                className="inline-flex items-center text-xs sm:text-sm text-blue-300 hover:text-white transition-colors"
+                className="inline-flex items-center text-base sm:text-lg text-blue-300 hover:text-white transition-colors"
               >
-                <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                <PencilSquareIcon className="w-5 sm:w-6 h-5 sm:h-6 mr-2" />
                 Edit
               </Link>
             }
           >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <span className="text-xs sm:text-sm font-medium text-gray-500">Customer:</span>
-                <p className="text-sm sm:text-base text-gray-900">
+                <span className="text-lg sm:text-xl font-medium text-gray-500">Customer:</span>
+                <p className="text-xl sm:text-2xl text-gray-900 mt-1.5">
                   <Link
                     to={`/admin/customer/${orderData.customerId}`}
                     target="_blank"
@@ -237,47 +237,47 @@ const Step4Content = memo(function Step4Content() {
             headerAction={
               <Link
                 to="/admin/orders/add/step-2"
-                className="inline-flex items-center text-xs sm:text-sm text-blue-300 hover:text-white transition-colors"
+                className="inline-flex items-center text-base sm:text-lg text-blue-300 hover:text-white transition-colors"
               >
-                <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                <PencilSquareIcon className="w-5 sm:w-6 h-5 sm:h-6 mr-2" />
                 Edit
               </Link>
             }
           >
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 <DataField
                   label="Start Date"
                   value={formatDateForDisplay(orderData.startDate)}
                   icon={CalendarIcon}
                 />
                 <div>
-                  <span className="text-xs sm:text-sm font-medium text-gray-500">Is Ongoing:</span>
-                  <p className="text-sm mt-0.5">
+                  <span className="text-lg sm:text-xl font-medium text-gray-500">Is Ongoing:</span>
+                  <p className="text-xl mt-1.5">
                     {orderData.isOngoing === 1 ? (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        <CheckIcon className="w-3 h-3 mr-1" />
+                      <span className="inline-flex items-center px-4 py-2 rounded-full text-base sm:text-lg font-medium bg-green-100 text-green-800">
+                        <CheckIcon className="w-5 h-5 mr-2" />
                         Yes - Ongoing
                       </span>
                     ) : (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        <XMarkIcon className="w-3 h-3 mr-1" />
+                      <span className="inline-flex items-center px-4 py-2 rounded-full text-base sm:text-lg font-medium bg-gray-100 text-gray-800">
+                        <XMarkIcon className="w-5 h-5 mr-2" />
                         No - One Time
                       </span>
                     )}
                   </p>
                 </div>
                 <div>
-                  <span className="text-xs sm:text-sm font-medium text-gray-500">Home Support Service:</span>
-                  <p className="text-sm mt-0.5">
+                  <span className="text-lg sm:text-xl font-medium text-gray-500">Home Support Service:</span>
+                  <p className="text-xl mt-1.5">
                     {orderData.isHomeSupportService === 1 ? (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        <HomeIcon className="w-3 h-3 mr-1" />
+                      <span className="inline-flex items-center px-4 py-2 rounded-full text-base sm:text-lg font-medium bg-green-100 text-green-800">
+                        <HomeIcon className="w-5 h-5 mr-2" />
                         Yes
                       </span>
                     ) : (
-                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                        <XMarkIcon className="w-3 h-3 mr-1" />
+                      <span className="inline-flex items-center px-4 py-2 rounded-full text-base sm:text-lg font-medium bg-gray-100 text-gray-800">
+                        <XMarkIcon className="w-5 h-5 mr-2" />
                         No
                       </span>
                     )}
@@ -296,20 +296,20 @@ const Step4Content = memo(function Step4Content() {
             headerAction={
               <Link
                 to="/admin/orders/add/step-3"
-                className="inline-flex items-center text-xs sm:text-sm text-blue-300 hover:text-white transition-colors"
+                className="inline-flex items-center text-base sm:text-lg text-blue-300 hover:text-white transition-colors"
               >
-                <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />
+                <PencilSquareIcon className="w-5 sm:w-6 h-5 sm:h-6 mr-2" />
                 Edit
               </Link>
             }
           >
-            <div className="space-y-4">
+            <div className="space-y-6">
               {orderData.description && (
                 <div>
-                  <span className="text-xs sm:text-sm font-medium text-gray-500 flex items-center mb-1">
+                  <span className="text-lg sm:text-xl font-medium text-gray-500 flex items-center mb-3">
                     Description:
                   </span>
-                  <div className="text-sm text-gray-900 bg-gray-50 p-3 rounded border border-gray-200">
+                  <div className="text-lg sm:text-xl text-gray-900 bg-gray-50 p-5 rounded-xl border border-gray-200">
                     <p className="whitespace-pre-wrap">{orderData.description}</p>
                   </div>
                 </div>
@@ -317,8 +317,8 @@ const Step4Content = memo(function Step4Content() {
 
               {orderData.skillSets && orderData.skillSets.length > 0 && (
                 <div>
-                  <span className="text-xs sm:text-sm font-medium text-gray-500 flex items-center mb-2">
-                    <AcademicCapIcon className="w-4 h-4 mr-1" />
+                  <span className="text-lg sm:text-xl font-medium text-gray-500 flex items-center mb-3">
+                    <AcademicCapIcon className="w-6 h-6 mr-2" />
                     Required Skills:
                   </span>
                   <SkillSetsDisplay
@@ -332,8 +332,8 @@ const Step4Content = memo(function Step4Content() {
 
               {orderData.tags && orderData.tags.length > 0 && (
                 <div>
-                  <span className="text-xs sm:text-sm font-medium text-gray-500 flex items-center mb-2">
-                    <TagIcon className="w-4 h-4 mr-1" />
+                  <span className="text-lg sm:text-xl font-medium text-gray-500 flex items-center mb-3">
+                    <TagIcon className="w-6 h-6 mr-2" />
                     Tags:
                   </span>
                   <TagsDisplay
@@ -347,11 +347,11 @@ const Step4Content = memo(function Step4Content() {
 
               {orderData.additionalComment && (
                 <div>
-                  <span className="text-xs sm:text-sm font-medium text-gray-500 flex items-center mb-1">
-                    <ChatBubbleBottomCenterTextIcon className="w-4 h-4 mr-1" />
+                  <span className="text-lg sm:text-xl font-medium text-gray-500 flex items-center mb-3">
+                    <ChatBubbleBottomCenterTextIcon className="w-6 h-6 mr-2" />
                     Additional Comments:
                   </span>
-                  <div className="text-sm text-gray-900 bg-amber-50 p-3 rounded border border-amber-200">
+                  <div className="text-lg sm:text-xl text-gray-900 bg-amber-50 p-5 rounded-xl border border-amber-200">
                     <p className="whitespace-pre-wrap">{orderData.additionalComment}</p>
                   </div>
                 </div>
@@ -364,27 +364,27 @@ const Step4Content = memo(function Step4Content() {
       {/* Cancel Confirmation Modal */}
       {showCancelWarning && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+          <div className="bg-white rounded-xl max-w-lg w-full">
+            <div className="px-6 sm:px-8 py-5 border-b border-gray-200">
+              <h3 className="text-xl sm:text-2xl font-semibold text-gray-900">
                 Are you sure?
               </h3>
             </div>
-            <div className="px-4 sm:px-6 py-4">
-              <p className="text-xs sm:text-sm text-gray-600">
+            <div className="px-6 sm:px-8 py-5">
+              <p className="text-base sm:text-lg text-gray-600">
                 Your Order record will be cancelled and your work will be lost. This cannot be undone. Do you want to continue?
               </p>
             </div>
-            <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-col-reverse sm:flex-row sm:justify-end gap-3 rounded-b-lg">
+            <div className="px-6 sm:px-8 py-5 bg-gray-50 border-t border-gray-200 flex flex-col-reverse sm:flex-row sm:justify-end gap-4 rounded-b-xl">
               <button
                 onClick={() => setShowCancelWarning(false)}
-                className="w-full sm:w-auto px-4 py-2 text-xs sm:text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="w-full sm:w-auto px-6 py-3 text-base sm:text-lg font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 No, Keep Working
               </button>
               <button
                 onClick={handleConfirmCancel}
-                className="w-full sm:w-auto px-4 py-2 text-xs sm:text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+                className="w-full sm:w-auto px-6 py-3 text-base sm:text-lg font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
               >
                 Yes, Cancel
               </button>

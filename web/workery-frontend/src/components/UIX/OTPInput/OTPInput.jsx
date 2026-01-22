@@ -3,7 +3,7 @@
 // OTP Input Component for 6-digit verification codes
 // Mobile-optimized with iOS/Android specific handling
 
-import React, { forwardRef } from "react";
+import React, { forwardRef, useRef } from "react";
 import { useUIXTheme } from "../themes/useUIXTheme.jsx";
 import useMobileOptimizations from "../hooks/useMobileOptimizations.jsx";
 
@@ -90,11 +90,10 @@ const OTPInput = forwardRef(
     const isComplete = value.length === maxLength;
     const isSuccess = isComplete && !hasError;
 
-    // Generate unique ID for the input
-    const inputId =
-      props.id ||
-      props.name ||
-      `otp-input-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    // Generate stable unique ID for the input - use useRef for guaranteed stability
+    // (without useRef, a new ID would be generated on every render, causing focus loss)
+    const generatedIdRef = useRef(`otp-input-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+    const inputId = props.id || props.name || generatedIdRef.current;
 
     // Handle change with validation
     const handleChange = (e) => {

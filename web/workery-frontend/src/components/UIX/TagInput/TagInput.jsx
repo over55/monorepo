@@ -79,10 +79,10 @@ const TagInput = memo(function TagInput({
     [getThemeClasses],
   );
 
-  // Generate a unique id for the input field if none provided
-  const inputId = useMemo(() => {
-    return id || `tag-input-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  }, [id]);
+  // Generate a stable unique id for the input field if none provided - use useRef for guaranteed stability
+  // (useMemo can discard values for optimization, causing focus loss with Math.random())
+  const generatedIdRef = useRef(`tag-input-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+  const inputId = id || generatedIdRef.current;
 
   // Filter options based on input value and exclude already selected
   const filteredSuggestions = useMemo(() => {

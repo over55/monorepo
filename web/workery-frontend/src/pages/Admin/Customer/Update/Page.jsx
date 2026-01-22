@@ -95,6 +95,7 @@ const BREADCRUMB_ITEMS = Object.freeze([
   },
   {
     label: "Detail",
+    to: "/admin/customer/{cid}",
     icon: InformationCircleIcon,
   },
   {

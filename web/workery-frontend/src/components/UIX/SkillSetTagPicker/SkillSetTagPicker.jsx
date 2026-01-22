@@ -221,7 +221,7 @@ const SkillSetTagPicker = memo(function SkillSetTagPicker({
     if (!label) return null;
 
     return (
-      <label className={`block text-base sm:text-lg font-semibold ${themeClasses.textPrimary} mb-3 flex items-center`}>
+      <label className={`block text-lg sm:text-xl font-semibold ${themeClasses.textPrimary} mb-4 flex items-center`}>
         {label}
         {required && <span className={`${themeClasses.textDanger} ml-1`}>*</span>}
       </label>
@@ -231,7 +231,7 @@ const SkillSetTagPicker = memo(function SkillSetTagPicker({
   // Memoize main input className
   const mainInputClassName = useMemo(() => {
     const classes = [
-      "min-h-[58px]",
+      "min-h-[68px]",
       "px-5",
       "py-4",
       "border-2",
@@ -243,7 +243,7 @@ const SkillSetTagPicker = memo(function SkillSetTagPicker({
       "flex",
       "flex-wrap",
       "items-center",
-      "gap-1.5",
+      "gap-2",
       "touch-manipulation",
     ];
 
@@ -277,17 +277,17 @@ const SkillSetTagPicker = memo(function SkillSetTagPicker({
           {selectedOptions.map((option) => (
             <span
               key={option.value}
-              className="inline-flex items-center px-3 py-1.5 rounded-lg text-base bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+              className="inline-flex items-center px-4 py-2 rounded-lg text-lg sm:text-xl bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
             >
               {option.label}
               {!disabled && (
                 <button
                   onClick={(e) => removeOption(option.value, e)}
-                  className="ml-1.5 min-w-[24px] min-h-[24px] flex items-center justify-center hover:bg-blue-200 dark:hover:bg-blue-800 rounded touch-manipulation"
+                  className="ml-2 min-w-[28px] min-h-[28px] flex items-center justify-center hover:bg-blue-200 dark:hover:bg-blue-800 rounded touch-manipulation"
                   style={{ WebkitTapHighlightColor: 'transparent' }}
                   type="button"
                 >
-                  <XMarkIcon className="h-4 w-4" />
+                  <XMarkIcon className="h-5 w-5" />
                 </button>
               )}
             </span>
@@ -305,14 +305,14 @@ const SkillSetTagPicker = memo(function SkillSetTagPicker({
             onClick={stopPropagation}
             placeholder={selectedOptions.length === 0 ? placeholder : ""}
             disabled={disabled}
-            className={`flex-1 min-w-[100px] bg-transparent border-none outline-none text-base sm:text-lg ${themeClasses.textPrimary} placeholder:${themeClasses.textMuted}`}
+            className={`flex-1 min-w-[100px] bg-transparent border-none outline-none text-lg sm:text-xl ${themeClasses.textPrimary} placeholder:${themeClasses.textMuted}`}
             autoComplete="off"
           />
 
           {/* Dropdown Arrow */}
           <div className="flex items-center ml-auto pl-2">
             <ChevronDownIcon
-              className={`h-5 w-5 ${themeClasses.textMuted} transition-transform ${isOpen ? "rotate-180" : ""}`}
+              className={`h-6 w-6 ${themeClasses.textMuted} transition-transform ${isOpen ? "rotate-180" : ""}`}
             />
           </div>
         </div>
@@ -321,7 +321,7 @@ const SkillSetTagPicker = memo(function SkillSetTagPicker({
         {isOpen && !disabled && (
           <div
             ref={dropdownRef}
-            className={`${themeClasses.bgCard} border ${themeClasses.inputBorder} rounded-lg shadow-lg`}
+            className={`${themeClasses.bgCard} border ${themeClasses.inputBorder} rounded-xl shadow-lg`}
             style={dropdownStyle}
           >
             <div className="overflow-y-auto" style={{ maxHeight }}>
@@ -330,14 +330,14 @@ const SkillSetTagPicker = memo(function SkillSetTagPicker({
                   <div
                     key={option.value}
                     onClick={() => selectOption(option.value)}
-                    className={`px-5 py-4 min-h-[58px] cursor-pointer flex items-center text-base sm:text-lg ${themeClasses.textPrimary} ${themeClasses.hoverBgDisabled} touch-manipulation select-none`}
+                    className={`px-5 py-4 min-h-[64px] cursor-pointer flex items-center text-lg sm:text-xl ${themeClasses.textPrimary} ${themeClasses.hoverBgDisabled} touch-manipulation select-none`}
                     style={{ WebkitTapHighlightColor: 'transparent' }}
                   >
                     {option.label}
                   </div>
                 ))
               ) : (
-                <div className={`px-5 py-4 text-base sm:text-lg ${themeClasses.textMuted}`}>
+                <div className={`px-5 py-4 text-lg sm:text-xl ${themeClasses.textMuted}`}>
                   {searchTerm ? "No matching options found" : "No options available"}
                 </div>
               )}
@@ -347,10 +347,10 @@ const SkillSetTagPicker = memo(function SkillSetTagPicker({
       </div>
 
       {helperText && !error && (
-        <p className={`mt-2 text-sm ${themeClasses.textMuted}`}>{helperText}</p>
+        <p className={`mt-3 text-base sm:text-lg ${themeClasses.textMuted}`}>{helperText}</p>
       )}
       {error && (
-        <p className={`mt-2 text-sm ${themeClasses.textDanger} flex items-center`}>{error}</p>
+        <p className={`mt-3 text-base sm:text-lg ${themeClasses.textDanger} flex items-center`}>{error}</p>
       )}
     </div>
   );

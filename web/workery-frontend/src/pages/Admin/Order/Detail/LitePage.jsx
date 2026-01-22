@@ -58,6 +58,8 @@ import {
   UIXThemeProvider,
   DetailLiteView,
   EditButton,
+  Button,
+  Badge,
   useUIXTheme,
 } from "../../../../components/UIX";
 
@@ -484,50 +486,58 @@ const AdminOrderDetailLitePageContent = memo(function AdminOrderDetailLitePageCo
         component: (
           <div>
             {/* Job ID and Status Header */}
-            <div className="bg-gray-50 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4 lg:mb-5">
+            <div className="bg-gray-50 rounded-xl p-4 sm:p-5 mb-4 sm:mb-5 lg:mb-6">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-                <h3 className={`text-base sm:text-lg font-semibold ${themeClasses.textPrimary}`}>
+                <h3 className={`text-lg sm:text-xl font-semibold ${themeClasses.textPrimary}`}>
                   Job #{order.wjid}
                 </h3>
-                <div
-                  className={`inline-flex items-center px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium ${statusInfo.bg} ${statusInfo.color} ${statusInfo.border} border`}
+                <Badge
+                  variant={
+                    statusInfo.color.includes('green') ? 'success' :
+                    statusInfo.color.includes('red') ? 'danger' :
+                    statusInfo.color.includes('yellow') ? 'warning' :
+                    statusInfo.color.includes('blue') ? 'info' :
+                    statusInfo.color.includes('orange') ? 'warning' :
+                    'default'
+                  }
+                  size="lg"
                 >
                   {statusInfo.text}
-                </div>
+                </Badge>
               </div>
             </div>
 
             {/* Client Information */}
-            <div className="border-t border-gray-200 pt-4 sm:pt-6 mb-4 sm:mb-6">
-              <h4 className={`text-sm sm:text-base font-semibold ${themeClasses.textPrimary} mb-3 sm:mb-4`}>
+            <div className="border-t border-gray-200 pt-5 sm:pt-6 mb-5 sm:mb-6">
+              <h4 className={`text-base sm:text-lg font-semibold ${themeClasses.textPrimary} mb-4 sm:mb-5`}>
                 Client Information
               </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                 <div className="flex items-start">
-                  <UserIcon className={`w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 ${themeClasses.textMuted} mt-0.5 flex-shrink-0`} />
+                  <UserIcon className={`w-5 sm:w-6 h-5 sm:h-6 mr-3 ${themeClasses.textMuted} mt-0.5 flex-shrink-0`} />
                   <div className="min-w-0 flex-1">
-                    <p className={`text-xs sm:text-sm font-medium ${themeClasses.textMuted}`}>
+                    <p className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                       Name
                     </p>
                     <Link
                       to={`/admin/customer/${order.customerId}`}
-                      className="text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium inline-flex items-center"
+                      className="text-base sm:text-lg text-blue-600 hover:text-blue-700 font-medium inline-flex items-center"
                     >
                       {order.customerName}
-                      <ArrowTopRightOnSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 ml-1" />
+                      <ArrowTopRightOnSquareIcon className="w-4 sm:w-5 h-4 sm:h-5 ml-1.5" />
                     </Link>
                   </div>
                 </div>
                 <div className="flex items-start">
-                  <PhoneIcon className={`w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 ${themeClasses.textMuted} mt-0.5 flex-shrink-0`} />
+                  <PhoneIcon className={`w-5 sm:w-6 h-5 sm:h-6 mr-3 ${themeClasses.textMuted} mt-0.5 flex-shrink-0`} />
                   <div className="min-w-0 flex-1">
-                    <p className={`text-xs sm:text-sm font-medium ${themeClasses.textMuted}`}>
+                    <p className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                       Phone ({ORDER_CLIENT_PHONE_TYPE_MAP[order.customerPhoneType]})
                     </p>
                     {order.customerPhone ? (
                       <a
                         href={`tel:${order.customerPhone}`}
-                        className="text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium"
+                        className="text-base sm:text-lg text-blue-600 hover:text-blue-700 font-medium"
                       >
                         {formatPhone(
                           order.customerPhone,
@@ -537,19 +547,19 @@ const AdminOrderDetailLitePageContent = memo(function AdminOrderDetailLitePageCo
                         )}
                       </a>
                     ) : (
-                      <span className={`text-sm sm:text-base ${themeClasses.textMuted}`}>
+                      <span className={`text-base sm:text-lg ${themeClasses.textMuted}`}>
                         No phone
                       </span>
                     )}
                   </div>
                 </div>
                 <div className="flex items-start md:col-span-2">
-                  <MapPinIcon className={`w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 ${themeClasses.textMuted} mt-0.5 flex-shrink-0`} />
+                  <MapPinIcon className={`w-5 sm:w-6 h-5 sm:h-6 mr-3 ${themeClasses.textMuted} mt-0.5 flex-shrink-0`} />
                   <div className="min-w-0 flex-1">
-                    <p className={`text-xs sm:text-sm font-medium ${themeClasses.textMuted}`}>
+                    <p className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                       Address
                     </p>
-                    <span className={`text-sm sm:text-base ${themeClasses.textPrimary}`}>
+                    <span className={`text-base sm:text-lg ${themeClasses.textPrimary}`}>
                       {formatAddress(order)}
                     </span>
                     {order.customerFullAddressUrl && (
@@ -559,7 +569,7 @@ const AdminOrderDetailLitePageContent = memo(function AdminOrderDetailLitePageCo
                         rel="noreferrer"
                         className="ml-2 inline-flex items-center text-blue-600 hover:text-blue-700"
                       >
-                        <ArrowTopRightOnSquareIcon className="w-3 sm:w-4 h-3 sm:h-4" />
+                        <ArrowTopRightOnSquareIcon className="w-4 sm:w-5 h-4 sm:h-5" />
                       </a>
                     )}
                   </div>
@@ -569,36 +579,36 @@ const AdminOrderDetailLitePageContent = memo(function AdminOrderDetailLitePageCo
 
             {/* Associate Information (if assigned) */}
             {hasAssociateInfo && (
-              <div className="border-t border-gray-200 pt-4 sm:pt-6 mb-4 sm:mb-6">
-                <h4 className={`text-sm sm:text-base font-semibold ${themeClasses.textPrimary} mb-3 sm:mb-4`}>
+              <div className="border-t border-gray-200 pt-5 sm:pt-6 mb-5 sm:mb-6">
+                <h4 className={`text-base sm:text-lg font-semibold ${themeClasses.textPrimary} mb-4 sm:mb-5`}>
                   Associate Information
                 </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                   <div className="flex items-start">
-                    <UserIcon className={`w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 ${themeClasses.textMuted} mt-0.5 flex-shrink-0`} />
+                    <UserIcon className={`w-5 sm:w-6 h-5 sm:h-6 mr-3 ${themeClasses.textMuted} mt-0.5 flex-shrink-0`} />
                     <div className="min-w-0 flex-1">
-                      <p className={`text-xs sm:text-sm font-medium ${themeClasses.textMuted}`}>
+                      <p className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                         Name
                       </p>
                       <Link
                         to={`/admin/associate/${order.associateId}`}
-                        className="text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium inline-flex items-center"
+                        className="text-base sm:text-lg text-blue-600 hover:text-blue-700 font-medium inline-flex items-center"
                       >
                         {order.associateName}
-                        <ArrowTopRightOnSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 ml-1" />
+                        <ArrowTopRightOnSquareIcon className="w-4 sm:w-5 h-4 sm:h-5 ml-1.5" />
                       </Link>
                     </div>
                   </div>
                   <div className="flex items-start">
-                    <PhoneIcon className={`w-4 sm:w-5 h-4 sm:h-5 mr-2 sm:mr-3 ${themeClasses.textMuted} mt-0.5 flex-shrink-0`} />
+                    <PhoneIcon className={`w-5 sm:w-6 h-5 sm:h-6 mr-3 ${themeClasses.textMuted} mt-0.5 flex-shrink-0`} />
                     <div className="min-w-0 flex-1">
-                      <p className={`text-xs sm:text-sm font-medium ${themeClasses.textMuted}`}>
+                      <p className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                         Phone ({ORDER_ASSOCIATE_PHONE_TYPE_MAP[order.associatePhoneType]})
                       </p>
                       {order.associatePhone ? (
                         <a
                           href={`tel:${order.associatePhone}`}
-                          className="text-sm sm:text-base text-blue-600 hover:text-blue-700 font-medium"
+                          className="text-base sm:text-lg text-blue-600 hover:text-blue-700 font-medium"
                         >
                           {formatPhone(
                             order.associatePhone,
@@ -608,7 +618,7 @@ const AdminOrderDetailLitePageContent = memo(function AdminOrderDetailLitePageCo
                           )}
                         </a>
                       ) : (
-                        <span className={`text-sm sm:text-base ${themeClasses.textMuted}`}>
+                        <span className={`text-base sm:text-lg ${themeClasses.textMuted}`}>
                           No phone
                         </span>
                       )}
@@ -619,23 +629,23 @@ const AdminOrderDetailLitePageContent = memo(function AdminOrderDetailLitePageCo
             )}
 
             {/* Job Details */}
-            <div className="border-t border-gray-200 pt-4 sm:pt-6">
-              <h4 className={`text-sm sm:text-base font-semibold ${themeClasses.textPrimary} mb-3 sm:mb-4`}>
+            <div className="border-t border-gray-200 pt-5 sm:pt-6">
+              <h4 className={`text-base sm:text-lg font-semibold ${themeClasses.textPrimary} mb-4 sm:mb-5`}>
                 Job Details
               </h4>
-              <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-4 sm:space-y-5">
                 <div className="flex items-start">
                   <div className="min-w-0 flex-1">
-                    <p className={`text-xs sm:text-sm font-medium ${themeClasses.textMuted}`}>
+                    <p className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                       Job Type
                     </p>
-                    <div className="flex items-center mt-1">
+                    <div className="flex items-center mt-1.5">
                       {order.type === 1 ? (
-                        <HomeIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600" />
+                        <HomeIcon className="w-5 sm:w-6 h-5 sm:h-6 mr-2.5 text-blue-600" />
                       ) : (
-                        <BuildingOfficeIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-2 text-blue-600" />
+                        <BuildingOfficeIcon className="w-5 sm:w-6 h-5 sm:h-6 mr-2.5 text-blue-600" />
                       )}
-                      <span className={`text-sm sm:text-base ${themeClasses.textPrimary} font-medium`}>
+                      <span className={`text-base sm:text-lg ${themeClasses.textPrimary} font-medium`}>
                         {ORDER_TYPE_MAP[order.type] || "Unknown"}
                       </span>
                     </div>
@@ -643,29 +653,28 @@ const AdminOrderDetailLitePageContent = memo(function AdminOrderDetailLitePageCo
                 </div>
                 <div className="flex items-start">
                   <div className="min-w-0 flex-1">
-                    <p className={`text-xs sm:text-sm font-medium ${themeClasses.textMuted}`}>
+                    <p className={`text-sm sm:text-base font-medium ${themeClasses.textMuted}`}>
                       Description
                     </p>
-                    <div className={`mt-1 text-sm sm:text-base ${themeClasses.textPrimary} whitespace-pre-wrap`}>
+                    <div className={`mt-1.5 text-base sm:text-lg ${themeClasses.textPrimary} whitespace-pre-wrap`}>
                       {order.description || "No description provided"}
                     </div>
                   </div>
                 </div>
                 <div className="flex items-start">
                   <div className="min-w-0 flex-1">
-                    <p className={`text-xs sm:text-sm font-medium ${themeClasses.textMuted} mb-2`}>
-                      Skills Required
-                    </p>
                     <SkillSetsDisplay
                       values={extractIds(order.skillSets)}
                       onUnauthorized={onUnauthorized}
+                      label="Skills Required"
+                      size="lg"
                     />
                   </div>
                 </div>
                 {hasPendingTask && (
                   <div className="flex items-start">
                     <div className="min-w-0 flex-1">
-                      <p className={`text-xs sm:text-sm font-medium ${themeClasses.textMuted} mb-2`}>
+                      <p className={`text-sm sm:text-base font-medium ${themeClasses.textMuted} mb-2.5`}>
                         Required Task
                       </p>
                       <Link
@@ -674,10 +683,14 @@ const AdminOrderDetailLitePageContent = memo(function AdminOrderDetailLitePageCo
                           order.latestPendingTaskType,
                         )}
                       >
-                        <button className="inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 border border-blue-300 rounded-md text-xs sm:text-sm font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 transition-colors">
+                        <Button
+                          variant="outline"
+                          size="md"
+                          className="border-blue-300 text-blue-700 bg-blue-50 hover:bg-blue-100"
+                        >
                           {order.latestPendingTaskTitle}
-                          <ArrowRightIcon className="w-3 sm:w-4 h-3 sm:h-4 ml-1 sm:ml-2" />
-                        </button>
+                          <ArrowRightIcon className="w-4 sm:w-5 h-4 sm:h-5 ml-2" />
+                        </Button>
                       </Link>
                     </div>
                   </div>
@@ -691,13 +704,14 @@ const AdminOrderDetailLitePageContent = memo(function AdminOrderDetailLitePageCo
       {
         column: "secondary",
         component: (
-          <div className="space-y-3 sm:space-y-4 lg:space-y-6">
+          <div className="space-y-4 sm:space-y-5 lg:space-y-6">
             {/* Tags */}
             <div>
               <TagsDisplay
                 values={extractIds(order.tags)}
                 label="Tags"
                 onUnauthorized={onUnauthorized}
+                size="lg"
               />
             </div>
           </div>

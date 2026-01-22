@@ -102,9 +102,9 @@ const DetailCard = memo(
       const iconClass = themeClasses.detailCardHeaderIcon || "text-white";
 
       return (
-        <Card padding="px-6 py-4" className={`${headerClasses} shadow-none border-0`}>
-          <h2 className={`text-xs sm:text-base font-bold ${textClass} uppercase tracking-wider flex items-center`}>
-            {Icon && <Icon className={`w-5 h-5 mr-2 ${iconClass}`} />}
+        <Card padding="px-6 py-4 sm:py-5" className={`${headerClasses} shadow-none border-0`}>
+          <h2 className={`text-sm sm:text-lg font-bold ${textClass} uppercase tracking-wider flex items-center`}>
+            {Icon && <Icon className={`w-5 h-5 sm:w-6 sm:h-6 mr-2.5 ${iconClass}`} />}
             {title}
           </h2>
         </Card>
@@ -118,7 +118,7 @@ const DetailCard = memo(
           {headerContent}
 
           {/* Content */}
-          <Card padding="p-6" className="shadow-none border-0 bg-transparent">{children}</Card>
+          <Card padding="p-5 sm:p-6" className="shadow-none border-0 bg-transparent">{children}</Card>
         </Card>
       </Card>
     );

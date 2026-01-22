@@ -561,7 +561,7 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                   maxLength={638}
                   rows={3}
                   placeholder="Enter additional notes or extras..."
-                  helperText={`${line01Notes.length}/638 characters`}
+                  showCharacterCount
                 />
 
                 <Textarea
@@ -571,7 +571,7 @@ function AdminFinancialGenerateInvoiceStep3Page() {
                   maxLength={638}
                   rows={3}
                   placeholder="Enter additional notes or extras..."
-                  helperText={`${line02Notes.length}/638 characters`}
+                  showCharacterCount
                 />
               </div>
             </FormCard>

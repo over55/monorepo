@@ -8,6 +8,7 @@ import {
   UserGroupIcon,
   InformationCircleIcon,
   PencilSquareIcon,
+  EllipsisHorizontalIcon,
 } from "@heroicons/react/24/outline";
 import { useStaffManager } from "../../../../services/Services";
 import { EntityUpdatePage, UIXThemeProvider } from "../../../../components/UIX";
@@ -107,6 +108,7 @@ const BREADCRUMB_ITEMS = Object.freeze([
   },
   {
     label: "Detail",
+    to: "/admin/staff/{aid}",
     icon: InformationCircleIcon,
   },
   {
@@ -123,12 +125,8 @@ const TAB_ITEMS = Object.freeze([
     to: `/admin/staff/{aid}`,
   },
   {
-    label: "Full Details",
+    label: "Detail",
     to: `/admin/staff/{aid}/detail`,
-  },
-  {
-    label: "Update",
-    isActive: true,
   },
   {
     label: "Comments",
@@ -137,6 +135,15 @@ const TAB_ITEMS = Object.freeze([
   {
     label: "Attachments",
     to: `/admin/staff/{aid}/attachments`,
+  },
+  {
+    label: "More",
+    to: `/admin/staff/{aid}/more`,
+    icon: EllipsisHorizontalIcon,
+  },
+  {
+    label: "Update",
+    isActive: true,
   },
 ]);
 

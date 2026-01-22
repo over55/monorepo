@@ -21,7 +21,6 @@ import {
   UserIcon,
   EnvelopeIcon,
   PhoneIcon,
-  InformationCircleIcon,
   ArrowLeftIcon,
   UserPlusIcon,
 } from "@heroicons/react/24/outline";
@@ -188,15 +187,15 @@ const Step1PartAContent = memo(function Step1PartAContent() {
                 />
               </div>
 
-              {/* Info Note */}
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-800 flex items-start">
-                  <InformationCircleIcon className="w-5 h-5 mr-2 flex-shrink-0 mt-0.5" />
-                  <span>
-                    Enter at least one search criteria to find existing customers.
-                    This helps you select the right customer for the order.
-                  </span>
-                </p>
+              {/* Search Button */}
+              <div className="flex justify-end">
+                <button
+                  onClick={handleSearch}
+                  className="inline-flex items-center px-8 py-4 text-lg sm:text-xl font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors shadow-sm"
+                >
+                  <MagnifyingGlassIcon className="w-6 h-6 mr-2" />
+                  Search Customers
+                </button>
               </div>
             </div>
           </FormCard>
@@ -204,38 +203,38 @@ const Step1PartAContent = memo(function Step1PartAContent() {
           {/* OR Divider */}
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
+              <div className="w-full border-t-2 border-gray-200"></div>
             </div>
             <div className="relative flex justify-center">
-              <span className="px-4 bg-gray-50 text-sm font-medium text-gray-500">OR</span>
+              <span className="px-6 bg-gray-50 text-lg sm:text-xl font-medium text-gray-500">OR</span>
             </div>
           </div>
 
           {/* Create New Customer Section */}
-          <div className="bg-gradient-to-r from-green-50 to-green-100 border border-green-200 rounded-lg p-6 text-center">
-            <UserPlusIcon className="w-12 h-12 mx-auto text-green-600 mb-3" />
-            <p className="text-sm text-gray-700 mb-2 font-medium">
+          <div className="bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-200 rounded-xl p-8 text-center">
+            <UserPlusIcon className="w-16 h-16 mx-auto text-green-600 mb-4" />
+            <p className="text-lg sm:text-xl text-gray-700 mb-3 font-medium">
               Can't find the customer? Create a new one!
             </p>
-            <p className="text-xs text-gray-600 mb-4">
+            <p className="text-base sm:text-lg text-gray-600 mb-5">
               This will open in a new window so you won't lose your progress
             </p>
             <button
               onClick={handleCreateNewCustomer}
-              className="inline-flex items-center px-6 py-2.5 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 transition-colors"
+              className="inline-flex items-center px-8 py-3.5 text-lg sm:text-xl font-medium text-white bg-green-600 rounded-xl hover:bg-green-700 transition-colors"
             >
-              <UserPlusIcon className="w-5 h-5 mr-2" />
+              <UserPlusIcon className="w-6 h-6 mr-2" />
               Create New Customer
             </button>
           </div>
 
           {/* Back Link */}
-          <div className="pt-2">
+          <div className="pt-4">
             <Link
               to="/admin/orders"
-              className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 transition-colors"
+              className="inline-flex items-center text-base sm:text-lg text-blue-600 hover:text-blue-800 transition-colors"
             >
-              <ArrowLeftIcon className="w-4 h-4 mr-1" />
+              <ArrowLeftIcon className="w-5 h-5 mr-2" />
               Back to Orders List
             </Link>
           </div>
@@ -245,28 +244,28 @@ const Step1PartAContent = memo(function Step1PartAContent() {
       {/* Cancel Confirmation Modal */}
       {showCancelWarning && (
         <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-lg max-w-md w-full">
-            <div className="px-4 sm:px-6 py-4 border-b border-gray-200">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900">
+          <div className="bg-white rounded-xl max-w-lg w-full">
+            <div className="px-6 sm:px-8 py-5 border-b border-gray-200">
+              <h3 className="text-xl sm:text-2xl font-semibold text-gray-900">
                 Are you sure?
               </h3>
             </div>
-            <div className="px-4 sm:px-6 py-4">
-              <p className="text-sm text-gray-600">
+            <div className="px-6 sm:px-8 py-5">
+              <p className="text-base sm:text-lg text-gray-600">
                 Your Order record will be cancelled and your work will be lost.
                 This cannot be undone. Do you want to continue?
               </p>
             </div>
-            <div className="px-4 sm:px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-col-reverse sm:flex-row sm:justify-end gap-3 rounded-b-lg">
+            <div className="px-6 sm:px-8 py-5 bg-gray-50 border-t border-gray-200 flex flex-col-reverse sm:flex-row sm:justify-end gap-4 rounded-b-xl">
               <button
                 onClick={() => setShowCancelWarning(false)}
-                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="w-full sm:w-auto px-6 py-3 text-base sm:text-lg font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 No, Keep Working
               </button>
               <button
                 onClick={handleConfirmCancel}
-                className="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+                className="w-full sm:w-auto px-6 py-3 text-base sm:text-lg font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
               >
                 Yes, Cancel
               </button>

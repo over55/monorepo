@@ -1113,7 +1113,7 @@ function AccountFormViewContent({
                     <Textarea
                       label="Profile Notes (Optional)"
                       value={limitSpecial}
-                      onChange={(e) => setLimitSpecial(e.target.value)}
+                      onChange={setLimitSpecial}
                       error={errors.limitSpecial}
                       rows={4}
                       placeholder="Enter optional profile notes here..."
@@ -1163,7 +1163,7 @@ function AccountFormViewContent({
                     <Textarea
                       label="Description (Optional)"
                       value={description}
-                      onChange={(e) => setDescription(e.target.value)}
+                      onChange={setDescription}
                       error={errors.description}
                       rows={4}
                       placeholder="Enter a description..."

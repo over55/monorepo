@@ -13,6 +13,7 @@ import { Badge, Loading, useUIXTheme } from "../../UIX";
  * @param {string} className - Additional CSS classes
  * @param {function} onUnauthorized - Callback for unauthorized errors
  * @param {string} variant - Badge variant for display
+ * @param {string} size - Size variant: "sm", "md", "lg" (defaults to "md")
  */
 function SkillSetsDisplay({
   values = [],
@@ -20,12 +21,21 @@ function SkillSetsDisplay({
   className = "",
   onUnauthorized = null,
   variant = "primary",
+  size = "md",
 }) {
   const skillSetManager = useSkillSetManager();
   const { getThemeClasses } = useUIXTheme();
   const [displaySkillSets, setDisplaySkillSets] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Size classes configuration
+  const sizeClasses = {
+    sm: { label: "text-sm", badge: "sm", empty: "text-sm", gap: "gap-1.5" },
+    md: { label: "text-sm sm:text-base", badge: "md", empty: "text-sm sm:text-base", gap: "gap-2" },
+    lg: { label: "text-base sm:text-lg", badge: "lg", empty: "text-base sm:text-lg", gap: "gap-2.5" },
+  };
+  const currentSize = sizeClasses[size] || sizeClasses.md;
 
   // Memoize stringified values to use as a stable dependency for detecting array changes
   const valuesKey = useMemo(() => JSON.stringify(values), [values]);
@@ -168,9 +178,9 @@ function SkillSetsDisplay({
   if (isLoading) {
     return (
       <div className={`mb-4 ${className}`}>
-        <p className={`text-sm font-medium ${getThemeClasses("text-secondary")} mb-2`}>{label}</p>
+        <p className={`${currentSize.label} font-medium ${getThemeClasses("text-secondary")} mb-2`}>{label}</p>
         <div className="flex items-center">
-          <Loading size="sm" text="Loading skill sets..." />
+          <Loading size={size === "lg" ? "md" : "sm"} text="Loading skill sets..." />
         </div>
       </div>
     );
@@ -178,18 +188,18 @@ function SkillSetsDisplay({
 
   return (
     <div className={`mb-4 ${className}`}>
-      <p className={`text-sm font-medium ${getThemeClasses("text-secondary")} mb-2`}>{label}</p>
-      <div className="flex flex-wrap gap-2">
+      <p className={`${currentSize.label} font-medium ${getThemeClasses("text-secondary")} mb-2.5`}>{label}</p>
+      <div className={`flex flex-wrap ${currentSize.gap}`}>
         {error ? (
-          <span className="text-red-600 text-sm">{error}</span>
+          <span className={`text-red-600 ${currentSize.empty}`}>{error}</span>
         ) : displaySkillSets.length > 0 ? (
           displaySkillSets.map((skillSet) => (
-            <Badge key={skillSet.id} variant={variant} size="md">
+            <Badge key={skillSet.id} variant={variant} size={currentSize.badge}>
               {skillSet.label}
             </Badge>
           ))
         ) : (
-          <span className={`${getThemeClasses("text-muted")} text-sm`}>No skill sets selected</span>
+          <span className={`${getThemeClasses("text-muted")} ${currentSize.empty}`}>No skill sets selected</span>
         )}
       </div>
     </div>

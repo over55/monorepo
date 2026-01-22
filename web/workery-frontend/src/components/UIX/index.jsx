@@ -146,6 +146,9 @@ export { default as FormSection } from "./Form/FormSection";
 // FormCard Component (New - for standardized form layouts)
 export { default as FormCard } from "./FormCard/FormCard";
 
+// SearchResultsCard Component (New - for search results pages with filters, pagination, and actions)
+export { default as SearchResultsCard } from "./SearchResultsCard/SearchResultsCard";
+
 // InfoField Component (New - for displaying labeled information fields)
 export { default as InfoField } from "./InfoField/InfoField";
 

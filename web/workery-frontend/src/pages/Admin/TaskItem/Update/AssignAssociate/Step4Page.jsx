@@ -54,11 +54,11 @@ const ASSIGN_STATUS_MAP = Object.freeze({
 const DetailField = memo(function DetailField({ label, value, fullWidth = false, icon: Icon = null, themeClasses }) {
   return (
     <div className={fullWidth ? "lg:col-span-2" : ""}>
-      <dt className={`text-xs sm:text-sm font-semibold ${themeClasses.textSecondary} mb-1 flex items-center`}>
-        {Icon && <Icon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />}
+      <dt className={`text-sm sm:text-base font-semibold ${themeClasses.textSecondary} mb-1.5 flex items-center`}>
+        {Icon && <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-1.5" />}
         {label}
       </dt>
-      <dd className={`text-base sm:text-lg font-medium ${themeClasses.textPrimary} break-words`}>
+      <dd className={`text-lg sm:text-xl font-medium ${themeClasses.textPrimary} break-words`}>
         {value || "-"}
       </dd>
     </div>
@@ -227,8 +227,8 @@ const Step4Content = memo(function Step4Content() {
             icon={ClipboardDocumentListIcon}
             maxWidth="full"
             headerAction={
-              <Link to={`/admin/task/${tid}/assign-associate/step-1`} className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800">
-                <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />Edit
+              <Link to={`/admin/task/${tid}/assign-associate/step-1`} className="inline-flex items-center text-sm sm:text-base text-blue-600 hover:text-blue-800">
+                <PencilSquareIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1.5" />Edit
               </Link>
             }
           >
@@ -255,12 +255,12 @@ const Step4Content = memo(function Step4Content() {
               <DetailField label="Job Description" value={task.orderDescription} fullWidth themeClasses={themeClasses} />
               {task.orderSkillSets?.length > 0 && (
                 <div className="lg:col-span-2">
-                  <SkillSetsDisplay values={extractIds(task.orderSkillSets)} onUnauthorized={onUnauthorized} label="Required Skill Sets" variant="primary" />
+                  <SkillSetsDisplay values={extractIds(task.orderSkillSets)} onUnauthorized={onUnauthorized} label="Required Skill Sets" variant="primary" size="lg" />
                 </div>
               )}
               {task.orderTags?.length > 0 && (
                 <div className="lg:col-span-2">
-                  <TagsDisplay values={extractIds(task.orderTags)} onUnauthorized={onUnauthorized} label="Job Tags" variant="success" />
+                  <TagsDisplay values={extractIds(task.orderTags)} onUnauthorized={onUnauthorized} label="Job Tags" variant="success" size="lg" />
                 </div>
               )}
             </dl>
@@ -293,7 +293,7 @@ const Step4Content = memo(function Step4Content() {
               )}
               {task.customerTags?.length > 0 && (
                 <div className="lg:col-span-2">
-                  <TagsDisplay values={extractIds(task.customerTags)} onUnauthorized={onUnauthorized} label="Client Tags" variant="info" />
+                  <TagsDisplay values={extractIds(task.customerTags)} onUnauthorized={onUnauthorized} label="Client Tags" variant="info" size="lg" />
                 </div>
               )}
             </dl>
@@ -305,8 +305,8 @@ const Step4Content = memo(function Step4Content() {
             icon={WrenchScrewdriverIcon}
             maxWidth="full"
             headerAction={
-              <Link to={`/admin/task/${tid}/assign-associate/step-3`} className="inline-flex items-center text-xs sm:text-sm text-blue-600 hover:text-blue-800">
-                <PencilSquareIcon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />Edit
+              <Link to={`/admin/task/${tid}/assign-associate/step-3`} className="inline-flex items-center text-sm sm:text-base text-blue-600 hover:text-blue-800">
+                <PencilSquareIcon className="w-4 sm:w-5 h-4 sm:h-5 mr-1.5" />Edit
               </Link>
             }
           >
@@ -326,8 +326,8 @@ const Step4Content = memo(function Step4Content() {
               <DetailField
                 label="Job Acceptance Status"
                 value={
-                  <span className={`inline-flex items-center px-3 py-1 text-sm font-medium rounded-full ${assignmentData.status === 3 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
-                    {assignmentData.status === 3 ? <CheckCircleIcon className="w-4 h-4 mr-1" /> : <XCircleIcon className="w-4 h-4 mr-1" />}
+                  <span className={`inline-flex items-center px-3.5 py-1.5 text-base font-medium rounded-full ${assignmentData.status === 3 ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                    {assignmentData.status === 3 ? <CheckCircleIcon className="w-5 h-5 mr-1.5" /> : <XCircleIcon className="w-5 h-5 mr-1.5" />}
                     {ASSIGN_STATUS_MAP[assignmentData.status]}
                   </span>
                 }
@@ -338,29 +338,29 @@ const Step4Content = memo(function Step4Content() {
             {/* Comments */}
             {(assignmentData.predefinedComment || assignmentData.comment) && (
               <div className={`mt-6 pt-6 border-t ${themeClasses.borderLight}`}>
-                <h4 className={`text-sm font-semibold ${themeClasses.textSecondary} mb-3 flex items-center`}>
-                  <ChatBubbleLeftRightIcon className="w-4 h-4 mr-2" />Comments
+                <h4 className={`text-base sm:text-lg font-semibold ${themeClasses.textSecondary} mb-4 flex items-center`}>
+                  <ChatBubbleLeftRightIcon className="w-5 h-5 mr-2.5" />Comments
                 </h4>
 
                 {assignmentData.predefinedComment && (
-                  <div className="mb-3 bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+                  <div className="mb-4 bg-blue-50 border border-blue-200 rounded-xl p-4 sm:p-5">
                     <div className="flex items-start">
-                      <InformationCircleIcon className="w-4 h-4 mt-0.5 mr-2 text-blue-600 flex-shrink-0" />
+                      <InformationCircleIcon className="w-5 h-5 mt-0.5 mr-2.5 text-blue-600 flex-shrink-0" />
                       <div>
-                        <p className="text-xs font-semibold text-blue-800 mb-1">System Generated Comment</p>
-                        <p className={`text-sm ${themeClasses.textPrimary}`}>{assignmentData.predefinedComment}</p>
+                        <p className="text-sm font-semibold text-blue-800 mb-1.5">System Generated Comment</p>
+                        <p className={`text-base sm:text-lg ${themeClasses.textPrimary}`}>{assignmentData.predefinedComment}</p>
                       </div>
                     </div>
                   </div>
                 )}
 
                 {assignmentData.comment && (
-                  <div className="bg-gray-50 border border-gray-200 rounded-lg p-3 sm:p-4">
+                  <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 sm:p-5">
                     <div className="flex items-start">
-                      <ChatBubbleLeftRightIcon className="w-4 h-4 mt-0.5 mr-2 text-gray-600 flex-shrink-0" />
+                      <ChatBubbleLeftRightIcon className="w-5 h-5 mt-0.5 mr-2.5 text-gray-600 flex-shrink-0" />
                       <div>
-                        <p className="text-xs font-semibold text-gray-700 mb-1">Additional Comment</p>
-                        <p className={`text-sm ${themeClasses.textPrimary}`}>{assignmentData.comment}</p>
+                        <p className="text-sm font-semibold text-gray-700 mb-1.5">Additional Comment</p>
+                        <p className={`text-base sm:text-lg ${themeClasses.textPrimary}`}>{assignmentData.comment}</p>
                       </div>
                     </div>
                   </div>

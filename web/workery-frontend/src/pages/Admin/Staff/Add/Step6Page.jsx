@@ -400,7 +400,7 @@ const Step6Content = memo(function Step6Content() {
             placeholder="Enter any additional comments or notes about this staff member"
             rows={4}
             maxLength={638}
-            helperText={`${additionalComment.length}/638 characters`}
+            showCharacterCount
           />
         </FormCard>
       </div>

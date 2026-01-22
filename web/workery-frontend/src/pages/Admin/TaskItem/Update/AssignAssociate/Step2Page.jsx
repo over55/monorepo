@@ -45,11 +45,11 @@ const WIZARD_STEPS = Object.freeze([
 const DetailField = memo(function DetailField({ label, value, fullWidth = false, icon: Icon = null, themeClasses }) {
   return (
     <div className={fullWidth ? "lg:col-span-2" : ""}>
-      <dt className={`text-xs sm:text-sm font-semibold ${themeClasses.textSecondary} mb-1 flex items-center`}>
-        {Icon && <Icon className="w-3 sm:w-4 h-3 sm:h-4 mr-1" />}
+      <dt className={`text-sm sm:text-base font-semibold ${themeClasses.textSecondary} mb-1.5 flex items-center`}>
+        {Icon && <Icon className="w-4 sm:w-5 h-4 sm:h-5 mr-1.5" />}
         {label}
       </dt>
-      <dd className={`text-base sm:text-lg font-medium ${themeClasses.textPrimary} break-words`}>
+      <dd className={`text-lg sm:text-xl font-medium ${themeClasses.textPrimary} break-words`}>
         {value || "-"}
       </dd>
     </div>
@@ -189,11 +189,11 @@ const Step2Content = memo(function Step2Content() {
     });
 
     return (
-      <div className="flex flex-wrap gap-1">
+      <div className="flex flex-wrap gap-2">
         {matchingSkills.map((skill) => (
           <span
             key={skill.id}
-            className="inline-flex items-center px-2 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-full"
+            className="inline-flex items-center px-3 py-1.5 text-sm sm:text-base font-medium text-green-800 bg-green-100 rounded-full"
             title="Matches job requirement"
           >
             ✓ {skill.name}
@@ -202,7 +202,7 @@ const Step2Content = memo(function Step2Content() {
         {nonMatchingSkills.map((skill) => (
           <span
             key={skill.id}
-            className="inline-flex items-center px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 rounded-full"
+            className="inline-flex items-center px-3 py-1.5 text-sm sm:text-base font-medium text-gray-600 bg-gray-100 rounded-full"
           >
             {skill.name}
           </span>
@@ -285,12 +285,12 @@ const Step2Content = memo(function Step2Content() {
               />
               <DetailField label="Job Description" value={task.orderDescription} fullWidth themeClasses={themeClasses} />
               <div>
-                <dt className={`text-xs sm:text-sm font-semibold ${themeClasses.textSecondary} mb-1`}>Job Skill Sets</dt>
+                <dt className={`text-base sm:text-lg font-semibold ${themeClasses.textSecondary} mb-1.5`}>Job Skill Sets</dt>
                 <dd>
                   {task.orderSkillSets?.length > 0 ? (
-                    <div className="flex flex-wrap gap-1">
+                    <div className="flex flex-wrap gap-2">
                       {task.orderSkillSets.map((skill, index) => (
-                        <span key={skill.id || skill.value || index} className="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-800 bg-blue-100 rounded-full">
+                        <span key={skill.id || skill.value || index} className="inline-flex items-center px-3 py-1.5 text-base sm:text-lg font-medium text-blue-800 bg-blue-100 rounded-full">
                           {skill.name || skill.text || skill.label}
                         </span>
                       ))}
@@ -380,16 +380,16 @@ const Step2Content = memo(function Step2Content() {
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Contacts (30d)</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">WSIB #</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rate</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Skills</th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Action</th>
+                        <th className="px-4 py-4 text-left text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wider">#</th>
+                        <th className="px-4 py-4 text-left text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                        <th className="px-4 py-4 text-left text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wider">Name</th>
+                        <th className="px-4 py-4 text-left text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wider">Phone</th>
+                        <th className="px-4 py-4 text-left text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wider">Email</th>
+                        <th className="px-4 py-4 text-left text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wider">Contacts (30d)</th>
+                        <th className="px-4 py-4 text-left text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wider">WSIB #</th>
+                        <th className="px-4 py-4 text-left text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wider">Rate</th>
+                        <th className="px-4 py-4 text-left text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wider">Skills</th>
+                        <th className="px-4 py-4 text-left text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wider">Action</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -399,53 +399,53 @@ const Step2Content = memo(function Step2Content() {
 
                         return (
                           <tr key={associate.id} className={isSelected ? "bg-green-50" : isAway ? "bg-gray-100 opacity-60" : "hover:bg-gray-50"}>
-                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{index + 1}</td>
+                            <td className="px-4 py-4 whitespace-nowrap text-lg text-gray-900">{index + 1}</td>
                             <td className="px-4 py-4 whitespace-nowrap">
                               {isAway ? (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                  <LockClosedIcon className="w-3 h-3 mr-1" />Unavailable
+                                <span className="inline-flex items-center px-3 py-2 rounded-full text-sm sm:text-base font-medium bg-red-100 text-red-800">
+                                  <LockClosedIcon className="w-5 h-5 mr-1.5" />Unavailable
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                  <CheckCircleIcon className="w-3 h-3 mr-1" />Available
+                                <span className="inline-flex items-center px-3 py-2 rounded-full text-sm sm:text-base font-medium bg-green-100 text-green-800">
+                                  <CheckCircleIcon className="w-5 h-5 mr-1.5" />Available
                                 </span>
                               )}
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap">
-                              <Link to={`/admin/associate/${associate.id}`} target="_blank" className={`text-sm font-medium ${isAway ? "text-gray-500" : themeClasses.linkPrimary}`}>
+                              <Link to={`/admin/associate/${associate.id}`} target="_blank" className={`text-lg font-medium ${isAway ? "text-gray-500" : themeClasses.linkPrimary}`}>
                                 {associate.name}
                               </Link>
-                              {isSelected && <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Selected</span>}
+                              {isSelected && <span className="ml-2 inline-flex items-center px-3 py-1.5 rounded text-sm sm:text-base font-medium bg-green-100 text-green-800">Selected</span>}
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap">
                               {associate.phone ? (
-                                <a href={`tel:${associate.phone}`} className={`text-sm ${isAway ? "text-gray-500 pointer-events-none" : themeClasses.linkPrimary} flex items-center`}>
-                                  <PhoneIcon className="w-4 h-4 mr-1" />{associate.phone}
+                                <a href={`tel:${associate.phone}`} className={`text-lg ${isAway ? "text-gray-500 pointer-events-none" : themeClasses.linkPrimary} flex items-center`}>
+                                  <PhoneIcon className="w-5 h-5 mr-1.5" />{associate.phone}
                                 </a>
-                              ) : <span className="text-sm text-gray-400">-</span>}
+                              ) : <span className="text-lg text-gray-400">-</span>}
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap">
                               {associate.email ? (
-                                <a href={`mailto:${associate.email}`} className={`text-sm ${isAway ? "text-gray-500 pointer-events-none" : themeClasses.linkPrimary} flex items-center`}>
-                                  <EnvelopeIcon className="w-4 h-4 mr-1" />{associate.email}
+                                <a href={`mailto:${associate.email}`} className={`text-lg ${isAway ? "text-gray-500 pointer-events-none" : themeClasses.linkPrimary} flex items-center`}>
+                                  <EnvelopeIcon className="w-5 h-5 mr-1.5" />{associate.email}
                                 </a>
-                              ) : <span className="text-sm text-gray-400">-</span>}
+                              ) : <span className="text-lg text-gray-400">-</span>}
                             </td>
-                            <td className={`px-4 py-4 whitespace-nowrap text-sm ${isAway ? "text-gray-500" : "text-gray-900"}`}>{associate.contactsLast30Days || 0}</td>
-                            <td className={`px-4 py-4 whitespace-nowrap text-sm ${isAway ? "text-gray-500" : "text-gray-900"}`}>{associate.wsibNumber || <span className="text-gray-400">-</span>}</td>
+                            <td className={`px-4 py-4 whitespace-nowrap text-lg ${isAway ? "text-gray-500" : "text-gray-900"}`}>{associate.contactsLast30Days || 0}</td>
+                            <td className={`px-4 py-4 whitespace-nowrap text-lg ${isAway ? "text-gray-500" : "text-gray-900"}`}>{associate.wsibNumber || <span className="text-gray-400">-</span>}</td>
                             <td className="px-4 py-4 whitespace-nowrap">
                               {associate.hourlySalaryDesired ? (
-                                <span className={`text-sm font-medium ${isAway ? "text-gray-500" : "text-green-600"}`}>${associate.hourlySalaryDesired}/hr</span>
-                              ) : <span className="text-sm text-gray-400">-</span>}
+                                <span className={`text-lg font-medium ${isAway ? "text-gray-500" : "text-green-600"}`}>${associate.hourlySalaryDesired}/hr</span>
+                              ) : <span className="text-lg text-gray-400">-</span>}
                             </td>
                             <td className="px-4 py-4"><div className={isAway ? "opacity-50" : ""}>{renderSkillSets(associate.skillSets, task?.orderSkillSets)}</div></td>
                             <td className="px-4 py-4 whitespace-nowrap">
                               {isAway ? (
-                                <div className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-gray-500 bg-gray-200 rounded-md cursor-not-allowed">
-                                  <LockClosedIcon className="w-3 h-3 mr-1" />Restricted
+                                <div className="inline-flex items-center px-4 py-2.5 text-base font-medium text-gray-500 bg-gray-200 rounded-lg cursor-not-allowed">
+                                  <LockClosedIcon className="w-5 h-5 mr-1.5" />Restricted
                                 </div>
                               ) : (
-                                <Button size="sm" variant={isSelected ? "success" : "primary"} onClick={() => onSelectClick(associate)} icon={ArrowRightIcon}>
+                                <Button size="lg" variant={isSelected ? "success" : "primary"} onClick={() => onSelectClick(associate)} icon={ArrowRightIcon}>
                                   {isSelected ? "Reselect" : "Assign"}
                                 </Button>
                               )}
@@ -464,44 +464,44 @@ const Step2Content = memo(function Step2Content() {
                     const isAway = associate.isAway;
 
                     return (
-                      <div key={associate.id} className={`p-4 rounded-lg border-2 ${isSelected ? "bg-green-50 border-green-200" : isAway ? "bg-gray-100 border-gray-300 opacity-75" : "bg-white border-gray-200"}`}>
-                        <div className="flex items-start justify-between mb-3">
+                      <div key={associate.id} className={`p-5 rounded-xl border-2 ${isSelected ? "bg-green-50 border-green-200" : isAway ? "bg-gray-100 border-gray-300 opacity-75" : "bg-white border-gray-200"}`}>
+                        <div className="flex items-start justify-between mb-4">
                           <div>
-                            <Link to={`/admin/associate/${associate.id}`} target="_blank" className={`text-sm font-medium ${isAway ? "text-gray-500" : themeClasses.linkPrimary}`}>
+                            <Link to={`/admin/associate/${associate.id}`} target="_blank" className={`text-xl font-semibold ${isAway ? "text-gray-500" : themeClasses.linkPrimary}`}>
                               {associate.name}
                             </Link>
-                            <div className="flex items-center gap-2 mt-1">
+                            <div className="flex items-center gap-2 mt-2">
                               {isAway ? (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                                  <LockClosedIcon className="w-3 h-3 mr-1" />Unavailable
+                                <span className="inline-flex items-center px-3 py-2 rounded-full text-base font-medium bg-red-100 text-red-800">
+                                  <LockClosedIcon className="w-5 h-5 mr-1.5" />Unavailable
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                  <CheckCircleIcon className="w-3 h-3 mr-1" />Available
+                                <span className="inline-flex items-center px-3 py-2 rounded-full text-base font-medium bg-green-100 text-green-800">
+                                  <CheckCircleIcon className="w-5 h-5 mr-1.5" />Available
                                 </span>
                               )}
-                              {isSelected && <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Selected</span>}
+                              {isSelected && <span className="inline-flex items-center px-3 py-1.5 rounded text-base font-medium bg-green-100 text-green-800">Selected</span>}
                             </div>
                           </div>
-                          <span className="text-xs text-gray-500">#{index + 1}</span>
+                          <span className="text-base text-gray-500">#{index + 1}</span>
                         </div>
 
-                        <div className="space-y-2 text-sm">
+                        <div className="space-y-3 text-lg">
                           {associate.phone && (
                             <div className="flex items-center">
-                              <PhoneIcon className="w-4 h-4 mr-2 text-gray-400" />
+                              <PhoneIcon className="w-6 h-6 mr-2.5 text-gray-400" />
                               <a href={`tel:${associate.phone}`} className={isAway ? "text-gray-500 pointer-events-none" : themeClasses.linkPrimary}>{associate.phone}</a>
                             </div>
                           )}
                           {associate.email && (
                             <div className="flex items-center">
-                              <EnvelopeIcon className="w-4 h-4 mr-2 text-gray-400" />
+                              <EnvelopeIcon className="w-6 h-6 mr-2.5 text-gray-400" />
                               <a href={`mailto:${associate.email}`} className={`${isAway ? "text-gray-500 pointer-events-none" : themeClasses.linkPrimary} break-all`}>{associate.email}</a>
                             </div>
                           )}
                           {associate.organizationName && (
                             <div className="flex items-center">
-                              <BuildingOfficeIcon className="w-4 h-4 mr-2 text-gray-400" />
+                              <BuildingOfficeIcon className="w-6 h-6 mr-2.5 text-gray-400" />
                               <span className={isAway ? "text-gray-500" : "text-gray-900"}>{associate.organizationName}</span>
                             </div>
                           )}
@@ -521,16 +521,16 @@ const Step2Content = memo(function Step2Content() {
                           </div>
                           <div>
                             <span className="text-gray-500">Skills:</span>
-                            <div className={`mt-1 ${isAway ? "opacity-50" : ""}`}>{renderSkillSets(associate.skillSets, task?.orderSkillSets)}</div>
+                            <div className={`mt-1.5 ${isAway ? "opacity-50" : ""}`}>{renderSkillSets(associate.skillSets, task?.orderSkillSets)}</div>
                           </div>
                         </div>
 
                         {isAway ? (
-                          <div className="mt-4 w-full inline-flex items-center justify-center px-4 py-2 text-sm font-medium text-gray-500 bg-gray-200 rounded-md cursor-not-allowed">
-                            <LockClosedIcon className="w-4 h-4 mr-2" />Cannot Assign - Associate is Away
+                          <div className="mt-5 w-full inline-flex items-center justify-center px-4 py-3.5 text-lg font-medium text-gray-500 bg-gray-200 rounded-xl cursor-not-allowed">
+                            <LockClosedIcon className="w-6 h-6 mr-2" />Cannot Assign - Associate is Away
                           </div>
                         ) : (
-                          <Button className="mt-4 w-full" variant={isSelected ? "success" : "primary"} onClick={() => onSelectClick(associate)} icon={ArrowRightIcon}>
+                          <Button className="mt-5 w-full" size="lg" variant={isSelected ? "success" : "primary"} onClick={() => onSelectClick(associate)} icon={ArrowRightIcon}>
                             {isSelected ? "Reselect" : "Assign"}
                           </Button>
                         )}
@@ -541,9 +541,9 @@ const Step2Content = memo(function Step2Content() {
               </>
             ) : (
               <div className="text-center py-12">
-                <UserGroupIcon className="mx-auto h-12 w-12 text-gray-400" />
-                <h3 className="mt-2 text-sm font-medium text-gray-900">No Associates Available</h3>
-                <p className="mt-1 text-sm text-gray-500">
+                <UserGroupIcon className="mx-auto h-20 w-20 text-gray-400" />
+                <h3 className="mt-3 text-xl font-semibold text-gray-900">No Associates Available</h3>
+                <p className="mt-2 text-lg text-gray-500">
                   {task.orderSkillSets?.length > 0 ? (
                     <>No active associates found with the required skill sets. <Link to="/admin/associates/add/step-1-search" className={themeClasses.linkPrimary}>Click here →</Link> to add a new associate.</>
                   ) : (

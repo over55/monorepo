@@ -243,7 +243,7 @@ function Sidebar({
       });
     }
 
-    // Frontline Staff - Limited access (no Administration section)
+    // Frontline Staff - Limited access (no Financials, Reports, or Staff management)
     else if (userRole === FRONTLINE_ROLE_ID) {
       sections.push({
         label: "Staff",
@@ -261,6 +261,7 @@ function Sidebar({
           { path: "/admin/incidents", label: "Incidents" },
           { path: "/admin/job-history", label: "Job History" },
           { path: "/admin/all-comments", label: "Comments" },
+          { path: "/admin/settings", label: "Settings" },
         ],
       });
     }

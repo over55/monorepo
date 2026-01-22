@@ -40,10 +40,10 @@ const WIZARD_STEPS = Object.freeze([
 const DetailField = memo(function DetailField({ label, value, fullWidth = false, themeClasses }) {
   return (
     <div className={fullWidth ? "lg:col-span-2" : ""}>
-      <dt className={`text-xs sm:text-sm font-semibold ${themeClasses.textSecondary} mb-1`}>
+      <dt className={`text-sm sm:text-base font-semibold ${themeClasses.textSecondary} mb-1.5`}>
         {label}
       </dt>
-      <dd className={`text-base sm:text-lg font-medium ${themeClasses.textPrimary} break-words`}>
+      <dd className={`text-lg sm:text-xl font-medium ${themeClasses.textPrimary} break-words`}>
         {value || "-"}
       </dd>
     </div>
@@ -265,28 +265,22 @@ const Step1Content = memo(function Step1Content() {
           >
             <dl className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
               <div>
-                <dt className={`text-xs sm:text-sm font-semibold ${themeClasses.textSecondary} mb-2`}>
-                  Required Skill Sets
-                </dt>
-                <dd>
-                  <SkillSetsDisplay
-                    values={extractIds(task.orderSkillSets)}
-                    onUnauthorized={onUnauthorized}
-                    variant="primary"
-                  />
-                </dd>
+                <SkillSetsDisplay
+                  values={extractIds(task.orderSkillSets)}
+                  onUnauthorized={onUnauthorized}
+                  variant="primary"
+                  label="Required Skill Sets"
+                  size="lg"
+                />
               </div>
               <div>
-                <dt className={`text-xs sm:text-sm font-semibold ${themeClasses.textSecondary} mb-2`}>
-                  Job Tags
-                </dt>
-                <dd>
-                  <TagsDisplay
-                    values={extractIds(task.orderTags)}
-                    onUnauthorized={onUnauthorized}
-                    variant="success"
-                  />
-                </dd>
+                <TagsDisplay
+                  values={extractIds(task.orderTags)}
+                  onUnauthorized={onUnauthorized}
+                  variant="success"
+                  label="Job Tags"
+                  size="lg"
+                />
               </div>
             </dl>
           </DetailCard>
@@ -341,30 +335,27 @@ const Step1Content = memo(function Step1Content() {
                 />
               )}
               <div className="lg:col-span-2">
-                <dt className={`text-xs sm:text-sm font-semibold ${themeClasses.textSecondary} mb-2`}>
-                  Client Tags
-                </dt>
-                <dd>
-                  <TagsDisplay
-                    values={extractIds(task.customerTags)}
-                    onUnauthorized={onUnauthorized}
-                    variant="info"
-                  />
-                </dd>
+                <TagsDisplay
+                  values={extractIds(task.customerTags)}
+                  onUnauthorized={onUnauthorized}
+                  variant="info"
+                  label="Client Tags"
+                  size="lg"
+                />
               </div>
             </dl>
           </DetailCard>
 
           {/* Comments Link */}
-          <div className={`pt-4 border-t ${themeClasses.borderLight}`}>
+          <div className={`pt-5 border-t ${themeClasses.borderLight}`}>
             <div className="flex items-center justify-between">
-              <label className={`text-sm font-medium ${themeClasses.textSecondary} flex items-center`}>
-                <ChatBubbleLeftRightIcon className="w-4 h-4 mr-2" />
+              <label className={`text-base sm:text-lg font-medium ${themeClasses.textSecondary} flex items-center`}>
+                <ChatBubbleLeftRightIcon className="w-5 h-5 sm:w-6 sm:h-6 mr-2.5" />
                 Comments
               </label>
               <Link
                 to={`/admin/order/${task.orderWjid}/comments`}
-                className={`text-sm ${themeClasses.linkPrimary}`}
+                className={`text-base sm:text-lg ${themeClasses.linkPrimary}`}
               >
                 View all comments →
               </Link>
