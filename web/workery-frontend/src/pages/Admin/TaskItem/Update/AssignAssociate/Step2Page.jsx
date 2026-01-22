@@ -380,14 +380,11 @@ const Step2Content = memo(function Step2Content() {
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-4 py-4 text-left text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wider">#</th>
-                        <th className="px-4 py-4 text-left text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wider">Status</th>
                         <th className="px-4 py-4 text-left text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wider">Name</th>
                         <th className="px-4 py-4 text-left text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wider">Phone</th>
                         <th className="px-4 py-4 text-left text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wider">Email</th>
                         <th className="px-4 py-4 text-left text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wider">Contacts (30d)</th>
-                        <th className="px-4 py-4 text-left text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wider">WSIB #</th>
-                        <th className="px-4 py-4 text-left text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wider">Rate</th>
+                        <th className="px-4 py-4 text-left text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wider">WSIB</th>
                         <th className="px-4 py-4 text-left text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wider">Skills</th>
                         <th className="px-4 py-4 text-left text-sm sm:text-base font-semibold text-gray-600 uppercase tracking-wider">Action</th>
                       </tr>
@@ -399,23 +396,10 @@ const Step2Content = memo(function Step2Content() {
 
                         return (
                           <tr key={associate.id} className={isSelected ? "bg-green-50" : isAway ? "bg-gray-100 opacity-60" : "hover:bg-gray-50"}>
-                            <td className="px-4 py-4 whitespace-nowrap text-lg text-gray-900">{index + 1}</td>
-                            <td className="px-4 py-4 whitespace-nowrap">
-                              {isAway ? (
-                                <span className="inline-flex items-center px-3 py-2 rounded-full text-sm sm:text-base font-medium bg-red-100 text-red-800">
-                                  <LockClosedIcon className="w-5 h-5 mr-1.5" />Unavailable
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center px-3 py-2 rounded-full text-sm sm:text-base font-medium bg-green-100 text-green-800">
-                                  <CheckCircleIcon className="w-5 h-5 mr-1.5" />Available
-                                </span>
-                              )}
-                            </td>
                             <td className="px-4 py-4 whitespace-nowrap">
                               <Link to={`/admin/associate/${associate.id}`} target="_blank" className={`text-lg font-medium ${isAway ? "text-gray-500" : themeClasses.linkPrimary}`}>
                                 {associate.name}
                               </Link>
-                              {isSelected && <span className="ml-2 inline-flex items-center px-3 py-1.5 rounded text-sm sm:text-base font-medium bg-green-100 text-green-800">Selected</span>}
                             </td>
                             <td className="px-4 py-4 whitespace-nowrap">
                               {associate.phone ? (
@@ -432,10 +416,11 @@ const Step2Content = memo(function Step2Content() {
                               ) : <span className="text-lg text-gray-400">-</span>}
                             </td>
                             <td className={`px-4 py-4 whitespace-nowrap text-lg ${isAway ? "text-gray-500" : "text-gray-900"}`}>{associate.contactsLast30Days || 0}</td>
-                            <td className={`px-4 py-4 whitespace-nowrap text-lg ${isAway ? "text-gray-500" : "text-gray-900"}`}>{associate.wsibNumber || <span className="text-gray-400">-</span>}</td>
                             <td className="px-4 py-4 whitespace-nowrap">
-                              {associate.hourlySalaryDesired ? (
-                                <span className={`text-lg font-medium ${isAway ? "text-gray-500" : "text-green-600"}`}>${associate.hourlySalaryDesired}/hr</span>
+                              {associate.wsibNumber ? (
+                                <span className="inline-flex items-center px-3 py-1.5 text-sm sm:text-base font-medium text-green-800 bg-green-100 rounded-full">
+                                  <CheckCircleIcon className="w-5 h-5 mr-1" />Yes
+                                </span>
                               ) : <span className="text-lg text-gray-400">-</span>}
                             </td>
                             <td className="px-4 py-4"><div className={isAway ? "opacity-50" : ""}>{renderSkillSets(associate.skillSets, task?.orderSkillSets)}</div></td>
@@ -446,7 +431,7 @@ const Step2Content = memo(function Step2Content() {
                                 </div>
                               ) : (
                                 <Button size="lg" variant={isSelected ? "success" : "primary"} onClick={() => onSelectClick(associate)} icon={ArrowRightIcon}>
-                                  {isSelected ? "Reselect" : "Assign"}
+                                  Select
                                 </Button>
                               )}
                             </td>
@@ -465,25 +450,10 @@ const Step2Content = memo(function Step2Content() {
 
                     return (
                       <div key={associate.id} className={`p-5 rounded-xl border-2 ${isSelected ? "bg-green-50 border-green-200" : isAway ? "bg-gray-100 border-gray-300 opacity-75" : "bg-white border-gray-200"}`}>
-                        <div className="flex items-start justify-between mb-4">
-                          <div>
-                            <Link to={`/admin/associate/${associate.id}`} target="_blank" className={`text-xl font-semibold ${isAway ? "text-gray-500" : themeClasses.linkPrimary}`}>
-                              {associate.name}
-                            </Link>
-                            <div className="flex items-center gap-2 mt-2">
-                              {isAway ? (
-                                <span className="inline-flex items-center px-3 py-2 rounded-full text-base font-medium bg-red-100 text-red-800">
-                                  <LockClosedIcon className="w-5 h-5 mr-1.5" />Unavailable
-                                </span>
-                              ) : (
-                                <span className="inline-flex items-center px-3 py-2 rounded-full text-base font-medium bg-green-100 text-green-800">
-                                  <CheckCircleIcon className="w-5 h-5 mr-1.5" />Available
-                                </span>
-                              )}
-                              {isSelected && <span className="inline-flex items-center px-3 py-1.5 rounded text-base font-medium bg-green-100 text-green-800">Selected</span>}
-                            </div>
-                          </div>
-                          <span className="text-base text-gray-500">#{index + 1}</span>
+                        <div className="mb-4">
+                          <Link to={`/admin/associate/${associate.id}`} target="_blank" className={`text-xl font-semibold ${isAway ? "text-gray-500" : themeClasses.linkPrimary}`}>
+                            {associate.name}
+                          </Link>
                         </div>
 
                         <div className="space-y-3 text-lg">
@@ -509,15 +479,13 @@ const Step2Content = memo(function Step2Content() {
                             <span className="text-gray-500">Contacts (30d):</span>
                             <span className={isAway ? "text-gray-500" : "text-gray-900"}>{associate.contactsLast30Days || 0}</span>
                           </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-500">WSIB #:</span>
-                            <span className={isAway ? "text-gray-500" : "text-gray-900"}>{associate.wsibNumber || "-"}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-500">Rate:</span>
-                            <span className={`font-medium ${isAway ? "text-gray-500" : "text-green-600"}`}>
-                              {associate.hourlySalaryDesired ? `$${associate.hourlySalaryDesired}/hr` : "-"}
-                            </span>
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-500">WSIB:</span>
+                            {associate.wsibNumber ? (
+                              <span className="inline-flex items-center px-3 py-1.5 text-sm sm:text-base font-medium text-green-800 bg-green-100 rounded-full">
+                                <CheckCircleIcon className="w-5 h-5 mr-1" />Yes
+                              </span>
+                            ) : <span className="text-gray-400">-</span>}
                           </div>
                           <div>
                             <span className="text-gray-500">Skills:</span>
@@ -531,7 +499,7 @@ const Step2Content = memo(function Step2Content() {
                           </div>
                         ) : (
                           <Button className="mt-5 w-full" size="lg" variant={isSelected ? "success" : "primary"} onClick={() => onSelectClick(associate)} icon={ArrowRightIcon}>
-                            {isSelected ? "Reselect" : "Assign"}
+                            Select
                           </Button>
                         )}
                       </div>
