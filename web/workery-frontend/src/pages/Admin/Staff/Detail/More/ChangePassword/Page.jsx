@@ -16,7 +16,6 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { useStaffManager } from "../../../../../../services/Services";
-import axios from "axios";
 import {
   Card,
   Alert,
@@ -129,49 +128,12 @@ function AdminStaffDetailMoreChangePasswordPage() {
 
     try {
       const passwordData = {
-        staff_id: aid,
+        staffId: aid,
         password: password,
-        password_repeated: passwordRepeated,
+        passwordRepeated: passwordRepeated,
       };
 
-      // Get access token
-      let accessToken =
-        localStorage.getItem("WORKERY_ACCESS_TOKEN") ||
-        localStorage.getItem("WORKERY_TENANT_ACCESS_TOKEN") ||
-        localStorage.getItem("access_token") ||
-        localStorage.getItem("accessToken");
-
-      if (!accessToken) {
-        const tokenKey = Object.keys(localStorage).find(
-          (key) =>
-            key.toLowerCase().includes("token") &&
-            !key.toLowerCase().includes("refresh") &&
-            !key.toLowerCase().includes("timestamp"),
-        );
-        if (tokenKey) {
-          accessToken = localStorage.getItem(tokenKey);
-        }
-      }
-
-      if (!accessToken) {
-        throw new Error("No access token found. Please login again.");
-      }
-
-      const apiBaseUrl =
-        process.env.NODE_ENV === "development"
-          ? "http://127.0.0.1:8000"
-          : window.location.origin;
-
-      const endpoint = "/api/v1/staffs/operations/change-password";
-      const fullUrl = `${apiBaseUrl}${endpoint}`;
-
-      await axios.post(fullUrl, passwordData, {
-        headers: {
-          Authorization: `JWT ${accessToken}`,
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-      });
+      await staffManager.changeStaffPassword(passwordData, onUnauthorized);
 
       setSuccessMessage("Password has been successfully changed");
       setPassword("");
@@ -185,32 +147,30 @@ function AdminStaffDetailMoreChangePasswordPage() {
 
       let errorMessage = "An unknown error occurred";
 
-      if (error.response) {
-        if (error.response.status === 404) {
-          errorMessage = "API endpoint not found. Please contact support.";
-        } else if (error.response.status === 401) {
-          errorMessage = "Unauthorized. Please login again.";
-          setTimeout(() => {
-            navigate("/login?unauthorized=true");
-          }, 2000);
-        } else if (error.response.status === 403) {
-          errorMessage = "You don't have permission to change this password.";
-        } else if (error.response.data?.message) {
-          errorMessage = error.response.data.message;
-        } else if (error.response.data?.detail) {
-          errorMessage = error.response.data.detail;
-        }
-      } else if (error.request) {
-        errorMessage = "No response from server. Please check your connection.";
-      } else {
-        errorMessage = error.message || errorMessage;
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.detail) {
+        errorMessage = error.detail;
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      }
+
+      if (error.status === 401 || error.unauthorized) {
+        errorMessage = "Unauthorized. Please login again.";
+        setTimeout(() => {
+          navigate("/login?unauthorized=true");
+        }, 2000);
+      } else if (error.status === 403) {
+        errorMessage = "You don't have permission to change this password.";
+      } else if (error.status === 404) {
+        errorMessage = "API endpoint not found. Please contact support.";
       }
 
       setErrors({ message: errorMessage });
     } finally {
       setIsSubmitting(false);
     }
-  }, [aid, password, passwordRepeated, validateForm, isSubmitting, navigate]);
+  }, [aid, password, passwordRepeated, validateForm, isSubmitting, navigate, staffManager, onUnauthorized]);
 
   // Handle confirm button click
   const handleConfirmClick = useCallback(() => {

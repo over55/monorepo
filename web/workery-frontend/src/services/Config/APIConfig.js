@@ -105,7 +105,7 @@ export const API_ENDPOINTS = {
   STAFF_DOWNGRADE_OPERATION: "/staff/operation/downgrade",
   STAFF_AVATAR_OPERATION: "/staff/operation/avatar",
   STAFF_SELECT_OPTIONS: "/staffs/select-options",
-  STAFF_CHANGE_PASSWORD_OPERATION: "/staff/operations/change-password",
+  STAFF_CHANGE_PASSWORD_OPERATION: "/staffs/operations/change-password",
   STAFF_CHANGE_2FA_OPERATION: "/staff/operations/change-2fa",
   STAFF_PERMANENTLY_DELETE_OPERATION: "/staff/operations/permanently-delete",
 

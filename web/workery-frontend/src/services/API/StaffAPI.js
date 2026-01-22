@@ -672,10 +672,13 @@ export class StaffAPI {
         onUnauthorizedCallback,
       );
 
+      // Convert request data from camelCase to snake_case
+      const decamelizedData = decamelizeKeys(passwordData);
+
       // Make the API call
       const response = await authenticatedAxios.post(
         this.endpoints.STAFF_CHANGE_PASSWORD_OPERATION,
-        passwordData,
+        decamelizedData,
       );
 
       // Convert response from snake_case to camelCase
