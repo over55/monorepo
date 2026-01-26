@@ -8,25 +8,49 @@
 
 services:
   s3:
-    container_name: workery_s3
-    image: minio/minio:latest
+    container_name: workery_seaweedfs
+    image: chrislusf/seaweedfs:latest
     ports:
-      - '9000:9000'
-      - '9001:9001'
+      - "8333:8333" # S3 API
+      - "9333:9333" # Master server (web UI)
+      - "8080:8080" # Volume server
     volumes:
-      - s3_data:/data
+      - seaweedfs_data:/data
     environment:
-      - MINIO_REGION_NAME=${WORKERY_BACKEND_AWS_REGION}
-      - MINIO_ROOT_USER=${WORKERY_BACKEND_AWS_ACCESS_KEY}
-      - MINIO_ROOT_PASSWORD=${WORKERY_BACKEND_AWS_SECRET_KEY}
-      - MINIO_DEFAULT_BUCKETS=${WORKERY_BACKEND_AWS_BUCKET_NAME}
-    command: server --console-address ":9001" /data
+      - WEED_MASTER_VOLUME_SIZE_LIMIT_MB=1024
+      - AWS_ACCESS_KEY_ID=${WORKERY_BACKEND_AWS_ACCESS_KEY}
+      - AWS_SECRET_ACCESS_KEY=${WORKERY_BACKEND_AWS_SECRET_KEY}
+    command: server -s3 -dir=/data -s3.port=8333 -ip=0.0.0.0
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "/usr/bin/wget",
+          "-q",
+          "--spider",
+          "http://127.0.0.1:9333/cluster/status",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
 
   # The purpose of this service is to store our application data.
   db:
     container_name: workery_mongodb
     image: mongo
-    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017", "--quiet", "--logpath", "/dev/null"]
+    command:
+      [
+        "--replSet",
+        "rs0",
+        "--bind_ip_all",
+        "--port",
+        "27017",
+        "--quiet",
+        "--logpath",
+        "/dev/null",
+      ]
     ports:
       - 27017:27017
     extra_hosts:
@@ -40,7 +64,7 @@ services:
       retries: 30
     volumes:
       - "./data/db/:/data/db"
-      - "./data/db/configdb:/data/configdb
+      - "./data/db/configdb:/data/configdb"
     restart: unless-stopped
     logging:
       driver: none
@@ -49,10 +73,10 @@ services:
     container_name: workery_mongodb_admin
     image: mongo-express
     environment:
-        - ME_CONFIG_MONGODB_SERVER=db
-        - ME_CONFIG_MONGODB_PORT=27017
+      - ME_CONFIG_MONGODB_SERVER=db
+      - ME_CONFIG_MONGODB_PORT=27017
     ports:
-        - '8081:8081'
+      - "8081:8081"
     depends_on:
       - "db"
     links:
@@ -66,35 +90,35 @@ services:
     container_name: workery_backend_app
     stdin_open: true
     environment:
-        WORKERY_BACKEND_IP: 0.0.0.0
-        WORKERY_BACKEND_PORT: 8000
-        WORKERY_BACKEND_HMAC_SECRET: ${WORKERY_BACKEND_HMAC_SECRET}
-        WORKERY_BACKEND_HAS_DEBUGGING: ${WORKERY_BACKEND_HAS_DEBUGGING}
-        WORKERY_BACKEND_CACHE_URI: mongodb://db:27017/?replicaSet=rs0
-        WORKERY_BACKEND_DB_URI: ${WORKERY_BACKEND_DB_URI}
-        WORKERY_BACKEND_DB_NAME: ${WORKERY_BACKEND_DB_NAME}
-        WORKERY_BACKEND_AWS_ACCESS_KEY: ${WORKERY_BACKEND_AWS_ACCESS_KEY}
-        WORKERY_BACKEND_AWS_SECRET_KEY: ${WORKERY_BACKEND_AWS_SECRET_KEY}
-        WORKERY_BACKEND_AWS_ENDPOINT: ${WORKERY_BACKEND_AWS_ENDPOINT}
-        WORKERY_BACKEND_AWS_REGION: ${WORKERY_BACKEND_AWS_REGION}
-        WORKERY_BACKEND_AWS_BUCKET_NAME: ${WORKERY_BACKEND_AWS_BUCKET_NAME}
-        WORKERY_BACKEND_AWS_S3_FORCE_PATH_STYLE: ${WORKERY_BACKEND_AWS_S3_FORCE_PATH_STYLE}
-        WORKERY_BACKEND_INITIAL_ADMIN_EMAIL: ${WORKERY_BACKEND_INITIAL_ADMIN_EMAIL} # Required email for root admin when project starts up
-        WORKERY_BACKEND_INITIAL_ADMIN_PASSWORD: ${WORKERY_BACKEND_INITIAL_ADMIN_PASSWORD} # Required password for root admin when project starts up
-        WORKERY_BACKEND_INITIAL_ADMIN_ORG_NAME: ${WORKERY_BACKEND_INITIAL_ADMIN_ORG_NAME}
-        WORKERY_BACKEND_API_DOMAIN_NAME: ${WORKERY_BACKEND_API_DOMAIN_NAME}
-        WORKERY_BACKEND_APP_DOMAIN_NAME: ${WORKERY_BACKEND_APP_DOMAIN_NAME}
-        AWS_ACCESS_KEY: ${WORKERY_BACKEND_AWS_ACCESS_KEY} # AWS SDK requires this exact name.
-        AWS_SECRET_KEY: ${WORKERY_BACKEND_AWS_SECRET_KEY} # AWS SDK requires this exact name.
-        AWS_REGION: ${WORKERY_BACKEND_AWS_REGION}         # AWS SDK requires this exact name.
-        WORKERY_BACKEND_MAILGUN_API_KEY: ${WORKERY_BACKEND_MAILGUN_API_KEY}
-        WORKERY_BACKEND_MAILGUN_DOMAIN: ${WORKERY_BACKEND_MAILGUN_DOMAIN}
-        WORKERY_BACKEND_MAILGUN_API_BASE: ${WORKERY_BACKEND_MAILGUN_API_BASE}
-        WORKERY_BACKEND_MAILGUN_SENDER_EMAIL: ${WORKERY_BACKEND_MAILGUN_SENDER_EMAIL}
-        WORKERY_BACKEND_PDF_BUILDER_DATA_DIRECTORY_PATH: ${WORKERY_BACKEND_PDF_BUILDER_DATA_DIRECTORY_PATH}
-        WORKERY_BACKEND_PDF_BUILDER_ASSOCIATE_INVOICE_PATH: ${WORKERY_BACKEND_PDF_BUILDER_ASSOCIATE_INVOICE_PATH}
-        WORKERY_BACKEND_APP_ENABLE_2FA_ON_REGISTRATION: ${WORKERY_BACKEND_APP_ENABLE_2FA_ON_REGISTRATION}
-        WORKERY_BACKEND_ALLOWED_COUNTRIES: ${WORKERY_BACKEND_ALLOWED_COUNTRIES}
+      WORKERY_BACKEND_IP: 0.0.0.0
+      WORKERY_BACKEND_PORT: 8000
+      WORKERY_BACKEND_HMAC_SECRET: ${WORKERY_BACKEND_HMAC_SECRET}
+      WORKERY_BACKEND_HAS_DEBUGGING: ${WORKERY_BACKEND_HAS_DEBUGGING}
+      WORKERY_BACKEND_CACHE_URI: mongodb://db:27017/?replicaSet=rs0
+      WORKERY_BACKEND_DB_URI: ${WORKERY_BACKEND_DB_URI}
+      WORKERY_BACKEND_DB_NAME: ${WORKERY_BACKEND_DB_NAME}
+      WORKERY_BACKEND_AWS_ACCESS_KEY: ${WORKERY_BACKEND_AWS_ACCESS_KEY}
+      WORKERY_BACKEND_AWS_SECRET_KEY: ${WORKERY_BACKEND_AWS_SECRET_KEY}
+      WORKERY_BACKEND_AWS_ENDPOINT: ${WORKERY_BACKEND_AWS_ENDPOINT}
+      WORKERY_BACKEND_AWS_REGION: ${WORKERY_BACKEND_AWS_REGION}
+      WORKERY_BACKEND_AWS_BUCKET_NAME: ${WORKERY_BACKEND_AWS_BUCKET_NAME}
+      WORKERY_BACKEND_AWS_S3_FORCE_PATH_STYLE: ${WORKERY_BACKEND_AWS_S3_FORCE_PATH_STYLE}
+      WORKERY_BACKEND_INITIAL_ADMIN_EMAIL: ${WORKERY_BACKEND_INITIAL_ADMIN_EMAIL} # Required email for root admin when project starts up
+      WORKERY_BACKEND_INITIAL_ADMIN_PASSWORD: ${WORKERY_BACKEND_INITIAL_ADMIN_PASSWORD} # Required password for root admin when project starts up
+      WORKERY_BACKEND_INITIAL_ADMIN_ORG_NAME: ${WORKERY_BACKEND_INITIAL_ADMIN_ORG_NAME}
+      WORKERY_BACKEND_API_DOMAIN_NAME: ${WORKERY_BACKEND_API_DOMAIN_NAME}
+      WORKERY_BACKEND_APP_DOMAIN_NAME: ${WORKERY_BACKEND_APP_DOMAIN_NAME}
+      AWS_ACCESS_KEY: ${WORKERY_BACKEND_AWS_ACCESS_KEY} # AWS SDK requires this exact name.
+      AWS_SECRET_KEY: ${WORKERY_BACKEND_AWS_SECRET_KEY} # AWS SDK requires this exact name.
+      AWS_REGION: ${WORKERY_BACKEND_AWS_REGION} # AWS SDK requires this exact name.
+      WORKERY_BACKEND_MAILGUN_API_KEY: ${WORKERY_BACKEND_MAILGUN_API_KEY}
+      WORKERY_BACKEND_MAILGUN_DOMAIN: ${WORKERY_BACKEND_MAILGUN_DOMAIN}
+      WORKERY_BACKEND_MAILGUN_API_BASE: ${WORKERY_BACKEND_MAILGUN_API_BASE}
+      WORKERY_BACKEND_MAILGUN_SENDER_EMAIL: ${WORKERY_BACKEND_MAILGUN_SENDER_EMAIL}
+      WORKERY_BACKEND_PDF_BUILDER_DATA_DIRECTORY_PATH: ${WORKERY_BACKEND_PDF_BUILDER_DATA_DIRECTORY_PATH}
+      WORKERY_BACKEND_PDF_BUILDER_ASSOCIATE_INVOICE_PATH: ${WORKERY_BACKEND_PDF_BUILDER_ASSOCIATE_INVOICE_PATH}
+      WORKERY_BACKEND_APP_ENABLE_2FA_ON_REGISTRATION: ${WORKERY_BACKEND_APP_ENABLE_2FA_ON_REGISTRATION}
+      WORKERY_BACKEND_ALLOWED_COUNTRIES: ${WORKERY_BACKEND_ALLOWED_COUNTRIES}
     build:
       context: .
       dockerfile: ./dev.Dockerfile
@@ -111,6 +135,6 @@ services:
       - ./:/go/src/github.com/over55/monorepo/cloud/workery-backend # IMPORTANT: Required for hotreload via `CompileDaemon`.
 
 volumes:
-    mongodb_data:
-    mongodb_config:
-    s3_data:
+  mongodb_data:
+  mongodb_config:
+  seaweedfs_data:

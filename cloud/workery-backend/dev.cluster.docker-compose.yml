@@ -8,19 +8,26 @@
 
 services:
   s3:
-    container_name: workery_s3
-    image: minio/minio:latest
+    container_name: workery_seaweedfs
+    image: chrislusf/seaweedfs:latest
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "8333:8333"  # S3 API
+      - "9333:9333"  # Master server (web UI)
+      - "8080:8080"  # Volume server
     volumes:
-      - s3_data:/data
+      - seaweedfs_data:/data
     environment:
-      - MINIO_REGION_NAME=${WORKERY_BACKEND_AWS_REGION}
-      - MINIO_ROOT_USER=${WORKERY_BACKEND_AWS_ACCESS_KEY}
-      - MINIO_ROOT_PASSWORD=${WORKERY_BACKEND_AWS_SECRET_KEY}
-      - MINIO_DEFAULT_BUCKETS=${WORKERY_BACKEND_AWS_BUCKET_NAME}
-    command: server --console-address ":9001" /data
+      - WEED_MASTER_VOLUME_SIZE_LIMIT_MB=1024
+      - AWS_ACCESS_KEY_ID=${WORKERY_BACKEND_AWS_ACCESS_KEY}
+      - AWS_SECRET_ACCESS_KEY=${WORKERY_BACKEND_AWS_SECRET_KEY}
+    command: server -s3 -dir=/data -s3.port=8333 -ip=0.0.0.0
+    healthcheck:
+      test: ["CMD", "/usr/bin/wget", "-q", "--spider", "http://127.0.0.1:9333/cluster/status"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+      start_period: 15s
+    restart: unless-stopped
 
   db1:
     container_name: workery_db1
@@ -170,7 +177,7 @@ services:
       - ./:/go/src/github.com/over55/monorepo/cloud/workery-backend # IMPORTANT: Required for hotreload via `CompileDaemon`.
 
 volumes:
-  s3_data:
+  seaweedfs_data:
   db1_data:
   db2_data:
   db3_data:
