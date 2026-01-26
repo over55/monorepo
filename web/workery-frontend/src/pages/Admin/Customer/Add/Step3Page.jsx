@@ -156,10 +156,8 @@ const Step3Content = memo(function Step3Content() {
       newErrors.lastName = "Last name is required";
       hasErrors = true;
     }
-    if (!email.trim()) {
-      newErrors.email = "Email is required";
-      hasErrors = true;
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    // Email is optional, but if provided, must be valid
+    if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       newErrors.email = "Please enter a valid email address";
       hasErrors = true;
     }
@@ -347,13 +345,12 @@ const Step3Content = memo(function Step3Content() {
 
             {/* Email */}
             <Input
-              label="Email Address"
+              label="Email Address (Optional)"
               type="email"
               value={email}
               onChange={handleEmailChange}
               placeholder="Enter email address"
               icon={EnvelopeIcon}
-              required
               error={errors.email}
             />
 
