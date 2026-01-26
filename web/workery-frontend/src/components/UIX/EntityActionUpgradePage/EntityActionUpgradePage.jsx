@@ -464,7 +464,7 @@ const EntityActionUpgradePage = memo(function EntityActionUpgradePage({ config }
                     label={field.label}
                     required={field.required}
                     value={formData[field.name] || ""}
-                    onChange={(e) => handleFieldChange(field.name, e.target.value)}
+                    onChange={(value) => handleFieldChange(field.name, value)}
                     disabled={isProcessing}
                     error={errors[field.name]}
                     options={field.options || []}
@@ -475,7 +475,7 @@ const EntityActionUpgradePage = memo(function EntityActionUpgradePage({ config }
                     required={field.required}
                     type={field.type || "text"}
                     value={formData[field.name] || ""}
-                    onChange={(e) => handleFieldChange(field.name, e.target.value)}
+                    onChange={(value) => handleFieldChange(field.name, value)}
                     placeholder={field.placeholder}
                     disabled={isProcessing}
                     error={errors[field.name]}

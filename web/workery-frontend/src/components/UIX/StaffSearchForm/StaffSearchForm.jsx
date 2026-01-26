@@ -259,7 +259,7 @@ const StaffSearchForm = memo(function StaffSearchForm({
                           label={field.label}
                           type={field.type || 'text'}
                           value={formData[field.name] || ''}
-                          onChange={(e) => handleInputChange(field.name, e.target.value)}
+                          onChange={(value) => handleInputChange(field.name, value)}
                           placeholder={field.placeholder}
                           icon={field.icon}
                           error={combinedErrors[field.name]}

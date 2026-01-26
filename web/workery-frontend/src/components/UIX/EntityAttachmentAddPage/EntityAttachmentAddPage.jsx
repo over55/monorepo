@@ -482,7 +482,7 @@ const EntityAttachmentAddPageContent = memo(
                     label="Title"
                     required
                     value={title}
-                    onChange={(e) => setTitle(e.target.value)}
+                    onChange={(value) => setTitle(value)}
                     placeholder="Enter attachment title"
                     maxLength={255}
                     disabled={isFetching}
@@ -495,7 +495,7 @@ const EntityAttachmentAddPageContent = memo(
                     name="description"
                     label="Description"
                     value={description}
-                    onChange={(e) => setDescription(e.target.value)}
+                    onChange={(value) => setDescription(value)}
                     placeholder="Enter attachment description (optional)"
                     maxLength={1000}
                     disabled={isFetching}
