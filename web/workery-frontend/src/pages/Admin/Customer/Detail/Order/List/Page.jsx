@@ -507,8 +507,13 @@ const AdminCustomerDetailOrderListPage = memo(function AdminCustomerDetailOrderL
         label: "New Order",
         variant: "success",
         icon: PlusIcon,
-        href: `/admin/orders/add/step-2-from-launchpad?id=${cid}&fn=${customer.firstName}&ln=${customer.lastName}`,
-        target: "_blank",
+        onClick: () => {
+          window.open(
+            `/admin/orders/add/step-2-from-launchpad?id=${cid}&fn=${customer.firstName}&ln=${customer.lastName}`,
+            '_blank',
+            'noopener,noreferrer'
+          );
+        },
       },
     ];
   }, [customer, cid]);
@@ -715,8 +720,13 @@ const AdminCustomerDetailOrderListPage = memo(function AdminCustomerDetailOrderL
                 </p>
                 {customer && (
                   <CreateButton
-                    href={`/admin/orders/add/step-2-from-launchpad?id=${cid}&fn=${customer.firstName}&ln=${customer.lastName}`}
-                    target="_blank"
+                    onClick={() => {
+                      window.open(
+                        `/admin/orders/add/step-2-from-launchpad?id=${cid}&fn=${customer.firstName}&ln=${customer.lastName}`,
+                        '_blank',
+                        'noopener,noreferrer'
+                      );
+                    }}
                     icon={PlusIcon}
                   >
                     Create First Order
@@ -736,8 +746,13 @@ const AdminCustomerDetailOrderListPage = memo(function AdminCustomerDetailOrderL
               </Button>
               {customer && (
                 <CreateButton
-                  href={`/admin/orders/add/step-2-from-launchpad?id=${cid}&fn=${customer.firstName}&ln=${customer.lastName}`}
-                  target="_blank"
+                  onClick={() => {
+                    window.open(
+                      `/admin/orders/add/step-2-from-launchpad?id=${cid}&fn=${customer.firstName}&ln=${customer.lastName}`,
+                      '_blank',
+                      'noopener,noreferrer'
+                    );
+                  }}
                   icon={PlusIcon}
                 >
                   New Order
