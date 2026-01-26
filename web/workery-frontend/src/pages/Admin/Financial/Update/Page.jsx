@@ -68,27 +68,46 @@ function AdminFinancialUpdatePage() {
 
   // UIX Theme
   const { getThemeClasses } = useUIXTheme();
-  const themeClasses = useMemo(() => ({
-    textPrimary: getThemeClasses("text-primary"),
-    textSecondary: getThemeClasses("text-secondary"),
-    linkPrimary: getThemeClasses("link-primary"),
-    textDanger: getThemeClasses("text-danger") || "text-red-600 dark:text-red-400",
-    textSuccess: getThemeClasses("text-success") || "text-green-600 dark:text-green-400",
-    textWarning: getThemeClasses("text-warning") || "text-yellow-600 dark:text-yellow-400",
-    textRequired: "text-red-500 dark:text-red-400",
-    inputFocus: "focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400",
-    inputChecked: "text-blue-600 dark:text-blue-400",
-    borderError: "border-red-300 dark:border-red-500",
-    borderNormal: "border-gray-300 dark:border-gray-600",
-  }), [getThemeClasses]);
+  const themeClasses = useMemo(
+    () => ({
+      textPrimary: getThemeClasses("text-primary"),
+      textSecondary: getThemeClasses("text-secondary"),
+      linkPrimary: getThemeClasses("link-primary"),
+      textDanger:
+        getThemeClasses("text-danger") || "text-red-600 dark:text-red-400",
+      textSuccess:
+        getThemeClasses("text-success") || "text-green-600 dark:text-green-400",
+      textWarning:
+        getThemeClasses("text-warning") ||
+        "text-yellow-600 dark:text-yellow-400",
+      textRequired: "text-red-500 dark:text-red-400",
+      inputFocus:
+        "focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400",
+      inputChecked: "text-blue-600 dark:text-blue-400",
+      borderError: "border-red-300 dark:border-red-500",
+      borderNormal: "border-gray-300 dark:border-gray-600",
+    }),
+    [getThemeClasses],
+  );
 
   // Breadcrumb items
-  const breadcrumbItems = useMemo(() => [
-    { label: "Dashboard", to: "/admin/dashboard", icon: ChartBarIcon },
-    { label: "Financials", to: "/admin/financials", icon: CurrencyDollarIcon },
-    { label: `Financial #${fid}`, to: `/admin/financial/${fid}`, icon: InformationCircleIcon },
-    { label: "Update", icon: PencilSquareIcon, isActive: true },
-  ], [fid]);
+  const breadcrumbItems = useMemo(
+    () => [
+      { label: "Dashboard", to: "/admin/dashboard", icon: ChartBarIcon },
+      {
+        label: "Financials",
+        to: "/admin/financials",
+        icon: CurrencyDollarIcon,
+      },
+      {
+        label: `Financial #${fid}`,
+        to: `/admin/financial/${fid}`,
+        icon: InformationCircleIcon,
+      },
+      { label: "Update", icon: PencilSquareIcon, isActive: true },
+    ],
+    [fid],
+  );
 
   // Component states
   const [errors, setErrors] = useState({});
@@ -460,7 +479,6 @@ function AdminFinancialUpdatePage() {
             setInvoiceBalanceOwingAmount(
               Math.max(0, financialData.invoiceBalanceOwingAmount || 0), // Ensure non-negative
             );
-
           }
         } catch (error) {
           console.error("Failed to fetch financial details:", error);
@@ -485,7 +503,12 @@ function AdminFinancialUpdatePage() {
 
   // Set the service fee object when both financial data and available service fees are loaded
   useEffect(() => {
-    if (financial && financial.invoiceServiceFeeId && availableServiceFees.length > 0 && !invoiceServiceFee) {
+    if (
+      financial &&
+      financial.invoiceServiceFeeId &&
+      availableServiceFees.length > 0 &&
+      !invoiceServiceFee
+    ) {
       const foundFee = availableServiceFees.find(
         (fee) => fee.id === financial.invoiceServiceFeeId,
       );
@@ -694,8 +717,10 @@ function AdminFinancialUpdatePage() {
       invoiceActualServiceFeeAmountPaid: adjustedActualServiceFeePaid, // Use adjusted value
       invoiceBalanceOwingAmount: adjustedInvoiceBalanceOwingAmount, // Use adjusted value (always >= 0)
 
-      // Include the order ID if it exists
-      orderId: financial.orderId || financial.wjid,
+      // REMOVED: orderId field - backend uses WJID from URL path exclusively
+      // The backend always uses the WJID from the URL parameter, not from the request body
+      // Including orderId here could cause the wrong order to be updated when cloning
+      // orderId: financial.orderId || financial.wjid,
     };
 
     try {
@@ -759,6 +784,7 @@ function AdminFinancialUpdatePage() {
     try {
       return DateTime.fromISO(dateString).toFormat("yyyy-MM-dd");
     } catch (error) {
+      console.log("error:", error);
       return "";
     }
   };
@@ -775,7 +801,9 @@ function AdminFinancialUpdatePage() {
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="text-center">
             <Spinner size="lg" />
-            <p className={`mt-4 ${themeClasses.textSecondary}`}>Loading financial details...</p>
+            <p className={`mt-4 ${themeClasses.textSecondary}`}>
+              Loading financial details...
+            </p>
           </div>
         </div>
       </div>
@@ -793,7 +821,12 @@ function AdminFinancialUpdatePage() {
         title="Financial Record"
         subtitle={`Update financial information #${fid}${financial?.orderId ? ` (Related to Order #${financial.orderId})` : ""}`}
         actions={[
-          <BackButton key="back" to={`/admin/financial/${fid}`} label="Back to Detail" size="md" />
+          <BackButton
+            key="back"
+            to={`/admin/financial/${fid}`}
+            label="Back to Detail"
+            size="md"
+          />,
         ]}
       />
 
@@ -812,7 +845,9 @@ function AdminFinancialUpdatePage() {
           onDismiss={() => setAlert(null)}
         >
           <span className="font-medium">
-            {alert.type === "error" ? "Please fix the following errors:" : "Success!"}
+            {alert.type === "error"
+              ? "Please fix the following errors:"
+              : "Success!"}
           </span>
           <div className="mt-1 text-sm">{alert.message}</div>
         </Alert>
@@ -821,13 +856,17 @@ function AdminFinancialUpdatePage() {
       {/* Detailed Error display (only if there are errors and no alert) */}
       {errors && Object.keys(errors).length > 0 && !alert && (
         <Alert type="error">
-          <span className="font-medium">Please correct the following errors:</span>
+          <span className="font-medium">
+            Please correct the following errors:
+          </span>
           <ul className="mt-2 list-disc list-inside space-y-1 text-sm">
             {Object.keys(errors).map((key) => {
               const fieldName =
                 key === "general"
                   ? ""
-                  : key.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase()) + ": ";
+                  : key
+                      .replace(/([A-Z])/g, " $1")
+                      .replace(/^./, (str) => str.toUpperCase()) + ": ";
               return (
                 <li key={key}>
                   <span className="font-medium">{fieldName}</span>
@@ -844,828 +883,865 @@ function AdminFinancialUpdatePage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* General Section */}
           <FormCard title="General" icon={DocumentTextIcon}>
-                <div className="space-y-6">
+            <div className="space-y-6">
+              <div>
+                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                  Who was paid for this job?{" "}
+                  <span className="text-red-500 dark:text-red-400">*</span>
+                </label>
+                <div className="space-x-6">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      value={INVOICE_PAID_TO_ASSOCIATE}
+                      checked={invoicePaidTo === INVOICE_PAID_TO_ASSOCIATE}
+                      onChange={(e) =>
+                        setInvoicePaidTo(parseInt(e.target.value))
+                      }
+                      className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
+                    />
+                    <span className="ml-2 text-base text-gray-700 dark:text-gray-200">
+                      <UserGroupIcon className="inline w-4 h-4 mr-1" />
+                      Associate
+                    </span>
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      value={INVOICE_PAID_TO_ORGANIZATION}
+                      checked={invoicePaidTo === INVOICE_PAID_TO_ORGANIZATION}
+                      onChange={(e) =>
+                        setInvoicePaidTo(parseInt(e.target.value))
+                      }
+                      className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
+                    />
+                    <span className="ml-2 text-base text-gray-700 dark:text-gray-200">
+                      <BuildingOfficeIcon className="inline w-4 h-4 mr-1" />
+                      Organization
+                    </span>
+                  </label>
+                </div>
+                {errors.invoicePaidTo && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {errors.invoicePaidTo}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                  What is the service fee payment status of this job?{" "}
+                  <span className="text-red-500 dark:text-red-400">*</span>
+                </label>
+                <div className="space-x-6">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      value={ORDER_STATUS_COMPLETED_AND_PAID}
+                      checked={
+                        paymentStatus === ORDER_STATUS_COMPLETED_AND_PAID
+                      }
+                      onChange={(e) =>
+                        setPaymentStatus(parseInt(e.target.value))
+                      }
+                      className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
+                    />
+                    <span className="ml-2 text-base text-gray-700 dark:text-gray-200">
+                      <CheckCircleIcon className="inline w-4 h-4 mr-1 text-green-600 dark:text-green-400" />
+                      Paid
+                    </span>
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      value={ORDER_STATUS_COMPLETED_BUT_UNPAID}
+                      checked={
+                        paymentStatus === ORDER_STATUS_COMPLETED_BUT_UNPAID
+                      }
+                      onChange={(e) =>
+                        setPaymentStatus(parseInt(e.target.value))
+                      }
+                      className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
+                    />
+                    <span className="ml-2 text-base text-gray-700 dark:text-gray-200">
+                      <XCircleIcon className="inline w-4 h-4 mr-1 text-yellow-600 dark:text-yellow-400" />
+                      Unpaid
+                    </span>
+                  </label>
+                </div>
+                {errors.paymentStatus && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {errors.paymentStatus}
+                  </p>
+                )}
+              </div>
+
+              {paymentStatus === ORDER_STATUS_COMPLETED_AND_PAID && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
-                      Who was paid for this job?{" "}
-                      <span className="text-red-500 dark:text-red-400">*</span>
+                      Completion Date
                     </label>
-                    <div className="space-x-6">
-                      <label className="inline-flex items-center">
-                        <input
-                          type="radio"
-                          value={INVOICE_PAID_TO_ASSOCIATE}
-                          checked={invoicePaidTo === INVOICE_PAID_TO_ASSOCIATE}
-                          onChange={(e) =>
-                            setInvoicePaidTo(parseInt(e.target.value))
-                          }
-                          className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
-                        />
-                        <span className="ml-2 text-base text-gray-700 dark:text-gray-200">
-                          <UserGroupIcon className="inline w-4 h-4 mr-1" />
-                          Associate
-                        </span>
-                      </label>
-                      <label className="inline-flex items-center">
-                        <input
-                          type="radio"
-                          value={INVOICE_PAID_TO_ORGANIZATION}
-                          checked={
-                            invoicePaidTo === INVOICE_PAID_TO_ORGANIZATION
-                          }
-                          onChange={(e) =>
-                            setInvoicePaidTo(parseInt(e.target.value))
-                          }
-                          className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
-                        />
-                        <span className="ml-2 text-base text-gray-700 dark:text-gray-200">
-                          <BuildingOfficeIcon className="inline w-4 h-4 mr-1" />
-                          Organization
-                        </span>
-                      </label>
-                    </div>
-                    {errors.invoicePaidTo && (
+                    <input
+                      type="date"
+                      value={formatDateForInput(completionDate)}
+                      onChange={(e) => setCompletionDate(e.target.value)}
+                      className={`block w-full px-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                        errors.completionDate
+                          ? "border-red-300 dark:border-red-500"
+                          : "border-gray-300 dark:border-gray-600"
+                      }`}
+                    />
+                    {errors.completionDate && (
                       <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                        {errors.invoicePaidTo}
+                        {errors.completionDate}
                       </p>
                     )}
-                  </div>
-
-                  <div>
-                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
-                      What is the service fee payment status of this job?{" "}
-                      <span className="text-red-500 dark:text-red-400">*</span>
-                    </label>
-                    <div className="space-x-6">
-                      <label className="inline-flex items-center">
-                        <input
-                          type="radio"
-                          value={ORDER_STATUS_COMPLETED_AND_PAID}
-                          checked={
-                            paymentStatus === ORDER_STATUS_COMPLETED_AND_PAID
-                          }
-                          onChange={(e) =>
-                            setPaymentStatus(parseInt(e.target.value))
-                          }
-                          className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
-                        />
-                        <span className="ml-2 text-base text-gray-700 dark:text-gray-200">
-                          <CheckCircleIcon className="inline w-4 h-4 mr-1 text-green-600 dark:text-green-400" />
-                          Paid
-                        </span>
-                      </label>
-                      <label className="inline-flex items-center">
-                        <input
-                          type="radio"
-                          value={ORDER_STATUS_COMPLETED_BUT_UNPAID}
-                          checked={
-                            paymentStatus === ORDER_STATUS_COMPLETED_BUT_UNPAID
-                          }
-                          onChange={(e) =>
-                            setPaymentStatus(parseInt(e.target.value))
-                          }
-                          className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
-                        />
-                        <span className="ml-2 text-base text-gray-700 dark:text-gray-200">
-                          <XCircleIcon className="inline w-4 h-4 mr-1 text-yellow-600 dark:text-yellow-400" />
-                          Unpaid
-                        </span>
-                      </label>
-                    </div>
-                    {errors.paymentStatus && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                        {errors.paymentStatus}
-                      </p>
-                    )}
-                  </div>
-
-                  {paymentStatus === ORDER_STATUS_COMPLETED_AND_PAID && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
-                          Completion Date
-                        </label>
-                        <input
-                          type="date"
-                          value={formatDateForInput(completionDate)}
-                          onChange={(e) => setCompletionDate(e.target.value)}
-                          className={`block w-full px-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
-                            errors.completionDate
-                              ? "border-red-300 dark:border-red-500"
-                              : "border-gray-300 dark:border-gray-600"
-                          }`}
-                        />
-                        {errors.completionDate && (
-                          <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                            {errors.completionDate}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
-                        Invoice Date <span className="text-red-500 dark:text-red-400">*</span>
-                      </label>
-                      <input
-                        type="date"
-                        value={formatDateForInput(invoiceDate)}
-                        onChange={(e) => setInvoiceDate(e.target.value)}
-                        className={`block w-full px-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
-                          errors.invoiceDate
-                            ? "border-red-300 dark:border-red-500"
-                            : "border-gray-300 dark:border-gray-600"
-                        }`}
-                        required
-                      />
-                      {errors.invoiceDate && (
-                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                          {errors.invoiceDate}
-                        </p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
-                        Invoice IDs <span className="text-red-500 dark:text-red-400">*</span>
-                      </label>
-                      <input
-                        type="text"
-                        value={invoiceIds}
-                        onChange={(e) => setInvoiceIds(e.target.value)}
-                        placeholder="Enter invoice ID"
-                        className={`block w-full px-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
-                          errors.invoiceIds
-                            ? "border-red-300 dark:border-red-500"
-                            : "border-gray-300 dark:border-gray-600"
-                        }`}
-                        required
-                      />
-                      {errors.invoiceIds && (
-                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                          {errors.invoiceIds}
-                        </p>
-                      )}
-                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        The system automatically generates an ID if not provided
-                      </p>
-                    </div>
                   </div>
                 </div>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                    Invoice Date{" "}
+                    <span className="text-red-500 dark:text-red-400">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={formatDateForInput(invoiceDate)}
+                    onChange={(e) => setInvoiceDate(e.target.value)}
+                    className={`block w-full px-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                      errors.invoiceDate
+                        ? "border-red-300 dark:border-red-500"
+                        : "border-gray-300 dark:border-gray-600"
+                    }`}
+                    required
+                  />
+                  {errors.invoiceDate && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {errors.invoiceDate}
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                    Invoice IDs{" "}
+                    <span className="text-red-500 dark:text-red-400">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    value={invoiceIds}
+                    onChange={(e) => setInvoiceIds(e.target.value)}
+                    placeholder="Enter invoice ID"
+                    className={`block w-full px-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                      errors.invoiceIds
+                        ? "border-red-300 dark:border-red-500"
+                        : "border-gray-300 dark:border-gray-600"
+                    }`}
+                    required
+                  />
+                  {errors.invoiceIds && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {errors.invoiceIds}
+                    </p>
+                  )}
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    The system automatically generates an ID if not provided
+                  </p>
+                </div>
+              </div>
+            </div>
           </FormCard>
 
           {/* Quote Section */}
           <FormCard title="Quote" icon={ClipboardDocumentCheckIcon}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
-                      Quoted Labour <span className="text-red-500 dark:text-red-400">*</span>
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
-                      </div>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={invoiceQuotedLabourAmount}
-                        onChange={(e) =>
-                          setInvoiceQuotedLabourAmount(e.target.value)
-                        }
-                        placeholder="0.00"
-                        className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
-                          errors.invoiceQuotedLabourAmount
-                            ? "border-red-300 dark:border-red-500"
-                            : "border-gray-300 dark:border-gray-600"
-                        }`}
-                        required
-                      />
-                    </div>
-                    {errors.invoiceQuotedLabourAmount && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                        {errors.invoiceQuotedLabourAmount}
-                      </p>
-                    )}
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      If no quoted labour costs, enter 0
-                    </p>
+              <div>
+                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                  Quoted Labour{" "}
+                  <span className="text-red-500 dark:text-red-400">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500 dark:text-gray-400 text-base">
+                      $
+                    </span>
                   </div>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={invoiceQuotedLabourAmount}
+                    onChange={(e) =>
+                      setInvoiceQuotedLabourAmount(e.target.value)
+                    }
+                    placeholder="0.00"
+                    className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                      errors.invoiceQuotedLabourAmount
+                        ? "border-red-300 dark:border-red-500"
+                        : "border-gray-300 dark:border-gray-600"
+                    }`}
+                    required
+                  />
+                </div>
+                {errors.invoiceQuotedLabourAmount && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {errors.invoiceQuotedLabourAmount}
+                  </p>
+                )}
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  If no quoted labour costs, enter 0
+                </p>
+              </div>
 
-                  <div>
-                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
-                      Quoted Materials <span className="text-red-500 dark:text-red-400">*</span>
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
-                      </div>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={invoiceQuotedMaterialAmount}
-                        onChange={(e) =>
-                          setInvoiceQuotedMaterialAmount(e.target.value)
-                        }
-                        placeholder="0.00"
-                        className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
-                          errors.invoiceQuotedMaterialAmount
-                            ? "border-red-300 dark:border-red-500"
-                            : "border-gray-300 dark:border-gray-600"
-                        }`}
-                        required
-                      />
-                    </div>
-                    {errors.invoiceQuotedMaterialAmount && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                        {errors.invoiceQuotedMaterialAmount}
-                      </p>
-                    )}
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      If no quoted material costs, enter 0
-                    </p>
+              <div>
+                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                  Quoted Materials{" "}
+                  <span className="text-red-500 dark:text-red-400">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500 dark:text-gray-400 text-base">
+                      $
+                    </span>
                   </div>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={invoiceQuotedMaterialAmount}
+                    onChange={(e) =>
+                      setInvoiceQuotedMaterialAmount(e.target.value)
+                    }
+                    placeholder="0.00"
+                    className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                      errors.invoiceQuotedMaterialAmount
+                        ? "border-red-300 dark:border-red-500"
+                        : "border-gray-300 dark:border-gray-600"
+                    }`}
+                    required
+                  />
+                </div>
+                {errors.invoiceQuotedMaterialAmount && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {errors.invoiceQuotedMaterialAmount}
+                  </p>
+                )}
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  If no quoted material costs, enter 0
+                </p>
+              </div>
 
-                  <div>
-                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
-                      Quoted Other Costs <span className="text-red-500 dark:text-red-400">*</span>
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
-                      </div>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={invoiceQuotedOtherCostsAmount}
-                        onChange={(e) =>
-                          setInvoiceQuotedOtherCostsAmount(e.target.value)
-                        }
-                        placeholder="0.00"
-                        className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
-                          errors.invoiceQuotedOtherCostsAmount
-                            ? "border-red-300 dark:border-red-500"
-                            : "border-gray-300 dark:border-gray-600"
-                        }`}
-                        required
-                      />
-                    </div>
-                    {errors.invoiceQuotedOtherCostsAmount && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                        {errors.invoiceQuotedOtherCostsAmount}
-                      </p>
-                    )}
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      If no quoted other costs, enter 0
-                    </p>
+              <div>
+                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                  Quoted Other Costs{" "}
+                  <span className="text-red-500 dark:text-red-400">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500 dark:text-gray-400 text-base">
+                      $
+                    </span>
                   </div>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={invoiceQuotedOtherCostsAmount}
+                    onChange={(e) =>
+                      setInvoiceQuotedOtherCostsAmount(e.target.value)
+                    }
+                    placeholder="0.00"
+                    className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                      errors.invoiceQuotedOtherCostsAmount
+                        ? "border-red-300 dark:border-red-500"
+                        : "border-gray-300 dark:border-gray-600"
+                    }`}
+                    required
+                  />
+                </div>
+                {errors.invoiceQuotedOtherCostsAmount && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {errors.invoiceQuotedOtherCostsAmount}
+                  </p>
+                )}
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  If no quoted other costs, enter 0
+                </p>
+              </div>
 
-                  <div>
-                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
-                      Total Quoted <span className="text-red-500 dark:text-red-400">*</span>
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
-                      </div>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={invoiceTotalQuoteAmount}
-                        disabled
-                        className="block w-full pl-8 pr-4 py-3 text-base sm:text-lg border border-gray-200 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200"
-                      />
-                    </div>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 flex items-center">
-                      <CalculatorIcon className="w-3 h-3 mr-1" />
-                      Automatically calculated
-                    </p>
+              <div>
+                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                  Total Quoted{" "}
+                  <span className="text-red-500 dark:text-red-400">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500 dark:text-gray-400 text-base">
+                      $
+                    </span>
                   </div>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={invoiceTotalQuoteAmount}
+                    disabled
+                    className="block w-full pl-8 pr-4 py-3 text-base sm:text-lg border border-gray-200 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200"
+                  />
+                </div>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 flex items-center">
+                  <CalculatorIcon className="w-3 h-3 mr-1" />
+                  Automatically calculated
+                </p>
+              </div>
             </div>
           </FormCard>
 
           {/* Actual Section */}
           <FormCard title="Actual" icon={BanknotesIcon}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
-                      Actual Labour <span className="text-red-500 dark:text-red-400">*</span>
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
-                      </div>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={invoiceLabourAmount}
-                        onChange={(e) => setInvoiceLabourAmount(e.target.value)}
-                        placeholder="0.00"
-                        className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
-                          errors.invoiceLabourAmount
-                            ? "border-red-300 dark:border-red-500"
-                            : "border-gray-300 dark:border-gray-600"
-                        }`}
-                        required
-                      />
-                    </div>
-                    {errors.invoiceLabourAmount && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                        {errors.invoiceLabourAmount}
-                      </p>
-                    )}
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      If no actual labour costs, enter 0
-                    </p>
+              <div>
+                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                  Actual Labour{" "}
+                  <span className="text-red-500 dark:text-red-400">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500 dark:text-gray-400 text-base">
+                      $
+                    </span>
                   </div>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={invoiceLabourAmount}
+                    onChange={(e) => setInvoiceLabourAmount(e.target.value)}
+                    placeholder="0.00"
+                    className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                      errors.invoiceLabourAmount
+                        ? "border-red-300 dark:border-red-500"
+                        : "border-gray-300 dark:border-gray-600"
+                    }`}
+                    required
+                  />
+                </div>
+                {errors.invoiceLabourAmount && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {errors.invoiceLabourAmount}
+                  </p>
+                )}
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  If no actual labour costs, enter 0
+                </p>
+              </div>
 
-                  <div>
-                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
-                      Actual Material <span className="text-red-500 dark:text-red-400">*</span>
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
-                      </div>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={invoiceMaterialAmount}
-                        onChange={(e) =>
-                          setInvoiceMaterialAmount(e.target.value)
-                        }
-                        placeholder="0.00"
-                        className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
-                          errors.invoiceMaterialAmount
-                            ? "border-red-300 dark:border-red-500"
-                            : "border-gray-300 dark:border-gray-600"
-                        }`}
-                        required
-                      />
-                    </div>
-                    {errors.invoiceMaterialAmount && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                        {errors.invoiceMaterialAmount}
-                      </p>
-                    )}
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      If no material costs were incurred, enter 0
-                    </p>
+              <div>
+                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                  Actual Material{" "}
+                  <span className="text-red-500 dark:text-red-400">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500 dark:text-gray-400 text-base">
+                      $
+                    </span>
                   </div>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={invoiceMaterialAmount}
+                    onChange={(e) => setInvoiceMaterialAmount(e.target.value)}
+                    placeholder="0.00"
+                    className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                      errors.invoiceMaterialAmount
+                        ? "border-red-300 dark:border-red-500"
+                        : "border-gray-300 dark:border-gray-600"
+                    }`}
+                    required
+                  />
+                </div>
+                {errors.invoiceMaterialAmount && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {errors.invoiceMaterialAmount}
+                  </p>
+                )}
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  If no material costs were incurred, enter 0
+                </p>
+              </div>
 
-                  <div>
-                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
-                      Actual Other Costs <span className="text-red-500 dark:text-red-400">*</span>
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
-                      </div>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={invoiceOtherCostsAmount}
-                        onChange={(e) =>
-                          setInvoiceOtherCostsAmount(e.target.value)
-                        }
-                        placeholder="0.00"
-                        className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
-                          errors.invoiceOtherCostsAmount
-                            ? "border-red-300 dark:border-red-500"
-                            : "border-gray-300 dark:border-gray-600"
-                        }`}
-                        required
-                      />
-                    </div>
-                    {errors.invoiceOtherCostsAmount && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                        {errors.invoiceOtherCostsAmount}
-                      </p>
-                    )}
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      If no other costs were incurred, enter 0
-                    </p>
+              <div>
+                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                  Actual Other Costs{" "}
+                  <span className="text-red-500 dark:text-red-400">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500 dark:text-gray-400 text-base">
+                      $
+                    </span>
                   </div>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={invoiceOtherCostsAmount}
+                    onChange={(e) => setInvoiceOtherCostsAmount(e.target.value)}
+                    placeholder="0.00"
+                    className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                      errors.invoiceOtherCostsAmount
+                        ? "border-red-300 dark:border-red-500"
+                        : "border-gray-300 dark:border-gray-600"
+                    }`}
+                    required
+                  />
+                </div>
+                {errors.invoiceOtherCostsAmount && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {errors.invoiceOtherCostsAmount}
+                  </p>
+                )}
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  If no other costs were incurred, enter 0
+                </p>
+              </div>
 
-                  <div>
-                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
-                      Actual Tax <span className="text-red-500 dark:text-red-400">*</span>
-                      {taxRate > 0 && (
-                        <span className="text-xs text-gray-500 ml-2">
-                          (Tax rate: {taxRate}%
-                          {associateTaxId && `, HST#: ${associateTaxId}`})
-                        </span>
-                      )}
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
-                      </div>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={invoiceTaxAmount}
-                        onChange={(e) => setInvoiceTaxAmount(e.target.value)}
-                        placeholder="0.00"
-                        disabled={!invoiceIsCustomTaxAmount}
-                        className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
-                          !invoiceIsCustomTaxAmount ? "bg-gray-50 dark:bg-gray-800" : ""
-                        } ${errors.invoiceTaxAmount ? "border-red-300 dark:border-red-500" : "border-gray-300 dark:border-gray-600"}`}
-                        required
-                      />
-                    </div>
-                    {errors.invoiceTaxAmount && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                        {errors.invoiceTaxAmount}
-                      </p>
-                    )}
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      {!invoiceIsCustomTaxAmount
-                        ? `Tax is automatically calculated at ${taxRate}%`
-                        : "Using custom tax amount"}
-                    </p>
+              <div>
+                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                  Actual Tax{" "}
+                  <span className="text-red-500 dark:text-red-400">*</span>
+                  {taxRate > 0 && (
+                    <span className="text-xs text-gray-500 ml-2">
+                      (Tax rate: {taxRate}%
+                      {associateTaxId && `, HST#: ${associateTaxId}`})
+                    </span>
+                  )}
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500 dark:text-gray-400 text-base">
+                      $
+                    </span>
                   </div>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={invoiceTaxAmount}
+                    onChange={(e) => setInvoiceTaxAmount(e.target.value)}
+                    placeholder="0.00"
+                    disabled={!invoiceIsCustomTaxAmount}
+                    className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                      !invoiceIsCustomTaxAmount
+                        ? "bg-gray-50 dark:bg-gray-800"
+                        : ""
+                    } ${errors.invoiceTaxAmount ? "border-red-300 dark:border-red-500" : "border-gray-300 dark:border-gray-600"}`}
+                    required
+                  />
+                </div>
+                {errors.invoiceTaxAmount && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {errors.invoiceTaxAmount}
+                  </p>
+                )}
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  {!invoiceIsCustomTaxAmount
+                    ? `Tax is automatically calculated at ${taxRate}%`
+                    : "Using custom tax amount"}
+                </p>
+              </div>
 
-                  <div className="md:col-span-2">
-                    <label className="flex items-center">
+              <div className="md:col-span-2">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={invoiceIsCustomTaxAmount}
+                    onChange={(e) =>
+                      setInvoiceIsCustomTaxAmount(e.target.checked)
+                    }
+                    className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
+                  />
+                  <span className="ml-2 text-base text-gray-700 dark:text-gray-200">
+                    Custom Actual Tax? (Override automatic calculation with
+                    custom value)
+                  </span>
+                </label>
+              </div>
+
+              <div>
+                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                  Actual Total Amount{" "}
+                  <span className="text-red-500 dark:text-red-400">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500 dark:text-gray-400 text-base">
+                      $
+                    </span>
+                  </div>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={invoiceTotalAmount}
+                    disabled
+                    className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl bg-gray-50 text-gray-700 ${
+                      errors.invoiceTotalAmount || errors.amount
+                        ? "border-red-300"
+                        : "border-gray-200"
+                    }`}
+                  />
+                </div>
+                {(errors.invoiceTotalAmount || errors.amount) && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {errors.invoiceTotalAmount || errors.amount}
+                  </p>
+                )}
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 flex items-center">
+                  <CalculatorIcon className="w-3 h-3 mr-1" />
+                  Automatically calculated
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                  Actual Deposit Amount{" "}
+                  <span className="text-red-500 dark:text-red-400">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500 dark:text-gray-400 text-base">
+                      $
+                    </span>
+                  </div>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={invoiceDepositAmount}
+                    onChange={(e) => setInvoiceDepositAmount(e.target.value)}
+                    placeholder="0.00"
+                    className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                      errors.invoiceDepositAmount
+                        ? "border-red-300 dark:border-red-500"
+                        : "border-gray-300 dark:border-gray-600"
+                    }`}
+                    required
+                  />
+                </div>
+                {errors.invoiceDepositAmount && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {errors.invoiceDepositAmount}
+                  </p>
+                )}
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  If no deposit, enter 0
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                  Actual Amount Due{" "}
+                  <span className="text-red-500 dark:text-red-400">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500 dark:text-gray-400 text-base">
+                      $
+                    </span>
+                  </div>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={invoiceAmountDue}
+                    disabled
+                    className="block w-full pl-8 pr-4 py-3 text-base sm:text-lg border border-gray-200 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200"
+                  />
+                </div>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 flex items-center">
+                  <CalculatorIcon className="w-3 h-3 mr-1" />
+                  Total amount minus deposit
+                </p>
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                  Payment Method(s){" "}
+                  <span className="text-red-500 dark:text-red-400">*</span>
+                </label>
+                <div className="space-y-2">
+                  {ORDER_INVOICE_PAYMENT_METHODS_OPTIONS.map((option) => (
+                    <label key={option.value} className="flex items-center">
                       <input
                         type="checkbox"
-                        checked={invoiceIsCustomTaxAmount}
-                        onChange={(e) =>
-                          setInvoiceIsCustomTaxAmount(e.target.checked)
-                        }
+                        value={option.value}
+                        checked={paymentMethods.includes(option.value)}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value);
+                          if (e.target.checked) {
+                            setPaymentMethods([...paymentMethods, value]);
+                          } else {
+                            setPaymentMethods(
+                              paymentMethods.filter((v) => v !== value),
+                            );
+                          }
+                        }}
                         className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
                       />
                       <span className="ml-2 text-base text-gray-700 dark:text-gray-200">
-                        Custom Actual Tax? (Override automatic calculation with
-                        custom value)
+                        <CreditCardIcon className="inline w-4 h-4 mr-1" />
+                        {option.label}
                       </span>
                     </label>
-                  </div>
-
-                  <div>
-                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
-                      Actual Total Amount{" "}
-                      <span className="text-red-500 dark:text-red-400">*</span>
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
-                      </div>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={invoiceTotalAmount}
-                        disabled
-                        className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl bg-gray-50 text-gray-700 ${
-                          errors.invoiceTotalAmount || errors.amount
-                            ? "border-red-300"
-                            : "border-gray-200"
-                        }`}
-                      />
-                    </div>
-                    {(errors.invoiceTotalAmount || errors.amount) && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                        {errors.invoiceTotalAmount || errors.amount}
-                      </p>
-                    )}
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 flex items-center">
-                      <CalculatorIcon className="w-3 h-3 mr-1" />
-                      Automatically calculated
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
-                      Actual Deposit Amount{" "}
-                      <span className="text-red-500 dark:text-red-400">*</span>
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
-                      </div>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={invoiceDepositAmount}
-                        onChange={(e) =>
-                          setInvoiceDepositAmount(e.target.value)
-                        }
-                        placeholder="0.00"
-                        className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
-                          errors.invoiceDepositAmount
-                            ? "border-red-300 dark:border-red-500"
-                            : "border-gray-300 dark:border-gray-600"
-                        }`}
-                        required
-                      />
-                    </div>
-                    {errors.invoiceDepositAmount && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                        {errors.invoiceDepositAmount}
-                      </p>
-                    )}
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      If no deposit, enter 0
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
-                      Actual Amount Due <span className="text-red-500 dark:text-red-400">*</span>
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
-                      </div>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={invoiceAmountDue}
-                        disabled
-                        className="block w-full pl-8 pr-4 py-3 text-base sm:text-lg border border-gray-200 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200"
-                      />
-                    </div>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 flex items-center">
-                      <CalculatorIcon className="w-3 h-3 mr-1" />
-                      Total amount minus deposit
-                    </p>
-                  </div>
-
-                  <div className="md:col-span-2">
-                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
-                      Payment Method(s) <span className="text-red-500 dark:text-red-400">*</span>
-                    </label>
-                    <div className="space-y-2">
-                      {ORDER_INVOICE_PAYMENT_METHODS_OPTIONS.map((option) => (
-                        <label key={option.value} className="flex items-center">
-                          <input
-                            type="checkbox"
-                            value={option.value}
-                            checked={paymentMethods.includes(option.value)}
-                            onChange={(e) => {
-                              const value = parseInt(e.target.value);
-                              if (e.target.checked) {
-                                setPaymentMethods([...paymentMethods, value]);
-                              } else {
-                                setPaymentMethods(
-                                  paymentMethods.filter((v) => v !== value),
-                                );
-                              }
-                            }}
-                            className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
-                          />
-                          <span className="ml-2 text-base text-gray-700 dark:text-gray-200">
-                            <CreditCardIcon className="inline w-4 h-4 mr-1" />
-                            {option.label}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                    {errors.paymentMethods && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                        {errors.paymentMethods}
-                      </p>
-                    )}
-                  </div>
+                  ))}
+                </div>
+                {errors.paymentMethods && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {errors.paymentMethods}
+                  </p>
+                )}
+              </div>
             </div>
           </FormCard>
 
           {/* Service Fee Section */}
           <FormCard title="Service Fee" icon={CurrencyDollarIcon}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
-                      Service Fee
-                    </label>
-                    <select
-                      value={invoiceServiceFeeId}
-                      onChange={(e) => {
-                        const selectedId = e.target.value;
-                        setInvoiceServiceFeeId(selectedId);
+              <div>
+                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                  Service Fee
+                </label>
+                <select
+                  value={invoiceServiceFeeId}
+                  onChange={(e) => {
+                    const selectedId = e.target.value;
+                    setInvoiceServiceFeeId(selectedId);
 
-                        // Find the selected service fee and update percentage
-                        const selectedFee = availableServiceFees.find(
-                          (fee) => fee.id === selectedId,
-                        );
+                    // Find the selected service fee and update percentage
+                    const selectedFee = availableServiceFees.find(
+                      (fee) => fee.id === selectedId,
+                    );
 
-                        if (selectedFee) {
-                          setInvoiceServiceFee(selectedFee);
-                          // FIXED: Ensure percentage is properly set and parsed
-                          const percentage =
-                            parseFloat(selectedFee.percentage) || 0;
-                          setInvoiceServiceFeePercentage(percentage);
+                    if (selectedFee) {
+                      setInvoiceServiceFee(selectedFee);
+                      // FIXED: Ensure percentage is properly set and parsed
+                      const percentage =
+                        parseFloat(selectedFee.percentage) || 0;
+                      setInvoiceServiceFeePercentage(percentage);
 
-                          console.log("Service fee selected:", {
-                            id: selectedId,
-                            name: selectedFee.name,
-                            percentage: percentage,
-                          });
+                      console.log("Service fee selected:", {
+                        id: selectedId,
+                        name: selectedFee.name,
+                        percentage: percentage,
+                      });
 
-                          // Check if it's "Other" option
-                          if (
-                            selectedFee.name &&
-                            selectedFee.name.toLowerCase() === "other"
-                          ) {
-                            setIsInvoiceServiceFeeOther(true);
-                          } else {
-                            setIsInvoiceServiceFeeOther(false);
-                            setInvoiceServiceFeeOther("");
-                          }
-                        } else {
-                          // Clear service fee if none selected
-                          setInvoiceServiceFee(null);
-                          setInvoiceServiceFeePercentage(0);
-                          setIsInvoiceServiceFeeOther(false);
-                          setInvoiceServiceFeeOther("");
-                        }
-                      }}
-                      className={`block w-full px-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
-                        errors.invoiceServiceFeeId
-                          ? "border-red-300 dark:border-red-500"
-                          : "border-gray-300 dark:border-gray-600"
-                      }`}
-                    >
-                      <option value="">Select a service fee...</option>
-                      {availableServiceFees.map((fee) => (
-                        <option key={fee.id} value={fee.id}>
-                          {fee.name} ({fee.percentage}%)
-                        </option>
-                      ))}
-                    </select>
-                    {errors.invoiceServiceFeeId && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                        {errors.invoiceServiceFeeId}
-                      </p>
-                    )}
-                    {invoiceServiceFee && invoiceServiceFee.description && (
-                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                        {invoiceServiceFee.description}
-                      </p>
-                    )}
-                  </div>
-
-                  {isInvoiceServiceFeeOther && (
-                    <div>
-                      <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
-                        Service Fee Other
-                      </label>
-                      <input
-                        type="text"
-                        value={invoiceServiceFeeOther}
-                        onChange={(e) =>
-                          setInvoiceServiceFeeOther(e.target.value)
-                        }
-                        placeholder="Enter custom service fee description"
-                        className={`block w-full px-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
-                          errors.invoiceServiceFeeOther
-                            ? "border-red-300 dark:border-red-500"
-                            : "border-gray-300 dark:border-gray-600"
-                        }`}
-                      />
-                      {errors.invoiceServiceFeeOther && (
-                        <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                          {errors.invoiceServiceFeeOther}
-                        </p>
-                      )}
-                    </div>
-                  )}
-
-                  <div>
-                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
-                      Service Fee Percentage
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={invoiceServiceFeePercentage}
-                        readOnly
-                        className="block w-full pr-8 px-4 py-3 text-base sm:text-lg border border-gray-200 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200"
-                      />
-                      <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 dark:text-gray-400 text-base">%</span>
-                      </div>
-                    </div>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      Automatically set based on selected service fee. This
-                      percentage is used to calculate: Labour × Percentage =
-                      Service Fee Amount
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
-                      Required Service Fee Amount{" "}
-                      <span className="text-red-500 dark:text-red-400">*</span>
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
-                      </div>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={invoiceServiceFeeAmount}
-                        disabled
-                        className="block w-full pl-8 pr-4 py-3 text-base sm:text-lg border border-gray-200 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200"
-                      />
-                    </div>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 flex items-center">
-                      <CalculatorIcon className="w-3 h-3 mr-1" />
-                      Service fee owed by associate (labour × percentage)
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
-                      Invoice Service Fee Payment Date
-                    </label>
-                    <input
-                      type="date"
-                      value={formatDateForInput(invoiceServiceFeePaymentDate)}
-                      onChange={(e) =>
-                        setInvoiceServiceFeePaymentDate(e.target.value)
+                      // Check if it's "Other" option
+                      if (
+                        selectedFee.name &&
+                        selectedFee.name.toLowerCase() === "other"
+                      ) {
+                        setIsInvoiceServiceFeeOther(true);
+                      } else {
+                        setIsInvoiceServiceFeeOther(false);
+                        setInvoiceServiceFeeOther("");
                       }
-                      className={`block w-full px-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
-                        errors.invoiceServiceFeePaymentDate
-                          ? "border-red-300 dark:border-red-500"
-                          : "border-gray-300 dark:border-gray-600"
-                      }`}
-                    />
-                    {errors.invoiceServiceFeePaymentDate && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                        {errors.invoiceServiceFeePaymentDate}
-                      </p>
-                    )}
-                  </div>
+                    } else {
+                      // Clear service fee if none selected
+                      setInvoiceServiceFee(null);
+                      setInvoiceServiceFeePercentage(0);
+                      setIsInvoiceServiceFeeOther(false);
+                      setInvoiceServiceFeeOther("");
+                    }
+                  }}
+                  className={`block w-full px-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                    errors.invoiceServiceFeeId
+                      ? "border-red-300 dark:border-red-500"
+                      : "border-gray-300 dark:border-gray-600"
+                  }`}
+                >
+                  <option value="">Select a service fee...</option>
+                  {availableServiceFees.map((fee) => (
+                    <option key={fee.id} value={fee.id}>
+                      {fee.name} ({fee.percentage}%)
+                    </option>
+                  ))}
+                </select>
+                {errors.invoiceServiceFeeId && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {errors.invoiceServiceFeeId}
+                  </p>
+                )}
+                {invoiceServiceFee && invoiceServiceFee.description && (
+                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    {invoiceServiceFee.description}
+                  </p>
+                )}
+              </div>
 
-                  <div>
-                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
-                      Actual Service Fee Paid{" "}
-                      <span className="text-red-500 dark:text-red-400">*</span>
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
-                      </div>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={invoiceActualServiceFeeAmountPaid}
-                        onChange={(e) =>
-                          setInvoiceActualServiceFeeAmountPaid(e.target.value)
-                        }
-                        placeholder="0.00"
-                        className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
-                          errors.invoiceActualServiceFeeAmountPaid
-                            ? "border-red-300 dark:border-red-500"
-                            : "border-gray-300 dark:border-gray-600"
-                        }`}
-                        required
-                      />
-                    </div>
-                    {errors.invoiceActualServiceFeeAmountPaid && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                        {errors.invoiceActualServiceFeeAmountPaid}
-                      </p>
-                    )}
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                      Amount paid by associate and received by organization (can
-                      be $0 if service fee is 0%)
+              {isInvoiceServiceFeeOther && (
+                <div>
+                  <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                    Service Fee Other
+                  </label>
+                  <input
+                    type="text"
+                    value={invoiceServiceFeeOther}
+                    onChange={(e) => setInvoiceServiceFeeOther(e.target.value)}
+                    placeholder="Enter custom service fee description"
+                    className={`block w-full px-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                      errors.invoiceServiceFeeOther
+                        ? "border-red-300 dark:border-red-500"
+                        : "border-gray-300 dark:border-gray-600"
+                    }`}
+                  />
+                  {errors.invoiceServiceFeeOther && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {errors.invoiceServiceFeeOther}
                     </p>
-                  </div>
+                  )}
+                </div>
+              )}
 
-                  <div>
-                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
-                      Balance Owing Amount{" "}
-                      <span className="text-red-500 dark:text-red-400">*</span>
-                    </label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <span className="text-gray-500 dark:text-gray-400 text-base">$</span>
-                      </div>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={invoiceBalanceOwingAmount}
-                        disabled
-                        className="block w-full pl-8 pr-4 py-3 text-base sm:text-lg border border-gray-200 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200"
-                      />
-                    </div>
-                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 flex items-center">
-                      <CalculatorIcon className="w-3 h-3 mr-1" />
-                      Remaining balance to be paid by associate (cannot be
-                      negative)
-                    </p>
+              <div>
+                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                  Service Fee Percentage
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={invoiceServiceFeePercentage}
+                    readOnly
+                    className="block w-full pr-8 px-4 py-3 text-base sm:text-lg border border-gray-200 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200"
+                  />
+                  <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500 dark:text-gray-400 text-base">
+                      %
+                    </span>
                   </div>
+                </div>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Automatically set based on selected service fee. This
+                  percentage is used to calculate: Labour × Percentage = Service
+                  Fee Amount
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                  Required Service Fee Amount{" "}
+                  <span className="text-red-500 dark:text-red-400">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500 dark:text-gray-400 text-base">
+                      $
+                    </span>
+                  </div>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={invoiceServiceFeeAmount}
+                    disabled
+                    className="block w-full pl-8 pr-4 py-3 text-base sm:text-lg border border-gray-200 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200"
+                  />
+                </div>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 flex items-center">
+                  <CalculatorIcon className="w-3 h-3 mr-1" />
+                  Service fee owed by associate (labour × percentage)
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                  Invoice Service Fee Payment Date
+                </label>
+                <input
+                  type="date"
+                  value={formatDateForInput(invoiceServiceFeePaymentDate)}
+                  onChange={(e) =>
+                    setInvoiceServiceFeePaymentDate(e.target.value)
+                  }
+                  className={`block w-full px-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                    errors.invoiceServiceFeePaymentDate
+                      ? "border-red-300 dark:border-red-500"
+                      : "border-gray-300 dark:border-gray-600"
+                  }`}
+                />
+                {errors.invoiceServiceFeePaymentDate && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {errors.invoiceServiceFeePaymentDate}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                  Actual Service Fee Paid{" "}
+                  <span className="text-red-500 dark:text-red-400">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500 dark:text-gray-400 text-base">
+                      $
+                    </span>
+                  </div>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={invoiceActualServiceFeeAmountPaid}
+                    onChange={(e) =>
+                      setInvoiceActualServiceFeeAmountPaid(e.target.value)
+                    }
+                    placeholder="0.00"
+                    className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                      errors.invoiceActualServiceFeeAmountPaid
+                        ? "border-red-300 dark:border-red-500"
+                        : "border-gray-300 dark:border-gray-600"
+                    }`}
+                    required
+                  />
+                </div>
+                {errors.invoiceActualServiceFeeAmountPaid && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {errors.invoiceActualServiceFeeAmountPaid}
+                  </p>
+                )}
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Amount paid by associate and received by organization (can be
+                  $0 if service fee is 0%)
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                  Balance Owing Amount{" "}
+                  <span className="text-red-500 dark:text-red-400">*</span>
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span className="text-gray-500 dark:text-gray-400 text-base">
+                      $
+                    </span>
+                  </div>
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={invoiceBalanceOwingAmount}
+                    disabled
+                    className="block w-full pl-8 pr-4 py-3 text-base sm:text-lg border border-gray-200 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200"
+                  />
+                </div>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 flex items-center">
+                  <CalculatorIcon className="w-3 h-3 mr-1" />
+                  Remaining balance to be paid by associate (cannot be negative)
+                </p>
+              </div>
             </div>
           </FormCard>
 
           {/* Form Actions */}
           <div className="flex justify-between items-center pt-6">
-            <BackButton to={`/admin/financial/${fid}`} label="Back to Detail" size="lg" />
+            <BackButton
+              to={`/admin/financial/${fid}`}
+              label="Back to Detail"
+              size="lg"
+            />
             <Button
               type="submit"
               variant="success"

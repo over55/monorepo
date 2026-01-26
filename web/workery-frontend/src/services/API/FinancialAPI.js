@@ -176,6 +176,10 @@ export class FinancialAPI {
         orderWJID,
       );
 
+      // Debug: Log the URL and request data
+      console.log("FinancialAPI: Sending PUT request to:", url);
+      console.log("FinancialAPI: Request data:", requestData);
+
       // Make the API call
       const response = await authenticatedAxios.put(url, requestData);
 
