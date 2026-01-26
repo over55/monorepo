@@ -165,24 +165,26 @@ const SearchFilter = memo(function SearchFilter({
     return `px-6 py-4 ${themeClasses.searchBg} border-b ${themeClasses.borderSecondary} !rounded-none ${className}`.trim();
   }, [className, themeClasses.searchBg, themeClasses.borderSecondary]);
 
-  // Memoize grid className based on statusOptions and typeOptions
+  // Memoize grid className based on statusOptions, typeOptions, and pageSizeOptions
   // Use explicit Tailwind classes (dynamic class names don't work with Tailwind)
   const gridClassName = useMemo(() => {
     const hasStatus = statusOptions && statusOptions.length > 0;
     const hasType = typeOptions && typeOptions.length > 0;
-    // Base columns: search, sort, page size = 3
-    // + 1 for status if shown, + 1 for type if shown
-    const columns = 3 + (hasStatus ? 1 : 0) + (hasType ? 1 : 0);
+    const hasPageSize = pageSizeOptions && pageSizeOptions.length > 0;
+    // Base columns: search, sort = 2
+    // + 1 for status if shown, + 1 for type if shown, + 1 for page size if shown
+    const columns = 2 + (hasStatus ? 1 : 0) + (hasType ? 1 : 0) + (hasPageSize ? 1 : 0);
 
     // Map column count to explicit Tailwind grid classes
     const gridColsMap = {
+      2: "grid grid-cols-1 gap-4 sm:grid-cols-2",
       3: "grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3",
       4: "grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4",
       5: "grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5",
     };
 
     return gridColsMap[columns] || gridColsMap[3];
-  }, [statusOptions, typeOptions]);
+  }, [statusOptions, typeOptions, pageSizeOptions]);
 
   // Normalize page size options to always have value/label format
   const normalizedPageSizeOptions = useMemo(() => {
@@ -294,16 +296,18 @@ const SearchFilter = memo(function SearchFilter({
           size="md"
         />
 
-        {/* Items per page */}
-        <Select
-          label="Items per page"
-          id="search-filter-pagesize"
-          name="pageSize"
-          value={pageSize}
-          onChange={handlePageSizeChange}
-          options={normalizedPageSizeOptions}
-          size="md"
-        />
+        {/* Items per page (optional) */}
+        {pageSizeOptions && pageSizeOptions.length > 0 && (
+          <Select
+            label="Items per page"
+            id="search-filter-pagesize"
+            name="pageSize"
+            value={pageSize}
+            onChange={handlePageSizeChange}
+            options={normalizedPageSizeOptions}
+            size="md"
+          />
+        )}
       </Card>
     </Card>
   );

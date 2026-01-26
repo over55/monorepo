@@ -234,6 +234,7 @@ function AdminTaskItemListPage() {
       typeFilterLabel: "Type",
       sortOptions: TASK_SORT_OPTIONS,
       searchPlaceholder: "Search tasks...",
+      pageSizeOptions: [], // Hide "Items per page" selector
 
       // Default values
       defaultStatus: String(TASK_IS_CLOSED_FILTER.OPEN),
@@ -249,6 +250,7 @@ function AdminTaskItemListPage() {
         filterDescription:
           "No tasks match your current filters. Try adjusting your search criteria.",
         emptyDescription: "No tasks have been created yet.",
+        actionLabel: null, // Explicitly prevent any action button from appearing
       },
 
       // Data fetching
