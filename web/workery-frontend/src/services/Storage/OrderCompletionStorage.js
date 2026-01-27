@@ -60,17 +60,18 @@ export class OrderCompletionStorage {
       const stored = sessionStorage.getItem(this.STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        // Convert date strings back to Date objects
+        // Convert date strings back to Date objects, but only if valid
         if (parsed.completionDate) {
-          parsed.completionDate = new Date(parsed.completionDate);
+          const date = new Date(parsed.completionDate);
+          parsed.completionDate = !isNaN(date.getTime()) ? date : null;
         }
         if (parsed.invoiceDate) {
-          parsed.invoiceDate = new Date(parsed.invoiceDate);
+          const date = new Date(parsed.invoiceDate);
+          parsed.invoiceDate = !isNaN(date.getTime()) ? date : null;
         }
         if (parsed.invoiceServiceFeePaymentDate) {
-          parsed.invoiceServiceFeePaymentDate = new Date(
-            parsed.invoiceServiceFeePaymentDate,
-          );
+          const date = new Date(parsed.invoiceServiceFeePaymentDate);
+          parsed.invoiceServiceFeePaymentDate = !isNaN(date.getTime()) ? date : null;
         }
         return { ...this.DEFAULT_STATE, ...parsed };
       }
