@@ -116,10 +116,20 @@ const Step2Content = memo(function Step2Content() {
 
   // Form state from storage
   const savedState = orderCompletionStorage.getState();
+
+  // Initialize completionDate properly - validate if it's a valid Date
+  const initializeCompletionDate = () => {
+    if (!savedState.completionDate) return null;
+    const date = savedState.completionDate instanceof Date
+      ? savedState.completionDate
+      : new Date(savedState.completionDate);
+    return !isNaN(date.getTime()) ? date : null;
+  };
+
   const [wasCompleted, setWasCompleted] = useState(savedState.wasCompleted);
   const [reason, setReason] = useState(savedState.reason);
   const [reasonOther, setReasonOther] = useState(savedState.reasonOther);
-  const [completionDate, setCompletionDate] = useState(savedState.completionDate);
+  const [completionDate, setCompletionDate] = useState(initializeCompletionDate());
   const [closingReasonComment, setClosingReasonComment] = useState(savedState.closingReasonComment);
   const [reasonComment, setReasonComment] = useState(savedState.reasonComment);
   const [visits, setVisits] = useState(savedState.visits);
@@ -167,7 +177,20 @@ const Step2Content = memo(function Step2Content() {
   }, []);
 
   const handleCompletionDateChange = useCallback((e) => {
-    const date = new Date(e.target.value);
+    const value = e.target.value;
+    if (!value) {
+      // If date is cleared, set to null
+      setCompletionDate(null);
+      setReasonComment("");
+      return;
+    }
+    const date = new Date(value);
+    if (isNaN(date.getTime())) {
+      // If date is invalid, set to null
+      setCompletionDate(null);
+      setReasonComment("");
+      return;
+    }
     setCompletionDate(date);
     const dateStr = date.toISOString().slice(0, 10);
     setReasonComment(`Job completed by Associate on ${dateStr}.`);
@@ -181,7 +204,9 @@ const Step2Content = memo(function Step2Content() {
     }
 
     if (wasCompleted === 1) {
-      if (!completionDate) newErrors.completionDate = "Completion date is required";
+      if (!completionDate || isNaN(completionDate.getTime())) {
+        newErrors.completionDate = "Completion date is required";
+      }
       if (!reasonComment) newErrors.reasonComment = "Reason comment is required";
       if (!visits || visits <= 0) newErrors.visits = "Number of visits is required";
     }
@@ -220,9 +245,6 @@ const Step2Content = memo(function Step2Content() {
     navigate(`/admin/task/${tid}`);
   }, [navigate, tid]);
 
-  // Redirect if needed
-  if (forceURL !== "") return <Navigate to={forceURL} />;
-
   // Action buttons
   const actions = useMemo(() => [{
     label: "Save & Continue",
@@ -231,6 +253,9 @@ const Step2Content = memo(function Step2Content() {
     iconPosition: "right",
     onClick: handleSubmit,
   }], [handleSubmit]);
+
+  // Redirect if needed (after all hooks)
+  if (forceURL !== "") return <Navigate to={forceURL} />;
 
   return (
     <>
@@ -313,7 +338,7 @@ const Step2Content = memo(function Step2Content() {
                   <div className="relative">
                     <input
                       type="date"
-                      value={completionDate ? completionDate.toISOString().slice(0, 10) : ""}
+                      value={completionDate && !isNaN(completionDate.getTime()) ? completionDate.toISOString().slice(0, 10) : ""}
                       onChange={handleCompletionDateChange}
                       max={new Date().toISOString().slice(0, 10)}
                       className={`block w-full px-3 py-2 border rounded-md shadow-sm ${themeClasses.inputFocus} sm:text-sm ${
