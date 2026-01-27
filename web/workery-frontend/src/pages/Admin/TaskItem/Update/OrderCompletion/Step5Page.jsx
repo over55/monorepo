@@ -134,15 +134,26 @@ const Step5Content = memo(function Step5Content() {
   }, [tid, taskManager, onUnauthorized]);
 
   const handleSubmit = useCallback(async () => {
+    console.log("=== handleSubmit CALLED ===");
+    console.log("formData:", formData);
+    console.log("task:", task);
+    console.log("tid:", tid);
+
     try {
       setIsSubmitting(true);
       setErrors({});
+
+      console.log("=== Starting validation ===");
+      console.log("hasInputtedFinancials:", formData.hasInputtedFinancials);
+      console.log("paymentStatus:", formData.paymentStatus);
+      console.log("ORDER_STATUS_COMPLETED_AND_PAID:", ORDER_STATUS_COMPLETED_AND_PAID);
 
       // Validate required fields before submission
       if (
         formData.hasInputtedFinancials === 1 &&
         formData.paymentStatus === ORDER_STATUS_COMPLETED_AND_PAID
       ) {
+        console.log("=== Paid status validation triggered ===");
         const validationErrors = {};
 
         if (
@@ -164,12 +175,22 @@ const Step5Content = memo(function Step5Content() {
             "Actual service fee paid amount is required when payment is complete";
         }
 
+        console.log("validationErrors:", validationErrors);
+
         if (Object.keys(validationErrors).length > 0) {
-          setErrors(validationErrors);
+          console.log("=== VALIDATION FAILED - returning early ===");
+          // Format errors with a message property so WizardFormStep displays them
+          const errorMessages = Object.values(validationErrors).join(". ");
+          setErrors({
+            ...validationErrors,
+            message: `Please fix the following errors: ${errorMessages}`
+          });
           window.scrollTo(0, 0);
           return;
         }
       }
+
+      console.log("=== Validation passed, preparing payload ===");
 
       // Prepare payload for API
       const payload = {
@@ -244,16 +265,30 @@ const Step5Content = memo(function Step5Content() {
           invoice_balance_owing_amount: parseFloat(formData.invoiceBalanceOwingAmount || 0),
           payment_methods: formData.paymentMethods || [],
         });
+        console.log("=== Financial fields added to payload ===");
       }
 
+      console.log("=== FINAL PAYLOAD ===");
+      console.log(JSON.stringify(payload, null, 2));
+
+      console.log("=== Calling taskManager.completeOrder ===");
       await taskManager.completeOrder(payload, onUnauthorized);
+      console.log("=== API call successful ===");
+
       orderCompletionStorage.clearState();
+      console.log("=== Navigating to order page ===");
+      console.log("task.orderWjid:", task?.orderWjid);
       navigate(`/admin/order/${task.orderWjid}`);
     } catch (error) {
-      console.error("Failed to submit order completion:", error);
+      console.error("=== ERROR in handleSubmit ===");
+      console.error("Error type:", typeof error);
+      console.error("Error:", error);
+      console.error("Error message:", error?.message);
+      console.error("Error stack:", error?.stack);
       setErrors(error);
       window.scrollTo(0, 0);
     } finally {
+      console.log("=== handleSubmit FINISHED ===");
       setIsSubmitting(false);
     }
   }, [formData, tid, task, taskManager, orderCompletionStorage, navigate, onUnauthorized]);
