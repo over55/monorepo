@@ -50,6 +50,13 @@ const MONTH_NAMES = [
 
 const DAY_HEADERS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+// Parse YYYY-MM-DD string as local date (not UTC)
+const parseLocalDate = (dateString) => {
+  if (!dateString) return null;
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
+
 // Static helper functions outside component
 const formatDisplayDate = (date) => {
   if (!date) return "";
@@ -151,7 +158,7 @@ const DatePicker = memo(
     const [isOpen, setIsOpen] = useState(false);
     const [currentMonth, setCurrentMonth] = useState(() => {
       if (value) {
-        const date = new Date(value);
+        const date = parseLocalDate(value);
         return new Date(date.getFullYear(), date.getMonth(), 1);
       }
       return new Date();
@@ -171,7 +178,7 @@ const DatePicker = memo(
 
     // Parse the selected date from value prop
     const selectedDate = useMemo(() => {
-      return value ? new Date(value) : null;
+      return parseLocalDate(value);
     }, [value]);
 
     // Create portal container on mount, cleanup on unmount
@@ -255,7 +262,7 @@ const DatePicker = memo(
     // Update current month when value changes
     useEffect(() => {
       if (value) {
-        const date = new Date(value);
+        const date = parseLocalDate(value);
         setCurrentMonth(new Date(date.getFullYear(), date.getMonth(), 1));
       }
     }, [value]);
@@ -356,8 +363,8 @@ const DatePicker = memo(
     const isDateDisabled = useCallback(
       (date) => {
         if (!date) return false;
-        if (min && date < new Date(min)) return true;
-        if (max && date > new Date(max)) return true;
+        if (min && date < parseLocalDate(min)) return true;
+        if (max && date > parseLocalDate(max)) return true;
         return false;
       },
       [min, max],
