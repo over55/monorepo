@@ -317,9 +317,21 @@ const Step3Content = memo(function Step3Content() {
         newErrors.paymentMethods = "At least one payment method is required";
       }
 
-      const actualServiceFeePaid = parseFloat(invoiceActualServiceFeeAmountPaid || 0);
-      if (actualServiceFeePaid > 0 && !invoiceServiceFeePaymentDate) {
-        newErrors.invoiceServiceFeePaymentDate = "Payment date is required when a service fee amount has been paid.";
+      // When payment status is "Paid", require service fee payment details
+      if (paymentStatus === ORDER_STATUS_COMPLETED_AND_PAID) {
+        if (!invoiceServiceFeePaymentDate) {
+          newErrors.invoiceServiceFeePaymentDate = "Service fee payment date is required when payment is complete";
+        }
+        const actualServiceFeePaid = parseFloat(invoiceActualServiceFeeAmountPaid || 0);
+        if (actualServiceFeePaid === 0) {
+          newErrors.invoiceActualServiceFeeAmountPaid = "Actual service fee paid amount is required when payment is complete";
+        }
+      } else {
+        // For unpaid status, only require date if amount > 0
+        const actualServiceFeePaid = parseFloat(invoiceActualServiceFeeAmountPaid || 0);
+        if (actualServiceFeePaid > 0 && !invoiceServiceFeePaymentDate) {
+          newErrors.invoiceServiceFeePaymentDate = "Payment date is required when a service fee amount has been paid.";
+        }
       }
     }
 
@@ -778,7 +790,7 @@ const Step3Content = memo(function Step3Content() {
                 <div>
                   <label className={`block text-sm font-semibold ${themeClasses.textPrimary} mb-2`}>
                     Service Fee Payment Date
-                    {parseFloat(invoiceActualServiceFeeAmountPaid || 0) > 0 && <span className="text-red-500"> *</span>}
+                    {(paymentStatus === ORDER_STATUS_COMPLETED_AND_PAID || parseFloat(invoiceActualServiceFeeAmountPaid || 0) > 0) && <span className="text-red-500"> *</span>}
                   </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -794,13 +806,24 @@ const Step3Content = memo(function Step3Content() {
                   {errors.invoiceServiceFeePaymentDate && <p className="mt-1 text-sm text-red-600">{errors.invoiceServiceFeePaymentDate}</p>}
                 </div>
                 <div>
-                  <label className={`block text-sm font-semibold ${themeClasses.textPrimary} mb-2`}>Actual Service Fee Amount Paid</label>
+                  <label className={`block text-sm font-semibold ${themeClasses.textPrimary} mb-2`}>
+                    Actual Service Fee Amount Paid
+                    {paymentStatus === ORDER_STATUS_COMPLETED_AND_PAID && <span className="text-red-500"> *</span>}
+                  </label>
                   <div className="relative">
                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                       <CurrencyDollarIcon className="h-5 w-5 text-gray-400" />
                     </div>
-                    <input type="number" step="0.01" value={invoiceActualServiceFeeAmountPaid} onChange={handleNumericChange(setInvoiceActualServiceFeeAmountPaid)} placeholder="0.00" className={inputClass} />
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={invoiceActualServiceFeeAmountPaid}
+                      onChange={handleNumericChange(setInvoiceActualServiceFeeAmountPaid)}
+                      placeholder="0.00"
+                      className={errors.invoiceActualServiceFeeAmountPaid ? inputErrorClass : inputClass}
+                    />
                   </div>
+                  {errors.invoiceActualServiceFeeAmountPaid && <p className="mt-1 text-sm text-red-600">{errors.invoiceActualServiceFeeAmountPaid}</p>}
                 </div>
                 <div>
                   <label className={`block text-sm font-semibold ${themeClasses.textPrimary} mb-2`}>Balance Owing Amount</label>
