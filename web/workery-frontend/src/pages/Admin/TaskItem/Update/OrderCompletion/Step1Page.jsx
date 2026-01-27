@@ -128,15 +128,23 @@ const Step1Content = memo(function Step1Content() {
         if (mounted) {
           setTask(taskData);
 
-          // Initialize order completion storage with task data if needed
+          // Clear storage if this is a different task or first time
           const currentState = orderCompletionStorage.getState();
-          if (!currentState.invoiceIDs) {
-            orderCompletionStorage.updateState({
-              invoiceIDs: taskData.orderWjid,
-              invoiceServiceFeeID: taskData.associateServiceFeeID || "",
-              invoiceServiceFeePercentage: taskData.associateServiceFeePercentage || 0,
-            });
+          const cachedTaskId = sessionStorage.getItem('ORDER_COMPLETION_TASK_ID');
+
+          if (cachedTaskId !== tid) {
+            // Different task - clear all cached data
+            console.log("Step1: Clearing cached data for new task");
+            orderCompletionStorage.clearState();
+            sessionStorage.setItem('ORDER_COMPLETION_TASK_ID', tid);
           }
+
+          // Initialize order completion storage with task data
+          orderCompletionStorage.updateState({
+            invoiceIDs: taskData.orderWjid,
+            invoiceServiceFeeID: taskData.associateServiceFeeID || "",
+            invoiceServiceFeePercentage: taskData.associateServiceFeePercentage || 0,
+          });
         }
       } catch (error) {
         console.error("Failed to fetch task:", error);
