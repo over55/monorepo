@@ -349,6 +349,7 @@ func (impl *TaskItemControllerImpl) OrderCompletionOperation(ctx context.Context
 			// Update model with the requests.
 			o.InvoicePaidTo = req.InvoicePaidTo
 			o.InvoiceDate = req.InvoiceDateFormatted
+			o.InvoiceIDs = req.InvoiceIDs
 			o.InvoiceQuotedLabourAmount = req.InvoiceQuotedLabourAmount
 			o.InvoiceQuotedMaterialAmount = req.InvoiceQuotedMaterialAmount
 			o.InvoiceQuotedOtherCostsAmount = req.InvoiceQuotedOtherCostsAmount
@@ -370,7 +371,11 @@ func (impl *TaskItemControllerImpl) OrderCompletionOperation(ctx context.Context
 			o.PaymentMethods = req.PaymentMethods
 			o.InvoiceActualServiceFeeAmountPaid = req.InvoiceActualServiceFeeAmountPaid
 			o.InvoiceBalanceOwingAmount = req.InvoiceBalanceOwingAmount
-			// o.PaymentStatus = req.PaymentStatus
+			if req.PaymentStatus == o_s.OrderStatusCompletedAndPaid {
+				o.Status = o_s.OrderStatusCompletedAndPaid
+			} else if req.PaymentStatus == o_s.OrderStatusCompletedButUnpaid {
+				o.Status = o_s.OrderStatusCompletedButUnpaid
+			}
 			o.Visits = req.Visits
 			o.ModifiedAt = time.Now()
 			o.ModifiedByUserID = userID
