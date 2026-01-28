@@ -25,6 +25,7 @@ import {
   UIXThemeProvider,
   useUIXTheme,
 } from "../../../../components/UIX";
+import { convertLocalDateToISO } from "../../../../constants/Date";
 import {
   HowHearAboutUsDisplay,
   TagsDisplay,
@@ -225,15 +226,14 @@ const Step6Content = memo(function Step6Content() {
       payload.tags = [];
     }
 
-    // Format join date for API
+    // Format join date for API using convertLocalDateToISO to avoid timezone shifts
     if (payload.joinDate) {
-      const joinDateObject = new Date(payload.joinDate);
-      payload.joinDate = joinDateObject.toISOString();
+      payload.joinDate = convertLocalDateToISO(payload.joinDate);
     }
 
     // Format birth date if present
-    if (payload.birthDate && !payload.birthDate.includes("T")) {
-      payload.birthDate = new Date(payload.birthDate).toISOString();
+    if (payload.birthDate) {
+      payload.birthDate = convertLocalDateToISO(payload.birthDate);
     }
 
     // Convert numeric fields

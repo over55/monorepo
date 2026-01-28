@@ -14,6 +14,7 @@ import {
   useUIXTheme,
 } from "../../UIX";
 import { CalendarIcon } from "@heroicons/react/24/outline";
+import { convertLocalDateToTimestamp } from "../../../constants/Date";
 
 /**
  * ReportMultiSelectDateRangeStatusView - Template for reports with multi-select, date range, and status filter
@@ -209,18 +210,23 @@ const ReportMultiSelectDateRangeStatusViewContent = memo(function ReportMultiSel
     setShowSuccess(false);
 
     try {
-      // Convert dates to timestamps
-      const fromDateObj = new Date(fromDate);
-      const toDateObj = new Date(toDate);
+      // Convert dates to timestamps representing midnight in local timezone
+      const fromTimestamp = convertLocalDateToTimestamp(fromDate);
+      const toTimestamp = convertLocalDateToTimestamp(toDate);
 
       // Build parameters - use custom function if provided
       let params;
       if (buildParams) {
+        // For custom build functions, create Date objects from local date strings
+        const [fromYear, fromMonth, fromDay] = fromDate.split('-').map(Number);
+        const [toYear, toMonth, toDay] = toDate.split('-').map(Number);
+        const fromDateObj = new Date(fromYear, fromMonth - 1, fromDay);
+        const toDateObj = new Date(toYear, toMonth - 1, toDay);
         params = buildParams({ selectedItems, fromDate: fromDateObj, toDate: toDateObj, status });
       } else {
         params = {
-          from_dt: fromDateObj.getTime(),
-          to_dt: toDateObj.getTime(),
+          from_dt: fromTimestamp,
+          to_dt: toTimestamp,
           state: parseInt(status) || 0,
           [multiSelectParamName]: selectedItems.join(","),
         };

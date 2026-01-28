@@ -15,6 +15,7 @@ import {
   UIXThemeProvider,
   useUIXTheme,
 } from "../../../../components/UIX";
+import { convertLocalDateToISO } from "../../../../constants/Date";
 import {
   PlusCircleIcon,
   CheckCircleIcon,
@@ -105,7 +106,7 @@ const Step4Content = memo(function Step4Content() {
         skillSets: orderData.skillSets,
         isOngoing: orderData.isOngoing,
         isHomeSupportService: orderData.isHomeSupportService,
-        startDate: orderData.startDate,
+        startDate: orderData.startDate ? convertLocalDateToISO(orderData.startDate) : null,
         additionalComment: orderData.additionalComment,
         tags: orderData.tags,
       };

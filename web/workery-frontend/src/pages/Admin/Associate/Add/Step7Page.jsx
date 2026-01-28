@@ -14,6 +14,7 @@ import {
   UIXThemeProvider,
   useUIXTheme,
 } from "../../../../components/UIX";
+import { convertLocalDateToISO } from "../../../../constants/Date";
 import {
   UserPlusIcon,
   CheckCircleIcon,
@@ -140,11 +141,11 @@ const Step7Content = memo(function Step7Content() {
   const processAssociateData = useCallback((data) => {
     const processed = { ...data };
 
-    // Handle date conversions
+    // Handle date conversions using convertLocalDateToISO to avoid timezone shifts
     const dateFields = ["duesDate", "policeCheck", "birthDate", "joinDate", "commercialInsuranceExpiryDate", "autoInsuranceExpiryDate", "wsibInsuranceDate", "dateOfEntryIntoCountry"];
     dateFields.forEach((field) => {
-      if (processed[field] && !processed[field].includes("T")) {
-        processed[field] = new Date(processed[field]).toISOString();
+      if (processed[field]) {
+        processed[field] = convertLocalDateToISO(processed[field]);
       }
     });
 

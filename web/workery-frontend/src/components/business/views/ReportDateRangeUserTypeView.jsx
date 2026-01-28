@@ -14,6 +14,7 @@ import {
   useUIXTheme,
 } from "../../UIX";
 import { CalendarIcon, UsersIcon } from "@heroicons/react/24/outline";
+import { convertLocalDateToTimestamp } from "../../../constants/Date";
 
 /**
  * ReportDateRangeUserTypeView - Template for reports with date range and required user type filter
@@ -166,14 +167,14 @@ const ReportDateRangeUserTypeViewContent = memo(function ReportDateRangeUserType
     setShowSuccess(false);
 
     try {
-      // Convert dates to timestamps
-      const fromDateObj = new Date(fromDate);
-      const toDateObj = new Date(toDate);
+      // Convert dates to timestamps representing midnight in local timezone
+      const fromTimestamp = convertLocalDateToTimestamp(fromDate);
+      const toTimestamp = convertLocalDateToTimestamp(toDate);
 
       // Build parameters
       const params = {
-        from_dt: fromDateObj.getTime(),
-        to_dt: toDateObj.getTime(),
+        from_dt: fromTimestamp,
+        to_dt: toTimestamp,
         user_type: parseInt(userType),
       };
 

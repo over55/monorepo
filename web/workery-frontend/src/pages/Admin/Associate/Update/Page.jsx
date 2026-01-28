@@ -12,6 +12,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useAssociateManager } from "../../../../services/Services";
 import { EntityUpdatePage, UIXThemeProvider } from "../../../../components/UIX";
+import { convertLocalDateToISO } from "../../../../constants/Date";
 import {
   AssociateSettingsSection,
   AssociateContactInfoSection,
@@ -197,13 +198,7 @@ const formatDateForInput = (dateValue) => {
 // Helper function to format date for API submission
 const formatDateForAPI = (dateValue) => {
   if (!dateValue) return "";
-  try {
-    const date = new Date(dateValue);
-    if (isNaN(date.getTime())) return "";
-    return date.toISOString();
-  } catch {
-    return "";
-  }
+  return convertLocalDateToISO(dateValue);
 };
 
 // Validation function

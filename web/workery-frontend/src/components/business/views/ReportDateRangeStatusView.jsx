@@ -14,6 +14,7 @@ import {
   useUIXTheme,
 } from "../../UIX";
 import { CalendarIcon } from "@heroicons/react/24/outline";
+import { convertLocalDateToTimestamp } from "../../../constants/Date";
 
 /**
  * ReportDateRangeStatusView - Template for reports with date range and status filter
@@ -164,18 +165,29 @@ const ReportDateRangeStatusViewContent = memo(function ReportDateRangeStatusView
     setShowSuccess(false);
 
     try {
-      // Convert dates to timestamps
-      const fromDateObj = new Date(fromDate);
-      const toDateObj = new Date(toDate);
+      // Convert dates to timestamps representing midnight in local timezone
+      const fromTimestamp = convertLocalDateToTimestamp(fromDate);
+      const toTimestamp = convertLocalDateToTimestamp(toDate);
 
       // Build parameters - use custom function if provided
       let params;
       if (buildParams) {
+        // For custom build functions, create Date objects from local date strings
+        const fromDateObj = new Date(fromDate.split('-').map(Number).reduce((acc, val, i) => {
+          if (i === 0) return [val];
+          if (i === 1) return [...acc, val - 1];
+          return [...acc, val];
+        }, []));
+        const toDateObj = new Date(toDate.split('-').map(Number).reduce((acc, val, i) => {
+          if (i === 0) return [val];
+          if (i === 1) return [...acc, val - 1];
+          return [...acc, val];
+        }, []));
         params = buildParams({ fromDate: fromDateObj, toDate: toDateObj, status });
       } else {
         params = {
-          from_dt: fromDateObj.getTime(),
-          to_dt: toDateObj.getTime(),
+          from_dt: fromTimestamp,
+          to_dt: toTimestamp,
           state: parseInt(status) || 0,
         };
       }

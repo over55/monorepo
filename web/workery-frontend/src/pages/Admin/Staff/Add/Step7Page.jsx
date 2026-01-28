@@ -25,6 +25,7 @@ import {
   Alert,
   UIXThemeProvider,
 } from "../../../../components/UIX";
+import { convertLocalDateToISO } from "../../../../constants/Date";
 import {
   GENDER_OPTIONS_WITH_EMPTY_OPTION,
   IDENTIFY_AS_OPTIONS,
@@ -158,6 +159,15 @@ const Step7Content = memo(function Step7Content() {
 
     try {
       const payload = { ...wizardState };
+
+      // Convert dates to ISO format to avoid timezone shifts
+      const dateFields = ["birthDate", "joinDate"];
+      dateFields.forEach((field) => {
+        if (payload[field]) {
+          payload[field] = convertLocalDateToISO(payload[field]);
+        }
+      });
+
       const response = await staffManager.createStaff(payload, onUnauthorized);
 
       wizardStorage.clearWizardState();

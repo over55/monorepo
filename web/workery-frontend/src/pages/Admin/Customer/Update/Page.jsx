@@ -11,6 +11,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { useCustomerManager } from "../../../../services/Services";
 import { EntityUpdatePage, UIXThemeProvider } from "../../../../components/UIX";
+import { convertLocalDateToISO } from "../../../../constants/Date";
 import {
   CustomerSettingsSection,
   CustomerContactInfoSection,
@@ -340,8 +341,8 @@ const formatDataForSubmit = (formData, entityId) => {
     ),
     gender: safeParseInt(formData.gender),
     genderOther: formData.genderOther,
-    joinDate: formData.joinDate || null,
-    birthDate: formData.birthDate || null,
+    joinDate: formData.joinDate ? convertLocalDateToISO(formData.joinDate) : null,
+    birthDate: formData.birthDate ? convertLocalDateToISO(formData.birthDate) : null,
     howDidYouHearAboutUsID: formData.howDidYouHearAboutUsID,
     isHowDidYouHearAboutUsOther: formData.isHowDidYouHearAboutUsOther,
     howDidYouHearAboutUsOther: formData.howDidYouHearAboutUsOther,

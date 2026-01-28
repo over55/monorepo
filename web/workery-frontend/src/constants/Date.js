@@ -94,3 +94,87 @@ export function parseDate(dateStr) {
     return null;
   }
 }
+
+/**
+ * Convert a local date string (YYYY-MM-DD) to ISO format without timezone shifts
+ * This fixes the common bug where new Date("2024-06-02") creates a UTC midnight date
+ * which shifts to the previous day when converted to local timezone
+ *
+ * @param {string} dateStr - The local date string in YYYY-MM-DD format
+ * @returns {string} - ISO datetime string with time set to noon local time
+ *
+ * @example
+ * // User in EST selects June 2, 2024
+ * convertLocalDateToISO("2024-06-02") // Returns "2024-06-02T17:00:00.000Z" (noon EST in UTC)
+ * // NOT "2024-06-02T00:00:00.000Z" which would display as June 1st in EST
+ */
+export function convertLocalDateToISO(dateStr) {
+  if (!dateStr || isZeroDate(dateStr)) {
+    return "";
+  }
+
+  // If already an ISO datetime string, return as-is
+  if (dateStr.includes("T")) {
+    return dateStr;
+  }
+
+  try {
+    // Parse as local date components to avoid UTC interpretation
+    const [year, month, day] = dateStr.split('-').map(Number);
+
+    if (!year || !month || !day) {
+      console.warn("Invalid date format:", dateStr);
+      return "";
+    }
+
+    // Create date in local timezone (month is 0-indexed)
+    const localDate = new Date(year, month - 1, day);
+
+    // Set to noon local time to avoid timezone edge cases
+    localDate.setHours(12, 0, 0, 0);
+
+    return localDate.toISOString();
+  } catch (e) {
+    console.warn("Date conversion error:", e);
+    return "";
+  }
+}
+
+/**
+ * Convert a local date string (YYYY-MM-DD) to a timestamp (milliseconds since epoch)
+ * representing midnight in the LOCAL timezone, not UTC
+ *
+ * This fixes the common bug where new Date("2024-06-02").getTime() creates a UTC midnight
+ * timestamp, which represents the previous day in many timezones
+ *
+ * @param {string} dateStr - The local date string in YYYY-MM-DD format
+ * @returns {number} - Timestamp in milliseconds representing midnight local time
+ *
+ * @example
+ * // User in EST selects June 2, 2024
+ * convertLocalDateToTimestamp("2024-06-02") // Returns timestamp for 2024-06-02 00:00:00 EST
+ * // NOT the timestamp for 2024-06-02 00:00:00 UTC (which is 2024-06-01 19:00:00 EST)
+ */
+export function convertLocalDateToTimestamp(dateStr) {
+  if (!dateStr || isZeroDate(dateStr)) {
+    return null;
+  }
+
+  try {
+    // Parse as local date components to avoid UTC interpretation
+    const [year, month, day] = dateStr.split('-').map(Number);
+
+    if (!year || !month || !day) {
+      console.warn("Invalid date format:", dateStr);
+      return null;
+    }
+
+    // Create date at midnight in local timezone (month is 0-indexed)
+    const localDate = new Date(year, month - 1, day, 0, 0, 0, 0);
+
+    return localDate.getTime();
+  } catch (e) {
+    console.warn("Date conversion error:", e);
+    return null;
+  }
+}
