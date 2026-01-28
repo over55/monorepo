@@ -521,6 +521,53 @@ function AdminFinancialUpdatePage() {
     }
   }, [financial, availableServiceFees, invoiceServiceFee]);
 
+  // Sync form state with financial data when it changes
+  // This ensures the form reflects the current saved values when navigating back
+  useEffect(() => {
+    if (financial && Object.keys(financial).length > 0) {
+      // Update all form fields from fetched financial data
+      setInvoicePaidTo(financial.invoicePaidTo || INVOICE_PAID_TO_ASSOCIATE);
+      setPaymentStatus(financial.status || ORDER_STATUS_COMPLETED_BUT_UNPAID);
+      setCompletionDate(financial.completionDate);
+      setInvoiceDate(financial.invoiceDate);
+      setInvoiceIds(financial.invoiceIds || "");
+
+      // Quote fields
+      setInvoiceQuotedLabourAmount(financial.invoiceQuotedLabourAmount || 0);
+      setInvoiceQuotedMaterialAmount(financial.invoiceQuotedMaterialAmount || 0);
+      setInvoiceQuotedOtherCostsAmount(
+        financial.invoiceQuotedOtherCostsAmount || 0,
+      );
+      setInvoiceTotalQuoteAmount(financial.invoiceTotalQuoteAmount || 0);
+
+      // Actual fields
+      setInvoiceLabourAmount(financial.invoiceLabourAmount || 0);
+      setInvoiceMaterialAmount(financial.invoiceMaterialAmount || 0);
+      setInvoiceOtherCostsAmount(financial.invoiceOtherCostsAmount || 0);
+      setAssociateTaxId(financial.associateTaxId || "");
+      setInvoiceTaxAmount(financial.invoiceTaxAmount || 0);
+      setInvoiceIsCustomTaxAmount(financial.invoiceIsCustomTaxAmount || false);
+      setInvoiceTotalAmount(financial.invoiceTotalAmount || 0);
+      setInvoiceDepositAmount(financial.invoiceDepositAmount || 0);
+      setInvoiceAmountDue(financial.invoiceAmountDue || 0);
+
+      // Service fee fields
+      setInvoiceServiceFeeId(financial.invoiceServiceFeeId || "");
+      setInvoiceServiceFeePercentage(financial.invoiceServiceFeePercentage || 0);
+      setIsInvoiceServiceFeeOther(financial.isInvoiceServiceFeeOther || false);
+      setInvoiceServiceFeeOther(financial.invoiceServiceFeeOther || "");
+      setInvoiceServiceFeeAmount(financial.invoiceServiceFeeAmount || 0);
+      setInvoiceServiceFeePaymentDate(financial.invoiceServiceFeePaymentDate);
+      setInvoiceActualServiceFeeAmountPaid(
+        financial.invoiceActualServiceFeeAmountPaid || 0,
+      );
+      setInvoiceBalanceOwingAmount(
+        Math.max(0, financial.invoiceBalanceOwingAmount || 0),
+      );
+      setPaymentMethods(financial.paymentMethods || []);
+    }
+  }, [financial, orderWJID]);
+
   // FIXED: Separate useEffect for calculations that always runs
   // This ensures calculations run whenever any relevant field changes
   useEffect(() => {
@@ -885,7 +932,7 @@ function AdminFinancialUpdatePage() {
           <FormCard title="General" icon={DocumentTextIcon}>
             <div className="space-y-6">
               <div>
-                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                <label className="block text-lg font-semibold !text-black mb-3" style={{ color: '#000000' }}>
                   Who was paid for this job?{" "}
                   <span className="text-red-500 dark:text-red-400">*</span>
                 </label>
@@ -900,7 +947,7 @@ function AdminFinancialUpdatePage() {
                       }
                       className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
                     />
-                    <span className="ml-2 text-base text-gray-700 dark:text-gray-200">
+                    <span className="ml-2 text-lg !text-black" style={{ color: '#000000' }}>
                       <UserGroupIcon className="inline w-4 h-4 mr-1" />
                       Associate
                     </span>
@@ -915,7 +962,7 @@ function AdminFinancialUpdatePage() {
                       }
                       className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
                     />
-                    <span className="ml-2 text-base text-gray-700 dark:text-gray-200">
+                    <span className="ml-2 text-lg !text-black" style={{ color: '#000000' }}>
                       <BuildingOfficeIcon className="inline w-4 h-4 mr-1" />
                       Organization
                     </span>
@@ -929,7 +976,7 @@ function AdminFinancialUpdatePage() {
               </div>
 
               <div>
-                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                <label className="block text-lg font-semibold !text-black mb-3" style={{ color: '#000000' }}>
                   What is the service fee payment status of this job?{" "}
                   <span className="text-red-500 dark:text-red-400">*</span>
                 </label>
@@ -946,7 +993,7 @@ function AdminFinancialUpdatePage() {
                       }
                       className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
                     />
-                    <span className="ml-2 text-base text-gray-700 dark:text-gray-200">
+                    <span className="ml-2 text-lg !text-black" style={{ color: '#000000' }}>
                       <CheckCircleIcon className="inline w-4 h-4 mr-1 text-green-600 dark:text-green-400" />
                       Paid
                     </span>
@@ -963,7 +1010,7 @@ function AdminFinancialUpdatePage() {
                       }
                       className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
                     />
-                    <span className="ml-2 text-base text-gray-700 dark:text-gray-200">
+                    <span className="ml-2 text-lg !text-black" style={{ color: '#000000' }}>
                       <XCircleIcon className="inline w-4 h-4 mr-1 text-yellow-600 dark:text-yellow-400" />
                       Unpaid
                     </span>
@@ -979,14 +1026,15 @@ function AdminFinancialUpdatePage() {
               {paymentStatus === ORDER_STATUS_COMPLETED_AND_PAID && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                    <label className="block text-lg font-semibold !text-black mb-3" style={{ color: '#000000' }}>
                       Completion Date
                     </label>
                     <input
                       type="date"
                       value={formatDateForInput(completionDate)}
                       onChange={(e) => setCompletionDate(e.target.value)}
-                      className={`block w-full px-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                      style={{ color: '#000000' }}
+                    className={`block w-full px-4 py-3 text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
                         errors.completionDate
                           ? "border-red-300 dark:border-red-500"
                           : "border-gray-300 dark:border-gray-600"
@@ -1003,7 +1051,7 @@ function AdminFinancialUpdatePage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                  <label className="block text-lg font-semibold !text-black mb-3" style={{ color: '#000000' }}>
                     Invoice Date{" "}
                     <span className="text-red-500 dark:text-red-400">*</span>
                   </label>
@@ -1011,7 +1059,8 @@ function AdminFinancialUpdatePage() {
                     type="date"
                     value={formatDateForInput(invoiceDate)}
                     onChange={(e) => setInvoiceDate(e.target.value)}
-                    className={`block w-full px-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                    style={{ color: '#000000' }}
+                    className={`block w-full px-4 py-3 text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
                       errors.invoiceDate
                         ? "border-red-300 dark:border-red-500"
                         : "border-gray-300 dark:border-gray-600"
@@ -1026,7 +1075,7 @@ function AdminFinancialUpdatePage() {
                 </div>
 
                 <div>
-                  <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                  <label className="block text-lg font-semibold !text-black mb-3" style={{ color: '#000000' }}>
                     Invoice IDs{" "}
                     <span className="text-red-500 dark:text-red-400">*</span>
                   </label>
@@ -1035,7 +1084,8 @@ function AdminFinancialUpdatePage() {
                     value={invoiceIds}
                     onChange={(e) => setInvoiceIds(e.target.value)}
                     placeholder="Enter invoice ID"
-                    className={`block w-full px-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                    style={{ color: '#000000' }}
+                    className={`block w-full px-4 py-3 text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
                       errors.invoiceIds
                         ? "border-red-300 dark:border-red-500"
                         : "border-gray-300 dark:border-gray-600"
@@ -1059,7 +1109,7 @@ function AdminFinancialUpdatePage() {
           <FormCard title="Quote" icon={ClipboardDocumentCheckIcon}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                <label className="block text-lg font-semibold !text-black mb-3" style={{ color: '#000000' }}>
                   Quoted Labour{" "}
                   <span className="text-red-500 dark:text-red-400">*</span>
                 </label>
@@ -1077,7 +1127,8 @@ function AdminFinancialUpdatePage() {
                       setInvoiceQuotedLabourAmount(e.target.value)
                     }
                     placeholder="0.00"
-                    className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                    style={{ color: '#000000' }}
+                    className={`block w-full pl-8 pr-4 py-3 text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
                       errors.invoiceQuotedLabourAmount
                         ? "border-red-300 dark:border-red-500"
                         : "border-gray-300 dark:border-gray-600"
@@ -1096,7 +1147,7 @@ function AdminFinancialUpdatePage() {
               </div>
 
               <div>
-                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                <label className="block text-lg font-semibold !text-black mb-3" style={{ color: '#000000' }}>
                   Quoted Materials{" "}
                   <span className="text-red-500 dark:text-red-400">*</span>
                 </label>
@@ -1114,7 +1165,8 @@ function AdminFinancialUpdatePage() {
                       setInvoiceQuotedMaterialAmount(e.target.value)
                     }
                     placeholder="0.00"
-                    className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                    style={{ color: '#000000' }}
+                    className={`block w-full pl-8 pr-4 py-3 text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
                       errors.invoiceQuotedMaterialAmount
                         ? "border-red-300 dark:border-red-500"
                         : "border-gray-300 dark:border-gray-600"
@@ -1133,7 +1185,7 @@ function AdminFinancialUpdatePage() {
               </div>
 
               <div>
-                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                <label className="block text-lg font-semibold !text-black mb-3" style={{ color: '#000000' }}>
                   Quoted Other Costs{" "}
                   <span className="text-red-500 dark:text-red-400">*</span>
                 </label>
@@ -1151,7 +1203,8 @@ function AdminFinancialUpdatePage() {
                       setInvoiceQuotedOtherCostsAmount(e.target.value)
                     }
                     placeholder="0.00"
-                    className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                    style={{ color: '#000000' }}
+                    className={`block w-full pl-8 pr-4 py-3 text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
                       errors.invoiceQuotedOtherCostsAmount
                         ? "border-red-300 dark:border-red-500"
                         : "border-gray-300 dark:border-gray-600"
@@ -1170,7 +1223,7 @@ function AdminFinancialUpdatePage() {
               </div>
 
               <div>
-                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                <label className="block text-lg font-semibold !text-black mb-3" style={{ color: '#000000' }}>
                   Total Quoted{" "}
                   <span className="text-red-500 dark:text-red-400">*</span>
                 </label>
@@ -1185,7 +1238,8 @@ function AdminFinancialUpdatePage() {
                     step="0.01"
                     value={invoiceTotalQuoteAmount}
                     disabled
-                    className="block w-full pl-8 pr-4 py-3 text-base sm:text-lg border border-gray-200 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200"
+                    style={{ color: '#000000' }}
+                    className="block w-full pl-8 pr-4 py-3 text-lg border border-gray-200 rounded-xl bg-gray-50"
                   />
                 </div>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 flex items-center">
@@ -1200,7 +1254,7 @@ function AdminFinancialUpdatePage() {
           <FormCard title="Actual" icon={BanknotesIcon}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                <label className="block text-lg font-semibold !text-black mb-3" style={{ color: '#000000' }}>
                   Actual Labour{" "}
                   <span className="text-red-500 dark:text-red-400">*</span>
                 </label>
@@ -1216,7 +1270,8 @@ function AdminFinancialUpdatePage() {
                     value={invoiceLabourAmount}
                     onChange={(e) => setInvoiceLabourAmount(e.target.value)}
                     placeholder="0.00"
-                    className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                    style={{ color: '#000000' }}
+                    className={`block w-full pl-8 pr-4 py-3 text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
                       errors.invoiceLabourAmount
                         ? "border-red-300 dark:border-red-500"
                         : "border-gray-300 dark:border-gray-600"
@@ -1235,7 +1290,7 @@ function AdminFinancialUpdatePage() {
               </div>
 
               <div>
-                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                <label className="block text-lg font-semibold !text-black mb-3" style={{ color: '#000000' }}>
                   Actual Material{" "}
                   <span className="text-red-500 dark:text-red-400">*</span>
                 </label>
@@ -1251,7 +1306,8 @@ function AdminFinancialUpdatePage() {
                     value={invoiceMaterialAmount}
                     onChange={(e) => setInvoiceMaterialAmount(e.target.value)}
                     placeholder="0.00"
-                    className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                    style={{ color: '#000000' }}
+                    className={`block w-full pl-8 pr-4 py-3 text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
                       errors.invoiceMaterialAmount
                         ? "border-red-300 dark:border-red-500"
                         : "border-gray-300 dark:border-gray-600"
@@ -1270,7 +1326,7 @@ function AdminFinancialUpdatePage() {
               </div>
 
               <div>
-                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                <label className="block text-lg font-semibold !text-black mb-3" style={{ color: '#000000' }}>
                   Actual Other Costs{" "}
                   <span className="text-red-500 dark:text-red-400">*</span>
                 </label>
@@ -1286,7 +1342,8 @@ function AdminFinancialUpdatePage() {
                     value={invoiceOtherCostsAmount}
                     onChange={(e) => setInvoiceOtherCostsAmount(e.target.value)}
                     placeholder="0.00"
-                    className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                    style={{ color: '#000000' }}
+                    className={`block w-full pl-8 pr-4 py-3 text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
                       errors.invoiceOtherCostsAmount
                         ? "border-red-300 dark:border-red-500"
                         : "border-gray-300 dark:border-gray-600"
@@ -1305,7 +1362,7 @@ function AdminFinancialUpdatePage() {
               </div>
 
               <div>
-                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                <label className="block text-lg font-semibold !text-black mb-3" style={{ color: '#000000' }}>
                   Actual Tax{" "}
                   <span className="text-red-500 dark:text-red-400">*</span>
                   {taxRate > 0 && (
@@ -1328,7 +1385,8 @@ function AdminFinancialUpdatePage() {
                     onChange={(e) => setInvoiceTaxAmount(e.target.value)}
                     placeholder="0.00"
                     disabled={!invoiceIsCustomTaxAmount}
-                    className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                    style={{ color: '#000000' }}
+                    className={`block w-full pl-8 pr-4 py-3 text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
                       !invoiceIsCustomTaxAmount
                         ? "bg-gray-50 dark:bg-gray-800"
                         : ""
@@ -1358,7 +1416,7 @@ function AdminFinancialUpdatePage() {
                     }
                     className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
                   />
-                  <span className="ml-2 text-base text-gray-700 dark:text-gray-200">
+                  <span className="ml-2 text-lg !text-black" style={{ color: '#000000' }}>
                     Custom Actual Tax? (Override automatic calculation with
                     custom value)
                   </span>
@@ -1366,7 +1424,7 @@ function AdminFinancialUpdatePage() {
               </div>
 
               <div>
-                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                <label className="block text-lg font-semibold !text-black mb-3" style={{ color: '#000000' }}>
                   Actual Total Amount{" "}
                   <span className="text-red-500 dark:text-red-400">*</span>
                 </label>
@@ -1381,7 +1439,8 @@ function AdminFinancialUpdatePage() {
                     step="0.01"
                     value={invoiceTotalAmount}
                     disabled
-                    className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl bg-gray-50 text-gray-700 ${
+                    style={{ color: '#000000' }}
+                    className={`block w-full pl-8 pr-4 py-3 text-lg border rounded-xl bg-gray-50 ${
                       errors.invoiceTotalAmount || errors.amount
                         ? "border-red-300"
                         : "border-gray-200"
@@ -1400,7 +1459,7 @@ function AdminFinancialUpdatePage() {
               </div>
 
               <div>
-                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                <label className="block text-lg font-semibold !text-black mb-3" style={{ color: '#000000' }}>
                   Actual Deposit Amount{" "}
                   <span className="text-red-500 dark:text-red-400">*</span>
                 </label>
@@ -1416,7 +1475,8 @@ function AdminFinancialUpdatePage() {
                     value={invoiceDepositAmount}
                     onChange={(e) => setInvoiceDepositAmount(e.target.value)}
                     placeholder="0.00"
-                    className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                    style={{ color: '#000000' }}
+                    className={`block w-full pl-8 pr-4 py-3 text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
                       errors.invoiceDepositAmount
                         ? "border-red-300 dark:border-red-500"
                         : "border-gray-300 dark:border-gray-600"
@@ -1435,7 +1495,7 @@ function AdminFinancialUpdatePage() {
               </div>
 
               <div>
-                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                <label className="block text-lg font-semibold !text-black mb-3" style={{ color: '#000000' }}>
                   Actual Amount Due{" "}
                   <span className="text-red-500 dark:text-red-400">*</span>
                 </label>
@@ -1450,7 +1510,8 @@ function AdminFinancialUpdatePage() {
                     step="0.01"
                     value={invoiceAmountDue}
                     disabled
-                    className="block w-full pl-8 pr-4 py-3 text-base sm:text-lg border border-gray-200 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200"
+                    style={{ color: '#000000' }}
+                    className="block w-full pl-8 pr-4 py-3 text-lg border border-gray-200 rounded-xl bg-gray-50"
                   />
                 </div>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 flex items-center">
@@ -1460,7 +1521,7 @@ function AdminFinancialUpdatePage() {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                <label className="block text-lg font-semibold !text-black mb-3" style={{ color: '#000000' }}>
                   Payment Method(s){" "}
                   <span className="text-red-500 dark:text-red-400">*</span>
                 </label>
@@ -1483,7 +1544,7 @@ function AdminFinancialUpdatePage() {
                         }}
                         className="rounded border-gray-300 dark:border-gray-600 text-blue-600 dark:text-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400"
                       />
-                      <span className="ml-2 text-base text-gray-700 dark:text-gray-200">
+                      <span className="ml-2 text-lg !text-black" style={{ color: '#000000' }}>
                         <CreditCardIcon className="inline w-4 h-4 mr-1" />
                         {option.label}
                       </span>
@@ -1503,7 +1564,7 @@ function AdminFinancialUpdatePage() {
           <FormCard title="Service Fee" icon={CurrencyDollarIcon}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                <label className="block text-lg font-semibold !text-black mb-3" style={{ color: '#000000' }}>
                   Service Fee
                 </label>
                 <select
@@ -1548,7 +1609,8 @@ function AdminFinancialUpdatePage() {
                       setInvoiceServiceFeeOther("");
                     }
                   }}
-                  className={`block w-full px-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                  style={{ color: '#000000' }}
+                  className={`block w-full px-4 py-3 text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
                     errors.invoiceServiceFeeId
                       ? "border-red-300 dark:border-red-500"
                       : "border-gray-300 dark:border-gray-600"
@@ -1575,7 +1637,7 @@ function AdminFinancialUpdatePage() {
 
               {isInvoiceServiceFeeOther && (
                 <div>
-                  <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                  <label className="block text-lg font-semibold !text-black mb-3" style={{ color: '#000000' }}>
                     Service Fee Other
                   </label>
                   <input
@@ -1583,7 +1645,8 @@ function AdminFinancialUpdatePage() {
                     value={invoiceServiceFeeOther}
                     onChange={(e) => setInvoiceServiceFeeOther(e.target.value)}
                     placeholder="Enter custom service fee description"
-                    className={`block w-full px-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                    style={{ color: '#000000' }}
+                    className={`block w-full px-4 py-3 text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
                       errors.invoiceServiceFeeOther
                         ? "border-red-300 dark:border-red-500"
                         : "border-gray-300 dark:border-gray-600"
@@ -1598,7 +1661,7 @@ function AdminFinancialUpdatePage() {
               )}
 
               <div>
-                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                <label className="block text-lg font-semibold !text-black mb-3" style={{ color: '#000000' }}>
                   Service Fee Percentage
                 </label>
                 <div className="relative">
@@ -1607,7 +1670,8 @@ function AdminFinancialUpdatePage() {
                     step="0.01"
                     value={invoiceServiceFeePercentage}
                     readOnly
-                    className="block w-full pr-8 px-4 py-3 text-base sm:text-lg border border-gray-200 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200"
+                    style={{ color: '#000000' }}
+                    className="block w-full pr-8 px-4 py-3 text-lg border border-gray-200 rounded-xl bg-gray-50"
                   />
                   <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                     <span className="text-gray-500 dark:text-gray-400 text-base">
@@ -1623,7 +1687,7 @@ function AdminFinancialUpdatePage() {
               </div>
 
               <div>
-                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                <label className="block text-lg font-semibold !text-black mb-3" style={{ color: '#000000' }}>
                   Required Service Fee Amount{" "}
                   <span className="text-red-500 dark:text-red-400">*</span>
                 </label>
@@ -1638,7 +1702,8 @@ function AdminFinancialUpdatePage() {
                     step="0.01"
                     value={invoiceServiceFeeAmount}
                     disabled
-                    className="block w-full pl-8 pr-4 py-3 text-base sm:text-lg border border-gray-200 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200"
+                    style={{ color: '#000000' }}
+                    className="block w-full pl-8 pr-4 py-3 text-lg border border-gray-200 rounded-xl bg-gray-50"
                   />
                 </div>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 flex items-center">
@@ -1648,7 +1713,7 @@ function AdminFinancialUpdatePage() {
               </div>
 
               <div>
-                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                <label className="block text-lg font-semibold !text-black mb-3" style={{ color: '#000000' }}>
                   Invoice Service Fee Payment Date
                 </label>
                 <input
@@ -1657,7 +1722,8 @@ function AdminFinancialUpdatePage() {
                   onChange={(e) =>
                     setInvoiceServiceFeePaymentDate(e.target.value)
                   }
-                  className={`block w-full px-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                  style={{ color: '#000000' }}
+                  className={`block w-full px-4 py-3 text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
                     errors.invoiceServiceFeePaymentDate
                       ? "border-red-300 dark:border-red-500"
                       : "border-gray-300 dark:border-gray-600"
@@ -1671,7 +1737,7 @@ function AdminFinancialUpdatePage() {
               </div>
 
               <div>
-                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                <label className="block text-lg font-semibold !text-black mb-3" style={{ color: '#000000' }}>
                   Actual Service Fee Paid{" "}
                   <span className="text-red-500 dark:text-red-400">*</span>
                 </label>
@@ -1689,7 +1755,8 @@ function AdminFinancialUpdatePage() {
                       setInvoiceActualServiceFeeAmountPaid(e.target.value)
                     }
                     placeholder="0.00"
-                    className={`block w-full pl-8 pr-4 py-3 text-base sm:text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
+                    style={{ color: '#000000' }}
+                    className={`block w-full pl-8 pr-4 py-3 text-lg border rounded-xl focus:ring-blue-500 focus:border-blue-500 dark:focus:ring-blue-400 dark:focus:border-blue-400 ${
                       errors.invoiceActualServiceFeeAmountPaid
                         ? "border-red-300 dark:border-red-500"
                         : "border-gray-300 dark:border-gray-600"
@@ -1709,7 +1776,7 @@ function AdminFinancialUpdatePage() {
               </div>
 
               <div>
-                <label className="block text-base sm:text-lg font-semibold text-gray-700 dark:text-gray-200 mb-3">
+                <label className="block text-lg font-semibold !text-black mb-3" style={{ color: '#000000' }}>
                   Balance Owing Amount{" "}
                   <span className="text-red-500 dark:text-red-400">*</span>
                 </label>
@@ -1724,7 +1791,8 @@ function AdminFinancialUpdatePage() {
                     step="0.01"
                     value={invoiceBalanceOwingAmount}
                     disabled
-                    className="block w-full pl-8 pr-4 py-3 text-base sm:text-lg border border-gray-200 rounded-xl bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200"
+                    style={{ color: '#000000' }}
+                    className="block w-full pl-8 pr-4 py-3 text-lg border border-gray-200 rounded-xl bg-gray-50"
                   />
                 </div>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 flex items-center">
