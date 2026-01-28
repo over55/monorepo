@@ -50,7 +50,7 @@ import {
   ORDER_STATUS_COMPLETED_AND_PAID,
   ORDER_STATUS_COMPLETED_BUT_UNPAID,
 } from "../../../../constants/Order";
-import { formatDateForInput, isZeroDate } from "../../../../constants/Date";
+import { formatDateForInput, isZeroDate, convertLocalDateToISO } from "../../../../constants/Date";
 
 function AdminFinancialUpdatePage() {
   // URL Parameters - fid represents the order WJID
@@ -732,8 +732,8 @@ function AdminFinancialUpdatePage() {
 
       // Financial fields
       invoicePaidTo: parseInt(invoicePaidTo),
-      completionDate: completionDate,
-      invoiceDate: invoiceDate,
+      completionDate: completionDate ? convertLocalDateToISO(completionDate) : null,
+      invoiceDate: invoiceDate ? convertLocalDateToISO(invoiceDate) : null,
       invoiceIds: invoiceIds.toString().trim(),
 
       // Quote fields
@@ -759,7 +759,7 @@ function AdminFinancialUpdatePage() {
       invoiceServiceFeeOther: invoiceServiceFeeOther,
       isInvoiceServiceFeeOther: isInvoiceServiceFeeOther,
       invoiceServiceFeeAmount: parseFloat(invoiceServiceFeeAmount),
-      invoiceServiceFeePaymentDate: invoiceServiceFeePaymentDate,
+      invoiceServiceFeePaymentDate: invoiceServiceFeePaymentDate ? convertLocalDateToISO(invoiceServiceFeePaymentDate) : null,
       paymentMethods: finalPaymentMethods, // Use the final payment methods with default
       invoiceActualServiceFeeAmountPaid: adjustedActualServiceFeePaid, // Use adjusted value
       invoiceBalanceOwingAmount: adjustedInvoiceBalanceOwingAmount, // Use adjusted value (always >= 0)
