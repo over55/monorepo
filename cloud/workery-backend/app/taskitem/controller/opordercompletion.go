@@ -309,7 +309,13 @@ func (impl *TaskItemControllerImpl) OrderCompletionOperation(ctx context.Context
 		if req.WasCompleted == 1 {
 			o.CompletionDate = req.CompletionDateFormatted
 			o.Visits = req.Visits
+
+		// Set order status based on hasInputtedFinancials
+		if req.HasInputtedFinancials == 1 {
+			o.Status = o_s.OrderStatusCompletedAndPaid
+		} else {
 			o.Status = o_s.OrderStatusCompletedButUnpaid
+		}
 		} else if req.WasCompleted == 2 {
 			o.Status = o_s.OrderStatusCancelled
 			o.ClosingReasonComment = req.ClosingReasonComment
@@ -371,11 +377,6 @@ func (impl *TaskItemControllerImpl) OrderCompletionOperation(ctx context.Context
 			o.PaymentMethods = req.PaymentMethods
 			o.InvoiceActualServiceFeeAmountPaid = req.InvoiceActualServiceFeeAmountPaid
 			o.InvoiceBalanceOwingAmount = req.InvoiceBalanceOwingAmount
-			if req.PaymentStatus == o_s.OrderStatusCompletedAndPaid {
-				o.Status = o_s.OrderStatusCompletedAndPaid
-			} else if req.PaymentStatus == o_s.OrderStatusCompletedButUnpaid {
-				o.Status = o_s.OrderStatusCompletedButUnpaid
-			}
 			o.Visits = req.Visits
 			o.ModifiedAt = time.Now()
 			o.ModifiedByUserID = userID
@@ -639,7 +640,13 @@ func (impl *TaskItemControllerImpl) OrderCompletionOperation(ctx context.Context
 			//// Update existing order.
 			////
 
+
+		// Set order status based on hasInputtedFinancials
+		if req.HasInputtedFinancials == 1 {
+			o.Status = o_s.OrderStatusCompletedAndPaid
+		} else {
 			o.Status = o_s.OrderStatusCompletedButUnpaid
+		}
 			o.LatestPendingTaskID = newTask.ID
 			o.LatestPendingTaskTitle = newTask.Title
 			o.LatestPendingTaskDescription = newTask.Description

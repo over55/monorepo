@@ -505,7 +505,7 @@ const Step3Content = memo(function Step3Content() {
                 {/* Payment Status */}
                 <div>
                   <label className={`block text-sm font-semibold ${themeClasses.textPrimary} mb-2`}>
-                    Payment Status <span className="text-red-500">*</span>
+                    Were the service fees paid? <span className="text-red-500">*</span>
                   </label>
                   <div className="space-y-2">
                     <label className="flex items-center">

@@ -146,33 +146,32 @@ const Step5Content = memo(function Step5Content() {
       console.log("=== Starting validation ===");
       console.log("hasInputtedFinancials:", formData.hasInputtedFinancials);
       console.log("paymentStatus:", formData.paymentStatus);
-      console.log("ORDER_STATUS_COMPLETED_AND_PAID:", ORDER_STATUS_COMPLETED_AND_PAID);
 
       // Validate required fields before submission
-      if (
-        formData.hasInputtedFinancials === 1 &&
-        formData.paymentStatus === ORDER_STATUS_COMPLETED_AND_PAID
-      ) {
-        console.log("=== Paid status validation triggered ===");
+      if (formData.hasInputtedFinancials === 1) {
+        console.log("=== Financial validation triggered ===");
         const validationErrors = {};
 
-        if (
-          !formData.invoiceServiceFeeAmount ||
-          parseFloat(formData.invoiceServiceFeeAmount) === 0
-        ) {
-          validationErrors.invoiceServiceFeeAmount =
-            "Service fee amount is required when payment is complete";
-        }
-        if (!formData.invoiceServiceFeePaymentDate) {
-          validationErrors.invoiceServiceFeePaymentDate =
-            "Service fee payment date is required when payment is complete";
-        }
-        if (
-          !formData.invoiceActualServiceFeeAmountPaid ||
-          parseFloat(formData.invoiceActualServiceFeeAmountPaid) === 0
-        ) {
-          validationErrors.invoiceActualServiceFeeAmountPaid =
-            "Actual service fee paid amount is required when payment is complete";
+        // Validate service fee fields if payment status indicates they were paid
+        if (formData.paymentStatus === ORDER_STATUS_COMPLETED_AND_PAID) {
+          if (
+            !formData.invoiceServiceFeeAmount ||
+            parseFloat(formData.invoiceServiceFeeAmount) === 0
+          ) {
+            validationErrors.invoiceServiceFeeAmount =
+              "Service fee amount is required when service fees are paid";
+          }
+          if (!formData.invoiceServiceFeePaymentDate) {
+            validationErrors.invoiceServiceFeePaymentDate =
+              "Service fee payment date is required when service fees are paid";
+          }
+          if (
+            !formData.invoiceActualServiceFeeAmountPaid ||
+            parseFloat(formData.invoiceActualServiceFeeAmountPaid) === 0
+          ) {
+            validationErrors.invoiceActualServiceFeeAmountPaid =
+              "Actual service fee paid amount is required when service fees are paid";
+          }
         }
 
         console.log("validationErrors:", validationErrors);
