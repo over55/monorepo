@@ -54,6 +54,7 @@ import {
   STAFF_TYPE_EXECUTIVE,
 } from "../../../../constants/Staff";
 import { formatDateForDisplay } from "../../../../services/Helpers/DateFormatter";
+import { formatPhoneNumber } from "../../../../utils/phoneFormat";
 import {
   UIXThemeProvider,
   DetailFullView,
@@ -221,12 +222,6 @@ const AdminOrderDetailFullPageContent = memo(function AdminOrderDetailFullPageCo
   }, [oid, authManager, navigate, fetchOrder, fetchCurrentUser]);
 
   // Helper functions for formatting
-  const formatPhone = useCallback((phone, extension = null) => {
-    if (!phone) return "-";
-    const formatted = phone.replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3");
-    return extension ? `${formatted} ext. ${extension}` : formatted;
-  }, []);
-
   const formatAddress = useCallback((orderData) => {
     if (!orderData) return "-";
     const address =
@@ -421,7 +416,7 @@ const AdminOrderDetailFullPageContent = memo(function AdminOrderDetailFullPageCo
                     href={`tel:${order.customerPhone}`}
                     className="text-blue-600 hover:text-blue-700"
                   >
-                    {formatPhone(
+                    {formatPhoneNumber(
                       order.customerPhone,
                       order.customerPhoneType === CLIENT_PHONE_TYPE_WORK
                         ? order.customerPhoneExtension
@@ -594,7 +589,7 @@ const AdminOrderDetailFullPageContent = memo(function AdminOrderDetailFullPageCo
                     href={`tel:${order.associatePhone}`}
                     className="text-blue-600 hover:text-blue-700"
                   >
-                    {formatPhone(
+                    {formatPhoneNumber(
                       order.associatePhone,
                       order.associatePhoneType === ASSOCIATE_PHONE_TYPE_WORK
                         ? order.associatePhoneExtension

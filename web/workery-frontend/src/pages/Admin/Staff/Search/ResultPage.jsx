@@ -16,6 +16,7 @@ import {
   UIXThemeProvider,
   useUIXTheme,
 } from "../../../../components/UIX";
+import { formatPhoneNumber } from "../../../../utils/phoneFormat";
 import {
   MagnifyingGlassIcon,
   UserGroupIcon,
@@ -132,7 +133,7 @@ const StaffCard = memo(function StaffCard({ staff, onArchive, formatPhone }) {
               href={`tel:${staff.phone}`}
               className={getThemeClasses("link-primary")}
             >
-              {formatPhone(staff.phone)}
+              {formatPhoneNumber(staff.phone)}
             </a>
           </div>
         )}
@@ -247,17 +248,6 @@ const AdminStaffSearchResultPage = memo(function AdminStaffSearchResultPage() {
   const onUnauthorized = useCallback(() => {
     navigate("/login?unauthorized=true");
   }, [navigate]);
-
-  // Format phone number
-  const formatPhone = useCallback((phone) => {
-    if (!phone) return "-";
-    const cleaned = phone.replace(/\D/g, "");
-    const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
-    if (match) {
-      return `(${match[1]}) ${match[2]}-${match[3]}`;
-    }
-    return phone;
-  }, []);
 
   // Fetch staff list based on search criteria
   const fetchStaffList = useCallback(() => {

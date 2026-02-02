@@ -10,6 +10,7 @@ import {
   SkillSetsDisplay,
 } from "../../../../../components/business/displays";
 import { CLIENT_PHONE_TYPE_OF_MAP } from "../../../../../constants/FieldOptions";
+import { formatPhoneNumber } from "../../../../../utils/phoneFormat";
 import {
   ChevronRightIcon,
   XMarkIcon,
@@ -308,11 +309,9 @@ const Step1Content = memo(function Step1Content() {
                 <DetailField
                   label={`Phone (${CLIENT_PHONE_TYPE_OF_MAP[task.customerPhoneType]})`}
                   value={
-                    <>
-                      {task.customerPhone}
-                      {task.customerPhoneExtension &&
-                        ` ext. ${task.customerPhoneExtension}`}
-                    </>
+                    <a href={`tel:${task.customerPhone}`} className={themeClasses.linkPrimary}>
+                      {formatPhoneNumber(task.customerPhone, task.customerPhoneExtension)}
+                    </a>
                   }
                   themeClasses={themeClasses}
                 />

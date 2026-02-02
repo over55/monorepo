@@ -41,6 +41,7 @@ import {
   formatDateForDisplay,
   formatDateTime,
 } from "../../../../services/Helpers/DateFormatter";
+import { formatPhoneNumber } from "../../../../utils/phoneFormat";
 import {
   UIXThemeProvider,
   DetailFullView,
@@ -183,16 +184,6 @@ const AdminAssociateDetailFullPageContent = memo(function AdminAssociateDetailFu
   }, [aid, fetchAssociate]);
 
   // Helper functions
-  const formatPhone = useCallback((phone, extension = null) => {
-    if (!phone) return "-";
-    const cleaned = phone.replace(/\D/g, "");
-    if (cleaned.length === 10) {
-      const formatted = `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
-      return extension ? `${formatted} ext. ${extension}` : formatted;
-    }
-    return phone;
-  }, []);
-
   const formatDriversLicenseClasses = useCallback((driversLicenseClass) => {
     if (!driversLicenseClass) return "-";
     if (typeof driversLicenseClass === "string") {
@@ -441,7 +432,7 @@ const AdminAssociateDetailFullPageContent = memo(function AdminAssociateDetailFu
             />
             <DetailField
               label="Phone"
-              value={formatPhone(
+              value={formatPhoneNumber(
                 associate.phone,
                 associate.phoneType === ASSOCIATE_PHONE_TYPE_WORK
                   ? associate.phoneExtension
@@ -456,7 +447,7 @@ const AdminAssociateDetailFullPageContent = memo(function AdminAssociateDetailFu
               <>
                 <DetailField
                   label="Other Phone (Optional)"
-                  value={formatPhone(
+                  value={formatPhoneNumber(
                     associate.otherPhone,
                     associate.otherPhoneType === ASSOCIATE_PHONE_TYPE_WORK
                       ? associate.otherPhoneExtension
@@ -619,11 +610,11 @@ const AdminAssociateDetailFullPageContent = memo(function AdminAssociateDetailFu
             />
             <DetailField
               label="Telephone"
-              value={formatPhone(associate.emergencyContactTelephone)}
+              value={formatPhoneNumber(associate.emergencyContactTelephone)}
             />
             <DetailField
               label="Alternate Telephone"
-              value={formatPhone(associate.emergencyContactAlternativeTelephone)}
+              value={formatPhoneNumber(associate.emergencyContactAlternativeTelephone)}
             />
           </DetailSection>
         ),
@@ -798,7 +789,7 @@ const AdminAssociateDetailFullPageContent = memo(function AdminAssociateDetailFu
         ),
       },
     ];
-  }, [associate, formatAddress, formatPhone, formatMultiSelect, formatDriversLicenseClasses, onUnauthorized]);
+  }, [associate, formatAddress, formatMultiSelect, formatDriversLicenseClasses, onUnauthorized]);
 
   // Show loading state AFTER all hooks have been called
   if (loading) {

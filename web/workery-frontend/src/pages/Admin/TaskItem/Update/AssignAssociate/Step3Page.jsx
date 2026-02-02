@@ -8,6 +8,7 @@ import {
   useAuthManager,
   useAssociateAwayLogManager,
 } from "../../../../../services/Services";
+import { formatPhoneNumber } from "../../../../../utils/phoneFormat";
 import {
   WizardFormStep,
   DetailCard,
@@ -339,7 +340,7 @@ const Step3Content = memo(function Step3Content() {
                   <div>
                     <dt className={`text-sm sm:text-base font-semibold ${themeClasses.textSecondary} mb-1.5`}>Phone</dt>
                     <dd className={`text-lg sm:text-xl font-medium ${themeClasses.textPrimary}`}>
-                      <a href={`tel:${associateData.associatePhone}`} className={`${themeClasses.linkPrimary} flex items-center`}><PhoneIcon className="w-5 h-5 mr-1.5" />{associateData.associatePhone}</a>
+                      <a href={`tel:${associateData.associatePhone}`} className={`${themeClasses.linkPrimary} flex items-center`}><PhoneIcon className="w-5 h-5 mr-1.5" />{formatPhoneNumber(associateData.associatePhone)}</a>
                     </dd>
                   </div>
                 )}

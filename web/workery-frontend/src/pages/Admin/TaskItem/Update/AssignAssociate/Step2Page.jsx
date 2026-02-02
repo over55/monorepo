@@ -14,6 +14,7 @@ import {
 } from "../../../../../components/UIX";
 import { CLIENT_PHONE_TYPE_OF_MAP } from "../../../../../constants/FieldOptions";
 import { STORAGE_KEYS } from "../../../../../constants/Storage";
+import { formatPhoneNumber } from "../../../../../utils/phoneFormat";
 import {
   ChevronRightIcon,
   ArrowLeftIcon,
@@ -313,8 +314,7 @@ const Step2Content = memo(function Step2Content() {
                   icon={PhoneIcon}
                   value={
                     <a href={`tel:${task.customerPhone}`} className={themeClasses.linkPrimary}>
-                      {task.customerPhone}
-                      {task.customerPhoneExtension && <span className="ml-1">ext. {task.customerPhoneExtension}</span>}
+                      {formatPhoneNumber(task.customerPhone, task.customerPhoneExtension)}
                     </a>
                   }
                   themeClasses={themeClasses}
@@ -404,7 +404,7 @@ const Step2Content = memo(function Step2Content() {
                             <td className="px-4 py-4 whitespace-nowrap">
                               {associate.phone ? (
                                 <a href={`tel:${associate.phone}`} className={`text-lg ${isAway ? "text-gray-500 pointer-events-none" : themeClasses.linkPrimary} flex items-center`}>
-                                  <PhoneIcon className="w-5 h-5 mr-1.5" />{associate.phone}
+                                  <PhoneIcon className="w-5 h-5 mr-1.5" />{formatPhoneNumber(associate.phone)}
                                 </a>
                               ) : <span className="text-lg text-gray-400">-</span>}
                             </td>
@@ -455,7 +455,7 @@ const Step2Content = memo(function Step2Content() {
                           {associate.phone && (
                             <div className="flex items-center">
                               <PhoneIcon className="w-6 h-6 mr-2.5 text-gray-400" />
-                              <a href={`tel:${associate.phone}`} className={isAway ? "text-gray-500 pointer-events-none" : themeClasses.linkPrimary}>{associate.phone}</a>
+                              <a href={`tel:${associate.phone}`} className={isAway ? "text-gray-500 pointer-events-none" : themeClasses.linkPrimary}>{formatPhoneNumber(associate.phone)}</a>
                             </div>
                           )}
                           {associate.organizationName && (

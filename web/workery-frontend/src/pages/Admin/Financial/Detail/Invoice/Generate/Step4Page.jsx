@@ -7,6 +7,7 @@ import { useParams, useNavigate, Link, useSearchParams } from "react-router";
 import { useOrderManager } from "../../../../../../services/Services";
 import { InvoiceGenerationStorage } from "../../../../../../services/Storage/InvoiceGenerationStorage";
 import { ORDER_INVOICE_PAYMENT_METHODS_OPTIONS } from "../../../../../../constants/FieldOptions";
+import { formatPhoneNumber } from "../../../../../../utils/phoneFormat";
 import {
   Spinner,
   Alert,
@@ -432,7 +433,7 @@ function AdminFinancialGenerateInvoiceStep4Page() {
                         Associate Phone:
                       </dt>
                       <dd className={`mt-1 text-base sm:text-lg font-medium ${themeClasses.textPrimary}`}>
-                        {invoiceData.associatePhone}
+                        {formatPhoneNumber(invoiceData.associatePhone)}
                       </dd>
                     </div>
                     {invoiceData.associateTaxId && (
@@ -466,7 +467,7 @@ function AdminFinancialGenerateInvoiceStep4Page() {
                         Client Phone:
                       </dt>
                       <dd className={`mt-1 text-base sm:text-lg font-medium ${themeClasses.textPrimary}`}>
-                        {invoiceData.customerPhone}
+                        {formatPhoneNumber(invoiceData.customerPhone)}
                       </dd>
                     </div>
                     {invoiceData.customerEmail && (

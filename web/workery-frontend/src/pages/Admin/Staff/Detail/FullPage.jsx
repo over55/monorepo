@@ -52,6 +52,7 @@ import {
   formatDateForDisplay,
   formatDateTime,
 } from "../../../../services/Helpers/DateFormatter";
+import { formatPhoneNumber } from "../../../../utils/phoneFormat";
 import {
   STAFF_TYPE_MAP,
   STAFF_GENDER_MAP,
@@ -61,17 +62,6 @@ import {
 } from "../../../../constants/Staff";
 
 // Utility functions moved outside component for performance
-const _formatPhone = (phoneNumber) => {
-  if (!phoneNumber) return "-";
-  const cleaned = phoneNumber.replace(/\D/g, "");
-  if (cleaned.length === 11 && cleaned.startsWith("1")) {
-    return `+1 (${cleaned.slice(1, 4)}) ${cleaned.slice(4, 7)}-${cleaned.slice(7)}`;
-  } else if (cleaned.length === 10) {
-    return `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
-  }
-  return phoneNumber;
-};
-
 const _formatMultiSelect = (values, options) => {
   if (!values || values.length === 0) return "-";
   return values.map((value) => options[value] || value).join(", ");

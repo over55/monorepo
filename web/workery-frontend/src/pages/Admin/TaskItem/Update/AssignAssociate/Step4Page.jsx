@@ -18,6 +18,7 @@ import {
 } from "../../../../../components/business/displays";
 import { CLIENT_PHONE_TYPE_OF_MAP } from "../../../../../constants/FieldOptions";
 import { STORAGE_KEYS } from "../../../../../constants/Storage";
+import { formatPhoneNumber } from "../../../../../utils/phoneFormat";
 import {
   DocumentCheckIcon,
   UserPlusIcon,
@@ -278,7 +279,11 @@ const Step4Content = memo(function Step4Content() {
                 <DetailField
                   label={`Phone (${CLIENT_PHONE_TYPE_OF_MAP[task.customerPhoneType]})`}
                   icon={PhoneIcon}
-                  value={<>{task.customerPhone}{task.customerPhoneExtension && ` ext. ${task.customerPhoneExtension}`}</>}
+                  value={
+                    <a href={`tel:${task.customerPhone}`} className={themeClasses.linkPrimary}>
+                      {formatPhoneNumber(task.customerPhone, task.customerPhoneExtension)}
+                    </a>
+                  }
                   themeClasses={themeClasses}
                 />
               )}
@@ -318,7 +323,16 @@ const Step4Content = memo(function Step4Content() {
                 themeClasses={themeClasses}
               />
               {assignmentData.associatePhone && (
-                <DetailField label="Phone" icon={PhoneIcon} value={assignmentData.associatePhone} themeClasses={themeClasses} />
+                <DetailField
+                  label="Phone"
+                  icon={PhoneIcon}
+                  value={
+                    <a href={`tel:${assignmentData.associatePhone}`} className={themeClasses.linkPrimary}>
+                      {formatPhoneNumber(assignmentData.associatePhone)}
+                    </a>
+                  }
+                  themeClasses={themeClasses}
+                />
               )}
               {assignmentData.associateEmail && (
                 <DetailField label="Email" icon={EnvelopeIcon} value={assignmentData.associateEmail} fullWidth themeClasses={themeClasses} />

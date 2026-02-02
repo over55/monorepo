@@ -35,6 +35,7 @@ import {
   formatDateForDisplay,
   formatDateTime,
 } from "../../../../services/Helpers/DateFormatter";
+import { formatPhoneNumber } from "../../../../utils/phoneFormat";
 import {
   UIXThemeProvider,
   DetailFullView,
@@ -165,16 +166,6 @@ const AdminCustomerDetailFullPageContent = memo(function AdminCustomerDetailFull
   }, [cid, fetchCustomer]);
 
   // Helper functions
-  const formatPhone = useCallback((phone, extension = null) => {
-    if (!phone) return "-";
-    const cleaned = phone.replace(/\D/g, "");
-    if (cleaned.length === 10) {
-      const formatted = `(${cleaned.slice(0, 3)}) ${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
-      return extension ? `${formatted} ext. ${extension}` : formatted;
-    }
-    return phone;
-  }, []);
-
   const formatAddress = useCallback((customerData) => {
     if (!customerData) return "-";
     const address =
@@ -377,7 +368,7 @@ const AdminCustomerDetailFullPageContent = memo(function AdminCustomerDetailFull
             />
             <DetailField
               label="Phone"
-              value={formatPhone(
+              value={formatPhoneNumber(
                 customer.phone,
                 customer.phoneType === CUSTOMER_PHONE_TYPE_WORK
                   ? customer.phoneExtension
@@ -392,7 +383,7 @@ const AdminCustomerDetailFullPageContent = memo(function AdminCustomerDetailFull
               <>
                 <DetailField
                   label="Other Phone (Optional)"
-                  value={formatPhone(
+                  value={formatPhoneNumber(
                     customer.otherPhone,
                     customer.otherPhoneType === CUSTOMER_PHONE_TYPE_WORK
                       ? customer.otherPhoneExtension
@@ -544,7 +535,7 @@ const AdminCustomerDetailFullPageContent = memo(function AdminCustomerDetailFull
         ),
       },
     ];
-  }, [customer, formatAddress, formatPhone, onUnauthorized]);
+  }, [customer, formatAddress, onUnauthorized]);
 
   // Show loading state AFTER all hooks have been called
   if (loading) {

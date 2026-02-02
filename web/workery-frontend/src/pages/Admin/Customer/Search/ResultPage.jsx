@@ -41,6 +41,7 @@ import {
   UIXThemeProvider,
   useUIXTheme,
 } from "../../../../components/UIX";
+import { formatPhoneNumber } from "../../../../utils/phoneFormat";
 
 // Constants
 const RESIDENTIAL_CUSTOMER_TYPE_OF_ID = 1;
@@ -163,7 +164,7 @@ const CustomerCard = memo(function CustomerCard({
               href={`tel:${customer.phone}`}
               className={getThemeClasses("link-primary")}
             >
-              {formatPhone(customer.phone)}
+              {formatPhoneNumber(customer.phone)}
             </a>
           </div>
         )}
@@ -267,17 +268,6 @@ const AdminCustomerSearchResultPage = memo(function AdminCustomerSearchResultPag
       navigate("/login");
     }
   }, [authManager, navigate]);
-
-  // Format phone number
-  const formatPhone = useCallback((phone) => {
-    if (!phone) return "-";
-    const cleaned = phone.replace(/\D/g, "");
-    const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
-    if (match) {
-      return `(${match[1]}) ${match[2]}-${match[3]}`;
-    }
-    return phone;
-  }, []);
 
   // Fetch customers list
   const fetchList = useCallback(() => {

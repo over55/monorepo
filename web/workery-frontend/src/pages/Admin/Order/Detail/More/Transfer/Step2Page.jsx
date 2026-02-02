@@ -15,6 +15,7 @@ import {
   useCustomerManager,
   useTransferOperationStorage,
 } from "../../../../../../services/Services";
+import { formatPhoneNumber } from "../../../../../../utils/phoneFormat";
 import {
   ChartBarIcon,
   WrenchScrewdriverIcon,
@@ -373,7 +374,7 @@ function AdminOrderDetailMoreTransferStep2Page() {
                           {customer.phone && (
                             <p className="text-xs sm:text-sm text-gray-600 mb-1 flex items-center">
                               <PhoneIcon className="w-4 h-4 mr-1 text-gray-400 flex-shrink-0" />
-                              <span className="truncate">{customer.phone}</span>
+                              <span className="truncate">{formatPhoneNumber(customer.phone)}</span>
                             </p>
                           )}
                           {customer.email && (

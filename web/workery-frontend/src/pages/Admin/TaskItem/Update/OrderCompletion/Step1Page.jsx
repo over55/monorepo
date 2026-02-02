@@ -19,6 +19,7 @@ import {
   CLIENT_PHONE_TYPE_OF_MAP,
   ASSOCIATE_PHONE_TYPE_OF_MAP,
 } from "../../../../../constants/FieldOptions";
+import { formatPhoneNumber } from "../../../../../utils/phoneFormat";
 import {
   ClipboardDocumentCheckIcon,
   InformationCircleIcon,
@@ -287,10 +288,9 @@ const Step1Content = memo(function Step1Content() {
                   label={`Phone (${CLIENT_PHONE_TYPE_OF_MAP[task.customerPhoneType]})`}
                   icon={PhoneIcon}
                   value={
-                    <>
-                      {task.customerPhone}
-                      {task.customerPhoneExtension && ` x${task.customerPhoneExtension}`}
-                    </>
+                    <a href={`tel:${task.customerPhone}`} className={themeClasses.linkPrimary}>
+                      {formatPhoneNumber(task.customerPhone, task.customerPhoneExtension)}
+                    </a>
                   }
                   themeClasses={themeClasses}
                 />
@@ -334,10 +334,9 @@ const Step1Content = memo(function Step1Content() {
                   label={`Phone (${ASSOCIATE_PHONE_TYPE_OF_MAP[task.associatePhoneType]})`}
                   icon={PhoneIcon}
                   value={
-                    <>
-                      {task.associatePhone}
-                      {task.associatePhoneExtension && ` x${task.associatePhoneExtension}`}
-                    </>
+                    <a href={`tel:${task.associatePhone}`} className={themeClasses.linkPrimary}>
+                      {formatPhoneNumber(task.associatePhone, task.associatePhoneExtension)}
+                    </a>
                   }
                   themeClasses={themeClasses}
                 />

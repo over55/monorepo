@@ -15,6 +15,7 @@ import {
   useAssociateManager,
   useTransferOperationStorage,
 } from "../../../../../../services/Services";
+import { formatPhoneNumber } from "../../../../../../utils/phoneFormat";
 import {
   ChartBarIcon,
   ChevronRightIcon,
@@ -374,7 +375,7 @@ function AdminOrderDetailMoreTransferStep4Page() {
                             {associate.phone && (
                               <p className="text-xs text-gray-600 flex items-center">
                                 <PhoneIcon className="w-3 h-3 mr-1 flex-shrink-0" />
-                                {associate.phone}
+                                {formatPhoneNumber(associate.phone)}
                               </p>
                             )}
 

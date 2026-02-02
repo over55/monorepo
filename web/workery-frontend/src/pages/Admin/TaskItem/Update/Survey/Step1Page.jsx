@@ -23,6 +23,7 @@ import {
   CLIENT_PHONE_TYPE_OF_MAP,
   ASSOCIATE_PHONE_TYPE_OF_MAP,
 } from "../../../../../constants/FieldOptions";
+import { formatPhoneNumber } from "../../../../../utils/phoneFormat";
 import {
   ChartBarIcon,
   ClipboardDocumentListIcon,
@@ -259,7 +260,11 @@ const Step1Content = memo(function Step1Content() {
                   <DetailField
                     label={`Phone (${CLIENT_PHONE_TYPE_OF_MAP[task.customerPhoneType]})`}
                     icon={PhoneIcon}
-                    value={<>{task.customerPhone}{task.customerPhoneExtension && ` ext. ${task.customerPhoneExtension}`}</>}
+                    value={
+                      <a href={`tel:${task.customerPhone}`} className={themeClasses.linkPrimary}>
+                        {formatPhoneNumber(task.customerPhone, task.customerPhoneExtension)}
+                      </a>
+                    }
                     themeClasses={themeClasses}
                   />
                 )}
@@ -293,7 +298,11 @@ const Step1Content = memo(function Step1Content() {
                   <DetailField
                     label={`Phone (${ASSOCIATE_PHONE_TYPE_OF_MAP[task.associatePhoneType]})`}
                     icon={PhoneIcon}
-                    value={<>{task.associatePhone}{task.associatePhoneExtension && ` ext. ${task.associatePhoneExtension}`}</>}
+                    value={
+                      <a href={`tel:${task.associatePhone}`} className={themeClasses.linkPrimary}>
+                        {formatPhoneNumber(task.associatePhone, task.associatePhoneExtension)}
+                      </a>
+                    }
                     themeClasses={themeClasses}
                   />
                 )}

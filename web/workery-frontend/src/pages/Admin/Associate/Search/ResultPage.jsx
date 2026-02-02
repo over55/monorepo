@@ -40,6 +40,7 @@ import {
   UIXThemeProvider,
   useUIXTheme,
 } from "../../../../components/UIX";
+import { formatPhoneNumber } from "../../../../utils/phoneFormat";
 
 // Constants
 const RESIDENTIAL_ASSOCIATE_TYPE_OF_ID = 1;
@@ -151,7 +152,7 @@ const AssociateCard = memo(function AssociateCard({
               href={`tel:${associate.phone}`}
               className={getThemeClasses("link-primary")}
             >
-              {formatPhone(associate.phone)}
+              {formatPhoneNumber(associate.phone)}
             </a>
           </div>
         )}
@@ -255,17 +256,6 @@ const AdminAssociateSearchResultPage = memo(function AdminAssociateSearchResultP
       navigate("/login");
     }
   }, [authManager, navigate]);
-
-  // Format phone number
-  const formatPhone = useCallback((phone) => {
-    if (!phone) return "-";
-    const cleaned = phone.replace(/\D/g, "");
-    const match = cleaned.match(/^(\d{3})(\d{3})(\d{4})$/);
-    if (match) {
-      return `(${match[1]}) ${match[2]}-${match[3]}`;
-    }
-    return phone;
-  }, []);
 
   // Fetch associates list
   const fetchList = useCallback(() => {
