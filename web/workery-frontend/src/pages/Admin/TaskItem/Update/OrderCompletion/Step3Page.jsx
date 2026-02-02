@@ -72,38 +72,19 @@ const Step3Content = memo(function Step3Content() {
   const [taxRate, setTaxRate] = useState(0);
   const [serviceFeeOptions, setServiceFeeOptions] = useState([]);
 
-  // Helper functions for date handling
-  const formatDateForInput = useCallback((date) => {
-    if (!date) return "";
-    try {
-      if (date instanceof Date && !isNaN(date)) {
-        return date.toISOString().slice(0, 10);
-      }
-      if (typeof date === "string") {
-        const parsed = new Date(date);
-        if (!isNaN(parsed)) {
-          return parsed.toISOString().slice(0, 10);
-        }
-      }
-      return "";
-    } catch (error) {
-      console.error("Error formatting date:", error);
-      return "";
+  // Helper function to format dates for input - handles legacy Date objects
+  const formatDateForInput = useCallback((dateStr) => {
+    if (!dateStr) return "";
+    // Handle legacy Date objects
+    if (dateStr instanceof Date) {
+      return dateStr.toISOString().slice(0, 10);
     }
-  }, []);
-
-  const parseDateFromInput = useCallback((value) => {
-    if (!value) return null;
-    try {
-      const date = new Date(value);
-      if (!isNaN(date)) {
-        return date;
-      }
-      return null;
-    } catch (error) {
-      console.error("Error parsing date:", error);
-      return null;
+    // Handle ISO datetime strings
+    if (typeof dateStr === "string" && dateStr.includes("T")) {
+      return dateStr.slice(0, 10);
     }
+    // Return YYYY-MM-DD strings as-is
+    return dateStr;
   }, []);
 
   // Generic handler for numeric inputs
@@ -118,12 +99,20 @@ const Step3Content = memo(function Step3Content() {
   // Initialize state with saved values
   const savedState = useState(() => orderCompletionStorage.getState())[0];
 
+  // Initialize dates as strings - handle legacy Date objects
+  const initializeDateString = (date) => {
+    if (!date) return "";
+    if (date instanceof Date) return date.toISOString().slice(0, 10);
+    if (typeof date === "string" && date.includes("T")) return date.slice(0, 10);
+    return date;
+  };
+
   // Form state from storage
   const [hasInputtedFinancials, setHasInputtedFinancials] = useState(savedState.hasInputtedFinancials);
   const [invoicePaidTo, setInvoicePaidTo] = useState(savedState.invoicePaidTo);
   const [paymentStatus, setPaymentStatus] = useState(savedState.paymentStatus);
-  const [completionDate, setCompletionDate] = useState(savedState.completionDate);
-  const [invoiceDate, setInvoiceDate] = useState(savedState.invoiceDate);
+  const [completionDate] = useState(savedState.completionDate);
+  const [invoiceDate, setInvoiceDate] = useState(initializeDateString(savedState.invoiceDate));
   const [invoiceIDs, setInvoiceIDs] = useState(savedState.invoiceIDs);
   const [invoiceQuotedLabourAmount, setInvoiceQuotedLabourAmount] = useState(savedState.invoiceQuotedLabourAmount);
   const [invoiceQuotedMaterialAmount, setInvoiceQuotedMaterialAmount] = useState(savedState.invoiceQuotedMaterialAmount);
@@ -140,7 +129,7 @@ const Step3Content = memo(function Step3Content() {
   const [invoiceServiceFeeID, setInvoiceServiceFeeID] = useState(savedState.invoiceServiceFeeID);
   const [invoiceServiceFeePercentage, setInvoiceServiceFeePercentage] = useState(savedState.invoiceServiceFeePercentage);
   const [invoiceServiceFeeAmount, setInvoiceServiceFeeAmount] = useState(savedState.invoiceServiceFeeAmount);
-  const [invoiceServiceFeePaymentDate, setInvoiceServiceFeePaymentDate] = useState(savedState.invoiceServiceFeePaymentDate);
+  const [invoiceServiceFeePaymentDate, setInvoiceServiceFeePaymentDate] = useState(initializeDateString(savedState.invoiceServiceFeePaymentDate));
   const [invoiceActualServiceFeeAmountPaid, setInvoiceActualServiceFeeAmountPaid] = useState(savedState.invoiceActualServiceFeeAmountPaid);
   const [invoiceBalanceOwingAmount, setInvoiceBalanceOwingAmount] = useState(savedState.invoiceBalanceOwingAmount);
   const [paymentMethods, setPaymentMethods] = useState(savedState.paymentMethods || []);
@@ -547,7 +536,7 @@ const Step3Content = memo(function Step3Content() {
                       <input
                         type="date"
                         value={formatDateForInput(invoiceDate)}
-                        onChange={(e) => setInvoiceDate(parseDateFromInput(e.target.value))}
+                        onChange={(e) => setInvoiceDate(e.target.value)}
                         className={errors.invoiceDate ? inputErrorClass : inputClass}
                       />
                     </div>
@@ -799,7 +788,7 @@ const Step3Content = memo(function Step3Content() {
                     <input
                       type="date"
                       value={formatDateForInput(invoiceServiceFeePaymentDate)}
-                      onChange={(e) => setInvoiceServiceFeePaymentDate(parseDateFromInput(e.target.value))}
+                      onChange={(e) => setInvoiceServiceFeePaymentDate(e.target.value)}
                       className={errors.invoiceServiceFeePaymentDate ? inputErrorClass : inputClass}
                     />
                   </div>

@@ -24,6 +24,7 @@ import {
   ORDER_STATUS_COMPLETED_AND_PAID,
   ORDER_STATUS_COMPLETED_BUT_UNPAID,
 } from "../../../../../constants/Order";
+import { convertLocalDateToISO } from "../../../../../constants/Date";
 import {
   CheckCircleIcon,
   ClipboardDocumentCheckIcon,
@@ -202,7 +203,7 @@ const Step5Content = memo(function Step5Content() {
         reason_other: formData.reasonOther || "",
         reason_comment: formData.reasonComment || "",
         completion_date: formData.completionDate
-          ? new Date(formData.completionDate).toISOString()
+          ? convertLocalDateToISO(formData.completionDate)
           : null,
         visits: parseInt(formData.visits || 0),
         closing_reason_comment: formData.closingReasonComment || "",
@@ -235,7 +236,7 @@ const Step5Content = memo(function Step5Content() {
         Object.assign(payload, {
           invoice_paid_to: formData.invoicePaidTo,
           payment_status: formData.paymentStatus,
-          invoice_date: formData.invoiceDate ? new Date(formData.invoiceDate).toISOString() : null,
+          invoice_date: formData.invoiceDate ? convertLocalDateToISO(formData.invoiceDate) : null,
           invoice_ids: String(formData.invoiceIDs || ""),
           invoice_quoted_labour_amount: parseFloat(formData.invoiceQuotedLabourAmount || 0),
           invoice_quoted_material_amount: parseFloat(formData.invoiceQuotedMaterialAmount || 0),
@@ -254,10 +255,10 @@ const Step5Content = memo(function Step5Content() {
           invoice_service_fee_amount: effectiveServiceFeeAmount,
           invoiceServiceFeeAmount: effectiveServiceFeeAmount,
           invoice_service_fee_payment_date: effectiveServiceFeePaymentDate
-            ? new Date(effectiveServiceFeePaymentDate).toISOString()
+            ? convertLocalDateToISO(effectiveServiceFeePaymentDate)
             : null,
           invoiceServiceFeePaymentDate: effectiveServiceFeePaymentDate
-            ? new Date(effectiveServiceFeePaymentDate).toISOString()
+            ? convertLocalDateToISO(effectiveServiceFeePaymentDate)
             : null,
           invoice_actual_service_fee_amount_paid: effectiveActualServiceFeePaid,
           invoiceActualServiceFeeAmountPaid: effectiveActualServiceFeePaid,

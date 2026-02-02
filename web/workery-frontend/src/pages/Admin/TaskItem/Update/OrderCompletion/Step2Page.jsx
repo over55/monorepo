@@ -117,13 +117,20 @@ const Step2Content = memo(function Step2Content() {
   // Form state from storage
   const savedState = orderCompletionStorage.getState();
 
-  // Initialize completionDate properly - validate if it's a valid Date
+  // Initialize completionDate as string - handle legacy Date objects
   const initializeCompletionDate = () => {
-    if (!savedState.completionDate) return null;
-    const date = savedState.completionDate instanceof Date
-      ? savedState.completionDate
-      : new Date(savedState.completionDate);
-    return !isNaN(date.getTime()) ? date : null;
+    if (!savedState.completionDate) return "";
+    const date = savedState.completionDate;
+    // Handle legacy Date objects
+    if (date instanceof Date) {
+      return date.toISOString().slice(0, 10);
+    }
+    // Handle ISO datetime strings
+    if (typeof date === "string" && date.includes("T")) {
+      return date.slice(0, 10);
+    }
+    // Return YYYY-MM-DD strings as-is
+    return date;
   };
 
   const [wasCompleted, setWasCompleted] = useState(savedState.wasCompleted);
@@ -169,7 +176,7 @@ const Step2Content = memo(function Step2Content() {
   // Handlers
   const handleWasCompletedChange = useCallback((value) => {
     setWasCompleted(parseInt(value));
-    setCompletionDate(null);
+    setCompletionDate("");
     setReasonComment("");
     setReason(0);
     setReasonOther("");
@@ -179,21 +186,14 @@ const Step2Content = memo(function Step2Content() {
   const handleCompletionDateChange = useCallback((e) => {
     const value = e.target.value;
     if (!value) {
-      // If date is cleared, set to null
-      setCompletionDate(null);
+      // If date is cleared, set to empty string
+      setCompletionDate("");
       setReasonComment("");
       return;
     }
-    const date = new Date(value);
-    if (isNaN(date.getTime())) {
-      // If date is invalid, set to null
-      setCompletionDate(null);
-      setReasonComment("");
-      return;
-    }
-    setCompletionDate(date);
-    const dateStr = date.toISOString().slice(0, 10);
-    setReasonComment(`Job completed by Associate on ${dateStr}.`);
+    // Store date as string (YYYY-MM-DD format)
+    setCompletionDate(value);
+    setReasonComment(`Job completed by Associate on ${value}.`);
   }, []);
 
   const handleSubmit = useCallback(() => {
@@ -204,7 +204,7 @@ const Step2Content = memo(function Step2Content() {
     }
 
     if (wasCompleted === 1) {
-      if (!completionDate || isNaN(completionDate.getTime())) {
+      if (!completionDate) {
         newErrors.completionDate = "Completion date is required";
       }
       if (!reasonComment) newErrors.reasonComment = "Reason comment is required";
@@ -338,7 +338,7 @@ const Step2Content = memo(function Step2Content() {
                   <div className="relative">
                     <input
                       type="date"
-                      value={completionDate && !isNaN(completionDate.getTime()) ? completionDate.toISOString().slice(0, 10) : ""}
+                      value={completionDate}
                       onChange={handleCompletionDateChange}
                       max={new Date().toISOString().slice(0, 10)}
                       className={`block w-full px-3 py-2 border rounded-md shadow-sm ${themeClasses.inputFocus} sm:text-sm ${
