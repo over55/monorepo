@@ -1212,11 +1212,11 @@ export class CustomerManager {
       errors.lastName = "Last name must be less than 50 characters";
     }
 
-    // Validate email (required)
-    if (!customerData.email || !customerData.email.trim()) {
-      errors.email = "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerData.email.trim())) {
-      errors.email = "Invalid email format";
+    // Validate email (optional, but if provided must be valid)
+    if (customerData.email && customerData.email.trim()) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customerData.email.trim())) {
+        errors.email = "Invalid email format";
+      }
     }
 
     // Validate phone (optional)
