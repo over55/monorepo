@@ -14,6 +14,7 @@ import {
   EnvelopeIcon,
   PhoneIcon,
 } from "@heroicons/react/24/outline";
+import { normalizePhoneForSearch } from "../../../../utils/phoneFormat";
 
 // Static configuration constants
 const PAGE_TITLE = "Search Staff";
@@ -144,7 +145,7 @@ function AdminStaffSearchCriteriaPage() {
       if (data.firstName) queryParams.append("fn", data.firstName);
       if (data.lastName) queryParams.append("ln", data.lastName);
       if (data.email) queryParams.append("e", data.email);
-      if (data.phone) queryParams.append("p", data.phone);
+      if (data.phone) queryParams.append("p", normalizePhoneForSearch(data.phone));
       queryParams.append("active", data.showOnlyActive ? "1" : "0");
 
       // Navigate to results page

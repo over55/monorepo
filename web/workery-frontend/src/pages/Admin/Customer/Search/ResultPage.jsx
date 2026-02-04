@@ -41,7 +41,7 @@ import {
   UIXThemeProvider,
   useUIXTheme,
 } from "../../../../components/UIX";
-import { formatPhoneNumber } from "../../../../utils/phoneFormat";
+import { formatPhoneNumber, normalizePhoneForSearch } from "../../../../utils/phoneFormat";
 
 // Constants
 const RESIDENTIAL_CUSTOMER_TYPE_OF_ID = 1;
@@ -91,7 +91,6 @@ const BREADCRUMB_ITEMS = Object.freeze([
 const CustomerCard = memo(function CustomerCard({
   customer,
   onArchiveClick,
-  formatPhone,
 }) {
   const { getThemeClasses } = useUIXTheme();
 
@@ -288,7 +287,7 @@ const AdminCustomerSearchResultPage = memo(function AdminCustomerSearchResultPag
     if (firstName) params.set("first_name", firstName);
     if (lastName) params.set("last_name", lastName);
     if (email) params.set("email", email);
-    if (phone) params.set("phone", phone);
+    if (phone) params.set("phone", normalizePhoneForSearch(phone));
     if (organizationName) params.set("organization_name", organizationName);
     if (status !== 0) params.set("status", status);
     if (typeOf !== 0) params.set("type", typeOf);
@@ -601,7 +600,6 @@ const AdminCustomerSearchResultPage = memo(function AdminCustomerSearchResultPag
                       key={customer.id}
                       customer={customer}
                       onArchiveClick={setSelectedCustomerForDeletion}
-                      formatPhone={formatPhone}
                     />
                   ))}
                 </div>

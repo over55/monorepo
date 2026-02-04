@@ -40,7 +40,7 @@ import {
   UIXThemeProvider,
   useUIXTheme,
 } from "../../../../components/UIX";
-import { formatPhoneNumber } from "../../../../utils/phoneFormat";
+import { formatPhoneNumber, normalizePhoneForSearch } from "../../../../utils/phoneFormat";
 
 // Constants
 const RESIDENTIAL_ASSOCIATE_TYPE_OF_ID = 1;
@@ -276,7 +276,7 @@ const AdminAssociateSearchResultPage = memo(function AdminAssociateSearchResultP
     if (firstName) params.set("first_name", firstName);
     if (lastName) params.set("last_name", lastName);
     if (email) params.set("email", email);
-    if (phone) params.set("phone", phone);
+    if (phone) params.set("phone", normalizePhoneForSearch(phone));
     if (organizationName) params.set("organization_name", organizationName);
     if (status !== 0) params.set("status", status);
     if (typeOf !== 0) params.set("type", typeOf);

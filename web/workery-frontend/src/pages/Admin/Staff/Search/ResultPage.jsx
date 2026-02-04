@@ -16,7 +16,7 @@ import {
   UIXThemeProvider,
   useUIXTheme,
 } from "../../../../components/UIX";
-import { formatPhoneNumber } from "../../../../utils/phoneFormat";
+import { formatPhoneNumber, normalizePhoneForSearch } from "../../../../utils/phoneFormat";
 import {
   MagnifyingGlassIcon,
   UserGroupIcon,
@@ -272,7 +272,7 @@ const AdminStaffSearchResultPage = memo(function AdminStaffSearchResultPage() {
     if (firstName) filtersMap.set("first_name", firstName);
     if (lastName) filtersMap.set("last_name", lastName);
     if (email) filtersMap.set("email", email);
-    if (phone) filtersMap.set("phone", phone);
+    if (phone) filtersMap.set("phone", normalizePhoneForSearch(phone));
 
     // Add filters
     if (status > 0) {

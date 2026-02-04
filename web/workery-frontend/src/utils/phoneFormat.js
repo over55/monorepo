@@ -50,3 +50,22 @@ export function formatPhoneForTel(phone) {
   if (!phone) return "";
   return phone.replace(/\D/g, "");
 }
+
+/**
+ * Normalize phone number for search by stripping all non-digit characters
+ * This ensures search queries match database records regardless of format
+ * @param {string} phone - Phone number in any format
+ * @returns {string} - Digits-only phone number for search
+ *
+ * @example
+ * normalizePhoneForSearch("(519) 225-2631") // "5192252631"
+ * normalizePhoneForSearch("519-225-2631") // "5192252631"
+ * normalizePhoneForSearch("+1 519 225 2631") // "15192252631"
+ */
+export function normalizePhoneForSearch(phone) {
+  // Handle null, undefined, or empty string
+  if (!phone) return "";
+
+  // Strip all non-digit characters
+  return phone.replace(/\D/g, "");
+}

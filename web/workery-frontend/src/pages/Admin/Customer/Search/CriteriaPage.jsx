@@ -15,6 +15,7 @@ import {
   PhoneIcon,
   BuildingOffice2Icon,
 } from "@heroicons/react/24/outline";
+import { normalizePhoneForSearch } from "../../../../utils/phoneFormat";
 
 // Static configuration constants
 const PAGE_TITLE = "Search Customers";
@@ -161,7 +162,7 @@ function AdminCustomerSearchCriteriaPage() {
       if (data.firstName) queryParams.append("fn", data.firstName);
       if (data.lastName) queryParams.append("ln", data.lastName);
       if (data.email) queryParams.append("e", data.email);
-      if (data.phone) queryParams.append("p", data.phone);
+      if (data.phone) queryParams.append("p", normalizePhoneForSearch(data.phone));
       if (data.organizationName) queryParams.append("on", data.organizationName);
       queryParams.append("active", data.showOnlyActive ? "1" : "0");
 
